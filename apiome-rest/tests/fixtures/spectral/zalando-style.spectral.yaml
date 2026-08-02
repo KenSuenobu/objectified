@@ -1,0 +1,265 @@
+# A Zalando-style public ruleset, in the shape orgs migrating from Stoplight/Redocly bring to
+# Apiome (GOV-1.5, #4431). Modelled on the Zalando RESTful API Guidelines: mostly custom rules
+# over the six core functions, a handful of severity overrides for spectral:oas rules, and a few
+# rules that can only run as JavaScript. Used by the acceptance test that pins import coverage.
+extends:
+  - spectral:oas
+  - ./zalando-internal-extras.yaml
+
+functions:
+  - checkIdempotencyKey
+
+aliases:
+  QueryParameters:
+    - $.paths[*][*].parameters[*]
+
+overrides:
+  - files: ["legacy/**/*.yaml"]
+    rules:
+      must-use-snake-case-property-names: off
+
+rules:
+  # --- Severity overrides of inherited spectral:oas rules ------------------------------------
+  info-description: error
+  operation-description: warn
+  oas3-valid-schema-example: error
+  operation-tags: warn
+
+  # --- Naming ---------------------------------------------------------------------------------
+  must-use-lowercase-with-hyphens-for-path-segments:
+    description: Path segments are lowercase and hyphenated (kebab-case).
+    severity: error
+    given: $.paths
+    then:
+      field: "@key"
+      function: pattern
+      functionOptions:
+        match: "^(/([a-z0-9-]+|\\{[a-zA-Z0-9_]+\\}))+/?$"
+
+  must-not-use-uri-versioning:
+    description: APIs are versioned by media type or header, never in the path.
+    severity: error
+    given: $.paths
+    then:
+      field: "@key"
+      function: pattern
+      functionOptions:
+        notMatch: "^/v[0-9]+"
+
+  must-use-snake-case-property-names:
+    description: Property names are snake_case.
+    severity: error
+    given: $..properties
+    then:
+      field: "@key"
+      function: casing
+      functionOptions:
+        type: snake
+
+  must-use-snake-case-query-parameters:
+    description: Query parameter names are snake_case.
+    severity: error
+    given: "#QueryParameters"
+    then:
+      field: name
+      function: casing
+      functionOptions:
+        type: snake
+
+  must-use-camel-case-operation-ids:
+    description: operationId is camelCase so generated clients read idiomatically.
+    given: $.paths[*][*]
+    then:
+      field: operationId
+      function: casing
+      functionOptions:
+        type: camel
+
+  should-use-upper-snake-case-enum-values:
+    description: Enum values are UPPER_SNAKE_CASE.
+    severity: warn
+    given: $..enum[*]
+    then:
+      function: casing
+      functionOptions:
+        type: macro
+
+  # --- API meta information -------------------------------------------------------------------
+  must-provide-api-id:
+    description: Every API declares a globally unique x-api-id.
+    severity: error
+    message: "{{path}} is missing x-api-id"
+    given: $.info
+    then:
+      field: x-api-id
+      function: truthy
+
+  must-provide-api-audience:
+    description: Every API declares its x-audience.
+    severity: error
+    given: $.info
+    then:
+      field: x-audience
+      function: enumeration
+      functionOptions:
+        values:
+          - component-internal
+          - business-unit-internal
+          - company-internal
+          - external-partner
+          - external-public
+
+  must-use-semantic-versioning:
+    description: info.version follows semantic versioning.
+    severity: error
+    given: $.info
+    then:
+      field: version
+      function: pattern
+      functionOptions:
+        match: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+
+  must-contain-api-contact-information:
+    description: The info block names a contact for the API.
+    severity: error
+    given: $.info
+    then:
+      field: contact
+      function: truthy
+
+  must-provide-tag-descriptions:
+    description: Every declared tag explains what it groups.
+    severity: warn
+    given: $.tags[*]
+    then:
+      field: description
+      function: truthy
+
+  # --- Transport / structure ------------------------------------------------------------------
+  must-use-https-server-urls:
+    description: Server URLs use https.
+    severity: error
+    given: $.servers[*]
+    then:
+      field: url
+      function: pattern
+      functionOptions:
+        match: "^https://"
+
+  must-not-expose-basic-auth:
+    description: Basic authentication is not permitted.
+    severity: error
+    given: $.components.securitySchemes[*]
+    then:
+      field: scheme
+      function: pattern
+      functionOptions:
+        notMatch: "^basic$"
+
+  must-use-standard-http-status-codes:
+    description: Operations answer with standard, documented status codes.
+    severity: warn
+    given: $.paths[*][*].responses
+    then:
+      field: "@key"
+      function: enumeration
+      functionOptions:
+        values:
+          - "200"
+          - "201"
+          - "202"
+          - "204"
+          - "301"
+          - "400"
+          - "401"
+          - "403"
+          - "404"
+          - "409"
+          - "410"
+          - "422"
+          - "429"
+          - "500"
+          - "503"
+          - default
+
+  should-bound-string-properties:
+    description: String properties declare a maxLength so payloads stay bounded.
+    severity: info
+    given: $.components.schemas[*].properties[*]
+    then:
+      field: maxLength
+      function: defined
+
+  must-not-use-additional-properties:
+    description: Schemas do not allow undeclared properties.
+    severity: warn
+    given: $.components.schemas[*]
+    then:
+      field: additionalProperties
+      function: undefined
+
+  should-limit-path-length:
+    description: Paths stay short enough to read.
+    severity: info
+    given: $.paths
+    then:
+      field: "@key"
+      function: length
+      functionOptions:
+        max: 120
+
+  must-document-operation-summary:
+    description: Every operation carries a summary.
+    severity: warn
+    given: $.paths[*][*]
+    then:
+      field: summary
+      function: truthy
+
+  should-avoid-deprecated-operations:
+    description: Deprecated operations are removed once consumers migrate.
+    severity: hint
+    given: $.paths[*][*]
+    then:
+      field: deprecated
+      function: undefined
+
+  # --- Rules that need JavaScript or Spectral-only functions -----------------------------------
+  must-use-problem-json-for-errors:
+    description: Error responses use application/problem+json.
+    severity: error
+    given: $.paths[*][*].responses[*].content
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - application/problem+json
+
+  must-order-tags-alphabetically:
+    description: Tags are declared in alphabetical order.
+    severity: warn
+    given: $.tags
+    then:
+      function: alphabetical
+      functionOptions:
+        keyedBy: name
+
+  must-not-mix-pagination-styles:
+    description: An operation uses cursor pagination or offset pagination, never both.
+    severity: error
+    given: $.paths[*][*]
+    then:
+      function: xor
+      functionOptions:
+        properties:
+          - x-cursor-pagination
+          - x-offset-pagination
+
+  must-support-idempotency-keys:
+    description: Unsafe operations accept an Idempotency-Key header.
+    severity: error
+    given: $.paths[*][*]
+    then:
+      function: checkIdempotencyKey

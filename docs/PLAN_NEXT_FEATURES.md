@@ -139,7 +139,7 @@ Phases are dependency-ordered. Within a phase, **MVP tickets ship before v2**. P
 | 0.4 | Ensure `mvp` / `v2` labels on every open issue | **Done** |
 | 0.5 | Create ECA / PMR / GNC / SGD epic parents | **Done** (#4941–#4952) |
 
-Remaining open leftovers intentionally **not** closed: MTG-EPIC-5 #4764, GOV-1.5/1.6/3.x, CTG-2.4/3.4/4.x, MFX studio polish (RC4), long-tail MFX/MFI (Future).
+Remaining open leftovers intentionally **not** closed: MTG-EPIC-5 #4764, GOV-1.6/3.x (GOV-1.5 #4431 shipped), CTG-2.4/3.4/4.x, MFX studio polish (RC4), long-tail MFX/MFI (Future).
 
 ---
 

@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.98.0",
+    "version": "1.99.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -10474,6 +10474,97 @@
           },
           "422": {
             "description": "Malformed guide: `detail.message` explains the problem and `detail.pointer` points at the offending YAML node (e.g. `rules.my-rule.then.functionOptions.match`)."
+          }
+        }
+      }
+    },
+    "/v1/lint/custom-rules/import": {
+      "post": {
+        "tags": [
+          "lint"
+        ],
+        "summary": "Import Spectral Ruleset Document",
+        "description": "Import a Spectral ruleset (GOV-1.5, #4431).\n\nAccepts a `.spectral.yaml` document (`content` \u2014 a paste or an uploaded file's text) or a\n`url` to fetch one from, and translates it into Apiome governance state: `extends:\nspectral:oas` resolves onto the built-in rule catalog (GOV-1.2), custom rule definitions are\ntranslated into the custom-rule DSL (GOV-1.3), and everything the subset cannot express is\nlisted in `entries` with a machine-readable `reason`. Lossy-but-successful translations\ncarry `notes`, so coverage is transparent rather than silently partial.\n\nNothing is persisted: `yaml` is ready for\n`PUT /v1/style-guides/{tenantSlug}/{guideId}/custom-rules` and `builtinRules` for\n`PUT /v1/style-guides/{tenantSlug}/{guideId}/rules`.",
+        "operationId": "import_spectral_ruleset_document_v1_lint_custom_rules_import_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Import Spectral Ruleset Documentauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Import Spectral Ruleset Documentauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Import Spectral Ruleset Document Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Import Spectral Ruleset Document Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpectralImportRequest",
+                "description": "Request body for import spectral ruleset documentrequest."
+              }
+            }
+          },
+          "description": "Request body for import spectral ruleset document."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for import spectral ruleset document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpectralImportResponse",
+                  "description": "Response payload for import spectral ruleset documentresponse200."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The ruleset could not be read: empty, invalid YAML, not a mapping, oversized, or (for `url`) unfetchable / blocked by the SSRF guard."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for import spectral ruleset documentresponse422."
+                }
+              }
+            }
           }
         }
       }
@@ -104891,7 +104982,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-01T23:12:21Z"
+            "example": "2026-08-02T00:49:45Z"
           }
         },
         "additionalProperties": false,
@@ -110556,6 +110647,387 @@
         ],
         "title": "SpecImportVersionTarget",
         "description": "Target catalog revision for an import job."
+      },
+      "SpectralImportBuiltinRuleOut": {
+        "properties": {
+          "ruleId": {
+            "type": "string",
+            "title": "Ruleid",
+            "description": "A registered built-in rule id (GOV-1.2).",
+            "example": "documentation.schema-missing-description"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether the imported ruleset leaves the rule on.",
+            "example": true
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "Severity to store: error | warning | info.",
+            "example": "warning"
+          },
+          "sourceRuleId": {
+            "type": "string",
+            "title": "Sourceruleid",
+            "description": "The Spectral rule (or extends target) the row came from.",
+            "example": "documentation.schema-missing-description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ruleId",
+          "enabled",
+          "severity",
+          "sourceRuleId"
+        ],
+        "title": "SpectralImportBuiltinRuleOut",
+        "description": "A built-in rule row an import resolves to (GOV-1.5, #4431).\n\nThe shape `PUT /v1/style-guides/{tenantSlug}/{guideId}/rules` stores, plus the Spectral rule\nit came from."
+      },
+      "SpectralImportEntryOut": {
+        "properties": {
+          "sourceRuleId": {
+            "type": "string",
+            "title": "Sourceruleid",
+            "description": "The rule id exactly as written in the imported ruleset.",
+            "example": "documentation.schema-missing-description"
+          },
+          "outcome": {
+            "type": "string",
+            "title": "Outcome",
+            "description": "custom (imported into the DSL) | builtin (mapped onto built-in rules) | unsupported.",
+            "example": "example"
+          },
+          "ruleId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for spectral import entry."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spectral import entry."
+              }
+            ],
+            "title": "Ruleid",
+            "description": "The Apiome custom rule id the rule imported as (custom outcome only)."
+          },
+          "builtinRuleIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Builtinruleids",
+            "description": "Built-in rule ids the entry resolved onto (builtin outcome only).",
+            "maxItems": 1000
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for spectral import entry."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spectral import entry."
+              }
+            ],
+            "title": "Severity",
+            "description": "Severity the entry assigns (null keeps the default)."
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "False when the source turned the rule off (`off`, `false`, `recommended: false`).",
+            "example": true
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for spectral import entry."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spectral import entry."
+              }
+            ],
+            "title": "Reason",
+            "description": "Why the rule could not be imported (unsupported outcome): unsupported_extends | unmapped_builtin | unknown_rule | js_function | unsupported_function | unsupported_severity | invalid_definition | malformed_rule | unknown_alias | rule_limit."
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for spectral import entry."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spectral import entry."
+              }
+            ],
+            "title": "Detail",
+            "description": "Human explanation of `reason` (unsupported outcome only)."
+          },
+          "pointer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for spectral import entry."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spectral import entry."
+              }
+            ],
+            "title": "Pointer",
+            "description": "Pointer to the offending node, e.g. `rules.my-rule.then.function`."
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes",
+            "description": "Lossy-translation notes for an imported rule (dropped `message`, normalized id, ...).",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "required": [
+          "sourceRuleId",
+          "outcome",
+          "enabled"
+        ],
+        "title": "SpectralImportEntryOut",
+        "description": "The outcome of one `rules.<id>` entry of an imported Spectral ruleset (GOV-1.5, #4431)."
+      },
+      "SpectralImportExtendsOut": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "The extends target as written (`spectral:oas`, a URL, ...).",
+            "example": "example"
+          },
+          "supported": {
+            "type": "boolean",
+            "title": "Supported",
+            "description": "True when the importer maps this bundled ruleset.",
+            "example": false
+          },
+          "modifier": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for spectral import extends."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spectral import extends."
+              }
+            ],
+            "title": "Modifier",
+            "description": "Spectral modifier of a [target, modifier] pair (off/all/recommended)."
+          },
+          "mappedRuleCount": {
+            "type": "integer",
+            "title": "Mappedrulecount",
+            "description": "Built-in rules inherited from this target.",
+            "default": 0,
+            "example": 1
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for spectral import extends."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spectral import extends."
+              }
+            ],
+            "title": "Reason",
+            "description": "`unsupported_extends` when the target could not be resolved."
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for spectral import extends."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spectral import extends."
+              }
+            ],
+            "title": "Detail",
+            "description": "Human explanation when unsupported."
+          }
+        },
+        "type": "object",
+        "required": [
+          "target",
+          "supported"
+        ],
+        "title": "SpectralImportExtendsOut",
+        "description": "One `extends` target of an imported Spectral ruleset (GOV-1.5, #4431)."
+      },
+      "SpectralImportRequest": {
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 262144,
+                "description": "Request body for spectral import."
+              },
+              {
+                "type": "null",
+                "description": "Request body for spectral import."
+              }
+            ],
+            "title": "Content",
+            "description": "The `.spectral.yaml` document text (paste or uploaded file)."
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "Request body for spectral import."
+              },
+              {
+                "type": "null",
+                "description": "Request body for spectral import."
+              }
+            ],
+            "title": "Url",
+            "description": "http/https URL of a `.spectral.yaml` to fetch (SSRF-guarded)."
+          },
+          "sourceLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "description": "Request body for spectral import."
+              },
+              {
+                "type": "null",
+                "description": "Request body for spectral import."
+              }
+            ],
+            "title": "Sourcelabel",
+            "description": "Human label for the source (e.g. the uploaded filename), echoed back."
+          }
+        },
+        "type": "object",
+        "title": "SpectralImportRequest",
+        "description": "Import a Spectral ruleset (GOV-1.5, #4431): the document, or a URL to fetch it from.\n\nExactly one of ``content`` (a pasted document or an uploaded ``.spectral.yaml`` file's\ntext) and ``url`` must be supplied."
+      },
+      "SpectralImportResponse": {
+        "properties": {
+          "sourceLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for spectral import."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spectral import."
+              }
+            ],
+            "title": "Sourcelabel",
+            "description": "Label of the imported source."
+          },
+          "ruleCount": {
+            "type": "integer",
+            "title": "Rulecount",
+            "description": "Rules declared by the source ruleset.",
+            "example": 1
+          },
+          "mappedCount": {
+            "type": "integer",
+            "title": "Mappedcount",
+            "description": "Rules the importer translated (custom + builtin).",
+            "example": 1
+          },
+          "unsupportedCount": {
+            "type": "integer",
+            "title": "Unsupportedcount",
+            "description": "Rules the importer could not translate; each entry carries a reason.",
+            "example": 1
+          },
+          "coverage": {
+            "type": "number",
+            "title": "Coverage",
+            "description": "mappedCount / ruleCount, 0.0-1.0 (1.0 for a ruleset with no rules).",
+            "example": 1.0
+          },
+          "customRuleCount": {
+            "type": "integer",
+            "title": "Customrulecount",
+            "description": "Custom rules in `yaml` (disabled imports are reported but not serialized).",
+            "example": 1
+          },
+          "yaml": {
+            "type": "string",
+            "title": "Yaml",
+            "description": "The imported custom rules as a style-guide YAML document.",
+            "example": "example"
+          },
+          "builtinRules": {
+            "items": {
+              "$ref": "#/components/schemas/SpectralImportBuiltinRuleOut"
+            },
+            "type": "array",
+            "title": "Builtinrules",
+            "description": "Built-in rule rows the ruleset resolves to, sorted by ruleId.",
+            "maxItems": 1000
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/SpectralImportEntryOut"
+            },
+            "type": "array",
+            "title": "Entries",
+            "description": "One entry per source rule, in document order.",
+            "maxItems": 100
+          },
+          "extends": {
+            "items": {
+              "$ref": "#/components/schemas/SpectralImportExtendsOut"
+            },
+            "type": "array",
+            "title": "Extends",
+            "description": "One entry per `extends` target, in document order.",
+            "maxItems": 1000
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes",
+            "description": "Document-level notes (ignored top-level keys, dropped `overrides`, ...).",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "required": [
+          "ruleCount",
+          "mappedCount",
+          "unsupportedCount",
+          "coverage",
+          "customRuleCount",
+          "yaml",
+          "entries"
+        ],
+        "title": "SpectralImportResponse",
+        "description": "A translated Spectral ruleset (GOV-1.5, #4431): what mapped, and what did not.\n\n``yaml`` is the ready-to-store custom-rules document \u2014 the exact body\n``PUT /v1/style-guides/{tenantSlug}/{guideId}/custom-rules`` accepts \u2014 and ``builtinRules``\nis the matching built-in rule state for ``PUT .../rules``. Nothing is persisted by the\nimport call itself."
       },
       "StagedTypeCandidate": {
         "properties": {
@@ -117611,14 +118083,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-01T23:12:21Z"
+            "example": "2026-08-02T00:49:45Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-01T23:12:21Z"
+            "example": "2026-08-02T00:49:45Z"
           },
           "outcome": {
             "anyOf": [

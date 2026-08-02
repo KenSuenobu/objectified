@@ -5,6 +5,47 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.235.0] - 2026-08-01
+
+### Added
+- **Spectral ruleset importer (GOV-1.5, #4431)** —
+  teams migrating from Stoplight/Redocly arrive with a `.spectral.yaml` holding years of org
+  standards. Re-authoring every rule by hand was a real switching cost, so
+  `POST /v1/lint/custom-rules/import` now reads that file — pasted/uploaded via `content`, or
+  fetched from a `url` through the existing SSRF-guarded ingestion boundary (256 KiB cap,
+  redirects re-validated) — and translates it into Apiome governance state. Nothing is
+  persisted: the response is a review-then-store payload whose `yaml` is exactly what
+  `PUT /v1/style-guides/{tenantSlug}/{guideId}/custom-rules` accepts and whose `builtinRules`
+  are exactly what `PUT …/rules` accepts.
+  - **Three outcomes, no silent loss.** Every `rules.<id>` entry of the source lands in exactly
+    one outcome, so the report accounts for the whole document: `builtin` (resolved onto the
+    GOV-1.2 rule catalog via the `extends: spectral:oas` map — `info-description`,
+    `operation-description`, and the four `valid-*-example` rules), `custom` (translated into
+    the GOV-1.3 DSL and validated *by* that module, so anything emitted is guaranteed storable
+    and evaluable), or `unsupported`.
+  - **Unsupported rules say why.** Ten stable reason codes — `js_function`,
+    `unsupported_function` (Spectral's `schema` / `alphabetical` / `xor` / `falsy` /
+    `unreferencedReusableObject`), `unsupported_extends`, `unmapped_builtin`, `unknown_rule`,
+    `unsupported_severity`, `invalid_definition`, `malformed_rule`, `unknown_alias`,
+    `rule_limit` — each with a human `detail` and, for DSL rejections, the `pointer` to the
+    offending node (`rules.my-rule.then.functionOptions.separator`).
+  - **Lossy translations are declared, not hidden.** A rule that imports while losing something
+    carries `notes`: a dropped `message` template or `formats` restriction, `resolved: false`,
+    `severity: hint` folded to `info`, a normalized rule id (an id that would shadow a built-in
+    becomes `imported.<id>`). Rules the source turned **off** (`off` / `false` /
+    `recommended: false`) are reported with `enabled: false` and deliberately left out of the
+    emitted YAML, so applying an import never silently switches a rule on. Document-level
+    `notes` cover ignored `overrides`, `parserOptions`, and unknown top-level keys.
+  - **Spectral dialect handling.** Severity tokens (`error`/`warn`/`info`/`hint`/`off`,
+    booleans, numeric `DiagnosticSeverity` including YAML 1.1 resolving bare `off` to `false`),
+    `extends` as a scalar/list/`[target, modifier]` pair (`off` inherits everything disabled),
+    and simple `aliases` (including `#Alias.suffix` expansion) all resolve.
+  - **Acceptance criterion pinned by fixture.** `tests/fixtures/spectral/zalando-style.spectral.yaml`
+    — a 27-rule Zalando-style ruleset — imports at **81.5%** coverage, above the ≥70% bar, and
+    its output round-trips through `POST /v1/lint/custom-rules/validate`. Documented in
+    `docs/guide/spectral-import.md`; 84 tests across `test_spectral_import.py` and
+    `test_spectral_import_routes.py`.
+
 ## [1.234.0] - 2026-08-01
 
 ### Added

@@ -54,6 +54,11 @@ from .models import (
     LintReportResponse,
     LintRuleCatalogResponse,
     LintRuleOut,
+    SpectralImportBuiltinRuleOut,
+    SpectralImportEntryOut,
+    SpectralImportExtendsOut,
+    SpectralImportRequest,
+    SpectralImportResponse,
     lint_axis_evaluation_out_from_row,
     lint_axis_fields_from_evaluation,
     lint_evidence_response_from_rows,
@@ -62,6 +67,11 @@ from .models import (
 from .permissions import Action, Resource, enforce_permission
 from .policy_evaluate import match_decision_for_fingerprint
 from .schema_lint import merge_compatibility_findings
+from .spectral_import import (
+    SpectralImportError,
+    fetch_spectral_ruleset,
+    import_spectral_ruleset,
+)
 from .style_guide_engine import guided_lint_openapi_spec
 
 router = APIRouter(prefix="/v1/versions", tags=["lint"])
@@ -208,6 +218,100 @@ async def validate_custom_rules(
         for rule in ruleset.rules
     ]
     return CustomRulesValidateResponse(valid=True, count=len(rules), rules=rules)
+
+
+@rules_router.post(
+    "/custom-rules/import",
+    response_model=SpectralImportResponse,
+    responses={
+        400: {
+            "description": "The ruleset could not be read: empty, invalid YAML, not a mapping, "
+            "oversized, or (for `url`) unfetchable / blocked by the SSRF guard."
+        }
+    },
+)
+async def import_spectral_ruleset_document(
+    payload: SpectralImportRequest,
+    auth_data: Dict[str, Any] = Depends(validate_session_credentials),
+) -> SpectralImportResponse:
+    """
+    Import a Spectral ruleset (GOV-1.5, #4431).
+
+    Accepts a `.spectral.yaml` document (`content` — a paste or an uploaded file's text) or a
+    `url` to fetch one from, and translates it into Apiome governance state: `extends:
+    spectral:oas` resolves onto the built-in rule catalog (GOV-1.2), custom rule definitions are
+    translated into the custom-rule DSL (GOV-1.3), and everything the subset cannot express is
+    listed in `entries` with a machine-readable `reason`. Lossy-but-successful translations
+    carry `notes`, so coverage is transparent rather than silently partial.
+
+    Nothing is persisted: `yaml` is ready for
+    `PUT /v1/style-guides/{tenantSlug}/{guideId}/custom-rules` and `builtinRules` for
+    `PUT /v1/style-guides/{tenantSlug}/{guideId}/rules`.
+    """
+    _ = auth_data
+    text = payload.content or ""
+    source_label = payload.source_label
+    if payload.url:
+        try:
+            text, resolved = fetch_spectral_ruleset(payload.url.strip())
+        except SpectralImportError as exc:
+            raise HTTPException(status_code=400, detail=exc.message) from exc
+        source_label = source_label or resolved
+
+    try:
+        result = import_spectral_ruleset(
+            text,
+            source_label=source_label,
+            reserved_rule_ids=frozenset(builtin_rule_ids()),
+        )
+    except SpectralImportError as exc:
+        raise HTTPException(status_code=400, detail=exc.message) from exc
+
+    return SpectralImportResponse(
+        source_label=result.source_label,
+        rule_count=result.rule_count,
+        mapped_count=result.mapped_count,
+        unsupported_count=result.unsupported_count,
+        coverage=result.coverage,
+        custom_rule_count=len(result.custom_rules.rules),
+        yaml=result.yaml,
+        builtin_rules=[
+            SpectralImportBuiltinRuleOut(
+                rule_id=row.rule_id,
+                enabled=row.enabled,
+                severity=row.severity,
+                source_rule_id=row.source_rule_id,
+            )
+            for row in result.builtin_rules
+        ],
+        entries=[
+            SpectralImportEntryOut(
+                source_rule_id=entry.source_rule_id,
+                outcome=entry.outcome,
+                rule_id=entry.rule_id,
+                builtin_rule_ids=list(entry.builtin_rule_ids),
+                severity=entry.severity,
+                enabled=entry.enabled,
+                reason=entry.reason,
+                detail=entry.detail,
+                pointer=entry.pointer,
+                notes=list(entry.notes),
+            )
+            for entry in result.entries
+        ],
+        extends=[
+            SpectralImportExtendsOut(
+                target=item.target,
+                supported=item.supported,
+                modifier=item.modifier,
+                mapped_rule_count=item.mapped_rule_count,
+                reason=item.reason,
+                detail=item.detail,
+            )
+            for item in result.extends
+        ],
+        notes=list(result.notes),
+    )
 
 
 def _coerce_quality_report(raw: Any) -> Dict[str, Any]:

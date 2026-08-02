@@ -63,9 +63,10 @@ Rule ids are lowercase alphanumeric segments separated by `.`, `-` or `_`, and m
 | `enumeration` | `values` (required) | The target equals one of `values` (scalars only). |
 | `length` | `min` and/or `max` | Strings/arrays/objects: their length is within bounds. Numbers: the value itself is within bounds (Spectral semantics). |
 
-JS-function custom rules (Spectral's `functions:` directory) are **not** supported (v2, per the
-governance roadmap); the Spectral ruleset importer that maps `.spectral.yaml` files onto this
-subset is GOV-1.5.
+JS-function custom rules (Spectral's `functions:` directory) are **not** supported. An existing
+`.spectral.yaml` does not have to be re-authored by hand, though: `POST
+/v1/lint/custom-rules/import` translates one onto this subset and reports every rule it could
+not map, with a reason each — see [spectral-import.md](spectral-import.md).
 
 ## Validation: actionable errors with pointers
 
@@ -113,4 +114,5 @@ evaluates.
 ## Related
 
 - [lint-rules.md](lint-rules.md) — the built-in rule catalog custom ids may not shadow
+- [spectral-import.md](spectral-import.md) — importing an existing `.spectral.yaml` onto this DSL
 - [lint-and-quality.md](lint-and-quality.md) — the lint/scoring surface style guides plug into

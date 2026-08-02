@@ -6138,6 +6138,183 @@ class CustomRulesValidateResponse(BaseModel):
     rules: List[CustomRuleOut] = Field(description="Every validated rule, in author order.")
 
 
+class SpectralImportRequest(BaseModel):
+    """Import a Spectral ruleset (GOV-1.5, #4431): the document, or a URL to fetch it from.
+
+    Exactly one of ``content`` (a pasted document or an uploaded ``.spectral.yaml`` file's
+    text) and ``url`` must be supplied.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    content: Optional[str] = Field(
+        default=None,
+        max_length=262_144,
+        description="The `.spectral.yaml` document text (paste or uploaded file).",
+    )
+    url: Optional[str] = Field(
+        default=None,
+        max_length=2048,
+        description="http/https URL of a `.spectral.yaml` to fetch (SSRF-guarded).",
+    )
+    source_label: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        validation_alias=AliasChoices("sourceLabel", "source_label"),
+        serialization_alias="sourceLabel",
+        description="Human label for the source (e.g. the uploaded filename), echoed back.",
+    )
+
+    @model_validator(mode="after")
+    def _exactly_one_source(self) -> "SpectralImportRequest":
+        """Require exactly one of ``content`` / ``url``."""
+        has_content = bool(self.content and self.content.strip())
+        has_url = bool(self.url and self.url.strip())
+        if has_content == has_url:
+            raise ValueError("provide exactly one of 'content' or 'url'")
+        return self
+
+
+class SpectralImportEntryOut(BaseModel):
+    """The outcome of one `rules.<id>` entry of an imported Spectral ruleset (GOV-1.5, #4431)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    source_rule_id: str = Field(
+        serialization_alias="sourceRuleId",
+        description="The rule id exactly as written in the imported ruleset.",
+    )
+    outcome: str = Field(
+        description="custom (imported into the DSL) | builtin (mapped onto built-in rules) | unsupported."
+    )
+    rule_id: Optional[str] = Field(
+        default=None,
+        serialization_alias="ruleId",
+        description="The Apiome custom rule id the rule imported as (custom outcome only).",
+    )
+    builtin_rule_ids: List[str] = Field(
+        default_factory=list,
+        serialization_alias="builtinRuleIds",
+        description="Built-in rule ids the entry resolved onto (builtin outcome only).",
+    )
+    severity: Optional[str] = Field(
+        default=None, description="Severity the entry assigns (null keeps the default)."
+    )
+    enabled: bool = Field(
+        description="False when the source turned the rule off (`off`, `false`, `recommended: false`)."
+    )
+    reason: Optional[str] = Field(
+        default=None,
+        description=(
+            "Why the rule could not be imported (unsupported outcome): unsupported_extends | "
+            "unmapped_builtin | unknown_rule | js_function | unsupported_function | "
+            "unsupported_severity | invalid_definition | malformed_rule | unknown_alias | rule_limit."
+        ),
+    )
+    detail: Optional[str] = Field(
+        default=None, description="Human explanation of `reason` (unsupported outcome only)."
+    )
+    pointer: Optional[str] = Field(
+        default=None,
+        description="Pointer to the offending node, e.g. `rules.my-rule.then.function`.",
+    )
+    notes: List[str] = Field(
+        default_factory=list,
+        description="Lossy-translation notes for an imported rule (dropped `message`, normalized id, ...).",
+    )
+
+
+class SpectralImportExtendsOut(BaseModel):
+    """One `extends` target of an imported Spectral ruleset (GOV-1.5, #4431)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    target: str = Field(description="The extends target as written (`spectral:oas`, a URL, ...).")
+    supported: bool = Field(description="True when the importer maps this bundled ruleset.")
+    modifier: Optional[str] = Field(
+        default=None, description="Spectral modifier of a [target, modifier] pair (off/all/recommended)."
+    )
+    mapped_rule_count: int = Field(
+        default=0,
+        serialization_alias="mappedRuleCount",
+        description="Built-in rules inherited from this target.",
+    )
+    reason: Optional[str] = Field(
+        default=None, description="`unsupported_extends` when the target could not be resolved."
+    )
+    detail: Optional[str] = Field(default=None, description="Human explanation when unsupported.")
+
+
+class SpectralImportBuiltinRuleOut(BaseModel):
+    """A built-in rule row an import resolves to (GOV-1.5, #4431).
+
+    The shape `PUT /v1/style-guides/{tenantSlug}/{guideId}/rules` stores, plus the Spectral rule
+    it came from.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    rule_id: str = Field(
+        serialization_alias="ruleId", description="A registered built-in rule id (GOV-1.2)."
+    )
+    enabled: bool = Field(description="Whether the imported ruleset leaves the rule on.")
+    severity: str = Field(description="Severity to store: error | warning | info.")
+    source_rule_id: str = Field(
+        serialization_alias="sourceRuleId",
+        description="The Spectral rule (or extends target) the row came from.",
+    )
+
+
+class SpectralImportResponse(BaseModel):
+    """A translated Spectral ruleset (GOV-1.5, #4431): what mapped, and what did not.
+
+    ``yaml`` is the ready-to-store custom-rules document — the exact body
+    ``PUT /v1/style-guides/{tenantSlug}/{guideId}/custom-rules`` accepts — and ``builtinRules``
+    is the matching built-in rule state for ``PUT .../rules``. Nothing is persisted by the
+    import call itself.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    source_label: Optional[str] = Field(
+        default=None, serialization_alias="sourceLabel", description="Label of the imported source."
+    )
+    rule_count: int = Field(
+        serialization_alias="ruleCount", description="Rules declared by the source ruleset."
+    )
+    mapped_count: int = Field(
+        serialization_alias="mappedCount",
+        description="Rules the importer translated (custom + builtin).",
+    )
+    unsupported_count: int = Field(
+        serialization_alias="unsupportedCount",
+        description="Rules the importer could not translate; each entry carries a reason.",
+    )
+    coverage: float = Field(
+        description="mappedCount / ruleCount, 0.0-1.0 (1.0 for a ruleset with no rules)."
+    )
+    custom_rule_count: int = Field(
+        serialization_alias="customRuleCount",
+        description="Custom rules in `yaml` (disabled imports are reported but not serialized).",
+    )
+    yaml: str = Field(description="The imported custom rules as a style-guide YAML document.")
+    builtin_rules: List[SpectralImportBuiltinRuleOut] = Field(
+        default_factory=list,
+        serialization_alias="builtinRules",
+        description="Built-in rule rows the ruleset resolves to, sorted by ruleId.",
+    )
+    entries: List[SpectralImportEntryOut] = Field(
+        description="One entry per source rule, in document order."
+    )
+    extends: List[SpectralImportExtendsOut] = Field(
+        default_factory=list, description="One entry per `extends` target, in document order."
+    )
+    notes: List[str] = Field(
+        default_factory=list,
+        description="Document-level notes (ignored top-level keys, dropped `overrides`, ...).",
+    )
+
+
 class StyleGuideProjectAssignmentOut(BaseModel):
     """One project-level style-guide assignment (GOV-2.1, #4433)."""
 
