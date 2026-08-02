@@ -1310,6 +1310,12 @@ class SpecImportJobError(BaseModel):
         description="Whether retrying the identical request may succeed without "
         "changing the input.",
     )
+    correlation_id: Optional[str] = Field(
+        None,
+        description="Correlation id of the request that started the job (IXH-6.6) — "
+        "equal to the X-Request-ID echoed on the submitting 202 response. Quote it "
+        "in bug reports; it links the failure to every log line the job emitted.",
+    )
 
 
 class SpecImportJobStatus(BaseModel):
@@ -1326,6 +1332,12 @@ class SpecImportJobStatus(BaseModel):
         None,
         description="Populated when state is failed: the stable taxonomy code and "
         "remediation for the terminal failure.",
+    )
+    correlation_id: Optional[str] = Field(
+        None,
+        description="Correlation id of the request that started the job (IXH-6.6); "
+        "matches the X-Request-ID of the submitting request and every log line the "
+        "job emitted.",
     )
 
 

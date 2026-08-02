@@ -104,6 +104,8 @@ from .export_service import (
 from .export_source import ExportSource, ExportSourceError, load_export_source
 from .export_validation import EmittedArtifactValidation, validate_emitted_artifact
 from .export_validation_gate import EmittedValidationReport, build_validation_report
+from .import_export_metrics import import_export_metrics
+from .logging_config import bind_contextvars
 from .lossiness import LossinessSeverity
 from .projection_telemetry import projection_telemetry
 from .quality_rank_telemetry import observe_delivery
@@ -366,6 +368,12 @@ class ExportJobError(BaseModel):
         default=None,
         description="Structured detail (e.g. an upstream ``status_code`` or guard reasons).",
     )
+    correlation_id: Optional[str] = Field(
+        default=None,
+        description="Correlation id of the request that started the job (IXH-6.6) — "
+        "equal to the X-Request-ID echoed on the submitting 202 response. Quote it in "
+        "bug reports; it links the failure to every log line the job emitted.",
+    )
 
 
 class ExportJobStatus(BaseModel):
@@ -384,6 +392,12 @@ class ExportJobStatus(BaseModel):
     error: Optional[ExportJobError] = Field(
         default=None,
         description="Structured failure detail; set only in the ``failed`` terminal state.",
+    )
+    correlation_id: Optional[str] = Field(
+        default=None,
+        description="Correlation id of the request that started the job (IXH-6.6); "
+        "matches the X-Request-ID of the submitting request and every log line the "
+        "job emitted.",
     )
 
 
@@ -494,6 +508,12 @@ class _ExportJobRecord:
     artifact_expires_at_ms: Optional[int] = None
     # Snapshot + version provenance for multi-file zip manifests (EFP-3.1); set at packaging.
     bundle_provenance: Optional[Dict[str, Any]] = None
+    # IXH-6.6: correlation id of the request that started the job, stamped onto every
+    # published status; plus the whole-job clock and the in-flight stage for metrics.
+    correlation_id: Optional[str] = None
+    started_monotonic: float = 0.0
+    current_stage: Optional[str] = None
+    stage_started_monotonic: Optional[float] = None
 
 
 _jobs: Dict[str, _ExportJobRecord] = {}
@@ -672,6 +692,10 @@ async def _publish(
     await asyncio.to_thread(_sync_export_cancel_flag, job_id)
     logged: Optional[ExportJobEvent] = None
     canceled = False
+    # Stage closures collected under the lock, recorded after release (IXH-6.6): the
+    # metrics registry takes its own lock and must never be entered under _jobs_lock.
+    closed_stages: List[tuple] = []
+    now = time.monotonic()
     with _jobs_lock:
         rec = _jobs.get(job_id)
         if rec is None:
@@ -684,7 +708,15 @@ async def _publish(
                 percent=rec.status.percent,
                 events=rec.status.events,
                 progress=rec.status.progress,
+                # The canceled rebuild must keep the correlation id (IXH-6.6).
+                correlation_id=rec.correlation_id,
             )
+            if rec.current_stage and rec.stage_started_monotonic is not None:
+                closed_stages.append(
+                    (rec.current_stage, (now - rec.stage_started_monotonic) * 1000.0, "canceled")
+                )
+                rec.current_stage = None
+                rec.stage_started_monotonic = None
             canceled = True
         else:
             if state is not None:
@@ -699,6 +731,18 @@ async def _publish(
                     completed=_STAGES.index(stage),
                     current_item=rec.request.target,
                 )
+                # Stage transition: close the previous stage's clock (IXH-6.6).
+                if stage != rec.current_stage:
+                    if rec.current_stage and rec.stage_started_monotonic is not None:
+                        closed_stages.append(
+                            (
+                                rec.current_stage,
+                                (now - rec.stage_started_monotonic) * 1000.0,
+                                "completed",
+                            )
+                        )
+                    rec.current_stage = stage
+                    rec.stage_started_monotonic = now
             if event is not None:
                 level, code, message, context = event
                 logged = _next_event(rec, level, code, message, context)
@@ -707,9 +751,31 @@ async def _publish(
                 rec.status.result = result
             if error is not None:
                 rec.status.error = error
+            # A terminal state closes the in-flight stage under its outcome.
+            if (
+                state in _TERMINAL_STATES
+                and rec.current_stage
+                and rec.stage_started_monotonic is not None
+            ):
+                outcome = "completed" if state == "completed" else state
+                closed_stages.append(
+                    (rec.current_stage, (now - rec.stage_started_monotonic) * 1000.0, outcome)
+                )
+                rec.current_stage = None
+                rec.stage_started_monotonic = None
+            rec.status.correlation_id = rec.correlation_id
+            if rec.status.error is not None and not rec.status.error.correlation_id:
+                rec.status.error.correlation_id = rec.correlation_id
     # Log outside the lock (logging handlers can block).
     if logged is not None:
         _log_event(job_id, logged)
+    for closed_stage, duration_ms, outcome in closed_stages:
+        try:
+            import_export_metrics.record_stage(
+                kind="export", stage=closed_stage, duration_ms=duration_ms, outcome=outcome
+            )
+        except Exception:  # noqa: BLE001 - metrics must never affect the job
+            logger.debug("Failed to record export stage metric", exc_info=True)
     # Mirror the new snapshot to the shared store so any instance can serve polls.
     await asyncio.to_thread(_mirror_export_job, job_id)
     return not canceled
@@ -720,14 +786,27 @@ async def _fail(job_id: str, code: str, message: str,
     """Move a job to ``failed`` with one terminal error event and structured error (IXH-6.4).
 
     The delivery taxonomy fills ``category`` / ``remediation`` / ``retriable``; internal
-    codes sanitize ``message`` to a generic sentence plus the job id as correlation id.
+    codes sanitize ``message`` to a generic sentence plus the correlation id.
     The same ``(code, message, context)`` is recorded as an ``error``-level event and as
     :class:`ExportJobError` on ``status.error`` so a poller can render either surface.
+
+    Also the failure-counter funnel (IXH-6.6): every terminal export failure increments
+    ``failures.export.<taxonomy code>.<target>``.
     """
+    with _jobs_lock:
+        rec = _jobs.get(job_id)
+        correlation_id = (rec.correlation_id if rec is not None else None) or job_id
+        target = rec.request.target if rec is not None else ""
     fields = delivery_error_fields(
-        code, message, context=context, correlation_id=job_id
+        code, message, context=context, correlation_id=correlation_id
     )
     error = ExportJobError(**fields)
+    try:
+        import_export_metrics.record_failure(
+            kind="export", code=error.code, adapter_or_target=target
+        )
+    except Exception:  # noqa: BLE001 - metrics must never affect the job
+        logger.debug("Failed to record export failure metric", exc_info=True)
     # Event context may still carry diagnostic detail (status codes, etc.); never put a
     # stringified internal exception into the user-facing structured message.
     event_context = dict(context) if context else {}
@@ -1051,6 +1130,62 @@ def _bundle_filename(target_format: str) -> str:
 
 
 async def _drive_export_job(job_id: str) -> None:
+    """Drive a job to a terminal state, then record its IXH-6.6 job metrics.
+
+    The engine loop is a separate daemon thread, so the request's contextvars are
+    **not** reliably carried here — the correlation id is bound explicitly, which is
+    the contract the correlation tests pin. The wrapper (not the pipeline) owns the
+    whole-job wall clock and the terminal metrics because every path exits through it.
+    """
+    with _jobs_lock:
+        rec = _jobs.get(job_id)
+        if rec is not None:
+            rec.started_monotonic = time.monotonic()
+            correlation_id = rec.correlation_id
+        else:
+            correlation_id = None
+    bind_contextvars(request_id=correlation_id, export_job_id=job_id)
+    try:
+        await _drive_export_job_inner(job_id)
+    finally:
+        _record_terminal_export_metrics(job_id)
+
+
+def _record_terminal_export_metrics(job_id: str) -> None:
+    """Record the terminal job total for one export (best-effort)."""
+    try:
+        with _jobs_lock:
+            rec = _jobs.get(job_id)
+            if rec is None:
+                return
+            state = rec.state
+            target = rec.request.target
+            started = rec.started_monotonic
+            result = rec.status.result
+        if state == "completed":
+            outcome = "completed"
+        elif state == "canceled":
+            outcome = "canceled"
+        else:
+            outcome = "failed"
+        bytes_out: Optional[int] = None
+        files = getattr(result, "files", None) if result is not None else None
+        if files:
+            bytes_out = sum(int(getattr(f, "size_bytes", 0) or 0) for f in files)
+        duration_ms = (time.monotonic() - started) * 1000.0 if started else None
+        import_export_metrics.record_job(
+            kind="export",
+            adapter_or_target=target,
+            format_key=target,
+            outcome=outcome,
+            duration_ms=duration_ms,
+            bytes_out=bytes_out,
+        )
+    except Exception:  # noqa: BLE001 - metrics must never affect the job
+        logger.debug("Failed to record terminal export metrics", exc_info=True)
+
+
+async def _drive_export_job_inner(job_id: str) -> None:
     """Run one export job through the pipeline, publishing progress after each stage.
 
     Every blocking stage (DB-backed source load, fidelity walk, emit) runs in a worker
@@ -1492,6 +1627,19 @@ def _download_path(tenant_slug: str, job_id: str) -> str:
     return f"/v1/export/{tenant_slug}/jobs/{job_id}/download"
 
 
+def _current_export_correlation_id(job_id: str) -> str:
+    """The request id the observability middleware bound, else the job id (IXH-6.6)."""
+    try:
+        from structlog.contextvars import get_contextvars
+
+        value = get_contextvars().get("request_id")
+        if isinstance(value, str) and value:
+            return value
+    except Exception:  # noqa: BLE001 - correlation must never fail scheduling
+        pass
+    return job_id
+
+
 async def schedule_export_job(
     tenant_slug: str,
     tenant_id: str,
@@ -1519,7 +1667,12 @@ async def schedule_export_job(
     resolve_emit_options(request.target, request.options)
 
     job_id = str(uuid.uuid4())
-    initial = ExportJobStatus(job_id=job_id, state="queued", percent=0)
+    # IXH-6.6: capture the submitting request's correlation id here, on the request
+    # loop — the engine loop below is a different thread whose context never saw it.
+    correlation_id = _current_export_correlation_id(job_id)
+    initial = ExportJobStatus(
+        job_id=job_id, state="queued", percent=0, correlation_id=correlation_id
+    )
     with _jobs_lock:
         _jobs[job_id] = _ExportJobRecord(
             tenant_slug=tenant_slug,
@@ -1528,6 +1681,7 @@ async def schedule_export_job(
             state="queued",
             status=initial,
             request=request,
+            correlation_id=correlation_id,
         )
     # Mirror the initial 'queued' row before returning 202 so the first poll — which
     # round-robin may route to any instance — already finds the job in the shared store.

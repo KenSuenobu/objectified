@@ -216,3 +216,64 @@ def test_ops_dashboard_requires_platform_admin(_auth_override):
         mdb.is_platform_admin.return_value = False
         r = client.get("/v1/ops/dashboard")
     assert r.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# IXH-6.6: import/export observability operator view
+# ---------------------------------------------------------------------------
+
+
+def test_ops_import_export_requires_platform_admin(_auth_override):
+    with patch("app.ops_routes.db") as mdb:
+        mdb.is_platform_admin.return_value = False
+        r = client.get("/v1/ops/import-export")
+    assert r.status_code == 403
+
+
+def test_ops_import_export_renders_the_aggregates_and_documented_tags(_auth_override):
+    """The operator view: the three metric families plus the complete documented tag
+    set every metric key is drawn from, and the per-replica scope statement."""
+    from app.import_export_metrics import import_export_metrics
+
+    import_export_metrics.reset()
+    try:
+        import_export_metrics.record_stage(kind="import", stage="parse", duration_ms=42)
+        import_export_metrics.record_failure(
+            kind="import", code="INPUT_MALFORMED", adapter_or_target="asyncapi"
+        )
+        with patch("app.ops_routes.db") as mdb:
+            mdb.is_platform_admin.return_value = True
+            r = client.get("/v1/ops/import-export")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["import_export"]["stages"]["import"]["parse"]["completed"]["count"] == 1
+        assert body["import_export"]["failures"]["import"]["INPUT_MALFORMED"]["asyncapi"] == 1
+        tags = body["documented_tags"]
+        assert set(tags["kinds"]) == {"import", "export"}
+        assert "parse" in tags["stages"]["import"]
+        assert "packaging" in tags["stages"]["export"]
+        assert "INPUT_MALFORMED" in tags["failure_codes"]["import"]
+        assert "SOURCE_LOAD_FAILED" in tags["failure_codes"]["export"]
+        assert body["scope"] == {"per_replica": True, "resets_on_restart": True}
+    finally:
+        import_export_metrics.reset()
+
+
+def test_ops_metrics_payload_includes_import_export(_auth_override):
+    """The general metrics payload (and thus /v1/ops/status + the dashboard poll)
+    carries the import/export aggregates."""
+    with patch("app.ops_routes.db") as mdb:
+        mdb.is_platform_admin.return_value = True
+        r = client.get("/v1/ops/metrics")
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body["import_export"]) == {"stages", "jobs", "failures"}
+
+
+def test_ops_dashboard_renders_import_export_cards(_auth_override):
+    with patch("app.ops_routes.db") as mdb:
+        mdb.is_platform_admin.return_value = True
+        r = client.get("/v1/ops/dashboard")
+    assert r.status_code == 200
+    assert "Import/Export jobs" in r.text
+    assert "Import/Export failures" in r.text

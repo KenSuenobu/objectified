@@ -5,6 +5,35 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.246.0] - 2026-08-02
+
+### Added
+- **Import/export observability — stage timings, failure reasons, metrics (IXH-6.6, #5125)** —
+  Diagnosing "imports are slow for one tenant" meant reading logs; now the two job pipelines
+  emit aggregate metrics and a correlation id that survives from the request to every log line.
+  - **Metrics** (`app/import_export_metrics.py`, in-process/per-replica like the rest of the
+    `/v1/ops/metrics` plane): per-stage duration histograms + byte totals, terminal job totals
+    keyed adapter/target × format × outcome, and failure counters keyed by the IXH-6.4
+    taxonomy code. Every tag comes from a closed vocabulary (registered adapters/targets, the
+    engine stage names, the two taxonomies) with out-of-vocabulary values clamped to `other` —
+    **no per-tenant or per-job tags exist**. Each record also emits one structured log line
+    (`import_export.stage|job|failure`).
+  - **Stage timings**: the in-process import pipeline now emits `PHASE_TIMING` events (the
+    exact shape the tsx worker always emitted, including a `failed` outcome for interrupted
+    stages), ingested into the metrics at the engine's event-dedupe seam so both paths feed
+    the same aggregates; the export engine times its five stages at the `_publish` funnel.
+    Timing events persist per job inside `async_job.status`, so durable evidence survives
+    restarts even though the aggregates are per-replica.
+  - **Correlation id (additive `correlation_id` fields)**: captured from the middleware's
+    `X-Request-ID` at schedule time, stamped onto every stored import/export job status and —
+    structurally — onto `SpecImportJobError`/`ExportJobError`, bound into every job log line
+    (explicitly on the export engine's thread loop), and therefore returned to the caller on
+    failure: the 202's `X-Request-ID` equals every subsequent poll's `correlation_id`.
+  - **Operator view**: new `GET /v1/ops/import-export` (platform-admin) rendering the
+    aggregates plus the complete documented tag set; `/v1/ops/metrics`/`status` carry the
+    snapshot under `import_export`; the ops dashboard gains *Import/Export jobs* and
+    *Import/Export failures* cards. Documented in `docs/import_export_observability.md`.
+
 ## [1.245.0] - 2026-08-02
 
 ### Added

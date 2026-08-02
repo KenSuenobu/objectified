@@ -350,6 +350,10 @@ def build_job_error(
         message=safe_message,
         remediation=descriptor.remediation,
         retriable=descriptor.retriable,
+        # Structural for every category (IXH-6.6), not just embedded in the
+        # internal-category message text: the caller quotes it to correlate the
+        # failure with the job's log lines.
+        correlation_id=correlation_id,
     )
 
 
@@ -1581,6 +1585,9 @@ async def run_adapter_import_job(
         The terminal :class:`SpecImportJobStatus` (``completed``/``failed``/``canceled``).
     """
     job_id = str(payload.get("rest_job_id") or "")
+    # IXH-6.6: the correlation id the engine captured from the submitting request;
+    # falls back to the job id for callers that schedule outside a request context.
+    correlation_id = str(payload.get("correlation_id") or "") or job_id
     metadata = payload.get("metadata") or {}
     options = metadata.get("options") or {}
     source_label = payload.get("filename")
@@ -1605,6 +1612,22 @@ async def run_adapter_import_job(
     def canceled() -> bool:
         return is_canceled is not None and is_canceled()
 
+    def _phase_timing(name: str, started: float, *, outcome: str = "completed") -> None:
+        """Emit one ``PHASE_TIMING`` event for a finished stage (IXH-6.6).
+
+        Same event shape as the tsx worker's phase timings (``context.phase`` /
+        ``context.ms``), so both paths read identically in the logs, feed the same
+        stage metrics at the engine's event seam, and persist the same durable
+        timing evidence inside the mirrored job status.
+        """
+        ms = round((time.monotonic() - started) * 1000.0, 3)
+        verb = "completed" if outcome == "completed" else outcome
+        state.event(
+            "PHASE_TIMING",
+            f"Phase {name} {verb} in {ms}ms",
+            context={"phase": name, "ms": ms, "outcome": outcome},
+        )
+
     # --- init -----------------------------------------------------------------
     state.event("ADAPTER_INIT", f"Importing via the {adapter.label!r} source ({adapter.key})")
     if options.get("incremental_mode"):
@@ -1624,17 +1647,23 @@ async def run_adapter_import_job(
         tenant_id=str(tenant_id) if isinstance(tenant_id, str) else None
     )
     stage_label = source_label if isinstance(source_label, str) else None
+    current_phase = "intake"
+    phase_started = time.monotonic()
     try:
         with stage_wall_clock("parse", limits=profile, source_label=stage_label):
             with stage_memory_tracker(limits=profile, source_label=stage_label):
                 intake = _resolve_intake(payload, options if isinstance(options, dict) else {})
+        _phase_timing("intake", phase_started)
         # Remote `$ref` resolution (MFI-29.4) runs between intake and parse, under its own
         # stage budget: it is the only intake step that touches the network, so it must not
         # eat into the parse stage's wall clock (its own deadline is the tighter bound).
+        current_phase, phase_started = "remote-refs", time.monotonic()
         with stage_wall_clock("remote-refs", limits=profile, source_label=stage_label):
             remote_refs = resolve_intake_remote_refs(
                 adapter, intake, options if isinstance(options, dict) else {}
             )
+        _phase_timing("remote-refs", phase_started)
+        current_phase, phase_started = "parse", time.monotonic()
         with stage_wall_clock("parse", limits=profile, source_label=stage_label):
             with stage_memory_tracker(limits=profile, source_label=stage_label):
                 if intake.fileset is not None:
@@ -1648,7 +1677,9 @@ async def run_adapter_import_job(
                         (remote_refs.text if remote_refs else None) or intake.text,
                         source_label=source_label,
                     )
+        _phase_timing("parse", phase_started)
     except (ImportSourceError, IntakeLimitError, SecureXmlError) as exc:
+        _phase_timing(current_phase, phase_started, outcome="failed")
         # A resource-limit or unsafe-construct rejection (IXH-1.4 / IXH-6.5) already knows
         # its taxonomy code and must not be re-classified as a malformed document.
         error_code = (
@@ -1663,7 +1694,7 @@ async def run_adapter_import_job(
         return state.snapshot(
             state="failed",
             percent=_PCT_INIT,
-            error=build_job_error(error_code, str(exc), correlation_id=job_id),
+            error=build_job_error(error_code, str(exc), correlation_id=correlation_id),
         )
     if remote_refs is not None:
         _emit_remote_ref_events(state, remote_refs.outcome)
@@ -1676,6 +1707,7 @@ async def run_adapter_import_job(
     # about to reduce it to the canonical model — for X12 that means one functional group's first
     # transaction set — so this is the last moment the whole native structure exists. The record is
     # stored after persistence (below), because it is scoped to the revision persistence creates.
+    phase_started = time.monotonic()
     analysis = run_import_analysis(
         adapter,
         native_ast,
@@ -1684,6 +1716,7 @@ async def run_adapter_import_job(
         profile=profile,
         source_label=stage_label,
     )
+    _phase_timing("analyze", phase_started)
     if artifacts is not None:
         artifacts.analysis = analysis
     state.event(
@@ -1708,6 +1741,7 @@ async def run_adapter_import_job(
         return state.snapshot(state="canceled", percent=_PCT_PARSED)
 
     # --- normalize ------------------------------------------------------------
+    phase_started = time.monotonic()
     try:
         with stage_wall_clock(
             "normalize",
@@ -1719,7 +1753,9 @@ async def run_adapter_import_job(
                 source_label=source_label if isinstance(source_label, str) else None,
             ):
                 model = adapter.normalize(native_ast, include_raw=True)
+        _phase_timing("normalize", phase_started)
     except (ImportSourceError, IntakeLimitError, SecureXmlError) as exc:
+        _phase_timing("normalize", phase_started, outcome="failed")
         error_code = resolve_intake_error_code(getattr(exc, "code", None)) or (
             "INPUT_SEMANTIC_INVALID"
         )
@@ -1730,7 +1766,7 @@ async def run_adapter_import_job(
         return state.snapshot(
             state="failed",
             percent=_PCT_PARSED,
-            error=build_job_error(error_code, str(exc), correlation_id=job_id),
+            error=build_job_error(error_code, str(exc), correlation_id=correlation_id),
         )
     if artifacts is not None:
         artifacts.model = model
@@ -1751,6 +1787,7 @@ async def run_adapter_import_job(
     # the right artifact. ``import_target`` is honored only for JSON Schema (see
     # ``decide_import_routing``), so OpenAPI/Arazzo routing cannot regress.
     requested_target = options.get("import_target") if isinstance(options, dict) else None
+    phase_started = time.monotonic()
     routing = decide_import_routing(adapter, model, requested_target=requested_target)
     if artifacts is not None:
         artifacts.routing = routing
@@ -1759,8 +1796,10 @@ async def run_adapter_import_job(
         f"Routing → {routing.target.value}: {routing.reason}",
         context=routing.as_dict(),
     )
+    _phase_timing("route", phase_started)
 
     # --- version (fingerprint) ------------------------------------------------
+    phase_started = time.monotonic()
     fingerprint = adapter.fingerprint(model)
     if artifacts is not None:
         artifacts.fingerprint = fingerprint
@@ -1769,11 +1808,13 @@ async def run_adapter_import_job(
         f"Computed revision fingerprint {fingerprint}.",
         context={"fingerprint": fingerprint},
     )
+    _phase_timing("version", phase_started)
     await publish(state.snapshot(state="running", percent=_PCT_VERSIONED))
     if canceled():
         return state.snapshot(state="canceled", percent=_PCT_VERSIONED)
 
     # --- lint -----------------------------------------------------------------
+    phase_started = time.monotonic()
     lint = adapter.lint(model)
     # MFI-29.4: fold in what remote `$ref` resolution could not resolve. These findings are
     # merged *before* the style guide is applied, so a tenant governs them (severity override,
@@ -1816,6 +1857,7 @@ async def run_adapter_import_job(
         + (f", score {lint.score}" if lint.score is not None else "")
         + ".",
     )
+    _phase_timing("lint", phase_started)
     await publish(state.snapshot(state="running", percent=_PCT_LINTED))
 
     # --- persist -------------------------------------------------------------
@@ -1834,6 +1876,7 @@ async def run_adapter_import_job(
     tenant_id = str(payload.get("tenant_id") or "")
     imports_as_types = routing.target is ImportTarget.TYPES
     if not options.get("dry_run") and not adapter.preview_only:
+        phase_started = time.monotonic()
         try:
             if imports_as_types:
                 types_outcome = await asyncio.to_thread(
@@ -1843,7 +1886,9 @@ async def run_adapter_import_job(
                 result = await asyncio.to_thread(
                     persist_adapter_import, payload, model, intake, routing, scrub_resolution
                 )
+            _phase_timing("persist", phase_started)
         except Exception as exc:  # noqa: BLE001 - surface a persistence fault as a failed job
+            _phase_timing("persist", phase_started, outcome="failed")
             logger.exception("adapter import persistence failed job=%s", job_id)
             state.event(
                 "PERSIST_ERROR",
@@ -1857,7 +1902,7 @@ async def run_adapter_import_job(
                 error=build_job_error(
                     "INTERNAL_PERSIST_FAULT",
                     f"Failed to store the import: {exc}",
-                    correlation_id=job_id,
+                    correlation_id=correlation_id,
                 ),
             )
 
@@ -1952,6 +1997,7 @@ async def run_adapter_import_job(
             )
 
     # --- finalize -------------------------------------------------------------
+    phase_started = time.monotonic()
     # Report what intake found (IXH-1.4, MFI-29.6). The scrub itself happens inside the
     # persistence hook — this recomputes the report so a dry run surfaces the same
     # findings without writing, and so the summary records them either way. The same
@@ -2016,4 +2062,5 @@ async def run_adapter_import_job(
             "Import-source pipeline completed; the source was stored in the catalog unconverted.",
         )
     cleanup_intake_tempfile(payload.get("document_path"))
+    _phase_timing("finalize", phase_started)
     return state.snapshot(state="completed", percent=_PCT_DONE, summary=summary, result=result)

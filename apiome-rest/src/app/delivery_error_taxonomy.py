@@ -240,5 +240,8 @@ def delivery_error_fields(
         "remediation": descriptor.remediation,
         "retriable": descriptor.retriable,
         "context": dict(context) if context else None,
+        # Structural, not just embedded in internal-category message text (IXH-6.6):
+        # the caller quotes it to correlate the failure with the job's log lines.
+        "correlation_id": correlation_id,
     }
     return fields
