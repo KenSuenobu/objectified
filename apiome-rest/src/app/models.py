@@ -6014,6 +6014,149 @@ class LintWorkspaceTrendsResponse(BaseModel):
     series: List[LintWorkspaceTrendPointOut] = Field(default_factory=list)
 
 
+class QualityRankPointOut(BaseModel):
+    """One day of one format's grade series (IXH-2.7, #5102).
+
+    ``averageScore`` / ``averageReadiness`` are ``null`` on a day with no observation — a gap,
+    never a zero, so a format nobody imported that day does not read as a crash to nothing.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    date: str = Field(description="The day, ISO-8601 (UTC).")
+    observations: int = Field(default=0, description="Grades recorded that day.")
+    average_score: Optional[int] = Field(
+        default=None,
+        serialization_alias="averageScore",
+        description="Mean 0-100 lint score over that day's *scored* observations.",
+    )
+    average_readiness: Optional[int] = Field(
+        default=None,
+        serialization_alias="averageReadiness",
+        description="Mean export readiness composite; null for import-only days.",
+    )
+    grade_distribution: Dict[str, int] = Field(
+        default_factory=dict,
+        serialization_alias="gradeDistribution",
+        description="A-F plus 'ungraded' counts for that day.",
+    )
+
+
+class QualityRankFormatOut(BaseModel):
+    """One (scope, format) group's grade rollup and trend (IXH-2.7, #5102)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    scope: str = Field(description="import | export — which half produced these grades.")
+    format_key: str = Field(
+        serialization_alias="formatKey",
+        description="Source format (import) or target format (export).",
+    )
+    adapter_keys: List[str] = Field(
+        default_factory=list,
+        serialization_alias="adapterKeys",
+        description="Adapter/emitter registry keys observed for this format in the window.",
+    )
+    style_guide_versions: List[str] = Field(
+        default_factory=list,
+        serialization_alias="styleGuideVersions",
+        description="Style-guide content fingerprints the grades were produced under. More "
+        "than one means the scoring rules changed inside the window, which moves grades "
+        "without anything about the specs changing.",
+    )
+    observations: int = Field(default=0, description="Grades recorded in the window.")
+    grade_distribution: Dict[str, int] = Field(
+        default_factory=dict,
+        serialization_alias="gradeDistribution",
+        description="A-F plus 'ungraded' counts over the window.",
+    )
+    average_score: Optional[int] = Field(
+        default=None, serialization_alias="averageScore"
+    )
+    average_readiness: Optional[int] = Field(
+        default=None,
+        serialization_alias="averageReadiness",
+        description="Mean export readiness composite; null for import groups.",
+    )
+    latest_score: Optional[int] = Field(default=None, serialization_alias="latestScore")
+    latest_grade: Optional[str] = Field(default=None, serialization_alias="latestGrade")
+    score_delta: Optional[int] = Field(
+        default=None,
+        serialization_alias="scoreDelta",
+        description="Newest scored observation minus the oldest one in the window — the "
+        "drift. Negative means grades are trending down.",
+    )
+    outcomes: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Gate outcome tally: pass / warn / block / error.",
+    )
+    blocked_count: int = Field(default=0, serialization_alias="blockedCount")
+    best_rank: Optional[int] = Field(
+        default=None,
+        serialization_alias="bestRank",
+        description="Best export readiness rank this target reached; null for imports.",
+    )
+    adapter_finding_count: int = Field(
+        default=0,
+        serialization_alias="adapterFindingCount",
+        description="Findings attributable to the adapter (intake could not read or resolve "
+        "part of the source) — an adapter gap, not a spec defect.",
+    )
+    spec_finding_count: int = Field(
+        default=0,
+        serialization_alias="specFindingCount",
+        description="Findings attributable to the specification itself.",
+    )
+    declared_parser_limits: int = Field(
+        default=0,
+        serialization_alias="declaredParserLimits",
+        description="Constructs the adapter *declares* it does not read yet. A declaration, "
+        "deliberately never counted as a finding.",
+    )
+    attribution: Dict[str, Dict[str, int]] = Field(
+        default_factory=dict,
+        description="Per-class breakdown: {'adapter': {class: count}, 'spec': {class: count}}.",
+    )
+    points: List[QualityRankPointOut] = Field(
+        default_factory=list, description="Daily series, oldest day first."
+    )
+
+
+class QualityRankSeriesResponse(BaseModel):
+    """Per-format quality-grade distribution and drift over a window (IXH-2.7, #5102)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    days: int = Field(description="Window size actually aggregated, in days.")
+    window_start: str = Field(serialization_alias="windowStart")
+    window_end: str = Field(serialization_alias="windowEnd")
+    observation_count: int = Field(
+        default=0,
+        serialization_alias="observationCount",
+        description="Observations folded into this response.",
+    )
+    truncated: bool = Field(
+        default=False,
+        description="True when more formats were observed than the response describes.",
+    )
+    format_limit: int = Field(
+        default=0,
+        serialization_alias="formatLimit",
+        description="Most format groups this response will describe.",
+    )
+    stages: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Observation tally by stage: preflight / committed.",
+    )
+    outcomes: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Observation tally by gate outcome: pass / warn / block / error.",
+    )
+    formats: List[QualityRankFormatOut] = Field(
+        default_factory=list, description="Format groups, busiest first."
+    )
+
+
 class LintWorkspaceBulkItem(BaseModel):
     """One finding targeted by a bulk decision action (CLX-4.1, #4859)."""
 

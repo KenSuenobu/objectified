@@ -106,6 +106,7 @@ from .export_validation import EmittedArtifactValidation, validate_emitted_artif
 from .export_validation_gate import EmittedValidationReport, build_validation_report
 from .lossiness import LossinessSeverity
 from .projection_telemetry import projection_telemetry
+from .quality_rank_telemetry import observe_delivery
 from .transcoding_guards import TranscodeGuard, classify_transcode
 
 logger = logging.getLogger(__name__)
@@ -1271,6 +1272,18 @@ async def _drive_export_job(job_id: str) -> None:
             validation=validation_report,
             lint=source_lint,
             preserved_percent=fidelity.summary.preserved_percent,
+        )
+        # Append the delivery grade to the quality-rank series (IXH-2.7), before the block
+        # branch so a refused delivery is trended too. Off-thread like the gate itself,
+        # because the DB driver blocks; best-effort by contract.
+        await asyncio.to_thread(
+            observe_delivery,
+            delivery,
+            tenant_id=tenant_id,
+            lint=source_lint,
+            adapter_key=fidelity.target.key or target_format,
+            project_id=source.artifact_id,
+            version_record_id=source.version_record_id,
         )
         if delivery.blocks_delivery:
             await _fail_delivery(job_id, delivery, validation, target_format)

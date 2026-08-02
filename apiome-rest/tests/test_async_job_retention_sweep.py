@@ -15,10 +15,12 @@ class FakeDb:
         self.reap_job_calls = []
         self.prune_calls = []
         self.quota_window_prune_calls = []
+        self.quality_rank_prune_calls = []
         self._job_batches = []
         self._artifact_counts = []
         self._prune_counts = []
         self._quota_window_prune_counts = []
+        self._quality_rank_prune_counts = []
 
     def reap_expired_export_job_artifacts(self, *, now=None, limit=100):
         self.reap_artifact_calls.append((now, limit))
@@ -42,6 +44,12 @@ class FakeDb:
         self.quota_window_prune_calls.append(older_than)
         if self._quota_window_prune_counts:
             return self._quota_window_prune_counts.pop(0)
+        return 0
+
+    def prune_quality_rank_observations(self, *, older_than):
+        self.quality_rank_prune_calls.append(older_than)
+        if self._quality_rank_prune_counts:
+            return self._quality_rank_prune_counts.pop(0)
         return 0
 
 
@@ -71,6 +79,7 @@ def test_sweep_reaps_artifacts_jobs_and_history():
     ]
     db._prune_counts = [1]
     db._quota_window_prune_counts = [4]
+    db._quality_rank_prune_counts = [5]
     now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
     with patch("app.async_job_retention_sweep.settings") as settings:
         settings.async_job_retention_export_completed_hours = 1
@@ -82,17 +91,20 @@ def test_sweep_reaps_artifacts_jobs_and_history():
         settings.async_job_history_retention_days = 90
         settings.async_job_retention_sweep_batch_size = 50
         settings.repository_quota_window_retention_days = 120
+        settings.quality_rank_retention_days = 180
         result = process_async_job_retention_sweep(db, now=now, batch_size=50)
     assert result == {
         "artifacts_reaped": 3,
         "jobs_deleted": 2,
         "history_pruned": 1,
         "quota_windows_pruned": 4,
+        "quality_ranks_pruned": 5,
     }
     assert db.reap_artifact_calls[0][1] == 50
     assert len(db.reap_job_calls[0][0]) == 6
     assert db.prune_calls[0][0] == now - timedelta(days=90)
     assert db.quota_window_prune_calls[0] == now - timedelta(days=120)
+    assert db.quality_rank_prune_calls[0] == now - timedelta(days=180)
 
 
 def test_sweep_second_tick_is_idempotent_when_empty():
@@ -104,6 +116,7 @@ def test_sweep_second_tick_is_idempotent_when_empty():
         "jobs_deleted": 0,
         "history_pruned": 0,
         "quota_windows_pruned": 0,
+        "quality_ranks_pruned": 0,
     }
     assert second == first
     assert len(db.reap_artifact_calls) == 2
@@ -170,3 +183,40 @@ def test_a_failed_quota_window_prune_does_not_lose_the_rest_of_the_tick():
     )
     assert result["artifacts_reaped"] == 2
     assert result["quota_windows_pruned"] == 0
+
+
+# --- IXH-2.7 (#5102): quality-rank observation retention -------------------------------------
+
+
+def test_quality_rank_prune_is_bounded_by_its_own_retention_window():
+    """Grade observations are events, so retention is what keeps the series table bounded."""
+    db = FakeDb()
+    db._quality_rank_prune_counts = [12]
+    now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+    result = process_async_job_retention_sweep(
+        db, now=now, history_retention_days=30, quality_rank_retention_days=180
+    )
+    assert db.quality_rank_prune_calls == [now - timedelta(days=180)]
+    assert result["quality_ranks_pruned"] == 12
+
+
+def test_quality_rank_prune_skipped_when_days_non_positive():
+    """The documented way to keep observations forever."""
+    db = FakeDb()
+    process_async_job_retention_sweep(db, quality_rank_retention_days=0)
+    assert db.quality_rank_prune_calls == []
+
+
+def test_a_failed_quality_rank_prune_does_not_lose_the_rest_of_the_tick():
+    class BrokenQualityRanks(FakeDb):
+        def prune_quality_rank_observations(self, **kwargs):
+            raise RuntimeError("observation table is gone")
+
+        def reap_expired_export_job_artifacts(self, **kwargs):
+            return 2
+
+    result = process_async_job_retention_sweep(
+        BrokenQualityRanks(), history_retention_days=30, quality_rank_retention_days=180
+    )
+    assert result["artifacts_reaped"] == 2
+    assert result["quality_ranks_pruned"] == 0

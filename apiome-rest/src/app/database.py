@@ -4809,6 +4809,227 @@ class Database:
         rows = self.execute_query(query, (cutoff, limit))
         return sorted(rows, key=lambda r: str(r.get("expires_at") or ""))
 
+    _QUALITY_RANK_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id, project_id::text AS project_id,
+        version_record_id::text AS version_record_id, scope, stage, format_key, adapter_key,
+        style_guide_id::text AS style_guide_id, style_guide_fingerprint, style_guide_source,
+        policy_version_id::text AS policy_version_id, policy_content_fingerprint,
+        verdict, blocking, outcome, score, grade, report_fingerprint,
+        error_count, warning_count, info_count,
+        adapter_finding_count, spec_finding_count, attribution, declared_parser_limits,
+        readiness, rank, band, preserved_percent, occurred_at
+    """
+
+    def record_quality_rank_observation(
+        self,
+        *,
+        tenant_id: str,
+        scope: str,
+        stage: str,
+        outcome: str,
+        format_key: Optional[str] = None,
+        adapter_key: Optional[str] = None,
+        project_id: Optional[str] = None,
+        version_record_id: Optional[str] = None,
+        style_guide_id: Optional[str] = None,
+        style_guide_fingerprint: Optional[str] = None,
+        style_guide_source: Optional[str] = None,
+        policy_version_id: Optional[str] = None,
+        policy_content_fingerprint: Optional[str] = None,
+        verdict: Optional[str] = None,
+        blocking: bool = False,
+        score: Optional[int] = None,
+        grade: Optional[str] = None,
+        report_fingerprint: Optional[str] = None,
+        error_count: int = 0,
+        warning_count: int = 0,
+        info_count: int = 0,
+        adapter_finding_count: int = 0,
+        spec_finding_count: int = 0,
+        attribution: Optional[Dict[str, Any]] = None,
+        declared_parser_limits: int = 0,
+        readiness: Optional[int] = None,
+        rank: Optional[int] = None,
+        band: Optional[str] = None,
+        preserved_percent: Optional[int] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Append one quality-rank observation to the telemetry series (IXH-2.7, #5102).
+
+        Every id argument is validated as a UUID and dropped to ``NULL`` when it is not one:
+        the caller is a best-effort telemetry hook on the import/export hot path, and a
+        malformed id must degrade the row rather than raise into the work being observed.
+
+        Args:
+            tenant_id: Owning tenant (required; a non-UUID returns ``None``).
+            scope: ``import`` | ``export``.
+            stage: ``preflight`` | ``committed``.
+            outcome: Gate outcome (``pass`` | ``warn`` | ``block`` | ``error``).
+            format_key: Source format (import) or target format (export).
+            adapter_key: Adapter registry key (import) or emitter/target key (export).
+            project_id: Owning artifact/project, when the subject had one.
+            version_record_id: The graded revision, when the subject was one.
+            style_guide_id: Style guide that scored the report.
+            style_guide_fingerprint: That guide's content hash (the style-guide version).
+            style_guide_source: ``builtin`` | ``custom`` | ``fallback``.
+            policy_version_id: Quality policy version in force.
+            policy_content_fingerprint: That policy's content fingerprint.
+            verdict: The policy verdict, when one was evaluated.
+            blocking: Whether the verdict refused the operation.
+            score: 0-100 lint score, or ``None`` when ungradable.
+            grade: A-F lint grade, or ``None`` when ungradable.
+            report_fingerprint: Fingerprint of the lint report behind the grade.
+            error_count: Error-severity findings.
+            warning_count: Warning-severity findings.
+            info_count: Info-severity findings.
+            adapter_finding_count: Findings attributable to the adapter.
+            spec_finding_count: Findings attributable to the specification.
+            attribution: ``{"adapter": {class: count}, "spec": {class: count}}`` breakdown.
+            declared_parser_limits: The adapter's declared parser-limit count.
+            readiness: Export readiness composite (export only).
+            rank: 1-based rank in the export ranking (export only).
+            band: Export readiness band (export only).
+            preserved_percent: Projected preserved-construct percentage, when measured.
+
+        Returns:
+            The inserted row, or ``None`` when the tenant id is not a UUID.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+
+        def _uuid_or_none(value: Optional[str]) -> Optional[str]:
+            """Keep an id only when it is a UUID (the columns are UUID-typed)."""
+            return value if value and is_uuid_string(str(value)) else None
+
+        query = f"""
+            INSERT INTO apiome.quality_rank_observations (
+                tenant_id, project_id, version_record_id, scope, stage,
+                format_key, adapter_key,
+                style_guide_id, style_guide_fingerprint, style_guide_source,
+                policy_version_id, policy_content_fingerprint,
+                verdict, blocking, outcome, score, grade, report_fingerprint,
+                error_count, warning_count, info_count,
+                adapter_finding_count, spec_finding_count, attribution,
+                declared_parser_limits, readiness, rank, band, preserved_percent
+            )
+            VALUES (
+                %s::uuid, %s::uuid, %s::uuid, %s, %s,
+                %s, %s,
+                %s::uuid, %s, %s,
+                %s::uuid, %s,
+                %s, %s, %s, %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, %s, %s, %s
+            )
+            RETURNING {self._QUALITY_RANK_COLUMNS}
+        """
+        params = (
+            tenant_id,
+            _uuid_or_none(project_id),
+            _uuid_or_none(version_record_id),
+            scope,
+            stage,
+            format_key,
+            adapter_key,
+            _uuid_or_none(style_guide_id),
+            style_guide_fingerprint,
+            style_guide_source,
+            _uuid_or_none(policy_version_id),
+            policy_content_fingerprint,
+            verdict,
+            bool(blocking),
+            outcome,
+            score,
+            grade,
+            report_fingerprint,
+            int(error_count or 0),
+            int(warning_count or 0),
+            int(info_count or 0),
+            int(adapter_finding_count or 0),
+            int(spec_finding_count or 0),
+            Json(attribution or {}),
+            int(declared_parser_limits or 0),
+            readiness,
+            rank,
+            band,
+            preserved_percent,
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                row = cursor.fetchone()
+            conn.commit()
+            return row
+        except Exception:
+            conn.rollback()
+            raise
+
+    def list_quality_rank_observations(
+        self,
+        tenant_id: str,
+        *,
+        since: Any,
+        project_id: Optional[str] = None,
+        scope: Optional[str] = None,
+        stage: Optional[str] = None,
+        limit: int = 20000,
+    ) -> List[Dict[str, Any]]:
+        """Observations for one tenant inside a window, newest first (IXH-2.7, #5102).
+
+        Args:
+            tenant_id: Tenant scope.
+            since: Window start; rows with ``occurred_at >= since`` are returned.
+            project_id: Restrict to one artifact/project; ``None`` spans the tenant.
+            scope: Restrict to ``import`` or ``export``; ``None`` returns both.
+            stage: Restrict to ``preflight`` or ``committed``; ``None`` returns both.
+            limit: Hard row cap (clamped to 1..50000) so the read stays bounded.
+
+        Returns:
+            The matching rows, newest first.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        clauses = ["tenant_id = %s::uuid", "occurred_at >= %s"]
+        params: List[Any] = [tenant_id, since]
+        if project_id and is_uuid_string(str(project_id)):
+            clauses.append("project_id = %s::uuid")
+            params.append(project_id)
+        if scope:
+            clauses.append("scope = %s")
+            params.append(scope)
+        if stage:
+            clauses.append("stage = %s")
+            params.append(stage)
+        params.append(max(1, min(int(limit), 50000)))
+        return self.execute_query(
+            f"""
+            SELECT {self._QUALITY_RANK_COLUMNS}
+            FROM apiome.quality_rank_observations
+            WHERE {' AND '.join(clauses)}
+            ORDER BY occurred_at DESC
+            LIMIT %s
+            """,
+            tuple(params),
+        )
+
+    def prune_quality_rank_observations(self, older_than: datetime) -> int:
+        """Delete observations recorded before ``older_than`` (IXH-2.7, #5102).
+
+        Observations are events, so they accrue with import/export traffic; retention keeps the
+        table proportional to the window the API serves rather than to the deployment's age.
+
+        Args:
+            older_than: Exclusive cutoff — observations before this are removed.
+
+        Returns:
+            The number of rows deleted.
+        """
+        return self._execute_write(
+            "DELETE FROM apiome.quality_rank_observations WHERE occurred_at < %s",
+            (older_than,),
+        )
+
     def get_effective_role_slug(self, tenant_id: str, user_id: str) -> Optional[str]:
         """The user's effective RBAC role slug in a tenant (IXH-2.3, #5098).
 

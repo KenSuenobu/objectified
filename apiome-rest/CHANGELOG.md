@@ -5,6 +5,42 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.241.0] - 2026-08-02
+
+### Added
+- **Quality-rank telemetry and grade drift over revisions (IXH-2.7, #5102)** —
+  scores were captured per revision but never aggregated across intake, so nobody could see that
+  a team's imports were trending downward, or that one format consistently graded low — which is
+  as likely to be an *adapter gap* as a spec problem, and a per-revision score cannot tell the
+  two apart.
+  - **An append-only observation series.** `apiome.quality_rank_observations` (V239) records one
+    row every time a grade is produced — an import pre-flight, a committed import, an export
+    pre-flight ranking, a delivery gate decision — keyed by tenant, format, adapter and
+    **style-guide version** (the guide's content fingerprint, which is what actually moves a
+    score), plus the policy version, the gate outcome, and the severity tally.
+  - **Attribution, not just grades.** Every observation carries the finding split that separates
+    what apiome's intake is answerable for from what the specification is: `intake.*` findings
+    (an external `$ref` never resolved or refused) are adapter-attributable, everything else is
+    spec-attributable and classed by the rule id's namespace. An unrecognised rule is
+    spec-attributable by construction — the opposite default would blame the adapter for every
+    new rule anybody adds. The adapter's *declared* parser limits
+    (`import_preview_manifest.KNOWN_PARSER_LIMITS`) ride alongside as a separate count and are
+    never folded into the finding tallies.
+  - **Export readiness in the same series.** An export pre-flight records the readiness composite,
+    band and rank of its top-ranked targets, so a target whose readiness is sliding shows up
+    beside the specs feeding it rather than in a second, parallel view.
+  - **One read.** `GET /v1/lint/workspace/quality-ranks` groups the window by `(scope, format)`
+    and returns each group's grade distribution, average score, drift (`scoreDelta`), outcome
+    tally, attribution split, style-guide versions, and a per-day point series. A day with no
+    observation is a **gap** (`averageScore: null`), never a zero. Rendered in the lint workspace
+    as a new **Quality ranks** tab with a selectable 7/30/90/180-day window.
+  - **Bounded by construction.** Recording is best-effort everywhere (telemetry never fails an
+    import, an export, or a pre-flight); an export pre-flight records only the head of its
+    ranking rather than all 30-odd targets; the read caps its window at 180 days and its format
+    count at 24, stating `truncated` rather than dropping rows silently; and the series is pruned
+    by `APIOME_QUALITY_RANK_RETENTION_DAYS` (default 180) on the IXH-6.3 retention sweep tick,
+    which is already the deployment's retention worker.
+
 ## [1.239.0] - 2026-08-02
 
 ### Added

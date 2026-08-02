@@ -119,6 +119,7 @@ from .payload_analysis import (
     unavailable_document,
 )
 from .payload_analyzer import analyze_import
+from .quality_rank_telemetry import observe_import_commit
 from .schema_validation import (
     IMPORT_CONTAINER_KEYS,
     is_root_type_document,
@@ -1786,9 +1787,13 @@ async def run_adapter_import_job(
     # engine schedules it fire-and-forget and only awaits it opportunistically. Strictly
     # best-effort: any fault leaves the adapter's default-scored report untouched.
     guide_tenant_id = str(payload.get("tenant_id") or "")
+    # Kept out of the try so the committed-grade telemetry below can name the guide that
+    # scored the report (or record that none did).
+    resolved_guide = None
     if guide_tenant_id:
         try:
             guide = resolve_style_guide(guide_tenant_id)
+            resolved_guide = guide
             if artifacts is not None:
                 artifacts.style_guide = guide
             # Only a *resolved* guide re-scores. Under the in-code fallback the adapter's
@@ -1893,6 +1898,23 @@ async def run_adapter_import_job(
             state.event(
                 "QUALITY_CAPTURED",
                 f"Captured quality score onto revision {result.version_record_id}.",
+            )
+
+            # Append the *committed* grade to the quality-rank series (IXH-2.7), keyed by the
+            # adapter, the produced format, and the style-guide version that scored it. The
+            # pre-flight half of the series records what a document would score; this records
+            # what actually entered the catalog, so the two are comparable. Best-effort by
+            # contract (the helper swallows its own failures) and off-thread like the capture
+            # above, because the DB driver blocks.
+            await asyncio.to_thread(
+                observe_import_commit,
+                tenant_id=tenant_id,
+                adapter_key=adapter.key,
+                format_key=model.format,
+                lint=lint,
+                style_guide=resolved_guide,
+                project_id=result.project_id,
+                version_record_id=result.version_record_id,
             )
 
         # Record the native analysis against the revision it describes (CPDO-1.2). Best-effort by

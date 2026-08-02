@@ -13,6 +13,9 @@ unbounded table. This sweep:
    ``repository_quota_window_retention_days`` (REPO-7.3, #2801). Those aggregates accrue on
    a schedule of their own, and this tick is already the deployment's retention worker —
    giving them a second background task would buy nothing but another thing to supervise.
+5. Prunes ``quality_rank_observations`` rows older than ``quality_rank_retention_days``
+   (IXH-2.7, #5102) — the same reasoning as step 4: grade observations accrue with import and
+   export traffic, and this tick is the one retention worker they belong on.
 
 Exactly-once / multi-instance safety comes from the claim (SKIP LOCKED), not the scheduler —
 every instance runs the tick; only one wins each row. Failures log and retry next interval.
@@ -26,6 +29,7 @@ from typing import Dict, Optional, Tuple
 
 from .config import settings
 from .database import Database
+from .quality_rank_telemetry import prune_quality_rank_observations
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +83,7 @@ def process_async_job_retention_sweep(
     batch_size: Optional[int] = None,
     history_retention_days: Optional[int] = None,
     quota_window_retention_days: Optional[int] = None,
+    quality_rank_retention_days: Optional[int] = None,
 ) -> Dict[str, int]:
     """Run one retention tick: reap artifacts, delete expired jobs, prune history.
 
@@ -92,10 +97,12 @@ def process_async_job_retention_sweep(
         quota_window_retention_days: REPO-7.3 quota-counter prune window; defaults to
             ``settings.repository_quota_window_retention_days``. ``<= 0`` keeps counters
             forever, which is the documented way to disable this prune.
+        quality_rank_retention_days: IXH-2.7 grade-observation prune window; defaults to
+            ``settings.quality_rank_retention_days``. ``<= 0`` keeps observations forever.
 
     Returns:
         Counts: ``artifacts_reaped``, ``jobs_deleted``, ``history_pruned``,
-        ``quota_windows_pruned``.
+        ``quota_windows_pruned``, ``quality_ranks_pruned``.
     """
     limit = (
         batch_size
@@ -161,18 +168,38 @@ def process_async_job_retention_sweep(
                 "async job retention sweep: quota window prune failed", exc_info=True
             )
 
-    if artifacts_reaped or jobs_deleted or history_pruned or quota_windows_pruned:
+    # The quality-rank series (IXH-2.7) prunes itself the same way, through the telemetry
+    # module's own helper so the retention rule lives with the series it bounds. The window is
+    # resolved here rather than inside the helper so this tick reads one settings object.
+    quality_rank_days = (
+        quality_rank_retention_days
+        if quality_rank_retention_days is not None
+        else int(settings.quality_rank_retention_days)
+    )
+    quality_ranks_pruned = prune_quality_rank_observations(
+        database, now=clock, retention_days=quality_rank_days
+    )
+
+    if (
+        artifacts_reaped
+        or jobs_deleted
+        or history_pruned
+        or quota_windows_pruned
+        or quality_ranks_pruned
+    ):
         logger.info(
             "async job retention sweep: artifacts_reaped=%d jobs_deleted=%d "
-            "history_pruned=%d quota_windows_pruned=%d",
+            "history_pruned=%d quota_windows_pruned=%d quality_ranks_pruned=%d",
             artifacts_reaped,
             jobs_deleted,
             history_pruned,
             quota_windows_pruned,
+            quality_ranks_pruned,
         )
     return {
         "artifacts_reaped": artifacts_reaped,
         "jobs_deleted": jobs_deleted,
         "history_pruned": history_pruned,
         "quota_windows_pruned": quota_windows_pruned,
+        "quality_ranks_pruned": quality_ranks_pruned,
     }

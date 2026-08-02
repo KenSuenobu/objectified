@@ -79,6 +79,45 @@ Daily series that keeps **genuine remediation separate from policy and coverage 
 Consumers must render these as distinct series and never sum remediation with policy
 activity.
 
+### `GET /v1/lint/workspace/quality-ranks?days=30` (IXH-2.7, #5102)
+
+Per-format **import/export grade distribution and drift**, over an append-only observation
+series (`apiome.quality_rank_observations`). One row is recorded every time a grade is
+produced: an import pre-flight, a committed import, an export pre-flight ranking (the top 5
+ranked targets), and a delivery gate decision — keyed by tenant, format, adapter, and
+style-guide version.
+
+Query parameters: `days` (1–180, default 30), `scope` (`import` | `export`), `stage`
+(`preflight` | `committed`), `projectId`.
+
+Each entry in `formats[]` is one `(scope, formatKey)` group and carries:
+
+* `gradeDistribution` / `averageScore` / `latestGrade` and `scoreDelta` — the **drift**:
+  newest scored observation minus the oldest one in the window.
+* `styleGuideVersions` — the style-guide content fingerprints those grades were produced
+  under. More than one means the *scoring rules* changed inside the window, which moves
+  grades without anything about the specifications changing.
+* `adapterFindingCount` / `specFindingCount` / `attribution` — the attribution split.
+  A finding is **adapter-attributable** when it describes something apiome's intake could
+  not do with the source (today: the `intake.*` rules, i.e. an external `$ref` that was
+  never resolved or was refused); everything else is **spec-attributable**, classed by the
+  rule id's namespace. An unrecognised rule is spec-attributable by construction — the
+  opposite default would blame the adapter for every new rule.
+* `declaredParserLimits` — constructs the adapter *declares* it does not read yet
+  (`import_preview_manifest.KNOWN_PARSER_LIMITS`). A declaration about the adapter, never
+  counted as a finding.
+* `averageReadiness` / `bestRank` — export readiness ranks ride the same series.
+* `points[]` — one entry per day. A day with no observation has `observations: 0` and
+  `averageScore: null`; consumers must render that as a **gap**, never as a zero.
+
+The response states its own bounds: `truncated` is true when more formats were graded than
+the `formatLimit` (24) the response describes.
+
+**Retention.** Observations are events, so they are bounded by
+`APIOME_QUALITY_RANK_RETENTION_DAYS` (default 180, comfortably wider than the 180-day read
+window) and pruned on the IXH-6.3 retention sweep tick, which is already the deployment's
+retention worker. `0` or below keeps them forever.
+
 ### `POST /v1/lint/workspace/decisions/bulk`
 
 Body: `{ "items": [{ "sourceFingerprint", "projectId"?, "ruleId"? }] (1–200),
@@ -131,8 +170,10 @@ grids).
 
 ## Implementation map
 
-* Migration: `apiome-db/scripts/V175__lint_workspace_4859.sql`
-* Service (pure): `apiome-rest/src/app/lint_workspace.py`
+* Migration: `apiome-db/scripts/V175__lint_workspace_4859.sql`,
+  `apiome-db/scripts/V239__quality_rank_telemetry_ixh_2_7.sql` (quality ranks)
+* Service (pure): `apiome-rest/src/app/lint_workspace.py`,
+  `apiome-rest/src/app/quality_rank_telemetry.py` (attribution, recording, series)
 * Routes: `apiome-rest/src/app/lint_workspace_routes.py`
 * Shared finding merge: `apiome-rest/src/app/lint_evidence.py`
   (`latest_runs_by_scanner`, `merged_findings_from_runs`)

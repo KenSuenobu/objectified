@@ -72,6 +72,7 @@ from .models import (
     ImportPreflightPolicy,
     ImportPreflightStyleGuide,
 )
+from .quality_rank_telemetry import observe_export_preflight
 from .style_guide_engine import FALLBACK_GUIDE_SOURCE, CompiledStyleGuide, resolve_style_guide
 
 logger = logging.getLogger(__name__)
@@ -774,7 +775,7 @@ def run_export_preflight(
         lint=lint,
         targets=request.targets,
     )
-    return ExportPreflightReport(
+    report = ExportPreflightReport(
         artifact=source.artifact_id,
         version=request.version,
         version_record_id=source.version_record_id,
@@ -787,3 +788,9 @@ def run_export_preflight(
         targets=targets,
         ranking_fingerprint=_ranking_fingerprint(targets),
     )
+    # Append the readiness ranks to the quality-rank series (IXH-2.7). Only the head of the
+    # ranking is recorded — see EXPORT_PREFLIGHT_RANK_SAMPLE — so a pre-flight over 30-odd
+    # registered targets contributes a handful of rows rather than 30. Best-effort by contract:
+    # the helper swallows and logs its own failures, so telemetry never fails a pre-flight.
+    observe_export_preflight(report, tenant_id=tenant_id, project_id=source.artifact_id)
+    return report
