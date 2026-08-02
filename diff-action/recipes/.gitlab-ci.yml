@@ -1,0 +1,41 @@
+# Apiome contract gate for GitLab CI (CTG-2.4 / #4474).
+#
+# Copy this file to your repository root as `.gitlab-ci.yml`, or merge the
+# `apiome-contract-gate` job into your existing pipeline.
+#
+# Required CI/CD variables (Settings -> CI/CD -> Variables, "Masked" + "Protected"):
+#   APIOME_API_KEY    Apiome API key, ideally a CI token scoped to `diff:read`
+#   APIOME_TENANT_ID  tenant slug or UUID
+#
+# The job fails when `apiome diff` exits 1 (changes at or above APIOME_FAIL_ON)
+# and when it exits 2 (auth, network, or parse error).
+
+stages:
+  - contract
+
+apiome-contract-gate:
+  stage: contract
+  image:
+    # Pin a version tag or digest in real pipelines - `latest` drifts.
+    name: ghcr.io/apiome/diff-action:latest
+    # The image entrypoint is the GitHub Action wrapper; GitLab needs a shell.
+    entrypoint: [""]
+  variables:
+    APIOME_SPEC: openapi.yaml
+    APIOME_PROJECT: payments-api@latest
+    APIOME_FAIL_ON: breaking
+    APIOME_BASE_URL: https://api.apiome.dev
+    APIOME_LOAD_DOTENV: "0"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - 'test -n "$APIOME_API_KEY" || { echo "APIOME_API_KEY is not set - add it as a masked CI/CD variable" >&2; exit 2; }'
+    - 'test -n "$APIOME_TENANT_ID" || { echo "APIOME_TENANT_ID is not set - add it as a masked CI/CD variable" >&2; exit 2; }'
+    - 'apiome diff "$APIOME_SPEC" --against "$APIOME_PROJECT" --fail-on "$APIOME_FAIL_ON" --format md > apiome-changelog.md || gate=$?'
+    - 'cat apiome-changelog.md'
+    - 'exit ${gate:-0}'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - apiome-changelog.md

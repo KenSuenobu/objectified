@@ -1,0 +1,101 @@
+name: diff-action
+
+# Shell tests for the diff-action Action (CTG-2.2) plus the CI-recipe smoke
+# matrix for the GitLab / Bitbucket pipelines (CTG-2.4, #4474). The recipe jobs
+# execute the published recipes against a stub CLI, so the documented pipelines
+# cannot rot as the CLI and the container image evolve.
+
+on:
+  push:
+    paths:
+      - "diff-action/**"
+      - "docs/guide/ci-diff-gate.md"
+      - "docs/guide/ci-gitlab-bitbucket.md"
+      - ".github/workflows/diff-action.yml"
+  pull_request:
+    paths:
+      - "diff-action/**"
+      - "docs/guide/ci-diff-gate.md"
+      - "docs/guide/ci-gitlab-bitbucket.md"
+      - ".github/workflows/diff-action.yml"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  shell-tests:
+    name: Action shell tests
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Lint shell scripts
+        run: |
+          cd diff-action
+          bash -n entrypoint.sh ci_entrypoint.sh sticky_comment.sh tests/*.sh
+
+      - name: Run diff-action tests
+        run: bash diff-action/tests/run.sh
+
+  recipes:
+    name: CI recipe smoke (${{ matrix.recipe }})
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: [gitlab, bitbucket]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Execute the ${{ matrix.recipe }} recipe against a stub CLI
+        run: bash diff-action/tests/test_ci_recipes.sh --recipe ${{ matrix.recipe }}
+
+  image-entrypoint:
+    name: Container image entrypoint
+    # Building the image installs the CLI from git, so keep it off every push:
+    # run it for releases (the artifact teams actually pin) and on demand.
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build the diff-action image
+        run: |
+          docker build \
+            --build-arg APIOME_CLI_REF="${CLI_REF}" \
+            -t apiome-diff-action:ci \
+            diff-action
+        env:
+          CLI_REF: ${{ github.event.release.tag_name || github.sha }}
+
+      - name: CLI arguments pass through the entrypoint
+        run: |
+          docker run --rm \
+            -e APIOME_API_KEY=ci-smoke \
+            -e APIOME_TENANT_ID=ci-smoke \
+            apiome-diff-action:ci diff --help | tee /tmp/diff-help.txt
+          grep -q -- "--fail-on" /tmp/diff-help.txt
+
+      - name: Missing credentials exit 2 (never 1)
+        run: |
+          set +e
+          docker run --rm apiome-diff-action:ci diff spec.yaml --against p@latest \
+            >/tmp/diff-nocred.txt 2>&1
+          code=$?
+          set -e
+          cat /tmp/diff-nocred.txt
+          test "${code}" -eq 2
+          grep -q "APIOME_API_KEY is not set" /tmp/diff-nocred.txt
+
+      - name: No arguments still runs Action mode
+        run: |
+          set +e
+          docker run --rm apiome-diff-action:ci >/tmp/diff-action-mode.txt 2>&1
+          code=$?
+          set -e
+          cat /tmp/diff-action-mode.txt
+          test "${code}" -eq 2
+          grep -q "Input 'spec' is required" /tmp/diff-action-mode.txt

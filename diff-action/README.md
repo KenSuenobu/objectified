@@ -53,23 +53,48 @@ Full guide: [`docs/guide/ci-diff-gate.md`](../docs/guide/ci-diff-gate.md).
 | `exit-code` | CLI exit code (`0` / `1` / `2`) |
 | `changelog-path` | Workspace-relative path to the markdown changelog |
 
-## Container image (CTG-2.4)
+## Container image & non-GitHub CI (CTG-2.4)
 
-The Dockerfile installs the CLI and defaults to the Action entrypoint. For bare
-pipeline recipes, override the entrypoint:
+The image is dual-mode, so the same artifact backs every platform:
+
+| Invocation | Mode |
+|---|---|
+| no arguments | GitHub Action (`INPUT_*` env vars) — `entrypoint.sh` |
+| any arguments | pass-through to the `apiome` CLI — `ci_entrypoint.sh` |
 
 ```bash
-docker run --rm --entrypoint apiome \
+docker run --rm \
   -e APIOME_API_KEY -e APIOME_TENANT_ID -e APIOME_BASE_URL \
   -v "$PWD:/work" -w /work \
   ghcr.io/apiome/diff-action:latest \
   diff ./openapi.yaml --against payments-api@latest --fail-on breaking --format md
 ```
 
+The pass-through mode validates `APIOME_API_KEY` / `APIOME_TENANT_ID` (exit `2`,
+never `1`), defaults `APIOME_BASE_URL`, forces `APIOME_LOAD_DOTENV=0` so a committed
+`.env` cannot override CI variables, and tolerates a repeated `apiome` binary name
+(`… <image> apiome diff …`). `--help` / `--version` need no credentials.
+
+Copy-paste pipelines live in [`recipes/`](recipes/):
+
+| File | Platform |
+|---|---|
+| [`recipes/.gitlab-ci.yml`](recipes/.gitlab-ci.yml) | GitLab CI |
+| [`recipes/bitbucket-pipelines.yml`](recipes/bitbucket-pipelines.yml) | Bitbucket Pipelines |
+
+Guide: [`docs/guide/ci-gitlab-bitbucket.md`](../docs/guide/ci-gitlab-bitbucket.md). The guide
+embeds those files verbatim and `tests/test_ci_recipes.sh` fails if either copy drifts.
+
 ## Develop / test
 
 ```bash
 cd diff-action
-bash tests/run.sh          # or: npm test / node-free: bash -n …
-bash -n entrypoint.sh sticky_comment.sh tests/*.sh
+bash tests/run.sh                                  # everything
+bash tests/test_ci_recipes.sh --recipe gitlab      # one recipe (as CI's matrix runs it)
+bash -n entrypoint.sh ci_entrypoint.sh sticky_comment.sh tests/*.sh
 ```
+
+The recipe smoke test extracts each recipe's `variables:` / `script:` blocks and runs them
+under `set -e` against a stub CLI, asserting exit-code propagation (`0`/`1`/`2`), the changelog
+artifact, and fail-fast behaviour when a credential is missing.
+CI: [`.github/workflows/diff-action.yml`](../.github/workflows/diff-action.yml).

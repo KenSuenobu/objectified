@@ -1,10 +1,10 @@
 {
   "name": "@apiome/diff-action",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "GitHub Action wrapping apiome diff with a sticky PR changelog comment",
   "scripts": {
     "test": "bash tests/run.sh",
-    "lint": "bash -n entrypoint.sh sticky_comment.sh tests/run.sh tests/test_entrypoint_exit.sh tests/test_sticky_comment.sh"
+    "lint": "bash -n entrypoint.sh ci_entrypoint.sh sticky_comment.sh tests/run.sh tests/recipe_lib.sh tests/test_ci_entrypoint.sh tests/test_ci_recipes.sh tests/test_entrypoint_exit.sh tests/test_sticky_comment.sh"
   }
 }

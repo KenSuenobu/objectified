@@ -7,6 +7,15 @@ set -uo pipefail
 
 APIOME_BIN="${APIOME_BIN:-apiome}"
 STICKY_BIN="${STICKY_BIN:-sticky_comment.sh}"
+CI_ENTRYPOINT="${CI_ENTRYPOINT:-ci_entrypoint.sh}"
+
+# Dual mode (CTG-2.4 / #4474): the GitHub Action runs this image with no
+# arguments and configures everything through INPUT_* env vars. Any argument
+# means the image was run as a plain CLI wrapper by a GitLab/Bitbucket recipe or
+# `docker run`, so hand off to the pass-through entrypoint.
+if [[ $# -gt 0 ]]; then
+  exec "${CI_ENTRYPOINT}" "$@"
+fi
 WORKSPACE="${GITHUB_WORKSPACE:-.}"
 CHANGELOG_REL="${APIOME_CHANGELOG_PATH:-.apiome-diff-changelog.md}"
 CHANGELOG_PATH="${WORKSPACE%/}/${CHANGELOG_REL#./}"

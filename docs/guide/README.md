@@ -45,6 +45,7 @@ project in ~10 minutes") and the [Golden Path](../GOLDEN_PATH.md) (the executabl
 | **Mock CI action** (start a pinned mock in a job, service URL, digests, auto-cleanup) | [mock-action/README.md](../../mock-action/README.md) |
 | **CLI** quick-start (`apiome …`) | [cli-quickstart.md](cli-quickstart.md) |
 | **CI contract gate** (GitHub Action `apiome/diff-action`) | [ci-diff-gate.md](ci-diff-gate.md) |
+| **CI contract gate on GitLab & Bitbucket** (container image + copy-paste pipelines) | [ci-gitlab-bitbucket.md](ci-gitlab-bitbucket.md) |
 | **MCP** setup quick-start (Claude Desktop / IDE hosts) | [mcp-quickstart.md](mcp-quickstart.md) |
 
 ---
