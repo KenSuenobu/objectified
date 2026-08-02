@@ -75,6 +75,16 @@ export type FailureClass =
   | 'unresolvable-ref'
   | 'version-out-of-range';
 
+/**
+ * How a corpus file came to exist — IXH-1.9 (#5095).
+ * `hand-authored` files were written in this repository from the format
+ * specification; `derived` files were copied or adapted from a third-party
+ * document (and link it in `source_url`); `captured` files were recorded from a
+ * real running system (and state how they were anonymized in `anonymization`).
+ * An entry that omits `origin` is hand-authored.
+ */
+export type Origin = 'hand-authored' | 'derived' | 'captured';
+
 /** README grouping section for a corpus directory. */
 export type CorpusCategory =
   | 'rest-http'
@@ -108,9 +118,17 @@ export interface CorpusEntry {
   /** Tags for what the file demonstrates (e.g. `oneOf`, `occurs-depending-on`). */
   features: string[];
   expected_outcome: ExpectedOutcome;
+  /** `hand-authored`, or the upstream project / capturing system name. */
   source: string;
+  /** SPDX identifier from the corpus allowlist (`scripts/check_corpus_provenance.py`). */
   license: string;
   provenance: string;
+  /** How the file came to exist; absent means `hand-authored`. */
+  origin?: Origin;
+  /** Upstream document URL (present on, and only on, `derived` entries). */
+  source_url?: string;
+  /** How a captured payload was anonymized (present on, and only on, `captured` entries). */
+  anonymization?: string;
   notes?: string;
   /** Ladder rung the example occupies (present on every valid entry). */
   rung?: Rung;
@@ -165,6 +183,8 @@ export interface CorpusFilter {
   failureClass?: FailureClass;
   /** Intake guard to match. */
   guard?: IntakeGuard;
+  /** Origin to match; `hand-authored` also selects entries that omit the field. */
+  origin?: Origin;
 }
 
 const VALIDITY_CLASSES: ReadonlySet<string> = new Set([
@@ -198,6 +218,7 @@ const INTAKE_GUARDS: ReadonlySet<string> = new Set([
   'archive-path-traversal',
   'secret-scrubbing',
 ]);
+const ORIGINS: ReadonlySet<string> = new Set(['hand-authored', 'derived', 'captured']);
 const FAILURE_CLASSES: ReadonlySet<string> = new Set([
   'syntactic',
   'semantic',
@@ -271,6 +292,14 @@ function assertEntry(value: unknown, index: number): CorpusEntry {
   if (entry.notes !== undefined && typeof entry.notes !== 'string') {
     fail(context, 'notes must be a string when present');
   }
+  if (entry.origin !== undefined && !ORIGINS.has(entry.origin as string)) {
+    fail(context, `invalid origin ${JSON.stringify(entry.origin)}`);
+  }
+  for (const field of ['source_url', 'anonymization'] as const) {
+    if (entry[field] !== undefined && (typeof entry[field] !== 'string' || !entry[field])) {
+      fail(context, `${field} must be a non-empty string when present`);
+    }
+  }
   if (entry.rung !== undefined && !RUNGS.has(entry.rung as string)) {
     fail(context, `invalid rung ${JSON.stringify(entry.rung)}`);
   }
@@ -342,14 +371,26 @@ export function loadManifest(): CorpusManifest {
 }
 
 /**
+ * The origin an entry declares, with the omitted-means-hand-authored default
+ * applied.
+ *
+ * @param entry - The manifest entry.
+ * @returns The entry's effective origin.
+ */
+export function effectiveOrigin(entry: CorpusEntry): Origin {
+  return entry.origin ?? 'hand-authored';
+}
+
+/**
  * Return the corpus entries matching every given filter (AND semantics).
  *
- * @param filter - Optional format / validity class / feature / adapter-key
- *   filters; with no filters the full corpus is returned.
+ * @param filter - Optional format / validity class / feature / adapter-key /
+ *   rung / failure-class / guard / origin filters; with no filters the full
+ *   corpus is returned.
  * @returns Matching entries in manifest (path-sorted) order.
  */
 export function loadCorpus(filter: CorpusFilter = {}): CorpusEntry[] {
-  const { format, validityClass, feature, adapterKey, rung, failureClass, guard } = filter;
+  const { format, validityClass, feature, adapterKey, rung, failureClass, guard, origin } = filter;
   return loadManifest().entries.filter(
     (entry) =>
       (format === undefined || entry.format === format) &&
@@ -358,7 +399,8 @@ export function loadCorpus(filter: CorpusFilter = {}): CorpusEntry[] {
       (adapterKey === undefined || entry.adapter_key === adapterKey) &&
       (rung === undefined || entry.rung === rung) &&
       (failureClass === undefined || entry.failure_class === failureClass) &&
-      (guard === undefined || entry.guard === guard),
+      (guard === undefined || entry.guard === guard) &&
+      (origin === undefined || effectiveOrigin(entry) === origin),
   );
 }
 

@@ -5,6 +5,33 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.239.0] - 2026-08-02
+
+### Added
+- **Corpus provenance, licensing and contributor guide (IXH-1.9, #5095)** —
+  real-world examples are the corpus's most valuable tier and the easiest to add carelessly:
+  a third-party spec carries a license the repository must honor, and a payload captured from
+  a running system carries personal data that must never reach git history. Neither was tracked.
+  - **Declared origin.** Manifest entries gained `origin`
+    (`hand-authored` | `derived` | `captured`, absent means hand-authored), `source_url` (the
+    upstream document a derived entry came from) and `anonymization` (how a captured payload was
+    scrubbed before commit). Both loaders expose them — `corpus_loader.CorpusEntry.effective_origin`
+    plus a `load_corpus(origin=…)` filter, and the same in `apiome-ui/lib/corpus/corpus.ts`.
+  - **An enforced gate.** `scripts/check_corpus_provenance.py` is a stdlib-only CI check: every
+    entry with a non-empty `source` must declare a `license`, that license must be on a reviewed
+    SPDX allowlist (copyleft, share-alike and non-commercial terms fail), `origin` and `source`
+    must agree, derived entries must link their upstream, and captured entries must carry an
+    anonymization statement under a license the contributor can actually grant. It runs as its own
+    lightweight workflow (`.github/workflows/corpus-provenance.yml`) so a manifest-only pull
+    request is gated even though the corpus lives under `apiome-ui/`.
+  - **The guide.** `docs/CORPUS_CONTRIBUTOR_GUIDE.md` documents the tiers and the six-rung ladder,
+    every manifest field, the licensing rules (including what to do when the upstream license is
+    not acceptable — reconstruct, do not vendor), the anonymization rule for captured payloads,
+    the end-to-end add-an-example workflow, and the reviewer checklist. The generated examples
+    README links it and now publishes the corpus's licensing bill of materials by origin.
+  - **Tests.** `tests/test_corpus_provenance.py` fires every rule against a purpose-built bad
+    entry, asserts the committed corpus is clean, and pins the guide/README linkage.
+
 ## [1.238.0] - 2026-08-02
 
 ### Added

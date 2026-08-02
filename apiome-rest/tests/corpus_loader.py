@@ -44,6 +44,7 @@ __all__ = [
     "FailureClass",
     "FilesetRole",
     "IntakeGuard",
+    "Origin",
     "Rung",
     "ValidityClass",
     "corpus_files",
@@ -149,6 +150,21 @@ class FailureClass(str, Enum):
     VERSION_OUT_OF_RANGE = "version-out-of-range"  # unsupported format version
 
 
+class Origin(str, Enum):
+    """How a corpus file came to exist — IXH-1.9 (#5095).
+
+    ``HAND_AUTHORED`` files were written in this repository from the format
+    specification; ``DERIVED`` files were copied or adapted from a third-party
+    document (and link it in ``source_url``); ``CAPTURED`` files were recorded
+    from a real running system (and state how they were anonymized in
+    ``anonymization``). An entry that omits ``origin`` is hand-authored.
+    """
+
+    HAND_AUTHORED = "hand-authored"
+    DERIVED = "derived"
+    CAPTURED = "captured"
+
+
 class CorpusCategory(str, Enum):
     """README grouping section for a corpus directory."""
 
@@ -188,9 +204,16 @@ class CorpusEntry(BaseModel):
         features: Tags for what the file demonstrates (spec keywords keep native
             casing, e.g. ``oneOf``; concepts are kebab-case).
         expected_outcome: See :class:`ExpectedOutcome`.
-        source: Where the file came from (e.g. ``hand-authored``).
-        license: SPDX license identifier covering the file's content.
+        source: Where the file came from (the reserved ``hand-authored``, or the
+            upstream project / capturing system name).
+        license: SPDX license identifier covering the file's content (must be on
+            the corpus allowlist — ``scripts/check_corpus_provenance.py``).
         provenance: One-sentence origin story.
+        origin: How the file came to exist (see :class:`Origin`); ``None`` means
+            hand-authored, which :attr:`effective_origin` resolves.
+        source_url: Upstream document URL (set on, and only on, derived entries).
+        anonymization: How a captured payload was anonymized before commit (set
+            on, and only on, captured entries).
         notes: Optional caveats (e.g. known detection deviations).
         rung: Ladder rung the example occupies (required on valid entries).
         fileset_role: Role inside a multi-file set (set only for files in a
@@ -216,12 +239,20 @@ class CorpusEntry(BaseModel):
     source: str
     license: str
     provenance: str
+    origin: Optional[Origin] = None
+    source_url: Optional[str] = None
+    anonymization: Optional[str] = None
     notes: Optional[str] = None
     rung: Optional[Rung] = None
     fileset_role: Optional[FilesetRole] = None
     failure_class: Optional[FailureClass] = None
     expected_error_code: Optional[str] = None
     guard: Optional[IntakeGuard] = None
+
+    @property
+    def effective_origin(self) -> Origin:
+        """The entry's origin, with the omitted-means-hand-authored default applied."""
+        return self.origin or Origin.HAND_AUTHORED
 
     @property
     def absolute_path(self) -> Path:
@@ -297,6 +328,7 @@ def load_corpus(
     rung: Optional[Rung | str] = None,
     failure_class: Optional[FailureClass | str] = None,
     guard: Optional[IntakeGuard | str] = None,
+    origin: Optional[Origin | str] = None,
 ) -> List[CorpusEntry]:
     """Return the corpus entries matching every given filter (AND semantics).
 
@@ -308,6 +340,9 @@ def load_corpus(
         rung: Ladder rung to match, as enum or string.
         failure_class: IXH-1.3 failure class to match, as enum or string.
         guard: IXH-1.4 intake guard to match, as enum or string.
+        origin: IXH-1.9 origin to match, as enum or string; matched against
+            :attr:`CorpusEntry.effective_origin`, so ``"hand-authored"`` also
+            selects entries that omit the field.
 
     Returns:
         Matching entries in manifest (path-sorted) order; empty list when
@@ -317,6 +352,7 @@ def load_corpus(
     wanted_rung = Rung(rung) if rung is not None else None
     wanted_failure = FailureClass(failure_class) if failure_class is not None else None
     wanted_guard = IntakeGuard(guard) if guard is not None else None
+    wanted_origin = Origin(origin) if origin is not None else None
     entries = load_manifest().entries
     return [
         entry
@@ -328,6 +364,7 @@ def load_corpus(
         and (wanted_rung is None or entry.rung is wanted_rung)
         and (wanted_failure is None or entry.failure_class is wanted_failure)
         and (wanted_guard is None or entry.guard is wanted_guard)
+        and (wanted_origin is None or entry.effective_origin is wanted_origin)
     ]
 
 

@@ -60,6 +60,68 @@ def _rung_cell(entry: Dict[str, Any]) -> str:
     return f"{rung} ({role})" if role else rung
 
 
+def _origin_of(entry: Dict[str, Any]) -> str:
+    """Return an entry's declared origin, defaulting to ``hand-authored`` (IXH-1.9)."""
+    return entry.get("origin") or "hand-authored"
+
+
+def _provenance_lines(entries: List[Dict[str, Any]]) -> List[str]:
+    """Render the provenance section: origin/license summary plus third-party detail.
+
+    The summary table always renders (it is the corpus's licensing bill of
+    materials); the per-file table renders only when the corpus actually holds
+    entries whose bytes came from somewhere else.
+
+    Args:
+        entries: The manifest's ``entries`` list.
+
+    Returns:
+        The section's Markdown lines.
+    """
+    by_origin: Dict[str, List[Dict[str, Any]]] = {}
+    for entry in entries:
+        by_origin.setdefault(_origin_of(entry), []).append(entry)
+
+    lines = [
+        "",
+        "## Provenance and licensing",
+        "",
+        "Every entry declares where its bytes came from (`origin`), under what license, and — for "
+        "payloads captured from a real system — how they were anonymized. See the "
+        "[corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md); "
+        "`scripts/check_corpus_provenance.py` enforces the rules in CI.",
+        "",
+        "| Origin | Files | Licenses |",
+        "| --- | --- | --- |",
+    ]
+    for origin in sorted(by_origin):
+        licenses = sorted({entry["license"] for entry in by_origin[origin]})
+        lines.append(
+            f"| `{origin}` | {len(by_origin[origin])} | "
+            f"{_cell(', '.join(f'`{name}`' for name in licenses))} |"
+        )
+
+    third_party = sorted(
+        (entry for entry in entries if _origin_of(entry) != "hand-authored"),
+        key=lambda entry: entry["path"],
+    )
+    if third_party:
+        lines += [
+            "",
+            "### Third-party and captured files",
+            "",
+            "| File | Origin | Source | License | Upstream / anonymization |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+        for entry in third_party:
+            detail = entry.get("source_url") or entry.get("anonymization") or "—"
+            lines.append(
+                f"| `{entry['path']}` | {_origin_of(entry)} | {_cell(entry['source'])} "
+                f"| `{entry['license']}` | {_cell(detail)} |"
+            )
+    return lines
+
+
 def build_readme(manifest: Dict[str, Any]) -> str:
     """Render the full README.md content for a parsed corpus manifest.
 
@@ -93,6 +155,14 @@ def build_readme(manifest: Dict[str, Any]) -> str:
         "[`corpus.manifest.json`](corpus.manifest.json) (schema: "
         "[`corpus.schema.json`](corpus.schema.json)). Edit the manifest, then run "
         "`python3 scripts/generate_examples_readme.py` from the repo root; CI fails on drift."
+    )
+    out("")
+    out(
+        "> **Adding an example?** Read the "
+        "[corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the "
+        "ladder, every manifest field, the licensing rules for documents derived from third-party "
+        "specs, the anonymization rule for captured payloads, and the review checklist. "
+        "`python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI."
     )
     out("")
     out(
@@ -200,6 +270,8 @@ def build_readme(manifest: Dict[str, Any]) -> str:
         for adapter in sorted(waivers):
             for rung in sorted(waivers[adapter]):
                 out(f"| `{adapter}` | {rung} | {_cell(waivers[adapter][rung])} |")
+
+    lines.extend(_provenance_lines(entries))
 
     out("")
     out("## Trying an import")

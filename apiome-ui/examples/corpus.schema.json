@@ -83,6 +83,20 @@
     },
     "entry": {
       "type": "object",
+      "allOf": [
+        {
+          "description": "A derived entry links the upstream document it came from, and only a derived entry may.",
+          "if": { "properties": { "origin": { "const": "derived" } }, "required": ["origin"] },
+          "then": { "required": ["source_url"] },
+          "else": { "not": { "required": ["source_url"] } }
+        },
+        {
+          "description": "A captured entry states how it was anonymized, and only a captured entry may.",
+          "if": { "properties": { "origin": { "const": "captured" } }, "required": ["origin"] },
+          "then": { "required": ["anonymization"] },
+          "else": { "not": { "required": ["anonymization"] } }
+        }
+      ],
       "required": [
         "path",
         "format",
@@ -150,17 +164,31 @@
           "enum": ["imports", "rejects", "imports_with_warnings"]
         },
         "source": {
-          "description": "Where the file came from (hand-authored, or an upstream project name).",
+          "description": "Where the file came from: the literal `hand-authored` for files written in-repo, or the upstream project / capturing system name otherwise. Must agree with `origin` (IXH-1.9).",
           "type": "string",
           "minLength": 1
         },
         "license": {
-          "description": "SPDX license identifier covering the file's content.",
+          "description": "SPDX license identifier covering the file's content. Must be one of the licenses approved for the corpus (docs/CORPUS_CONTRIBUTOR_GUIDE.md); scripts/check_corpus_provenance.py enforces the allowlist.",
           "type": "string",
           "minLength": 1
         },
         "provenance": {
           "description": "One-sentence origin story for the file.",
+          "type": "string",
+          "minLength": 1
+        },
+        "origin": {
+          "description": "How the file came to exist (IXH-1.9, #5095): hand-authored (written in-repo from the format specification), derived (copied or adapted from a third-party document), or captured (recorded from a real running system). Absent means hand-authored.",
+          "enum": ["hand-authored", "derived", "captured"]
+        },
+        "source_url": {
+          "description": "Public URL of the upstream document a `derived` entry came from. Required for (and only allowed on) derived entries.",
+          "type": "string",
+          "pattern": "^https?://[^\\s]+$"
+        },
+        "anonymization": {
+          "description": "One-sentence statement of how a `captured` payload was anonymized before it was committed (what was removed or replaced, and with what). Required for (and only allowed on) captured entries.",
           "type": "string",
           "minLength": 1
         },
