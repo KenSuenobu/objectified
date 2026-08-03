@@ -92,6 +92,8 @@ const FORMAT_LABELS: Readonly<Record<string, string>> = {
   raml: 'RAML',
   postman: 'Postman',
   'http-file': 'HTTP Request File',
+  kong: 'Kong Declarative Config',
+  'gateway-api': 'Gateway API HTTPRoute',
   odata: 'OData',
   wsdl: 'WSDL',
   wadl: 'WADL',

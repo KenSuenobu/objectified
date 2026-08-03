@@ -1,0 +1,185 @@
+{
+  "adapter": "gateway-api",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "gateway": {
+        "auth": [],
+        "credential_redactions": 0,
+        "flavor": "gateway-api",
+        "global_plugins": [],
+        "ignored_constructs": [
+          {
+            "construct": "Gateway",
+            "count": 1,
+            "reason": "only HTTPRoute resources are modeled; other Gateway API kinds describe infrastructure, not the HTTP surface"
+          }
+        ],
+        "operation_count": 3,
+        "route_count": 2,
+        "schemaless_operation_count": 3,
+        "unmapped_plugins": []
+      }
+    },
+    "format": "gateway-api",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "gateway-api/03-multi-route-stream.yaml",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://shop.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "shop/catalog",
+        "name": "shop/catalog",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "catalog-svc",
+                  "port": 8080
+                }
+              ],
+              "gateway_route": "catalog",
+              "hosts": [
+                "shop.example.com"
+              ],
+              "namespace": "shop",
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/catalog"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/catalog",
+            "key": "GET /catalog",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /catalog",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "shop/orders",
+        "name": "shop/orders",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "orders-svc",
+                  "port": 8080
+                }
+              ],
+              "gateway_route": "orders",
+              "hosts": [
+                "shop.example.com"
+              ],
+              "namespace": "shop",
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/orders"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/orders",
+            "key": "GET /orders",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /orders",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "orders-svc",
+                  "port": 8080
+                }
+              ],
+              "gateway_route": "orders",
+              "hosts": [
+                "shop.example.com"
+              ],
+              "namespace": "shop",
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/orders"
+              }
+            },
+            "http_method": "POST",
+            "http_path": "/orders",
+            "key": "POST /orders",
+            "kind": "request_response",
+            "messages": [],
+            "name": "POST /orders",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "gateway-api/03-multi-route-stream.yaml",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "gateway-api/03-multi-route-stream.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 2,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "gateway-api"
+  },
+  "fingerprint": "sha256:e4db15a6210ef349fed080373b9118444c27c824cffa5136abea4b637c5f79aa",
+  "lint": {
+    "findings": 4,
+    "grade": "B",
+    "report_fingerprint": "19ef93f7e96aa4dac0a5263835423297b35a7ab4dc3b388d79cdbc17241ff520",
+    "score": 87,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

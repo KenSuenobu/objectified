@@ -1,0 +1,21 @@
+_format_version: "3.0"
+services:
+  - name: users-service
+    url: https://users.internal:8443/api
+    plugins:
+      - name: key-auth
+        config:
+          key_names: [x-api-key]
+    routes:
+      - name: users-collection
+        hosts: [api.example.com]
+        paths: ["/users"]
+        methods: [GET, POST]
+        protocols: [https]
+        strip_path: false
+      - name: users-item
+        hosts: [api.example.com]
+        paths: ["~/users/(?<userId>\\d+)$"]
+        methods: [GET, PUT, DELETE]
+        protocols: [https]
+        strip_path: false

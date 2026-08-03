@@ -201,6 +201,7 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         "body_schema",
         "http_file_variables",
         "overlay",
+        "gateway",
     }
 )
 
@@ -326,6 +327,22 @@ KNOWN_PARSER_LIMITS: Dict[str, Tuple[ParserLimit, ...]] = {
             construct="top-level event batch arrays",
             detail="A JSON document whose root is a CloudEvents batch array is rejected "
             "by the parser; only single-event documents are read.",
+        ),
+    ),
+    "kong": (
+        ParserLimit(
+            construct="expression-based routes",
+            detail="Kong 3.x `expression` router rules are preserved verbatim in extras "
+            "but not evaluated; a route defined only by an expression imports without "
+            "its match conditions.",
+        ),
+    ),
+    "gateway-api": (
+        ParserLimit(
+            construct="ExtensionRef filters and policy attachments",
+            detail="HTTPRoute ExtensionRef filters and external policy attachments "
+            "(for example auth policies) reference resources outside the manifest; "
+            "they are preserved verbatim in extras, not resolved.",
         ),
     ),
 }
@@ -982,6 +999,7 @@ def _document_scope_rows(
             _ = index
 
     ledger.extend(_overlay_provenance_rows(api))
+    ledger.extend(_gateway_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1042,6 +1060,128 @@ def _overlay_provenance_rows(api: CanonicalApi) -> List[CoverageEntry]:
                     f"The overlay application recorded {total} change(s) in total; "
                     f"only the first {len(report.get('provenance') or [])} carry "
                     "itemized provenance rows here."
+                ),
+                document_scoped=True,
+            )
+        )
+    return rows
+
+
+#: Human labels for the gateway-config flavors (IXH-7.8).
+_GATEWAY_FLAVOR_LABELS = {
+    "kong": "Kong declarative config",
+    "gateway-api": "Gateway API HTTPRoute manifests",
+}
+
+
+def _gateway_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the IXH-7.8 gateway-config report as document-scoped ledger rows.
+
+    Gateway configurations declare routes but no request/response schemas. The
+    schema absence is stated as ``inferred`` / ``source_incomplete`` — a
+    capability limit of the *source format*, **never** a drop — alongside one
+    row per inferred auth scheme, one ``partially-mapped`` row per auth plugin
+    with no canonical mapping (its config rides in extras), one
+    ``unsupported-by-canonical-model`` row per recognized-but-unmodeled source
+    construct, and a ``mapped`` statement of credential redaction so the scrub
+    is visible, not silent.
+    """
+    report = api.extras.get("gateway") if isinstance(api.extras, dict) else None
+    if not isinstance(report, dict):
+        return []
+    flavor = str(report.get("flavor") or "")
+    label = _GATEWAY_FLAVOR_LABELS.get(flavor, "This gateway configuration")
+    rows: List[CoverageEntry] = []
+
+    inferred_status, inferred_reason = STATUS_FOR_COVERAGE[CoverageClass.INFERRED]
+    schemaless = int(report.get("schemaless_operation_count") or 0)
+    if schemaless:
+        rows.append(
+            CoverageEntry(
+                source_construct="gateway#request-response-schemas",
+                coverage=CoverageClass.INFERRED,
+                status=inferred_status,
+                reason=inferred_reason,
+                detail=(
+                    f"{label} declares routes without request/response schemas; "
+                    f"{schemaless} operation(s) imported without message payloads. "
+                    "This is a capability limit of the source format, not a drop — "
+                    "supply schemas and use the convert flow to promote the catalog "
+                    "item."
+                ),
+                document_scoped=True,
+            )
+        )
+    for hint in report.get("auth") or []:
+        if not isinstance(hint, dict) or not hint.get("scheme"):
+            continue
+        rows.append(
+            CoverageEntry(
+                source_construct=f"gateway#auth.{hint.get('plugin')}",
+                coverage=CoverageClass.INFERRED,
+                status=inferred_status,
+                reason=inferred_reason,
+                detail=(
+                    f"Auth scheme {hint.get('scheme')!r} inferred from plugin "
+                    f"{hint.get('plugin')!r} ({hint.get('scope')} scope) — mapped to "
+                    "canonical security, labelled inferred, never presented as "
+                    "declared."
+                ),
+                document_scoped=True,
+            )
+        )
+
+    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
+    for plugin in report.get("unmapped_plugins") or []:
+        if not isinstance(plugin, dict) or not plugin.get("name"):
+            continue
+        rows.append(
+            CoverageEntry(
+                source_construct=f"gateway#plugin.{plugin.get('name')}",
+                coverage=CoverageClass.PARTIALLY_MAPPED,
+                status=partial_status,
+                reason=partial_reason,
+                detail=(
+                    f"Auth plugin {plugin.get('name')!r} ({plugin.get('scope')} scope) "
+                    "has no canonical security mapping; its configuration is preserved "
+                    "verbatim in extras."
+                ),
+                document_scoped=True,
+            )
+        )
+
+    dropped_status, dropped_reason = STATUS_FOR_COVERAGE[
+        CoverageClass.UNSUPPORTED_BY_CANONICAL_MODEL
+    ]
+    for entry in report.get("ignored_constructs") or []:
+        if not isinstance(entry, dict) or not entry.get("construct"):
+            continue
+        rows.append(
+            CoverageEntry(
+                source_construct=f"gateway#{entry.get('construct')}",
+                coverage=CoverageClass.UNSUPPORTED_BY_CANONICAL_MODEL,
+                status=dropped_status,
+                reason=dropped_reason,
+                detail=(
+                    f"Source construct {entry.get('construct')!r} "
+                    f"({entry.get('count')} entr(y/ies)): {entry.get('reason')}."
+                ),
+                document_scoped=True,
+            )
+        )
+
+    redactions = int(report.get("credential_redactions") or 0)
+    if redactions:
+        mapped_status, mapped_reason = STATUS_FOR_COVERAGE[CoverageClass.MAPPED]
+        rows.append(
+            CoverageEntry(
+                source_construct="gateway#credential-redactions",
+                coverage=CoverageClass.MAPPED,
+                status=mapped_status,
+                reason=mapped_reason,
+                detail=(
+                    f"{redactions} credential value(s) were redacted at parse time; "
+                    "counts are retained, values are never imported."
                 ),
                 document_scoped=True,
             )

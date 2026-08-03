@@ -1,0 +1,62 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "name": "storefront-bff",
+      "url": "http://storefront-bff.prod.svc:3000",
+      "routes": [
+        {
+          "name": "storefront-pages",
+          "hosts": ["www.acme-shop.example"],
+          "paths": ["/", "/collections", "/cart"],
+          "methods": ["GET"]
+        },
+        {
+          "name": "storefront-checkout",
+          "hosts": ["www.acme-shop.example"],
+          "paths": ["/checkout"],
+          "methods": ["GET", "POST"],
+          "protocols": ["https"]
+        }
+      ]
+    },
+    {
+      "name": "inventory-api",
+      "protocol": "http",
+      "host": "inventory.prod.svc",
+      "port": 8080,
+      "plugins": [
+        {
+          "name": "key-auth",
+          "config": { "key_names": ["apikey"] }
+        }
+      ],
+      "routes": [
+        {
+          "name": "inventory-skus",
+          "hosts": ["api.acme-shop.example"],
+          "paths": ["~/inventory/skus/(?<sku>[A-Z0-9-]+)$", "/inventory/skus"],
+          "methods": ["GET", "PATCH"]
+        }
+      ]
+    },
+    {
+      "name": "search-api",
+      "url": "http://search.prod.svc:9200",
+      "routes": [
+        {
+          "name": "search",
+          "hosts": ["api.acme-shop.example"],
+          "paths": ["/search"],
+          "methods": ["GET"]
+        }
+      ]
+    }
+  ],
+  "plugins": [
+    {
+      "name": "rate-limiting",
+      "config": { "second": 50, "policy": "redis" }
+    }
+  ]
+}

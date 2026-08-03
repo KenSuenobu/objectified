@@ -44,6 +44,7 @@ from .import_source import ImportSource
 __all__ = [
     "PUBLISHABLE_FORMATS",
     "AS_CURRENT_TARGETS",
+    "GATEWAY_CONFIG_FORMATS",
     "ImportTarget",
     "ImportRoutingDecision",
     "decide_import_routing",
@@ -58,6 +59,13 @@ __all__ = [
 PUBLISHABLE_FORMATS = frozenset(
     {"openapi-3.0", "openapi-3.1", "openapi-3.2", "swagger-2.0"}
 )
+
+#: Emitted format keys of the gateway-configuration adapters (IXH-7.8). They route to
+#: the catalog like every other non-OpenAPI format; the only specialization is the
+#: routing *reason*, which states the partial-fidelity cause (routes without schemas)
+#: and the promotion path, because that is exactly what the catalog's non-publishable
+#: staging exists for.
+GATEWAY_CONFIG_FORMATS = frozenset({"kong", "kong-declarative", "gateway-api", "httproute"})
 
 #: The explicit ``requested_target`` values (from the JSON Schema disambiguation prompt,
 #: MFI-26.7) that mean "import the schema **as current** into Types/Projects" rather than
@@ -234,6 +242,30 @@ def decide_import_routing(
             reason=(
                 f"{fmt_label} imported as current type/schema "
                 f"(requested target {requested!r}) → Types/Projects, not a catalog item."
+            ),
+            source=source,
+            paradigm=paradigm.value,
+            format=fmt,
+            operation_count=operation_count,
+            type_count=type_count,
+            channel_count=channel_count,
+        )
+
+    # --- gateway configs → catalog, with the partial-fidelity reason stated ------
+    # Same destination as every non-OpenAPI format; the reason names the capability
+    # limit (routes without request/response schemas) and the promotion path, so the
+    # UI can state *why* this import is staged rather than published (IXH-7.8).
+    if fmt_key in GATEWAY_CONFIG_FORMATS:
+        fmt_label = fmt or paradigm.value
+        return ImportRoutingDecision(
+            target=ImportTarget.CATALOG,
+            publishable=False,
+            schemas_only=False,
+            reason=(
+                f"{fmt_label} is a gateway routing surface ({operation_count} "
+                "operation(s)) with no request/response schemas — a capability limit "
+                "of the format, not a loss → non-publishable catalog item; supply "
+                "schemas and use the convert flow to promote."
             ),
             source=source,
             paradigm=paradigm.value,

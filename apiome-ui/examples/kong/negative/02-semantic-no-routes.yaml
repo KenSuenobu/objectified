@@ -1,0 +1,4 @@
+_format_version: "3.0"
+services:
+  - name: routeless-service
+    url: http://routeless.internal:8080

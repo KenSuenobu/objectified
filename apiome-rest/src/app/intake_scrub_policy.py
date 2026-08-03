@@ -78,10 +78,12 @@ TIER_DEFAULT = "default"
 #: by name. These are the MFI-EPIC-32 collection and captured-traffic formats plus the
 #: request-file adapter that shares their inferred-spec pipeline (IXH-7.4): all of them carry
 #: real request material — bearer tokens, cookie jars, signed URLs — as a matter of course.
+#: ``kong`` (IXH-7.8) is listed for the same reason: declarative configs routinely embed
+#: consumer credentials (key-auth keys, basic-auth passwords, JWT secrets).
 #: Keys match :attr:`app.import_source.ImportSource.key`; listing a format that does not exist
 #: yet is harmless, and is how 29.6 lands ahead of the adapters it protects.
 ALWAYS_ENFORCED_FORMATS: FrozenSet[str] = frozenset(
-    {"bruno", "har", "http-file", "insomnia", "postman"}
+    {"bruno", "har", "http-file", "insomnia", "kong", "postman"}
 )
 
 

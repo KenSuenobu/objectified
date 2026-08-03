@@ -1,0 +1,73 @@
+_format_version: "3.0"
+services:
+  - name: identity-service
+    url: https://identity.internal:8443
+    plugins:
+      - name: jwt
+        config:
+          claims_to_verify: [exp]
+      - name: rate-limiting
+        config:
+          minute: 120
+          policy: local
+    routes:
+      - name: identity-tokens
+        hosts: [auth.example.com]
+        paths: ["/oauth/token"]
+        methods: [POST]
+      - name: identity-userinfo
+        hosts: [auth.example.com]
+        paths: ["/userinfo"]
+        methods: [GET]
+  - name: billing-service
+    url: https://billing.internal:8443
+    plugins:
+      - name: oauth2
+        config:
+          scopes: [billing.read, billing.write]
+          enable_client_credentials: true
+          provision_key: not-a-real-provision-key
+    routes:
+      - name: billing-invoices
+        hosts: [api.example.com]
+        paths: ["~/billing/invoices/(?<invoiceId>[0-9a-f-]+)$", "/billing/invoices"]
+        methods: [GET, POST]
+  - name: partner-service
+    url: http://partner.internal:8085
+    plugins:
+      - name: hmac-auth
+        config:
+          clock_skew: 300
+      - name: basic-auth
+    routes:
+      - name: partner-feed
+        hosts: [partner.example.com]
+        paths: ["/feed"]
+  - name: admin-service
+    url: http://admin.internal:9000
+    routes:
+      - name: admin-any
+        hosts: [admin.example.com]
+        paths: ["/admin"]
+        headers:
+          x-admin-realm: [internal]
+plugins:
+  - name: cors
+    config:
+      origins: ["https://app.example.com"]
+  - name: prometheus
+  - name: rate-limiting
+    service: partner-service
+    config:
+      minute: 10
+consumers:
+  - username: reporting-bot
+    keyauth_credentials:
+      - key: fixture-only-key-value
+  - username: legacy-partner
+    basicauth_credentials:
+      - username: legacy-partner
+        password: fixture-only-password
+    jwt_secrets:
+      - algorithm: HS256
+        secret: fixture-only-jwt-secret

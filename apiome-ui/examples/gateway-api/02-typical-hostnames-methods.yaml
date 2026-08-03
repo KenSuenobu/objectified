@@ -1,0 +1,32 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: users
+  namespace: identity
+spec:
+  parentRefs:
+    - name: main-gateway
+      namespace: gateway-system
+  hostnames:
+    - api.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /users
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /users
+          method: POST
+      backendRefs:
+        - name: users-svc
+          port: 8080
+    - matches:
+        - path:
+            type: RegularExpression
+            value: "/users/(?<userId>[0-9]+)"
+          method: GET
+      backendRefs:
+        - name: users-svc
+          port: 8080

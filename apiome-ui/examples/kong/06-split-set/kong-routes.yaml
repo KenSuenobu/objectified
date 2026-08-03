@@ -1,0 +1,11 @@
+_format_version: "3.0"
+routes:
+  - name: notifications-status
+    service: notifications-service
+    hosts: [api.example.com]
+    paths: ["~/notifications/(?<notificationId>[0-9a-f-]+)/status$"]
+    methods: [GET]
+plugins:
+  - name: correlation-id
+    config:
+      header_name: x-request-id

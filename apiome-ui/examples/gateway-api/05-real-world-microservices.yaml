@@ -1,0 +1,70 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: frontend
+  namespace: web
+  labels:
+    app.kubernetes.io/part-of: acme-shop
+spec:
+  parentRefs:
+    - name: public-gateway
+      namespace: gateway-system
+  hostnames: [www.acme-shop.example]
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+          method: GET
+      backendRefs:
+        - name: frontend
+          port: 3000
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: checkout
+  namespace: commerce
+  labels:
+    app.kubernetes.io/part-of: acme-shop
+spec:
+  parentRefs:
+    - name: public-gateway
+      namespace: gateway-system
+  hostnames: [www.acme-shop.example]
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /checkout
+      backendRefs:
+        - name: checkout
+          port: 8080
+          weight: 95
+        - name: checkout-v2
+          port: 8080
+          weight: 5
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: inventory-api
+  namespace: commerce
+spec:
+  parentRefs:
+    - name: internal-gateway
+      namespace: gateway-system
+  hostnames: [api.internal.acme-shop.example]
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /inventory
+          method: GET
+        - path:
+            type: RegularExpression
+            value: "/inventory/skus/(?<sku>[A-Z0-9-]+)"
+          method: GET
+      backendRefs:
+        - name: inventory
+          port: 8080
