@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **491 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **496 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -42,7 +42,7 @@ The corpus holds **491 files** across **40 format directories**. Every file has 
 | `corba-idl/` | CORBA / OMG IDL | rpc | `module` + `interface` | 11 |
 | `onc-rpc/` | ONC RPC / XDR | rpc | `program {} = N` + XDR types | 11 |
 | `openrpc/` | OpenRPC (JSON-RPC) | rpc | top-level `openrpc:` version | 11 |
-| `protobuf/` | Protobuf / gRPC | rpc | `syntax = "proto3"` | 12 |
+| `protobuf/` | Protobuf / gRPC | rpc | `syntax = "proto3"` | 17 |
 | `smithy/` | Smithy 2.0 | rpc | `$version` + Smithy shapes | 11 |
 | `thrift/` | Apache Thrift | rpc | `service` / `struct` shapes | 11 |
 | `xml-rpc/` | XML-RPC | rpc | `<methodCall>` / `<methodResponse>` root | 13 |
@@ -747,11 +747,22 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `05-pubsub-style.proto` | real-world | `protobuf` ≥ 0.95 | valid | `proto3`, `service`, `rpc`, `message`, `map`, `import` |
 | `06-orders-set/order_service.proto` | multi-file (root) | `protobuf` ≥ 0.95 | valid | `proto3`, `service`, `rpc`, `import`, `package` |
 | `06-orders-set/order_types.proto` | multi-file (member) | `protobuf` ≥ 0.95 | valid | `proto3`, `message`, `enum`, `repeated`, `package` |
+| `07-inventory-source.proto` ⚠ | typical | `protobuf` ≥ 0.95 | valid | `proto3`, `service`, `rpc`, `message`, `enum`, `map`, `package`, `binary-pair`, `binary-pair-source` |
+| `08-inventory-descriptor-set.binpb` ⚠ | typical | `protobuf` ≥ 0.9 | valid | `binary`, `descriptor-set`, `binary-pair`, `binary-pair-descriptor-set` |
+| `09-inventory-buf-image.binpb` ⚠ | typical | `protobuf` ≥ 0.9 | valid | `binary`, `buf-image`, `binary-pair`, `binary-pair-buf-image` |
 | `negative/01-syntactic-unclosed-message.proto` | — | `protobuf` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-message` |
 | `negative/02-semantic-duplicate-field-number.proto` | — | `protobuf` (no guarantee) | invalid | `negative`, `semantic`, `duplicate-field-number` |
 | `negative/03-truncated-mid-message.proto` | — | `protobuf` (no guarantee) | invalid | `negative`, `truncated`, `mid-message` |
 | `negative/04-unresolvable-ref-missing-import.proto` | — | `protobuf` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-import` |
 | `negative/05-encoding-utf16-user.proto` | — | `protobuf` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
+| `negative/06-truncated-descriptor-set.binpb` | — | `protobuf` (no guarantee) | invalid | `negative`, `truncated`, `binary`, `descriptor-set` |
+| `negative/07-garbage-descriptor-set.binpb` | — | `protobuf` (no guarantee) | invalid | `negative`, `syntactic`, `binary`, `descriptor-set` |
+
+> ⚠ **`07-inventory-source.proto`** — Paired fixture (IXH-7.5): the descriptor-set and buf-image entries compiled from this source must import to the same canonical model.
+
+> ⚠ **`08-inventory-descriptor-set.binpb`** — Paired fixture (IXH-7.5): must import to the same canonical model as protobuf/07-inventory-source.proto.
+
+> ⚠ **`09-inventory-buf-image.binpb`** — Paired fixture (IXH-7.5): must import to the same canonical model as protobuf/07-inventory-source.proto.
 
 ### `raml/` — RAML 1.0
 
@@ -977,7 +988,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 491 | `Apache-2.0` |
+| `hand-authored` | 496 | `Apache-2.0` |
 
 ## Trying an import
 

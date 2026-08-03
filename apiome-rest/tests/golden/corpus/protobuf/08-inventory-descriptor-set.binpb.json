@@ -1,0 +1,631 @@
+{
+  "adapter": "grpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {},
+    "format": "protobuf",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "examples.inventory.v1",
+      "namespace": "examples.inventory.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "examples.inventory.v1.InventoryService",
+        "name": "InventoryService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples.inventory.v1.InventoryService.AdjustStock",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples.inventory.v1.InventoryService.AdjustStock#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples.inventory.v1.AdjustStockRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples.inventory.v1.InventoryService.AdjustStock#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples.inventory.v1.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "AdjustStock",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples.inventory.v1.InventoryService.GetItem",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples.inventory.v1.InventoryService.GetItem#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples.inventory.v1.GetItemRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples.inventory.v1.InventoryService.GetItem#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples.inventory.v1.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GetItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples.inventory.v1.InventoryService.ListItems",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples.inventory.v1.InventoryService.ListItems#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples.inventory.v1.ListItemsRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples.inventory.v1.InventoryService.ListItems#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples.inventory.v1.ListItemsResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ListItems",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "examples.inventory.v1.AdjustStockRequest.delta",
+            "name": "delta",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "sint64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "examples.inventory.v1.AdjustStockRequest.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "examples.inventory.v1.AdjustStockRequest.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "examples.inventory.v1.AdjustStockRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "AdjustStockRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "examples.inventory.v1.GetItemRequest.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "examples.inventory.v1.GetItemRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetItemRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 5,
+            "key": "examples.inventory.v1.Item.labels",
+            "name": "labels",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "examples.inventory.v1.Item.LabelsEntry",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "examples.inventory.v1.Item.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "examples.inventory.v1.Item.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "examples.inventory.v1.Item.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "examples.inventory.v1.Item.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "examples.inventory.v1.ItemStatus",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "examples.inventory.v1.Item",
+        "key_type": null,
+        "kind": "record",
+        "name": "Item",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "examples.inventory.v1.Item.LabelsEntry",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "LabelsEntry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples.inventory.v1.ItemStatus.ITEM_STATUS_UNSPECIFIED",
+            "name": "ITEM_STATUS_UNSPECIFIED",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples.inventory.v1.ItemStatus.ITEM_STATUS_ACTIVE",
+            "name": "ITEM_STATUS_ACTIVE",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples.inventory.v1.ItemStatus.ITEM_STATUS_BACKORDERED",
+            "name": "ITEM_STATUS_BACKORDERED",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples.inventory.v1.ItemStatus.ITEM_STATUS_DISCONTINUED",
+            "name": "ITEM_STATUS_DISCONTINUED",
+            "value": 3
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "examples.inventory.v1.ItemStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "ItemStatus",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "examples.inventory.v1.ListItemsRequest.page_size",
+            "name": "page_size",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "examples.inventory.v1.ListItemsRequest.page_token",
+            "name": "page_token",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "examples.inventory.v1.ListItemsRequest.status_filter",
+            "name": "status_filter",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "examples.inventory.v1.ItemStatus",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "examples.inventory.v1.ListItemsRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "ListItemsRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 1,
+            "key": "examples.inventory.v1.ListItemsResponse.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "examples.inventory.v1.Item",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "examples.inventory.v1.ListItemsResponse.next_page_token",
+            "name": "next_page_token",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "examples.inventory.v1.ListItemsResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "ListItemsResponse",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "protobuf/08-inventory-descriptor-set.binpb",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "protobuf"
+  },
+  "fingerprint": "sha256:4daa04b73c0a208520bb6c9fc3f6874ecd173eebcbffdffbe6a436ff63b1a73a",
+  "lint": {
+    "findings": 31,
+    "grade": "F",
+    "report_fingerprint": "8a8df126b0b4afc634ce0ff29eba649438195f10a2cb516e8725e777a54b43c8",
+    "score": 47,
+    "severity_counts": {
+      "error": 0,
+      "info": 21,
+      "warning": 10
+    }
+  },
+  "snapshot_version": 1
+}

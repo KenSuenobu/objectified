@@ -120,6 +120,16 @@ class ConnectRpcImportSource(ImportSource, register=True):
     def parse(self, raw: str, *, source_label: Optional[str] = None) -> CompiledDescriptorSet:
         return self._grpc.parse(raw, source_label=source_label)
 
+    def accepts_bytes(self, raw: bytes, *, filename: Optional[str] = None) -> bool:
+        """Delegate binary descriptor-set routing to the gRPC adapter (IXH-7.5)."""
+        return self._grpc.accepts_bytes(raw, filename=filename)
+
+    def parse_bytes(
+        self, raw: bytes, *, source_label: Optional[str] = None
+    ) -> CompiledDescriptorSet:
+        """Decode a binary ``FileDescriptorSet`` / buf image via the gRPC adapter (IXH-7.5)."""
+        return self._grpc.parse_bytes(raw, source_label=source_label)
+
     def parse_fileset(
         self,
         fileset: IntakeFileset,

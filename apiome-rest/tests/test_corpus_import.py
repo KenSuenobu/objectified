@@ -11,6 +11,8 @@ manifest's ``notes`` convention from IXH-1.1.
 Multi-file sets are exercised through their root via
 :meth:`~app.import_source.ImportSource.parse_fileset`; member files are not
 parsed standalone (they only exist to be referenced by their set's root).
+Binary entries (IXH-7.5 descriptor sets / buf images) are exercised through
+:meth:`~app.import_source.ImportSource.parse_bytes` on their raw bytes.
 
 The entry selection, tool gating, known-bug maps, and fileset assembly live in
 :mod:`tests.corpus_adapter_support`, shared with the IXH-1.6 golden runner
@@ -19,20 +21,19 @@ The entry selection, tool gating, known-bug maps, and fileset assembly live in
 
 from __future__ import annotations
 
-from pathlib import PurePosixPath
-
 import pytest
 from corpus_adapter_support import (
     KNOWN_DETECTION_BUGS,
     KNOWN_IMPORT_BUGS,
     adapter_for,
-    build_fileset,
+    detection_input_for,
     missing_tools,
+    parse_native,
     valid_entries,
 )
-from corpus_loader import CorpusEntry, FilesetRole
+from corpus_loader import CorpusEntry
 
-from app.import_source import DetectionInput, load_builtin_import_sources
+from app.import_source import load_builtin_import_sources
 
 load_builtin_import_sources()
 
@@ -61,12 +62,7 @@ def _import_param(entry: CorpusEntry) -> "pytest.param":
 @pytest.mark.parametrize("entry", [_detection_param(e) for e in valid_entries()])
 def test_adapter_claims_example_at_recorded_confidence(entry: CorpusEntry) -> None:
     adapter = adapter_for(entry)
-    result = adapter.detect(
-        DetectionInput(
-            text=entry.read_text(),
-            filename=PurePosixPath(entry.path).name,
-        )
-    )
+    result = adapter.detect(detection_input_for(entry))
     expected = entry.expected_detection
     assert result.matched, (
         f"{entry.adapter_key} did not claim {entry.path} "
@@ -81,10 +77,7 @@ def test_adapter_claims_example_at_recorded_confidence(entry: CorpusEntry) -> No
 @pytest.mark.parametrize("entry", [_import_param(e) for e in valid_entries()])
 def test_example_parses_normalizes_and_lints(entry: CorpusEntry) -> None:
     adapter = adapter_for(entry)
-    if entry.fileset_role is FilesetRole.ROOT:
-        native_ast = adapter.parse_fileset(build_fileset(entry), source_label=entry.path)
-    else:
-        native_ast = adapter.parse(entry.read_text(), source_label=entry.path)
+    native_ast = parse_native(adapter, entry)
     model = adapter.normalize(native_ast)
     assert model is not None, f"{entry.path}: normalize returned no canonical model"
     report = adapter.lint(model)

@@ -158,6 +158,18 @@ def _sniff_protobuf(payload: DetectionInput) -> DetectionResult:
         return DetectionResult(
             confidence=0.97, format="protobuf", reason=f"`syntax = \"proto{match.group(1)}\"` marker"
         )
+    if payload.data is not None:
+        # IXH-7.5: a binary serialized FileDescriptorSet / buf image has no text marker —
+        # the undecoded bytes either parse as one or they do not. Imported lazily so the
+        # sniffer table stays cheap for the (overwhelmingly common) text payloads.
+        from .proto_descriptor import sniff_file_descriptor_set
+
+        if sniff_file_descriptor_set(payload.data):
+            return DetectionResult(
+                confidence=0.9,
+                format="protobuf",
+                reason="binary FileDescriptorSet / buf image",
+            )
     return NO_MATCH
 
 

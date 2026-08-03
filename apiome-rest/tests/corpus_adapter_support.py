@@ -20,16 +20,19 @@ from __future__ import annotations
 import io
 import zipfile
 from functools import lru_cache
-from typing import Dict, List
+from pathlib import PurePosixPath
+from typing import Any, Dict, List
 
 from corpus_loader import CorpusEntry, FilesetRole, ValidityClass, load_corpus
 
 from app.fileset import IntakeFileset
 from app.import_source import (
+    DetectionInput,
     ImportSource,
     get_import_source,
     resolve_import_source_key,
 )
+from app.proto_descriptor import DESCRIPTOR_SET_SUFFIXES
 from app.toolchain_packaging import probe_tool
 
 __all__ = [
@@ -38,7 +41,10 @@ __all__ = [
     "adapter_for",
     "build_fileset",
     "build_fileset_archive",
+    "detection_input_for",
+    "is_binary_entry",
     "missing_tools",
+    "parse_native",
     "tool_available",
     "valid_entries",
 ]
@@ -135,6 +141,62 @@ def valid_entries() -> List[CorpusEntry]:
         for entry in load_corpus(validity_class=ValidityClass.VALID)
         if entry.adapter_key is not None and entry.fileset_role is not FilesetRole.MEMBER
     ]
+
+
+def is_binary_entry(entry: CorpusEntry) -> bool:
+    """Whether a corpus entry is a *binary* artifact rather than source text (IXH-7.5).
+
+    Binary entries (a serialized protobuf ``FileDescriptorSet`` / buf image) are not
+    UTF-8 decodable, so the corpus suites must read their bytes and drive the adapter's
+    binary seam (``parse_bytes``) instead of ``read_text()``/``parse()``.
+
+    Args:
+        entry: The manifest entry.
+
+    Returns:
+        ``True`` when the entry's path carries a conventional descriptor-set suffix.
+    """
+    return entry.path.lower().endswith(DESCRIPTOR_SET_SUFFIXES)
+
+
+def detection_input_for(entry: CorpusEntry) -> DetectionInput:
+    """Build the :class:`DetectionInput` a corpus entry's detection contract runs on.
+
+    Text entries carry their decoded ``text`` exactly as before; binary entries carry
+    their undecoded ``data`` bytes instead (IXH-7.5), matching what the intake pipeline
+    hands detection for each shape.
+
+    Args:
+        entry: The manifest entry.
+
+    Returns:
+        The detection payload with the entry's own filename as the hint.
+    """
+    filename = PurePosixPath(entry.path).name
+    if is_binary_entry(entry):
+        return DetectionInput(data=entry.read_bytes(), filename=filename)
+    return DetectionInput(text=entry.read_text(), filename=filename)
+
+
+def parse_native(adapter: ImportSource, entry: CorpusEntry) -> Any:
+    """Parse a valid corpus entry through the adapter seam its shape requires.
+
+    Multi-file set roots go through ``parse_fileset`` with their per-set siblings;
+    binary entries (IXH-7.5) go through ``parse_bytes`` with their raw bytes; every
+    other entry parses its own text through ``parse``.
+
+    Args:
+        adapter: The entry's resolved adapter.
+        entry: The manifest entry.
+
+    Returns:
+        The adapter's native AST for the entry.
+    """
+    if entry.fileset_role is FilesetRole.ROOT:
+        return adapter.parse_fileset(build_fileset(entry), source_label=entry.path)
+    if is_binary_entry(entry):
+        return adapter.parse_bytes(entry.read_bytes(), source_label=entry.path)
+    return adapter.parse(entry.read_text(), source_label=entry.path)
 
 
 def build_fileset(entry: CorpusEntry) -> IntakeFileset:

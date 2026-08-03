@@ -39,16 +39,15 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
-from corpus_adapter_support import adapter_for, build_fileset
-from corpus_loader import CorpusEntry, FilesetRole
+from corpus_adapter_support import adapter_for, detection_input_for, is_binary_entry, parse_native
+from corpus_loader import CorpusEntry
 
 from app.canonical_model import CanonicalApi
 from app.import_source import (
-    DetectionInput,
     DiffChangeKind,
     ImportSource,
     LintReport,
@@ -112,7 +111,9 @@ def run_pipeline(entry: CorpusEntry, adapter: Optional[ImportSource] = None) -> 
     """Run detect → parse → normalize → fingerprint → lint for one corpus entry.
 
     Multi-file set roots go through ``parse_fileset`` with every sibling in their
-    per-set directory as a member; every other entry parses its own text.
+    per-set directory as a member; binary entries (IXH-7.5 descriptor sets / buf
+    images) go through ``parse_bytes`` on their raw bytes; every other entry parses
+    its own text.
 
     Args:
         entry: The ``valid`` manifest entry to run.
@@ -123,14 +124,10 @@ def run_pipeline(entry: CorpusEntry, adapter: Optional[ImportSource] = None) -> 
         The :class:`CorpusRun` carrying every artifact the snapshot records.
     """
     source = adapter or adapter_for(entry)
-    filename = PurePosixPath(entry.path).name
 
-    detection = source.detect(DetectionInput(text=entry.read_text(), filename=filename))
+    detection = source.detect(detection_input_for(entry))
 
-    if entry.fileset_role is FilesetRole.ROOT:
-        native_ast = source.parse_fileset(build_fileset(entry), source_label=entry.path)
-    else:
-        native_ast = source.parse(entry.read_text(), source_label=entry.path)
+    native_ast = parse_native(source, entry)
 
     model = source.normalize(native_ast, include_raw=True)
     return CorpusRun(
@@ -527,7 +524,8 @@ def reordered_source(entry: CorpusEntry) -> Optional[str]:
     fingerprint must not move.
 
     Only structured JSON/YAML sources can be reordered this way; a text-grammar
-    source (proto, GraphQL SDL, an IDL) has no key order to permute.
+    source (proto, GraphQL SDL, an IDL) has no key order to permute, and a binary
+    entry (IXH-7.5 descriptor set / buf image) has no text at all.
 
     Args:
         entry: The manifest entry.
@@ -536,6 +534,8 @@ def reordered_source(entry: CorpusEntry) -> Optional[str]:
         The reordered source text, or ``None`` when the source is not a JSON/YAML
         mapping (so the caller skips the check).
     """
+    if is_binary_entry(entry):
+        return None
     text = entry.read_text()
     try:
         document = yaml.safe_load(text)

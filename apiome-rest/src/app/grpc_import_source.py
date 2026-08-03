@@ -11,6 +11,13 @@ it wraps machinery that already exists rather than reimplementing it:
   (:func:`app.proto_descriptor.compile_proto_descriptor_set`); a proto that does not compile —
   or a runtime with no bundled ``buf`` — becomes a clean
   :class:`~app.import_source.ImportSourceError` carrying the compiler diagnostics;
+* **parse_bytes** (IXH-7.5, #5130) accepts the artifact real deployments actually publish: a
+  binary serialized ``FileDescriptorSet`` (``protoc --descriptor_set_out``, grpcurl
+  ``.protoset``) or a **buf image** (``buf build -o api.binpb``, a compatible superset).
+  Decoding is pure :func:`app.proto_descriptor.read_file_descriptor_set` — dependencies are
+  already resolved *inside* the set, so no filesystem, network, or ``buf`` toolchain is
+  touched. Malformed bytes fail with taxonomy code ``INPUT_MALFORMED``; bytes whose wire
+  stream is cut off mid-element fail with ``INPUT_TRUNCATED``;
 * **normalize** delegates to the registered Protobuf :class:`~app.normalizer.Normalizer`
   (MFI-9.2, :class:`app.proto_normalizer.ProtoNormalizer`) under the ``protobuf`` format key —
   no mapping logic is duplicated here — and accepts either the compiled descriptor set
@@ -175,13 +182,25 @@ class GrpcImportSource(ImportSource, register=True):
     required_tools = ("buf",)
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
-        """Recognize Protocol Buffers source text (or a ``.proto`` filename).
+        """Recognize Protocol Buffers source text, a binary descriptor set, or a filename hint.
 
         A ``.proto`` is plain schema text — not the JSON/YAML *mapping* the OpenAPI/AsyncAPI
         adapters sniff — so detection reads ``text`` and matches a proto marker (``syntax``/
-        ``edition``/a top-level ``message``/``service``/``enum``/``package``). A ``.proto``
-        filename is a weaker signal. Never raises: an unrecognized input returns :data:`NO_MATCH`.
+        ``edition``/a top-level ``message``/``service``/``enum``/``package``). When the caller
+        supplies the undecoded ``data`` bytes (IXH-7.5), a payload that parses as a
+        ``FileDescriptorSet`` / buf image is claimed at high confidence — the parse *is* the
+        evidence. A ``.proto`` (or ``.binpb``/``.desc``/``.protoset``) filename is a weaker
+        signal. Never raises: an unrecognized input returns :data:`NO_MATCH`.
         """
+        from .proto_descriptor import is_descriptor_set_filename, sniff_file_descriptor_set
+
+        if payload.data is not None and sniff_file_descriptor_set(payload.data):
+            return DetectionResult(
+                confidence=0.9,
+                format="protobuf",
+                reason="binary FileDescriptorSet / buf image",
+            )
+
         text = payload.text
         if text is not None:
             if 'syntax = "proto3"' in text or 'syntax = "proto2"' in text:
@@ -201,6 +220,12 @@ class GrpcImportSource(ImportSource, register=True):
         if filename.endswith(".proto"):
             return DetectionResult(
                 confidence=0.6, format="protobuf", reason="`.proto` file extension"
+            )
+        if is_descriptor_set_filename(filename):
+            return DetectionResult(
+                confidence=0.6,
+                format="protobuf",
+                reason="descriptor-set file extension",
             )
         return NO_MATCH
 
@@ -235,6 +260,78 @@ class GrpcImportSource(ImportSource, register=True):
             raise ImportSourceError(detail) from exc
         except ProtoDescriptorError as exc:
             raise ImportSourceError(str(exc)) from exc
+
+    def accepts_bytes(self, raw: bytes, *, filename: Optional[str] = None) -> bool:
+        """Claim binary descriptor-set payloads for :meth:`parse_bytes` (IXH-7.5).
+
+        Two signals route an upload to the binary path: bytes that actually parse as a
+        ``FileDescriptorSet`` / buf image, or a conventional descriptor-set filename
+        (``.binpb``/``.desc``/``.protoset``). The filename signal deliberately claims
+        *malformed* payloads too, so a broken descriptor set fails through
+        :meth:`parse_bytes` with a descriptor-specific taxonomy code
+        (``INPUT_MALFORMED``/``INPUT_TRUNCATED``) instead of being mis-reported as a
+        text-encoding fault. Never raises.
+        """
+        from .proto_descriptor import is_descriptor_set_filename, sniff_file_descriptor_set
+
+        if is_descriptor_set_filename(filename):
+            return True
+        try:
+            return sniff_file_descriptor_set(raw)
+        except Exception:  # noqa: BLE001 - routing must never raise; fall back to text
+            return False
+
+    def parse_bytes(
+        self, raw: bytes, *, source_label: Optional[str] = None
+    ) -> CompiledDescriptorSet:
+        """Decode a binary ``FileDescriptorSet`` / buf image into a descriptor set (IXH-7.5).
+
+        The binary counterpart to :meth:`parse` for the artifact real gRPC deployments
+        distribute: a serialized ``FileDescriptorSet`` (``protoc --descriptor_set_out``,
+        grpcurl's ``.protoset``) or a buf image (``buf build -o api.binpb`` — a
+        ``FileDescriptorSet`` with buf's per-file extensions, which decode as unknown
+        fields and are ignored). Dependencies are already resolved *within* the set, so
+        decoding is pure :func:`app.proto_descriptor.read_file_descriptor_set` — no
+        filesystem lookups, no network access, and no ``buf`` toolchain involved.
+
+        Args:
+            raw: The serialized ``FileDescriptorSet`` / buf image bytes.
+            source_label: Optional label (filename/URL) for error messages.
+
+        Returns:
+            The decoded :class:`app.proto_descriptor.CompiledDescriptorSet`, identical in
+            shape to what :meth:`parse` / :meth:`discover` return.
+
+        Raises:
+            ImportSourceError: With taxonomy code ``INPUT_EMPTY`` for an empty payload,
+                ``INPUT_TRUNCATED`` when the wire stream is cut off mid-element, or
+                ``INPUT_MALFORMED`` when the bytes are not a descriptor set at all.
+        """
+        from .proto_descriptor import (
+            ProtoDescriptorError,
+            descriptor_set_looks_truncated,
+            read_file_descriptor_set,
+        )
+
+        label = source_label or "uploaded descriptor set"
+        if not raw:
+            raise ImportSourceError(
+                f"{label}: the descriptor-set payload is empty.", code="INPUT_EMPTY"
+            )
+        try:
+            return read_file_descriptor_set(raw)
+        except ProtoDescriptorError as exc:
+            if descriptor_set_looks_truncated(raw):
+                raise ImportSourceError(
+                    f"{label}: the descriptor set is cut off mid-message — the upload "
+                    f"looks truncated. Re-export it (e.g. `buf build -o api.binpb` or "
+                    f"`protoc --descriptor_set_out`) and retry. ({exc})",
+                    code="INPUT_TRUNCATED",
+                ) from exc
+            raise ImportSourceError(
+                f"{label}: not a valid binary FileDescriptorSet / buf image. ({exc})",
+                code="INPUT_MALFORMED",
+            ) from exc
 
     def parse_fileset(
         self,

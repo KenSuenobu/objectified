@@ -72,6 +72,10 @@ __all__ = [
     "compile_proto_descriptor_set",
     "materialize_proto_module",
     "BUF_MODULE_YAML",
+    "DESCRIPTOR_SET_SUFFIXES",
+    "descriptor_set_looks_truncated",
+    "is_descriptor_set_filename",
+    "sniff_file_descriptor_set",
 ]
 
 
@@ -350,6 +354,129 @@ def read_file_descriptor_set(
         files=files,
         summary=_summarize(files),
     )
+
+
+# ===========================================================================
+# Binary-intake recognition — IXH-7.5 (#5130)
+# ===========================================================================
+
+#: Filename suffixes that conventionally carry a serialized ``FileDescriptorSet`` (or a buf
+#: image, which is a compatible superset): ``.binpb`` (the protobuf binary-wire convention buf
+#: itself emits, see :data:`_DESCRIPTOR_OUTPUT_NAME`), ``.desc`` (``protoc --descriptor_set_out``
+#: convention), and ``.protoset`` (grpcurl's convention). A file with one of these suffixes is
+#: routed to the binary intake path *even when its bytes turn out malformed*, so a broken
+#: descriptor set fails with a descriptor-specific taxonomy code instead of an encoding error.
+DESCRIPTOR_SET_SUFFIXES: Tuple[str, ...] = (".binpb", ".desc", ".protoset")
+
+
+def is_descriptor_set_filename(filename: Optional[str]) -> bool:
+    """Whether *filename* carries a conventional descriptor-set suffix.
+
+    Args:
+        filename: The upload's filename or label (``None``/empty returns ``False``).
+
+    Returns:
+        ``True`` when the name ends in one of :data:`DESCRIPTOR_SET_SUFFIXES`.
+    """
+    if not filename:
+        return False
+    return filename.lower().endswith(DESCRIPTOR_SET_SUFFIXES)
+
+
+def sniff_file_descriptor_set(data: bytes) -> bool:
+    """Whether *data* parses as a plausible binary ``FileDescriptorSet`` / buf image.
+
+    Used by detection and intake routing, so it must never raise and must reject
+    non-protobuf content cheaply: a ``FileDescriptorSet``'s only field is ``repeated
+    FileDescriptorProto file = 1`` (wire tag ``0x0A``), so anything not starting with that
+    byte is dismissed before the real parse. A buf image is a ``FileDescriptorSet`` with
+    extension fields layered onto each file, so it parses (and sniffs) identically.
+
+    Args:
+        data: The raw uploaded bytes.
+
+    Returns:
+        ``True`` when the bytes decode as a ``FileDescriptorSet`` holding at least one
+        *named* file — an empty or nameless set is not evidence of the format.
+    """
+    if len(data) < 8 or data[0] != 0x0A:
+        return False
+    descriptor_set = descriptor_pb2.FileDescriptorSet()
+    try:
+        descriptor_set.ParseFromString(data)
+    except (DecodeError, ValueError):
+        return False
+    files = list(descriptor_set.file)
+    return bool(files) and all(file_proto.name for file_proto in files)
+
+
+def _read_varint(data: bytes, pos: int) -> Optional[Tuple[int, int]]:
+    """Read one base-128 varint at *pos*; ``None`` when the buffer ends mid-varint.
+
+    Returns:
+        ``(value, next_pos)``, or ``None`` on end-of-buffer truncation. A varint longer
+        than 10 bytes is not a truncation signal — it is malformed — and returns the
+        overlong value so the caller's wire walk keeps its truncated/malformed distinction.
+    """
+    result = 0
+    shift = 0
+    while pos < len(data) and shift <= 63:
+        byte = data[pos]
+        pos += 1
+        result |= (byte & 0x7F) << shift
+        if not (byte & 0x80):
+            return result, pos
+        shift += 7
+    return None if pos >= len(data) else (result, pos)
+
+
+def descriptor_set_looks_truncated(data: bytes) -> bool:
+    """Whether unparseable descriptor-set bytes end mid-element (a truncated upload).
+
+    Walks the *top-level* wire format only: each field is a varint tag followed by a
+    varint / fixed-width scalar / length-delimited payload. A buffer that ends inside a
+    tag, inside a length varint, or before a declared length completes is truncated — the
+    signature of an interrupted download or a partial copy. A walk that completes (or hits
+    an invalid wire type) means the bytes are wrong for some *other* reason, and the
+    caller should report plain malformation instead.
+
+    Args:
+        data: The raw bytes that failed :func:`read_file_descriptor_set`.
+
+    Returns:
+        ``True`` when the top-level wire stream is cut off mid-element.
+    """
+    pos = 0
+    while pos < len(data):
+        tag = _read_varint(data, pos)
+        if tag is None:
+            return True
+        tag_value, pos = tag
+        wire_type = tag_value & 0x07
+        if wire_type == 0:  # varint scalar
+            value = _read_varint(data, pos)
+            if value is None:
+                return True
+            pos = value[1]
+        elif wire_type == 1:  # fixed 64-bit
+            if pos + 8 > len(data):
+                return True
+            pos += 8
+        elif wire_type == 2:  # length-delimited
+            length = _read_varint(data, pos)
+            if length is None:
+                return True
+            length_value, pos = length
+            if pos + length_value > len(data):
+                return True
+            pos += length_value
+        elif wire_type == 5:  # fixed 32-bit
+            if pos + 4 > len(data):
+                return True
+            pos += 4
+        else:  # groups (3/4) or reserved wire types: malformed, not truncated
+            return False
+    return False
 
 
 # ===========================================================================

@@ -333,6 +333,9 @@ def _detect(raw: bytes, request: ImportPreflightRequest) -> Tuple[FormatDetectio
                 filename=request.filename,
                 content_type=request.content_type,
                 url=request.url,
+                # IXH-7.5: binary artifacts (a protobuf FileDescriptorSet / buf image)
+                # are recognized from the undecoded bytes, not the replaced text.
+                data=raw,
             )
         )
     except Exception:  # noqa: BLE001 - detection must never decide a pre-flight's fate
