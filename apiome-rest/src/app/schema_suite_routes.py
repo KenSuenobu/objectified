@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from .auth import validate_authentication
 from .database import db
@@ -268,17 +268,21 @@ async def delete_schema_test_suite(
     tenant_slug: str,
     suite_id: str,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
-) -> None:
+) -> Response:
     """Delete a suite; payloads, runs and results follow.
 
     Raises:
         HTTPException: 403 without ``types:delete``, 404 when the suite is not visible.
     """
+    # NB: return a Response (not `-> None`) — under `from __future__ import annotations`
+    # FastAPI evaluates a `None` return annotation to NoneType and asserts that a 204
+    # cannot carry a body. Mirrors the export-job and spec-import cancel routes.
     enforce_permission(db, auth_data, Resource.TYPES, Action.DELETE)
     tenant_id = _tenant_id(auth_data)
     _ = tenant_slug
     if not delete_suite(tenant_id, suite_id):
         raise HTTPException(status_code=404, detail="Test suite not found.")
+    return Response(status_code=204)
 
 
 @router.post(
