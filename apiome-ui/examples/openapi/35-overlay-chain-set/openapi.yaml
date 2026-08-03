@@ -1,0 +1,73 @@
+openapi: 3.1.0
+info:
+  title: Payments Gateway API
+  version: 2.0.0
+  description: Base description for the payments gateway.
+servers:
+  - url: http://localhost:9000
+    description: Local development
+paths:
+  /charges:
+    post:
+      operationId: createCharge
+      summary: Create a charge
+      description: Authorizes and captures a charge in one call.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChargeRequest'
+      responses:
+        '201':
+          description: The charge was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Charge'
+    get:
+      operationId: listCharges
+      summary: List charges
+      description: Returns charges, newest first.
+      responses:
+        '200':
+          description: The charges.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Charge'
+components:
+  schemas:
+    ChargeRequest:
+      type: object
+      description: A request to charge a card or account.
+      required: [amount, currency]
+      properties:
+        amount:
+          type: integer
+          description: Amount in minor units.
+          minimum: 1
+        currency:
+          type: string
+          description: ISO 4217 currency code.
+          pattern: '^[A-Z]{3}$'
+    Charge:
+      type: object
+      description: One settled or pending charge.
+      required: [id, amount, currency, status]
+      properties:
+        id:
+          type: string
+          description: Stable charge identifier.
+        amount:
+          type: integer
+          description: Amount in minor units.
+        currency:
+          type: string
+          description: ISO 4217 currency code.
+        status:
+          type: string
+          description: Lifecycle state of the charge.
+          enum: [pending, succeeded, failed]

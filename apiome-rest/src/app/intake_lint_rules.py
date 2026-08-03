@@ -33,6 +33,8 @@ __all__ = [
     "INTAKE_PACK",
     "INTAKE_RULES",
     "RULE_BLOCKED_EXTERNAL_REF",
+    "RULE_OVERLAY_ACTION_INVALID",
+    "RULE_OVERLAY_UNMATCHED_TARGET",
     "RULE_UNRESOLVED_EXTERNAL_REF",
 ]
 
@@ -47,6 +49,15 @@ RULE_UNRESOLVED_EXTERNAL_REF = "intake.unresolved-external-ref"
 #: address (loopback / RFC1918 / link-local incl. the cloud metadata IP) or a scheme
 #: this service will not fetch.
 RULE_BLOCKED_EXTERNAL_REF = "intake.blocked-external-ref"
+
+#: An OpenAPI Overlay action's ``target`` JSONPath matched nothing in the base
+#: document, so the action was not applied (IXH-7.7).
+RULE_OVERLAY_UNMATCHED_TARGET = "intake.overlay-unmatched-target"
+
+#: An OpenAPI Overlay action was structurally unusable — no ``target``, neither
+#: ``update`` nor ``remove``, an unparsable JSONPath, or an ``update`` value whose
+#: type does not fit the selected node (IXH-7.7).
+RULE_OVERLAY_ACTION_INVALID = "intake.overlay-action-invalid"
 
 #: ``rule_id → (category, default_severity, rationale)`` — the same shape as
 #: :data:`app.schema_lint.OPENAPI_RULES`, so :mod:`app.lint_rule_registry` and the docs
@@ -68,5 +79,21 @@ INTAKE_RULES: Dict[str, Tuple[str, str, str]] = {
         "or the cloud metadata endpoint) or at a non-HTTP scheme is refused by the SSRF "
         "guard and is never fetched. Publish the referenced document at a public HTTPS URL, "
         "or bundle it into the import instead of referencing it.",
+    ),
+    RULE_OVERLAY_UNMATCHED_TARGET: (
+        "structure",
+        "warning",
+        "An OpenAPI Overlay action whose `target` JSONPath matches nothing in the base "
+        "document has no effect: the modification the overlay describes was silently "
+        "skipped everywhere the resolved document is used. Fix the target expression, or "
+        "remove the action if the construct it targeted no longer exists in the base.",
+    ),
+    RULE_OVERLAY_ACTION_INVALID: (
+        "structure",
+        "warning",
+        "An OpenAPI Overlay action that declares no target, neither `update` nor "
+        "`remove: true`, an invalid JSONPath, or an `update` value whose type does not "
+        "fit the selected node cannot be applied as written (Overlay 1.0). Fix the "
+        "action so the modification it describes actually reaches the resolved document.",
     ),
 }

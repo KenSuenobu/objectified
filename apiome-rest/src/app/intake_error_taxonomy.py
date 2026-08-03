@@ -139,6 +139,15 @@ INTAKE_ERROR_TAXONOMY: Dict[str, IntakeErrorDescriptor] = {
             "again.",
         ),
         _d(
+            "INPUT_OVERLAY_BASE_MISSING",
+            IntakeErrorCategory.INPUT,
+            False,
+            "The document is an OpenAPI Overlay, which modifies a base OpenAPI "
+            "document that was not provided. Upload the base document together "
+            "with the overlay (for example as a .zip archive containing both), "
+            "and import them as one.",
+        ),
+        _d(
             "INPUT_UNSAFE_CONSTRUCT",
             IntakeErrorCategory.INPUT,
             False,

@@ -1,0 +1,20 @@
+overlay: 1.0.0
+info:
+  title: Production overrides
+  version: 1.0.0
+extends: ./openapi.yaml
+actions:
+  # Second link of the chain: overrides the description the first overlay set
+  # (last writer wins, and the provenance records show both writes) and adds
+  # the production server on top of the staging one.
+  - target: $.info.description
+    description: The production copy replaces the regional rollout copy.
+    update: Payments gateway, EU region, production.
+  - target: $.servers
+    description: Publish the EU production server.
+    update:
+      url: https://payments.eu.example.com
+      description: EU production
+  - target: $.paths['/charges'].get
+    description: Charge listing is not exposed on the production surface yet.
+    remove: true

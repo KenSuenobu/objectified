@@ -1,0 +1,29 @@
+overlay: 1.0.0
+info:
+  title: Public-audience production overrides
+  version: 1.0.0
+extends: ./openapi.yaml
+actions:
+  # update: deep-merge into the info object (replaces description, adds a key).
+  - target: $.info
+    description: Point readers at the public description and record the audience.
+    update:
+      description: Public production surface of the Adoption Center API.
+      x-audience: public
+  # add: appending to an array target (Overlay 1.0 array-append semantics).
+  - target: $.servers
+    description: Publish the production server.
+    update:
+      url: https://api.adoption.example.com
+      description: Production
+  # remove: internal maintenance surface never ships to the public audience.
+  - target: $.paths['/internal/reindex']
+    description: Drop the internal maintenance endpoint.
+    remove: true
+  - target: $.tags[?(@.name == 'internal')]
+    description: Drop the internal tag alongside its endpoint.
+    remove: true
+  # update: replace a primitive value in place.
+  - target: $.paths['/pets'].get.parameters[0].schema.maximum
+    description: The public rate plan caps page sizes lower.
+    update: 100

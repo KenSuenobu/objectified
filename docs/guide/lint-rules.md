@@ -179,6 +179,11 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Category:** composition
 - **Default severity:** error
 - **Rationale:** A composition error reported by `rover supergraph compose` over the imported subgraph set.
+- **Reference:** https://github.com/apiome/apiome/blob/main/docs/guide/lint-rules.md#graphql-composition-error
+- **Remediation:** Fix the subgraph the finding names so the set composes (run `rover supergraph compose` locally for the full report), then re-import.
+- **False-positive guidance:** The verdict is captured at import time; if the subgraphs changed since, re-import the set to refresh it.
+- **Fixture:** `catalog/graphql-composition-error`
+- **Scan modes:** `lint`
 
 <a id="graphql-composition-invalid-key"></a>
 ### `graphql.composition-invalid-key`
@@ -186,6 +191,11 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Category:** composition
 - **Default severity:** error
 - **Rationale:** A @key(fields:) selection must name fields its type declares in that subgraph.
+- **Reference:** https://github.com/apiome/apiome/blob/main/docs/guide/lint-rules.md#graphql-composition-invalid-key
+- **Remediation:** Make the @key selection reference fields the type declares in the named subgraph (declare the field, or fix the selection).
+- **False-positive guidance:** Nested key selections are checked at the top level only; a top-level field reported missing is genuinely undeclared in that subgraph's file.
+- **Fixture:** `catalog/graphql-composition-invalid-key`
+- **Scan modes:** `lint`
 
 <a id="graphql-composition-non-shareable-field"></a>
 ### `graphql.composition-non-shareable-field`
@@ -193,6 +203,11 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Category:** composition
 - **Default severity:** error
 - **Rationale:** A field resolved by more than one subgraph must be @shareable in every subgraph that resolves it.
+- **Reference:** https://github.com/apiome/apiome/blob/main/docs/guide/lint-rules.md#graphql-composition-non-shareable-field
+- **Remediation:** Mark the field @shareable in every subgraph that resolves it, mark the stub copies @external, or move the field to a single owning subgraph.
+- **False-positive guidance:** Key fields and @external stubs are already exempt; a hit means two subgraphs genuinely both resolve the field.
+- **Fixture:** `catalog/graphql-composition-non-shareable-field`
+- **Scan modes:** `lint`
 
 <a id="graphql-composition-unresolvable-selection"></a>
 ### `graphql.composition-unresolvable-selection`
@@ -200,6 +215,11 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Category:** composition
 - **Default severity:** error
 - **Rationale:** A @requires/@provides selection must reference fields some subgraph declares.
+- **Reference:** https://github.com/apiome/apiome/blob/main/docs/guide/lint-rules.md#graphql-composition-unresolvable-selection
+- **Remediation:** Point the @requires/@provides selection at fields declared on the target type in some subgraph (declare the field there, or fix the selection).
+- **False-positive guidance:** The check unions declarations across the whole set; a hit means no subgraph declares the selected field at all.
+- **Fixture:** `catalog/graphql-composition-unresolvable-selection`
+- **Scan modes:** `lint`
 
 <a id="graphql-enum-value-missing-description"></a>
 ### `graphql.enum-value-missing-description`
@@ -252,6 +272,20 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Category:** structure
 - **Default severity:** warning
 - **Rationale:** An external $ref pointing at a non-public address (loopback, RFC1918, link-local, or the cloud metadata endpoint) or at a non-HTTP scheme is refused by the SSRF guard and is never fetched. Publish the referenced document at a public HTTPS URL, or bundle it into the import instead of referencing it.
+
+<a id="intake-overlay-action-invalid"></a>
+### `intake.overlay-action-invalid`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** An OpenAPI Overlay action that declares no target, neither `update` nor `remove: true`, an invalid JSONPath, or an `update` value whose type does not fit the selected node cannot be applied as written (Overlay 1.0). Fix the action so the modification it describes actually reaches the resolved document.
+
+<a id="intake-overlay-unmatched-target"></a>
+### `intake.overlay-unmatched-target`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** An OpenAPI Overlay action whose `target` JSONPath matches nothing in the base document has no effect: the modification the overlay describes was silently skipped everywhere the resolved document is used. Fix the target expression, or remove the action if the construct it targeted no longer exists in the base.
 
 <a id="intake-unresolved-external-ref"></a>
 ### `intake.unresolved-external-ref`

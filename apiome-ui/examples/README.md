@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **500 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **506 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -25,7 +25,7 @@ The corpus holds **500 files** across **40 format directories**. Every file has 
 | `discovery/` | Google API Discovery | rest | `kind: discovery#restDescription` / `discoveryVersion` | 11 |
 | `http-file/` | HTTP Request File | rest | HTTP request line / `###` separators / `curl` / `.http` `.rest` | 13 |
 | `odata/` | OData v4 (EDMX) | rest | `<edmx:Edmx>` root | 12 |
-| `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 38 |
+| `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 44 |
 | `postman/` | Postman v2.1 | rest | collection `info.schema` URL | 11 |
 | `raml/` | RAML 1.0 | rest | `#%RAML 1.0` header | 11 |
 | `swagger/` | Swagger 2.0 | rest | `swagger: "2.0"` | 1 |
@@ -678,11 +678,17 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `31-paths-comprehensive.yaml` | typical | `openapi-3.1` ≥ 0.95 | valid | `paths-comprehensive`, `enum` |
 | `32-openapi-3.2.0-minimal.yaml` | minimal | `openapi-3.2` ≥ 0.95 | valid | `openapi-3.2.0-minimal` |
 | `33-nonconforming-examples.yaml` ⚠ | typical | `openapi-3.1` ≥ 0.95 | valid | `non-conforming-examples`, `multiple-examples`, `response-examples`, `enum` |
+| `34-overlay-basic-set/openapi.yaml` | multi-file (root) | `openapi-3.1` ≥ 0.99 | valid | `overlay`, `overlay-base`, `parameters`, `servers` |
+| `34-overlay-basic-set/overlay.yaml` ⚠ | multi-file (member) | `openapi-3.1` (no guarantee) | valid | `overlay`, `overlay-add`, `overlay-update`, `overlay-remove` |
+| `35-overlay-chain-set/01-region-defaults.yaml` ⚠ | multi-file (member) | `openapi-3.1` (no guarantee) | valid | `overlay`, `overlay-chain`, `overlay-add`, `overlay-update` |
+| `35-overlay-chain-set/02-production.yaml` ⚠ | multi-file (member) | `openapi-3.1` (no guarantee) | valid | `overlay`, `overlay-chain`, `overlay-update`, `overlay-remove` |
+| `35-overlay-chain-set/openapi.yaml` | multi-file (root) | `openapi-3.1` ≥ 0.99 | valid | `overlay`, `overlay-chain`, `overlay-base`, `requestBody` |
 | `negative/01-syntactic-unclosed-flow-sequence.yaml` | — | `openapi-3.1` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-flow-sequence` |
 | `negative/02-truncated-mid-quoted-ref.yaml` | — | `openapi-3.1` (no guarantee) | invalid | `negative`, `truncated`, `cut-mid-token` |
 | `negative/03-wrong-format-graphql-sdl.graphql` | — | `openapi-3.1` (no guarantee) | invalid | `negative`, `wrong-format`, `graphql-sdl` |
 | `negative/04-encoding-utf16.yaml` | — | `openapi-3.1` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
 | `negative/05-version-out-of-range.yaml` ⚠ | — | `openapi-3.1` (no guarantee) | invalid | `negative`, `version-out-of-range`, `openapi-9.0.0` |
+| `negative/06-bare-overlay.yaml` ⚠ | — | `openapi-3.1` (no guarantee) | invalid | `negative`, `semantic`, `overlay`, `bare-overlay` |
 
 > ⚠ **`05-dependent-schemas.yaml`** — detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work.
 
@@ -708,7 +714,15 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`33-nonconforming-examples.yaml`** — Every example carrier (component schema, nested property, path- and operation-level parameter, request body, response media type with an examples map, and a response header) deliberately violates its schema; the document is valid OpenAPI 3.1 and must import cleanly. Drives tests/test_example_conformance_corpus.py.
 
+> ⚠ **`34-overlay-basic-set/overlay.yaml`** — Fileset member: an Overlay document, not an API description. The openapi adapter claims a bare overlay at 0.9 with no format pinned, and importing it alone fails with INPUT_OVERLAY_BASE_MISSING (see openapi/negative/06-bare-overlay.yaml); it imports only through the set root openapi.yaml.
+
+> ⚠ **`35-overlay-chain-set/01-region-defaults.yaml`** — Fileset member: an Overlay document applied in member-path order before 02-production.yaml; imports only through the set root openapi.yaml.
+
+> ⚠ **`35-overlay-chain-set/02-production.yaml`** — Fileset member: an Overlay document applied in member-path order after 01-region-defaults.yaml; imports only through the set root openapi.yaml.
+
 > ⚠ **`negative/05-version-out-of-range.yaml`** — Fails at the normalize phase (parse succeeds since the YAML is well-formed); the adapter's detect declines the 9.0.0 marker, so normalize raises and the pipeline grounds INPUT_SEMANTIC_INVALID.
+
+> ⚠ **`negative/06-bare-overlay.yaml`** — The openapi adapter deliberately claims a bare overlay (confidence 0.9, no format pinned) so the import fails with INPUT_OVERLAY_BASE_MISSING, whose remediation prompts for the base document, instead of an obscure parse error.
 
 ### `openrpc/` — OpenRPC (JSON-RPC)
 
@@ -975,7 +989,6 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | `llm-tools` | multi-file | LlmToolsImportSource.parse_fileset only parses the root member and tool bundles do not resolve cross-file references, so a multi-file set demonstrates nothing beyond a single document. |
 | `odata` | multi-file | The odata adapter's parse_fileset only parses the root member and does not resolve edmx:Reference includes across other members, so a multi-file set exercises nothing. |
 | `oncrpc` | multi-file | The ONC RPC adapter's parse_fileset only parses the root document and does not resolve references across fileset members, so a multi-file set would exercise nothing. |
-| `openapi` | multi-file | The openapi adapter has no parse_fileset, so a multi-file set cannot be imported together. |
 | `openrpc` | multi-file | The openrpc adapter's parse_fileset only parses the root member and does not resolve external $ref targets in other members, so a multi-file set exercises nothing. |
 | `postman` | multi-file | The Postman adapter's parse_fileset only parses the root collection and never resolves references across fileset members, so a multi-file set would exercise nothing beyond a single file. |
 | `raml` | multi-file | The RAML adapter's parse_fileset only parses the root document and never resolves !include or library references across fileset members, so a multi-file set would exercise nothing beyond a single file. |
@@ -994,7 +1007,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 500 | `Apache-2.0` |
+| `hand-authored` | 506 | `Apache-2.0` |
 
 ## Trying an import
 

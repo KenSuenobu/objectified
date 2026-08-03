@@ -1,0 +1,71 @@
+openapi: 3.1.0
+info:
+  title: Adoption Center API
+  version: 1.4.0
+  description: Base description maintained by the platform team.
+  contact:
+    name: Platform Team
+    email: platform@adoption.example.com
+servers:
+  - url: http://localhost:8080
+    description: Local development
+tags:
+  - name: pets
+    description: Adoptable pets
+  - name: internal
+    description: Internal maintenance operations
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      tags: [pets]
+      summary: List adoptable pets
+      description: Returns the adoptable pets, newest first.
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of pets to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 20
+      responses:
+        '200':
+          description: The adoptable pets.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+        '400':
+          description: The limit was out of range.
+  /internal/reindex:
+    post:
+      operationId: reindexPets
+      tags: [internal]
+      summary: Rebuild the pet search index
+      description: Maintenance endpoint used by the nightly indexing job.
+      responses:
+        '202':
+          description: Reindex accepted.
+components:
+  schemas:
+    Pet:
+      type: object
+      description: One adoptable pet.
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Stable pet identifier.
+        name:
+          type: string
+          description: Display name.
+          examples: [Biscuit]
+        adopted:
+          type: boolean
+          description: Whether the pet has already been adopted.
+          default: false
