@@ -5,6 +5,45 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.249.0] - 2026-08-02
+
+### Added
+- **OpenAPI Overlay 1.0 pre-processor (IXH-7.7, #5132)** — The OpenAPI adapter now
+  resolves a base document plus one or more Overlay Specification 1.0 documents at
+  import time, with per-value provenance (`app/openapi_overlay.py`).
+  - **Action semantics**: `update` deep-merges into object targets (nested objects
+    merge recursively; primitives and arrays replace), **appends** to array targets,
+    and replaces primitive targets in place; `remove: true` deletes the selected
+    nodes (list indices deleted highest-first so survivors never shift under the
+    removal). Targets are JSONPath, evaluated through the custom-rule DSL's hardened
+    Spectral-compatible parser (`parse_jsonpath_expression`, now public).
+  - **Fileset intake**: the adapter accepts multi-document filesets
+    (`InputKind.FILESET`) — members classified by version marker (exactly one
+    `openapi`/`swagger` base; every `overlay: 1.x` member applied in member-path
+    order, each seeing the previous one's result, so a chain's last writer wins);
+    unclassified members (e.g. `$ref` targets) ride along untouched and are listed
+    as ignored.
+  - **Per-value provenance**: each set/replaced/appended/removed value is recorded
+    (JSON Pointer, kind, contributing overlay, action index, target expression) on
+    the canonical model's `extras["overlay"]`, rendered by the import preview
+    coverage ledger as document-scoped `mapped` rows — capped at 500 records with a
+    declared-truncation row, never a silent cut.
+  - **Bare overlay prompt**: a lone overlay document is *detected* (claimed at 0.9,
+    no format pinned) and rejected with new taxonomy code
+    `INPUT_OVERLAY_BASE_MISSING`, whose remediation prompts for the base document —
+    instead of an obscure parse error. A fileset with overlays but no base gets the
+    same code.
+  - **Findings, not silence**: actions whose target matches nothing, or that are
+    structurally unusable (no target, neither `update` nor `remove`, invalid
+    JSONPath, type-mismatched update, root removal), surface as new registered
+    warning rules `intake.overlay-unmatched-target` / `intake.overlay-action-invalid`
+    merged into the import lint report (tenant-governable like any registered rule).
+  - **Corpus ladder**: `openapi/34-overlay-basic-set/` (add + update + remove in one
+    overlay), `openapi/35-overlay-chain-set/` (two-overlay chain with a last-writer
+    override), and negative `openapi/negative/06-bare-overlay.yaml`
+    (`INPUT_OVERLAY_BASE_MISSING`), with canonical goldens; the openapi `multi-file`
+    rung waiver is retired.
+
 ## [1.248.0] - 2026-08-02
 
 ### Added

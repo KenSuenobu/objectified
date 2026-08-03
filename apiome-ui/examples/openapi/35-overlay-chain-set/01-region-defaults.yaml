@@ -1,0 +1,17 @@
+overlay: 1.0.0
+info:
+  title: Region defaults
+  version: 1.0.0
+extends: ./openapi.yaml
+actions:
+  # First link of the chain: the EU staging server and a regional description.
+  - target: $.info
+    description: Regional rollout baseline.
+    update:
+      description: Payments gateway, EU region rollout.
+      x-region: eu-west-1
+  - target: $.servers
+    description: Publish the EU staging server.
+    update:
+      url: https://staging.eu.payments.example.com
+      description: EU staging

@@ -1,0 +1,377 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": "Payments gateway, EU region, production.",
+    "extras": {
+      "overlay": {
+        "applied": [
+          "01-region-defaults.yaml",
+          "02-production.yaml"
+        ],
+        "base": "openapi.yaml",
+        "findings": [],
+        "ignored_members": [],
+        "provenance": [
+          {
+            "action_index": 0,
+            "kind": "replaced",
+            "overlay": "01-region-defaults.yaml",
+            "pointer": "/info/description",
+            "target": "$.info"
+          },
+          {
+            "action_index": 0,
+            "kind": "set",
+            "overlay": "01-region-defaults.yaml",
+            "pointer": "/info/x-region",
+            "target": "$.info"
+          },
+          {
+            "action_index": 1,
+            "kind": "appended",
+            "overlay": "01-region-defaults.yaml",
+            "pointer": "/servers/1",
+            "target": "$.servers"
+          },
+          {
+            "action_index": 0,
+            "kind": "replaced",
+            "overlay": "02-production.yaml",
+            "pointer": "/info/description",
+            "target": "$.info.description"
+          },
+          {
+            "action_index": 1,
+            "kind": "appended",
+            "overlay": "02-production.yaml",
+            "pointer": "/servers/2",
+            "target": "$.servers"
+          },
+          {
+            "action_index": 2,
+            "kind": "removed",
+            "overlay": "02-production.yaml",
+            "pointer": "/paths/~1charges/get",
+            "target": "$.paths['/charges'].get"
+          }
+        ],
+        "provenance_total": 6,
+        "provenance_truncated": false
+      }
+    },
+    "format": "openapi-3.1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Payments Gateway API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Local development",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "http://localhost:9000",
+        "variables": []
+      },
+      {
+        "description": "EU staging",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://staging.eu.payments.example.com",
+        "variables": []
+      },
+      {
+        "description": "EU production",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://payments.eu.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "default",
+        "name": "default",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Authorizes and captures a charge in one call.",
+            "extras": {
+              "operationId": "createCharge",
+              "summary": "Create a charge"
+            },
+            "http_method": "POST",
+            "http_path": "/charges",
+            "key": "POST /charges",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /charges#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ChargeRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "The charge was created.",
+                "extras": {},
+                "headers": [],
+                "key": "POST /charges#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Charge",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createCharge",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Payments Gateway API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One settled or pending charge.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Amount in minor units.",
+            "extras": {},
+            "field_number": null,
+            "key": "Charge.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "ISO 4217 currency code.",
+            "extras": {},
+            "field_number": null,
+            "key": "Charge.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Stable charge identifier.",
+            "extras": {},
+            "field_number": null,
+            "key": "Charge.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "pending",
+                "succeeded",
+                "failed"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Lifecycle state of the charge.",
+            "extras": {},
+            "field_number": null,
+            "key": "Charge.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Charge",
+        "key_type": null,
+        "kind": "record",
+        "name": "Charge",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A request to charge a card or account.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Amount in minor units.",
+            "extras": {},
+            "field_number": null,
+            "key": "ChargeRequest.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "^[A-Z]{3}$",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "ISO 4217 currency code.",
+            "extras": {},
+            "field_number": null,
+            "key": "ChargeRequest.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ChargeRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "ChargeRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.0.0"
+  },
+  "corpus_path": "openapi/35-overlay-chain-set/openapi.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 3,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "openapi-3.1"
+  },
+  "fingerprint": "sha256:86c78d1c603fb2fb090aade4c736edf20fdfcd7b4249d8e9e63e0c1b3be55fca",
+  "lint": {
+    "findings": 6,
+    "grade": "A",
+    "report_fingerprint": "dc298232ec3c72d72d3b27dcbf30916996d8a1266da179764e2bbed4eb349904",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

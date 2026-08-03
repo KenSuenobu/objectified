@@ -88,6 +88,7 @@ __all__ = [
     "REGEX_MATCH_TIMEOUT_SECONDS",
     "EMPTY_STYLE_GUIDE_YAML",
     "evaluate_custom_rules",
+    "parse_jsonpath_expression",
     "parse_style_guide_yaml",
     "serialize_style_guide_yaml",
     "validate_custom_definition",
@@ -720,6 +721,27 @@ def _rewrite_wildcards(node: Any) -> Any:
 def _parse_jsonpath(expression: str):
     """Parse a JSONPath expression once (cached; parsing is pure) with Spectral wildcards."""
     return _rewrite_wildcards(_jsonpath_parse(expression))
+
+
+def parse_jsonpath_expression(expression: str):
+    """Public seam for other intake features that evaluate JSONPath (IXH-7.7 overlays).
+
+    Parses with exactly the Spectral-compatible semantics custom rules use — the
+    ``[*]``-on-objects wildcard rewrite and the shared parse cache — so a JSONPath
+    written for one feature selects the same nodes in the other.
+
+    Args:
+        expression: The JSONPath expression.
+
+    Returns:
+        The parsed (rewritten) jsonpath-ng expression.
+
+    Raises:
+        Exception: Whatever jsonpath-ng raises for an invalid expression (it raises
+            ``JsonPathParserError`` and bare ``Exception`` subclasses; callers catch
+            broadly).
+    """
+    return _parse_jsonpath(expression)
 
 
 # --- Budget-counting document proxies ----------------------------------------------------------

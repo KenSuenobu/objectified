@@ -41,7 +41,8 @@ def test_list_import_sources_returns_registered_adapters():
     assert openapi["label"] == "OpenAPI / Swagger"
     assert openapi["icon"] == "file-json"
     assert openapi["paradigm"] == "rest"
-    assert openapi["input_kinds"] == ["file", "url", "paste"]
+    # IXH-7.7: fileset intake carries a base document plus Overlay 1.0 overlays.
+    assert openapi["input_kinds"] == ["file", "url", "paste", "fileset"]
     assert openapi["supports_live_discovery"] is False
     assert "openapi-3.1" in openapi["formats"]
 

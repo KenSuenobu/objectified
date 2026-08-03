@@ -7706,6 +7706,119 @@
       "rung": "typical"
     },
     {
+      "path": "openapi/34-overlay-basic-set/openapi.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.99
+      },
+      "features": [
+        "overlay",
+        "overlay-base",
+        "parameters",
+        "servers"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Base Adoption Center API for the IXH-7.7 Overlay 1.0 basic set; overlay.yaml applies add, update, and remove actions to it.",
+      "rung": "multi-file",
+      "fileset_role": "root"
+    },
+    {
+      "path": "openapi/34-overlay-basic-set/overlay.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0
+      },
+      "features": [
+        "overlay",
+        "overlay-add",
+        "overlay-update",
+        "overlay-remove"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Overlay 1.0 document exercising all three action shapes: object deep-merge and primitive replacement (update), array append (add), and node removal (remove), including a filtered tag removal.",
+      "notes": "Fileset member: an Overlay document, not an API description. The openapi adapter claims a bare overlay at 0.9 with no format pinned, and importing it alone fails with INPUT_OVERLAY_BASE_MISSING (see openapi/negative/06-bare-overlay.yaml); it imports only through the set root openapi.yaml.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "openapi/35-overlay-chain-set/01-region-defaults.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0
+      },
+      "features": [
+        "overlay",
+        "overlay-chain",
+        "overlay-add",
+        "overlay-update"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "First overlay of the IXH-7.7 multi-overlay chain: sets the regional description and appends the staging server; 02-production.yaml later overrides its description (last writer wins).",
+      "notes": "Fileset member: an Overlay document applied in member-path order before 02-production.yaml; imports only through the set root openapi.yaml.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "openapi/35-overlay-chain-set/02-production.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0
+      },
+      "features": [
+        "overlay",
+        "overlay-chain",
+        "overlay-update",
+        "overlay-remove"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Second overlay of the IXH-7.7 multi-overlay chain: overrides the description 01-region-defaults.yaml set, appends the production server, and removes the charge-listing operation.",
+      "notes": "Fileset member: an Overlay document applied in member-path order after 01-region-defaults.yaml; imports only through the set root openapi.yaml.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "openapi/35-overlay-chain-set/openapi.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.99
+      },
+      "features": [
+        "overlay",
+        "overlay-chain",
+        "overlay-base",
+        "requestBody"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Base Payments Gateway API for the IXH-7.7 multi-overlay chain set; 01-region-defaults.yaml then 02-production.yaml apply in order.",
+      "rung": "multi-file",
+      "fileset_role": "root"
+    },
+    {
       "path": "openapi/negative/01-syntactic-unclosed-flow-sequence.yaml",
       "format": "openapi",
       "adapter_key": "openapi",
@@ -7810,6 +7923,29 @@
       "failure_class": "version-out-of-range",
       "expected_error_code": "INPUT_SEMANTIC_INVALID",
       "notes": "Fails at the normalize phase (parse succeeds since the YAML is well-formed); the adapter's detect declines the 9.0.0 marker, so normalize raises and the pipeline grounds INPUT_SEMANTIC_INVALID."
+    },
+    {
+      "path": "openapi/negative/06-bare-overlay.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "overlay",
+        "bare-overlay"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A well-formed Overlay 1.0 document uploaded without the base OpenAPI document its actions modify (IXH-7.7).",
+      "notes": "The openapi adapter deliberately claims a bare overlay (confidence 0.9, no format pinned) so the import fails with INPUT_OVERLAY_BASE_MISSING, whose remediation prompts for the base document, instead of an obscure parse error.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_OVERLAY_BASE_MISSING"
     },
     {
       "path": "openrpc/01-wallet-api.json",
@@ -11010,9 +11146,6 @@
     },
     "oncrpc": {
       "multi-file": "The ONC RPC adapter's parse_fileset only parses the root document and does not resolve references across fileset members, so a multi-file set would exercise nothing."
-    },
-    "openapi": {
-      "multi-file": "The openapi adapter has no parse_fileset, so a multi-file set cannot be imported together."
     },
     "openrpc": {
       "multi-file": "The openrpc adapter's parse_fileset only parses the root member and does not resolve external $ref targets in other members, so a multi-file set exercises nothing."

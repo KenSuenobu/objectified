@@ -1,0 +1,302 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": "Public production surface of the Adoption Center API.",
+    "extras": {
+      "overlay": {
+        "applied": [
+          "overlay.yaml"
+        ],
+        "base": "openapi.yaml",
+        "findings": [],
+        "ignored_members": [],
+        "provenance": [
+          {
+            "action_index": 0,
+            "kind": "replaced",
+            "overlay": "overlay.yaml",
+            "pointer": "/info/description",
+            "target": "$.info"
+          },
+          {
+            "action_index": 0,
+            "kind": "set",
+            "overlay": "overlay.yaml",
+            "pointer": "/info/x-audience",
+            "target": "$.info"
+          },
+          {
+            "action_index": 1,
+            "kind": "appended",
+            "overlay": "overlay.yaml",
+            "pointer": "/servers/1",
+            "target": "$.servers"
+          },
+          {
+            "action_index": 2,
+            "kind": "removed",
+            "overlay": "overlay.yaml",
+            "pointer": "/paths/~1internal~1reindex",
+            "target": "$.paths['/internal/reindex']"
+          },
+          {
+            "action_index": 3,
+            "kind": "removed",
+            "overlay": "overlay.yaml",
+            "pointer": "/tags/1",
+            "target": "$.tags[?(@.name == 'internal')]"
+          },
+          {
+            "action_index": 4,
+            "kind": "replaced",
+            "overlay": "overlay.yaml",
+            "pointer": "/paths/~1pets/get/parameters/0/schema/maximum",
+            "target": "$.paths['/pets'].get.parameters[0].schema.maximum"
+          }
+        ],
+        "provenance_total": 6,
+        "provenance_truncated": false
+      }
+    },
+    "format": "openapi-3.1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Adoption Center API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Local development",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "http://localhost:8080",
+        "variables": []
+      },
+      {
+        "description": "Production",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.adoption.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": "Adoptable pets",
+        "extras": {},
+        "key": "pets",
+        "name": "pets",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Returns the adoptable pets, newest first.",
+            "extras": {
+              "operationId": "listPets",
+              "summary": "List adoptable pets"
+            },
+            "http_method": "GET",
+            "http_path": "/pets",
+            "key": "GET /pets",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "The adoptable pets.",
+                "extras": {},
+                "headers": [],
+                "key": "GET /pets#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Pet",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              },
+              {
+                "content_types": [],
+                "description": "The limit was out of range.",
+                "extras": {},
+                "headers": [],
+                "key": "GET /pets#response.400",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": "400"
+              }
+            ],
+            "name": "listPets",
+            "parameters": [
+              {
+                "constraints": {
+                  "enum": null,
+                  "exclusive_maximum": null,
+                  "exclusive_minimum": null,
+                  "extras": {},
+                  "format": null,
+                  "max_items": null,
+                  "max_length": null,
+                  "maximum": 100.0,
+                  "min_items": null,
+                  "min_length": null,
+                  "minimum": 1.0,
+                  "multiple_of": null,
+                  "pattern": null,
+                  "unique_items": null
+                },
+                "default": 20,
+                "deprecated": false,
+                "description": "Maximum number of pets to return.",
+                "extras": {},
+                "key": "GET /pets#query.limit",
+                "location": "query",
+                "name": "limit",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": [
+              "pets"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Adoption Center API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One adoptable pet.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": "Whether the pet has already been adopted.",
+            "extras": {},
+            "field_number": null,
+            "key": "Pet.adopted",
+            "name": "adopted",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Stable pet identifier.",
+            "extras": {},
+            "field_number": null,
+            "key": "Pet.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Display name.",
+            "extras": {},
+            "field_number": null,
+            "key": "Pet.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Pet",
+        "key_type": null,
+        "kind": "record",
+        "name": "Pet",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.4.0"
+  },
+  "corpus_path": "openapi/34-overlay-basic-set/openapi.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 2,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "openapi-3.1"
+  },
+  "fingerprint": "sha256:6490f5805151688738f629bc1e216eed7c6d14cc71013d47844fe9ffb26aa6f4",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "6f3d88623854abecadda6c20498c642fac98edcf9a0af2aa2e72debe97f0ba2d",
+    "score": 98,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

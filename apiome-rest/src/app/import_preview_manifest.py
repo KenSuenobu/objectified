@@ -200,6 +200,7 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         "http_status",
         "body_schema",
         "http_file_variables",
+        "overlay",
     }
 )
 
@@ -888,6 +889,10 @@ def _document_scope_rows(
     * Declared parser limits → ``not-parsed-by-adapter``: adapter-level declarations,
       ledger-only (no graph rows — the graph states only document facts), each naming
       its capability-registry reference.
+    * Overlay provenance (IXH-7.7) → ``mapped``: each value an OpenAPI Overlay set,
+      replaced, appended, or removed, naming the contributing overlay and action —
+      the pre-processor applied the action fully, so the row is a retained fact
+      about this document, with the attribution in its detail.
     """
     nodes: List[ProjectionNode] = []
     edges: List[ProjectionEdge] = []
@@ -976,7 +981,72 @@ def _document_scope_rows(
             # Keep index referenced so unused-variable linters stay quiet if enumerate changes.
             _ = index
 
+    ledger.extend(_overlay_provenance_rows(api))
+
     return nodes, edges, ledger
+
+
+#: Human verbs for overlay provenance kinds (IXH-7.7).
+_OVERLAY_KIND_VERBS = {
+    "set": "was added",
+    "replaced": "was replaced",
+    "appended": "was appended",
+    "removed": "was removed",
+}
+
+
+def _overlay_provenance_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the IXH-7.7 overlay application report as document-scoped ledger rows.
+
+    One row per provenance record — the value's JSON Pointer, what happened to it,
+    and which overlay's action did it — plus one declared-truncation row when the
+    report capped its records, so the ledger never silently claims completeness.
+    The rows are ``mapped``: the pre-processor applied the action fully, and the
+    attribution (which overlay contributed the value) is the row's detail.
+    """
+    report = api.extras.get("overlay") if isinstance(api.extras, dict) else None
+    if not isinstance(report, dict):
+        return []
+    status, reason = STATUS_FOR_COVERAGE[CoverageClass.MAPPED]
+    rows: List[CoverageEntry] = []
+    for record in report.get("provenance") or []:
+        if not isinstance(record, dict):
+            continue
+        pointer = str(record.get("pointer") or "")
+        kind = str(record.get("kind") or "")
+        verb = _OVERLAY_KIND_VERBS.get(kind, f"was {kind or 'changed'}")
+        detail = (
+            f"The value at {pointer or 'the document root'} {verb} by overlay "
+            f"{record.get('overlay')!r} (action #{record.get('action_index')}, "
+            f"target {record.get('target')!r})."
+        )
+        rows.append(
+            CoverageEntry(
+                source_construct=f"overlay#{pointer or '/'}",
+                coverage=CoverageClass.MAPPED,
+                status=status,
+                reason=reason,
+                detail=detail,
+                document_scoped=True,
+            )
+        )
+    if report.get("provenance_truncated"):
+        total = report.get("provenance_total")
+        rows.append(
+            CoverageEntry(
+                source_construct="overlay#(truncated)",
+                coverage=CoverageClass.MAPPED,
+                status=status,
+                reason=reason,
+                detail=(
+                    f"The overlay application recorded {total} change(s) in total; "
+                    f"only the first {len(report.get('provenance') or [])} carry "
+                    "itemized provenance rows here."
+                ),
+                document_scoped=True,
+            )
+        )
+    return rows
 
 
 def _sort_graph(
