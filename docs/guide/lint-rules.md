@@ -173,6 +173,34 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Default severity:** info
 - **Rationale:** Every operation argument should describe itself.
 
+<a id="graphql-composition-error"></a>
+### `graphql.composition-error`
+
+- **Category:** composition
+- **Default severity:** error
+- **Rationale:** A composition error reported by `rover supergraph compose` over the imported subgraph set.
+
+<a id="graphql-composition-invalid-key"></a>
+### `graphql.composition-invalid-key`
+
+- **Category:** composition
+- **Default severity:** error
+- **Rationale:** A @key(fields:) selection must name fields its type declares in that subgraph.
+
+<a id="graphql-composition-non-shareable-field"></a>
+### `graphql.composition-non-shareable-field`
+
+- **Category:** composition
+- **Default severity:** error
+- **Rationale:** A field resolved by more than one subgraph must be @shareable in every subgraph that resolves it.
+
+<a id="graphql-composition-unresolvable-selection"></a>
+### `graphql.composition-unresolvable-selection`
+
+- **Category:** composition
+- **Default severity:** error
+- **Rationale:** A @requires/@provides selection must reference fields some subgraph declares.
+
 <a id="graphql-enum-value-missing-description"></a>
 ### `graphql.enum-value-missing-description`
 
@@ -258,6 +286,11 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Category:** naming
 - **Default severity:** error
 - **Rationale:** Flag colliding tool names within a bundle.
+- **Reference:** https://github.com/apiome/apiome/blob/main/docs/guide/lint-rules.md#llm-tools-duplicate-tool-name
+- **Remediation:** Give each tool a unique `name` within the bundle (rename or drop duplicates).
+- **False-positive guidance:** Cross-dialect wrappers that intentionally alias the same tool should still expose a single canonical name to agents.
+- **Fixture:** `catalog/llm-tools-duplicate-tool-name`
+- **Scan modes:** `lint`
 
 <a id="llm-tools-param-missing-description"></a>
 ### `llm-tools.param-missing-description`

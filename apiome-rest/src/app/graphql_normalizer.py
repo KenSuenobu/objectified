@@ -78,7 +78,6 @@ from graphql import (
     is_specified_directive,
     is_specified_scalar_type,
     print_ast,
-    print_schema,
 )
 
 from .canonical_model import (
@@ -98,6 +97,11 @@ from .canonical_model import (
     Type,
     TypeKind,
     TypeRef,
+)
+from .graphql_federation import (
+    FederationInfo,
+    federation_info_of,
+    print_schema_with_directives,
 )
 from .normalizer import Keys, Normalizer, normalize_ordering
 
@@ -179,6 +183,34 @@ class GraphQlNormalizer(Normalizer, register=True):
             else {}
         )
 
+        # Schema-level applied directives (``schema @link(...) { … }``) — the
+        # supergraph/subgraph @link machinery lives here (IXH-7.6).
+        schema_directives = _schema_applied_directives(source)
+        if schema_directives:
+            extras["directives"] = schema_directives
+
+        # Federation ownership (IXH-7.6): the parser stashes a FederationInfo on
+        # the built schema (supergraph join-spec ownership, or per-file ownership
+        # for a subgraph set); record the roster on the artifact and the owning
+        # subgraph names on every owned type/field/service/operation.
+        federation = federation_info_of(source)
+        if federation is not None:
+            extras["federation"] = federation.extras_payload()
+            _stamp_subgraph_ownership(types, services, federation)
+
+        raw: Optional[dict[str, Any]] = None
+        if include_raw:
+            # The stored SDL keeps applied directives (@key / @join__type / …)
+            # rather than the bare print_schema form, which drops them.
+            raw = {"sdl": print_schema_with_directives(source)}
+            if federation is not None and federation.subgraph_sdls:
+                raw["subgraphs"] = dict(federation.subgraph_sdls)
+            if federation is not None and federation.composition_findings:
+                raw["composition"] = [
+                    finding.model_dump(exclude_none=True)
+                    for finding in federation.composition_findings
+                ]
+
         api = CanonicalApi(
             paradigm=self.paradigm,
             format=_FORMAT_KEY,
@@ -187,7 +219,7 @@ class GraphQlNormalizer(Normalizer, register=True):
             description=source.description,
             services=services,
             types=types,
-            raw={"sdl": print_schema(source)} if include_raw else None,
+            raw=raw,
             extras=extras,
         )
         return normalize_ordering(api)
@@ -431,6 +463,10 @@ class GraphQlNormalizer(Normalizer, register=True):
                         self._operation(slot, root_type.name, field_name, field)
                         for field_name, field in root_type.fields.items()
                     ],
+                    # A root operation type can carry applied directives too
+                    # (e.g. a supergraph's @join__type); the type is surfaced as
+                    # a service, so they live on the service's extras.
+                    extras=_applied_directives(root_type),
                 )
             )
         return services
@@ -627,6 +663,56 @@ def _applied_directives(node: Any) -> dict[str, Any]:
         if directive.name.value not in _REDUNDANT_APPLIED_DIRECTIVES
     ]
     return {"directives": applied} if applied else {}
+
+
+def _schema_applied_directives(schema: GraphQLSchema) -> List[str]:
+    """Printed schema-level applied directives (``@link(url: "…")``), in source order.
+
+    Read off the schema definition node and every ``extend schema`` node, so a
+    subgraph's ``extend schema @link(...)`` and a supergraph's ``schema @link(...)``
+    both land in the artifact's ``extras["directives"]``. Directives consumed
+    into first-class canonical signals are filtered exactly as
+    :func:`_applied_directives` does.
+    """
+    rendered: List[str] = []
+    nodes = [schema.ast_node, *(schema.extension_ast_nodes or ())]
+    for node in nodes:
+        if node is None:
+            continue
+        for directive in getattr(node, "directives", ()) or ():
+            if directive.name.value in _REDUNDANT_APPLIED_DIRECTIVES:
+                continue
+            rendered.append(print_ast(directive))
+    return rendered
+
+
+def _stamp_subgraph_ownership(
+    types: List[Type], services: List[Service], federation: FederationInfo
+) -> None:
+    """Record owning-subgraph names on every owned entity's ``extras`` (in place).
+
+    Keys line up with the federation ownership maps by construction: a GraphQL
+    canonical type key is the bare type name, a field key is ``Type.field``,
+    a service key is the root type name, and an operation key is the
+    ``Root.field`` schema coordinate. Entities the federation info does not
+    cover (e.g. join/link machinery types) are left untouched — no empty keys.
+    """
+    for type_ in types:
+        owners = federation.type_owners.get(type_.key)
+        if owners:
+            type_.extras["subgraphs"] = list(owners)
+        for field in type_.fields:
+            field_owners = federation.field_owners.get(field.key)
+            if field_owners:
+                field.extras["subgraphs"] = list(field_owners)
+    for service in services:
+        owners = federation.type_owners.get(service.key)
+        if owners:
+            service.extras["subgraphs"] = list(owners)
+        for operation in service.operations:
+            field_owners = federation.field_owners.get(operation.key)
+            if field_owners:
+                operation.extras["subgraphs"] = list(field_owners)
 
 
 def _default_value(value: Any) -> Any:

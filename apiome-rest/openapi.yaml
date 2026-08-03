@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.111.0
+  version: 1.112.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -55828,7 +55828,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-02T23:05:27Z'
+          example: '2026-08-03T01:01:39Z'
         envelope:
           additionalProperties: true
           type: object
@@ -82361,7 +82361,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-02T23:05:27Z'
+          example: '2026-08-03T01:01:39Z'
       additionalProperties: false
       type: object
       required:
@@ -93649,13 +93649,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-02T23:05:27Z'
+          example: '2026-08-03T01:01:39Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-02T23:05:27Z'
+          example: '2026-08-03T01:01:39Z'
         outcome:
           anyOf:
           - type: string

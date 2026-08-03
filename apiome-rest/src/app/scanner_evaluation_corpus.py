@@ -266,6 +266,36 @@ def run_fixture(data: Mapping[str, Any]) -> Tuple[Set[str], List[Dict[str, Any]]
         findings = list(report.report_dict().get("findings") or [])
         return _blocking_rule_ids(findings), findings
 
+    if kind == "catalog_graphql_fileset":
+        # Federated GraphQL subgraph set (IXH-7.6): lint the composition dimension.
+        from .fileset import IntakeFileset
+        from .graphql_import_source import GraphQlImportSource
+
+        members = {str(path): str(text) for path, text in (data.get("members") or {}).items()}
+        root = str(data.get("root") or next(iter(members)))
+        adapter = GraphQlImportSource()
+        model = adapter.normalize(adapter.parse_fileset(IntakeFileset.from_members(members, root=root)))
+        rover_composition = data.get("rover_composition")
+        if isinstance(rover_composition, list) and model.raw is not None:
+            # A captured `rover supergraph compose` verdict (the tool itself is
+            # not available in the evaluation environment) — the fixture
+            # exercises the lint surface of the stored verdict.
+            model.raw["composition"] = rover_composition
+        report = adapter.lint(model)
+        findings = [
+            f.as_dict()
+            if hasattr(f, "as_dict")
+            else {
+                "rule": f.rule,
+                "severity": f.severity,
+                "path": getattr(f, "path", ""),
+                "id": getattr(f, "id", ""),
+                "message": getattr(f, "message", ""),
+            }
+            for f in report.findings
+        ]
+        return _blocking_rule_ids(findings), findings
+
     if kind == "catalog_pointer_index":
         # Inventory-only fixture: multi-format pointers validated in tests by path existence.
         return set(), []

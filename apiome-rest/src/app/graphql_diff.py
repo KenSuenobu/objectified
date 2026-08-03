@@ -45,7 +45,7 @@ from .breaking_change import (
     Severity,
 )
 from .canonical_model import CanonicalApi
-from .diff import EntityCategory, ModelDiff, diff
+from .diff import DiffLabeler, EntityCategory, EntityChange, ModelDiff, diff
 from .toolchain_runner import (
     ToolchainError,
     ToolchainRunner,
@@ -65,6 +65,7 @@ __all__ = [
     "GraphQlDiffError",
     "run_graphql_diff",
     "GraphQlBreakingChangeClassifier",
+    "GraphQlDiffLabeler",
     "classify_graphql",
 ]
 
@@ -514,3 +515,63 @@ async def classify_graphql(
     return await classifier.classify_async(
         model_diff, base, target, runner=runner, timeout=timeout
     )
+
+
+# ===========================================================================
+# The GraphQL diff labeler — subgraph attribution (IXH-7.6)
+# ===========================================================================
+
+
+class GraphQlDiffLabeler(DiffLabeler, register=True):
+    """Attribute each GraphQL change to its owning Federation subgraph(s).
+
+    The first provider on the :class:`app.diff.DiffLabeler` SPI. When a
+    federated artifact (supergraph or subgraph set) is diffed, every canonical
+    entity the IXH-7.6 normalizer could attribute carries the owning subgraph
+    names in ``extras["subgraphs"]`` — this labeler surfaces them as the
+    change's human-readable label, so "which subgraph broke the supergraph?"
+    is answered directly on the diff:
+
+    * added/removed entities → ``owned by subgraph 'reviews'``;
+    * modified entities whose ownership itself moved →
+      ``subgraph ownership: products → products, reviews``;
+    * entities of a non-federated schema (no ``subgraphs`` extras) → no label.
+    """
+
+    format = "graphql"
+
+    def label(
+        self, change: EntityChange, base: CanonicalApi, target: CanonicalApi
+    ) -> Optional[str]:
+        """Return the subgraph-attribution label for ``change``, or ``None``.
+
+        Reads the owning-subgraph names off the change's ``before``/``after``
+        self-projections (which carry ``extras`` verbatim); deterministic and
+        I/O-free, per the SPI contract.
+        """
+        before_owners = _owners_of(change.before)
+        after_owners = _owners_of(change.after)
+        if before_owners and after_owners and before_owners != after_owners:
+            return (
+                f"subgraph ownership: {', '.join(before_owners)} → "
+                f"{', '.join(after_owners)}"
+            )
+        owners = after_owners or before_owners
+        if not owners:
+            return None
+        noun = "subgraph" if len(owners) == 1 else "subgraphs"
+        named = ", ".join(f"'{name}'" for name in owners)
+        return f"owned by {noun} {named}"
+
+
+def _owners_of(payload: Any) -> List[str]:
+    """The ``extras['subgraphs']`` list of a change self-projection, if any."""
+    if not isinstance(payload, dict):
+        return []
+    extras = payload.get("extras")
+    if not isinstance(extras, dict):
+        return []
+    owners = extras.get("subgraphs")
+    if not isinstance(owners, list):
+        return []
+    return [str(name) for name in owners]

@@ -1,0 +1,25 @@
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable"])
+
+"Product catalog subgraph: owns products and their pricing."
+type Query {
+  "Look up one product by its identifier."
+  product(id: ID!): Product
+
+  "The current best-selling products."
+  topProducts(first: Int = 5): [Product!]
+}
+
+"A purchasable item in the storefront catalog."
+type Product @key(fields: "id") {
+  "Stable product identifier."
+  id: ID!
+
+  "Display name shown in listings."
+  name: String!
+
+  "Unit price in minor currency units."
+  priceCents: Int!
+
+  "Weight in grams, when known (shared with the inventory subgraph)."
+  weightGrams: Int @shareable
+}

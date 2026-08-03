@@ -1,0 +1,1061 @@
+{
+  "adapter": "graphql",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "directive_definitions": [
+        {
+          "arguments": [
+            {
+              "name": "graph",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "join__Graph",
+                "nullable": false
+              }
+            }
+          ],
+          "locations": [
+            "ENUM_VALUE"
+          ],
+          "name": "join__enumValue",
+          "repeatable": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "graph",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "join__Graph",
+                "nullable": true
+              }
+            },
+            {
+              "name": "requires",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "join__FieldSet",
+                "nullable": true
+              }
+            },
+            {
+              "name": "provides",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "join__FieldSet",
+                "nullable": true
+              }
+            },
+            {
+              "name": "type",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": true
+              }
+            },
+            {
+              "name": "external",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "Boolean",
+                "nullable": true
+              }
+            },
+            {
+              "name": "override",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": true
+              }
+            },
+            {
+              "name": "usedOverridden",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "Boolean",
+                "nullable": true
+              }
+            }
+          ],
+          "locations": [
+            "FIELD_DEFINITION",
+            "INPUT_FIELD_DEFINITION"
+          ],
+          "name": "join__field",
+          "repeatable": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "name",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": false
+              }
+            },
+            {
+              "name": "url",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": false
+              }
+            }
+          ],
+          "locations": [
+            "ENUM_VALUE"
+          ],
+          "name": "join__graph",
+          "repeatable": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "graph",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "join__Graph",
+                "nullable": false
+              }
+            },
+            {
+              "name": "interface",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": false
+              }
+            }
+          ],
+          "locations": [
+            "INTERFACE",
+            "OBJECT"
+          ],
+          "name": "join__implements",
+          "repeatable": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "graph",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "join__Graph",
+                "nullable": false
+              }
+            },
+            {
+              "name": "key",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "join__FieldSet",
+                "nullable": true
+              }
+            },
+            {
+              "default": false,
+              "name": "extension",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "Boolean",
+                "nullable": false
+              }
+            },
+            {
+              "default": true,
+              "name": "resolvable",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "Boolean",
+                "nullable": false
+              }
+            },
+            {
+              "default": false,
+              "name": "isInterfaceObject",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "Boolean",
+                "nullable": false
+              }
+            }
+          ],
+          "locations": [
+            "ENUM",
+            "INPUT_OBJECT",
+            "INTERFACE",
+            "OBJECT",
+            "SCALAR",
+            "UNION"
+          ],
+          "name": "join__type",
+          "repeatable": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "graph",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "join__Graph",
+                "nullable": false
+              }
+            },
+            {
+              "name": "member",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": false
+              }
+            }
+          ],
+          "locations": [
+            "UNION"
+          ],
+          "name": "join__unionMember",
+          "repeatable": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "url",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": true
+              }
+            },
+            {
+              "name": "as",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": true
+              }
+            },
+            {
+              "name": "for",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "link__Purpose",
+                "nullable": true
+              }
+            },
+            {
+              "name": "import",
+              "type": {
+                "extras": {},
+                "item": {
+                  "extras": {},
+                  "item": null,
+                  "name": "link__Import",
+                  "nullable": true
+                },
+                "name": null,
+                "nullable": true
+              }
+            }
+          ],
+          "locations": [
+            "SCHEMA"
+          ],
+          "name": "link",
+          "repeatable": true
+        }
+      ],
+      "directives": [
+        "@link(url: \"https://specs.apollo.dev/link/v1.0\")",
+        "@link(url: \"https://specs.apollo.dev/join/v0.3\", for: EXECUTION)"
+      ],
+      "federation": {
+        "role": "supergraph",
+        "subgraphs": [
+          {
+            "name": "inventory",
+            "url": "http://inventory.storefront.local/graphql"
+          },
+          {
+            "name": "products",
+            "url": "http://products.storefront.local/graphql"
+          },
+          {
+            "name": "reviews",
+            "url": "http://reviews.storefront.local/graphql"
+          }
+        ]
+      }
+    },
+    "format": "graphql",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "GraphQL Schema",
+      "namespace": null
+    },
+    "paradigm": "graph",
+    "protocol": "graphql",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "The storefront's composed query root.",
+        "extras": {
+          "directives": [
+            "@join__type(graph: INVENTORY)",
+            "@join__type(graph: PRODUCTS)",
+            "@join__type(graph: REVIEWS)"
+          ],
+          "subgraphs": [
+            "inventory",
+            "products",
+            "reviews"
+          ]
+        },
+        "key": "Query",
+        "name": "Query",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Products currently available to ship.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: INVENTORY)"
+              ],
+              "subgraphs": [
+                "inventory"
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.inStock",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.inStock#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Product",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "inStock",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "The most recent reviews across all products.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: REVIEWS)"
+              ],
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.latestReviews",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.latestReviews#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Review",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "latestReviews",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": 10,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.latestReviews#arg.limit",
+                "location": "query",
+                "name": "limit",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Look up one product by its identifier.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: PRODUCTS)"
+              ],
+              "subgraphs": [
+                "products"
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.product",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.product#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Product",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "product",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.product#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "The current best-selling products.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: PRODUCTS)"
+              ],
+              "subgraphs": [
+                "products"
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.topProducts",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.topProducts#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Product",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "topProducts",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": 5,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.topProducts#arg.first",
+                "location": "query",
+                "name": "first",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A purchasable item in the storefront catalog.",
+        "enum_values": [],
+        "extras": {
+          "directives": [
+            "@join__type(graph: INVENTORY, key: \"id\")",
+            "@join__type(graph: PRODUCTS, key: \"id\")",
+            "@join__type(graph: REVIEWS, key: \"id\")"
+          ],
+          "graphql_type": "object",
+          "subgraphs": [
+            "inventory",
+            "products",
+            "reviews"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Estimated delivery window in days, when the item is in stock.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: INVENTORY)"
+              ],
+              "subgraphs": [
+                "inventory"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.deliveryEstimateDays",
+            "name": "deliveryEstimateDays",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Stable product identifier.",
+            "extras": {
+              "subgraphs": [
+                "inventory",
+                "products",
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Display name shown in listings.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: PRODUCTS)"
+              ],
+              "subgraphs": [
+                "products"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unit price in minor currency units.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: PRODUCTS)"
+              ],
+              "subgraphs": [
+                "products"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.priceCents",
+            "name": "priceCents",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "All reviews written for this product.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: REVIEWS)"
+              ],
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.reviews",
+            "name": "reviews",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Review",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Units currently on hand across all warehouses.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: INVENTORY)"
+              ],
+              "subgraphs": [
+                "inventory"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.unitsInStock",
+            "name": "unitsInStock",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Average rating weighted by price bracket.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: REVIEWS, requires: \"priceCents\")"
+              ],
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.valueScore",
+            "name": "valueScore",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Weight in grams, when known.",
+            "extras": {
+              "directives": [
+                "@join__field(graph: INVENTORY)",
+                "@join__field(graph: PRODUCTS)"
+              ],
+              "subgraphs": [
+                "inventory",
+                "products"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.weightGrams",
+            "name": "weightGrams",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Product",
+        "key_type": null,
+        "kind": "record",
+        "name": "Product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A customer review of one product.",
+        "enum_values": [],
+        "extras": {
+          "directives": [
+            "@join__type(graph: REVIEWS)"
+          ],
+          "graphql_type": "object",
+          "subgraphs": [
+            "reviews"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Review text as submitted.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Review.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Review identifier.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Review.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The reviewed product.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Review.product",
+            "name": "product",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Product",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Star rating from 1 to 5.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Review.rating",
+            "name": "rating",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Review",
+        "key_type": null,
+        "kind": "record",
+        "name": "Review",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "join__FieldSet",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "join__FieldSet",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "directives": [
+                "@join__graph(name: \"inventory\", url: \"http://inventory.storefront.local/graphql\")"
+              ]
+            },
+            "key": "join__Graph.INVENTORY",
+            "name": "INVENTORY",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "directives": [
+                "@join__graph(name: \"products\", url: \"http://products.storefront.local/graphql\")"
+              ]
+            },
+            "key": "join__Graph.PRODUCTS",
+            "name": "PRODUCTS",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "directives": [
+                "@join__graph(name: \"reviews\", url: \"http://reviews.storefront.local/graphql\")"
+              ]
+            },
+            "key": "join__Graph.REVIEWS",
+            "name": "REVIEWS",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "join__Graph",
+        "key_type": null,
+        "kind": "enum",
+        "name": "join__Graph",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "link__Import",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "link__Import",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": "SECURITY features provide metadata necessary to securely resolve fields.",
+            "extras": {},
+            "key": "link__Purpose.SECURITY",
+            "name": "SECURITY",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": "EXECUTION features provide metadata necessary for operation execution.",
+            "extras": {},
+            "key": "link__Purpose.EXECUTION",
+            "name": "EXECUTION",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "link__Purpose",
+        "key_type": null,
+        "kind": "enum",
+        "name": "link__Purpose",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "graphql/14-federation-supergraph.graphql",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "graphql"
+  },
+  "fingerprint": "sha256:1da42b80e0de0a17e557ea4bfd2ad720cc6f4ca8cb015ec96804719b0103b0c8",
+  "lint": {
+    "findings": 15,
+    "grade": "C",
+    "report_fingerprint": "ebcb13a494596eb38b59da6528735323afffeeb33af140e87d59ac0e0cbee0a6",
+    "score": 73,
+    "severity_counts": {
+      "error": 0,
+      "info": 11,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

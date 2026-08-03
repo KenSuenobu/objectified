@@ -45,7 +45,13 @@ from graphql import GraphQLSchema
 
 # Importing the GraphQL normalizer self-registers the ``graphql`` format key, which
 # :meth:`GraphQlImportSource.normalize` resolves through the normalizer registry.
-from . import graphql_normalizer  # noqa: F401
+# Importing the GraphQL diff module self-registers the breaking-change classifier
+# (MFI-10.5) and the subgraph-attribution diff labeler (IXH-7.6), so the default
+# canonical diff labels every change with its owning subgraph for federated schemas.
+from . import (
+    graphql_diff,  # noqa: F401
+    graphql_normalizer,  # noqa: F401
+)
 from .canonical_model import ApiParadigm, CanonicalApi
 from .fileset import IntakeFileset
 from .import_source import (
@@ -183,7 +189,16 @@ class GraphQlImportSource(ImportSource, register=True):
         *,
         source_label: Optional[str] = None,
     ) -> GraphQLSchema:
-        """Merge and build a schema from every SDL member of *fileset* (MFI-29.2)."""
+        """Merge and build a schema from every SDL member of *fileset* (MFI-29.2).
+
+        A fileset whose members carry Federation subgraph markers (``@key`` /
+        ``@shareable`` / a federation ``@link``) is a **subgraph set** (IXH-7.6):
+        the parser records per-file subgraph ownership on the built schema, and —
+        when the bundled ``rover`` toolchain is present — the set is additionally
+        composed with ``rover supergraph compose``, whose composition errors are
+        attached for the ``composition`` lint dimension. Both are best-effort
+        annotations: a missing/failed ``rover`` never fails the import.
+        """
         from .graphql_parser import GraphQlParseError, GraphQlSource, build_schema_from_sources
 
         ordered = sorted(fileset.members.keys(), key=lambda path: (path != fileset.root, path))
@@ -191,9 +206,38 @@ class GraphQlImportSource(ImportSource, register=True):
             GraphQlSource(label=path, text=fileset.members[path]) for path in ordered
         ]
         try:
-            return build_schema_from_sources(sources)
+            schema = build_schema_from_sources(sources)
         except GraphQlParseError as exc:
             raise ImportSourceError(str(exc)) from exc
+
+        self._attach_rover_composition(schema)
+        return schema
+
+    @staticmethod
+    def _attach_rover_composition(schema: GraphQLSchema) -> None:
+        """Compose a subgraph set with the bundled ``rover``, attaching its findings.
+
+        No-op unless the parser marked the schema as a multi-subgraph set. The
+        compose runs on the gRPC-adapter-style worker-loop bridge
+        (:func:`app.graphql_federation.compose_subgraphs_sync`) and degrades to
+        "no verdict" when ``rover`` (or its composition plugin) is unavailable.
+        """
+        from .graphql_federation import (
+            FEDERATION_EXTENSIONS_KEY,
+            FederationInfo,
+            compose_subgraphs_sync,
+        )
+
+        info = (schema.extensions or {}).get(FEDERATION_EXTENSIONS_KEY)
+        if not isinstance(info, FederationInfo):
+            return
+        if info.role != "subgraph" or len(info.subgraphs) < 2 or not info.subgraph_sdls:
+            return
+        findings = compose_subgraphs_sync(info.subgraphs, info.subgraph_sdls)
+        if findings:
+            schema.extensions[FEDERATION_EXTENSIONS_KEY] = info.model_copy(
+                update={"composition_findings": findings}
+            )
 
     def _sdl_from_raw(self, raw: str, *, source_label: Optional[str]) -> str:
         """Return SDL for ``raw``, rebuilding it from an introspection response when needed."""

@@ -1,0 +1,92 @@
+schema @link(url: "https://specs.apollo.dev/link/v1.0") @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) {
+  query: Query
+}
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+scalar join__FieldSet
+
+scalar link__Import
+
+enum link__Purpose {
+  "SECURITY features provide metadata necessary to securely resolve fields."
+  SECURITY
+
+  "EXECUTION features provide metadata necessary for operation execution."
+  EXECUTION
+}
+
+enum join__Graph {
+  INVENTORY @join__graph(name: "inventory", url: "http://inventory.storefront.local/graphql")
+  PRODUCTS @join__graph(name: "products", url: "http://products.storefront.local/graphql")
+  REVIEWS @join__graph(name: "reviews", url: "http://reviews.storefront.local/graphql")
+}
+
+"The storefront's composed query root."
+type Query @join__type(graph: INVENTORY) @join__type(graph: PRODUCTS) @join__type(graph: REVIEWS) {
+  "Products currently available to ship."
+  inStock: [Product!] @join__field(graph: INVENTORY)
+
+  "Look up one product by its identifier."
+  product(id: ID!): Product @join__field(graph: PRODUCTS)
+
+  "The current best-selling products."
+  topProducts(first: Int = 5): [Product!] @join__field(graph: PRODUCTS)
+
+  "The most recent reviews across all products."
+  latestReviews(limit: Int = 10): [Review!] @join__field(graph: REVIEWS)
+}
+
+"A purchasable item in the storefront catalog."
+type Product @join__type(graph: INVENTORY, key: "id") @join__type(graph: PRODUCTS, key: "id") @join__type(graph: REVIEWS, key: "id") {
+  "Stable product identifier."
+  id: ID!
+
+  "Display name shown in listings."
+  name: String! @join__field(graph: PRODUCTS)
+
+  "Unit price in minor currency units."
+  priceCents: Int! @join__field(graph: PRODUCTS)
+
+  "Weight in grams, when known."
+  weightGrams: Int @join__field(graph: INVENTORY) @join__field(graph: PRODUCTS)
+
+  "Units currently on hand across all warehouses."
+  unitsInStock: Int! @join__field(graph: INVENTORY)
+
+  "Estimated delivery window in days, when the item is in stock."
+  deliveryEstimateDays: Int @join__field(graph: INVENTORY)
+
+  "All reviews written for this product."
+  reviews: [Review!] @join__field(graph: REVIEWS)
+
+  "Average rating weighted by price bracket."
+  valueScore: Float @join__field(graph: REVIEWS, requires: "priceCents")
+}
+
+"A customer review of one product."
+type Review @join__type(graph: REVIEWS) {
+  "Review identifier."
+  id: ID!
+
+  "Review text as submitted."
+  body: String!
+
+  "Star rating from 1 to 5."
+  rating: Int!
+
+  "The reviewed product."
+  product: Product!
+}
