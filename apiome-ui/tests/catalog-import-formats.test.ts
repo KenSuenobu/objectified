@@ -41,6 +41,10 @@ describe('catalog-import-formats', () => {
     expect(catalogAdapterForFormat('postmancollection')?.sourceKind).toBe('postman');
     expect(catalogAdapterForFormat('http-file')?.sourceKind).toBe('http-file');
     expect(catalogAdapterForFormat('curl')?.sourceKind).toBe('http-file');
+    expect(catalogAdapterForFormat('kong')?.sourceKind).toBe('kong');
+    expect(catalogAdapterForFormat('kong-declarative')?.sourceKind).toBe('kong');
+    expect(catalogAdapterForFormat('gateway-api')?.sourceKind).toBe('gateway-api');
+    expect(catalogAdapterForFormat('httproute')?.sourceKind).toBe('gateway-api');
     expect(catalogAdapterForFormat('cloudevents')?.sourceKind).toBe('cloudevents');
     expect(catalogAdapterForFormat('cloud-events')?.sourceKind).toBe('cloudevents');
     expect(catalogAdapterForFormat('smithy')?.sourceKind).toBe('smithy');
@@ -99,7 +103,7 @@ describe('catalog-import-formats', () => {
 
   test('exposes the distinct storable sources (deduped by source_kind)', () => {
     const kinds = CATALOG_STORABLE_SOURCES.map((s) => s.sourceKind).sort();
-    expect(kinds).toEqual(['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fhir', 'fix', 'flatbuffers', 'graphql', 'grpc', 'hl7v2', 'http-file', 'iso20022', 'iso8583', 'json-schema', 'jtd', 'k8s-crd', 'llm-tools', 'odata', 'oncrpc', 'openrpc', 'postman', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect']);
+    expect(kinds).toEqual(['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fhir', 'fix', 'flatbuffers', 'gateway-api', 'graphql', 'grpc', 'hl7v2', 'http-file', 'iso20022', 'iso8583', 'json-schema', 'jtd', 'k8s-crd', 'kong', 'llm-tools', 'odata', 'oncrpc', 'openrpc', 'postman', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect']);
   });
 
   test('routes adapter-backed formats to catalog', () => {
@@ -147,6 +151,14 @@ describe('catalog-import-formats', () => {
     expect(decideCatalogImportRouting('curl')).toMatchObject({
       destination: 'catalog',
       adapter: { sourceKind: 'http-file' },
+    });
+    expect(decideCatalogImportRouting('kong')).toMatchObject({
+      destination: 'catalog',
+      adapter: { sourceKind: 'kong' },
+    });
+    expect(decideCatalogImportRouting('httproute')).toMatchObject({
+      destination: 'catalog',
+      adapter: { sourceKind: 'gateway-api' },
     });
     expect(decideCatalogImportRouting('avro')).toMatchObject({
       destination: 'catalog',
@@ -366,6 +378,9 @@ describe('catalog-import-formats', () => {
     expect(paradigmForFormat('postman')).toBe('rest');
     expect(paradigmForFormat('http-file')).toBe('rest');
     expect(paradigmForFormat('curl')).toBe('rest');
+    expect(paradigmForFormat('kong')).toBe('rest');
+    expect(paradigmForFormat('gateway-api')).toBe('rest');
+    expect(paradigmForFormat('httproute')).toBe('rest');
     expect(paradigmForFormat('cloudevents')).toBe('event');
     expect(paradigmForFormat('cloud-events')).toBe('event');
     expect(paradigmForFormat('smithy')).toBe('rpc');

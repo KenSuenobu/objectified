@@ -18,7 +18,7 @@
       "label": "ASN.1",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`DEFINITIONS ::= BEGIN … END`"
+      "marker": "`DEFINITIONS ::= BEGIN \u2026 END`"
     },
     "asyncapi": {
       "label": "AsyncAPI 2.x/3.0",
@@ -36,7 +36,7 @@
       "label": "Cap'n Proto",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`@0x…` file id + `struct`"
+      "marker": "`@0x\u2026` file id + `struct`"
     },
     "cloudevents": {
       "label": "CloudEvents 1.0",
@@ -92,6 +92,12 @@
       "paradigm": "data_schema",
       "marker": "`table`/`struct` + `root_type`"
     },
+    "gateway-api": {
+      "label": "Gateway API HTTPRoute",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`apiVersion: gateway.networking.k8s.io/*` + `kind: HTTPRoute`"
+    },
     "graphql": {
       "label": "GraphQL SDL",
       "category": "graph",
@@ -139,6 +145,12 @@
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition`"
+    },
+    "kong": {
+      "label": "Kong Declarative Config",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`_format_version` + `services:`/`routes:` declarative sections"
     },
     "llm-tools": {
       "label": "LLM Tools",
@@ -1138,7 +1150,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1159,7 +1171,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1701,7 +1713,7 @@
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
-      "provenance": "Grammatically well-formed schema containing a file id and constants only — no struct, enum, or interface to import.",
+      "provenance": "Grammatically well-formed schema containing a file id and constants only \u2014 no struct, enum, or interface to import.",
       "failure_class": "semantic",
       "expected_error_code": "INPUT_MALFORMED"
     },
@@ -1825,7 +1837,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays — the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
+      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays \u2014 the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
       "rung": "composition"
     },
     {
@@ -2718,7 +2730,7 @@
       "provenance": "Hand-written billing IDL that #includes common/money.idl, which is not provided, so Common::Money can never resolve.",
       "failure_class": "unresolvable-ref",
       "expected_error_code": "FORMAT_MISMATCH",
-      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 — the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
+      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 \u2014 the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
     },
     {
       "path": "corba-idl/negative/03-truncated-inventory.idl",
@@ -3546,7 +3558,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "FIX Orchestra XML is not yet recognized — currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
+      "notes": "FIX Orchestra XML is not yet recognized \u2014 currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
       "rung": "composition"
     },
     {
@@ -3952,6 +3964,276 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Hand-authored valid minimal Ping schema encoded as UTF-16 with BOM so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "gateway-api/01-minimal-httproute.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "minimal",
+        "single-route"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "minimal"
+    },
+    {
+      "path": "gateway-api/02-typical-hostnames-methods.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "typical",
+        "hostnames",
+        "regex-paths",
+        "multi-rule"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "typical"
+    },
+    {
+      "path": "gateway-api/03-multi-route-stream.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "composition",
+        "multi-document",
+        "gateway-resource"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Multi-document stream; the Gateway resource is recorded as an ignored construct, only HTTPRoutes import.",
+      "rung": "composition"
+    },
+    {
+      "path": "gateway-api/04-stress-filters-matches.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "stress",
+        "filters",
+        "header-matches",
+        "query-matches",
+        "weighted-backends",
+        "extension-ref"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "stress"
+    },
+    {
+      "path": "gateway-api/05-real-world-microservices.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "real-world",
+        "multi-document",
+        "namespaces",
+        "weighted-backends"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "real-world"
+    },
+    {
+      "path": "gateway-api/06-manifest-set/gateway.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "multi-file",
+        "manifest-directory",
+        "gateway-resource"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Gateway infrastructure resource; not independently importable, merged as an ignored construct through the set.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "gateway-api/06-manifest-set/routes-billing.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "multi-file",
+        "manifest-directory"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "multi-file",
+      "fileset_role": "root"
+    },
+    {
+      "path": "gateway-api/06-manifest-set/routes-ledger.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "multi-file",
+        "manifest-directory"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "gateway-api/negative/01-syntactic-bad-yaml.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "gateway-api/negative/02-semantic-no-httproute.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Gateway API resources are present (Gateway, TCPRoute) but no HTTPRoute \u2014 nothing importable.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_SEMANTIC_INVALID"
+    },
+    {
+      "path": "gateway-api/negative/03-truncated-mid-rule.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_TRUNCATED"
+    },
+    {
+      "path": "gateway-api/negative/04-wrong-format-deployment.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "gateway-api/negative/05-encoding-utf16.yaml",
+      "format": "gateway-api",
+      "adapter_key": "gateway-api",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "gateway-api",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "A minimal HTTPRoute re-encoded as UTF-16 (BOM + NUL bytes).",
       "failure_class": "encoding",
       "expected_error_code": "INPUT_ENCODING_INVALID"
     },
@@ -4368,7 +4650,7 @@
         "defaults"
       ],
       "rung": "composition",
-      "notes": "expected_detection records intent: the greedy flatbuffers sniffer (is_flatbuffers matches the join__Graph enum block) claims this file at 0.96, with smithy/thrift at 0.95, outranking graphql's 0.9 — the same sniffer-ranking bug family recorded for graphql/03-04/07-08 (IXH-1.2)."
+      "notes": "expected_detection records intent: the greedy flatbuffers sniffer (is_flatbuffers matches the join__Graph enum block) claims this file at 0.96, with smithy/thrift at 0.95, outranking graphql's 0.9 \u2014 the same sniffer-ranking bug family recorded for graphql/03-04/07-08 (IXH-1.2)."
     },
     {
       "path": "graphql/negative/01-syntactic-unclosed-brace.graphql",
@@ -6283,6 +6565,258 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "The hand-authored k8s-crd/01-minimal-widget.yaml re-encoded as UTF-16 (BOM + NUL bytes).",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "kong/01-minimal-single-service.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "minimal",
+        "single-service"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "minimal"
+    },
+    {
+      "path": "kong/02-typical-single-service-auth.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "typical",
+        "single-service",
+        "key-auth",
+        "regex-paths"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "typical"
+    },
+    {
+      "path": "kong/03-multi-service.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "composition",
+        "multi-service",
+        "top-level-routes",
+        "upstreams"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "composition"
+    },
+    {
+      "path": "kong/04-stress-plugin-heavy.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "stress",
+        "plugin-heavy",
+        "jwt",
+        "oauth2",
+        "hmac-auth",
+        "consumers",
+        "credential-redaction"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Consumer credential values are fixtures only and are redacted at parse time; the import records the redaction count.",
+      "rung": "stress"
+    },
+    {
+      "path": "kong/05-real-world-ecommerce.json",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "real-world",
+        "json",
+        "multi-service",
+        "key-auth"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "real-world"
+    },
+    {
+      "path": "kong/06-split-set/kong-routes.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "multi-file",
+        "split-config",
+        "top-level-routes"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "deck-style split file: top-level routes referencing a service declared in kong-services.yaml.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "kong/06-split-set/kong-services.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "multi-file",
+        "split-config"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "multi-file",
+      "fileset_role": "root"
+    },
+    {
+      "path": "kong/negative/01-syntactic-bad-yaml.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "kong/negative/02-semantic-no-routes.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Well-formed Kong config that declares a service but no routes \u2014 no API surface to import.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_SEMANTIC_INVALID"
+    },
+    {
+      "path": "kong/negative/03-truncated-mid-route.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_TRUNCATED"
+    },
+    {
+      "path": "kong/negative/04-wrong-format-openapi.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "kong/negative/05-encoding-utf16.yaml",
+      "format": "kong",
+      "adapter_key": "kong",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "kong",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "The hand-authored kong/01-minimal-single-service.yaml shape re-encoded as UTF-16 (BOM + NUL bytes).",
       "failure_class": "encoding",
       "expected_error_code": "INPUT_ENCODING_INVALID"
     },
@@ -9372,7 +9906,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) — the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
+      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) \u2014 the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
       "rung": "stress"
     },
     {

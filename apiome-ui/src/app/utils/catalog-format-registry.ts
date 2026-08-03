@@ -43,6 +43,8 @@ import {
   TrendingUp,
   Boxes,
   Box,
+  Waypoints,
+  Route,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -172,6 +174,8 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
   { id: 'raml', label: 'RAML', icon: BookMarked, tone: 'red', importable: true, description: 'RAML 1.0 REST API definition.' },
   { id: 'postman', label: 'Postman', icon: FileJson, tone: 'orange', importable: true, aliases: ['postmancollection'], description: 'Postman v2.1 request collection.' },
   { id: 'http-file', label: 'HTTP Request File', icon: FileCode, tone: 'orange', importable: true, aliases: ['httpfile', 'http', 'rest', 'curl'], description: 'VS Code / JetBrains .http/.rest request file or cURL paste (inferred surface).' },
+  { id: 'kong', label: 'Kong Declarative Config', icon: Waypoints, tone: 'emerald', importable: true, aliases: ['kong-declarative'], description: 'Kong declarative (deck) gateway config — routes without schemas, staged non-publishable.' },
+  { id: 'gateway-api', label: 'Gateway API HTTPRoute', icon: Route, tone: 'blue', importable: true, aliases: ['httproute', 'gatewayapi'], description: 'Kubernetes Gateway API HTTPRoute manifests — routes without schemas, staged non-publishable.' },
   { id: 'odata', label: 'OData', icon: Database, tone: 'orange', importable: true, aliases: ['edmx'], description: 'OData EDMX / CSDL service metadata.' },
   { id: 'wsdl', label: 'WSDL', icon: FileCode, tone: 'slate', importable: true, aliases: ['soap'], description: 'SOAP web service description (WSDL).' },
   { id: 'wadl', label: 'WADL', icon: FileCode, tone: 'slate', importable: true, aliases: ['restdescription'], description: 'WADL REST resource description.' },

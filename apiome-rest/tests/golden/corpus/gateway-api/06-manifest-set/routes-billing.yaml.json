@@ -1,0 +1,197 @@
+{
+  "adapter": "gateway-api",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "gateway": {
+        "auth": [],
+        "credential_redactions": 0,
+        "flavor": "gateway-api",
+        "global_plugins": [],
+        "ignored_constructs": [],
+        "operation_count": 3,
+        "route_count": 2,
+        "schemaless_operation_count": 3,
+        "unmapped_plugins": []
+      }
+    },
+    "format": "gateway-api",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "gateway-api/06-manifest-set/routes-billing.yaml",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://billing.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "finance/billing",
+        "name": "finance/billing",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "billing-svc",
+                  "port": 8080
+                }
+              ],
+              "gateway_route": "billing",
+              "hosts": [
+                "billing.example.com"
+              ],
+              "namespace": "finance",
+              "parent_refs": [
+                {
+                  "name": "team-gateway",
+                  "namespace": "gateway-system"
+                }
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/invoices"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/invoices",
+            "key": "GET /invoices",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /invoices",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "finance/ledger",
+        "name": "finance/ledger",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "ledger-svc",
+                  "port": 8081
+                }
+              ],
+              "gateway_route": "ledger",
+              "hosts": [
+                "billing.example.com"
+              ],
+              "namespace": "finance",
+              "parent_refs": [
+                {
+                  "name": "team-gateway",
+                  "namespace": "gateway-system"
+                }
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/ledger"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/ledger",
+            "key": "GET /ledger",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /ledger",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "ledger-svc",
+                  "port": 8081
+                }
+              ],
+              "gateway_route": "ledger",
+              "hosts": [
+                "billing.example.com"
+              ],
+              "namespace": "finance",
+              "parent_refs": [
+                {
+                  "name": "team-gateway",
+                  "namespace": "gateway-system"
+                }
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/ledger"
+              }
+            },
+            "http_method": "POST",
+            "http_path": "/ledger",
+            "key": "POST /ledger",
+            "kind": "request_response",
+            "messages": [],
+            "name": "POST /ledger",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "gateway-api/06-manifest-set/routes-billing.yaml",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "gateway-api/06-manifest-set/routes-billing.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 2,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "gateway-api"
+  },
+  "fingerprint": "sha256:a3aaa16a73c2b34f6bec17158353dfe340dfc207552e648c85c7398f5fb1ea30",
+  "lint": {
+    "findings": 4,
+    "grade": "B",
+    "report_fingerprint": "44fdbce3a47dd32982e2c807aed546b25a2737dc722d13c86ca4ba010319c483",
+    "score": 87,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

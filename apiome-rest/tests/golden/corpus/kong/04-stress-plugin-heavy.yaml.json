@@ -1,0 +1,547 @@
+{
+  "adapter": "kong",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "gateway": {
+        "auth": [
+          {
+            "attached_to": "partner-service",
+            "detail": {},
+            "plugin": "basic-auth",
+            "scheme": "basic",
+            "scope": "service"
+          },
+          {
+            "attached_to": "identity-service",
+            "detail": {
+              "bearer_format": "JWT"
+            },
+            "plugin": "jwt",
+            "scheme": "bearer",
+            "scope": "service"
+          },
+          {
+            "attached_to": "billing-service",
+            "detail": {
+              "flows": [
+                "enable_client_credentials"
+              ],
+              "scopes": [
+                "billing.read",
+                "billing.write"
+              ]
+            },
+            "plugin": "oauth2",
+            "scheme": "oauth2",
+            "scope": "service"
+          }
+        ],
+        "credential_redactions": 4,
+        "flavor": "kong",
+        "global_plugins": [
+          "cors",
+          "prometheus",
+          "rate-limiting"
+        ],
+        "ignored_constructs": [
+          {
+            "construct": "consumers",
+            "count": 2,
+            "reason": "consumer identities are callers of the API, not part of its surface; credential values are redacted and never imported"
+          }
+        ],
+        "operation_count": 8,
+        "route_count": 5,
+        "schemaless_operation_count": 8,
+        "unmapped_plugins": [
+          {
+            "name": "hmac-auth",
+            "scope": "service"
+          }
+        ]
+      },
+      "inferred_auth_schemes": [
+        "basic",
+        "bearer",
+        "oauth2"
+      ]
+    },
+    "format": "kong",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "kong/04-stress-plugin-heavy.yaml",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://admin.example.com",
+        "variables": []
+      },
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      },
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://auth.example.com",
+        "variables": []
+      },
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://partner.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "backend": {
+            "url": "http://admin.internal:9000"
+          }
+        },
+        "key": "admin-service",
+        "name": "admin-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "admin-any",
+              "headers": {
+                "x-admin-realm": [
+                  "internal"
+                ]
+              },
+              "hosts": [
+                "admin.example.com"
+              ],
+              "methods_unrestricted": true,
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/admin"
+              }
+            },
+            "http_method": "ANY",
+            "http_path": "/admin",
+            "key": "ANY /admin",
+            "kind": "request_response",
+            "messages": [],
+            "name": "ANY /admin",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "backend": {
+            "url": "https://billing.internal:8443"
+          }
+        },
+        "key": "billing-service",
+        "name": "billing-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "billing-invoices",
+              "hosts": [
+                "api.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/billing/invoices"
+              },
+              "security": [
+                {
+                  "attached_to": "billing-service",
+                  "detail": {
+                    "flows": [
+                      "enable_client_credentials"
+                    ],
+                    "scopes": [
+                      "billing.read",
+                      "billing.write"
+                    ]
+                  },
+                  "plugin": "oauth2",
+                  "scheme": "oauth2",
+                  "scope": "service"
+                }
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/billing/invoices",
+            "key": "GET /billing/invoices",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /billing/invoices",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "billing-invoices",
+              "hosts": [
+                "api.example.com"
+              ],
+              "path_match": {
+                "kind": "regex",
+                "raw": "~/billing/invoices/(?<invoiceId>[0-9a-f-]+)$"
+              },
+              "security": [
+                {
+                  "attached_to": "billing-service",
+                  "detail": {
+                    "flows": [
+                      "enable_client_credentials"
+                    ],
+                    "scopes": [
+                      "billing.read",
+                      "billing.write"
+                    ]
+                  },
+                  "plugin": "oauth2",
+                  "scheme": "oauth2",
+                  "scope": "service"
+                }
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/billing/invoices/{invoiceId}",
+            "key": "GET /billing/invoices/{invoiceId}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /billing/invoices/{invoiceId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "pattern": "~/billing/invoices/(?<invoiceId>[0-9a-f-]+)$",
+                  "provenance": "inferred"
+                },
+                "key": "GET /billing/invoices/{invoiceId}#path.invoiceId",
+                "location": "path",
+                "name": "invoiceId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "billing-invoices",
+              "hosts": [
+                "api.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/billing/invoices"
+              },
+              "security": [
+                {
+                  "attached_to": "billing-service",
+                  "detail": {
+                    "flows": [
+                      "enable_client_credentials"
+                    ],
+                    "scopes": [
+                      "billing.read",
+                      "billing.write"
+                    ]
+                  },
+                  "plugin": "oauth2",
+                  "scheme": "oauth2",
+                  "scope": "service"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/billing/invoices",
+            "key": "POST /billing/invoices",
+            "kind": "request_response",
+            "messages": [],
+            "name": "POST /billing/invoices",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "billing-invoices",
+              "hosts": [
+                "api.example.com"
+              ],
+              "path_match": {
+                "kind": "regex",
+                "raw": "~/billing/invoices/(?<invoiceId>[0-9a-f-]+)$"
+              },
+              "security": [
+                {
+                  "attached_to": "billing-service",
+                  "detail": {
+                    "flows": [
+                      "enable_client_credentials"
+                    ],
+                    "scopes": [
+                      "billing.read",
+                      "billing.write"
+                    ]
+                  },
+                  "plugin": "oauth2",
+                  "scheme": "oauth2",
+                  "scope": "service"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/billing/invoices/{invoiceId}",
+            "key": "POST /billing/invoices/{invoiceId}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "POST /billing/invoices/{invoiceId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "pattern": "~/billing/invoices/(?<invoiceId>[0-9a-f-]+)$",
+                  "provenance": "inferred"
+                },
+                "key": "POST /billing/invoices/{invoiceId}#path.invoiceId",
+                "location": "path",
+                "name": "invoiceId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "backend": {
+            "url": "https://identity.internal:8443"
+          }
+        },
+        "key": "identity-service",
+        "name": "identity-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "identity-userinfo",
+              "hosts": [
+                "auth.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/userinfo"
+              },
+              "plugins": [
+                "rate-limiting"
+              ],
+              "security": [
+                {
+                  "attached_to": "identity-service",
+                  "detail": {
+                    "bearer_format": "JWT"
+                  },
+                  "plugin": "jwt",
+                  "scheme": "bearer",
+                  "scope": "service"
+                }
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/userinfo",
+            "key": "GET /userinfo",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /userinfo",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "identity-tokens",
+              "hosts": [
+                "auth.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/oauth/token"
+              },
+              "plugins": [
+                "rate-limiting"
+              ],
+              "security": [
+                {
+                  "attached_to": "identity-service",
+                  "detail": {
+                    "bearer_format": "JWT"
+                  },
+                  "plugin": "jwt",
+                  "scheme": "bearer",
+                  "scope": "service"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/oauth/token",
+            "key": "POST /oauth/token",
+            "kind": "request_response",
+            "messages": [],
+            "name": "POST /oauth/token",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "backend": {
+            "url": "http://partner.internal:8085"
+          }
+        },
+        "key": "partner-service",
+        "name": "partner-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "partner-feed",
+              "hosts": [
+                "partner.example.com"
+              ],
+              "methods_unrestricted": true,
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/feed"
+              },
+              "security": [
+                {
+                  "attached_to": "partner-service",
+                  "detail": {},
+                  "plugin": "basic-auth",
+                  "scheme": "basic",
+                  "scope": "service"
+                },
+                {
+                  "attached_to": "partner-service",
+                  "detail": {},
+                  "plugin": "hmac-auth",
+                  "scheme": null,
+                  "scope": "service"
+                }
+              ]
+            },
+            "http_method": "ANY",
+            "http_path": "/feed",
+            "key": "ANY /feed",
+            "kind": "request_response",
+            "messages": [],
+            "name": "ANY /feed",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "kong/04-stress-plugin-heavy.yaml",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "kong/04-stress-plugin-heavy.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 8,
+    "servers": 4,
+    "services": 4,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "kong"
+  },
+  "fingerprint": "sha256:fac7da0082306f9bfeef7ea68b5a4afa40627e5d473e2005b06f82af67e44598",
+  "lint": {
+    "findings": 9,
+    "grade": "C",
+    "report_fingerprint": "24798aea7df8575f605990f0d0d691b6acc3bfe8abd0908c003c69e3f4db913a",
+    "score": 79,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

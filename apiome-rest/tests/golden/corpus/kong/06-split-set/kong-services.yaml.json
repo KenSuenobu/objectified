@@ -1,0 +1,153 @@
+{
+  "adapter": "kong",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "gateway": {
+        "auth": [],
+        "credential_redactions": 0,
+        "flavor": "kong",
+        "global_plugins": [
+          "correlation-id"
+        ],
+        "ignored_constructs": [],
+        "operation_count": 2,
+        "route_count": 2,
+        "schemaless_operation_count": 2,
+        "unmapped_plugins": []
+      }
+    },
+    "format": "kong",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "kong/06-split-set/kong-services.yaml",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "backend": {
+            "url": "http://notifications.internal:8082"
+          }
+        },
+        "key": "notifications-service",
+        "name": "notifications-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "notifications-status",
+              "hosts": [
+                "api.example.com"
+              ],
+              "path_match": {
+                "kind": "regex",
+                "raw": "~/notifications/(?<notificationId>[0-9a-f-]+)/status$"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/notifications/{notificationId}/status",
+            "key": "GET /notifications/{notificationId}/status",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /notifications/{notificationId}/status",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "pattern": "~/notifications/(?<notificationId>[0-9a-f-]+)/status$",
+                  "provenance": "inferred"
+                },
+                "key": "GET /notifications/{notificationId}/status#path.notificationId",
+                "location": "path",
+                "name": "notificationId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "notifications-send",
+              "hosts": [
+                "api.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/notifications"
+              }
+            },
+            "http_method": "POST",
+            "http_path": "/notifications",
+            "key": "POST /notifications",
+            "kind": "request_response",
+            "messages": [],
+            "name": "POST /notifications",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "kong/06-split-set/kong-services.yaml",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "kong/06-split-set/kong-services.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "kong"
+  },
+  "fingerprint": "sha256:cb0d5f0969869bbf281dc9017ed2f4a6e703ace7d763ed72c041e294626784f5",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "1af10c4085fae8e5c0324022078f6b81f5fa6eb71470ea10f20bfaf7fa026bb8",
+    "score": 91,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,9 @@
+_format_version: "3.0"
+services:
+  - name: notifications-service
+    url: http://notifications.internal:8082
+    routes:
+      - name: notifications-send
+        hosts: [api.example.com]
+        paths: ["/notifications"]
+        methods: [POST]

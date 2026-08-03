@@ -5,6 +5,37 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.250.0] - 2026-08-02
+
+### Added
+- **Gateway configuration import (IXH-7.8, #5133)** — Two new `ImportSource`
+  adapters make gateway configs importable: `kong` (Kong declarative / deck
+  YAML-JSON, single file or split fileset) and `gateway-api` (Kubernetes Gateway
+  API `HTTPRoute` manifests, single document, multi-document stream, or manifest
+  directory). Routes normalize to canonical REST operations — hosts, path
+  patterns (regex paths become inferred `{param}` templates with the original
+  pattern preserved as evidence), methods, header/query matches, and backends.
+  Kong auth plugins map to canonical security where a mapping exists
+  (`key-auth` → apiKey, `jwt` → bearer, `oauth2`, `basic-auth`, `mtls-auth`,
+  `openid-connect`) and are preserved as unmapped hints otherwise; Gateway API
+  filters are preserved verbatim in extras.
+- **Schema absence as a capability limit** — Gateway configs carry no
+  request/response schemas, so both formats route to the catalog as
+  non-publishable with the reason stated (supply schemas and convert to
+  promote), and the import preview coverage ledger reports the missing schemas
+  as `inferred` / `source_incomplete` — a capability limit of the source
+  format, never a drop.
+- **Credential hygiene** — Kong consumer credentials (key-auth keys, basic-auth
+  passwords, JWT secrets) and secret-shaped plugin config values are redacted at
+  parse time (counts retained, values never imported); `kong` joins the
+  always-enforced intake secret-scrub formats, and a `secrets-kong.yaml`
+  adversarial fixture guards the pipeline end to end.
+- **Corpus ladder** — Full six-rung corpus for both formats (single-service,
+  multi-service, and plugin-heavy Kong configs; single-route, multi-document,
+  and filter-heavy HTTPRoute manifests, plus split-file/manifest-directory
+  filesets), five-class negative tiers, golden snapshots, and round-trip matrix
+  rows.
+
 ## [1.249.0] - 2026-08-02
 
 ### Added

@@ -1,0 +1,14 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ping
+spec:
+  rules:
+    - matches:
+        - path:
+            type: Exact
+            value: /ping
+          method: GET
+      backendRefs:
+        - name: ping-svc
+          port: 8080

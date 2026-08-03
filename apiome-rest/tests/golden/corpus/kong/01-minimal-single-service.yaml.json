@@ -1,0 +1,94 @@
+{
+  "adapter": "kong",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "gateway": {
+        "auth": [],
+        "credential_redactions": 0,
+        "flavor": "kong",
+        "global_plugins": [],
+        "ignored_constructs": [],
+        "operation_count": 1,
+        "route_count": 1,
+        "schemaless_operation_count": 1,
+        "unmapped_plugins": []
+      }
+    },
+    "format": "kong",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "kong/01-minimal-single-service.yaml",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "backend": {
+            "url": "http://ping.internal:8080"
+          }
+        },
+        "key": "ping-service",
+        "name": "ping-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "ping",
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/ping"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/ping",
+            "key": "GET /ping",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "kong/01-minimal-single-service.yaml",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "kong/01-minimal-single-service.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "kong"
+  },
+  "fingerprint": "sha256:c1853645ecbe29f4393f748a926119830f073a6e273d5f2fb3bb1b8615c4e9a0",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "7777b19d357b1f8458dde51cd394b4b14e1b1d7b0ef5626fc4c40e1c8fce8017",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

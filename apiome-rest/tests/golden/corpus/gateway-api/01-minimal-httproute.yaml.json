@@ -1,0 +1,96 @@
+{
+  "adapter": "gateway-api",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "gateway": {
+        "auth": [],
+        "credential_redactions": 0,
+        "flavor": "gateway-api",
+        "global_plugins": [],
+        "ignored_constructs": [],
+        "operation_count": 1,
+        "route_count": 1,
+        "schemaless_operation_count": 1,
+        "unmapped_plugins": []
+      }
+    },
+    "format": "gateway-api",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "gateway-api/01-minimal-httproute.yaml",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "ping",
+        "name": "ping",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "ping-svc",
+                  "port": 8080
+                }
+              ],
+              "gateway_route": "ping",
+              "path_match": {
+                "kind": "exact",
+                "raw": "/ping"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/ping",
+            "key": "GET /ping",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "gateway-api/01-minimal-httproute.yaml",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "gateway-api/01-minimal-httproute.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "gateway-api"
+  },
+  "fingerprint": "sha256:c19446f038549538e53484bfa83d14c70f434540d9aec0f70e7496aea3c5ffd5",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "9d4e8c51231905a5c740d6a78e1966f0b8247916e24369314b5660a7be607abc",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

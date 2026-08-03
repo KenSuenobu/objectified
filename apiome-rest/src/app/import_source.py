@@ -1056,6 +1056,12 @@ def load_builtin_import_sources() -> None:
     from . import fix_import_source as _fix  # noqa: F401
     from . import zosconnect_import_source as _zosconnect  # noqa: F401
 
+    # ``kong_import_source`` / ``gateway_api_import_source`` (IXH-7.8) self-register the
+    # ``kong`` and ``gateway-api`` adapters and, via their shared normalizer module, the
+    # gateway-config normalizers under ``kong`` / ``gateway-api``.
+    from . import gateway_api_import_source as _gateway_api  # noqa: F401
+    from . import kong_import_source as _kong  # noqa: F401
+
 
 # ===========================================================================
 # Shared canonical fingerprint + diff

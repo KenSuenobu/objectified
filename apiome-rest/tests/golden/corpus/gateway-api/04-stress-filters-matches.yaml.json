@@ -1,0 +1,257 @@
+{
+  "adapter": "gateway-api",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "gateway": {
+        "auth": [],
+        "credential_redactions": 0,
+        "flavor": "gateway-api",
+        "global_plugins": [],
+        "ignored_constructs": [],
+        "operation_count": 3,
+        "route_count": 3,
+        "schemaless_operation_count": 3,
+        "unmapped_plugins": []
+      }
+    },
+    "format": "gateway-api",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "gateway-api/04-stress-filters-matches.yaml",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://*.apps.example.com",
+        "variables": []
+      },
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "platform/edge-router",
+        "name": "platform/edge-router",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "reports-svc",
+                  "port": 8080,
+                  "weight": 90
+                },
+                {
+                  "name": "reports-canary",
+                  "port": 8080,
+                  "weight": 10
+                }
+              ],
+              "gateway_route": "edge-router#rule-0",
+              "hosts": [
+                "*.apps.example.com",
+                "api.example.com"
+              ],
+              "namespace": "platform",
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/v1/reports"
+              },
+              "plugins": [
+                "RequestHeaderModifier"
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/v1/reports",
+            "key": "GET /v1/reports",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /v1/reports",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "match_value": "acme"
+                },
+                "key": "GET /v1/reports#header.x-tenant",
+                "location": "header",
+                "name": "x-tenant",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "match_value": "30d"
+                },
+                "key": "GET /v1/reports#query.window",
+                "location": "query",
+                "name": "window",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "usage-svc",
+                  "port": 8081
+                }
+              ],
+              "gateway_route": "edge-router#rule-1",
+              "hosts": [
+                "*.apps.example.com",
+                "api.example.com"
+              ],
+              "namespace": "platform",
+              "path_match": {
+                "kind": "regex",
+                "raw": "/v1/tenants/(?<tenantId>[a-z0-9-]+)/usage"
+              },
+              "plugins": [
+                "URLRewrite"
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/v1/tenants/{tenantId}/usage",
+            "key": "GET /v1/tenants/{tenantId}/usage",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /v1/tenants/{tenantId}/usage",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "pattern": "/v1/tenants/(?<tenantId>[a-z0-9-]+)/usage",
+                  "provenance": "inferred"
+                },
+                "key": "GET /v1/tenants/{tenantId}/usage#path.tenantId",
+                "location": "path",
+                "name": "tenantId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "export-svc",
+                  "port": 8082
+                }
+              ],
+              "gateway_route": "edge-router#rule-2",
+              "hosts": [
+                "*.apps.example.com",
+                "api.example.com"
+              ],
+              "namespace": "platform",
+              "path_match": {
+                "kind": "exact",
+                "raw": "/v1/export"
+              },
+              "plugins": [
+                "ExtensionRef"
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/v1/export",
+            "key": "POST /v1/export",
+            "kind": "request_response",
+            "messages": [],
+            "name": "POST /v1/export",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "gateway-api/04-stress-filters-matches.yaml",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "gateway-api/04-stress-filters-matches.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 2,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "gateway-api"
+  },
+  "fingerprint": "sha256:3ebb723ae17a6f34c99df23df6c9dd788a8a8574d19ed98e5392da291716b1dc",
+  "lint": {
+    "findings": 4,
+    "grade": "B",
+    "report_fingerprint": "05e883cd3bc8f6ecb43c4f10a693403a8b58a3660fb71ea85848246e85d6f25d",
+    "score": 87,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

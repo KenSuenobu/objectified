@@ -396,6 +396,44 @@ def _postman_with_secrets() -> bytes:
     return json.dumps(collection, indent=2).encode("utf-8")
 
 
+def _kong_with_secrets() -> bytes:
+    """A Kong declarative config planting credentials where real configs leak them.
+
+    Consumer credential sections (key-auth keys, basic-auth passwords, JWT
+    secrets) and secret-shaped plugin config values (oauth2 ``provision_key``)
+    are the places IXH-7.8's parse-time redaction and the enforced intake scrub
+    must both catch.
+    """
+    secrets = SYNTHETIC_SECRETS
+    config = (
+        '_format_version: "3.0"\n'
+        "services:\n"
+        "  - name: billing-service\n"
+        "    url: https://billing.internal:8443\n"
+        "    plugins:\n"
+        "      - name: oauth2\n"
+        "        config:\n"
+        "          scopes: [billing.read]\n"
+        f"          provision_key: {secrets['stripe_key']}\n"
+        "    routes:\n"
+        "      - name: billing\n"
+        "        hosts: [api.example.com]\n"
+        "        paths: [\"/billing\"]\n"
+        "        methods: [GET, POST]\n"
+        "consumers:\n"
+        "  - username: reporting-bot\n"
+        "    keyauth_credentials:\n"
+        f"      - key: {secrets['google_api_key']}\n"
+        "    basicauth_credentials:\n"
+        "      - username: reporting-bot\n"
+        f"        password: {secrets['basic_auth_password']}\n"
+        "    jwt_secrets:\n"
+        "      - algorithm: HS256\n"
+        f"        secret: {secrets['aws_secret_access_key']}\n"
+    )
+    return config.encode("utf-8")
+
+
 def _http_file_with_secrets() -> bytes:
     """An ``.http`` request file carrying synthetic credentials in headers and URLs."""
     secrets = SYNTHETIC_SECRETS
@@ -595,6 +633,27 @@ GENERATED_FIXTURES: List[GeneratedFixture] = [
             "basic-auth-url",
             "aws-key",
             "bearer-token",
+            "jwt",
+        ],
+    ),
+    GeneratedFixture(
+        name="secrets-kong.yaml",
+        guard="secret-scrubbing",
+        adapter_key="kong",
+        expected_error_code=None,
+        description=(
+            "Kong declarative config planting consumer credentials (key-auth key, "
+            "basic-auth password, JWT secret) and a secret-shaped plugin config value; "
+            "parse-time redaction and the enforced intake scrub must both hold."
+        ),
+        builder=_kong_with_secrets,
+        approx_bytes=900,
+        features=[
+            "adversarial",
+            "secret-scrubbing",
+            "consumer-credentials",
+            "api-key",
+            "basic-auth",
             "jwt",
         ],
     ),

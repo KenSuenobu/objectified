@@ -1,0 +1,32 @@
+_format_version: "3.0"
+services:
+  - name: catalog-service
+    protocol: http
+    host: catalog.internal
+    port: 8080
+    path: /v1
+    routes:
+      - name: catalog-browse
+        hosts: [shop.example.com]
+        paths: ["/catalog", "/products"]
+        methods: [GET]
+  - name: orders-service
+    url: http://orders.internal:8081
+    routes:
+      - name: orders
+        hosts: [shop.example.com]
+        paths: ["/orders"]
+        methods: [GET, POST]
+  - name: payments-service
+    url: https://payments.internal:8443
+routes:
+  - name: payments-webhook
+    service: payments-service
+    hosts: [hooks.example.com]
+    paths: ["/webhooks/payment"]
+    methods: [POST]
+upstreams:
+  - name: catalog.internal
+    targets:
+      - target: 10.0.0.11:8080
+      - target: 10.0.0.12:8080

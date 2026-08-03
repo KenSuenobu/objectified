@@ -1,0 +1,62 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: edge-router
+  namespace: platform
+spec:
+  hostnames:
+    - api.example.com
+    - "*.apps.example.com"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/reports
+          method: GET
+          headers:
+            - name: x-tenant
+              value: acme
+          queryParams:
+            - name: window
+              value: 30d
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            add:
+              - name: x-edge
+                value: "true"
+      backendRefs:
+        - name: reports-svc
+          port: 8080
+          weight: 90
+        - name: reports-canary
+          port: 8080
+          weight: 10
+    - matches:
+        - path:
+            type: RegularExpression
+            value: "/v1/tenants/(?<tenantId>[a-z0-9-]+)/usage"
+          method: GET
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /usage
+      backendRefs:
+        - name: usage-svc
+          port: 8081
+    - matches:
+        - path:
+            type: Exact
+            value: /v1/export
+          method: POST
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: policy.example.com
+            kind: AuthPolicy
+            name: export-auth
+      backendRefs:
+        - name: export-svc
+          port: 8082

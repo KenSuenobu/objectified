@@ -1,0 +1,278 @@
+{
+  "adapter": "gateway-api",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "gateway": {
+        "auth": [],
+        "credential_redactions": 0,
+        "flavor": "gateway-api",
+        "global_plugins": [],
+        "ignored_constructs": [],
+        "operation_count": 4,
+        "route_count": 3,
+        "schemaless_operation_count": 4,
+        "unmapped_plugins": []
+      }
+    },
+    "format": "gateway-api",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "gateway-api/05-real-world-microservices.yaml",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.internal.acme-shop.example",
+        "variables": []
+      },
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://www.acme-shop.example",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "commerce/checkout",
+        "name": "commerce/checkout",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "checkout",
+                  "port": 8080,
+                  "weight": 95
+                },
+                {
+                  "name": "checkout-v2",
+                  "port": 8080,
+                  "weight": 5
+                }
+              ],
+              "gateway_route": "checkout",
+              "hosts": [
+                "www.acme-shop.example"
+              ],
+              "methods_unrestricted": true,
+              "namespace": "commerce",
+              "parent_refs": [
+                {
+                  "name": "public-gateway",
+                  "namespace": "gateway-system"
+                }
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/checkout"
+              }
+            },
+            "http_method": "ANY",
+            "http_path": "/checkout",
+            "key": "ANY /checkout",
+            "kind": "request_response",
+            "messages": [],
+            "name": "ANY /checkout",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "commerce/inventory-api",
+        "name": "commerce/inventory-api",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "inventory",
+                  "port": 8080
+                }
+              ],
+              "gateway_route": "inventory-api",
+              "hosts": [
+                "api.internal.acme-shop.example"
+              ],
+              "namespace": "commerce",
+              "parent_refs": [
+                {
+                  "name": "internal-gateway",
+                  "namespace": "gateway-system"
+                }
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/inventory"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/inventory",
+            "key": "GET /inventory",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /inventory",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "inventory",
+                  "port": 8080
+                }
+              ],
+              "gateway_route": "inventory-api",
+              "hosts": [
+                "api.internal.acme-shop.example"
+              ],
+              "namespace": "commerce",
+              "parent_refs": [
+                {
+                  "name": "internal-gateway",
+                  "namespace": "gateway-system"
+                }
+              ],
+              "path_match": {
+                "kind": "regex",
+                "raw": "/inventory/skus/(?<sku>[A-Z0-9-]+)"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/inventory/skus/{sku}",
+            "key": "GET /inventory/skus/{sku}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /inventory/skus/{sku}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "pattern": "/inventory/skus/(?<sku>[A-Z0-9-]+)",
+                  "provenance": "inferred"
+                },
+                "key": "GET /inventory/skus/{sku}#path.sku",
+                "location": "path",
+                "name": "sku",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "web/frontend",
+        "name": "web/frontend",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "backends": [
+                {
+                  "name": "frontend",
+                  "port": 3000
+                }
+              ],
+              "gateway_route": "frontend",
+              "hosts": [
+                "www.acme-shop.example"
+              ],
+              "namespace": "web",
+              "parent_refs": [
+                {
+                  "name": "public-gateway",
+                  "namespace": "gateway-system"
+                }
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/",
+            "key": "GET /",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "gateway-api/05-real-world-microservices.yaml",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "gateway-api/05-real-world-microservices.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 2,
+    "services": 3,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "gateway-api"
+  },
+  "fingerprint": "sha256:a36b491f8081080074178180bf7e32a126bde6d7567891be7db3243d3e46f257",
+  "lint": {
+    "findings": 5,
+    "grade": "B",
+    "report_fingerprint": "61c6f71df5cf789d8560486004728206c3a5adaa60930979555abd0195ff7c29",
+    "score": 83,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,243 @@
+{
+  "adapter": "kong",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "gateway": {
+        "auth": [],
+        "credential_redactions": 0,
+        "flavor": "kong",
+        "global_plugins": [],
+        "ignored_constructs": [
+          {
+            "construct": "upstreams",
+            "count": 1,
+            "reason": "load-balancing targets describe deployment topology, not the API surface"
+          }
+        ],
+        "operation_count": 5,
+        "route_count": 3,
+        "schemaless_operation_count": 5,
+        "unmapped_plugins": []
+      }
+    },
+    "format": "kong",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "kong/03-multi-service.yaml",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://hooks.example.com",
+        "variables": []
+      },
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://shop.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "backend": {
+            "host": "catalog.internal",
+            "path": "/v1",
+            "port": 8080,
+            "protocol": "http"
+          }
+        },
+        "key": "catalog-service",
+        "name": "catalog-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "catalog-browse",
+              "hosts": [
+                "shop.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/catalog"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/catalog",
+            "key": "GET /catalog",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /catalog",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "catalog-browse",
+              "hosts": [
+                "shop.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/products"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/products",
+            "key": "GET /products",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /products",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "backend": {
+            "url": "http://orders.internal:8081"
+          }
+        },
+        "key": "orders-service",
+        "name": "orders-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "orders",
+              "hosts": [
+                "shop.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/orders"
+              }
+            },
+            "http_method": "GET",
+            "http_path": "/orders",
+            "key": "GET /orders",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /orders",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "orders",
+              "hosts": [
+                "shop.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/orders"
+              }
+            },
+            "http_method": "POST",
+            "http_path": "/orders",
+            "key": "POST /orders",
+            "kind": "request_response",
+            "messages": [],
+            "name": "POST /orders",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "backend": {
+            "url": "https://payments.internal:8443"
+          }
+        },
+        "key": "payments-service",
+        "name": "payments-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "gateway_route": "payments-webhook",
+              "hosts": [
+                "hooks.example.com"
+              ],
+              "path_match": {
+                "kind": "prefix",
+                "raw": "/webhooks/payment"
+              }
+            },
+            "http_method": "POST",
+            "http_path": "/webhooks/payment",
+            "key": "POST /webhooks/payment",
+            "kind": "request_response",
+            "messages": [],
+            "name": "POST /webhooks/payment",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "kong/03-multi-service.yaml",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "kong/03-multi-service.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 5,
+    "servers": 2,
+    "services": 3,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "kong"
+  },
+  "fingerprint": "sha256:4802313497d1ea259c0a6ec9e22bc8318c78094544c7716c9ba1a8be2896a8fd",
+  "lint": {
+    "findings": 6,
+    "grade": "C",
+    "report_fingerprint": "e7ad533171e2e67b83c168e85162751509d859b29fad94c2f8d7e89b057a71f5",
+    "score": 79,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **506 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **531 files** across **42 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -23,7 +23,9 @@ The corpus holds **506 files** across **40 format directories**. Every file has 
 | `api-blueprint/` | API Blueprint | rest | `FORMAT: 1A` metadata line | 11 |
 | `arazzo/` | Arazzo workflows | rest | top-level `arazzo:` version | 11 |
 | `discovery/` | Google API Discovery | rest | `kind: discovery#restDescription` / `discoveryVersion` | 11 |
+| `gateway-api/` | Gateway API HTTPRoute | rest | `apiVersion: gateway.networking.k8s.io/*` + `kind: HTTPRoute` | 13 |
 | `http-file/` | HTTP Request File | rest | HTTP request line / `###` separators / `curl` / `.http` `.rest` | 13 |
+| `kong/` | Kong Declarative Config | rest | `_format_version` + `services:`/`routes:` declarative sections | 12 |
 | `odata/` | OData v4 (EDMX) | rest | `<edmx:Edmx>` root | 12 |
 | `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 44 |
 | `postman/` | Postman v2.1 | rest | collection `info.schema` URL | 11 |
@@ -397,6 +399,32 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-proto-widget.proto` | — | `flatbuffers` (no guarantee) | invalid | `negative`, `wrong-format`, `proto-schema` |
 | `negative/05-encoding-utf16-ping.fbs` | — | `flatbuffers` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
 
+### `gateway-api/` — Gateway API HTTPRoute
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-httproute.yaml` | minimal | `gateway-api` ≥ 0.9 | valid | `minimal`, `single-route` |
+| `02-typical-hostnames-methods.yaml` | typical | `gateway-api` ≥ 0.9 | valid | `typical`, `hostnames`, `regex-paths`, `multi-rule` |
+| `03-multi-route-stream.yaml` ⚠ | composition | `gateway-api` ≥ 0.9 | valid | `composition`, `multi-document`, `gateway-resource` |
+| `04-stress-filters-matches.yaml` | stress | `gateway-api` ≥ 0.9 | valid | `stress`, `filters`, `header-matches`, `query-matches`, `weighted-backends`, `extension-ref` |
+| `05-real-world-microservices.yaml` | real-world | `gateway-api` ≥ 0.9 | valid | `real-world`, `multi-document`, `namespaces`, `weighted-backends` |
+| `06-manifest-set/gateway.yaml` ⚠ | multi-file (member) | `gateway-api` (no guarantee) | valid | `multi-file`, `manifest-directory`, `gateway-resource` |
+| `06-manifest-set/routes-billing.yaml` | multi-file (root) | `gateway-api` ≥ 0.9 | valid | `multi-file`, `manifest-directory` |
+| `06-manifest-set/routes-ledger.yaml` | multi-file (member) | `gateway-api` ≥ 0.9 | valid | `multi-file`, `manifest-directory` |
+| `negative/01-syntactic-bad-yaml.yaml` | — | `gateway-api` (no guarantee) | invalid | `negative`, `syntactic` |
+| `negative/02-semantic-no-httproute.yaml` ⚠ | — | `gateway-api` (no guarantee) | invalid | `negative`, `semantic` |
+| `negative/03-truncated-mid-rule.yaml` | — | `gateway-api` (no guarantee) | invalid | `negative`, `truncated` |
+| `negative/04-wrong-format-deployment.yaml` | — | `gateway-api` (no guarantee) | invalid | `negative`, `wrong-format` |
+| `negative/05-encoding-utf16.yaml` ⚠ | — | `gateway-api` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+
+> ⚠ **`03-multi-route-stream.yaml`** — Multi-document stream; the Gateway resource is recorded as an ignored construct, only HTTPRoutes import.
+
+> ⚠ **`06-manifest-set/gateway.yaml`** — Gateway infrastructure resource; not independently importable, merged as an ignored construct through the set.
+
+> ⚠ **`negative/02-semantic-no-httproute.yaml`** — Gateway API resources are present (Gateway, TCPRoute) but no HTTPRoute — nothing importable.
+
+> ⚠ **`negative/05-encoding-utf16.yaml`** — A minimal HTTPRoute re-encoded as UTF-16 (BOM + NUL bytes).
+
 ### `graphql/` — GraphQL SDL
 
 | File | Rung | Expected detection | Class | Features |
@@ -577,6 +605,31 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/05-encoding-utf16.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
 
 > ⚠ **`06-multi-crd-stream.yaml`** — Multi-document YAML stream with two CRDs; imports as one CanonicalApi with two Services. The multi-file ladder rung is waived because CRDs do not resolve cross-file references.
+
+### `kong/` — Kong Declarative Config
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-single-service.yaml` | minimal | `kong` ≥ 0.9 | valid | `minimal`, `single-service` |
+| `02-typical-single-service-auth.yaml` | typical | `kong` ≥ 0.9 | valid | `typical`, `single-service`, `key-auth`, `regex-paths` |
+| `03-multi-service.yaml` | composition | `kong` ≥ 0.9 | valid | `composition`, `multi-service`, `top-level-routes`, `upstreams` |
+| `04-stress-plugin-heavy.yaml` ⚠ | stress | `kong` ≥ 0.9 | valid | `stress`, `plugin-heavy`, `jwt`, `oauth2`, `hmac-auth`, `consumers`, `credential-redaction` |
+| `05-real-world-ecommerce.json` | real-world | `kong` ≥ 0.9 | valid | `real-world`, `json`, `multi-service`, `key-auth` |
+| `06-split-set/kong-routes.yaml` ⚠ | multi-file (member) | `kong` ≥ 0.9 | valid | `multi-file`, `split-config`, `top-level-routes` |
+| `06-split-set/kong-services.yaml` | multi-file (root) | `kong` ≥ 0.9 | valid | `multi-file`, `split-config` |
+| `negative/01-syntactic-bad-yaml.yaml` | — | `kong` (no guarantee) | invalid | `negative`, `syntactic` |
+| `negative/02-semantic-no-routes.yaml` ⚠ | — | `kong` (no guarantee) | invalid | `negative`, `semantic` |
+| `negative/03-truncated-mid-route.yaml` | — | `kong` (no guarantee) | invalid | `negative`, `truncated` |
+| `negative/04-wrong-format-openapi.yaml` | — | `kong` (no guarantee) | invalid | `negative`, `wrong-format` |
+| `negative/05-encoding-utf16.yaml` ⚠ | — | `kong` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+
+> ⚠ **`04-stress-plugin-heavy.yaml`** — Consumer credential values are fixtures only and are redacted at parse time; the import records the redaction count.
+
+> ⚠ **`06-split-set/kong-routes.yaml`** — deck-style split file: top-level routes referencing a service declared in kong-services.yaml.
+
+> ⚠ **`negative/02-semantic-no-routes.yaml`** — Well-formed Kong config that declares a service but no routes — no API surface to import.
+
+> ⚠ **`negative/05-encoding-utf16.yaml`** — The hand-authored kong/01-minimal-single-service.yaml shape re-encoded as UTF-16 (BOM + NUL bytes).
 
 ### `llm-tools/` — LLM Tools
 
@@ -1007,7 +1060,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 506 | `Apache-2.0` |
+| `hand-authored` | 531 | `Apache-2.0` |
 
 ## Trying an import
 
