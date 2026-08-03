@@ -1,0 +1,660 @@
+{
+  "adapter": "wit",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "source_files": [
+        "wit/05-real-world-keyvalue.wit"
+      ],
+      "wit": {
+        "capability_limits": [
+          {
+            "construct": "resource#store.bucket",
+            "count": 5,
+            "detail": "Resource 'bucket' declares 5 constructor/method(s); the canonical model cannot express resource-scoped methods as operations, so they are preserved in the type's extras.",
+            "kind": "resource-methods"
+          },
+          {
+            "construct": "borrow#atomics",
+            "count": 1,
+            "detail": "borrow<…> handle semantics (temporary, non-owning resource access) have no canonical representation; the referenced type is used with the handle kind preserved in extras.",
+            "kind": "borrow-handle"
+          },
+          {
+            "construct": "borrow#batch",
+            "count": 2,
+            "detail": "borrow<…> handle semantics (temporary, non-owning resource access) have no canonical representation; the referenced type is used with the handle kind preserved in extras.",
+            "kind": "borrow-handle"
+          },
+          {
+            "construct": "tuple#batch",
+            "count": 2,
+            "detail": "tuple<…> has no canonical representation; it is referenced as an opaque type with the WIT spelling preserved in extras.",
+            "kind": "tuple"
+          }
+        ],
+        "external_uses": [],
+        "package": "wasi:keyvalue",
+        "unexpanded_includes": [],
+        "version": "0.2.0",
+        "worlds": [
+          "imports"
+        ]
+      }
+    },
+    "format": "wit",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "wasi:keyvalue",
+      "namespace": "wasi:keyvalue"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "wasi:keyvalue.atomics",
+        "name": "atomics",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "wasi:keyvalue.atomics.increment",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "wasi:keyvalue.atomics.increment#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "wasi:keyvalue.store.error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_params": [
+                    {
+                      "name": "target",
+                      "resolved": {
+                        "extras": {
+                          "wit_handle": "borrow"
+                        },
+                        "item": null,
+                        "name": "wasi:keyvalue.store.bucket",
+                        "nullable": false
+                      },
+                      "type": "borrow<bucket>"
+                    },
+                    {
+                      "name": "key",
+                      "resolved": {
+                        "extras": {},
+                        "item": null,
+                        "name": "string",
+                        "nullable": false
+                      },
+                      "type": "string"
+                    },
+                    {
+                      "name": "delta",
+                      "resolved": {
+                        "extras": {},
+                        "item": null,
+                        "name": "i64",
+                        "nullable": false
+                      },
+                      "type": "s64"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "wasi:keyvalue.atomics.increment#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "wasi:keyvalue.atomics.increment#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i64",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "increment",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "wasi:keyvalue.batch",
+        "name": "batch",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "wasi:keyvalue.batch.get-many",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "wasi:keyvalue.batch.get-many#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "wasi:keyvalue.store.error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_params": [
+                    {
+                      "name": "target",
+                      "resolved": {
+                        "extras": {
+                          "wit_handle": "borrow"
+                        },
+                        "item": null,
+                        "name": "wasi:keyvalue.store.bucket",
+                        "nullable": false
+                      },
+                      "type": "borrow<bucket>"
+                    },
+                    {
+                      "name": "keys",
+                      "resolved": {
+                        "extras": {},
+                        "item": {
+                          "extras": {},
+                          "item": null,
+                          "name": "string",
+                          "nullable": false
+                        },
+                        "name": null,
+                        "nullable": false
+                      },
+                      "type": "list<string>"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "wasi:keyvalue.batch.get-many#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "wasi:keyvalue.batch.get-many#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {
+                      "wit_type": "tuple<string, list<u8>>"
+                    },
+                    "item": null,
+                    "name": "tuple",
+                    "nullable": true
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "get-many",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "wasi:keyvalue.batch.set-many",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "wasi:keyvalue.batch.set-many#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "wasi:keyvalue.store.error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_params": [
+                    {
+                      "name": "target",
+                      "resolved": {
+                        "extras": {
+                          "wit_handle": "borrow"
+                        },
+                        "item": null,
+                        "name": "wasi:keyvalue.store.bucket",
+                        "nullable": false
+                      },
+                      "type": "borrow<bucket>"
+                    },
+                    {
+                      "name": "key-values",
+                      "resolved": {
+                        "extras": {},
+                        "item": {
+                          "extras": {
+                            "wit_type": "tuple<string, list<u8>>"
+                          },
+                          "item": null,
+                          "name": "tuple",
+                          "nullable": false
+                        },
+                        "name": null,
+                        "nullable": false
+                      },
+                      "type": "list<tuple<string, list<u8>>>"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "wasi:keyvalue.batch.set-many#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "set-many",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "wit_exports": [],
+          "wit_imports": [
+            "store",
+            "atomics",
+            "batch"
+          ],
+          "wit_includes": [],
+          "wit_kind": "world"
+        },
+        "key": "wasi:keyvalue.imports",
+        "name": "imports",
+        "operations": []
+      },
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "wasi:keyvalue.store",
+        "name": "store",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "wasi:keyvalue.store.open",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "wasi:keyvalue.store.open#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "wasi:keyvalue.store.error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "identifier"
+                },
+                "headers": [],
+                "key": "wasi:keyvalue.store.open#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "wasi:keyvalue.store.open#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "wasi:keyvalue.store.bucket",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "open",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "store",
+          "wit_kind": "resource",
+          "wit_methods": [
+            {
+              "kind": "method",
+              "name": "get",
+              "params": [
+                {
+                  "name": "key",
+                  "type": "string"
+                }
+              ],
+              "result": "result<option<list<u8>>, error>"
+            },
+            {
+              "kind": "method",
+              "name": "set",
+              "params": [
+                {
+                  "name": "key",
+                  "type": "string"
+                },
+                {
+                  "name": "value",
+                  "type": "list<u8>"
+                }
+              ],
+              "result": "result<_, error>"
+            },
+            {
+              "kind": "method",
+              "name": "delete",
+              "params": [
+                {
+                  "name": "key",
+                  "type": "string"
+                }
+              ],
+              "result": "result<_, error>"
+            },
+            {
+              "kind": "method",
+              "name": "exists",
+              "params": [
+                {
+                  "name": "key",
+                  "type": "string"
+                }
+              ],
+              "result": "result<bool, error>"
+            },
+            {
+              "kind": "method",
+              "name": "list-keys",
+              "params": [
+                {
+                  "name": "cursor",
+                  "type": "option<string>"
+                }
+              ],
+              "result": "result<key-response, error>"
+            }
+          ]
+        },
+        "fields": [],
+        "key": "wasi:keyvalue.store.bucket",
+        "key_type": null,
+        "kind": "record",
+        "name": "bucket",
+        "namespace": "wasi:keyvalue",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_cases": [
+            {
+              "name": "no-such-store",
+              "payload": null
+            },
+            {
+              "name": "access-denied",
+              "payload": null
+            },
+            {
+              "name": "other",
+              "payload": "string"
+            }
+          ],
+          "wit_interface": "store",
+          "wit_kind": "variant"
+        },
+        "fields": [],
+        "key": "wasi:keyvalue.store.error",
+        "key_type": null,
+        "kind": "union",
+        "name": "error",
+        "namespace": "wasi:keyvalue",
+        "union_members": [
+          "string"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "store",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "wasi:keyvalue.store.key-response.cursor",
+            "name": "cursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "wasi:keyvalue.store.key-response.keys",
+            "name": "keys",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "wasi:keyvalue.store.key-response",
+        "key_type": null,
+        "kind": "record",
+        "name": "key-response",
+        "namespace": "wasi:keyvalue",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "0.2.0"
+  },
+  "corpus_path": "wit/05-real-world-keyvalue.wit",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 4,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wit"
+  },
+  "fingerprint": "sha256:6d7bdc74189a65881e30c9e748605808fe6bcb53bc463c0cc992f391001bf67f",
+  "lint": {
+    "findings": 21,
+    "grade": "F",
+    "report_fingerprint": "342d04859928aabb6cc83783336da80c79be9c657262f188a613f1259c30f7c7",
+    "score": 58,
+    "severity_counts": {
+      "error": 0,
+      "info": 14,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,5 @@
+package examples:broken@0.1.0;
+
+interface greet {
+    greeting func(name: string) -> string;
+}

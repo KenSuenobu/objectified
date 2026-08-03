@@ -1,0 +1,490 @@
+{
+  "adapter": "wit",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "source_files": [
+        "wit/03-composition-notifier.wit"
+      ],
+      "wit": {
+        "capability_limits": [],
+        "external_uses": [],
+        "package": "examples:notify",
+        "unexpanded_includes": [],
+        "version": "1.1.0",
+        "worlds": [
+          "notifier"
+        ]
+      }
+    },
+    "format": "wit",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "examples:notify",
+      "namespace": "examples:notify"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "wit_exports": [
+            "subscriber",
+            "health"
+          ],
+          "wit_imports": [
+            "publisher"
+          ],
+          "wit_includes": [],
+          "wit_kind": "world"
+        },
+        "key": "examples:notify.notifier",
+        "name": "notifier",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "wit_direction": "import"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:notify.notifier.now",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:notify.notifier.now#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "uint64",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "now",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "examples:notify.notifier.health",
+        "name": "notifier.health",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:notify.notifier.health.check",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:notify.notifier.health.check#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "bool",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "check",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "examples:notify.publisher",
+        "name": "publisher",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:notify.publisher.min-level",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:notify.publisher.min-level#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:notify.events.level",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "min-level",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:notify.publisher.publish",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "evt"
+                },
+                "headers": [],
+                "key": "examples:notify.publisher.publish#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:notify.events.event",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:notify.publisher.publish#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "bool",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "publish",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:notify.publisher.publish-batch",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "evts"
+                },
+                "headers": [],
+                "key": "examples:notify.publisher.publish-batch#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "examples:notify.events.event",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:notify.publisher.publish-batch#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "uint32",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "publish-batch",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "examples:notify.subscriber",
+        "name": "subscriber",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:notify.subscriber.on-event",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "evt"
+                },
+                "headers": [],
+                "key": "examples:notify.subscriber.on-event#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:notify.events.event",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "on-event",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "events",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:notify.events.event.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:notify.events.event.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "uint8",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:notify.events.event.topic",
+            "name": "topic",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "examples:notify.events.event",
+        "key_type": null,
+        "kind": "record",
+        "name": "event",
+        "namespace": "examples:notify",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:notify.events.level.debug",
+            "name": "debug",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:notify.events.level.info",
+            "name": "info",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:notify.events.level.warn",
+            "name": "warn",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:notify.events.level.error",
+            "name": "error",
+            "value": null
+          }
+        ],
+        "extras": {
+          "wit_interface": "events",
+          "wit_kind": "enum"
+        },
+        "fields": [],
+        "key": "examples:notify.events.level",
+        "key_type": null,
+        "kind": "enum",
+        "name": "level",
+        "namespace": "examples:notify",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.1.0"
+  },
+  "corpus_path": "wit/03-composition-notifier.wit",
+  "counts": {
+    "channels": 0,
+    "operations": 6,
+    "servers": 0,
+    "services": 4,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wit"
+  },
+  "fingerprint": "sha256:7b71a9e1dc16d7c40afa87fbb6110db1b42f2657a5017de9eb9d258ab350504e",
+  "lint": {
+    "findings": 20,
+    "grade": "D",
+    "report_fingerprint": "cfc15126d509b5989da97277361b967a0504edb08f6bca64876b315985dd9ed3",
+    "score": 60,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

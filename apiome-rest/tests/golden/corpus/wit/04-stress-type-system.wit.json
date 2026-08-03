@@ -1,0 +1,853 @@
+{
+  "adapter": "wit",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "source_files": [
+        "wit/04-stress-type-system.wit"
+      ],
+      "wit": {
+        "capability_limits": [
+          {
+            "construct": "tuple#primitives",
+            "count": 1,
+            "detail": "tuple<…> has no canonical representation; it is referenced as an opaque type with the WIT spelling preserved in extras.",
+            "kind": "tuple"
+          },
+          {
+            "construct": "result#primitives",
+            "count": 1,
+            "detail": "result<…> used as a plain type (not a function return) has no canonical representation; the ok arm is referenced with the WIT spelling preserved in extras.",
+            "kind": "nested-result"
+          },
+          {
+            "construct": "borrow#store",
+            "count": 2,
+            "detail": "borrow<…> handle semantics (temporary, non-owning resource access) have no canonical representation; the referenced type is used with the handle kind preserved in extras.",
+            "kind": "borrow-handle"
+          },
+          {
+            "construct": "resource#store.table",
+            "count": 6,
+            "detail": "Resource 'table' declares 6 constructor/method(s); the canonical model cannot express resource-scoped methods as operations, so they are preserved in the type's extras.",
+            "kind": "resource-methods"
+          },
+          {
+            "construct": "tuple#stress",
+            "count": 1,
+            "detail": "tuple<…> has no canonical representation; it is referenced as an opaque type with the WIT spelling preserved in extras.",
+            "kind": "tuple"
+          }
+        ],
+        "external_uses": [],
+        "package": "examples:stress-lab",
+        "unexpanded_includes": [],
+        "version": "2.0.0",
+        "worlds": [
+          "stress"
+        ]
+      }
+    },
+    "format": "wit",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "examples:stress-lab",
+      "namespace": "examples:stress-lab"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "examples:stress-lab.store",
+        "name": "store",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:stress-lab.store.drop-table",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:stress-lab.store.drop-table#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:stress-lab.store.lookup-error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "name"
+                },
+                "headers": [],
+                "key": "examples:stress-lab.store.drop-table#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "drop-table",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:stress-lab.store.open-table",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:stress-lab.store.open-table#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:stress-lab.store.lookup-error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "name"
+                },
+                "headers": [],
+                "key": "examples:stress-lab.store.open-table#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:stress-lab.store.open-table#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:stress-lab.store.table",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "open-table",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "wit_exports": [],
+          "wit_imports": [
+            "store"
+          ],
+          "wit_includes": [],
+          "wit_kind": "world"
+        },
+        "key": "examples:stress-lab.stress",
+        "name": "stress",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "wit_direction": "export"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:stress-lab.stress.probe",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "count"
+                },
+                "headers": [],
+                "key": "examples:stress-lab.stress.probe#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "uint32",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:stress-lab.stress.probe#response",
+                "name": null,
+                "payload": {
+                  "extras": {
+                    "wit_type": "tuple<u32, u32>"
+                  },
+                  "item": null,
+                  "name": "tuple",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "probe",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "primitives",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.attempt",
+            "name": "attempt",
+            "type": {
+              "extras": {
+                "wit_type": "result<string, string>"
+              },
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.big",
+            "name": "big",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.blob",
+            "name": "blob",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "uint8",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.flag",
+            "name": "flag",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.label",
+            "name": "label",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.letter",
+            "name": "letter",
+            "type": {
+              "extras": {
+                "wit_type": "char"
+              },
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.matrix",
+            "name": "matrix",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                },
+                "name": null,
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.medium",
+            "name": "medium",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.nickname",
+            "name": "nickname",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "examples:stress-lab.primitives.maybe-name",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.pair",
+            "name": "pair",
+            "type": {
+              "extras": {
+                "wit_type": "tuple<u32, string>"
+              },
+              "item": null,
+              "name": "tuple",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.precise",
+            "name": "precise",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.ratio",
+            "name": "ratio",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.sbig",
+            "name": "sbig",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.small",
+            "name": "small",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint16",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.smedium",
+            "name": "smedium",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.ssmall",
+            "name": "ssmall",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i16",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.stiny",
+            "name": "stiny",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int8",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:stress-lab.primitives.all-scalars.tiny",
+            "name": "tiny",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint8",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "examples:stress-lab.primitives.all-scalars",
+        "key_type": null,
+        "kind": "record",
+        "name": "all-scalars",
+        "namespace": "examples:stress-lab",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "uint64",
+          "nullable": false
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "primitives",
+          "wit_kind": "type-alias"
+        },
+        "fields": [],
+        "key": "examples:stress-lab.primitives.id",
+        "key_type": null,
+        "kind": "alias",
+        "name": "id",
+        "namespace": "examples:stress-lab",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "primitives",
+          "wit_kind": "type-alias"
+        },
+        "fields": [],
+        "key": "examples:stress-lab.primitives.maybe-name",
+        "key_type": null,
+        "kind": "alias",
+        "name": "maybe-name",
+        "namespace": "examples:stress-lab",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:stress-lab.store.access.read",
+            "name": "read",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:stress-lab.store.access.write",
+            "name": "write",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:stress-lab.store.access.admin",
+            "name": "admin",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:stress-lab.store.access.audit",
+            "name": "audit",
+            "value": null
+          }
+        ],
+        "extras": {
+          "wit_interface": "store",
+          "wit_kind": "flags"
+        },
+        "fields": [],
+        "key": "examples:stress-lab.store.access",
+        "key_type": null,
+        "kind": "enum",
+        "name": "access",
+        "namespace": "examples:stress-lab",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_cases": [
+            {
+              "name": "missing",
+              "payload": null
+            },
+            {
+              "name": "denied",
+              "payload": "access"
+            },
+            {
+              "name": "invalid",
+              "payload": "string"
+            }
+          ],
+          "wit_interface": "store",
+          "wit_kind": "variant"
+        },
+        "fields": [],
+        "key": "examples:stress-lab.store.lookup-error",
+        "key_type": null,
+        "kind": "union",
+        "name": "lookup-error",
+        "namespace": "examples:stress-lab",
+        "union_members": [
+          "examples:stress-lab.store.access",
+          "string"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_constructor": {
+            "kind": "constructor",
+            "name": "constructor",
+            "params": [
+              {
+                "name": "name",
+                "type": "string"
+              }
+            ]
+          },
+          "wit_interface": "store",
+          "wit_kind": "resource",
+          "wit_methods": [
+            {
+              "kind": "method",
+              "name": "get",
+              "params": [
+                {
+                  "name": "key",
+                  "type": "id"
+                }
+              ],
+              "result": "result<row, lookup-error>"
+            },
+            {
+              "kind": "method",
+              "name": "put",
+              "params": [
+                {
+                  "name": "key",
+                  "type": "id"
+                },
+                {
+                  "name": "value",
+                  "type": "row"
+                }
+              ],
+              "result": "result<_, lookup-error>"
+            },
+            {
+              "kind": "method",
+              "name": "keys",
+              "params": [],
+              "result": "list<id>"
+            },
+            {
+              "kind": "static",
+              "name": "merge",
+              "params": [
+                {
+                  "name": "a",
+                  "type": "borrow<table>"
+                },
+                {
+                  "name": "b",
+                  "type": "borrow<table>"
+                }
+              ],
+              "result": "table"
+            },
+            {
+              "kind": "method",
+              "name": "snapshot",
+              "params": [],
+              "result": "own<table>"
+            }
+          ]
+        },
+        "fields": [],
+        "key": "examples:stress-lab.store.table",
+        "key_type": null,
+        "kind": "record",
+        "name": "table",
+        "namespace": "examples:stress-lab",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.0.0"
+  },
+  "corpus_path": "wit/04-stress-type-system.wit",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 2,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wit"
+  },
+  "fingerprint": "sha256:da56eb6833a6c3d6f3ade4af43a39f728436317a3dd7f4609de1cda6d1775cad",
+  "lint": {
+    "findings": 35,
+    "grade": "F",
+    "report_fingerprint": "7d78ab9c4b730b545ad67c3bec80231ddbf89356e8856280ed75cfa408a02177",
+    "score": 42,
+    "severity_counts": {
+      "error": 0,
+      "info": 26,
+      "warning": 9
+    }
+  },
+  "snapshot_version": 1
+}

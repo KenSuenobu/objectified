@@ -14,6 +14,7 @@ export const CATALOG_FORMAT_DOCUMENTATION_URL: Readonly<Record<string, string>> 
   thrift: 'https://thrift.apache.org/docs/',
   connectrpc: 'https://connectrpc.com/docs/introduction',
   capnproto: 'https://capnproto.org/language.html',
+  wit: 'https://component-model.bytecodealliance.org/design/wit.html',
   flatbuffers: 'https://flatbuffers.dev/docs/',
   corbaidl: 'https://www.omg.org/spec/IDL/',
   oncrpc: 'https://datatracker.ietf.org/doc/html/rfc5531',

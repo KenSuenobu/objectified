@@ -1,0 +1,30 @@
+package examples:calculator@0.1.0;
+
+interface calculate {
+    /// Supported operations.
+    enum op {
+        add,
+        sub,
+        mul,
+        div,
+    }
+
+    record request {
+        a: f64,
+        b: f64,
+        operation: op,
+    }
+
+    variant calc-error {
+        divide-by-zero,
+        overflow,
+        invalid-input(string),
+    }
+
+    eval: func(req: request) -> result<f64, calc-error>;
+    describe: func(operation: op) -> string;
+}
+
+world calculator {
+    export calculate;
+}

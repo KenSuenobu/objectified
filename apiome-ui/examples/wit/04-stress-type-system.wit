@@ -1,0 +1,62 @@
+package examples:stress-lab@2.0.0;
+
+interface primitives {
+    type id = u64;
+    type maybe-name = option<string>;
+
+    record all-scalars {
+        flag: bool,
+        tiny: u8,
+        small: u16,
+        medium: u32,
+        big: u64,
+        stiny: s8,
+        ssmall: s16,
+        smedium: s32,
+        sbig: s64,
+        ratio: f32,
+        precise: f64,
+        letter: char,
+        label: string,
+        blob: list<u8>,
+        matrix: list<list<f64>>,
+        pair: tuple<u32, string>,
+        attempt: result<string, string>,
+        nickname: maybe-name,
+    }
+}
+
+interface store {
+    use primitives.{id, all-scalars as row};
+
+    flags access {
+        read,
+        write,
+        admin,
+        audit,
+    }
+
+    variant lookup-error {
+        missing,
+        denied(access),
+        invalid(string),
+    }
+
+    resource table {
+        constructor(name: string);
+        get: func(key: id) -> result<row, lookup-error>;
+        put: func(key: id, value: row) -> result<_, lookup-error>;
+        @since(version = 2.0.0)
+        keys: func() -> list<id>;
+        merge: static func(a: borrow<table>, b: borrow<table>) -> table;
+        snapshot: func() -> own<table>;
+    }
+
+    open-table: func(name: string) -> result<table, lookup-error>;
+    drop-table: func(name: string) -> result<_, lookup-error>;
+}
+
+world stress {
+    import store;
+    export probe: func(count: option<u32>) -> tuple<u32, u32>;
+}

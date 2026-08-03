@@ -1,0 +1,504 @@
+{
+  "adapter": "wit",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "source_files": [
+        "api.wit",
+        "service.wit",
+        "types.wit"
+      ],
+      "wit": {
+        "capability_limits": [],
+        "external_uses": [],
+        "package": "examples:orders",
+        "unexpanded_includes": [],
+        "version": "1.0.0",
+        "worlds": [
+          "order-service"
+        ]
+      }
+    },
+    "format": "wit",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "examples:orders",
+      "namespace": "examples:orders"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "examples:orders.order-api",
+        "name": "order-api",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:orders.order-api.cancel-order",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:orders.order-api.cancel-order#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:orders.order-types.order-error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "id"
+                },
+                "headers": [],
+                "key": "examples:orders.order-api.cancel-order#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "cancel-order",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:orders.order-api.get-order",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:orders.order-api.get-order#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:orders.order-types.order-error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "id"
+                },
+                "headers": [],
+                "key": "examples:orders.order-api.get-order#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:orders.order-api.get-order#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:orders.order-types.order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "get-order",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:orders.order-api.place-order",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:orders.order-api.place-order#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:orders.order-types.order-error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "new-order"
+                },
+                "headers": [],
+                "key": "examples:orders.order-api.place-order#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:orders.order-types.order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:orders.order-api.place-order#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "place-order",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "wit_exports": [
+            "order-api"
+          ],
+          "wit_imports": [],
+          "wit_includes": [],
+          "wit_kind": "world"
+        },
+        "key": "examples:orders.order-service",
+        "name": "order-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "wit_direction": "import"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:orders.order-service.log",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "message"
+                },
+                "headers": [],
+                "key": "examples:orders.order-service.log#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "log",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "order-types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:orders.order-types.line-item.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:orders.order-types.line-item.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:orders.order-types.line-item.unit-price-cents",
+            "name": "unit-price-cents",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "examples:orders.order-types.line-item",
+        "key_type": null,
+        "kind": "record",
+        "name": "line-item",
+        "namespace": "examples:orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "order-types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:orders.order-types.order.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:orders.order-types.order.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "examples:orders.order-types.line-item",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:orders.order-types.order.note",
+            "name": "note",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "examples:orders.order-types.order",
+        "key_type": null,
+        "kind": "record",
+        "name": "order",
+        "namespace": "examples:orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_cases": [
+            {
+              "name": "not-found",
+              "payload": null
+            },
+            {
+              "name": "out-of-stock",
+              "payload": "string"
+            },
+            {
+              "name": "rejected",
+              "payload": "string"
+            }
+          ],
+          "wit_interface": "order-types",
+          "wit_kind": "variant"
+        },
+        "fields": [],
+        "key": "examples:orders.order-types.order-error",
+        "key_type": null,
+        "kind": "union",
+        "name": "order-error",
+        "namespace": "examples:orders",
+        "union_members": [
+          "string",
+          "string"
+        ],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "wit/06-package-set/api.wit",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 2,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wit"
+  },
+  "fingerprint": "sha256:546d74fc6b345c0f97dcdc23ba4fdf891b957146d7937a946601f7b2495d77f5",
+  "lint": {
+    "findings": 23,
+    "grade": "F",
+    "report_fingerprint": "29cff68598e977a7e0079419bf16241aa1839405397930713bd6106c9fa542c7",
+    "score": 56,
+    "severity_counts": {
+      "error": 0,
+      "info": 16,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

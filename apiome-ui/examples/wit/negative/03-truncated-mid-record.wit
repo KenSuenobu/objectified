@@ -1,0 +1,6 @@
+package examples:cut@0.1.0;
+
+interface data {
+    record point {
+        x: u32,
+        y: u32,

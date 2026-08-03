@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **531 files** across **42 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **544 files** across **43 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -47,6 +47,7 @@ The corpus holds **531 files** across **42 format directories**. Every file has 
 | `protobuf/` | Protobuf / gRPC | rpc | `syntax = "proto3"` | 17 |
 | `smithy/` | Smithy 2.0 | rpc | `$version` + Smithy shapes | 11 |
 | `thrift/` | Apache Thrift | rpc | `service` / `struct` shapes | 11 |
+| `wit/` | WIT (WebAssembly Component Model) | rpc | `package ns:name` + `interface`/`world` blocks | 13 |
 | `xml-rpc/` | XML-RPC | rpc | `<methodCall>` / `<methodResponse>` root | 13 |
 
 ### Event / messaging
@@ -940,6 +941,36 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-wsdl-definitions.wsdl` | — | `wadl` (no guarantee) | invalid | `negative`, `wrong-format`, `wsdl-definitions` |
 | `negative/05-encoding-utf16-bom.wadl` | — | `wadl` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bom` |
 
+### `wit/` — WIT (WebAssembly Component Model)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-greeter.wit` | minimal | `wit` ≥ 0.9 | valid | `minimal`, `single-interface`, `world` |
+| `02-typical-calculator.wit` | typical | `wit` ≥ 0.9 | valid | `typical`, `record`, `enum`, `variant`, `result-type` |
+| `03-composition-notifier.wit` | composition | `wit` ≥ 0.9 | valid | `composition`, `cross-interface-use`, `world`, `inline-interface` |
+| `04-stress-type-system.wit` ⚠ | stress | `wit` ≥ 0.9 | valid | `stress`, `resource`, `borrow`, `flags`, `tuple`, `type-alias`, `gate-annotations` |
+| `05-real-world-keyvalue.wit` ⚠ | real-world | `wit` ≥ 0.9 | valid | `real-world`, `resource`, `borrow`, `variant` |
+| `06-package-set/api.wit` ⚠ | multi-file (root) | `wit` ≥ 0.9 | valid | `multi-file`, `package-directory`, `cross-file-use` |
+| `06-package-set/service.wit` | multi-file (member) | `wit` ≥ 0.9 | valid | `multi-file`, `package-directory`, `world` |
+| `06-package-set/types.wit` | multi-file (member) | `wit` ≥ 0.9 | valid | `multi-file`, `package-directory` |
+| `negative/01-syntactic-missing-colon.wit` ⚠ | — | `wit` (no guarantee) | invalid | `negative`, `syntactic` |
+| `negative/02-semantic-no-definitions.wit` ⚠ | — | `wit` (no guarantee) | invalid | `negative`, `semantic` |
+| `negative/03-truncated-mid-record.wit` | — | `wit` (no guarantee) | invalid | `negative`, `truncated` |
+| `negative/04-wrong-format-openapi.yaml` | — | `wit` (no guarantee) | invalid | `negative`, `wrong-format` |
+| `negative/05-encoding-utf16.wit` ⚠ | — | `wit` (no guarantee) | invalid | `negative`, `encoding` |
+
+> ⚠ **`04-stress-type-system.wit`** — Resources with methods, borrow/own handles, tuples, and nested results normalize with capability-limit ledger entries (IXH-7.9), never silent drops.
+
+> ⚠ **`05-real-world-keyvalue.wit`** — Modeled after the WASI key-value proposal's interface surface (wasi:keyvalue).
+
+> ⚠ **`06-package-set/api.wit`** — `use order-types.{…}` resolves against the sibling types.wit through the merged package fileset.
+
+> ⚠ **`negative/01-syntactic-missing-colon.wit`** — Function statement missing the `name: func` colon.
+
+> ⚠ **`negative/02-semantic-no-definitions.wit`** — A lone package declaration with no interfaces or worlds — nothing to import.
+
+> ⚠ **`negative/05-encoding-utf16.wit`** — UTF-16 encoded WIT text; surviving NUL bytes are rejected as a binary/encoding fault.
+
 ### `wsdl/` — WSDL 1.1 (SOAP)
 
 | File | Rung | Expected detection | Class | Features |
@@ -1060,7 +1091,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 531 | `Apache-2.0` |
+| `hand-authored` | 544 | `Apache-2.0` |
 
 ## Trying an import
 

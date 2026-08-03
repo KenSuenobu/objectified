@@ -230,6 +230,12 @@
       "paradigm": "rest",
       "marker": "`<application>` root (WADL namespace)"
     },
+    "wit": {
+      "label": "WIT (WebAssembly Component Model)",
+      "category": "rpc",
+      "paradigm": "rpc",
+      "marker": "`package ns:name` + `interface`/`world` blocks"
+    },
     "wsdl": {
       "label": "WSDL 1.1 (SOAP)",
       "category": "rest-http",
@@ -10549,6 +10555,282 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Bytes of 02-status-ping.wadl re-encoded as UTF-16 with BOM via Python, breaking UTF-8 decoding.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "wit/01-minimal-greeter.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "minimal",
+        "single-interface",
+        "world"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "minimal"
+    },
+    {
+      "path": "wit/02-typical-calculator.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "typical",
+        "record",
+        "enum",
+        "variant",
+        "result-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "typical"
+    },
+    {
+      "path": "wit/03-composition-notifier.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "composition",
+        "cross-interface-use",
+        "world",
+        "inline-interface"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "composition"
+    },
+    {
+      "path": "wit/04-stress-type-system.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "stress",
+        "resource",
+        "borrow",
+        "flags",
+        "tuple",
+        "type-alias",
+        "gate-annotations"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Resources with methods, borrow/own handles, tuples, and nested results normalize with capability-limit ledger entries (IXH-7.9), never silent drops.",
+      "rung": "stress"
+    },
+    {
+      "path": "wit/05-real-world-keyvalue.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "real-world",
+        "resource",
+        "borrow",
+        "variant"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Modeled after the WASI key-value proposal's interface surface (wasi:keyvalue).",
+      "rung": "real-world"
+    },
+    {
+      "path": "wit/06-package-set/api.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "multi-file",
+        "package-directory",
+        "cross-file-use"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "`use order-types.{\u2026}` resolves against the sibling types.wit through the merged package fileset.",
+      "rung": "multi-file",
+      "fileset_role": "root"
+    },
+    {
+      "path": "wit/06-package-set/service.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "multi-file",
+        "package-directory",
+        "world"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "wit/06-package-set/types.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "multi-file",
+        "package-directory"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "wit/negative/01-syntactic-missing-colon.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Function statement missing the `name: func` colon.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "wit/negative/02-semantic-no-definitions.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "A lone package declaration with no interfaces or worlds \u2014 nothing to import.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_SEMANTIC_INVALID"
+    },
+    {
+      "path": "wit/negative/03-truncated-mid-record.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_TRUNCATED"
+    },
+    {
+      "path": "wit/negative/04-wrong-format-openapi.yaml",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "wit/negative/05-encoding-utf16.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "UTF-16 encoded WIT text; surviving NUL bytes are rejected as a binary/encoding fault.",
       "failure_class": "encoding",
       "expected_error_code": "INPUT_ENCODING_INVALID"
     },

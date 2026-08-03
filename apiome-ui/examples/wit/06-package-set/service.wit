@@ -1,0 +1,6 @@
+package examples:orders@1.0.0;
+
+world order-service {
+    export order-api;
+    import log: func(message: string);
+}
