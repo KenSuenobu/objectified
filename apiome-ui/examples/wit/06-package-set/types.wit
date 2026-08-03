@@ -1,0 +1,21 @@
+package examples:orders@1.0.0;
+
+interface order-types {
+    record line-item {
+        sku: string,
+        quantity: u32,
+        unit-price-cents: u64,
+    }
+
+    record order {
+        id: option<string>,
+        items: list<line-item>,
+        note: option<string>,
+    }
+
+    variant order-error {
+        not-found,
+        out-of-stock(string),
+        rejected(string),
+    }
+}

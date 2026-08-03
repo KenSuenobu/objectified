@@ -24,6 +24,7 @@ describe('catalog-import-formats', () => {
     expect(catalogAdapterForFormat('fbs')?.sourceKind).toBe('flatbuffers');
     expect(catalogAdapterForFormat('capnproto')?.sourceKind).toBe('capnproto');
     expect(catalogAdapterForFormat('capnp')?.sourceKind).toBe('capnproto');
+    expect(catalogAdapterForFormat('wit')?.sourceKind).toBe('wit');
     expect(catalogAdapterForFormat('wsdl')?.sourceKind).toBe('wsdl');
     expect(catalogAdapterForFormat('soap')?.sourceKind).toBe('wsdl');
     expect(catalogAdapterForFormat('raml')?.sourceKind).toBe('raml');
@@ -103,7 +104,7 @@ describe('catalog-import-formats', () => {
 
   test('exposes the distinct storable sources (deduped by source_kind)', () => {
     const kinds = CATALOG_STORABLE_SOURCES.map((s) => s.sourceKind).sort();
-    expect(kinds).toEqual(['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fhir', 'fix', 'flatbuffers', 'gateway-api', 'graphql', 'grpc', 'hl7v2', 'http-file', 'iso20022', 'iso8583', 'json-schema', 'jtd', 'k8s-crd', 'kong', 'llm-tools', 'odata', 'oncrpc', 'openrpc', 'postman', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect']);
+    expect(kinds).toEqual(['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fhir', 'fix', 'flatbuffers', 'gateway-api', 'graphql', 'grpc', 'hl7v2', 'http-file', 'iso20022', 'iso8583', 'json-schema', 'jtd', 'k8s-crd', 'kong', 'llm-tools', 'odata', 'oncrpc', 'openrpc', 'postman', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wit', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect']);
   });
 
   test('routes adapter-backed formats to catalog', () => {

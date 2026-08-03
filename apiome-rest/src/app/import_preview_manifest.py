@@ -202,6 +202,7 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         "http_file_variables",
         "overlay",
         "gateway",
+        "wit",
     }
 )
 
@@ -343,6 +344,20 @@ KNOWN_PARSER_LIMITS: Dict[str, Tuple[ParserLimit, ...]] = {
             detail="HTTPRoute ExtensionRef filters and external policy attachments "
             "(for example auth policies) reference resources outside the manifest; "
             "they are preserved verbatim in extras, not resolved.",
+        ),
+    ),
+    "wit": (
+        ParserLimit(
+            construct="world include expansion",
+            detail="A world's `include` statements are recorded but not expanded — "
+            "the included world's imports/exports are not merged into the "
+            "including world.",
+        ),
+        ParserLimit(
+            construct="secondary nested package blocks",
+            detail="A file nesting more than one `package ns:name { … }` block has "
+            "only its first block read; the others are counted and reported, not "
+            "parsed.",
         ),
     ),
 }
@@ -1000,6 +1015,7 @@ def _document_scope_rows(
 
     ledger.extend(_overlay_provenance_rows(api))
     ledger.extend(_gateway_capability_rows(api))
+    ledger.extend(_wit_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1182,6 +1198,62 @@ def _gateway_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
                 detail=(
                     f"{redactions} credential value(s) were redacted at parse time; "
                     "counts are retained, values are never imported."
+                ),
+                document_scoped=True,
+            )
+        )
+    return rows
+
+
+def _wit_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the IXH-7.9 WIT capability-limit report as document-scoped ledger rows.
+
+    WIT constructs the canonical model cannot hold — resources with methods,
+    ``borrow`` handle semantics, tuples, nested results, stream/future wrappers —
+    are stated as ``partially-mapped``: the construct itself was normalized (the
+    resource type exists, the referenced type is used) and its inexpressible part
+    is preserved verbatim in extras. A **capability limit, never a drop.** A
+    ``use`` whose target lives outside the supplied package is ``inferred`` /
+    ``source_incomplete``: the reference is kept by name, the definition behind
+    it was not supplied.
+    """
+    report = api.extras.get("wit") if isinstance(api.extras, dict) else None
+    if not isinstance(report, dict):
+        return []
+    rows: List[CoverageEntry] = []
+
+    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
+    for limit in report.get("capability_limits") or []:
+        if not isinstance(limit, dict) or not limit.get("construct"):
+            continue
+        count = int(limit.get("count") or 1)
+        rows.append(
+            CoverageEntry(
+                source_construct=f"wit#{limit.get('construct')}",
+                coverage=CoverageClass.PARTIALLY_MAPPED,
+                status=partial_status,
+                reason=partial_reason,
+                detail=(
+                    f"{limit.get('detail')} ({count} occurrence(s); a capability "
+                    "limit of the canonical model, not a drop — the WIT construct "
+                    "is preserved in extras)."
+                ),
+                document_scoped=True,
+            )
+        )
+
+    inferred_status, inferred_reason = STATUS_FOR_COVERAGE[CoverageClass.INFERRED]
+    for use in report.get("external_uses") or []:
+        rows.append(
+            CoverageEntry(
+                source_construct=f"wit#use.{use}",
+                coverage=CoverageClass.INFERRED,
+                status=inferred_status,
+                reason=inferred_reason,
+                detail=(
+                    f"`use {use}` resolves outside the supplied package; the "
+                    "imported names are referenced by name only. Supply the "
+                    "package's dependencies as a fileset to resolve them."
                 ),
                 document_scoped=True,
             )

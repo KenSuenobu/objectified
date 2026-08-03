@@ -45,6 +45,7 @@ import {
   Box,
   Waypoints,
   Route,
+  Component,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -157,6 +158,7 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
   { id: 'thrift', label: 'Thrift', icon: Network, tone: 'lime', importable: true, description: 'Apache Thrift IDL services & structs.' },
   { id: 'connectrpc', label: 'Connect', icon: Network, tone: 'emerald', importable: true, aliases: ['connect'], description: 'Connect RPC (Protobuf-based) services.' },
   { id: 'capnproto', label: "Cap'n Proto", icon: Zap, tone: 'lime', importable: true, aliases: ['capnp'], description: "Cap'n Proto schema & RPC interfaces." },
+  { id: 'wit', label: 'WIT (WebAssembly)', icon: Component, tone: 'violet', importable: true, description: 'WebAssembly Component Model WIT package — worlds, interfaces & typed functions.' },
   { id: 'flatbuffers', label: 'FlatBuffers', icon: Boxes, tone: 'teal', importable: true, aliases: ['fbs'], description: 'FlatBuffers serialization schema (.fbs).' },
   { id: 'corbaidl', label: 'CORBA IDL', icon: Network, tone: 'red', importable: true, aliases: ['corba', 'idl'], description: 'CORBA interface definition language.' },
   { id: 'oncrpc', label: 'ONC RPC', icon: Network, tone: 'slate', importable: true, aliases: ['sunrpc', 'rpcgen', 'xdr'], description: 'ONC/Sun RPC (XDR) interface definition.' },

@@ -82,6 +82,7 @@ const FORMAT_LABELS: Readonly<Record<string, string>> = {
   connectrpc: 'Connect RPC',
   thrift: 'Thrift',
   capnproto: "Cap'n Proto",
+  wit: 'WIT (WebAssembly)',
   flatbuffers: 'FlatBuffers',
   corbaidl: 'CORBA IDL',
   oncrpc: 'ONC RPC',

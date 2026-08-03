@@ -1,0 +1,369 @@
+{
+  "adapter": "wit",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "source_files": [
+        "wit/02-typical-calculator.wit"
+      ],
+      "wit": {
+        "capability_limits": [],
+        "external_uses": [],
+        "package": "examples:calculator",
+        "unexpanded_includes": [],
+        "version": "0.1.0",
+        "worlds": [
+          "calculator"
+        ]
+      }
+    },
+    "format": "wit",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "examples:calculator",
+      "namespace": "examples:calculator"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "examples:calculator.calculate",
+        "name": "calculate",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:calculator.calculate.describe",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "operation"
+                },
+                "headers": [],
+                "key": "examples:calculator.calculate.describe#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:calculator.calculate.op",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:calculator.calculate.describe#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "describe",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "examples:calculator.calculate.eval",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:calculator.calculate.eval#error",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:calculator.calculate.calc-error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "req"
+                },
+                "headers": [],
+                "key": "examples:calculator.calculate.eval#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "examples:calculator.calculate.request",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "examples:calculator.calculate.eval#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "eval",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {
+          "wit_exports": [
+            "calculate"
+          ],
+          "wit_imports": [],
+          "wit_includes": [],
+          "wit_kind": "world"
+        },
+        "key": "examples:calculator.calculator",
+        "name": "calculator",
+        "operations": []
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_cases": [
+            {
+              "name": "divide-by-zero",
+              "payload": null
+            },
+            {
+              "name": "overflow",
+              "payload": null
+            },
+            {
+              "name": "invalid-input",
+              "payload": "string"
+            }
+          ],
+          "wit_interface": "calculate",
+          "wit_kind": "variant"
+        },
+        "fields": [],
+        "key": "examples:calculator.calculate.calc-error",
+        "key_type": null,
+        "kind": "union",
+        "name": "calc-error",
+        "namespace": "examples:calculator",
+        "union_members": [
+          "string"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:calculator.calculate.op.add",
+            "name": "add",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:calculator.calculate.op.sub",
+            "name": "sub",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:calculator.calculate.op.mul",
+            "name": "mul",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "examples:calculator.calculate.op.div",
+            "name": "div",
+            "value": null
+          }
+        ],
+        "extras": {
+          "wit_interface": "calculate",
+          "wit_kind": "enum"
+        },
+        "fields": [],
+        "key": "examples:calculator.calculate.op",
+        "key_type": null,
+        "kind": "enum",
+        "name": "op",
+        "namespace": "examples:calculator",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "calculate",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:calculator.calculate.request.a",
+            "name": "a",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:calculator.calculate.request.b",
+            "name": "b",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "examples:calculator.calculate.request.operation",
+            "name": "operation",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "examples:calculator.calculate.op",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "examples:calculator.calculate.request",
+        "key_type": null,
+        "kind": "record",
+        "name": "request",
+        "namespace": "examples:calculator",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "0.1.0"
+  },
+  "corpus_path": "wit/02-typical-calculator.wit",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 2,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wit"
+  },
+  "fingerprint": "sha256:59968bd98f119daec7dcf1acd23a09ae621a921d9862dc92fa45916f25589031",
+  "lint": {
+    "findings": 14,
+    "grade": "C",
+    "report_fingerprint": "d91dd9454232f9fd881372573132c01ebf739a9bf28849e40a642c3afd1fce40",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 9,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

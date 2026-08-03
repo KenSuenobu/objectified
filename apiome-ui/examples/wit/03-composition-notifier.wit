@@ -1,0 +1,39 @@
+package examples:notify@1.1.0;
+
+interface events {
+    record event {
+        id: u64,
+        topic: string,
+        payload: list<u8>,
+    }
+
+    enum level {
+        debug,
+        info,
+        warn,
+        error,
+    }
+}
+
+interface publisher {
+    use events.{event, level};
+
+    publish: func(evt: event) -> bool;
+    publish-batch: func(evts: list<event>) -> u32;
+    min-level: func() -> level;
+}
+
+interface subscriber {
+    use events.{event};
+
+    on-event: func(evt: event);
+}
+
+world notifier {
+    import publisher;
+    export subscriber;
+    import now: func() -> u64;
+    export health: interface {
+        check: func() -> bool;
+    }
+}

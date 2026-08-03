@@ -1,0 +1,9 @@
+package examples:orders@1.0.0;
+
+interface order-api {
+    use order-types.{order, order-error};
+
+    place-order: func(new-order: order) -> result<string, order-error>;
+    get-order: func(id: string) -> result<order, order-error>;
+    cancel-order: func(id: string) -> result<_, order-error>;
+}

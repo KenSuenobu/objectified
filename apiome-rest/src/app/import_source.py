@@ -1062,6 +1062,10 @@ def load_builtin_import_sources() -> None:
     from . import gateway_api_import_source as _gateway_api  # noqa: F401
     from . import kong_import_source as _kong  # noqa: F401
 
+    # ``wit_import_source`` (IXH-7.9) self-registers the ``wit`` adapter and, as a side
+    # effect of its own imports, the WIT normalizer under ``wit``.
+    from . import wit_import_source as _wit  # noqa: F401
+
 
 # ===========================================================================
 # Shared canonical fingerprint + diff

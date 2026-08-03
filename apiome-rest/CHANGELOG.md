@@ -5,6 +5,36 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.251.0] - 2026-08-02
+
+### Added
+- **WIT (WebAssembly Component Model) import (IXH-7.9, #5134)** — A new `wit`
+  `ImportSource` adapter makes WIT packages importable (file, URL, paste, or a
+  multi-file package fileset). Worlds and interfaces normalize to canonical
+  services on the RPC paradigm, functions to operations (a top-of-return
+  `result<ok, err>` becomes the RESPONSE/ERROR message pair; `option<t>` maps to
+  canonical nullability, `list<t>` to list nesting), and the WIT type system to
+  canonical types: `record` → RECORD, `enum` → ENUM, `variant` → UNION with case
+  payloads preserved, `flags` → ENUM with bitset semantics flagged, `type`
+  aliases → ALIAS, `resource` → RECORD carrying its constructor and methods in
+  extras.
+- **Cross-file `use` resolution** — Archive/git filesets merge every `.wit`
+  member into one package, so `use iface.{type}` statements resolve against
+  sibling files; a `use` naming another package is recorded as an external
+  reference (`inferred` / `source_incomplete` ledger row), never fabricated or
+  dropped.
+- **Capability limits, never silent drops** — Constructs the canonical model
+  cannot hold (resources with methods, `borrow<…>` handle semantics, tuples,
+  nested results, `stream`/`future` wrappers) are preserved in extras and
+  reported on the import preview coverage ledger as `partially-mapped`
+  capability limits; declared parser limits (`include` expansion, secondary
+  nested package blocks) carry `not-parsed-by-adapter` registry entries.
+- **Corpus ladder** — Full six-rung WIT corpus (minimal, typical calculator,
+  world composition, type-system stress, WASI-style key-value real-world, and a
+  multi-file package set), a five-class negative tier, golden snapshots,
+  round-trip matrix rows, and the lint capability matrix / catalog format
+  registry entries.
+
 ## [1.250.0] - 2026-08-02
 
 ### Added
