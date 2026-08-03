@@ -89,6 +89,8 @@ from .slate_git_preview_routes import router as slate_git_preview_router
 from .slate_insights_routes import router as slate_insights_router
 from .slate_routes import router as slate_router
 from .slate_security_routes import router as slate_security_router
+from .snippet_routes import browse_router as snippet_browse_router
+from .snippet_routes import versions_router as snippet_versions_router
 from .source_review_routes import router as source_review_router
 from .schema_suite_routes import router as schema_suite_router
 from .schema_synthesis_routes import router as schema_synthesis_router
@@ -119,7 +121,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.115.0",
+    version="1.116.0",
 )
 
 
@@ -256,6 +258,7 @@ app.include_router(mcp_badge_router)
 # mcp_feed_router: anonymous public RSS/Atom/JSON change feeds at /mcp/feed/* (unauthenticated, like browse).
 app.include_router(mcp_feed_router)
 app.include_router(browse_export_router)
+app.include_router(snippet_browse_router)
 app.include_router(data_router)
 # registry_audit_router before primitives_router so its literal /{tenant_slug}/audit route is
 # matched ahead of the primitives /{tenant_slug}/{primitive_id} catch-all (#3481).
@@ -290,6 +293,7 @@ app.include_router(version_changelog_router)
 # /{tenant_slug}/{project_id}/{version_record_id}/agent-outputs suffix stays unambiguous
 # against the versions parameter routes (APX-3.4, private-suite#2459).
 app.include_router(slate_agent_outputs_router)
+app.include_router(snippet_versions_router)
 app.include_router(versions_router)
 app.include_router(properties_router)
 app.include_router(project_tags_router)

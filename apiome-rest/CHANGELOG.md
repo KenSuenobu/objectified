@@ -5,6 +5,29 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.252.0] - 2026-08-03
+
+### Added
+- **Snippet service (SDK-2.3, #4487)** — Per-operation usage snippets
+  (install + call code) rendered server-side from the persisted canonical
+  model, as the single source of truth for the browse operation pages
+  (SDK-3.3) and the Try It copy-as-code feature (SIM-3.5). Two surfaces share
+  one pure renderer (`app.snippet_render`):
+  `GET /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/snippets/{operation_id}?lang=`
+  (authenticated, published revisions only) and
+  `GET /v1/browse/tenants/{t}/projects/{p}/versions/{v}/snippets/{operation_id}?lang=`
+  (anonymous, published+public with uniform 404s, sharing the public-export
+  rate limit). Languages: `ts` (built-in `fetch`), `python` (`httpx`, with a
+  `pip install httpx` install line), and `curl`, plus browse-vocabulary
+  aliases `fetch`/`httpx`. Output shape, escaping, and `$API_KEY`-style
+  secret placeholders mirror the client-side Try It generators; request
+  bodies are minimal valid instances synthesized deterministically from the
+  payload schema, so responses are content-addressed (`ETag` / 304). The
+  structured response carries the resolved operation, the synthesized
+  request, and a placeholder inventory so consumers need no post-processing.
+  Snippets derive from the canonical spec directly — the original SDK-2.1/2.2
+  template dependency was dropped when those tickets were cancelled.
+
 ## [1.251.0] - 2026-08-02
 
 ### Added

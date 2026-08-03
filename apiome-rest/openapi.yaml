@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.115.0
+  version: 1.116.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -765,6 +765,98 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for emittheexportdocumentforapublishedpublicresponse422.
+  /v1/browse/tenants/{tenant_slug}/projects/{project_slug}/versions/{version_slug}/snippets/{operation_id}:
+    get:
+      tags:
+      - browse
+      summary: Render a usage snippet for one operation of a published public version
+        (no auth)
+      description: "Return the install + call snippet for one operation of a published\
+        \ public version.\n\nThe anonymous counterpart of the authenticated snippet\
+        \ route, addressed by URL slugs.\nBacks the browse operation pages' snippet\
+        \ tabs (SDK-3.3) and the Try It copy-as-code\nfeature (SIM-3.5) so both consume\
+        \ one source of truth.\n\nArgs:\n    tenant_slug: The owning tenant's slug.\n\
+        \    project_slug: The project (artifact) slug within the tenant.\n    version_slug:\
+        \ The version label (e.g. ``1.0.0``) of the published revision.\n    operation_id:\
+        \ operationId, canonical name, or URL-encoded canonical key.\n    lang: ``ts``\
+        \ / ``python`` / ``curl`` (aliases ``fetch`` / ``httpx``).\n    if_none_match:\
+        \ Standard conditional-request header.\n\nReturns:\n    The :class:`PublicSnippetResponse`\
+        \ JSON, or an empty 304."
+      operationId: get_public_operation_snippet_v1_browse_tenants__tenant_slug__projects__project_slug__versions__version_slug__snippets__operation_id__get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Slug
+          description: Project Slug schema.
+        description: URL-safe project slug within the tenant.
+      - name: version_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Slug
+          description: Version Slug schema.
+        description: Semantic version label or version slug (for example ``1.0.0``).
+      - name: operation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Operation Id
+          description: Operation Id schema.
+        description: Operation identifier within the path.
+      - name: lang
+        in: query
+        required: true
+        schema:
+          type: string
+          description: 'Snippet language: ts | python | curl (aliases: fetch → ts,
+            httpx → python).'
+          title: Lang
+        description: 'Snippet language: ts | python | curl (aliases: fetch → ts, httpx
+          → python).'
+      - name: If-None-Match
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Renderausagesnippetforoneoperationofapub If None Match schema.
+          - type: 'null'
+            description: Renderausagesnippetforoneoperationofapub If None Match schema.
+          title: If-None-Match
+          description: If-None-Match schema.
+        description: ETag from a prior response; returns 304 when unchanged.
+      responses:
+        '200':
+          description: Successful response for render a usage snippet for one operation
+            of a published public version (no auth).
+          content:
+            application/json:
+              schema:
+                description: Response payload for renderausagesnippetforoneoperationofapubresponse200.
+        '304':
+          description: Not modified (ETag matched If-None-Match).
+        '400':
+          description: Unknown lang value.
+        '404':
+          description: No published public version matches the slugs (private, draft,
+            and unknown versions are indistinguishable), or the operation is unknown.
+        '422':
+          description: The operation has no HTTP binding (no snippet is defined).
+        '429':
+          description: Public export rate limit exceeded (MFX-7.3).
   /v1/data/{tenant_slug}:
     get:
       tags:
@@ -12790,6 +12882,121 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for get version agent outputsresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/snippets/{operation_id}:
+    get:
+      tags:
+      - snippets
+      summary: Render a usage snippet for one operation of a published revision
+      description: "Return the install + call snippet for one operation of a published\
+        \ revision.\n\nResolves the project and version within the caller's tenant,\
+        \ requires the revision to\nbe published, loads its canonical content, addresses\
+        \ the operation by operationId /\nname / URL-encoded canonical key, and renders\
+        \ the requested language deterministically\nwith a content-addressed ``ETag``.\
+        \ A matching ``If-None-Match`` short-circuits to 304.\n\nArgs:\n    tenant_slug:\
+        \ Decorative; the token's tenant scopes every read.\n    project_id: The project\
+        \ UUID within the tenant.\n    version_record_id: The revision UUID (``versions.id``).\n\
+        \    operation_id: operationId, canonical name, or URL-encoded canonical key.\n\
+        \    lang: ``ts`` / ``python`` / ``curl`` (aliases ``fetch`` / ``httpx``).\n\
+        \    if_none_match: Standard conditional-request header.\n    auth_data: The\
+        \ authenticated tenant context (JWT or API key).\n\nReturns:\n    The :class:`SnippetResponse`\
+        \ JSON, or an empty 304."
+      operationId: get_version_operation_snippet_v1_versions__tenant_slug___project_id___version_record_id__snippets__operation_id__get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: operation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Operation Id
+          description: Operation Id schema.
+        description: Operation identifier within the path.
+      - name: lang
+        in: query
+        required: true
+        schema:
+          type: string
+          description: 'Snippet language: ts | python | curl (aliases: fetch → ts,
+            httpx → python).'
+          title: Lang
+        description: 'Snippet language: ts | python | curl (aliases: fetch → ts, httpx
+          → python).'
+      - name: If-None-Match
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Renderausagesnippetforoneoperationofapub If None Match schema.
+          - type: 'null'
+            description: Renderausagesnippetforoneoperationofapub If None Match schema.
+          title: If-None-Match
+          description: If-None-Match schema.
+        description: ETag from a prior response; returns 304 when unchanged.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Renderausagesnippetforoneoperationofapubauthorization schema.
+          - type: 'null'
+            description: Renderausagesnippetforoneoperationofapubauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Renderausagesnippetforoneoperationofapub Xapikey schema.
+          - type: 'null'
+            description: Renderausagesnippetforoneoperationofapub Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for render a usage snippet for one operation
+            of a published revision.
+          content:
+            application/json:
+              schema:
+                description: Response payload for renderausagesnippetforoneoperationofapubresponse200.
+        '304':
+          description: Not modified (ETag matched If-None-Match).
+        '400':
+          description: Malformed project id, unknown lang, or unpublished revision.
+        '404':
+          description: Project, version, or operation not found in tenant.
+        '422':
+          description: The operation has no HTTP binding (no snippet is defined).
   /v1/versions/{tenant_slug}/sunset-timeline:
     get:
       tags:
@@ -55828,7 +56035,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-03T03:30:24Z'
+          example: '2026-08-03T13:46:56Z'
         envelope:
           additionalProperties: true
           type: object
@@ -82361,7 +82568,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-03T03:30:24Z'
+          example: '2026-08-03T13:46:56Z'
       additionalProperties: false
       type: object
       required:
@@ -93649,13 +93856,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-03T03:30:24Z'
+          example: '2026-08-03T13:46:57Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-03T03:30:24Z'
+          example: '2026-08-03T13:46:57Z'
         outcome:
           anyOf:
           - type: string
