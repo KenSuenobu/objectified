@@ -1,0 +1,37 @@
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@external", "@requires"])
+
+"Review subgraph: owns customer reviews and rating aggregation."
+type Query {
+  "The most recent reviews across all products."
+  latestReviews(limit: Int = 10): [Review!]
+}
+
+"A customer review of one product."
+type Review {
+  "Review identifier."
+  id: ID!
+
+  "Review text as submitted."
+  body: String!
+
+  "Star rating from 1 to 5."
+  rating: Int!
+
+  "The reviewed product."
+  product: Product!
+}
+
+"Review-side contribution to the Product entity."
+type Product @key(fields: "id") {
+  "Stable product identifier."
+  id: ID!
+
+  "Unit price in minor currency units (resolved by the products subgraph)."
+  priceCents: Int! @external
+
+  "All reviews written for this product."
+  reviews: [Review!]
+
+  "Average rating weighted by price bracket."
+  valueScore: Float @requires(fields: "priceCents")
+}

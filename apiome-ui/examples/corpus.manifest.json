@@ -4275,6 +4275,102 @@
       "fileset_role": "root"
     },
     {
+      "path": "graphql/13-federation-set/inventory.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "features": [
+        "federation",
+        "federation-set",
+        "key",
+        "shareable",
+        "link"
+      ],
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "graphql/13-federation-set/products.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "features": [
+        "federation",
+        "federation-set",
+        "key",
+        "shareable",
+        "link",
+        "query",
+        "defaults"
+      ],
+      "rung": "multi-file",
+      "fileset_role": "root"
+    },
+    {
+      "path": "graphql/13-federation-set/reviews.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "features": [
+        "federation",
+        "federation-set",
+        "key",
+        "external",
+        "requires",
+        "link"
+      ],
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "graphql/14-federation-supergraph.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "features": [
+        "federation",
+        "supergraph",
+        "join-spec",
+        "enum",
+        "query",
+        "defaults"
+      ],
+      "rung": "composition",
+      "notes": "expected_detection records intent: the greedy flatbuffers sniffer (is_flatbuffers matches the join__Graph enum block) claims this file at 0.96, with smithy/thrift at 0.95, outranking graphql's 0.9 — the same sniffer-ranking bug family recorded for graphql/03-04/07-08 (IXH-1.2)."
+    },
+    {
       "path": "graphql/negative/01-syntactic-unclosed-brace.graphql",
       "format": "graphql",
       "adapter_key": "graphql",

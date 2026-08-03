@@ -67,6 +67,34 @@
       ]
     },
     {
+      "id": "catalog/graphql-composition-error",
+      "kind": "catalog_graphql_fileset",
+      "expected_blocking_rule_ids": [
+        "graphql.composition-error"
+      ]
+    },
+    {
+      "id": "catalog/graphql-composition-invalid-key",
+      "kind": "catalog_graphql_fileset",
+      "expected_blocking_rule_ids": [
+        "graphql.composition-invalid-key"
+      ]
+    },
+    {
+      "id": "catalog/graphql-composition-non-shareable-field",
+      "kind": "catalog_graphql_fileset",
+      "expected_blocking_rule_ids": [
+        "graphql.composition-non-shareable-field"
+      ]
+    },
+    {
+      "id": "catalog/graphql-composition-unresolvable-selection",
+      "kind": "catalog_graphql_fileset",
+      "expected_blocking_rule_ids": [
+        "graphql.composition-unresolvable-selection"
+      ]
+    },
+    {
       "id": "mcp/safe/clean-surface",
       "kind": "mcp_surface",
       "expected_blocking_rule_ids": [],

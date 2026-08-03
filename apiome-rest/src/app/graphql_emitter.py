@@ -28,8 +28,10 @@ from collections import Counter
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from graphql import (
+    DirectiveLocation,
     GraphQLArgument,
     GraphQLBoolean,
+    GraphQLDirective,
     GraphQLEnumType,
     GraphQLEnumValue,
     GraphQLField,
@@ -49,6 +51,7 @@ from graphql import (
     GraphQLUnionType,
     Undefined,
     print_schema,
+    specified_directives,
     validate_schema,
 )
 from pydantic import Field
@@ -66,8 +69,6 @@ from .canonical_model import (
     TypeKind,
     TypeRef,
 )
-from .fidelity_rulepack import CapabilityRulePack, FidelityVerdict, _has_any_constraint
-from .lossiness import LossinessReport
 from .emitter import (
     CapabilityProfile,
     EmitOptions,
@@ -79,6 +80,8 @@ from .emitter import (
     Provenance,
     ProvenanceTracker,
 )
+from .fidelity_rulepack import CapabilityRulePack, FidelityVerdict, _has_any_constraint
+from .lossiness import LossinessReport
 
 __all__ = ["GraphQlEmitOptions", "GraphQlEmitter", "GraphQlFidelityRulePack"]
 
@@ -336,7 +339,15 @@ class _GraphQlWriter:
         return "schema.graphql"
 
     def render(self) -> str:
-        """Build and print the GraphQL schema as SDL."""
+        """Build and print the GraphQL schema as SDL.
+
+        Custom directive *definitions* recorded by the normalizer
+        (``api.extras["directive_definitions"]``) are rebuilt as real
+        ``GraphQLDirective``\\s so ``print_schema`` emits them, and the *applied*
+        directives stowed per entity (``extras["directives"]``) are re-attached
+        onto the printed SDL (IXH-7.6) — so ``@key`` / ``@join__type`` / ``@link``
+        survive a GraphQL round-trip instead of being stripped.
+        """
         for type_ in sorted(self._api.types, key=lambda t: t.key):
             self._ensure_named_type(type_)
 
@@ -346,17 +357,120 @@ class _GraphQlWriter:
         elif not query.fields:
             query = self._placeholder_query()
 
+        directives = self._custom_directives()
         schema = GraphQLSchema(
             query=query,
             mutation=mutation,
             subscription=subscription,
+            directives=[*specified_directives, *directives] if directives else None,
             description=self._options.schema_description or self._api.description,
         )
         errors = validate_schema(schema)
         if errors:
             messages = "; ".join(error.message for error in errors)
             raise ValueError(f"Emitted GraphQL schema failed validation: {messages}")
-        return print_schema(schema)
+        return self._reattach_applied_directives(print_schema(schema))
+
+    # --- directives (definitions + applications) ----------------------------
+
+    def _custom_directives(self) -> List[GraphQLDirective]:
+        """Rebuild the source's custom directive definitions for the schema.
+
+        Inverts :meth:`app.graphql_normalizer.GraphQlNormalizer._directive_definitions`:
+        each captured descriptor becomes a ``GraphQLDirective`` whose argument
+        types resolve through the writer's input-type mapping, so
+        ``print_schema`` prints the ``directive @…`` definitions and a re-import
+        of SDL that *applies* them still validates. A malformed descriptor is
+        recorded as a loss, never raised.
+        """
+        directives: List[GraphQLDirective] = []
+        for descriptor in self._api.extras.get("directive_definitions") or []:
+            try:
+                name = str(descriptor["name"])
+                locations = [
+                    DirectiveLocation[location]
+                    for location in descriptor.get("locations") or []
+                ]
+                args: Dict[str, GraphQLArgument] = {}
+                for argument in descriptor.get("arguments") or []:
+                    arg_type = TypeRef.model_validate(argument["type"])
+                    default = argument.get("default", Undefined)
+                    if default is None and "default" not in argument:
+                        default = Undefined
+                    args[argument["name"]] = GraphQLArgument(
+                        self._input_type_for_ref(arg_type), default_value=default
+                    )
+                directives.append(
+                    GraphQLDirective(
+                        name=name,
+                        locations=locations,
+                        args=args,
+                        is_repeatable=bool(descriptor.get("repeatable", False)),
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001 - a bad descriptor must not fail emit
+                self.losses.record(
+                    LossKind.NA,
+                    "directive-definition",
+                    f"Custom directive definition {descriptor!r} could not be "
+                    f"rebuilt and was dropped ({exc}).",
+                    pointer="extras.directive_definitions",
+                )
+        return directives
+
+    def _applied_directive_map(self) -> Dict[str, List[str]]:
+        """Coordinate → applied-directive strings, using *emitted* type names.
+
+        Collects the ``extras["directives"]`` bags the GraphQL normalizer stowed
+        on the artifact (schema level), each type, its fields/enum values, and
+        each graph-native root operation, keyed by the coordinates of the SDL
+        this writer just emitted.
+        """
+        applications: Dict[str, List[str]] = {}
+
+        def _put(coordinate: str, extras: Dict[str, Any]) -> None:
+            rendered = (extras or {}).get("directives")
+            if isinstance(rendered, list) and rendered:
+                applications.setdefault(coordinate, []).extend(
+                    str(item) for item in rendered
+                )
+
+        _put("", self._api.extras)
+        for type_ in self._api.types:
+            emitted_name = self._gql_names_by_key.get(type_.key)
+            if emitted_name is None:
+                continue
+            _put(emitted_name, type_.extras)
+            for field in type_.fields:
+                _put(f"{emitted_name}.{field.name}", field.extras)
+            for value in type_.enum_values or []:
+                _put(f"{emitted_name}.{value.name}", value.extras)
+        # Graph-native root types keep their service/operation names verbatim.
+        for service in self._api.services:
+            _put(service.name, service.extras)
+            for operation in service.operations:
+                _put(
+                    f"{service.name}.{_graphql_field_name(operation)}",
+                    operation.extras,
+                )
+        return applications
+
+    def _reattach_applied_directives(self, sdl: str) -> str:
+        """Re-attach applied directives onto the printed SDL, recording skips."""
+        from .graphql_federation import attach_directive_applications
+
+        applications = self._applied_directive_map()
+        if not applications:
+            return sdl
+        attached, skipped = attach_directive_applications(sdl, applications)
+        for reason in skipped:
+            self.losses.record(
+                LossKind.NA,
+                "directive-application",
+                f"Applied directive could not be re-attached: {reason}",
+                pointer=reason.split(":", 1)[0],
+            )
+        return attached
 
     # --- named types -------------------------------------------------------
 

@@ -45,7 +45,6 @@ from graphql import (
     is_specified_scalar_type,
     parse,
     print_ast,
-    print_schema,
     validate_schema,
 )
 from graphql.language.ast import DocumentNode, Node
@@ -465,8 +464,33 @@ def _build(
         # A document that does not even parse cannot be merged or built.
         return None, GraphQlParseResult(ok=False, diagnostics=syntax_diagnostics)
 
+    # 1b) Federation subgraph SDL applies @key/@shareable/@link without defining
+    #     them (Apollo's build injects the definitions); fold in exactly the
+    #     missing Federation v2 definitions so validate_sdl accepts real-world
+    #     subgraph files (IXH-7.6). Plain SDL and supergraph SDL are untouched.
+    from .graphql_federation import (
+        document_federation_role,
+        federation_prelude_document,
+        subgraph_set_info,
+    )
+
+    prelude = federation_prelude_document([document for _label, document in parsed])
+    merge_input = list(parsed)
+    if prelude is not None:
+        merge_input.append(("federation-prelude", prelude))
+
+    # Subgraph-set ownership must be read *before* the merge: _merge_documents
+    # unions same-named types into the first-seen definition node in place,
+    # which would smear every merged field onto the first file's subgraph.
+    subgraph_info = None
+    if any(document_federation_role(document) == "subgraph" for _label, document in parsed):
+        texts = {src.label: src.text for src in coerced}
+        subgraph_info = subgraph_set_info(
+            [(label, document, texts.get(label, "")) for label, document in parsed]
+        )
+
     # 2) Merge (graphql-tools semantics) and 3) validate the merged SDL document.
-    merged, merge_diagnostics = _merge_documents(parsed)
+    merged, merge_diagnostics = _merge_documents(merge_input)
     sdl_diagnostics = [_diagnostic_from_error(err) for err in validate_sdl(merged)]
     if merge_diagnostics or sdl_diagnostics:
         return None, GraphQlParseResult(ok=False, diagnostics=merge_diagnostics + sdl_diagnostics)
@@ -485,9 +509,23 @@ def _build(
     if schema_diagnostics:
         return None, GraphQlParseResult(ok=False, diagnostics=schema_diagnostics)
 
+    # 6) Federation awareness (IXH-7.6): record subgraph ownership on the built
+    #    schema — from the join-spec directives of a supergraph, or from the
+    #    pre-merge file boundaries for a subgraph set — for the normalizer to
+    #    fold into extras.
+    from .graphql_federation import FEDERATION_EXTENSIONS_KEY, supergraph_info
+
+    info = supergraph_info(schema) or subgraph_info
+    if info is not None:
+        schema.extensions[FEDERATION_EXTENSIONS_KEY] = info
+
+    # The canonical SDL keeps applied directives (@key / @join__type / @link …)
+    # rather than the bare print_schema form, which silently drops them.
+    from .graphql_federation import print_schema_with_directives
+
     return schema, GraphQlParseResult(
         ok=True,
-        sdl=print_schema(schema),
+        sdl=print_schema_with_directives(schema),
         root_operations=_root_operations(schema),
         type_names=_user_defined_type_names(schema),
     )

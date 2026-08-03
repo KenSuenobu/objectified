@@ -1,0 +1,22 @@
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable"])
+
+"Inventory subgraph: stock levels and delivery estimates."
+type Query {
+  "Products currently available to ship."
+  inStock: [Product!]
+}
+
+"Inventory-side contribution to the Product entity."
+type Product @key(fields: "id") {
+  "Stable product identifier."
+  id: ID!
+
+  "Weight in grams, when known (shared with the catalog subgraph)."
+  weightGrams: Int @shareable
+
+  "Units currently on hand across all warehouses."
+  unitsInStock: Int!
+
+  "Estimated delivery window in days, when the item is in stock."
+  deliveryEstimateDays: Int
+}

@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **496 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **500 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -58,7 +58,7 @@ The corpus holds **496 files** across **40 format directories**. Every file has 
 
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
-| `graphql/` | GraphQL SDL | graph | root `type Query` / `schema {}` | 19 |
+| `graphql/` | GraphQL SDL | graph | root `type Query` / `schema {}` | 23 |
 
 ### Data schema
 
@@ -415,6 +415,10 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `12-storefront-set/products.graphql` | multi-file (member) | `graphql` ≥ 0.85 | valid | `storefront-set`, `extend-type`, `query`, `defaults`, `list-type` |
 | `12-storefront-set/reviews.graphql` | multi-file (member) | `graphql` ≥ 0.85 | valid | `storefront-set`, `extend-type`, `defaults`, `list-type` |
 | `12-storefront-set/schema.graphql` | multi-file (root) | `graphql` ≥ 0.85 | valid | `storefront-set`, `query`, `scalar`, `interface` |
+| `13-federation-set/inventory.graphql` | multi-file (member) | `graphql` ≥ 0.85 | valid | `federation`, `federation-set`, `key`, `shareable`, `link` |
+| `13-federation-set/products.graphql` | multi-file (root) | `graphql` ≥ 0.85 | valid | `federation`, `federation-set`, `key`, `shareable`, `link`, `query`, `defaults` |
+| `13-federation-set/reviews.graphql` | multi-file (member) | `graphql` ≥ 0.85 | valid | `federation`, `federation-set`, `key`, `external`, `requires`, `link` |
+| `14-federation-supergraph.graphql` ⚠ | composition | `graphql` ≥ 0.85 | valid | `federation`, `supergraph`, `join-spec`, `enum`, `query`, `defaults` |
 | `negative/01-syntactic-unclosed-brace.graphql` | — | `graphql` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-brace` |
 | `negative/02-semantic-unknown-type.graphql` | — | `graphql` (no guarantee) | invalid | `negative`, `semantic`, `unknown-type` |
 | `negative/03-truncated-mid-definition.graphql` | — | `graphql` (no guarantee) | invalid | `negative`, `truncated`, `mid-definition` |
@@ -434,6 +438,8 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`10-comprehensive-ecommerce.graphql`** — detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work.
 
 > ⚠ **`11-github-style-api.graphql`** — Currently outranked: detection ranks `corbaidl` and `thrift` (0.95) above `graphql` (0.90) because the file pairs `interface Node {` with `enum` keywords; expected_detection records the intended winner for the detection-hardening work.
+
+> ⚠ **`14-federation-supergraph.graphql`** — expected_detection records intent: the greedy flatbuffers sniffer (is_flatbuffers matches the join__Graph enum block) claims this file at 0.96, with smithy/thrift at 0.95, outranking graphql's 0.9 — the same sniffer-ranking bug family recorded for graphql/03-04/07-08 (IXH-1.2).
 
 ### `hl7v2/` — HL7 v2.x
 
@@ -988,7 +994,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 496 | `Apache-2.0` |
+| `hand-authored` | 500 | `Apache-2.0` |
 
 ## Trying an import
 

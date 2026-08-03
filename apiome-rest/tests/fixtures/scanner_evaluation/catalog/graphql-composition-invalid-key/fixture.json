@@ -1,0 +1,8 @@
+{
+  "kind": "catalog_graphql_fileset",
+  "root": "products.graphql",
+  "members": {
+    "products.graphql": "extend schema @link(url: \"https://specs.apollo.dev/federation/v2.3\", import: [\"@key\"])\n\ntype Query {\n  topProducts: [Product!]\n}\n\ntype Product @key(fields: \"id uuid\") {\n  id: ID!\n  name: String!\n}\n",
+    "reviews.graphql": "extend schema @link(url: \"https://specs.apollo.dev/federation/v2.3\", import: [\"@key\"])\n\ntype Query {\n  latestReviews: [Review!]\n}\n\ntype Review {\n  id: ID!\n  body: String!\n}\n\ntype Product @key(fields: \"id\") {\n  id: ID!\n  reviews: [Review!]\n}\n"
+  }
+}

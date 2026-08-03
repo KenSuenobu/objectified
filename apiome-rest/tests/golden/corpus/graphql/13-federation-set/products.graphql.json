@@ -1,0 +1,796 @@
+{
+  "adapter": "graphql",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "directive_definitions": [
+        {
+          "arguments": [],
+          "locations": [
+            "FIELD_DEFINITION",
+            "OBJECT"
+          ],
+          "name": "external",
+          "repeatable": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "fields",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "federation__FieldSet",
+                "nullable": false
+              }
+            },
+            {
+              "default": true,
+              "name": "resolvable",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "Boolean",
+                "nullable": true
+              }
+            }
+          ],
+          "locations": [
+            "INTERFACE",
+            "OBJECT"
+          ],
+          "name": "key",
+          "repeatable": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "url",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": true
+              }
+            },
+            {
+              "name": "as",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": true
+              }
+            },
+            {
+              "name": "for",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "link__Purpose",
+                "nullable": true
+              }
+            },
+            {
+              "name": "import",
+              "type": {
+                "extras": {},
+                "item": {
+                  "extras": {},
+                  "item": null,
+                  "name": "link__Import",
+                  "nullable": true
+                },
+                "name": null,
+                "nullable": true
+              }
+            }
+          ],
+          "locations": [
+            "SCHEMA"
+          ],
+          "name": "link",
+          "repeatable": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "fields",
+              "type": {
+                "extras": {},
+                "item": null,
+                "name": "federation__FieldSet",
+                "nullable": false
+              }
+            }
+          ],
+          "locations": [
+            "FIELD_DEFINITION"
+          ],
+          "name": "requires",
+          "repeatable": false
+        },
+        {
+          "arguments": [],
+          "locations": [
+            "FIELD_DEFINITION",
+            "OBJECT"
+          ],
+          "name": "shareable",
+          "repeatable": true
+        }
+      ],
+      "directives": [
+        "@link(url: \"https://specs.apollo.dev/federation/v2.3\", import: [\"@key\", \"@shareable\"])",
+        "@link(url: \"https://specs.apollo.dev/federation/v2.3\", import: [\"@key\", \"@shareable\"])",
+        "@link(url: \"https://specs.apollo.dev/federation/v2.3\", import: [\"@key\", \"@external\", \"@requires\"])"
+      ],
+      "federation": {
+        "role": "subgraph",
+        "subgraphs": [
+          {
+            "name": "inventory"
+          },
+          {
+            "name": "products"
+          },
+          {
+            "name": "reviews"
+          }
+        ]
+      }
+    },
+    "format": "graphql",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "GraphQL Schema",
+      "namespace": null
+    },
+    "paradigm": "graph",
+    "protocol": "graphql",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Product catalog subgraph: owns products and their pricing.",
+        "extras": {
+          "subgraphs": [
+            "inventory",
+            "products",
+            "reviews"
+          ]
+        },
+        "key": "Query",
+        "name": "Query",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Products currently available to ship.",
+            "extras": {
+              "subgraphs": [
+                "inventory"
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.inStock",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.inStock#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Product",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "inStock",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "The most recent reviews across all products.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.latestReviews",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.latestReviews#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Review",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "latestReviews",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": 10,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.latestReviews#arg.limit",
+                "location": "query",
+                "name": "limit",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Look up one product by its identifier.",
+            "extras": {
+              "subgraphs": [
+                "products"
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.product",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.product#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Product",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "product",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.product#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "The current best-selling products.",
+            "extras": {
+              "subgraphs": [
+                "products"
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.topProducts",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.topProducts#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Product",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "topProducts",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": 5,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.topProducts#arg.first",
+                "location": "query",
+                "name": "first",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A purchasable item in the storefront catalog.",
+        "enum_values": [],
+        "extras": {
+          "directives": [
+            "@key(fields: \"id\")"
+          ],
+          "graphql_type": "object",
+          "subgraphs": [
+            "inventory",
+            "products",
+            "reviews"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Estimated delivery window in days, when the item is in stock.",
+            "extras": {
+              "subgraphs": [
+                "inventory"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.deliveryEstimateDays",
+            "name": "deliveryEstimateDays",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Stable product identifier.",
+            "extras": {
+              "subgraphs": [
+                "inventory",
+                "products",
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Display name shown in listings.",
+            "extras": {
+              "subgraphs": [
+                "products"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unit price in minor currency units.",
+            "extras": {
+              "subgraphs": [
+                "products"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.priceCents",
+            "name": "priceCents",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "All reviews written for this product.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.reviews",
+            "name": "reviews",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Review",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Units currently on hand across all warehouses.",
+            "extras": {
+              "subgraphs": [
+                "inventory"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.unitsInStock",
+            "name": "unitsInStock",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Average rating weighted by price bracket.",
+            "extras": {
+              "directives": [
+                "@requires(fields: \"priceCents\")"
+              ],
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.valueScore",
+            "name": "valueScore",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Weight in grams, when known (shared with the inventory subgraph).",
+            "extras": {
+              "directives": [
+                "@shareable"
+              ],
+              "subgraphs": [
+                "inventory",
+                "products"
+              ]
+            },
+            "field_number": null,
+            "key": "Product.weightGrams",
+            "name": "weightGrams",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Product",
+        "key_type": null,
+        "kind": "record",
+        "name": "Product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A customer review of one product.",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "subgraphs": [
+            "reviews"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Review text as submitted.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Review.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Review identifier.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Review.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The reviewed product.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Review.product",
+            "name": "product",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Product",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Star rating from 1 to 5.",
+            "extras": {
+              "subgraphs": [
+                "reviews"
+              ]
+            },
+            "field_number": null,
+            "key": "Review.rating",
+            "name": "rating",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Review",
+        "key_type": null,
+        "kind": "record",
+        "name": "Review",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "federation__FieldSet",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "federation__FieldSet",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "link__Import",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "link__Import",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "link__Purpose.SECURITY",
+            "name": "SECURITY",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "link__Purpose.EXECUTION",
+            "name": "EXECUTION",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "link__Purpose",
+        "key_type": null,
+        "kind": "enum",
+        "name": "link__Purpose",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "graphql/13-federation-set/products.graphql",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "graphql"
+  },
+  "fingerprint": "sha256:b2cd21ebe91972779029bab282d662846bc74e2077fe639ea16307225b52d5cc",
+  "lint": {
+    "findings": 13,
+    "grade": "C",
+    "report_fingerprint": "836e514ce7a0c7eed655688f273a2ed4ef7c0dc58913526a3cfd1769db218544",
+    "score": 78,
+    "severity_counts": {
+      "error": 0,
+      "info": 10,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

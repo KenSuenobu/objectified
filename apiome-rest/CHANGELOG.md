@@ -5,6 +5,42 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.248.0] - 2026-08-02
+
+### Added
+- **GraphQL Federation supergraph and subgraph import (IXH-7.6, #5131)** — The GraphQL
+  adapter is now composition-aware: a supergraph SDL and a multi-file subgraph set both
+  import with per-type / per-field subgraph ownership carried through the canonical model
+  (`app/graphql_federation.py`, docs in `docs/graphql_federation.md`).
+  - **Ownership**: supergraph ownership is read off the Apollo `join`-spec directives
+    (`@join__type` / `@join__field`, `external: true` references excluded); a subgraph
+    set derives ownership from file boundaries (`@external` stubs excluded). Recorded as
+    `extras["federation"]` on the artifact and `extras["subgraphs"]` on every owned
+    type/field/service/operation, so ownership participates in the fingerprint.
+  - **Subgraph SDL builds bare**: real-world subgraph files apply `@key`/`@shareable`/
+    `@link` without defining them; the parser injects exactly the missing Federation v2
+    definitions before `validate_sdl` (author definitions never overridden).
+  - **Diff attribution**: `GraphQlDiffLabeler` — the first provider on the MFI-3.x
+    `DiffLabeler` SPI — labels every change with its owning subgraph(s)
+    (`owned by subgraph 'reviews'`, `subgraph ownership: products → reviews`).
+  - **Composition lint dimension**: new `composition` category in the GraphQL rule pack —
+    `graphql.composition-invalid-key`, `graphql.composition-non-shareable-field`,
+    `graphql.composition-unresolvable-selection` (pure checks over the subgraph set), and
+    `graphql.composition-error` surfacing the bundled `rover supergraph compose` verdict
+    captured at import time (worker-loop bridge; degrades to "no verdict" when the tool
+    or its composition plugin is unavailable). Every finding names the offending
+    subgraph. Federation spec-machinery names (`join__Graph`, …) are exempt from the
+    GraphQL naming rules.
+  - **Directive preservation**: applied directives are no longer stripped —
+    `print_schema_with_directives` restores them on the parser's canonical SDL and the
+    normalizer's `raw["sdl"]`, and the emitter rebuilds custom directive definitions
+    (`extras["directive_definitions"]`) as real `GraphQLDirective`s and re-attaches the
+    per-entity `extras["directives"]` applications onto the printed SDL with validation
+    fallback. A GraphQL→GraphQL supergraph round-trip is canonical-diff clean.
+  - **Corpus ladder**: `graphql/13-federation-set/` (products/reviews/inventory,
+    `multi-file` rung) and `graphql/14-federation-supergraph.graphql` (`composition`
+    rung), with canonical goldens.
+
 ## [1.247.0] - 2026-08-02
 
 ### Added

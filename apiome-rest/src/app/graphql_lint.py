@@ -165,9 +165,22 @@ def _deprecation_reason(extras: Dict[str, Any]) -> Any:
 # ===========================================================================
 
 
+def _is_spec_machinery(name: str) -> bool:
+    """Whether a name is federation/spec machinery (``join__Graph``, ``link__Purpose``…).
+
+    The double-underscore infix is the Apollo spec-namespace convention
+    (``join__``/``link__``/``federation__``); flagging those names against the
+    author's naming conventions would put deterministic noise on every
+    supergraph import, so the naming checks skip them (IXH-7.6).
+    """
+    return "__" in name
+
+
 def _check_type_naming(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
     """Type-like definitions should be PascalCase (graphql-eslint ``naming-convention``)."""
     for api_type in _types_sorted(api):
+        if _is_spec_machinery(api_type.name):
+            continue
         if not _is_pascal_case(api_type.name):
             family = _graphql_family(api_type)
             yield (
@@ -306,6 +319,81 @@ def _check_require_deprecation_reason(api: CanonicalApi) -> Iterable[Tuple[str, 
 
 
 # ===========================================================================
+# Composition checks (Federation, IXH-7.6)
+# ===========================================================================
+#
+# The ``composition`` lint dimension: deterministic checks over a federated
+# subgraph set, each finding naming the offending subgraph. The per-subgraph
+# SDL rides on ``CanonicalApi.raw["subgraphs"]`` (kept out of the fingerprint),
+# so these rules simply no-op for non-federated artifacts and for models
+# normalized with ``include_raw=False``. The ``rover supergraph compose``
+# verdict captured at import time (``raw["composition"]``) surfaces through its
+# own rule so the authoritative composer's errors merge into the same score.
+
+
+def _raw_subgraph_sdls(api: CanonicalApi) -> Dict[str, str]:
+    """The per-subgraph SDL map stowed by the IXH-7.6 normalizer, or ``{}``."""
+    raw = api.raw or {}
+    subgraphs = raw.get("subgraphs")
+    if not isinstance(subgraphs, dict):
+        return {}
+    return {
+        str(name): text for name, text in subgraphs.items() if isinstance(text, str)
+    }
+
+
+def _composition_findings_for(api: CanonicalApi, rule: str) -> Iterable[Tuple[str, str]]:
+    """Findings of one pure composition check, in deterministic order."""
+    subgraph_sdls = _raw_subgraph_sdls(api)
+    if len(subgraph_sdls) < 2:
+        return
+    from .graphql_federation import check_composition
+
+    for finding in check_composition(subgraph_sdls):
+        if finding.rule == rule:
+            yield (finding.path, finding.message)
+
+
+def _check_composition_invalid_key(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
+    """A ``@key(fields:)`` selection must name fields its type declares there."""
+    yield from _composition_findings_for(api, "invalid-key")
+
+
+def _check_composition_non_shareable(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
+    """A field resolved by several subgraphs must be ``@shareable`` in each."""
+    yield from _composition_findings_for(api, "non-shareable-field")
+
+
+def _check_composition_unresolvable(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
+    """``@requires``/``@provides`` selections must resolve against known fields."""
+    yield from _composition_findings_for(api, "unresolvable-selection")
+
+
+def _check_composition_rover(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
+    """Surface ``rover supergraph compose`` errors captured at import time."""
+    raw = api.raw or {}
+    entries = raw.get("composition")
+    if not isinstance(entries, list):
+        return
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        message = str(entry.get("message", "") or "").strip()
+        if not message:
+            continue
+        subgraph = str(entry.get("subgraph", "") or "unknown")
+        type_name = entry.get("type_name")
+        field_name = entry.get("field_name")
+        if type_name and field_name:
+            path = f"types.{type_name}.fields.{type_name}.{field_name}"
+        elif type_name:
+            path = f"types.{type_name}"
+        else:
+            path = f"subgraphs.{subgraph}"
+        yield (path, message)
+
+
+# ===========================================================================
 # The GraphQL native rule pack
 # ===========================================================================
 
@@ -377,6 +465,39 @@ class GraphqlRulePack(RulePack, register=True):
             severity="warning",
             description="A @deprecated entity should carry a deprecation reason.",
             check=_check_require_deprecation_reason,
+        ),
+        # --- composition (Federation subgraph sets, IXH-7.6) ---
+        LintRule(
+            rule_id="graphql.composition-invalid-key",
+            category="composition",
+            severity="error",
+            description="A @key(fields:) selection must name fields its type declares "
+            "in that subgraph.",
+            check=_check_composition_invalid_key,
+        ),
+        LintRule(
+            rule_id="graphql.composition-non-shareable-field",
+            category="composition",
+            severity="error",
+            description="A field resolved by more than one subgraph must be @shareable "
+            "in every subgraph that resolves it.",
+            check=_check_composition_non_shareable,
+        ),
+        LintRule(
+            rule_id="graphql.composition-unresolvable-selection",
+            category="composition",
+            severity="error",
+            description="A @requires/@provides selection must reference fields some "
+            "subgraph declares.",
+            check=_check_composition_unresolvable,
+        ),
+        LintRule(
+            rule_id="graphql.composition-error",
+            category="composition",
+            severity="error",
+            description="A composition error reported by `rover supergraph compose` "
+            "over the imported subgraph set.",
+            check=_check_composition_rover,
         ),
     )
 

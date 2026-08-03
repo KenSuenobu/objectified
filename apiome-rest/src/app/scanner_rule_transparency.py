@@ -181,6 +181,58 @@ BLOCKING_RULES: Dict[str, BlockingRuleMeta] = {
         fixture_id="catalog/compatibility-breaking",
         docs_page="docs/guide/lint-rules.md",
     ),
+    "graphql.composition-error": _meta(
+        "graphql.composition-error",
+        ENGINE_SCHEMA,
+        rationale="`rover supergraph compose` reported the subgraph set does not compose.",
+        reference=_SCHEMA_REF + "#graphql-composition-error",
+        remediation="Fix the subgraph the finding names so the set composes (run "
+        "`rover supergraph compose` locally for the full report), then re-import.",
+        false_positive_guidance="The verdict is captured at import time; if the subgraphs "
+        "changed since, re-import the set to refresh it.",
+        scan_modes=("lint",),
+        fixture_id="catalog/graphql-composition-error",
+        docs_page="docs/guide/lint-rules.md",
+    ),
+    "graphql.composition-invalid-key": _meta(
+        "graphql.composition-invalid-key",
+        ENGINE_SCHEMA,
+        rationale="A @key(fields:) selection must name fields its type declares in that subgraph.",
+        reference=_SCHEMA_REF + "#graphql-composition-invalid-key",
+        remediation="Make the @key selection reference fields the type declares in the named "
+        "subgraph (declare the field, or fix the selection).",
+        false_positive_guidance="Nested key selections are checked at the top level only; a "
+        "top-level field reported missing is genuinely undeclared in that subgraph's file.",
+        scan_modes=("lint",),
+        fixture_id="catalog/graphql-composition-invalid-key",
+        docs_page="docs/guide/lint-rules.md",
+    ),
+    "graphql.composition-non-shareable-field": _meta(
+        "graphql.composition-non-shareable-field",
+        ENGINE_SCHEMA,
+        rationale="A field resolved by more than one subgraph must be @shareable in each.",
+        reference=_SCHEMA_REF + "#graphql-composition-non-shareable-field",
+        remediation="Mark the field @shareable in every subgraph that resolves it, mark the "
+        "stub copies @external, or move the field to a single owning subgraph.",
+        false_positive_guidance="Key fields and @external stubs are already exempt; a hit "
+        "means two subgraphs genuinely both resolve the field.",
+        scan_modes=("lint",),
+        fixture_id="catalog/graphql-composition-non-shareable-field",
+        docs_page="docs/guide/lint-rules.md",
+    ),
+    "graphql.composition-unresolvable-selection": _meta(
+        "graphql.composition-unresolvable-selection",
+        ENGINE_SCHEMA,
+        rationale="@requires/@provides selections must reference fields some subgraph declares.",
+        reference=_SCHEMA_REF + "#graphql-composition-unresolvable-selection",
+        remediation="Point the @requires/@provides selection at fields declared on the target "
+        "type in some subgraph (declare the field there, or fix the selection).",
+        false_positive_guidance="The check unions declarations across the whole set; a hit "
+        "means no subgraph declares the selected field at all.",
+        scan_modes=("lint",),
+        fixture_id="catalog/graphql-composition-unresolvable-selection",
+        docs_page="docs/guide/lint-rules.md",
+    ),
     "llm-tools.duplicate-tool-name": _meta(
         "llm-tools.duplicate-tool-name",
         ENGINE_SCHEMA,
