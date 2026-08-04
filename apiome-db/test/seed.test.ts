@@ -19,6 +19,7 @@ describe("listSeedFiles", () => {
       "006_sample_project.sql",
       "007_multitenant.sql",
       "008_credential_accounts.sql",
+      "009_entitlements.sql",
     ]);
   });
 });
@@ -104,5 +105,46 @@ describe("dev seed contents", () => {
     // and re-running must converge instead of erroring.
     expect(credential).toContain("u.password <> ''");
     expect(credential).toContain('ON CONFLICT ("providerId", "accountId")');
+  });
+
+  it("entitles the seed users to the commercial products (private-suite#2619)", async () => {
+    const entitlements = await readFile(`${SEED_DIR}/009_entitlements.sql`, "utf8");
+    // The file is deliberately comment-heavy, and the plan it grants is the whole point of it —
+    // so the assertions about *which* plan read the statements, not the prose explaining them.
+    const statements = entitlements.replace(/--[^\n]*/g, "");
+
+    // Feature gating joins license_feature_flags on user_entitlements.license_id, so the *user*
+    // grant is the one that decides whether an Authoring surface renders at all. Without it every
+    // seeded user resolves to zero product flags and the whole UXE-1.4 conformance battery skips
+    // as a pass (docs/releases/RC1_EVIDENCE.md §4.1).
+    expect(entitlements).toContain("INSERT INTO apiome.user_entitlements");
+    expect(entitlements).toContain("00000000-0000-4000-8000-000000000001"); // Ada
+    expect(entitlements).toContain("00000000-0000-4000-8000-000000000010"); // Grace
+
+    // `Paid` is the lowest catalog tier bundling authoring (V192) and scribe/slate/hosted (V191);
+    // `Free` bundles `designer` alone, and the seed's own `Dev` plan bundles nothing at all. Any
+    // of those would leave the gate exactly as shut as an absent row.
+    expect(statements).toMatch(/name = 'Paid'\s+AND\s+license_type = 'paid'/);
+    expect(statements).not.toMatch(/name = '(Free|Dev)'/);
+
+    // The sample tenant holds the same plan, so a future move of feature composition to tenant
+    // scope cannot silently un-entitle the dev stack.
+    expect(entitlements).toContain("INSERT INTO apiome.tenant_licenses");
+    expect(entitlements).toContain("00000000-0000-4000-8000-000000000002"); // acme-corp
+
+    // The raw limit columns mirror the catalog's `seats` JSON and are read by different consumers
+    // than the joined catalog is; deriving them is what stops the seed being where those two views
+    // of one plan first disagree. Literal quotas here would be that disagreement.
+    for (const key of ["max_tenants", "max_projects", "max_versions"]) {
+      expect(statements).toContain(`l.seats ->> '${key}'`);
+    }
+
+    // Conflict posture, and it differs by table on purpose:
+    //   * the user grant leaves an existing row alone, so a plan a developer re-pointed through
+    //     the super-admin license manager survives a re-seed;
+    //   * the tenant grant upserts, because V183's AFTER INSERT trigger has already auto-issued
+    //     Free by the time this file runs — the same reason 007 upserts its fixture tiers.
+    expect(statements).toContain("ON CONFLICT (user_id) DO NOTHING");
+    expect(statements).toMatch(/ON CONFLICT \(tenant_id\) DO UPDATE/);
   });
 });

@@ -50,9 +50,10 @@ with `--dir` or `APIOME_DB_SEED_DIR`), creating a runnable local fixture:
 |---------|-------|
 | User | `ada@example.com` / password `apiome-dev` |
 | Tenant | `acme-corp` (Ada is a member + administrator) |
-| License | `Dev` (free tier) |
+| License | `Dev` (free tier) — a sample *catalog* row; the seeded tenant and users hold `Paid` |
 | API key | prefix `sk_devseed00...` (raw key in [`seed/dev/005_api_key.sql`](./seed/dev/005_api_key.sql)) |
 | Credential accounts | Better Auth `providerId='credential'` rows for the seed users, so the documented passwords sign in ([`seed/dev/008_credential_accounts.sql`](./seed/dev/008_credential_accounts.sql)) |
+| Entitlements | `Paid` for both seed users and for `acme-corp` — the lowest catalog tier bundling the Authoring products, so a fresh stack reaches the commercial surfaces without manual SQL ([`seed/dev/009_entitlements.sql`](./seed/dev/009_entitlements.sql)) |
 
 Seeds are **never** run automatically (not wired into the Docker entrypoint or compose) and the
 command refuses under `NODE_ENV=production` without `--force`.
