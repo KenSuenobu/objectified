@@ -15,6 +15,11 @@ INSECURE_JWT_SECRET_FALLBACK = "your-secret-key-here"
 # Settings.effective_slate_artifact_signing_key.
 INSECURE_SLATE_SIGNING_KEY_FALLBACK = "slate-artifact-signing-key-development-only"
 
+# Insecure development-only secret for deriving custom-domain ownership tokens (Slate 10.1,
+# private-suite#119). Used (with a warning) outside production; production fails closed — see
+# Settings.effective_slate_domain_verification_secret.
+INSECURE_SLATE_DOMAIN_SECRET_FALLBACK = "slate-domain-verification-development-only"
+
 # Default CORS allow-list applied when APIOME_CORS_ALLOWED_ORIGINS is unset.
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:3000",  # apiome-ui (main app)
@@ -140,6 +145,38 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices(
             "APIOME_SLATE_PREVIEW_DEFAULT_TTL_HOURS",
             "slate_preview_default_ttl_hours",
+        ),
+    )
+    # The platform hostname tenants point a custom domain at (Slate 10.1, private-suite#119).
+    # It is the value printed in the CNAME row of the DNS instructions and the value ownership
+    # verification compares an observed CNAME against, so the instruction and the check can never
+    # disagree about where traffic is supposed to go.
+    slate_domain_dns_target: str = Field(
+        default="sites.apiome.app",
+        validation_alias=AliasChoices(
+            "APIOME_SLATE_DOMAIN_DNS_TARGET",
+            "slate_domain_dns_target",
+        ),
+    )
+    # The platform's own DNS zone. Hosts inside it are refused as custom domains: a tenant
+    # "verifying" a name in a zone they cannot publish records for would be verifying our DNS.
+    # Defaults to the DNS target's own zone, which is the correct answer for every deployment
+    # that has not split them — see effective_slate_domain_zone.
+    slate_domain_reserved_zone: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "APIOME_SLATE_DOMAIN_RESERVED_ZONE",
+            "slate_domain_reserved_zone",
+        ),
+    )
+    # Secret the per-domain ownership token is derived from. Deliberately separate from the JWT
+    # secret and the artifact signing key: a token is published in public DNS by design, so it must
+    # not be derived from a value whose exposure would matter. Never logged.
+    slate_domain_verification_secret: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "APIOME_SLATE_DOMAIN_VERIFICATION_SECRET",
+            "slate_domain_verification_secret",
         ),
     )
     # Claude API key used only for the server-digest generation above. Read from the environment; never
@@ -1567,6 +1604,49 @@ class Settings(BaseSettings):
             "APIOME_SLATE_ARTIFACT_SIGNING_KEY for any non-local deployment."
         )
         return INSECURE_SLATE_SIGNING_KEY_FALLBACK
+
+    @property
+    def effective_slate_domain_zone(self) -> str:
+        """
+        Get the DNS zone this platform controls, which no tenant may claim (Slate 10.1, #119).
+
+        Defaults to the configured DNS target itself. Every deployment points custom domains at a
+        hostname inside its own zone, so deriving the reservation from the target means an
+        operator who changes one cannot leave the other pointing at the previous platform — which
+        would let a tenant attach a hostname the platform is still authoritative for.
+
+        Returns:
+            The reserved zone, lowercased and stripped of any trailing dot.
+        """
+        zone = (self.slate_domain_reserved_zone or self.slate_domain_dns_target or "").strip()
+        return zone.rstrip(".").lower()
+
+    @property
+    def effective_slate_domain_verification_secret(self) -> str:
+        """
+        Get the secret custom-domain ownership tokens are derived from (Slate 10.1, #119).
+
+        Fail-closed in production, matching effective_slate_artifact_signing_key. A token derived
+        from a well-known value proves nothing: anyone could compute the token for a domain they
+        do not own, publish it, and have this service confirm their ownership. In development the
+        built-in value is returned with a warning so local setups keep working.
+
+        Raises:
+            RuntimeError: in production when no verification secret is configured.
+        """
+        if self.slate_domain_verification_secret:
+            return self.slate_domain_verification_secret
+        if self.is_production:
+            raise RuntimeError(
+                "Slate custom-domain verification secret is not configured. Set "
+                "APIOME_SLATE_DOMAIN_VERIFICATION_SECRET before starting apiome-rest in "
+                "production; refusing to derive ownership tokens from a well-known default."
+            )
+        logger.warning(
+            "Using the insecure built-in Slate domain verification secret. Set "
+            "APIOME_SLATE_DOMAIN_VERIFICATION_SECRET for any non-local deployment."
+        )
+        return INSECURE_SLATE_DOMAIN_SECRET_FALLBACK
 
     @property
     def cors_allowed_origins_list(self) -> list[str]:

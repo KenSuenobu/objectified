@@ -84,6 +84,7 @@ from .registry_audit_routes import router as registry_audit_router
 from .repository_webhook_routes import router as repository_webhook_router
 from .slate_agent_outputs_routes import router as slate_agent_outputs_router
 from .slate_cache_routes import router as slate_cache_router
+from .slate_domains_routes import router as slate_domains_router
 from .slate_functions_routes import router as slate_functions_router
 from .slate_git_preview_routes import router as slate_git_preview_router
 from .slate_insights_routes import router as slate_insights_router
@@ -121,7 +122,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.116.0",
+    version="1.117.0",
 )
 
 
@@ -316,6 +317,10 @@ app.include_router(slate_functions_router)
 # Same reasoning one surface further on: /environments/{id}/insights* sits alongside the cache,
 # security and function planes and the existing environment routes (UXE-3.4, private-suite#2476).
 app.include_router(slate_insights_router)
+# Custom domains: /environments/{id}/domains sits alongside the cache, security, function and
+# insight planes, and /domains/{id} + /tls/authorize are disjoint from every existing /v1/slate
+# path (Slate 10.1, private-suite#119).
+app.include_router(slate_domains_router)
 # The git-triggered preview plane: /git/connections, /git/events and /git/previews sit under
 # the same /v1/slate prefix, disjoint from the /environments and /sites surfaces above
 # (APX-3.3, private-suite#2458).

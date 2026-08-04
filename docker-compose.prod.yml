@@ -69,6 +69,15 @@ services:
       # Surface backup freshness on the ops dashboard (RC1-3.2 reads RC1-1.3 manifests).
       APIOME_BACKUP_DIR: /var/backups/apiome
       APIOME_MOCK_PUBLIC_BASE_URL: https://${DEPLOY_MOCK_DOMAIN:?set DEPLOY_MOCK_DOMAIN in your .env}
+      # Slate custom documentation domains (Slate 10.1, private-suite#119). The DNS target is
+      # both what tenants are told to CNAME to and what verification compares an observed record
+      # against, so one value drives both — set it to a hostname in *your* zone that resolves to
+      # this host. Optional pass-throughs rather than required: a deployment that never attaches a
+      # custom domain needs neither, and the REST service already fails closed at the point of use
+      # if the secret is missing in production, because a token derived from a well-known default
+      # could be computed by anyone for any domain and would prove nothing.
+      APIOME_SLATE_DOMAIN_DNS_TARGET: ${APIOME_SLATE_DOMAIN_DNS_TARGET:-sites.apiome.app}
+      APIOME_SLATE_DOMAIN_VERIFICATION_SECRET: ${APIOME_SLATE_DOMAIN_VERIFICATION_SECRET:-}
       # Admin-configured sign-in providers (OLO-8.x). The pass-throughs are declared in the base
       # compose and inherited here; they stay optional because a deployment that configures its
       # OAuth apps purely from .env needs none of them. If you *do* use the admin screen, set
@@ -172,6 +181,11 @@ services:
       DEPLOY_STUDIO_DOMAIN: ${DEPLOY_STUDIO_DOMAIN:?set DEPLOY_STUDIO_DOMAIN to the Studio hostname, e.g. studio.example.com}
       DEPLOY_MOCK_DOMAIN: ${DEPLOY_MOCK_DOMAIN:?set DEPLOY_MOCK_DOMAIN to the mock hostname, e.g. mock.example.com}
       ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL for Let's Encrypt expiry notices}
+      # Slate custom documentation domains (Slate 10.1, private-suite#119). Both have working
+      # defaults, so a deployment that does not host Slate sites needs no configuration: the
+      # catch-all site block answers 502 for unknown hostnames rather than serving them.
+      DEPLOY_SLATE_ORIGIN: ${DEPLOY_SLATE_ORIGIN:-sites:8080}
+      DEPLOY_SLATE_TLS_ASK_URL: ${DEPLOY_SLATE_TLS_ASK_URL:-http://rest:8000/v1/slate/tls/authorize}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data # issued certificates + ACME account (persist across restarts)
