@@ -5,6 +5,51 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.256.0] - 2026-08-04
+
+### Added
+- **Domain summary & counts API (DUW-1.3, private-suite#2570)** — The workspace
+  tree draws a badge on every domain folder before anything is hydrated —
+  `customers/ 3·4`, `billing/ 5·9`, `shared/ 8` — and each lens badges the same
+  folder with a different number (`3 classes` in the schemas lens, `4 ops` in the
+  paths lens). Deriving any of that in the browser would mean fetching the whole
+  catalog first, which is the read DUW-1.2 exists to eliminate.
+  `GET /v1/workspace/{tenant}/version/{version_id}/summary` answers it in one
+  round trip: every folder with `class_count`, `path_count`, `op_count` and
+  `enum_count`, plus shallow member lists — class rows (id, name, kind, version
+  badge) and path rows carrying their operations (verb, `operation_id`,
+  `summary`, `deprecated`) — which is every field the three tree lens panels
+  draw.
+
+  Counts are exhaustive; member lists are not. A badge that is only right for the
+  first page is not a badge, so each count covers the folder's whole membership,
+  while the rows beside it are capped per folder by `member_limit` (default 50,
+  clamped to 200, `0` for badges alone) and a folder that was cut reports
+  `classes_truncated` / `paths_truncated`, continuing through DUW-1.2's paged
+  reads. `class_count` and `enum_count` *partition* a folder's classes rather
+  than overlapping, matching the mockup's `customers/ 3 classes` above three
+  objects and one enum; each row carries a `kind` of `object`/`enum`/`union` read
+  from the stored schema column, so the `Schemas` and `Enums & unions` groups
+  need no second pass, and objects sort first so a truncated list is cut from the
+  enum group upward. The `v2.1` badge is the version's own label repeated per
+  class row — a class has no version of its own — so a tree row renders without
+  consulting the envelope.
+
+  The cost is four statements whatever the version holds: a window function
+  carries each domain's totals onto its own member rows, so a 40-folder catalog
+  costs what a one-folder catalog does. A per-domain count query would be exactly
+  the N+1 this endpoint exists to prevent, and would pass every functional test.
+  The `shared/` bucket is joined with `IS NOT DISTINCT FROM`, because `NULL =
+  NULL` would silently drop the largest folder in most catalogs, and empty
+  folders are listed with zeroes so a newly created one cannot look like a failed
+  write. Reads commit, matching the scoped reads: psycopg2 opens a transaction
+  for a bare SELECT too. Verified against a seeded 218-path / 250-class catalog
+  under `pg_virtualenv` — every badge checked against its own `SELECT COUNT(*)`,
+  the mockup's numbers reproduced, and p95 ≈ 3.5 ms against the ticket's 300 ms
+  budget. No migration: V242's `domain_id` indexes and the existing `version_id`
+  indexes cover the aggregates. The per-path schema rows the combined lens nests
+  under an operation remain DUW-1.4.
+
 ## [1.255.0] - 2026-08-04
 
 ### Added
