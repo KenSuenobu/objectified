@@ -82,6 +82,83 @@ class ClassTagSchema(BaseModel):
         from_attributes = True
 
 
+class DomainSchema(BaseModel):
+    """A domain folder grouping a version's classes and paths (DUW-1.1).
+
+    ``id`` is None for exactly one entry per version: the derived ``shared/`` bucket, which
+    collects members with no domain. A client must read ``virtual`` rather than inferring
+    editability from the name, since a real domain may legitimately be called anything else.
+    """
+    id: Optional[str] = None
+    version_id: str
+    name: str
+    slug: str
+    sort_order: int = 0
+    virtual: bool = False
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class DomainCreateRequest(BaseModel):
+    """Request model for creating a domain folder.
+
+    ``slug`` is derived from ``name`` when omitted, so the common case is a single field.
+    ``sort_order`` defaults to the end of the tree.
+    """
+    name: str
+    slug: Optional[str] = None
+    sort_order: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class DomainUpdateRequest(BaseModel):
+    """Request model for renaming or reordering a domain.
+
+    Every field is optional and only the supplied ones are written; renaming a domain never moves
+    it in the tree unless ``sort_order`` is given too.
+    """
+    name: Optional[str] = None
+    slug: Optional[str] = None
+    sort_order: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class DomainAssignmentRequest(BaseModel):
+    """Request model for moving a class or path between domains.
+
+    ``domain_id`` is a domain UUID, the literal ``"shared"``, or null — the last two both meaning
+    the derived bucket. It is required rather than optional so that omitting it is a validation
+    error instead of a silent move to ``shared/``.
+    """
+    domain_id: Optional[str] = Field(...)
+
+    class Config:
+        from_attributes = True
+
+
+class DomainMemberSchema(BaseModel):
+    """A class or path with its current domain membership.
+
+    ``name`` carries the class name or the pathname, whichever the member is, so one shape answers
+    both move endpoints.
+    """
+    id: str
+    version_id: str
+    name: str
+    domain_id: Optional[str] = None
+    kind: str
+
+    class Config:
+        from_attributes = True
+
+
 class ClassSchema(BaseModel):
     """Pydantic model for a class schema."""
     id: str
