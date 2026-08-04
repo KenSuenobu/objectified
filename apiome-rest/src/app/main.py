@@ -81,6 +81,7 @@ from .quality_policy_routes import router as quality_policy_router
 from .verification_policy_routes import router as verification_policy_router
 from .scrub_policy_routes import router as scrub_policy_router
 from .scoped_catalog_routes import router as scoped_catalog_router
+from .workspace_summary_routes import router as workspace_summary_router
 from .rate_limit import RateLimitMiddleware
 from .registry_audit_routes import router as registry_audit_router
 from .repository_webhook_routes import router as repository_webhook_router
@@ -302,6 +303,7 @@ app.include_router(properties_router)
 app.include_router(project_tags_router)
 app.include_router(domains_router)
 app.include_router(scoped_catalog_router)
+app.include_router(workspace_summary_router)
 app.include_router(paths_router)
 app.include_router(migration_plans_router)
 app.include_router(version_tags_router)

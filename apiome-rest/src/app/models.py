@@ -159,6 +159,143 @@ class DomainMemberSchema(BaseModel):
         from_attributes = True
 
 
+class WorkspaceSummaryClass(BaseModel):
+    """One class as the workspace tree draws it (DUW-1.3).
+
+    Deliberately shallow: a tree row needs a label, an icon and a badge, so this carries no schema
+    body, no properties and no tags. Those arrive from the scoped read (DUW-1.2) when the user
+    opens the class, which is the whole point of splitting the two.
+    """
+    id: str
+    name: str
+    kind: str = Field(
+        description="Which tree group this class belongs to: 'object' for the Schemas group, "
+                    "'enum' or 'union' for the Enums & unions group."
+    )
+    version_badge: Optional[str] = Field(
+        default=None,
+        description="The badge the tree prints beside the row, e.g. 'v2.1'. A class has no "
+                    "version of its own — this is the label of the version it was read from, "
+                    "repeated per row so a row renders without consulting the envelope.",
+    )
+
+    class Config:
+        from_attributes = True
+
+
+class WorkspaceSummaryOperation(BaseModel):
+    """One operation of one path, as the tree draws it (DUW-1.3)."""
+    id: str
+    operation: str = Field(description="HTTP method, upper-case.")
+    operation_id: Optional[str] = Field(
+        default=None, description="The spec's operationId, drawn beside the verb in the paths lens."
+    )
+    summary: Optional[str] = None
+    deprecated: bool = False
+
+    class Config:
+        from_attributes = True
+
+
+class WorkspaceSummaryPath(BaseModel):
+    """One path with its operations, as the tree draws it (DUW-1.3).
+
+    Operations are complete rather than capped: ``apiome.path_operation`` is unique on
+    ``(version_path_id, operation)``, so their number is bounded by the HTTP method vocabulary
+    rather than by the catalog.
+    """
+    id: str
+    pathname: str
+    op_count: int = Field(description="Operations on this path — the per-path '2 ops' badge.")
+    operations: List[WorkspaceSummaryOperation] = Field(default_factory=list)
+
+    class Config:
+        from_attributes = True
+
+
+class WorkspaceDomainCounts(BaseModel):
+    """The four numbers every lens badges a folder with (DUW-1.3).
+
+    ``class_count`` and ``enum_count`` *partition* the folder's classes — they do not overlap and
+    do not nest — because the mockup badges ``customers/ 3 classes`` above a list of three objects
+    and one enum, and drawing the enum inside the count would contradict the list beneath it.
+
+    Each count covers the folder's whole membership, never the member list returned beside it.
+    """
+    class_count: int = Field(description="Object schemas — the schemas lens's 'N classes' badge.")
+    path_count: int = Field(description="Paths in this folder.")
+    op_count: int = Field(description="Operations across those paths — the paths lens's 'N ops'.")
+    enum_count: int = Field(description="Enums and unions — the 'Enums & unions' group's size.")
+
+    class Config:
+        from_attributes = True
+
+
+class WorkspaceDomainSummary(BaseModel):
+    """One domain folder: identity, counts, and a bounded slice of its members (DUW-1.3)."""
+    id: Optional[str] = Field(
+        default=None,
+        description="The domain's UUID, or null for the derived 'shared/' bucket, which is the "
+                    "absence of a domain and so has no row to identify.",
+    )
+    name: str
+    slug: str
+    sort_order: int
+    virtual: bool = Field(
+        default=False,
+        description="True for 'shared/' only: a folder that cannot be renamed, reordered or "
+                    "deleted because it is derived from membership rather than stored.",
+    )
+    counts: WorkspaceDomainCounts
+    classes: List[WorkspaceSummaryClass] = Field(default_factory=list)
+    paths: List[WorkspaceSummaryPath] = Field(default_factory=list)
+    classes_truncated: bool = Field(
+        default=False,
+        description="The folder holds more classes than member_limit returned. Continue with "
+                    "GET /v1/workspace/{tenant}/version/{version_id}/classes?domain_id=…, which "
+                    "pages.",
+    )
+    paths_truncated: bool = Field(
+        default=False,
+        description="The folder holds more paths than member_limit returned. Continue with "
+                    "GET /v1/workspace/{tenant}/version/{version_id}/paths?domain_id=…",
+    )
+
+    class Config:
+        from_attributes = True
+
+
+class WorkspaceSummary(BaseModel):
+    """Every domain folder of one version, counted and shallowly listed (DUW-1.3).
+
+    One response the workspace tree renders all three lens panels from — combined, schemas and
+    paths — with no further request. The per-path *schema* rows the combined lens nests under a
+    path are the schema↔path index of DUW-1.4 and are not part of this response.
+    """
+    version_id: str = Field(description="The version record UUID this summarizes.")
+    version_badge: Optional[str] = Field(
+        default=None,
+        description="The version's own badge, e.g. 'v2.1'. Repeated on every class row so a tree "
+                    "row is renderable on its own.",
+    )
+    member_limit: int = Field(
+        description="Member rows returned per folder, per kind — the limit actually applied after "
+                    "clamping, not necessarily the one requested."
+    )
+    domains: List[WorkspaceDomainSummary] = Field(
+        default_factory=list,
+        description="Tree order: live domains by sort_order then slug, then 'shared/' last. Empty "
+                    "folders are included, with zeroes.",
+    )
+    totals: WorkspaceDomainCounts = Field(
+        description="The same four counts across the whole version — the sum of every folder's, "
+                    "so a client sizing a full hydration against its node budget need not add up."
+    )
+
+    class Config:
+        from_attributes = True
+
+
 class ScopedCatalogPage(BaseModel):
     """One bounded slice of a version's catalog (DUW-1.2).
 
