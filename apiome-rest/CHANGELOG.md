@@ -5,6 +5,34 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.253.0] - 2026-08-03
+
+### Added
+- **Slate custom domains + DNS/TLS (Slate 10.1, private-suite#119)** — The
+  editing half of the domain inventory APX-3.1 could only report, under
+  `/v1/slate`: attach a hostname to a lane and get back the exact DNS rows to
+  publish, verify ownership against the tenant's live records, probe the host to
+  see what certificate it is actually serving, make a host canonical, park
+  renewal, and detach. A subdomain is delegated with one CNAME; an apex is
+  proven with a TXT record and pointed with ALIAS/ANAME, because RFC 1034
+  forbids a CNAME beside the SOA and NS records every apex carries. A failed
+  check reports what the resolver found, not merely that it failed.
+  `app.slate_dns` is a dependency-free DNS client (the stdlib resolver discards
+  the CNAME chain and every TXT record — the two things verification needs);
+  `app.slate_tls_probe` completes a verified TLS handshake and reads the peer
+  certificate, so every certificate field is an observation of the live host at
+  a stated instant and a renewal is *detected* (the serial changes) rather than
+  assumed. Nothing here issues, stores or renews a certificate: the edge does
+  (`deploy/Caddyfile`, Caddy on-demand TLS against Let's Encrypt), and
+  `GET /v1/slate/tls/authorize?domain=` is the gate it asks first — a single
+  conjunction (row exists, ownership verified, renewal on), unauthenticated
+  because the caller is a TLS handshake with no session to present. Requires
+  V241 (`apiome-db`), which adds the verification/certificate lifecycle columns
+  and CHECKs that make "verified with no timestamp" and "active with no expiry"
+  unrepresentable. New settings: `APIOME_SLATE_DOMAIN_DNS_TARGET`,
+  `APIOME_SLATE_DOMAIN_RESERVED_ZONE`,
+  `APIOME_SLATE_DOMAIN_VERIFICATION_SECRET` (fails closed in production).
+
 ## [1.252.0] - 2026-08-03
 
 ### Added

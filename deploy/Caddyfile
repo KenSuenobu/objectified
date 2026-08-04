@@ -13,11 +13,34 @@
 #   DEPLOY_MOCK_DOMAIN  public hostname for the mock runtime (e.g. mock.example.com)
 #   ACME_EMAIL          contact address Let's Encrypt uses for expiry notices
 #
-# Caddy substitutes {$VAR} from its environment at load time.
+# Optional, for Slate custom documentation domains (Slate 10.1, private-suite#119):
+#   DEPLOY_SLATE_ORIGIN        internal address serving built Slate sites (default sites:8080)
+#   DEPLOY_SLATE_TLS_ASK_URL   control-plane endpoint that authorizes on-demand issuance
+#                              (default http://rest:8000/v1/slate/tls/authorize)
+#
+# Caddy substitutes {$VAR} from its environment at load time; {$VAR:default} supplies a fallback.
 
 {
 	# ACME account contact. Required for production certificate issuance.
 	email {$ACME_EMAIL}
+
+	# On-demand TLS for Slate custom documentation domains.
+	#
+	# A tenant points their own hostname at this platform, so the set of names needing a
+	# certificate is not known when Caddy loads its config — it is whatever tenants have
+	# attached and verified. On-demand issuance covers exactly that, and `ask` is what keeps
+	# it from being an open invitation: before ordering for a name it has not seen, Caddy asks
+	# the control plane, which answers 200 only for a domain row that exists, has completed DNS
+	# ownership verification, and has renewal enabled. Everything else gets 403 and no order is
+	# placed. Without `ask`, anyone could point a domain here and burn our ACME rate limit.
+	#
+	# The interval/burst pair is a second, independent bound: even if the control plane were
+	# wrong, no more than 10 new names in 2 minutes can be attempted from this instance.
+	on_demand_tls {
+		ask {$DEPLOY_SLATE_TLS_ASK_URL:http://rest:8000/v1/slate/tls/authorize}
+		interval 2m
+		burst 10
+	}
 }
 
 # ─────────────────────────────── REST API ───────────────────────────────
@@ -103,4 +126,53 @@
 		health_interval 15s
 		health_timeout 5s
 	}
+}
+
+# ──────────────── Slate documentation sites — custom domains ────────────────
+# Slate 10.1 (private-suite#119). This block is what makes "a verified domain serves the site
+# over auto-renewing TLS" a fact rather than a setting.
+#
+# It is a catch-all deliberately: every named site above wins over it, so this handles only
+# hostnames this file does not otherwise mention — which is exactly the set of tenant custom
+# domains. Caddy obtains a Let's Encrypt certificate for each on first request (gated by the
+# `ask` endpoint configured above) and renews it automatically thereafter, so renewal is a
+# property of the edge rather than a job somebody has to remember to run.
+#
+# `protocols tls1.3` enforces the version the Custom Domain screen claims. It is stricter than
+# the service hostnames above on purpose: those serve API clients of unknown vintage, while these
+# serve documentation to browsers, none of which have lacked TLS 1.3 since 2018. Reporting
+# "TLS 1.3 enforced" while accepting 1.2 would make the checklist decorative.
+https:// {
+	tls {
+		on_demand
+		protocols tls1.3
+	}
+
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# The origin serving built site bytes. A deployment that has not stood one up answers 502
+	# here and nothing else changes — a custom domain that resolves to an unconfigured platform
+	# should fail visibly rather than land on some other tenant's site.
+	reverse_proxy {$DEPLOY_SLATE_ORIGIN:sites:8080} {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		# The origin routes by hostname, so the tenant's own host must survive the hop.
+		header_up Host {host}
+	}
+}
+
+# Custom domains reach port 80 first — from a redirect, an old link, or a health check. Caddy
+# creates the HTTP→HTTPS redirect automatically for named sites but not for the catch-all above,
+# so it is written out here. ACME HTTP-01 challenges are answered by Caddy before site routing,
+# so this cannot shadow issuance.
+http:// {
+	redir https://{host}{uri} permanent
 }
