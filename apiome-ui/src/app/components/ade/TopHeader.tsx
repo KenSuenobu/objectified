@@ -141,6 +141,14 @@ function TopHeaderView({
   const navItems = getPlatformNavItems(commercialNavItems);
   const profileHref = platformProfilePath();
 
+  /** Signed-in display name, when the session carries one. */
+  const accountName =
+    typeof session?.user?.name === 'string' ? session.user.name.trim() : '';
+  /** Decorative avatar glyph — the accessible name comes from {@link accountMenuLabel}. */
+  const accountInitial = accountName ? accountName.slice(0, 1).toUpperCase() : '?';
+  /** Accessible name for the profile menu trigger, whose content is all decorative. */
+  const accountMenuLabel = accountName ? `Account menu for ${accountName}` : 'Account menu';
+
   // Get display name for current theme (shows effective theme when system is selected)
   const getThemeDisplayName = () => {
     if (isSystemTheme) {
@@ -163,6 +171,32 @@ function TopHeaderView({
     document.addEventListener("mousedown", handleOutside);
     return () => document.removeEventListener("mousedown", handleOutside);
   }, []);
+
+  /**
+   * Dismiss the tenant and profile menus on Escape, returning focus to their trigger.
+   *
+   * Both were pointer-only dismissals — a click outside — which strands a keyboard user
+   * inside an open menu (WCAG 2.2 A 2.1.1) and leaves the popup mounted for anything
+   * auditing the page afterwards. The nav dropdowns own their own Escape handling and
+   * roving focus in `SuiteNavMenu`, so they are deliberately not touched here.
+   *
+   * The trigger is the first `button` in each menu's container, which is exactly how both
+   * are composed (trigger, then the popup it toggles).
+   */
+  useEffect(() => {
+    if (!open && !tenantMenuOpen) return;
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      const container = tenantMenuOpen ? tenantMenuRef.current : menuRef.current;
+      setOpen(false);
+      setTenantMenuOpen(false);
+      container?.querySelector('button')?.focus();
+    }
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [open, tenantMenuOpen]);
 
   useEffect(() => {
     if (!session?.user) {
@@ -226,6 +260,15 @@ function TopHeaderView({
       (t) => t.name.toLowerCase().includes(q) || (t.slug ?? '').toLowerCase().includes(q)
     );
   }, [userTenants, tenantSearchQuery]);
+
+  /**
+   * Whether the switcher popup has anything to put inside its `role="menu"`.
+   *
+   * A menu that owns no `menuitem` is an `aria-required-children` violation in its own
+   * right, and a filter query matching nothing would produce exactly that — so the menu
+   * element is rendered only when at least one row or the create-tenant entry will be.
+   */
+  const hasTenantMenuItems = filteredTenants.length > 0 || Boolean(createTenantGate);
 
   const handleSelectTenant = async (tenantId: string) => {
     if (tenantId === currentTenantId || isSwitchingTenant) return;
@@ -326,7 +369,11 @@ function TopHeaderView({
               <li key={item.id} className="relative">
                 {item.enabled === false ? (
                   <span
-                    className="inline-flex cursor-not-allowed items-center gap-1 rounded-md px-2 py-1 text-[13px] text-slate-400 dark:text-slate-500"
+                    // slate-500 on the light header (4.76:1) and slate-400 on the dark one
+                    // (6.78:1) keep this "coming soon" item muted while clearing WCAG 2.2
+                    // AA 1.4.3 — the previous slate-400/slate-500 pair sat at 2.63:1 and
+                    // 3.74:1. Measured by tests/top-header-a11y.test.tsx.
+                    className="inline-flex cursor-not-allowed items-center gap-1 rounded-md px-2 py-1 text-[13px] text-slate-500 dark:text-slate-400"
                     title="Coming soon"
                   >
                     {item.label}
@@ -402,96 +449,124 @@ function TopHeaderView({
               />
             </button>
             {tenantMenuOpen && !isLoadingTenants && (
-              <div
-                role="menu"
-                aria-label="Your tenants"
-                className="absolute right-0 z-[10050] mt-2 flex max-h-[min(70vh,24rem)] min-w-[260px] flex-col overflow-hidden rounded-lg bg-white shadow-lg shadow-slate-900/15 dark:bg-slate-800 dark:shadow-gray-900/50"
-              >
+              <div className="absolute right-0 z-[10050] mt-2 flex max-h-[min(70vh,24rem)] min-w-[260px] flex-col overflow-hidden rounded-lg bg-white shadow-lg shadow-slate-900/15 dark:bg-slate-800 dark:shadow-gray-900/50">
+                {/*
+                 * The filter field is chrome around the menu, not part of it: a
+                 * `searchbox` is not a permitted child of `role="menu"`, and owning one
+                 * fails axe `aria-required-children` (critical) on every route the header
+                 * renders on. So the popup itself carries no role and `role="menu"` sits
+                 * on the wrapper that owns only the menu items.
+                 */}
                 <div className="shrink-0 border-b border-gray-200 p-2 dark:border-gray-600">
                   <input
                     type="search"
                     autoComplete="off"
                     value={tenantSearchQuery}
                     onChange={(e) => setTenantSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.stopPropagation()}
+                    // Keystrokes typed here are the query, not app shortcuts — except
+                    // Escape, which must still reach the document handler that closes
+                    // the menu and returns focus to the trigger.
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Escape') e.stopPropagation();
+                    }}
                     placeholder="Search tenants…"
                     aria-label="Filter tenants"
                     className="w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
                   />
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1">
-                  {filteredTenants.length === 0 ? (
-                    <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No matching tenants</div>
-                  ) : (
-                    filteredTenants.map((t) => {
-                      const isCurrent = t.id === currentTenantId;
-                      const isSuspended = t.status === 'suspended';
-                      return (
+                {filteredTenants.length === 0 && (
+                  <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No matching tenants</div>
+                )}
+                {/*
+                 * Rendered only when it would own at least one item: an empty
+                 * `role="menu"` is itself an `aria-required-children` violation, which a
+                 * filter matching nothing would otherwise produce.
+                 */}
+                {hasTenantMenuItems && (
+                  <div
+                    role="menu"
+                    aria-label="Your tenants"
+                    className="flex min-h-0 flex-1 flex-col overflow-hidden"
+                  >
+                    {filteredTenants.length > 0 && (
+                      <div
+                        role="none"
+                        className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1"
+                      >
+                        {filteredTenants.map((t) => {
+                          const isCurrent = t.id === currentTenantId;
+                          const isSuspended = t.status === 'suspended';
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              role="menuitem"
+                              disabled={isSwitchingTenant || isCurrent || isSuspended}
+                              title={
+                                isSuspended
+                                  ? 'Your membership in this tenant is suspended'
+                                  : undefined
+                              }
+                              onClick={() => handleSelectTenant(t.id)}
+                              className={`flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm transition-colors ${
+                                isCurrent
+                                  ? 'cursor-default bg-indigo-50 font-medium text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100'
+                                  : isSuspended
+                                    ? 'cursor-not-allowed text-gray-500 dark:text-gray-400'
+                                    : 'cursor-pointer text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
+                              } ${isSwitchingTenant && !isCurrent ? 'opacity-50' : ''}`}
+                            >
+                              <span className="min-w-0 flex-1 truncate">{t.name}</span>
+                              {isSuspended && (
+                                <span className="inline-flex shrink-0 items-center rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                  Suspended
+                                </span>
+                              )}
+                              <TenantRoleBadge role={t.role} isLegacyAdmin={adminTenantIds.has(t.id)} />
+                              <TenantLicenseChip name={t.licenseName} type={t.licenseType} role={t.role} />
+                              {isCurrent && (
+                                <Check className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {createTenantGate && (
+                      <div
+                        role="none"
+                        className="shrink-0 border-t border-gray-200 p-1 dark:border-gray-600"
+                      >
                         <button
-                          key={t.id}
                           type="button"
                           role="menuitem"
-                          disabled={isSwitchingTenant || isCurrent || isSuspended}
+                          data-testid="create-tenant-entry"
+                          disabled={!createTenantGate.allowed}
                           title={
-                            isSuspended
-                              ? 'Your membership in this tenant is suspended'
-                              : undefined
+                            createTenantGate.allowed
+                              ? undefined
+                              : `Tenant limit reached (${createTenantGate.used} of ${createTenantGate.max} used) — upgrade your plan to create more`
                           }
-                          onClick={() => handleSelectTenant(t.id)}
+                          onClick={() => {
+                            setTenantMenuOpen(false);
+                            setCreateTenantOpen(true);
+                          }}
                           className={`flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm transition-colors ${
-                            isCurrent
-                              ? 'cursor-default bg-indigo-50 font-medium text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100'
-                              : isSuspended
-                                ? 'cursor-not-allowed text-gray-400 dark:text-gray-500'
-                                : 'cursor-pointer text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
-                          } ${isSwitchingTenant && !isCurrent ? 'opacity-50' : ''}`}
+                            createTenantGate.allowed
+                              ? 'cursor-pointer text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/40'
+                              : 'cursor-not-allowed text-gray-500 dark:text-gray-400'
+                          }`}
                         >
-                          <span className="min-w-0 flex-1 truncate">{t.name}</span>
-                          {isSuspended && (
-                            <span className="inline-flex shrink-0 items-center rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                              Suspended
+                          <Plus className="h-4 w-4 shrink-0" aria-hidden />
+                          <span className="min-w-0 flex-1 truncate">Create tenant</span>
+                          {!createTenantGate.allowed && (
+                            <span className="shrink-0 text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                              {createTenantGate.used}/{createTenantGate.max}
                             </span>
                           )}
-                          <TenantRoleBadge role={t.role} isLegacyAdmin={adminTenantIds.has(t.id)} />
-                          <TenantLicenseChip name={t.licenseName} type={t.licenseType} role={t.role} />
-                          {isCurrent && (
-                            <Check className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
-                          )}
                         </button>
-                      );
-                    })
-                  )}
-                </div>
-                {createTenantGate && (
-                  <div className="shrink-0 border-t border-gray-200 p-1 dark:border-gray-600">
-                    <button
-                      type="button"
-                      role="menuitem"
-                      data-testid="create-tenant-entry"
-                      disabled={!createTenantGate.allowed}
-                      title={
-                        createTenantGate.allowed
-                          ? undefined
-                          : `Tenant limit reached (${createTenantGate.used} of ${createTenantGate.max} used) — upgrade your plan to create more`
-                      }
-                      onClick={() => {
-                        setTenantMenuOpen(false);
-                        setCreateTenantOpen(true);
-                      }}
-                      className={`flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm transition-colors ${
-                        createTenantGate.allowed
-                          ? 'cursor-pointer text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/40'
-                          : 'cursor-not-allowed text-gray-400 dark:text-gray-500'
-                      }`}
-                    >
-                      <Plus className="h-4 w-4 shrink-0" aria-hidden />
-                      <span className="min-w-0 flex-1 truncate">Create tenant</span>
-                      {!createTenantGate.allowed && (
-                        <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-gray-500">
-                          {createTenantGate.used}/{createTenantGate.max}
-                        </span>
-                      )}
-                    </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -501,9 +576,17 @@ function TopHeaderView({
 
         {/* Profile menu */}
         <div ref={menuRef} className="relative">
+        {/*
+         * The avatar is decorative (`aria-hidden`) and the name it abbreviates used to sit
+         * in a `hidden` — i.e. `display: none` — span, so this button reached assistive
+         * technology with no accessible name at all (axe `button-name`, critical). The
+         * label names the control and, when the session carries one, who it belongs to.
+         */}
         <button
+          type="button"
           aria-haspopup="menu"
           aria-expanded={open}
+          aria-label={accountMenuLabel}
           onClick={() => {
             setTenantMenuOpen(false);
             setOpenNavMenuId(null);
@@ -515,11 +598,8 @@ function TopHeaderView({
             className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-medium"
             aria-hidden
           >
-            {session?.user?.name ? String(session.user.name).slice(0, 1).toUpperCase() : '?'}
+            {accountInitial}
           </div>
-          <span className="hidden">
-            {session?.user?.name}
-          </span>
         </button>
 
         {open && (
@@ -531,7 +611,7 @@ function TopHeaderView({
             <Link href={profileHref} role="menuitem" className="block rounded px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white" style={{ textDecoration: "none" }} onClick={() => setOpen(false)}>
               View Profile
             </Link>
-            <div className="h-px bg-gray-200 dark:bg-gray-600 my-1" />
+            <div role="separator" className="h-px bg-gray-200 dark:bg-gray-600 my-1" />
             {/* Theme Selector */}
             <button
               onClick={() => {
@@ -548,12 +628,20 @@ function TopHeaderView({
                 </svg>
                 Theme
               </span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+              {/* gray-400 on the dark chip measured 3.96:1; gray-300 is 7.00:1. */}
+              <span
+                data-testid="theme-menu-value"
+                className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+              >
                 {getThemeDisplayName()}
               </span>
             </button>
-            <div className="h-px bg-gray-200 dark:bg-gray-600 my-1" />
+            <div role="separator" className="h-px bg-gray-200 dark:bg-gray-600 my-1" />
             <button
+              // A plain button is not a permitted child of `role="menu"` — the sibling
+              // entries were menu items and this one was not, which axe reports as
+              // `aria-required-children` (critical) whenever the menu is open.
+              role="menuitem"
               // Explicit landing so logout exits cleanly to the login page instead of
               // bouncing off the protected page's auth guard (OLO-3.4). The studio
               // shell has no /login route of its own, so it targets the main app's.
