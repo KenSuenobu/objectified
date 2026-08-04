@@ -490,6 +490,14 @@ async def get_classes_with_properties_and_tags(
     """
     Get all classes for a version with their properties and tags.
 
+    Deprecated for canvas hydration (DUW-1.2, private-suite#2569). This read has no LIMIT: it
+    returns every class of the version with every property and every tag, which is why a large
+    catalog makes the designer canvas choke. Surfaces that need a *selection* — the unified
+    workspace and anything else hydrating what a user picked — must use
+    ``GET /v1/workspace/{tenant_slug}/version/{version_id}/classes`` with ``class_ids`` or
+    ``domain_id`` instead. It stays here, unchanged, for the surfaces that genuinely do need the
+    whole version (exports, scoring, readiness sweeps).
+
     Supports authentication via JWT token or API key.
 
     Args:

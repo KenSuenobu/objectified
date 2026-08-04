@@ -5,6 +5,48 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.255.0] - 2026-08-04
+
+### Added
+- **Selection-scoped class and path reads (DUW-1.2, private-suite#2569)** — The
+  only way to read a version's classes with their properties and tags was
+  `GET /v1/classes/{tenant}/version/{version_id}/with-properties-tags`, three
+  queries with no LIMIT that return the whole catalog. Twelve designer call
+  sites use it, `/editor` fires it twice on mount and again after every
+  single-class edit, and that is the direct cause of the browser choking on a
+  large catalog. `/v1/workspace/{tenant}/version/{version_id}/classes` and
+  `…/paths` answer the question the canvas actually asks: *these items*, or
+  *this folder*, never *this version*. A selection is mandatory — omitting both
+  `class_ids` and `domain_id` is a 400 rather than a convenience default,
+  because that default would be the very read this endpoint exists to replace,
+  and supplying both is a 400 too rather than a guess about which one wins. The
+  server cap is enforced two different ways for one reason: a page size over 200
+  is clamped, since a domain listing hands back a cursor and the client has a
+  working continuation, while an id list over 200 is refused, since there is no
+  cursor for an arbitrary id set and quietly answering a different question than
+  the one asked would be undetectable. Both bounds are echoed in every response
+  and documented in the OpenAPI parameter descriptions, so a client never has to
+  trigger a 400 to discover them. A bounded read is still a bulk read: three
+  statements hydrate a page of classes and two hydrate a page of paths, whatever
+  the page size, so cost tracks the selection rather than the catalog. Ids that
+  no longer resolve — a class deleted since the selection was made, one
+  belonging to another version, one that is not a UUID at all — come back in
+  `missing_ids` rather than as a silently short response that would leave an
+  unexplained hole on the canvas. Every query is scoped by `version_id` even in
+  id mode, which is the tenancy boundary: the version is resolved against the
+  caller's tenant first, so an id from another tenant's catalog matches nothing.
+  `total` is the size of the whole selection rather than of the page, which is
+  what the workspace sizes its node budget against, and pagination reuses the
+  same opaque cursor format the export and import manifest surfaces already
+  speak. Paths carry their operations with each operation's `operation_id`,
+  `summary` and `deprecated` flag, because the mockup's paths lens draws the
+  operationId beside every verb; parameters, request bodies and responses stay
+  with the per-path `/full` endpoint, which is inspector-sized data for one
+  selected operation. The legacy full-version read is deliberately unchanged —
+  exports, scoring and readiness sweeps really do want every class — but now
+  carries a deprecation note pointing here. No migration: V242's `domain_id`
+  indexes were added for exactly these reads.
+
 ## [1.254.0] - 2026-08-04
 
 ### Added
