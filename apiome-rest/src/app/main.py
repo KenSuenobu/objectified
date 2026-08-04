@@ -31,6 +31,7 @@ from .contract_suite_routes import router as contract_suite_router
 from .contract_runner_routes import router as contract_runner_router
 from .data_routes import router as data_router
 from .database import Database, db
+from .domains_routes import router as domains_router
 from .draft_lock_routes import router as draft_lock_router
 from .export_job_routes import router as export_job_router
 from .export_routes import router as export_router
@@ -122,7 +123,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.117.0",
+    version="1.118.0",
 )
 
 
@@ -298,6 +299,7 @@ app.include_router(snippet_versions_router)
 app.include_router(versions_router)
 app.include_router(properties_router)
 app.include_router(project_tags_router)
+app.include_router(domains_router)
 app.include_router(paths_router)
 app.include_router(migration_plans_router)
 app.include_router(version_tags_router)

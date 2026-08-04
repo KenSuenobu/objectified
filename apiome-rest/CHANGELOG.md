@@ -5,6 +5,38 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.254.0] - 2026-08-04
+
+### Added
+- **Domain folders for schemas and paths (DUW-1.1, private-suite#2568)** — The
+  unified workspace organizes a catalog into domain folders and scopes the canvas
+  to one of them, but classes and paths had no hierarchy at all: two flat lists
+  read with `ORDER BY name ASC`. Tags and canvas groups are not that hierarchy —
+  tags are project-scoped, many-to-many and for filtering; canvas groups are
+  per-layout visual furniture. A folder that scopes a *fetch* has to be exactly
+  one per item, version-scoped, and stored beside the item it groups, so V242
+  (`apiome-db`) adds `apiome.domains` plus a nullable `domain_id` on
+  `apiome.classes` and `apiome.version_path`. `/v1/domains` lists, creates,
+  renames and deletes them, and moves a class or a path between them.
+  `shared/` is deliberately **not** a row: a member with `domain_id IS NULL` *is*
+  in it, so the bucket always exists, cannot be renamed or deleted, and is
+  synthesized into the list response with `id: null` and `virtual: true`. The
+  slug `shared` is reserved by a CHECK so no stored domain can draw the same
+  folder. Deleting a domain never deletes its contents — the delete is a soft
+  delete, and V242's `trg_domains_soft_delete_release` releases every member to
+  `shared/` in the same statement, with `ON DELETE SET NULL` covering a hard
+  delete too; the response reports how many classes and paths moved. A database
+  trigger, not a service-layer check, rejects a domain assignment that crosses
+  versions or targets a deleted domain, because a foreign key can constrain
+  `domain_id` but knows nothing about `version_id` on either side. Existing
+  catalogs are backfilled: paths seed domains from their first *meaningful* path
+  segment — skipping templated segments (`/{customerId}` names an instance) and
+  API version prefixes (`/v1/` is on every path, so it partitions nothing) — and
+  classes follow a project tag whose name slugifies to a seeded domain. Anything
+  unmatched stays in `shared/`, which is the honest outcome for a catalog with no
+  path structure and no tags. Per-domain counts for the tree badges are DUW-1.2 /
+  DUW-1.3, not this release.
+
 ## [1.253.0] - 2026-08-03
 
 ### Added
