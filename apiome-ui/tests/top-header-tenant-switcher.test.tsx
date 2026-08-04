@@ -10,7 +10,7 @@
  * that carry no gate).
  */
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -91,77 +91,12 @@ jest.mock('next/link', () => ({
   ),
 }));
 
-import TopHeader, { type TopHeaderTenantContext } from '../src/app/components/ade/TopHeader';
-import type { AppSession } from '@lib/auth/better-auth-session-shape';
-
-const CURRENT_TENANT_ID = 'tenant-acme';
-
-const session = {
-  user: {
-    user_id: 'user-1',
-    name: 'Kenji',
-    email: 'kenji@example.com',
-    current_tenant_id: CURRENT_TENANT_ID,
-  },
-} as unknown as AppSession;
-
-/** Enriched three-tenant context matching the issue's mockup. */
-function enrichedContext(overrides: Partial<TopHeaderTenantContext> = {}): TopHeaderTenantContext {
-  return {
-    tenants: [
-      {
-        id: CURRENT_TENANT_ID,
-        name: 'acme-corp',
-        slug: 'acme-corp',
-        role: 'owner',
-        status: 'active',
-        licenseName: 'Free',
-        licenseType: 'free',
-      },
-      {
-        id: 'tenant-globex',
-        name: 'globex',
-        slug: 'globex',
-        role: 'editor',
-        status: 'active',
-        licenseName: 'Paid',
-        licenseType: 'paid',
-      },
-      {
-        id: 'tenant-initech',
-        name: 'initech',
-        slug: 'initech',
-        role: 'viewer',
-        status: 'suspended',
-        licenseName: 'Free',
-        licenseType: 'free',
-      },
-    ],
-    adminTenantIds: new Set([CURRENT_TENANT_ID]),
-    createTenant: { allowed: true, used: 3, max: 5 },
-    ...overrides,
-  };
-}
-
-/** Renders the header with an injected session and tenant context. */
-function renderHeader(context: TopHeaderTenantContext, update = jest.fn(async () => null)) {
-  const loadTenantContext = jest.fn(async () => context);
-  const view = render(
-    <TopHeader
-      loadTenantContext={loadTenantContext}
-      sessionBridge={{ session, update: update as never }}
-    />
-  );
-  return { view, update, loadTenantContext };
-}
-
-/** Opens the switcher menu once tenants finish loading. */
-async function openSwitcher(user: ReturnType<typeof userEvent.setup>) {
-  const trigger = await screen.findByRole('button', { name: 'Switch tenant' });
-  await waitFor(() => expect(trigger).toBeEnabled());
-  await user.click(trigger);
-  return screen.getByRole('menu', { name: 'Your tenants' });
-}
+import {
+  CURRENT_TENANT_ID,
+  enrichedTenantContext as enrichedContext,
+  openTenantSwitcher as openSwitcher,
+  renderTopHeader as renderHeader,
+} from './helpers/top-header-fixture';
 
 beforeEach(() => {
   jest.clearAllMocks();
