@@ -335,10 +335,23 @@ function TopHeaderView({
 
   return (
     <header
-      className="relative z-[10048] flex h-12 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-3 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95"
+      /*
+       * The header reflows rather than scrolling (WCAG 2.2 AA 1.4.10, private-suite#2622).
+       * Its three clusters wrap onto as many rows as the viewport needs — `min-h-12` keeps
+       * the familiar 48px bar whenever they fit on one, which is every width at which they
+       * used to, so the unwrapped header is the same height it has always been (no vertical
+       * padding, for exactly that reason: `ADE_SUBHEADER_RESERVE_PX` and the `calc(100vh -
+       * 48px)` layouts measure from it). `gap-y-1` is what the wrapped rows breathe with.
+       */
+      className="relative z-[10048] flex min-h-12 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-slate-200 bg-white/95 px-3 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95"
     >
       {/* Left: Logo */}
-      <div className="flex h-10 items-center gap-2">
+      {/*
+       * `shrink-0`: the logo and the version badge have no compressible slack, so shrinking
+       * this cluster only pushed its contents over the tenant switcher. It keeps its width
+       * and the cluster that no longer fits beside it wraps instead.
+       */}
+      <div className="flex h-10 shrink-0 items-center gap-2">
         <img
           src={isDark ? "/Apiome-05.png" : "/Apiome-02.png"}
           alt="Apiome Logo"
@@ -354,9 +367,27 @@ function TopHeaderView({
       </div>
 
       {/* Center: Navigation */}
-      <nav ref={navMenuRef} aria-label="Main navigation" className="min-w-0 flex-1 text-center">
+      {/*
+       * `basis-80` (20rem) is the width below which the nav stops being a centre column and
+       * becomes its own row: flex breaks the line when the three clusters' hypothetical
+       * widths no longer fit, and `order-last` puts that row under the other two rather
+       * than between them. It cannot be `overflow-x-auto` instead — a scroll container
+       * clips the absolutely positioned suite dropdowns, and a nav the reader has to scroll
+       * sideways is the very thing 1.4.10 forbids.
+       */}
+      <nav
+        ref={navMenuRef}
+        aria-label="Main navigation"
+        className="order-last min-w-0 flex-1 basis-full sm:order-none sm:basis-80"
+      >
+        {/*
+         * `flex-wrap` so the items themselves reflow once the row is as wide as it gets;
+         * `justify-center` replaces the `text-center` this list used to be centred by,
+         * which centred it even when it overflowed — the items simply spilled past both
+         * edges of the nav and out of the document.
+         */}
         <ul
-          className="m-0 inline-flex list-none items-center gap-2 p-0 text-[13px]"
+          className="m-0 flex list-none flex-wrap items-center justify-center gap-2 p-0 text-[13px]"
         >
           {navItems.map((item) => {
             const href = resolvePlatformNavHref(item);
@@ -366,7 +397,18 @@ function TopHeaderView({
             const navMenuOpen = openNavMenuId === item.id;
 
             return (
-              <li key={item.id} className="relative">
+              /*
+               * The suite dropdown is centred on its containing block. Below `lg` that is
+               * deliberately the header rather than this item: the panel is 36rem wide, so
+               * centring it on a trigger leaves it hanging off the side of the viewport at
+               * every width under about 1024px — horizontal scrolling by another route
+               * (WCAG 2.2 AA 1.4.10, private-suite#2622), and worst at the reflow width
+               * where the trigger has wrapped away from the middle of the row. Centred on
+               * the header it is centred on the viewport, where its `min(92vw, 36rem)`
+               * width always fits. Vertical placement is unaffected — the panel sets no
+               * `top`, so it keeps the static position it has inside this item either way.
+               */
+              <li key={item.id} className="static lg:relative">
                 {item.enabled === false ? (
                   <span
                     // slate-500 on the light header (4.76:1) and slate-400 on the dark one
@@ -421,9 +463,21 @@ function TopHeaderView({
         </ul>
       </nav>
 
-      <div className="flex shrink-0 items-center gap-2">
+      {/*
+       * `ms-auto` keeps this cluster at the end of whatever row it lands on. On one row
+       * `justify-between` already did that; on a row of its own `justify-between` puts a
+       * lone item at the *start*, which would swing the tenant and profile menus — both
+       * anchored to their trigger's right edge — off the left of the viewport.
+       */}
+      <div className="ms-auto flex shrink-0 items-center gap-2">
         {showTenantSwitcher && (
-          <div ref={tenantMenuRef} className="relative">
+          /*
+           * Below `sm` the popup anchors to the header rather than to this trigger, for
+           * the reason the suite dropdown does: right-aligned to a trigger that has the
+           * profile button to its right, a 260px popup starts off the left of a 320px
+           * viewport. Anchored to the header it ends at the viewport's edge instead.
+           */
+          <div ref={tenantMenuRef} className="static sm:relative">
             <button
               type="button"
               aria-haspopup="menu"
@@ -575,7 +629,8 @@ function TopHeaderView({
         )}
 
         {/* Profile menu */}
-        <div ref={menuRef} className="relative">
+        {/* Anchored to the header below `sm`, as the tenant popup above is. */}
+        <div ref={menuRef} className="static sm:relative">
         {/*
          * The avatar is decorative (`aria-hidden`) and the name it abbreviates used to sit
          * in a `hidden` — i.e. `display: none` — span, so this button reached assistive
