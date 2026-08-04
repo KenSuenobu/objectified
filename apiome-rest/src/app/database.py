@@ -437,7 +437,13 @@ class Database:
         return self.execute_query(query, (class_id,))
 
     def get_classes_with_properties_and_tags_for_version(self, version_id: str) -> List[Dict[str, Any]]:
-        """Get all classes for a version with their properties and tags in bulk."""
+        """Get all classes for a version with their properties and tags in bulk.
+
+        Deprecated for canvas hydration (DUW-1.2, private-suite#2569): the three queries below
+        have no LIMIT, so cost tracks the catalog rather than what the caller needs. Use
+        :mod:`app.scoped_catalog_store` when the caller has a selection — an id set or a domain.
+        Left as it is for the surfaces that really do want the whole version.
+        """
         # Query 1: Get all classes for the version
         classes_query = """
             SELECT id, version_id, name, description, schema, enabled, canvas_metadata, created_at, updated_at

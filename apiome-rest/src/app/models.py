@@ -159,6 +159,47 @@ class DomainMemberSchema(BaseModel):
         from_attributes = True
 
 
+class ScopedCatalogPage(BaseModel):
+    """One bounded slice of a version's catalog (DUW-1.2).
+
+    Shared by the scoped class and path reads, because a client pages both the same way and a
+    second identically-shaped model would only invite the two to drift apart. ``items`` stays
+    loosely typed for the same reason the legacy full-version read does: a class carries JSONB
+    ``schema``/``canvas_metadata`` and nested property rows, a path carries JSONB ``metadata`` and
+    operations, and pinning either here would make an additive column a breaking change.
+
+    ``total`` is the size of the *whole* selection, not of this page — the folder's membership for
+    a domain listing — so the workspace can compare it against its node budget before hydrating
+    anything further.
+    """
+    items: List[Dict[str, Any]]
+    total: int
+    limit: int = Field(
+        description="The most items this response could have carried: the effective page size for "
+                    "a domain listing, or the server's id cap for an explicit selection."
+    )
+    scope: str = Field(description="Which selector produced this page: 'ids' or 'domain'.")
+    domain_id: Optional[str] = Field(
+        default=None,
+        description="The domain listed, or null for the derived 'shared/' bucket and for id "
+                    "selections.",
+    )
+    missing_ids: List[str] = Field(
+        default_factory=list,
+        description="Ids the caller named that resolved to nothing in this version — deleted "
+                    "since the selection was made, belonging to another version, or malformed. "
+                    "Always empty for a domain listing.",
+    )
+    next_cursor: Optional[str] = Field(
+        default=None,
+        description="Opaque token for the following page, or null when this page is the last. "
+                    "Same cursor format as the export and import manifest surfaces.",
+    )
+
+    class Config:
+        from_attributes = True
+
+
 class ClassSchema(BaseModel):
     """Pydantic model for a class schema."""
     id: str
