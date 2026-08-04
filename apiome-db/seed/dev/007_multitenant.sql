@@ -29,7 +29,7 @@ VALUES (
   '00000000-0000-4000-8000-000000000010',
   'Grace Hopper',
   'grace@example.com',
-  '$2b$10$ubOFS2D0e.u2pYFxsDowfOgqXTOHv6fSF1ZuKi.VVaz301rnaLqVG',
+  '$2b$10$CZ6T5dNM4gGB07ni8rcW5ObIIuOaC3DsBwzM6keX8Sei/8.QpGpdS',
   true,
   true
 )

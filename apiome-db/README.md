@@ -52,6 +52,7 @@ with `--dir` or `APIOME_DB_SEED_DIR`), creating a runnable local fixture:
 | Tenant | `acme-corp` (Ada is a member + administrator) |
 | License | `Dev` (free tier) |
 | API key | prefix `sk_devseed00...` (raw key in [`seed/dev/005_api_key.sql`](./seed/dev/005_api_key.sql)) |
+| Credential accounts | Better Auth `providerId='credential'` rows for the seed users, so the documented passwords sign in ([`seed/dev/008_credential_accounts.sql`](./seed/dev/008_credential_accounts.sql)) |
 
 Seeds are **never** run automatically (not wired into the Docker entrypoint or compose) and the
 command refuses under `NODE_ENV=production` without `--force`.

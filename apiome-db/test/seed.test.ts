@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 
+import bcrypt from "bcrypt";
 import { describe, expect, it } from "vitest";
 
 import { listSeedFiles } from "../src/seed.js";
@@ -17,6 +18,7 @@ describe("listSeedFiles", () => {
       "005_api_key.sql",
       "006_sample_project.sql",
       "007_multitenant.sql",
+      "008_credential_accounts.sql",
     ]);
   });
 });
@@ -62,5 +64,45 @@ describe("dev seed contents", () => {
 
     // Idempotent, like every other dev seed file.
     expect(fixture).toContain("ON CONFLICT");
+  });
+
+  it("seeds bcrypt hashes that actually verify against the documented dev password", async () => {
+    // Better Auth verifies the seed hash at sign-in (private-suite#2560, DH-1.2); a hash that
+    // does not match "apiome-dev" makes every documented dev login fail with
+    // INVALID_EMAIL_OR_PASSWORD, so prove it here instead of at first manual login.
+    const hashes = new Set<string>();
+    for (const file of ["001_user.sql", "007_multitenant.sql"]) {
+      const sql = await readFile(`${SEED_DIR}/${file}`, "utf8");
+      const found = sql.match(/\$2[aby]\$\d\d\$[./A-Za-z0-9]{53}/g) ?? [];
+      expect(found.length, `${file} should contain a bcrypt hash`).toBeGreaterThan(0);
+      for (const hash of found) hashes.add(hash);
+    }
+    for (const hash of hashes) {
+      expect(
+        await bcrypt.compare("apiome-dev", hash),
+        `hash ${hash} must verify against "apiome-dev"`,
+      ).toBe(true);
+    }
+  });
+
+  it("creates Better Auth credential accounts for the seed users (private-suite#2560)", async () => {
+    const credential = await readFile(`${SEED_DIR}/008_credential_accounts.sql`, "utf8");
+
+    // One credential row per seed user, in the V200 account shape.
+    expect(credential).toContain("INSERT INTO apiome.account");
+    expect(credential).toContain("'credential'");
+    expect(credential).toContain("00000000-0000-4000-8000-000000000001"); // Ada
+    expect(credential).toContain("00000000-0000-4000-8000-000000000010"); // Grace
+
+    // Heals the pre-#2560 hash that never verified against "apiome-dev" — and only that hash.
+    const brokenHash = "$2b$10$ubOFS2D0e.u2pYFxsDowfOgqXTOHv6fSF1ZuKi.VVaz301rnaLqVG";
+    expect(await bcrypt.compare("apiome-dev", brokenHash)).toBe(false);
+    expect(credential).toContain("UPDATE apiome.users");
+    expect(credential).toContain(brokenHash);
+
+    // The empty-string "no usable credential" sentinel must never become a login (V200's rule),
+    // and re-running must converge instead of erroring.
+    expect(credential).toContain("u.password <> ''");
+    expect(credential).toContain('ON CONFLICT ("providerId", "accountId")');
   });
 });
