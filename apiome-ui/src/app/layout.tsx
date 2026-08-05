@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { interSans, jetbrainsMono } from "./fonts";
 import "./globals.css";
 import "@radix-ui/themes/styles.css";
 import SessionWrapper from "@/app/components/auth/SessionWrapper";
@@ -18,8 +19,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Font variables sit on <html>, not <body>: globals.css declares
+  // --app-font-sans at :root, and var() substitution inside a custom property
+  // happens where that property is computed (the html element) — variables
+  // mounted on <body> would be invisible to it.
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${interSans.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="antialiased">
         <NextThemesProvider
           attribute="class"

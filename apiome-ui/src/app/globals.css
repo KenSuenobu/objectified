@@ -20,8 +20,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --app-font-sans: "Aptos", "Segoe UI", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-  --app-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* Inter + JetBrains Mono, self-hosted via next/font (src/app/fonts.ts) —
+     the typography of the unified-workspace mockups. The webfont variables
+     are mounted on <html> by this app's root layout; everything after the
+     first comma is the var() fallback, so a sibling app that imports this
+     stylesheet without loading the fonts (e.g. the private-suite designer)
+     degrades to the previous system stacks. */
+  --app-font-sans: var(--app-webfont-sans, "Inter", "Aptos", "Segoe UI", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif);
+  --app-font-mono: var(--app-webfont-mono, "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
   --font-inter: var(--app-font-sans);
   --background: #ffffff;
   --foreground: #171717;
@@ -33,6 +39,18 @@
   --radius-md: 0.5rem;
   --shadow-subtle: 0 1px 2px rgb(15 23 42 / 0.06);
   --control-height: 2.5rem;
+}
+
+/* Radix Themes resets typography inside <Theme> to its own
+   --default-font-family stack, which would bypass the app fonts everywhere
+   the layout wraps content in RadixTheme (i.e. the whole app). Point the
+   Radix font tokens at the app tokens instead. `html` prefix: layouts import
+   this file before @radix-ui/themes/styles.css, so a bare `.radix-themes`
+   would lose the cascade to Radix's own token declarations. */
+html .radix-themes {
+  --default-font-family: var(--app-font-sans);
+  --heading-font-family: var(--app-font-sans);
+  --code-font-family: var(--app-font-mono);
 }
 
 /* ===== THEME SYSTEM ===== */
