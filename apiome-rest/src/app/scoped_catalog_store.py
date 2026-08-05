@@ -45,6 +45,7 @@ __all__ = [
     "PATH_COLUMNS",
     "SHARED_DOMAIN_ID",
     "ScopedPage",
+    "canonical_id",
     "clamp_page_size",
     "load_classes_by_domain",
     "load_classes_by_ids",
@@ -216,7 +217,7 @@ def _group_by(rows: Iterable[Dict[str, Any]], key: str) -> Dict[Any, List[Dict[s
     return grouped
 
 
-def _canonical(value: Any) -> str:
+def canonical_id(value: Any) -> str:
     """The one spelling of an id that two sides can be compared on.
 
     A psycopg2 ``uuid`` column arrives as :class:`uuid.UUID` while the request carried text, and
@@ -247,8 +248,8 @@ def _missing(requested: Sequence[str], found: Iterable[Dict[str, Any]]) -> List[
         The unresolved ids, in the caller's own spelling — that is what a client has to match them
         back against its selection.
     """
-    resolved = {_canonical(row["id"]) for row in found}
-    return [candidate for candidate in requested if _canonical(candidate) not in resolved]
+    resolved = {canonical_id(row["id"]) for row in found}
+    return [candidate for candidate in requested if canonical_id(candidate) not in resolved]
 
 
 # ─── Class reads ─────────────────────────────────────────────────────────────

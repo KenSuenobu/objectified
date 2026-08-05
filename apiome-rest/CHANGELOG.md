@@ -5,6 +5,87 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.257.0] - 2026-08-04
+
+### Added
+- **Schema↔path consumption index (DUW-1.4, private-suite#2571)** — Five surfaces
+  of the unified workspace need to know which operations consume which classes and
+  *how*: the combined lens's edges (solid amber for a schema named directly by a
+  request or response, dashed rose for one reached through a parent class), the
+  tree's per-path `Schemas` rows (`Customer 200`, `Address nested`), the palette's
+  "find every path that consumes X" action, the inspector's `Consumes` list, and
+  the status bar's `N schema↔path links` chip. Today's derivation is the designer's
+  `createAllEdges` — O(classes×properties) over a full-catalog fetch, and
+  schema↔schema only; it has never known that an *operation* consumes anything.
+  `GET /v1/workspace/{tenant}/version/{version_id}/consumption` answers it from
+  the server, in seven statements.
+
+  Every edge names both members, how the consumption arrives (`request`,
+  `parameter`, `response.<status>`) and — for a nested one — the chain of classes
+  it hangs off, so one response drives all five surfaces. The facts arrive twice:
+  flat in `edges`, the shape the canvas draws, and rolled up per path in `paths`,
+  the shape the tree nests under a path with the badge each row prints.
+  `link_count` counts operation↔class edges, `path_link_count` distinct path↔class
+  pairs.
+
+  Five decisions are load-bearing:
+
+  - **A reference is a `$ref` anywhere in a payload.** The catalog stores an
+    operation's schemas as a `class_id` column, an inline schema or a legacy `data`
+    blob, and a class's own references as `$ref`, `items.$ref`,
+    `allOf`/`anyOf`/`oneOf`, or any of those nested inside another. Enumerating the
+    shapes would mean re-deriving the emitter's rules in reverse and losing an edge
+    whenever they gained a case, so the resolver walks the JSON and collects every
+    `$ref` — exactly the set of names the emitted document carries. Only the tables
+    the emitter reads are indexed (`shared_path_response`(`_content`),
+    `shared_path_request_body_content`, `shared_path_parameter`); the V028-era
+    tables V031–V034 superseded are read by nothing, and indexing them would invent
+    edges no exported document contains.
+
+  - **Nesting is resolved per class, not per operation, and breadth-first.** Two
+    operations returning `Customer` reach the same descendants through the same
+    edges, so the walk runs once per class and is memoized — walking per operation
+    would be the client-side derivation moved to the server and multiplied by the
+    operation count. Breadth-first makes `via` the *shortest* parent chain, and
+    ties break on class name, so "nested via X" is a property of the catalog rather
+    than of row order. Cycles terminate by construction: the visited set includes
+    the root, so a self-referencing class and a mutual pair are each walked once
+    and the root is never nested under itself. Depth is capped at 6 hops
+    (`depth_cap`) and a graph continuing past it says so through `depth_capped`.
+
+  - **A directly named class is never also nested.** The canvas draws one line
+    between two nodes, and the solid one is the truthful description.
+
+  - **The scope narrows paths; the graph is always whole.** `domain_id` and
+    `path_ids` are mutually exclusive path selectors; `class_ids` narrows the class
+    side and composes with either, because "which of these classes does
+    `customers/` consume" is a real question. The class filter is applied *after*
+    the walk — filtering the graph first would drop the very parents a nested edge
+    is reached through, so "every path that consumes `Address`" would miss every
+    path that reaches it through `Customer`, which is most of them. A
+    domain-scoped answer therefore still names classes outside the domain, which is
+    what "nested via parent" means.
+
+  - **Caching is content-addressed.** The index is computed on read and never
+    persisted (no table in v1); the response carries a strong `ETag` digested from
+    the body, which keys it on version content by construction *and* on the scope —
+    something a stored version-content hash would not do — so a repeat read is a
+    `304` until the index actually changes. Same convention as the APX-3.4 agent
+    outputs.
+
+  Bounded and honest about it: `edge_limit` caps the edge list at 5000 with
+  `truncated` set, and there is no cursor, because an edge means nothing without
+  both members it connects. Unresolvable path or class ids come back in
+  `missing_ids` rather than being silently absent, and the two id selectors share
+  the DUW-1.2 cap of 200 per request. Verified against a seeded 218-path /
+  250-class catalog under `pg_virtualenv`: the mockup's
+  Customer/Address/ContactMethod × 4 operations reproduced edge for edge including
+  `nested via parent` and the status bar's six path↔class pairs, a self-referencing
+  class and a mutual pair terminating on stored rows, seven statements whatever the
+  scope, and p95 ≈ 5.3 ms against the epic's 300 ms budget. No migration: V242's
+  `domain_id` indexes and the existing `version_id` indexes cover the reads. The
+  BFF routes and typed client are DUW-1.5.
+
 ## [1.256.0] - 2026-08-04
 
 ### Added
