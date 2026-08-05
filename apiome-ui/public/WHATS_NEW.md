@@ -20,6 +20,7 @@ We continue to improve the platform based on your feedback with improvements and
 - Repository: you can now choose what an auto-refresh does when it finds a spec you edited in Apiome after it was first imported (repository detail → Settings → **Refresh conflicts**). **Hold for review** stays the default and changes nothing: the refresh is skipped and the file is flagged, so nothing is overwritten until someone looks. **Overwrite** lets the repository win — the divergence is still recorded, so you can always see what was replaced. **New branch** keeps both, landing the refresh on a new branch instead of touching your edited version. Set it once for the repository, and override it for the one file that needs to differ; clearing an override puts that file back on whatever the repository is set to next, not on a stale copy of today's choice
 - UI/UX: Updates look and feel for tabs
 - UI/UX: Added tabbed sections to Style Guides
+- UI/UX: Softened the font of the entire application
 - Primitives
   - Major UX improvements in the import functionality
   - Shows unregistered namespaces that were detected
