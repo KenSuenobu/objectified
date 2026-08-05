@@ -5,6 +5,29 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.258.0] - 2026-08-05
+
+### Added
+- **Response status codes on the scoped path read (DUW-4.3, private-suite#2583)** —
+  The unified workspace's paths lens draws every operation as a lane, and a lane ends
+  in the codes it answers with (`200·400·401`), coloured by method. Those codes were
+  the one thing on the lane the scoped read did not carry: `GET
+  /v1/workspace/{tenant}/version/{version_id}/paths` shipped each operation's
+  `operation_id`, `summary` and `deprecated` flag and left everything about a response
+  with the per-path `/full` endpoint. That is right for a response *body* — schemas,
+  content types and examples are inspector-sized data for one selected operation — but
+  a status code is a label the canvas prints on every lane it draws, and there is no
+  number of round trips between "one" and "one per operation" that answers it.
+
+  Each operation now carries `response_codes`: the status codes it declares, as
+  strings, ascending (`default` sorts after the numbers), empty when it declares none.
+  They come from a lateral aggregate over `path_operation_response_link` →
+  `shared_path_response` on the statement that was already reading the operations, so
+  a page of paths costs the same two statements it did before, whatever its size. The
+  codes are per *operation*, not per path: responses are shared per path in this schema
+  and linked per operation, so a read that rolled up by path would give every verb on
+  `/customers` the same list. Response bodies stay exactly where they were.
+
 ## [1.257.0] - 2026-08-04
 
 ### Added
