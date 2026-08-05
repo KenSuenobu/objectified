@@ -4581,6 +4581,18 @@ export async function createCanvasLayout(
 const CANVAS_LAYOUT_REVISION_RETAIN = 50;
 
 /**
+ * Re-encode a JSONB column read back off a row before it is written to another
+ * JSONB column. The driver hands back parsed JS values, and it serializes a JS
+ * array as a Postgres array literal rather than as JSON — so a `nodes`/`edges`
+ * array round-tripped as-is reaches the server as `{"{...}","{...}"}` and fails
+ * to parse. Null stays null so a nullable column keeps SQL NULL instead of
+ * picking up a JSON `null`.
+ */
+function encodeJsonbParam(value: unknown): string | null {
+  return value === null || value === undefined ? null : JSON.stringify(value);
+}
+
+/**
  * Update an existing canvas layout.
  * @param options.recordRevision When true, stores the previous row snapshot in canvas_layout_revisions
  *   (used for named layout saves). A revision is recorded whenever spatial layout fields are provided,
@@ -4649,11 +4661,11 @@ export async function updateCanvasLayout(
         [
           layoutId,
           nextRevision,
-          currentRow.viewport,
-          currentRow.nodes,
-          currentRow.edges,
-          currentRow.grid_settings,
-          currentRow.minimap_settings,
+          encodeJsonbParam(currentRow.viewport),
+          encodeJsonbParam(currentRow.nodes),
+          encodeJsonbParam(currentRow.edges),
+          encodeJsonbParam(currentRow.grid_settings),
+          encodeJsonbParam(currentRow.minimap_settings),
           revisionUserId
         ]
       );
