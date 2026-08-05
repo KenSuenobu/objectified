@@ -437,6 +437,36 @@ class TestLoadPathsByIds:
         assert "pod.operation_id" in ops_query
         assert "LEFT JOIN" in ops_query  # an operation with no description row still appears
 
+    def test_operations_carry_the_status_codes_they_declare(self):
+        # The paths lens draws `200·400·401` on every lane (private-suite#2583); the aggregate
+        # rides the statement the operations already cost rather than buying one per operation.
+        conn = FakeConnection([[path_row(PATH_A, "/a")], []])
+        load_paths_by_ids(FakeDb(conn), version_id=VERSION, path_ids=[PATH_A])
+
+        ops_query = conn.statements[1][0]
+        assert "path_operation_response_link" in ops_query
+        assert "shared_path_response" in ops_query
+        assert "array_agg(spr.status_code ORDER BY spr.status_code)" in ops_query
+        # An operation that declares none renders an empty lane, not a missing key.
+        assert "COALESCE(codes.response_codes, ARRAY[]::text[])" in ops_query
+
+    def test_the_status_codes_cost_no_extra_statement(self):
+        conn = FakeConnection([[path_row(PATH_A, "/a"), path_row(PATH_B, "/b")], []])
+        load_paths_by_ids(FakeDb(conn), version_id=VERSION, path_ids=[PATH_A, PATH_B])
+
+        assert len(conn.statements) == 2
+
+    def test_the_response_bodies_themselves_stay_with_the_per_path_read(self):
+        # Only the label is bulk-read: schemas, content types and examples are inspector-sized
+        # data for one selected operation, which is the habit this endpoint exists to break.
+        conn = FakeConnection([[path_row(PATH_A, "/a")], []])
+        load_paths_by_ids(FakeDb(conn), version_id=VERSION, path_ids=[PATH_A])
+
+        ops_query = conn.statements[1][0]
+        assert "shared_path_response_content" not in ops_query
+        assert "inline_schema" not in ops_query
+        assert "spr.data" not in ops_query
+
     def test_operations_order_by_http_method(self):
         conn = FakeConnection([[path_row(PATH_A, "/a")], []])
         load_paths_by_ids(FakeDb(conn), version_id=VERSION, path_ids=[PATH_A])

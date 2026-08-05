@@ -303,9 +303,12 @@ async def get_scoped_paths(
     """Paths with their operations, scoped to a selection or a domain folder.
 
     The bulk form of ``GET /v1/paths/{tenant}/{version}/{path}/full``'s first query: each path
-    carries its operations, each operation its ``operation_id``, ``summary`` and ``deprecated``
-    flag. Parameters, request bodies and responses stay with the per-path endpoint — those are
-    inspector-sized data for one selected operation.
+    carries its operations, each operation its ``operation_id``, ``summary``, ``deprecated`` flag
+    and ``response_codes`` — the status codes it declares, as strings, in ascending order, empty
+    when it declares none. Parameters, request bodies and the responses *themselves*
+    (descriptions, schemas, content types, examples) stay with the per-path endpoint: those are
+    inspector-sized data for one selected operation, whereas a status code is a label the paths
+    lens draws on every lane (private-suite#2583).
     """
     tenant_id = _tenant_id(auth_data)
     _assert_version_in_tenant(version_id, tenant_id)

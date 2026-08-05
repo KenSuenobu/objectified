@@ -161,6 +161,21 @@ CREATE TABLE apiome.path_operation_description (
     metadata JSONB,
     UNIQUE (path_operation_id)
 );
+CREATE TABLE apiome.shared_path_response (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    version_path_id UUID NOT NULL REFERENCES apiome.version_path(id) ON DELETE CASCADE,
+    status_code VARCHAR(10) NOT NULL,
+    description TEXT,
+    UNIQUE (version_path_id, status_code)
+);
+CREATE TABLE apiome.path_operation_response_link (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    path_operation_id UUID NOT NULL REFERENCES apiome.path_operation(id) ON DELETE CASCADE,
+    shared_path_response_id UUID NOT NULL
+        REFERENCES apiome.shared_path_response(id) ON DELETE CASCADE,
+    metadata JSONB,
+    UNIQUE (path_operation_id, shared_path_response_id)
+);
 """
 
 #: A catalog of the size the acceptance criteria name. The bulk rows exist to be *not* returned:
@@ -228,6 +243,9 @@ INSERT INTO apiome.path_operation (id, version_path_id, operation) VALUES
   ('00000000-0000-4000-8000-00000000aa02'::uuid, '{CUSTOMERS_PATH}'::uuid, 'POST'),
   ('00000000-0000-4000-8000-00000000aa01'::uuid, '{CUSTOMERS_PATH}'::uuid, 'GET');
 
+INSERT INTO apiome.path_operation (id, version_path_id, operation) VALUES
+  ('00000000-0000-4000-8000-00000000aa04'::uuid, '{CUSTOMER_PATH}'::uuid, 'GET');
+
 INSERT INTO apiome.path_operation (version_path_id, operation)
 SELECT id, 'GET' FROM apiome.version_path
  WHERE version_id = '{VERSION}'::uuid AND pathname LIKE '/v1/bulk/%';
@@ -236,6 +254,26 @@ SELECT id, 'GET' FROM apiome.version_path
 INSERT INTO apiome.path_operation_description (path_operation_id, operation_id, summary, metadata)
 VALUES ('00000000-0000-4000-8000-00000000aa01'::uuid, 'listCustomers', 'List customers',
         '{{"deprecated": true}}'::jsonb);
+
+-- Responses are shared per *path* and linked per *operation*, which is the whole reason the lane's
+-- codes cannot be read off the path: every code below belongs to `/v1/customers`, and no operation
+-- declares all of them. DELETE is linked to none, so the empty case is seeded rather than assumed.
+INSERT INTO apiome.shared_path_response (id, version_path_id, status_code) VALUES
+  ('00000000-0000-4000-8000-00000000bb01'::uuid, '{CUSTOMERS_PATH}'::uuid, '200'),
+  ('00000000-0000-4000-8000-00000000bb02'::uuid, '{CUSTOMERS_PATH}'::uuid, '400'),
+  ('00000000-0000-4000-8000-00000000bb03'::uuid, '{CUSTOMERS_PATH}'::uuid, '401'),
+  ('00000000-0000-4000-8000-00000000bb04'::uuid, '{CUSTOMERS_PATH}'::uuid, '201'),
+  ('00000000-0000-4000-8000-00000000bb05'::uuid, '{CUSTOMERS_PATH}'::uuid, 'default'),
+  ('00000000-0000-4000-8000-00000000bb06'::uuid, '{CUSTOMER_PATH}'::uuid,  '404');
+
+-- Linked out of ascending order, so the ORDER BY inside the aggregate is doing real work.
+INSERT INTO apiome.path_operation_response_link (path_operation_id, shared_path_response_id) VALUES
+  ('00000000-0000-4000-8000-00000000aa01'::uuid, '00000000-0000-4000-8000-00000000bb03'::uuid),
+  ('00000000-0000-4000-8000-00000000aa01'::uuid, '00000000-0000-4000-8000-00000000bb01'::uuid),
+  ('00000000-0000-4000-8000-00000000aa01'::uuid, '00000000-0000-4000-8000-00000000bb02'::uuid),
+  ('00000000-0000-4000-8000-00000000aa02'::uuid, '00000000-0000-4000-8000-00000000bb05'::uuid),
+  ('00000000-0000-4000-8000-00000000aa02'::uuid, '00000000-0000-4000-8000-00000000bb04'::uuid),
+  ('00000000-0000-4000-8000-00000000aa04'::uuid, '00000000-0000-4000-8000-00000000bb06'::uuid);
 """
 
 #: Domains are assigned explicitly rather than left to V242's backfill: the backfill's heuristics
@@ -534,6 +572,41 @@ class TestScopedPaths:
         page = load_paths_by_ids(catalog, version_id=VERSION, path_ids=[CUSTOMERS_PATH])
 
         assert page.items[0]["summary"] == "Customer collection"
+
+    def test_each_operation_carries_the_codes_it_declares_not_its_paths(self, catalog):
+        # The lane the paths lens draws (private-suite#2583) prints one operation's codes. All
+        # five codes below hang off `/v1/customers`; GET declares three of them and POST two, so
+        # a read that rolled up by path — the easy mistake — would give both the same list.
+        page = load_paths_by_ids(catalog, version_id=VERSION, path_ids=[CUSTOMERS_PATH])
+        operations = {op["operation"]: op for op in page.items[0]["operations"]}
+
+        assert operations["GET"]["response_codes"] == ["200", "400", "401"]
+        # Ascending by code, with `default` after the numbers rather than first.
+        assert operations["POST"]["response_codes"] == ["201", "default"]
+        # An operation that declares none renders an empty lane, not a missing key.
+        assert operations["DELETE"]["response_codes"] == []
+
+    def test_codes_do_not_leak_between_paths_read_in_one_page(self, catalog):
+        page = load_paths_by_ids(
+            catalog, version_id=VERSION, path_ids=[CUSTOMERS_PATH, CUSTOMER_PATH]
+        )
+        by_path = {p["pathname"]: p for p in page.items}
+        item = by_path["/v1/customers/{customerId}"]["operations"][0]
+
+        assert item["response_codes"] == ["404"]
+        collection_get = next(
+            op for op in by_path["/v1/customers"]["operations"] if op["operation"] == "GET"
+        )
+        assert collection_get["response_codes"] == ["200", "400", "401"]
+
+    def test_the_codes_travel_with_a_domain_page_too(self, catalog):
+        page = load_paths_by_domain(
+            catalog, version_id=VERSION, domain_id=CUSTOMERS_DOMAIN, limit=10
+        )
+        collection = next(p for p in page.items if p["pathname"] == "/v1/customers")
+        get = next(op for op in collection["operations"] if op["operation"] == "GET")
+
+        assert get["response_codes"] == ["200", "400", "401"]
 
     def test_a_domain_page_reports_the_whole_folder(self, catalog):
         page = load_paths_by_domain(

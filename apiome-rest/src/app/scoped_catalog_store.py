@@ -447,11 +447,17 @@ def _hydrate_paths(cursor: Any, paths: List[Dict[str, Any]]) -> List[Dict[str, A
 
     Each operation carries its description's ``operation_id``, ``summary`` and ``deprecated`` flag,
     because the mockup's paths lens draws the operationId beside every verb and the tree would
-    otherwise need a second round trip per operation to render a row. The rest of an operation's
-    detail — parameters, request body, responses — deliberately stays with
-    ``GET /v1/paths/{tenant}/{version}/{path}/full``: that is inspector-sized data for one
-    selected operation, and shipping it for a whole folder is the habit this endpoint exists to
-    break.
+    otherwise need a second round trip per operation to render a row. It also carries
+    ``response_codes`` — the status codes it declares, and nothing else about them — because the
+    lens draws them on every lane (``200·400·401``, private-suite#2583) and there is no other
+    number of round trips between "one" and "one per operation" that answers that.
+
+    The rest of an operation's detail — parameters, request body, response bodies, schemas,
+    examples — deliberately stays with ``GET /v1/paths/{tenant}/{version}/{path}/full``: that is
+    inspector-sized data for one selected operation, and shipping it for a whole folder is the
+    habit this endpoint exists to break. A status code is a label the canvas renders, not a body:
+    it costs one lateral aggregate on the statement already being run, no extra statement, and no
+    row per response.
 
     Args:
         cursor: An open cursor.
@@ -465,6 +471,10 @@ def _hydrate_paths(cursor: Any, paths: List[Dict[str, Any]]) -> List[Dict[str, A
 
     path_ids = [str(path["id"]) for path in paths]
 
+    # `shared_path_response` is unique per (path, status_code) and the link table per
+    # (operation, response), so an operation cannot reach one status code twice — the aggregate
+    # needs no DISTINCT. The text ordering is the one the rest of the codebase reads these in and
+    # is the order the lane prints: `200 < 201 < 2XX` (digits before letters), `default` last.
     operations = _fetch_all(
         cursor,
         """
@@ -472,9 +482,17 @@ def _hydrate_paths(cursor: Any, paths: List[Dict[str, Any]]) -> List[Dict[str, A
                po.created_at, po.updated_at,
                pod.operation_id,
                pod.summary,
-               COALESCE((pod.metadata->>'deprecated')::boolean, false) AS deprecated
+               COALESCE((pod.metadata->>'deprecated')::boolean, false) AS deprecated,
+               COALESCE(codes.response_codes, ARRAY[]::text[]) AS response_codes
           FROM apiome.path_operation po
           LEFT JOIN apiome.path_operation_description pod ON pod.path_operation_id = po.id
+          LEFT JOIN LATERAL (
+              SELECT array_agg(spr.status_code ORDER BY spr.status_code) AS response_codes
+                FROM apiome.path_operation_response_link porl
+                JOIN apiome.shared_path_response spr
+                  ON spr.id = porl.shared_path_response_id
+               WHERE porl.path_operation_id = po.id
+          ) codes ON TRUE
          WHERE po.version_path_id = ANY(%s::uuid[])
          ORDER BY po.version_path_id,
                   CASE po.operation
