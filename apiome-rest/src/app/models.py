@@ -296,6 +296,150 @@ class WorkspaceSummary(BaseModel):
         from_attributes = True
 
 
+class ConsumptionVia(BaseModel):
+    """One hop on the parent chain that reaches a nested class (DUW-1.4)."""
+    class_id: str
+    class_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ConsumptionEdgeOut(BaseModel):
+    """One operation consuming one class — an edge of the combined lens (DUW-1.4).
+
+    ``direct`` is the solid amber edge the legend calls "direct schema in request/response";
+    ``nested`` is the dashed rose "nested via parent class", and its ``via`` chain names the
+    parents it hangs off. An operation that both names a class and reaches it through another is
+    one *direct* edge, not two: the canvas draws one line between two nodes.
+    """
+    path_id: str
+    pathname: str
+    domain_id: Optional[str] = Field(
+        default=None, description="The path's folder, or null for the 'shared/' bucket."
+    )
+    operation_uuid: str = Field(description="The apiome.path_operation UUID.")
+    method: str = Field(description="HTTP method, upper-case.")
+    operation_id: Optional[str] = Field(
+        default=None, description="The spec's operationId, drawn beside the verb."
+    )
+    class_id: str
+    class_name: Optional[str] = None
+    kind: str = Field(description="'direct' or 'nested'.")
+    roles: List[str] = Field(
+        default_factory=list,
+        description="How the consumption arrives: 'request', 'parameter', or "
+                    "'response.<status>'. A nested edge carries the roles of the direct class it "
+                    "hangs off, so a client can filter 'everything this response drags in' "
+                    "without re-walking the graph.",
+    )
+    via: List[ConsumptionVia] = Field(
+        default_factory=list,
+        description="For a nested edge, the shortest chain of classes from the directly consumed "
+                    "one to this class's parent. Empty for a direct edge.",
+    )
+    depth: int = Field(
+        description="Hops from the directly consumed class — 0 for direct, len(via) otherwise."
+    )
+
+    class Config:
+        from_attributes = True
+
+
+class ConsumptionPathClass(BaseModel):
+    """One schema row of a path's ``Schemas`` block in the tree (DUW-1.4)."""
+    class_id: str
+    class_name: Optional[str] = None
+    kind: str = Field(description="'direct' or 'nested', direct winning when a path's operations "
+                                  "disagree.")
+    roles: List[str] = Field(default_factory=list, description="Every role across the path's "
+                                                               "operations.")
+    badge: str = Field(
+        description="What the tree prints beside the row: a status code ('200'), 'body', 'param', "
+                    "or 'nested'."
+    )
+    via: List[ConsumptionVia] = Field(default_factory=list)
+    depth: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class ConsumptionPath(BaseModel):
+    """One path's ``Schemas`` block — its classes rolled up across its operations (DUW-1.4)."""
+    path_id: str
+    pathname: str
+    domain_id: Optional[str] = None
+    classes: List[ConsumptionPathClass] = Field(default_factory=list)
+
+    class Config:
+        from_attributes = True
+
+
+class ConsumptionIndex(BaseModel):
+    """Which operations consume which classes, and how (DUW-1.4).
+
+    Computed on read from the version's own content, never persisted, and content-addressed with a
+    strong ``ETag`` so a repeat read is a 304 until the version changes.
+    """
+    version_id: str
+    scope: str = Field(description="Which question was answered: 'version', 'domain' or "
+                                   "'path_ids'.")
+    domain_id: Optional[str] = Field(
+        default=None, description="The folder scoped to, when scope is 'domain'. Null means the "
+                                  "'shared/' bucket, not 'unscoped' — read scope to tell them "
+                                  "apart."
+    )
+    path_ids: List[str] = Field(
+        default_factory=list, description="The paths scoped to, when scope is 'path_ids'."
+    )
+    class_ids: List[str] = Field(
+        default_factory=list,
+        description="The class filter applied, if any. Combines with either path scope: it "
+                    "narrows the class side of every edge, never the path side.",
+    )
+    missing_ids: List[str] = Field(
+        default_factory=list,
+        description="Ids the caller named — paths or classes — that this version does not hold. "
+                    "Reported rather than dropped: a silently short answer would leave a hole on "
+                    "the canvas with no way to know why.",
+    )
+    edges: List[ConsumptionEdgeOut] = Field(
+        default_factory=list,
+        description="One entry per operation↔class pair, ordered by pathname, then method, then "
+                    "direct before nested, then class name.",
+    )
+    paths: List[ConsumptionPath] = Field(
+        default_factory=list,
+        description="The same facts rolled up per path — the tree's per-path Schemas block. Paths "
+                    "that consume nothing are absent rather than present-and-empty.",
+    )
+    link_count: int = Field(
+        description="Edges returned — what the canvas draws and the status bar's "
+                    "'N schema↔path links' chip counts."
+    )
+    path_link_count: int = Field(
+        description="Distinct path↔class pairs, for a status bar that counts links per path "
+                    "rather than per operation."
+    )
+    depth_cap: int = Field(description="How far a nested edge may sit from its direct root.")
+    depth_capped: bool = Field(
+        default=False,
+        description="A reference graph continued past depth_cap, so some far nested edges are "
+                    "not in this answer.",
+    )
+    edge_limit: int = Field(description="Most edges one response may carry.")
+    truncated: bool = Field(
+        default=False,
+        description="The edge list was cut at edge_limit. Narrow the scope — by domain, by path "
+                    "set, or by class set — rather than paging: an edge only means something "
+                    "beside the members it connects.",
+    )
+
+    class Config:
+        from_attributes = True
+
+
 class ScopedCatalogPage(BaseModel):
     """One bounded slice of a version's catalog (DUW-1.2).
 
