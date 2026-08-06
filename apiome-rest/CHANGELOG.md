@@ -5,6 +5,43 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.260.0] - 2026-08-05
+
+### Added
+- **Programmable custom palette actions (DUW-5.5, private-suite#2592)** — The ⌘K
+  palette's `Actions` band has been a fixed registry of five built-ins since DUW-5.4;
+  "programmable" means a tenant defining its own rows — `Open runbook for {subject}`
+  against every class whose name contains `Invoice` — and that needs the definitions
+  stored somewhere durable and tenant-scoped. `apiome.workspace_custom_actions` (V243)
+  and the CRUD surface under `/v1/workspace/{tenant_slug}/custom-actions` are that
+  storage.
+
+  A definition is a *declaration*, never a script. Its matcher is a subject kind
+  (`class`, `path`, `property`, `any`) plus an optional case-insensitive label
+  substring; its effects are an ordered list drawn from a closed vocabulary —
+  `hydrate-set`, `lens-switch`, `open-inspector-tab`, `run-consumption-query`,
+  `open-url` — each element validated down to exactly the fields its type declares
+  (`workspace_custom_action_rules`). Unknown keys are rejected rather than ignored, so
+  a typo cannot become an effect that silently does less than its author meant;
+  `open-url` accepts absolute `https://` URLs only, with no embedded credentials,
+  because `javascript:` and `data:` are not effects, they are payloads. Anything
+  resembling SDK-script execution stays out of scope by design and defers to the
+  DUW-7.4 sandbox. The database independently pins the outer shape — a JSON array of
+  1–5 elements under 16KB — so no write path can park a script here even if it skipped
+  the service schema.
+
+  Tenancy comes from the token, never the URL: every statement is scoped by the
+  caller's tenant, so another tenant's action is a 404 — whether it exists is not
+  something this API confirms. Reads are open to any authenticated member (the palette
+  performs one for everyone); writes require an attributable user holding
+  VERSIONS/EDIT, the same gate the domain folders use for reorganizing what everyone
+  sees. Deletes are soft, and a live action's name is unique per tenant
+  case-insensitively — two rows both drawn as `Open runbook…` in one band would be
+  indistinguishable to the reader. The management page that will wrap this API is
+  DUW-8.2 (private-suite#2602); until it lands, these routes are the management
+  surface, which is why every 422 names the offending field as a pointer
+  (`effects[1].lens`).
+
 ## [1.258.0] - 2026-08-05
 
 ### Added
