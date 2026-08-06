@@ -296,6 +296,75 @@ class WorkspaceSummary(BaseModel):
         from_attributes = True
 
 
+class WorkspacePropertyOwner(BaseModel):
+    """One class carrying a matched property (DUW-5.3).
+
+    Shallow for the same reason every other workspace row is: the palette draws a name, an icon and
+    a folder badge, and hydrates the class only once the reader opens it.
+    """
+    class_id: str
+    class_name: str
+    domain_id: Optional[str] = Field(
+        default=None,
+        description="The folder this class lives in, or null for the derived 'shared/' bucket.",
+    )
+    kind: str = Field(
+        description="Which tree group the class belongs to: 'object', 'enum' or 'union' — the same "
+                    "classification the domain summary applies, so one icon table serves both."
+    )
+
+    class Config:
+        from_attributes = True
+
+
+class WorkspacePropertyHit(BaseModel):
+    """One property name the query matched, and how widely the version uses it (DUW-5.3)."""
+    name: str
+    class_count: int = Field(
+        description="How many of this version's live classes carry a property of this name — the "
+                    "band's 'used by 14 classes'. Counted over the whole version, not over the "
+                    "owners listed below, and counting each class once however many times it "
+                    "carries the name."
+    )
+    owners: List[WorkspacePropertyOwner] = Field(
+        default_factory=list,
+        description="The classes carrying it, alphabetically, capped at owner_limit. The first is "
+                    "the one an activation opens.",
+    )
+    owners_truncated: bool = Field(
+        default=False,
+        description="More classes carry this property than are listed here. Their number is "
+                    "class_count.",
+    )
+
+    class Config:
+        from_attributes = True
+
+
+class WorkspacePropertySearch(BaseModel):
+    """Properties of one version whose name matches a query (DUW-5.3).
+
+    The ⌘K palette's `Properties` band in one read. The usage counts are the point: they are an
+    aggregate over ``apiome.class_properties`` that a client could only reproduce by hydrating
+    every class in the version, which is the read the unified workspace exists to delete.
+    """
+    version_id: str = Field(description="The version record UUID this searched.")
+    query: str = Field(description="The query these hits answer, normalized (trimmed).")
+    properties: List[WorkspacePropertyHit] = Field(default_factory=list)
+    total: int = Field(
+        description="Property names that matched in total, before the cap — so a client can say "
+                    "its answer is a slice rather than implying it is the whole."
+    )
+    limit: int = Field(description="Property names returned at most: the limit actually applied.")
+    owner_limit: int = Field(description="Owning classes per property: the limit actually applied.")
+    truncated: bool = Field(
+        default=False, description="More names matched than this response lists."
+    )
+
+    class Config:
+        from_attributes = True
+
+
 class ConsumptionVia(BaseModel):
     """One hop on the parent chain that reaches a nested class (DUW-1.4)."""
     class_id: str
