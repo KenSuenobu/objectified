@@ -82,6 +82,7 @@ from .verification_policy_routes import router as verification_policy_router
 from .scrub_policy_routes import router as scrub_policy_router
 from .consumption_index_routes import router as consumption_index_router
 from .scoped_catalog_routes import router as scoped_catalog_router
+from .workspace_property_routes import router as workspace_property_router
 from .workspace_summary_routes import router as workspace_summary_router
 from .rate_limit import RateLimitMiddleware
 from .registry_audit_routes import router as registry_audit_router
@@ -126,7 +127,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.121.0",
+    version="1.122.0",
 )
 
 
@@ -305,6 +306,7 @@ app.include_router(project_tags_router)
 app.include_router(domains_router)
 app.include_router(scoped_catalog_router)
 app.include_router(workspace_summary_router)
+app.include_router(workspace_property_router)
 app.include_router(consumption_index_router)
 app.include_router(paths_router)
 app.include_router(migration_plans_router)
