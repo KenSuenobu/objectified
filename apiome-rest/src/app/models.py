@@ -365,6 +365,93 @@ class WorkspacePropertySearch(BaseModel):
         from_attributes = True
 
 
+class WorkspaceCustomActionOut(BaseModel):
+    """One tenant-defined ⌘K palette action (DUW-5.5).
+
+    A declaration, never a script: the matcher (``subject`` kind plus the optional
+    ``nameContains`` narrowing) says when the palette offers the row, and ``effects`` is an
+    ordered list from the closed vocabulary of ``workspace_custom_action_rules`` saying what ⏎
+    performs. The workspace client interprets it; nothing here executes.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    name: str = Field(
+        description="The sentence the palette row draws; may carry one {subject} placeholder."
+    )
+    subject: Literal["class", "path", "property", "any"] = Field(
+        description="Which kind of palette subject the action offers itself for."
+    )
+    name_contains: Optional[str] = Field(
+        default=None,
+        alias="nameContains",
+        description="Case-insensitive substring the subject's label must contain; null matches "
+                    "every subject of the kind.",
+    )
+    effects: List[Dict[str, Any]] = Field(
+        description="Ordered declarative effects, each validated against the closed vocabulary."
+    )
+    created_by: Optional[str] = Field(default=None, alias="createdBy")
+    created_at: datetime = Field(alias="createdAt")
+    updated_at: datetime = Field(alias="updatedAt")
+
+
+class WorkspaceCustomActionListResponse(BaseModel):
+    """Envelope for listing a tenant's custom palette actions."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool = True
+    actions: List[WorkspaceCustomActionOut] = Field(default_factory=list)
+
+
+class WorkspaceCustomActionCreate(BaseModel):
+    """Request body for creating a custom palette action.
+
+    Field-level validation (vocabulary, lengths, URL scheme) lives in
+    ``workspace_custom_action_rules`` rather than here, so the rules stay pure, testable and
+    shared with PATCH; ``extra="forbid"`` still rejects unknown top-level fields at the schema.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    name: str
+    subject: str
+    name_contains: Optional[str] = Field(default=None, alias="nameContains")
+    effects: List[Dict[str, Any]]
+
+
+class WorkspaceCustomActionUpdate(BaseModel):
+    """Request body for patching a custom palette action (all fields optional).
+
+    ``nameContains`` distinguishes absent from null: absent leaves the narrowing alone, an
+    explicit null clears it. The route reads ``model_fields_set`` to tell the two apart.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    name: Optional[str] = None
+    subject: Optional[str] = None
+    name_contains: Optional[str] = Field(default=None, alias="nameContains")
+    effects: Optional[List[Dict[str, Any]]] = None
+
+
+def workspace_custom_action_out_from_row(row: Dict[str, Any]) -> WorkspaceCustomActionOut:
+    """Project a ``workspace_custom_actions`` row onto the wire model."""
+    effects = row.get("effects")
+    return WorkspaceCustomActionOut(
+        id=str(row["id"]),
+        name=str(row["name"]),
+        subject=row["subject"],
+        name_contains=row.get("name_contains"),
+        effects=list(effects) if isinstance(effects, list) else [],
+        created_by=str(row["created_by"]) if row.get("created_by") else None,
+        created_at=row["created_at"],
+        updated_at=row["updated_at"],
+    )
+
+
 class ConsumptionVia(BaseModel):
     """One hop on the parent chain that reaches a nested class (DUW-1.4)."""
     class_id: str

@@ -82,6 +82,7 @@ from .verification_policy_routes import router as verification_policy_router
 from .scrub_policy_routes import router as scrub_policy_router
 from .consumption_index_routes import router as consumption_index_router
 from .scoped_catalog_routes import router as scoped_catalog_router
+from .workspace_custom_action_routes import router as workspace_custom_action_router
 from .workspace_property_routes import router as workspace_property_router
 from .workspace_summary_routes import router as workspace_summary_router
 from .rate_limit import RateLimitMiddleware
@@ -307,6 +308,7 @@ app.include_router(domains_router)
 app.include_router(scoped_catalog_router)
 app.include_router(workspace_summary_router)
 app.include_router(workspace_property_router)
+app.include_router(workspace_custom_action_router)
 app.include_router(consumption_index_router)
 app.include_router(paths_router)
 app.include_router(migration_plans_router)
