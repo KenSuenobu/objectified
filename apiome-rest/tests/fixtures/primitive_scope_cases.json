@@ -1,0 +1,119 @@
+{
+  "revision": 1,
+  "ticket": "DWX-3.1 (private-suite#2683)",
+  "purpose": "Canonical scope-classification cases shared by three implementations of one rule: the designer's classifyPrimitive (TypeScript), app.primitives_search_store.classify_scope (Python) and SCOPE_EXPRESSION (SQL). A copy of this file lives at private-suite/designer/tests/fixtures/primitive-scope-cases.json; the two must be edited together, and each side's test asserts this revision number so a one-sided edit fails loudly.",
+  "cases": [
+    {
+      "why": "The JSON Schema base types: a system row filed under a .../primitives namespace.",
+      "is_system": true,
+      "namespace": "std/v0/primitives",
+      "source": "human",
+      "expected": "standard"
+    },
+    {
+      "why": "A trailing slash is not part of the namespace; both sides strip it before matching.",
+      "is_system": true,
+      "namespace": "std/v0/primitives/",
+      "source": "human",
+      "expected": "standard"
+    },
+    {
+      "why": "Several trailing slashes strip the same way (the client uses /\\/+$/, not a single cut).",
+      "is_system": true,
+      "namespace": "std/v0/primitives///",
+      "source": "human",
+      "expected": "standard"
+    },
+    {
+      "why": "The separator is required: a namespace merely named 'primitives' is not a .../primitives one.",
+      "is_system": true,
+      "namespace": "primitives",
+      "source": "human",
+      "expected": "core"
+    },
+    {
+      "why": "The word must end the namespace, not merely appear in it.",
+      "is_system": true,
+      "namespace": "std/v0/primitives/extras",
+      "source": "human",
+      "expected": "core"
+    },
+    {
+      "why": "A leading-slash namespace still ends with /primitives.",
+      "is_system": true,
+      "namespace": "/primitives",
+      "source": "human",
+      "expected": "standard"
+    },
+    {
+      "why": "The derived and composite system types.",
+      "is_system": true,
+      "namespace": "std/v0/types",
+      "source": "human",
+      "expected": "core"
+    },
+    {
+      "why": "A namespace-less system row is Core, never Standard — the client's `p.namespace &&` guard.",
+      "is_system": true,
+      "namespace": null,
+      "source": "human",
+      "expected": "core"
+    },
+    {
+      "why": "An empty namespace is falsy on the client and empty in SQL; both land on Core.",
+      "is_system": true,
+      "namespace": "",
+      "source": "human",
+      "expected": "core"
+    },
+    {
+      "why": "A namespace of nothing but slashes reduces to empty, so it is Core.",
+      "is_system": true,
+      "namespace": "///",
+      "source": "human",
+      "expected": "core"
+    },
+    {
+      "why": "An imported *system* row is still classified by namespace: provenance only splits tenant rows.",
+      "is_system": true,
+      "namespace": "std/v0/types",
+      "source": "imported",
+      "expected": "core"
+    },
+    {
+      "why": "A tenant row authored in the app.",
+      "is_system": false,
+      "namespace": "tenant/acme/types",
+      "source": "human",
+      "expected": "tenant"
+    },
+    {
+      "why": "A tenant row is Tenant whatever its namespace looks like — .../primitives does not promote it.",
+      "is_system": false,
+      "namespace": "std/v0/primitives",
+      "source": "human",
+      "expected": "tenant"
+    },
+    {
+      "why": "A tenant row that arrived through an import is Custom.",
+      "is_system": false,
+      "namespace": "tenant/acme/imported",
+      "source": "imported",
+      "expected": "custom"
+    },
+    {
+      "why": "Provenance is matched exactly: only the literal 'imported' is Custom.",
+      "is_system": false,
+      "namespace": "tenant/acme/types",
+      "source": "Imported",
+      "expected": "tenant"
+    },
+    {
+      "why": "A legacy flat primitive with no namespace is a plain tenant type.",
+      "is_system": false,
+      "namespace": null,
+      "source": "human",
+      "expected": "tenant"
+    }
+  ]
+}

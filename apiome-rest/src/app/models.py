@@ -757,6 +757,72 @@ class PrimitiveSchema(BaseModel):
         from_attributes = True
 
 
+class PrimitiveSearchItem(PrimitiveSchema):
+    """One primitive as the bounded search returns it — DWX-3.1 (private-suite#2683).
+
+    The classic row plus the type-picker tab it belongs to. The tab is computed server-side (see
+    ``app.primitives_search_store.SCOPE_EXPRESSION``) rather than left to the client, because a
+    scope-filtered read whose rows the client re-classified differently would put a type in a tab
+    the server says is empty. A separate model rather than a field on ``PrimitiveSchema`` so the
+    classic listing's contract is untouched.
+    """
+    scope: str = Field(
+        description="The type-picker tab this row belongs to: standard, core, tenant or custom."
+    )
+
+
+class PrimitiveScopeCounts(BaseModel):
+    """How many primitives match a search in each of the four type-picker tabs (DWX-3.1).
+
+    Counted over the *match set* — the query, category and namespace narrowings — before the
+    ``scope`` filter and before ``limit``, so the badges are the sizes of the four tabs for the
+    query the reader typed. A count derived from the returned page would read as the page size
+    forever.
+    """
+    standard: int = 0
+    core: int = 0
+    tenant: int = 0
+    custom: int = 0
+
+
+class PrimitiveSearchPage(BaseModel):
+    """One bounded page of the primitives registry — DWX-3.1 (private-suite#2683).
+
+    What ``GET /v1/primitives/{tenant_slug}`` answers once the caller asks a bounded question
+    (``q``, ``scope``, ``namespace``, ``limit`` or ``cursor``). Callers that ask none of them still
+    get the classic unbounded array, so the pre-existing dialogs are unaffected.
+    """
+    items: List[PrimitiveSearchItem] = Field(
+        default_factory=list, description="At most `limit` primitives, in the picker's order."
+    )
+    counts: PrimitiveScopeCounts = Field(
+        default_factory=PrimitiveScopeCounts,
+        description="Per-tab totals over the match set, for the picker's badges.",
+    )
+    total: int = Field(
+        default=0,
+        description="Rows matching within the applied scope, before the limit — so a client can "
+                    "say its page is a slice rather than implying it is the whole.",
+    )
+    limit: int = Field(default=0, description="Rows returned at most: the limit actually applied.")
+    query: str = Field(default="", description="The query these rows answer, normalized (trimmed).")
+    scope: Optional[str] = Field(default=None, description="The scope filter applied, if any.")
+    namespace: Optional[str] = Field(
+        default=None, description="The namespace filter applied, normalized, if any."
+    )
+    category: Optional[str] = Field(default=None, description="The category filter applied, if any.")
+    next_cursor: Optional[str] = Field(
+        default=None,
+        description="Opaque token for the following page, or null when this was the last one.",
+    )
+    truncated: bool = Field(
+        default=False, description="More rows matched in this scope than the page carries."
+    )
+
+    class Config:
+        from_attributes = True
+
+
 class PrimitiveCreateRequest(BaseModel):
     """Request model for creating a primitive."""
     name: str

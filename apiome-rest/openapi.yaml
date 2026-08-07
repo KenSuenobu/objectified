@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.116.0
+  version: 1.123.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -1506,11 +1506,33 @@ paths:
       tags:
       - primitives
       summary: List Primitives
-      description: "List all primitives for a tenant.\n\nSupports authentication via:\n\
-        - JWT token in Authorization header (Bearer token)\n- API key in X-API-Key\
-        \ header\n\nArgs:\n    tenant_slug: The tenant slug\n    category: Optional\
-        \ category filter\n    auth_data: Authentication data (injected by dependency)\n\
-        \nReturns:\n    List of primitives for the tenant"
+      description: "List a tenant's primitives — unbounded by default, bounded on\
+        \ request (DWX-3.1, #2683).\n\nTwo shapes behind one path, and which one a\
+        \ caller gets is decided by the question it asked:\n\n- **No bounded parameter**\
+        \ — the classic behaviour, unchanged: a JSON array of every primitive\n  the\
+        \ tenant can see, optionally filtered by ``category``. The classic property\
+        \ dialogs read\n  this and are unaffected by this ticket.\n- **Any of ``q``,\
+        \ ``scope``, ``namespace``, ``limit`` or ``cursor``** — a\n  :class:`~app.models.PrimitiveSearchPage`:\
+        \ at most ``limit`` rows, the four type-picker tab\n  counts for the query,\
+        \ and a cursor to continue with. A tenant that has imported a standard\n \
+        \ library has thousands of rows, and no surface in the unified workspace may\
+        \ read a catalog of\n  that size; this is the shape that lets the type picker\
+        \ exist.\n\nThe two shapes list the same catalog — the same visibility scope,\
+        \ the same\n``(namespace, name)`` deduplication — so a primitive is never\
+        \ visible through one and not the\nother. See :mod:`app.primitives_search_store`.\n\
+        \nSupports authentication via:\n- JWT token in Authorization header (Bearer\
+        \ token)\n- API key in X-API-Key header\n\nArgs:\n    tenant_slug: The tenant\
+        \ slug. Decorative: the authoritative tenant is the token's, so a\n      \
+        \  slug naming another tenant cannot widen what this returns.\n    category:\
+        \ Optional category filter, honoured by both shapes.\n    q: Optional text\
+        \ to match; see :data:`_SEARCH_Q_DESCRIPTION`.\n    scope: Optional type-picker\
+        \ tab to restrict to.\n    namespace: Optional exact namespace filter.\n \
+        \   limit: Optional page size, clamped to :data:`app.primitives_search_store.MAX_LIMIT`.\n\
+        \    cursor: Optional opaque continuation token.\n    auth_data: Authentication\
+        \ data (injected by dependency)\n\nReturns:\n    Every visible primitive,\
+        \ or one bounded page of them with the tab counts.\n\nRaises:\n    HTTPException:\
+        \ 400 when ``scope`` is not one of the four tabs, or when ``cursor`` did not\n\
+        \        come from this endpoint."
       operationId: list_primitives_v1_primitives__tenant_slug__get
       parameters:
       - name: tenant_slug
@@ -1533,6 +1555,97 @@ paths:
           description: Filter by category
           title: Category
         description: Filter by category
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Primitivesq schema.
+          - type: 'null'
+            description: List Primitivesq schema.
+          description: Text to match, case-insensitively, anywhere in a primitive's
+            name, namespace, registry $ref, description or tags — the five fields
+            the type picker's client-side filter has always spanned — or in its JSON
+            Schema $id. '%' and '_' match themselves rather than acting as wildcards.
+            Asking this, or any other bounded parameter, switches the response to
+            the paged envelope.
+          title: Q
+        description: Text to match, case-insensitively, anywhere in a primitive's
+          name, namespace, registry $ref, description or tags — the five fields the
+          type picker's client-side filter has always spanned — or in its JSON Schema
+          $id. '%' and '_' match themselves rather than acting as wildcards. Asking
+          this, or any other bounded parameter, switches the response to the paged
+          envelope.
+      - name: scope
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Primitivesscope schema.
+          - type: 'null'
+            description: List Primitivesscope schema.
+          description: 'Restrict to one type-picker tab: standard, core, tenant, custom.
+            Classified server-side exactly as the designer''s `classifyPrimitive`
+            classifies it, so a tab and its badge can never disagree. An unrecognized
+            value is a 400, never an empty page.'
+          title: Scope
+        description: 'Restrict to one type-picker tab: standard, core, tenant, custom.
+          Classified server-side exactly as the designer''s `classifyPrimitive` classifies
+          it, so a tab and its badge can never disagree. An unrecognized value is
+          a 400, never an empty page.'
+      - name: namespace
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Primitivesnamespace schema.
+          - type: 'null'
+            description: List Primitivesnamespace schema.
+          description: Restrict to one registry namespace, e.g. `std/v0/types`. Matched
+            exactly against the namespace with its trailing slashes removed; child
+            namespaces are not included.
+          title: Namespace
+        description: Restrict to one registry namespace, e.g. `std/v0/types`. Matched
+          exactly against the namespace with its trailing slashes removed; child namespaces
+          are not included.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            minimum: 0
+            description: List Primitiveslimit schema.
+          - type: 'null'
+            description: List Primitiveslimit schema.
+          description: Rows to return. Default 25, clamped to 100; 0 returns the tab
+            counts alone. No response ever exceeds it — that bound is the reason this
+            endpoint exists.
+          title: Limit
+        description: Rows to return. Default 25, clamped to 100; 0 returns the tab
+          counts alone. No response ever exceeds it — that bound is the reason this
+          endpoint exists.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Primitivescursor schema.
+          - type: 'null'
+            description: List Primitivescursor schema.
+          description: Opaque token from a previous response's `next_cursor`, to continue
+            after its last row. Keyset rather than an offset, so a primitive created
+            mid-scroll cannot make a row repeat or vanish. A token this endpoint did
+            not mint is a 400.
+          title: Cursor
+        description: Opaque token from a previous response's `next_cursor`, to continue
+          after its last row. Keyset rather than an offset, so a primitive created
+          mid-scroll cannot make a row repeat or vanish. A token this endpoint did
+          not mint is a 400.
       - name: authorization
         in: header
         required: false
@@ -1564,12 +1677,17 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PrimitiveSchema'
+                anyOf:
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/PrimitiveSchema'
+                  description: Response payload for list primitivesresponse200.
+                - $ref: '#/components/schemas/PrimitiveSearchPage'
                 title: Response List Primitives V1 Primitives  Tenant Slug  Get
                 description: Response List Primitives V1 Primitives  Tenant Slug  Get
                   schema.
+        '400':
+          description: Unknown `scope`, or a `cursor` this endpoint did not mint.
         '422':
           description: Validation Error
           content:
@@ -3551,10 +3669,17 @@ paths:
       - classes
       summary: Get Classes With Properties And Tags
       description: "Get all classes for a version with their properties and tags.\n\
-        \nSupports authentication via JWT token or API key.\n\nArgs:\n    tenant_slug:\
-        \ The tenant slug\n    version_id: The version ID\n    auth_data: Authentication\
-        \ data (injected by dependency)\n\nReturns:\n    List of classes with properties\
-        \ and tags"
+        \nDeprecated for canvas hydration (DUW-1.2, private-suite#2569). This read\
+        \ has no LIMIT: it\nreturns every class of the version with every property\
+        \ and every tag, which is why a large\ncatalog makes the designer canvas choke.\
+        \ Surfaces that need a *selection* — the unified\nworkspace and anything else\
+        \ hydrating what a user picked — must use\n``GET /v1/workspace/{tenant_slug}/version/{version_id}/classes``\
+        \ with ``class_ids`` or\n``domain_id`` instead. It stays here, unchanged,\
+        \ for the surfaces that genuinely do need the\nwhole version (exports, scoring,\
+        \ readiness sweeps).\n\nSupports authentication via JWT token or API key.\n\
+        \nArgs:\n    tenant_slug: The tenant slug\n    version_id: The version ID\n\
+        \    auth_data: Authentication data (injected by dependency)\n\nReturns:\n\
+        \    List of classes with properties and tags"
       operationId: get_classes_with_properties_and_tags_v1_classes__tenant_slug__version__version_id__with_properties_tags_get
       parameters:
       - name: tenant_slug
@@ -15578,6 +15703,1435 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for remove tag from classresponse422.
+  /v1/domains/{tenant_slug}/version/{version_id}:
+    get:
+      tags:
+      - domains
+      summary: List Domains
+      description: 'List a version''s domain folders in tree order, with ``shared/``
+        last.
+
+
+        The synthetic ``shared/`` entry is always present, including for a version
+        that has no domains
+
+        at all — where it is the whole tree.'
+      operationId: list_domains_v1_domains__tenant_slug__version__version_id__get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Id
+          description: Version Id schema.
+        description: Version identifier or semantic version label, depending on the
+          route.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Domainsauthorization schema.
+          - type: 'null'
+            description: List Domainsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Domains Xapikey schema.
+          - type: 'null'
+            description: List Domains Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list domains.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DomainSchema'
+                title: Response List Domains V1 Domains  Tenant Slug  Version  Version
+                  Id  Get
+                description: Response List Domains V1 Domains  Tenant Slug  Version  Version
+                  Id  Get schema.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for list domainsresponse422.
+    post:
+      tags:
+      - domains
+      summary: Create Domain
+      description: Create a domain folder in a version.
+      operationId: create_domain_v1_domains__tenant_slug__version__version_id__post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Id
+          description: Version Id schema.
+        description: Version identifier or semantic version label, depending on the
+          route.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Create Domainauthorization schema.
+          - type: 'null'
+            description: Create Domainauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Create Domain Xapikey schema.
+          - type: 'null'
+            description: Create Domain Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainCreateRequest'
+              description: Request body for create domainrequest.
+        description: Request body for create domain.
+      responses:
+        '201':
+          description: Successful response for create domain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainSchema'
+                description: Response payload for create domainresponse201.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for create domainresponse422.
+  /v1/domains/{tenant_slug}/{domain_id}:
+    patch:
+      tags:
+      - domains
+      summary: Update Domain
+      description: Rename or reorder a domain folder.
+      operationId: update_domain_v1_domains__tenant_slug___domain_id__patch
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Domain Id
+          description: Domain Id schema.
+        description: Path parameter identifying the domain id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Update Domainauthorization schema.
+          - type: 'null'
+            description: Update Domainauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Update Domain Xapikey schema.
+          - type: 'null'
+            description: Update Domain Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainUpdateRequest'
+              description: Request body for update domainrequest.
+        description: Request body for update domain.
+      responses:
+        '200':
+          description: Successful response for update domain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainSchema'
+                description: Response payload for update domainresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for update domainresponse422.
+    delete:
+      tags:
+      - domains
+      summary: Delete Domain
+      description: 'Delete a domain folder, moving its classes and paths to ``shared/``.
+
+
+        Returns the number of members released, so the caller can report what moved
+        rather than
+
+        asserting that nothing was lost.'
+      operationId: delete_domain_v1_domains__tenant_slug___domain_id__delete
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Domain Id
+          description: Domain Id schema.
+        description: Path parameter identifying the domain id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Delete Domainauthorization schema.
+          - type: 'null'
+            description: Delete Domainauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Delete Domain Xapikey schema.
+          - type: 'null'
+            description: Delete Domain Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for delete domain.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Delete Domain V1 Domains  Tenant Slug   Domain Id  Delete
+                description: Response Delete Domain V1 Domains  Tenant Slug   Domain
+                  Id  Delete schema.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for delete domainresponse422.
+  /v1/domains/{tenant_slug}/classes/{class_id}:
+    put:
+      tags:
+      - domains
+      summary: Assign Class Domain
+      description: 'Move a class into a domain, or into ``shared/`` with ``domain_id:
+        null``.'
+      operationId: assign_class_domain_v1_domains__tenant_slug__classes__class_id__put
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: class_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Class Id
+          description: Class Id schema.
+        description: Class identifier within the version.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Assign Class Domainauthorization schema.
+          - type: 'null'
+            description: Assign Class Domainauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Assign Class Domain Xapikey schema.
+          - type: 'null'
+            description: Assign Class Domain Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainAssignmentRequest'
+              description: Request body for assign class domainrequest.
+        description: Request body for assign class domain.
+      responses:
+        '200':
+          description: Successful response for assign class domain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainMemberSchema'
+                description: Response payload for assign class domainresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for assign class domainresponse422.
+  /v1/domains/{tenant_slug}/paths/{path_id}:
+    put:
+      tags:
+      - domains
+      summary: Assign Path Domain
+      description: 'Move a path into a domain, or into ``shared/`` with ``domain_id:
+        null``.'
+      operationId: assign_path_domain_v1_domains__tenant_slug__paths__path_id__put
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: path_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Path Id
+          description: Path Id schema.
+        description: Path identifier within the version.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Assign Path Domainauthorization schema.
+          - type: 'null'
+            description: Assign Path Domainauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Assign Path Domain Xapikey schema.
+          - type: 'null'
+            description: Assign Path Domain Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainAssignmentRequest'
+              description: Request body for assign path domainrequest.
+        description: Request body for assign path domain.
+      responses:
+        '200':
+          description: Successful response for assign path domain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainMemberSchema'
+                description: Response payload for assign path domainresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for assign path domainresponse422.
+  /v1/workspace/{tenant_slug}/version/{version_id}/classes:
+    get:
+      tags:
+      - workspace
+      summary: Get Scoped Classes
+      description: 'Classes with their properties and tags, scoped to a selection
+        or a domain folder.
+
+
+        Requesting three ids returns those three classes and nothing else, whatever
+        the version
+
+        contains. Requesting a domain returns one page of that folder plus ``total``,
+        so the workspace
+
+        can decide whether hydrating the rest fits its node budget before asking for
+        it.'
+      operationId: get_scoped_classes_v1_workspace__tenant_slug__version__version_id__classes_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Id
+          description: Version Id schema.
+        description: Version identifier or semantic version label, depending on the
+          route.
+      - name: class_ids
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              type: string
+            description: Get Scoped Classesclassids schema.
+          - type: 'null'
+            description: Get Scoped Classesclassids schema.
+          description: Explicit selection. Repeat the parameter or comma-separate
+            the values; duplicates collapse. At most 200 ids per request — a larger
+            selection is a 400, not a truncated response. Mutually exclusive with
+            domain_id.
+          title: Class Ids
+        description: Explicit selection. Repeat the parameter or comma-separate the
+          values; duplicates collapse. At most 200 ids per request — a larger selection
+          is a 400, not a truncated response. Mutually exclusive with domain_id.
+      - name: domain_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Scoped Classesdomainid schema.
+          - type: 'null'
+            description: Get Scoped Classesdomainid schema.
+          description: Domain folder to list, or the literal 'shared' for items with
+            no domain. Paginated. Mutually exclusive with the id selector.
+          title: Domain Id
+        description: Domain folder to list, or the literal 'shared' for items with
+          no domain. Paginated. Mutually exclusive with the id selector.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            minimum: 1
+            description: Get Scoped Classeslimit schema.
+          - type: 'null'
+            description: Get Scoped Classeslimit schema.
+          description: Page size for a domain listing, default 50, clamped to 200.
+            Ignored for an id selection, which is bounded by the id cap instead.
+          title: Limit
+        description: Page size for a domain listing, default 50, clamped to 200. Ignored
+          for an id selection, which is bounded by the id cap instead.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Scoped Classescursor schema.
+          - type: 'null'
+            description: Get Scoped Classescursor schema.
+          description: Opaque token from a previous next_cursor.
+          title: Cursor
+        description: Opaque token from a previous next_cursor.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Scoped Classesauthorization schema.
+          - type: 'null'
+            description: Get Scoped Classesauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Scoped Classes Xapikey schema.
+          - type: 'null'
+            description: Get Scoped Classes Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get scoped classes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScopedCatalogPage'
+                description: Response payload for get scoped classesresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get scoped classesresponse422.
+  /v1/workspace/{tenant_slug}/version/{version_id}/paths:
+    get:
+      tags:
+      - workspace
+      summary: Get Scoped Paths
+      description: 'Paths with their operations, scoped to a selection or a domain
+        folder.
+
+
+        The bulk form of ``GET /v1/paths/{tenant}/{version}/{path}/full``''s first
+        query: each path
+
+        carries its operations, each operation its ``operation_id``, ``summary``,
+        ``deprecated`` flag
+
+        and ``response_codes`` — the status codes it declares, as strings, in ascending
+        order, empty
+
+        when it declares none. Parameters, request bodies and the responses *themselves*
+
+        (descriptions, schemas, content types, examples) stay with the per-path endpoint:
+        those are
+
+        inspector-sized data for one selected operation, whereas a status code is
+        a label the paths
+
+        lens draws on every lane (private-suite#2583).'
+      operationId: get_scoped_paths_v1_workspace__tenant_slug__version__version_id__paths_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Id
+          description: Version Id schema.
+        description: Version identifier or semantic version label, depending on the
+          route.
+      - name: path_ids
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              type: string
+            description: Get Scoped Pathspathids schema.
+          - type: 'null'
+            description: Get Scoped Pathspathids schema.
+          description: Explicit selection. Repeat the parameter or comma-separate
+            the values; duplicates collapse. At most 200 ids per request — a larger
+            selection is a 400, not a truncated response. Mutually exclusive with
+            domain_id.
+          title: Path Ids
+        description: Explicit selection. Repeat the parameter or comma-separate the
+          values; duplicates collapse. At most 200 ids per request — a larger selection
+          is a 400, not a truncated response. Mutually exclusive with domain_id.
+      - name: domain_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Scoped Pathsdomainid schema.
+          - type: 'null'
+            description: Get Scoped Pathsdomainid schema.
+          description: Domain folder to list, or the literal 'shared' for items with
+            no domain. Paginated. Mutually exclusive with the id selector.
+          title: Domain Id
+        description: Domain folder to list, or the literal 'shared' for items with
+          no domain. Paginated. Mutually exclusive with the id selector.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            minimum: 1
+            description: Get Scoped Pathslimit schema.
+          - type: 'null'
+            description: Get Scoped Pathslimit schema.
+          description: Page size for a domain listing, default 50, clamped to 200.
+            Ignored for an id selection, which is bounded by the id cap instead.
+          title: Limit
+        description: Page size for a domain listing, default 50, clamped to 200. Ignored
+          for an id selection, which is bounded by the id cap instead.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Scoped Pathscursor schema.
+          - type: 'null'
+            description: Get Scoped Pathscursor schema.
+          description: Opaque token from a previous next_cursor.
+          title: Cursor
+        description: Opaque token from a previous next_cursor.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Scoped Pathsauthorization schema.
+          - type: 'null'
+            description: Get Scoped Pathsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Scoped Paths Xapikey schema.
+          - type: 'null'
+            description: Get Scoped Paths Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get scoped paths.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScopedCatalogPage'
+                description: Response payload for get scoped pathsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get scoped pathsresponse422.
+  /v1/workspace/{tenant_slug}/version/{version_id}/summary:
+    get:
+      tags:
+      - workspace
+      summary: Get Workspace Summary
+      description: 'Every domain folder of a version, counted, with shallow member
+        lists.
+
+
+        Enough to render all three tree lens panels — combined, schemas and paths
+        — with no further
+
+        request: each folder arrives with its four counts, its class rows (kind-labelled,
+        so the
+
+        ``Schemas`` and ``Enums & unions`` groups need no second pass) and its path
+        rows with their
+
+        operations.'
+      operationId: get_workspace_summary_v1_workspace__tenant_slug__version__version_id__summary_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Id
+          description: Version Id schema.
+        description: Version identifier or semantic version label, depending on the
+          route.
+      - name: member_limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            minimum: 0
+            description: Get Workspace Summarymemberlimit schema.
+          - type: 'null'
+            description: Get Workspace Summarymemberlimit schema.
+          description: Shallow member rows per folder, per kind. Default 50, clamped
+            to 200; 0 returns counts alone, which is what a tree needs after an edit
+            that changed a badge but not the folder on screen. Counts are unaffected
+            — they always cover the whole folder.
+          title: Member Limit
+        description: Shallow member rows per folder, per kind. Default 50, clamped
+          to 200; 0 returns counts alone, which is what a tree needs after an edit
+          that changed a badge but not the folder on screen. Counts are unaffected
+          — they always cover the whole folder.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Workspace Summaryauthorization schema.
+          - type: 'null'
+            description: Get Workspace Summaryauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Workspace Summary Xapikey schema.
+          - type: 'null'
+            description: Get Workspace Summary Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get workspace summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceSummary'
+                description: Response payload for get workspace summaryresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get workspace summaryresponse422.
+  /v1/workspace/{tenant_slug}/version/{version_id}/properties:
+    get:
+      tags:
+      - workspace
+      summary: Search Workspace Properties
+      description: 'Which properties of this version a query names, and how many classes
+        carry each.
+
+
+        Enough to draw the palette''s `Properties` band with no further request: each
+        hit carries the
+
+        usage count the band prints and the classes behind it, so ⏎ opens the top
+        owner and the
+
+        secondary action lists the rest without asking again.'
+      operationId: search_workspace_properties_v1_workspace__tenant_slug__version__version_id__properties_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Id
+          description: Version Id schema.
+        description: Version identifier or semantic version label, depending on the
+          route.
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Search Workspace Propertiesq schema.
+          - type: 'null'
+            description: Search Workspace Propertiesq schema.
+          description: The property name to search for, matched case-insensitively
+            anywhere in the name. Shorter than 2 characters answers with no hits rather
+            than with most of the catalog; '%' and '_' match themselves rather than
+            acting as wildcards.
+          title: Q
+        description: The property name to search for, matched case-insensitively anywhere
+          in the name. Shorter than 2 characters answers with no hits rather than
+          with most of the catalog; '%' and '_' match themselves rather than acting
+          as wildcards.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            minimum: 0
+            description: Search Workspace Propertieslimit schema.
+          - type: 'null'
+            description: Search Workspace Propertieslimit schema.
+          description: Property names to return. Default 25, clamped to 50; 0 returns
+            no hits. 'total' always reports how many matched.
+          title: Limit
+        description: Property names to return. Default 25, clamped to 50; 0 returns
+          no hits. 'total' always reports how many matched.
+      - name: owner_limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            minimum: 0
+            description: Search Workspace Propertiesownerlimit schema.
+          - type: 'null'
+            description: Search Workspace Propertiesownerlimit schema.
+          description: Owning classes listed per property. Default 10, clamped to
+            50; 0 returns counts alone, which costs one statement instead of two.
+            'class_count' is unaffected — it always covers the whole version.
+          title: Owner Limit
+        description: Owning classes listed per property. Default 10, clamped to 50;
+          0 returns counts alone, which costs one statement instead of two. 'class_count'
+          is unaffected — it always covers the whole version.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Search Workspace Propertiesauthorization schema.
+          - type: 'null'
+            description: Search Workspace Propertiesauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Search Workspace Properties Xapikey schema.
+          - type: 'null'
+            description: Search Workspace Properties Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for search workspace properties.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspacePropertySearch'
+                description: Response payload for search workspace propertiesresponse200.
+        '404':
+          description: Version not found in this tenant.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for search workspace propertiesresponse422.
+  /v1/workspace/{tenant_slug}/custom-actions:
+    get:
+      tags:
+      - workspace
+      summary: List Custom Actions
+      description: List the tenant's live custom actions, alphabetically by name.
+      operationId: list_custom_actions_v1_workspace__tenant_slug__custom_actions_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Custom Actionsauthorization schema.
+          - type: 'null'
+            description: List Custom Actionsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Custom Actions Xapikey schema.
+          - type: 'null'
+            description: List Custom Actions Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list custom actions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceCustomActionListResponse'
+                description: Response payload for list custom actionsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for list custom actionsresponse422.
+    post:
+      tags:
+      - workspace
+      summary: Create Custom Action
+      description: Create a custom action in the tenant.
+      operationId: create_custom_action_v1_workspace__tenant_slug__custom_actions_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Create Custom Actionauthorization schema.
+          - type: 'null'
+            description: Create Custom Actionauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Create Custom Action Xapikey schema.
+          - type: 'null'
+            description: Create Custom Action Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCustomActionCreate'
+              description: Request body for create custom actionrequest.
+        description: Request body for create custom action.
+      responses:
+        '201':
+          description: Successful response for create custom action.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceCustomActionOut'
+                description: Response payload for create custom actionresponse201.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for create custom actionresponse422.
+  /v1/workspace/{tenant_slug}/custom-actions/{action_id}:
+    get:
+      tags:
+      - workspace
+      summary: Get Custom Action
+      description: Fetch one custom action in the tenant.
+      operationId: get_custom_action_v1_workspace__tenant_slug__custom_actions__action_id__get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: action_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Action Id
+          description: Action Id schema.
+        description: Path parameter identifying the action id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Custom Actionauthorization schema.
+          - type: 'null'
+            description: Get Custom Actionauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Custom Action Xapikey schema.
+          - type: 'null'
+            description: Get Custom Action Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get custom action.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceCustomActionOut'
+                description: Response payload for get custom actionresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get custom actionresponse422.
+    patch:
+      tags:
+      - workspace
+      summary: Update Custom Action
+      description: 'Update a custom action''s name, matcher, or effects.
+
+
+        Only supplied fields change. The cross-field rule (a consumption query needs
+        a class subject)
+
+        is checked against the row as it *will be* — the supplied half merged over
+        the stored half —
+
+        so a PATCH cannot leave a contradiction behind by changing one side of it.'
+      operationId: update_custom_action_v1_workspace__tenant_slug__custom_actions__action_id__patch
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: action_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Action Id
+          description: Action Id schema.
+        description: Path parameter identifying the action id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Update Custom Actionauthorization schema.
+          - type: 'null'
+            description: Update Custom Actionauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Update Custom Action Xapikey schema.
+          - type: 'null'
+            description: Update Custom Action Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCustomActionUpdate'
+              description: Request body for update custom actionrequest.
+        description: Request body for update custom action.
+      responses:
+        '200':
+          description: Successful response for update custom action.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceCustomActionOut'
+                description: Response payload for update custom actionresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for update custom actionresponse422.
+    delete:
+      tags:
+      - workspace
+      summary: Delete Custom Action
+      description: Soft-delete a custom action, freeing its name for reuse.
+      operationId: delete_custom_action_v1_workspace__tenant_slug__custom_actions__action_id__delete
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: action_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Action Id
+          description: Action Id schema.
+        description: Path parameter identifying the action id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Delete Custom Actionauthorization schema.
+          - type: 'null'
+            description: Delete Custom Actionauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Delete Custom Action Xapikey schema.
+          - type: 'null'
+            description: Delete Custom Action Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for delete custom action.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: boolean
+                title: Response Delete Custom Action V1 Workspace  Tenant Slug  Custom
+                  Actions  Action Id  Delete
+                description: Response Delete Custom Action V1 Workspace  Tenant Slug  Custom
+                  Actions  Action Id  Delete schema.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for delete custom actionresponse422.
+  /v1/workspace/{tenant_slug}/version/{version_id}/consumption:
+    get:
+      tags:
+      - workspace
+      summary: Get Consumption Index
+      description: 'Which operations consume which classes in this version, directly
+        or through a parent.
+
+
+        Every edge carries both members, how the consumption arrives (``request``,
+        ``parameter``,
+
+        ``response.<status>``) and — for a nested one — the chain of classes it hangs
+        off, so the
+
+        combined lens, the tree, the palette, the inspector and the status bar all
+        render from one
+
+        request. The same facts arrive twice: flat in ``edges``, the shape the canvas
+        draws, and rolled
+
+        up per path in ``paths``, the shape the tree nests under a path.'
+      operationId: get_consumption_index_v1_workspace__tenant_slug__version__version_id__consumption_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Id
+          description: Version Id schema.
+        description: Version identifier or semantic version label, depending on the
+          route.
+      - name: domain_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Consumption Indexdomainid schema.
+          - type: 'null'
+            description: Get Consumption Indexdomainid schema.
+          description: Restrict to operations on paths in this folder, or the literal
+            'shared' for paths with no folder. Mutually exclusive with path_ids. Nested
+            edges may still name classes outside the folder — that is what 'nested
+            via parent' means.
+          title: Domain Id
+        description: Restrict to operations on paths in this folder, or the literal
+          'shared' for paths with no folder. Mutually exclusive with path_ids. Nested
+          edges may still name classes outside the folder — that is what 'nested via
+          parent' means.
+      - name: path_ids
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              type: string
+            description: Get Consumption Indexpathids schema.
+          - type: 'null'
+            description: Get Consumption Indexpathids schema.
+          description: Restrict to these paths. Repeat the parameter or comma-separate
+            the values; duplicates collapse. At most 200 ids per request. Mutually
+            exclusive with domain_id.
+          title: Path Ids
+        description: Restrict to these paths. Repeat the parameter or comma-separate
+          the values; duplicates collapse. At most 200 ids per request. Mutually exclusive
+          with domain_id.
+      - name: class_ids
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              type: string
+            description: Get Consumption Indexclassids schema.
+          - type: 'null'
+            description: Get Consumption Indexclassids schema.
+          description: Restrict to edges consuming these classes — 'every path that
+            consumes X'. Filters the class side only, so it composes with domain_id
+            or path_ids. At most 200 ids.
+          title: Class Ids
+        description: Restrict to edges consuming these classes — 'every path that
+          consumes X'. Filters the class side only, so it composes with domain_id
+          or path_ids. At most 200 ids.
+      - name: If-None-Match
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Consumption Index If None Match schema.
+          - type: 'null'
+            description: Get Consumption Index If None Match schema.
+          title: If-None-Match
+          description: If-None-Match schema.
+        description: ETag from a prior response; returns 304 when unchanged.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Consumption Indexauthorization schema.
+          - type: 'null'
+            description: Get Consumption Indexauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Consumption Index Xapikey schema.
+          - type: 'null'
+            description: Get Consumption Index Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get consumption index.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionIndex'
+                description: Response payload for get consumption indexresponse200.
+        '304':
+          description: Not modified (ETag matched If-None-Match).
+        '400':
+          description: Conflicting path selectors, or an id list over the cap.
+        '404':
+          description: Version, or scoped domain, not found in this tenant.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get consumption indexresponse422.
   /v1/paths/{tenant_slug}/{version_id}:
     get:
       tags:
@@ -28530,6 +30084,717 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for export insights auditresponse422.
+  /v1/slate/environments/{environment_id}/domains:
+    get:
+      tags:
+      - slate
+      summary: List Environment Domains
+      description: List a lane's custom domains with their DNS instructions and certificate
+        state.
+      operationId: list_environment_domains_v1_slate_environments__environment_id__domains_get
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Environment Id
+          description: Environment Id schema.
+        description: Path parameter identifying the environment id segment.
+      - name: tenantSlug
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Environment Domainstenant Slug schema.
+          - type: 'null'
+            description: List Environment Domainstenant Slug schema.
+          description: 'Tenant slug. Optional: the Slate routes read tenancy from
+            the credential, so a browser call carrying a session JWT does not need
+            to name a tenant in the URL.'
+          title: Tenantslug
+        description: 'Tenant slug. Optional: the Slate routes read tenancy from the
+          credential, so a browser call carrying a session JWT does not need to name
+          a tenant in the URL.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Environment Domainsauthorization schema.
+          - type: 'null'
+            description: List Environment Domainsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Environment Domains Xapikey schema.
+          - type: 'null'
+            description: List Environment Domains Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list environment domains.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainListResponse'
+                description: Response payload for list environment domainsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for list environment domainsresponse422.
+    post:
+      tags:
+      - slate
+      summary: Attach Environment Domain
+      description: 'Attach a hostname to a lane and answer with the DNS records that
+        make it work.
+
+
+        The domain starts unverified and with no certificate: nothing has been proven,
+        and because
+
+        ``/tls/authorize`` refuses an unverified host, nothing is being provisioned
+        either.'
+      operationId: attach_environment_domain_v1_slate_environments__environment_id__domains_post
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Environment Id
+          description: Environment Id schema.
+        description: Path parameter identifying the environment id segment.
+      - name: tenantSlug
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Attach Environment Domaintenant Slug schema.
+          - type: 'null'
+            description: Attach Environment Domaintenant Slug schema.
+          description: 'Tenant slug. Optional: the Slate routes read tenancy from
+            the credential, so a browser call carrying a session JWT does not need
+            to name a tenant in the URL.'
+          title: Tenantslug
+        description: 'Tenant slug. Optional: the Slate routes read tenancy from the
+          credential, so a browser call carrying a session JWT does not need to name
+          a tenant in the URL.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Attach Environment Domainauthorization schema.
+          - type: 'null'
+            description: Attach Environment Domainauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Attach Environment Domain Xapikey schema.
+          - type: 'null'
+            description: Attach Environment Domain Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachDomainRequest'
+              description: Request body for attach environment domainrequest.
+        description: Request body for attach environment domain.
+      responses:
+        '201':
+          description: Successful response for attach environment domain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainResponse'
+                description: Response payload for attach environment domainresponse201.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for attach environment domainresponse422.
+  /v1/slate/domains/{domain_id}:
+    get:
+      tags:
+      - slate
+      summary: Get Domain Detail
+      description: Return one domain with its DNS instructions, checklist and certificate
+        state.
+      operationId: get_domain_detail_v1_slate_domains__domain_id__get
+      parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Domain Id
+          description: Domain Id schema.
+        description: Path parameter identifying the domain id segment.
+      - name: tenantSlug
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Domain Detailtenant Slug schema.
+          - type: 'null'
+            description: Get Domain Detailtenant Slug schema.
+          description: 'Tenant slug. Optional: the Slate routes read tenancy from
+            the credential, so a browser call carrying a session JWT does not need
+            to name a tenant in the URL.'
+          title: Tenantslug
+        description: 'Tenant slug. Optional: the Slate routes read tenancy from the
+          credential, so a browser call carrying a session JWT does not need to name
+          a tenant in the URL.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Domain Detailauthorization schema.
+          - type: 'null'
+            description: Get Domain Detailauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Domain Detail Xapikey schema.
+          - type: 'null'
+            description: Get Domain Detail Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get domain detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainResponse'
+                description: Response payload for get domain detailresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get domain detailresponse422.
+    delete:
+      tags:
+      - slate
+      summary: Remove Domain
+      description: 'Detach a domain from its lane.
+
+
+        The row is deleted rather than tombstoned: it is what makes the global hostname
+        claim and the
+
+        issuance authorization true, and a retained row would keep a hostname claimed
+        against whoever
+
+        registers it next.'
+      operationId: remove_domain_v1_slate_domains__domain_id__delete
+      parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Domain Id
+          description: Domain Id schema.
+        description: Path parameter identifying the domain id segment.
+      - name: tenantSlug
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Remove Domaintenant Slug schema.
+          - type: 'null'
+            description: Remove Domaintenant Slug schema.
+          description: 'Tenant slug. Optional: the Slate routes read tenancy from
+            the credential, so a browser call carrying a session JWT does not need
+            to name a tenant in the URL.'
+          title: Tenantslug
+        description: 'Tenant slug. Optional: the Slate routes read tenancy from the
+          credential, so a browser call carrying a session JWT does not need to name
+          a tenant in the URL.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Remove Domainauthorization schema.
+          - type: 'null'
+            description: Remove Domainauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Remove Domain Xapikey schema.
+          - type: 'null'
+            description: Remove Domain Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '204':
+          description: Successful response for remove domain.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for remove domainresponse422.
+  /v1/slate/domains/{domain_id}/verify:
+    post:
+      tags:
+      - slate
+      summary: Verify Domain
+      description: 'Read the tenant''s public DNS now and record whether ownership
+        is proven.
+
+
+        A failed check is a 200 with ``verified: false``, not an error: "the record
+        is not there yet"
+
+        is the normal state of a domain someone attached ninety seconds ago, and answering
+        4xx would
+
+        make the screen show an error banner for the expected path. Only an inability
+        to *ask* — a
+
+        resolver that timed out, a truncated answer — is a 502, because that is a
+        statement about this
+
+        platform rather than about the tenant''s DNS.'
+      operationId: verify_domain_v1_slate_domains__domain_id__verify_post
+      parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Domain Id
+          description: Domain Id schema.
+        description: Path parameter identifying the domain id segment.
+      - name: tenantSlug
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Verify Domaintenant Slug schema.
+          - type: 'null'
+            description: Verify Domaintenant Slug schema.
+          description: 'Tenant slug. Optional: the Slate routes read tenancy from
+            the credential, so a browser call carrying a session JWT does not need
+            to name a tenant in the URL.'
+          title: Tenantslug
+        description: 'Tenant slug. Optional: the Slate routes read tenancy from the
+          credential, so a browser call carrying a session JWT does not need to name
+          a tenant in the URL.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Verify Domainauthorization schema.
+          - type: 'null'
+            description: Verify Domainauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Verify Domain Xapikey schema.
+          - type: 'null'
+            description: Verify Domain Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for verify domain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
+                description: Response payload for verify domainresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for verify domainresponse422.
+  /v1/slate/domains/{domain_id}/certificate:
+    post:
+      tags:
+      - slate
+      summary: Probe Domain Certificate
+      description: 'Complete a TLS handshake with the host and record what it is serving.
+
+
+        This is the whole of "Renew now" as an honest action. Renewal is the edge''s
+        job and it does it
+
+        on a schedule; what an operator actually wants from that button is confirmation,
+        so this
+
+        measures the live host and reports the certificate it found — including, when
+        the serial has
+
+        changed, that a renewal has already happened.
+
+
+        A probe that fails is recorded and returned as a 200 with ``tlsStatus: "error"``
+        and the
+
+        reason, for the same reason a failed DNS check is: an unreachable host is
+        a state to display,
+
+        not an exception to raise.'
+      operationId: probe_domain_certificate_v1_slate_domains__domain_id__certificate_post
+      parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Domain Id
+          description: Domain Id schema.
+        description: Path parameter identifying the domain id segment.
+      - name: tenantSlug
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Probe Domain Certificatetenant Slug schema.
+          - type: 'null'
+            description: Probe Domain Certificatetenant Slug schema.
+          description: 'Tenant slug. Optional: the Slate routes read tenancy from
+            the credential, so a browser call carrying a session JWT does not need
+            to name a tenant in the URL.'
+          title: Tenantslug
+        description: 'Tenant slug. Optional: the Slate routes read tenancy from the
+          credential, so a browser call carrying a session JWT does not need to name
+          a tenant in the URL.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Probe Domain Certificateauthorization schema.
+          - type: 'null'
+            description: Probe Domain Certificateauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Probe Domain Certificate Xapikey schema.
+          - type: 'null'
+            description: Probe Domain Certificate Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for probe domain certificate.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainResponse'
+                description: Response payload for probe domain certificateresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for probe domain certificateresponse422.
+  /v1/slate/domains/{domain_id}/primary:
+    post:
+      tags:
+      - slate
+      summary: Make Domain Primary
+      description: 'Make a domain the lane''s canonical host; the others become redirects
+        to it.
+
+
+        Refused for an unverified host: a canonical host that does not resolve here
+        would redirect
+
+        every alias to a name that fails, taking the working aliases down with it.'
+      operationId: make_domain_primary_v1_slate_domains__domain_id__primary_post
+      parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Domain Id
+          description: Domain Id schema.
+        description: Path parameter identifying the domain id segment.
+      - name: tenantSlug
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Make Domain Primarytenant Slug schema.
+          - type: 'null'
+            description: Make Domain Primarytenant Slug schema.
+          description: 'Tenant slug. Optional: the Slate routes read tenancy from
+            the credential, so a browser call carrying a session JWT does not need
+            to name a tenant in the URL.'
+          title: Tenantslug
+        description: 'Tenant slug. Optional: the Slate routes read tenancy from the
+          credential, so a browser call carrying a session JWT does not need to name
+          a tenant in the URL.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Make Domain Primaryauthorization schema.
+          - type: 'null'
+            description: Make Domain Primaryauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Make Domain Primary Xapikey schema.
+          - type: 'null'
+            description: Make Domain Primary Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for make domain primary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainResponse'
+                description: Response payload for make domain primaryresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for make domain primaryresponse422.
+  /v1/slate/domains/{domain_id}/renewal:
+    post:
+      tags:
+      - slate
+      summary: Set Domain Renewal
+      description: 'Switch automatic certificate renewal on or off.
+
+
+        Switching it off withdraws the edge''s authorization to obtain a certificate
+        for the host at
+
+        all, so it parks a domain immediately rather than in ninety days'' time.'
+      operationId: set_domain_renewal_v1_slate_domains__domain_id__renewal_post
+      parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Domain Id
+          description: Domain Id schema.
+        description: Path parameter identifying the domain id segment.
+      - name: tenantSlug
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Set Domain Renewaltenant Slug schema.
+          - type: 'null'
+            description: Set Domain Renewaltenant Slug schema.
+          description: 'Tenant slug. Optional: the Slate routes read tenancy from
+            the credential, so a browser call carrying a session JWT does not need
+            to name a tenant in the URL.'
+          title: Tenantslug
+        description: 'Tenant slug. Optional: the Slate routes read tenancy from the
+          credential, so a browser call carrying a session JWT does not need to name
+          a tenant in the URL.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Set Domain Renewalauthorization schema.
+          - type: 'null'
+            description: Set Domain Renewalauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Set Domain Renewal Xapikey schema.
+          - type: 'null'
+            description: Set Domain Renewal Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenewalRequest'
+              description: Request body for set domain renewalrequest.
+        description: Request body for set domain renewal.
+      responses:
+        '200':
+          description: Successful response for set domain renewal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainResponse'
+                description: Response payload for set domain renewalresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for set domain renewalresponse422.
+  /v1/slate/tls/authorize:
+    get:
+      tags:
+      - slate
+      summary: Authorize Tls
+      description: 'Answer the edge''s on-demand TLS question: may this hostname be
+        issued for?
+
+
+        **Unauthenticated by necessity and by design.** The caller is a TLS handshake,
+        which has no
+
+        session to present. It supplies a hostname it already has and learns only
+        whether this
+
+        platform will serve it — the same thing it would learn by connecting. Every
+        other route on
+
+        this surface requires VERSIONS/PUBLISH.
+
+
+        Answers 200 only for a domain that exists, is verified, and has renewal enabled;
+        everything
+
+        else is 403, which is what Caddy reads as "do not order a certificate". A
+        permissive answer
+
+        here would let anyone point a hostname at us and have certificates issued
+        in our ACME account
+
+        until the rate limit stopped them, so the check is a single conjunction with
+        no fallbacks.'
+      operationId: authorize_tls_v1_slate_tls_authorize_get
+      parameters:
+      - name: domain
+        in: query
+        required: true
+        schema:
+          type: string
+          description: The hostname the edge received over SNI.
+          title: Domain
+        description: The hostname the edge received over SNI.
+      responses:
+        '200':
+          description: Successful response for authorize tls.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizeResponse'
+                description: Response payload for authorize tlsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for authorize tlsresponse422.
   /v1/slate/git/connections:
     post:
       tags:
@@ -49731,6 +51996,58 @@ components:
       - outcome
       title: AssertionRecord
       description: A stored assertion, as every reader and both exporters see it.
+    AttachDomainRequest:
+      properties:
+        host:
+          type: string
+          title: Host
+          description: The domain, with or without a scheme — it is normalized here.
+          example: example
+        isPrimary:
+          type: boolean
+          title: Isprimary
+          description: Make this the lane's canonical host, demoting the current one.
+          default: false
+          example: false
+        verificationMethod:
+          anyOf:
+          - type: string
+            description: Request body for attach domain.
+          - type: 'null'
+            description: Request body for attach domain.
+          title: Verificationmethod
+          description: Override the derived method (cname for a subdomain, txt for
+            an apex). Provided because apex detection is a heuristic, not the Public
+            Suffix List.
+      type: object
+      required:
+      - host
+      title: AttachDomainRequest
+      description: Attach a hostname to a lane.
+    AuthorizeResponse:
+      properties:
+        domain:
+          type: string
+          title: Domain
+          description: Domain.
+          example: example
+        allowed:
+          type: boolean
+          title: Allowed
+          description: Allowed.
+          example: false
+        reason:
+          type: string
+          title: Reason
+          description: For the edge's log. Not shown to a browser.
+          example: example
+      type: object
+      required:
+      - domain
+      - allowed
+      - reason
+      title: AuthorizeResponse
+      description: The edge's on-demand TLS answer for one hostname.
     BotPresetBody:
       properties:
         key:
@@ -53210,6 +55527,108 @@ components:
         "stream the
 
         captured bytes" from "open the URL".'
+    CertificateBody:
+      properties:
+        known:
+          type: boolean
+          title: Known
+          description: False until a probe has completed a handshake.
+          example: false
+        issuer:
+          anyOf:
+          - type: string
+            description: Request body for certificate.
+          - type: 'null'
+            description: Request body for certificate.
+          title: Issuer
+          description: Issuing CA, e.g. Let's Encrypt (R11).
+        serial:
+          anyOf:
+          - type: string
+            description: Request body for certificate.
+          - type: 'null'
+            description: Request body for certificate.
+          title: Serial
+          description: Certificate serial; changes on every renewal.
+        issuedAt:
+          anyOf:
+          - type: string
+            description: Request body for certificate.
+          - type: 'null'
+            description: Request body for certificate.
+          title: Issuedat
+          description: Observed notBefore, ISO-8601.
+        expiresAt:
+          anyOf:
+          - type: string
+            description: Request body for certificate.
+          - type: 'null'
+            description: Request body for certificate.
+          title: Expiresat
+          description: Observed notAfter, ISO-8601.
+        checkedAt:
+          anyOf:
+          - type: string
+            description: Request body for certificate.
+          - type: 'null'
+            description: Request body for certificate.
+          title: Checkedat
+          description: When the handshake completed. Without it, expiry is a claim.
+        protocol:
+          anyOf:
+          - type: string
+            description: Request body for certificate.
+          - type: 'null'
+            description: Request body for certificate.
+          title: Protocol
+          description: Protocol actually negotiated, e.g. TLSv1.3.
+        daysRemaining:
+          anyOf:
+          - type: integer
+            description: Request body for certificate.
+          - type: 'null'
+            description: Request body for certificate.
+          title: Daysremaining
+          description: Whole days until expiry; negative once lapsed.
+        expired:
+          type: boolean
+          title: Expired
+          description: Whether the observed certificate has lapsed.
+          default: false
+          example: false
+        renewalDue:
+          type: boolean
+          title: Renewaldue
+          description: Whether the edge should have renewed by now.
+          default: false
+          example: false
+        renewsAt:
+          anyOf:
+          - type: string
+            description: Request body for certificate.
+          - type: 'null'
+            description: Request body for certificate.
+          title: Renewsat
+          description: When renewal becomes due, ISO-8601.
+        autoRenew:
+          type: boolean
+          title: Autorenew
+          description: Whether the edge may renew this host.
+          default: true
+          example: false
+        error:
+          anyOf:
+          - type: string
+            description: Request body for certificate.
+          - type: 'null'
+            description: Request body for certificate.
+          title: Error
+          description: Why the last probe failed; null when it succeeded.
+      type: object
+      required:
+      - known
+      title: CertificateBody
+      description: The certificate the live host was last observed serving.
     ChangeReportModel:
       properties:
         schemaVersion:
@@ -53459,6 +55878,36 @@ components:
       - linkUrl
       title: ChangedPageBody
       description: ChangedPageBody schema.
+    ChecklistItemBody:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable identifier the UI keys on.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        label:
+          type: string
+          title: Label
+          description: The claim being made.
+          example: example
+        ok:
+          type: boolean
+          title: Ok
+          description: Whether the claim currently holds.
+          example: false
+        detail:
+          type: string
+          title: Detail
+          description: Why it does or does not.
+          example: example
+      type: object
+      required:
+      - id
+      - label
+      - ok
+      - detail
+      title: ChecklistItemBody
+      description: One line of the verification checklist.
     ClassCreateRequest:
       properties:
         version_id:
@@ -54345,6 +56794,332 @@ components:
       - connections
       title: ConnectionListResponse
       description: ConnectionListResponse schema.
+    ConsumptionEdgeOut:
+      properties:
+        path_id:
+          type: string
+          title: Path Id
+          description: Path ID.
+          example: path_01h2xcejqtf3fz5y5j0v8k9m2p
+        pathname:
+          type: string
+          title: Pathname
+          description: HTTP path template (for example ``/pets/{petId}``).
+          example: /pets/{petId}
+        domain_id:
+          anyOf:
+          - type: string
+            description: Response payload for consumption edge.
+          - type: 'null'
+            description: Response payload for consumption edge.
+          title: Domain Id
+          description: The path's folder, or null for the 'shared/' bucket.
+        operation_uuid:
+          type: string
+          title: Operation Uuid
+          description: The apiome.path_operation UUID.
+          example: b28445a3-20d9-40bc-8390-06e1a7406cdb
+        method:
+          type: string
+          title: Method
+          description: HTTP method, upper-case.
+          example: example
+        operation_id:
+          anyOf:
+          - type: string
+            description: Response payload for consumption edge.
+          - type: 'null'
+            description: Response payload for consumption edge.
+          title: Operation Id
+          description: The spec's operationId, drawn beside the verb.
+        class_id:
+          type: string
+          title: Class Id
+          description: Class identifier the resource is attached to.
+          example: cls_01h2xcejqtf3fz5y5j0v8k9m2p
+        class_name:
+          anyOf:
+          - type: string
+            description: Response payload for consumption edge.
+          - type: 'null'
+            description: Response payload for consumption edge.
+          title: Class Name
+          description: Class Name.
+        kind:
+          type: string
+          title: Kind
+          description: '''direct'' or ''nested''.'
+          example: example
+        roles:
+          items:
+            type: string
+          type: array
+          title: Roles
+          description: 'How the consumption arrives: ''request'', ''parameter'', or
+            ''response.<status>''. A nested edge carries the roles of the direct class
+            it hangs off, so a client can filter ''everything this response drags
+            in'' without re-walking the graph.'
+          maxItems: 1000
+        via:
+          items:
+            $ref: '#/components/schemas/ConsumptionVia'
+          type: array
+          title: Via
+          description: For a nested edge, the shortest chain of classes from the directly
+            consumed one to this class's parent. Empty for a direct edge.
+          maxItems: 1000
+        depth:
+          type: integer
+          title: Depth
+          description: Hops from the directly consumed class — 0 for direct, len(via)
+            otherwise.
+          example: 1
+      type: object
+      required:
+      - path_id
+      - pathname
+      - operation_uuid
+      - method
+      - class_id
+      - kind
+      - depth
+      title: ConsumptionEdgeOut
+      description: 'One operation consuming one class — an edge of the combined lens
+        (DUW-1.4).
+
+
+        ``direct`` is the solid amber edge the legend calls "direct schema in request/response";
+
+        ``nested`` is the dashed rose "nested via parent class", and its ``via`` chain
+        names the
+
+        parents it hangs off. An operation that both names a class and reaches it
+        through another is
+
+        one *direct* edge, not two: the canvas draws one line between two nodes.'
+    ConsumptionIndex:
+      properties:
+        version_id:
+          type: string
+          title: Version Id
+          description: Project version identifier or semantic version label, depending
+            on context.
+          example: 1.0.0
+        scope:
+          type: string
+          title: Scope
+          description: 'Which question was answered: ''version'', ''domain'' or ''path_ids''.'
+          example: example
+        domain_id:
+          anyOf:
+          - type: string
+            description: Consumption Index schema.
+          - type: 'null'
+            description: Consumption Index schema.
+          title: Domain Id
+          description: The folder scoped to, when scope is 'domain'. Null means the
+            'shared/' bucket, not 'unscoped' — read scope to tell them apart.
+        path_ids:
+          items:
+            type: string
+          type: array
+          title: Path Ids
+          description: The paths scoped to, when scope is 'path_ids'.
+          maxItems: 1000
+        class_ids:
+          items:
+            type: string
+          type: array
+          title: Class Ids
+          description: 'The class filter applied, if any. Combines with either path
+            scope: it narrows the class side of every edge, never the path side.'
+          maxItems: 1000
+        missing_ids:
+          items:
+            type: string
+          type: array
+          title: Missing Ids
+          description: 'Ids the caller named — paths or classes — that this version
+            does not hold. Reported rather than dropped: a silently short answer would
+            leave a hole on the canvas with no way to know why.'
+          maxItems: 1000
+        edges:
+          items:
+            $ref: '#/components/schemas/ConsumptionEdgeOut'
+          type: array
+          title: Edges
+          description: One entry per operation↔class pair, ordered by pathname, then
+            method, then direct before nested, then class name.
+          maxItems: 1000
+        paths:
+          items:
+            $ref: '#/components/schemas/ConsumptionPath'
+          type: array
+          title: Paths
+          description: The same facts rolled up per path — the tree's per-path Schemas
+            block. Paths that consume nothing are absent rather than present-and-empty.
+          maxItems: 1000
+        link_count:
+          type: integer
+          title: Link Count
+          description: Edges returned — what the canvas draws and the status bar's
+            'N schema↔path links' chip counts.
+          example: 1
+        path_link_count:
+          type: integer
+          title: Path Link Count
+          description: Distinct path↔class pairs, for a status bar that counts links
+            per path rather than per operation.
+          example: 1
+        depth_cap:
+          type: integer
+          title: Depth Cap
+          description: How far a nested edge may sit from its direct root.
+          example: 1
+        depth_capped:
+          type: boolean
+          title: Depth Capped
+          description: A reference graph continued past depth_cap, so some far nested
+            edges are not in this answer.
+          default: false
+          example: false
+        edge_limit:
+          type: integer
+          title: Edge Limit
+          description: Most edges one response may carry.
+          example: 50
+        truncated:
+          type: boolean
+          title: Truncated
+          description: 'The edge list was cut at edge_limit. Narrow the scope — by
+            domain, by path set, or by class set — rather than paging: an edge only
+            means something beside the members it connects.'
+          default: false
+          example: false
+      type: object
+      required:
+      - version_id
+      - scope
+      - link_count
+      - path_link_count
+      - depth_cap
+      - edge_limit
+      title: ConsumptionIndex
+      description: 'Which operations consume which classes, and how (DUW-1.4).
+
+
+        Computed on read from the version''s own content, never persisted, and content-addressed
+        with a
+
+        strong ``ETag`` so a repeat read is a 304 until the version changes.'
+    ConsumptionPath:
+      properties:
+        path_id:
+          type: string
+          title: Path Id
+          description: Path ID.
+          example: path_01h2xcejqtf3fz5y5j0v8k9m2p
+        pathname:
+          type: string
+          title: Pathname
+          description: HTTP path template (for example ``/pets/{petId}``).
+          example: /pets/{petId}
+        domain_id:
+          anyOf:
+          - type: string
+            description: Consumption Path schema.
+          - type: 'null'
+            description: Consumption Path schema.
+          title: Domain Id
+          description: Domain ID.
+        classes:
+          items:
+            $ref: '#/components/schemas/ConsumptionPathClass'
+          type: array
+          title: Classes
+          description: Classes.
+          maxItems: 1000
+      type: object
+      required:
+      - path_id
+      - pathname
+      title: ConsumptionPath
+      description: One path's ``Schemas`` block — its classes rolled up across its
+        operations (DUW-1.4).
+    ConsumptionPathClass:
+      properties:
+        class_id:
+          type: string
+          title: Class Id
+          description: Class identifier the resource is attached to.
+          example: cls_01h2xcejqtf3fz5y5j0v8k9m2p
+        class_name:
+          anyOf:
+          - type: string
+            description: Consumption Path Class schema.
+          - type: 'null'
+            description: Consumption Path Class schema.
+          title: Class Name
+          description: Class Name.
+        kind:
+          type: string
+          title: Kind
+          description: '''direct'' or ''nested'', direct winning when a path''s operations
+            disagree.'
+          example: example
+        roles:
+          items:
+            type: string
+          type: array
+          title: Roles
+          description: Every role across the path's operations.
+          maxItems: 1000
+        badge:
+          type: string
+          title: Badge
+          description: 'What the tree prints beside the row: a status code (''200''),
+            ''body'', ''param'', or ''nested''.'
+          example: example
+        via:
+          items:
+            $ref: '#/components/schemas/ConsumptionVia'
+          type: array
+          title: Via
+          description: Via.
+          maxItems: 1000
+        depth:
+          type: integer
+          title: Depth
+          default: 0
+          description: Depth.
+          example: 1
+      type: object
+      required:
+      - class_id
+      - kind
+      - badge
+      title: ConsumptionPathClass
+      description: One schema row of a path's ``Schemas`` block in the tree (DUW-1.4).
+    ConsumptionVia:
+      properties:
+        class_id:
+          type: string
+          title: Class Id
+          description: Class identifier the resource is attached to.
+          example: cls_01h2xcejqtf3fz5y5j0v8k9m2p
+        class_name:
+          anyOf:
+          - type: string
+            description: Consumption Via schema.
+          - type: 'null'
+            description: Consumption Via schema.
+          title: Class Name
+          description: Class Name.
+      type: object
+      required:
+      - class_id
+      title: ConsumptionVia
+      description: One hop on the parent chain that reaches a nested class (DUW-1.4).
     ContractCase:
       properties:
         case_id:
@@ -56035,7 +58810,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-03T13:46:56Z'
+          example: '2026-08-07T23:55:47Z'
         envelope:
           additionalProperties: true
           type: object
@@ -56512,6 +59287,50 @@ components:
       - changed
       title: DiffChangeKind
       description: The kind of change a :class:`CanonicalDiffEntry` records.
+    DnsRecordBody:
+      properties:
+        recordType:
+          type: string
+          title: Recordtype
+          description: CNAME, TXT, or the apex pointer type (ALIAS/ANAME/A).
+          example: example
+        name:
+          type: string
+          title: Name
+          description: Record name relative to the zone the tenant edits; @ for apex.
+          example: Pet
+        value:
+          type: string
+          title: Value
+          description: What the record points at or contains.
+          example: example
+        ttl:
+          type: integer
+          title: Ttl
+          description: Suggested TTL in seconds.
+          example: 1
+        purpose:
+          type: string
+          title: Purpose
+          description: verification (proves ownership) or routing (sends traffic).
+          example: example
+        note:
+          anyOf:
+          - type: string
+            description: Request body for dns record.
+          - type: 'null'
+            description: Request body for dns record.
+          title: Note
+          description: Guidance for this row.
+      type: object
+      required:
+      - recordType
+      - name
+      - value
+      - ttl
+      - purpose
+      title: DnsRecordBody
+      description: One row of the DNS table the tenant copies into their provider.
     DocumentationEvidence:
       properties:
         specification:
@@ -56585,6 +59404,385 @@ components:
         instance. This supersedes EFP-1.1''s per-target seed; it is now sourced per
 
         destination (and, on a projection edge, per reason code) from this registry.'
+    DomainAssignmentRequest:
+      properties:
+        domain_id:
+          anyOf:
+          - type: string
+            description: Request body for domain assignment.
+          - type: 'null'
+            description: Request body for domain assignment.
+          title: Domain Id
+          description: Domain ID.
+      type: object
+      required:
+      - domain_id
+      title: DomainAssignmentRequest
+      description: 'Request model for moving a class or path between domains.
+
+
+        ``domain_id`` is a domain UUID, the literal ``"shared"``, or null — the last
+        two both meaning
+
+        the derived bucket. It is required rather than optional so that omitting it
+        is a validation
+
+        error instead of a silent move to ``shared/``.'
+    DomainBody:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        host:
+          type: string
+          title: Host
+          description: Host.
+          example: example
+        environmentId:
+          type: string
+          title: Environmentid
+          description: Environment ID.
+          example: example
+        siteId:
+          type: string
+          title: Siteid
+          description: Site ID.
+          example: example
+        isPrimary:
+          type: boolean
+          title: Isprimary
+          description: Is Primary.
+          example: false
+        verificationStatus:
+          type: string
+          title: Verificationstatus
+          description: pending, verified or failed.
+          example: active
+        verificationMethod:
+          type: string
+          title: Verificationmethod
+          description: cname or txt.
+          example: example
+        verificationCheckedAt:
+          anyOf:
+          - type: string
+            description: Request body for domain.
+          - type: 'null'
+            description: Request body for domain.
+          title: Verificationcheckedat
+          description: Verification Checked At.
+        verificationError:
+          anyOf:
+          - type: string
+            description: Request body for domain.
+          - type: 'null'
+            description: Request body for domain.
+          title: Verificationerror
+          description: Verification Error.
+        verifiedAt:
+          anyOf:
+          - type: string
+            description: Request body for domain.
+          - type: 'null'
+            description: Request body for domain.
+          title: Verifiedat
+          description: Verified At.
+        challengeRecord:
+          anyOf:
+          - type: string
+            description: Request body for domain.
+          - type: 'null'
+            description: Request body for domain.
+          title: Challengerecord
+          description: Fully-qualified name of the TXT challenge, when one applies.
+        dnsTarget:
+          type: string
+          title: Dnstarget
+          description: The platform hostname this domain is pointed at.
+          example: example
+        tlsStatus:
+          type: string
+          title: Tlsstatus
+          description: pending, provisioning, active or error.
+          example: active
+        records:
+          items:
+            $ref: '#/components/schemas/DnsRecordBody'
+          type: array
+          title: Records
+          description: The DNS rows the tenant must publish.
+          maxItems: 1000
+        checklist:
+          items:
+            $ref: '#/components/schemas/ChecklistItemBody'
+          type: array
+          title: Checklist
+          description: Checklist.
+          maxItems: 100
+        certificate:
+          $ref: '#/components/schemas/CertificateBody'
+          description: Certificate.
+        createdAt:
+          anyOf:
+          - type: string
+            description: Request body for domain.
+          - type: 'null'
+            description: Request body for domain.
+          title: Createdat
+          description: Created At.
+        updatedAt:
+          anyOf:
+          - type: string
+            description: Request body for domain.
+          - type: 'null'
+            description: Request body for domain.
+          title: Updatedat
+          description: Updated At.
+      type: object
+      required:
+      - id
+      - host
+      - environmentId
+      - siteId
+      - isPrimary
+      - verificationStatus
+      - verificationMethod
+      - dnsTarget
+      - tlsStatus
+      - certificate
+      title: DomainBody
+      description: One custom domain with everything the screen renders for it.
+    DomainCreateRequest:
+      properties:
+        name:
+          type: string
+          title: Name
+          description: Human-readable name.
+          example: Pet
+        slug:
+          anyOf:
+          - type: string
+            description: Request body for domain create.
+          - type: 'null'
+            description: Request body for domain create.
+          title: Slug
+          description: URL-safe identifier.
+        sort_order:
+          anyOf:
+          - type: integer
+            description: Request body for domain create.
+          - type: 'null'
+            description: Request body for domain create.
+          title: Sort Order
+          description: Sort Order.
+      type: object
+      required:
+      - name
+      title: DomainCreateRequest
+      description: 'Request model for creating a domain folder.
+
+
+        ``slug`` is derived from ``name`` when omitted, so the common case is a single
+        field.
+
+        ``sort_order`` defaults to the end of the tree.'
+    DomainListResponse:
+      properties:
+        environmentId:
+          type: string
+          title: Environmentid
+          description: Environment ID.
+          example: example
+        domains:
+          items:
+            $ref: '#/components/schemas/DomainBody'
+          type: array
+          title: Domains
+          description: Domains.
+          maxItems: 1000
+        tlsPolicy:
+          $ref: '#/components/schemas/TlsPolicyBody'
+          description: Tls Policy.
+        dnsTarget:
+          type: string
+          title: Dnstarget
+          description: The platform hostname custom domains are pointed at.
+          example: example
+      type: object
+      required:
+      - environmentId
+      - tlsPolicy
+      - dnsTarget
+      title: DomainListResponse
+      description: A lane's domains and the edge policy that applies to all of them.
+    DomainMemberSchema:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        version_id:
+          type: string
+          title: Version Id
+          description: Project version identifier or semantic version label, depending
+            on context.
+          example: 1.0.0
+        name:
+          type: string
+          title: Name
+          description: Human-readable name.
+          example: Pet
+        domain_id:
+          anyOf:
+          - type: string
+            description: Domain Member schema.
+          - type: 'null'
+            description: Domain Member schema.
+          title: Domain Id
+          description: Domain ID.
+        kind:
+          type: string
+          title: Kind
+          description: Kind.
+          example: example
+      type: object
+      required:
+      - id
+      - version_id
+      - name
+      - kind
+      title: DomainMemberSchema
+      description: 'A class or path with its current domain membership.
+
+
+        ``name`` carries the class name or the pathname, whichever the member is,
+        so one shape answers
+
+        both move endpoints.'
+    DomainResponse:
+      properties:
+        domain:
+          $ref: '#/components/schemas/DomainBody'
+          description: Domain.
+        tlsPolicy:
+          $ref: '#/components/schemas/TlsPolicyBody'
+          description: Tls Policy.
+      type: object
+      required:
+      - domain
+      - tlsPolicy
+      title: DomainResponse
+      description: One domain, plus the edge policy, so a single-domain screen needs
+        one call.
+    DomainSchema:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            description: Domain schema.
+          - type: 'null'
+            description: Domain schema.
+          title: Id
+          description: Stable resource identifier.
+        version_id:
+          type: string
+          title: Version Id
+          description: Project version identifier or semantic version label, depending
+            on context.
+          example: 1.0.0
+        name:
+          type: string
+          title: Name
+          description: Human-readable name.
+          example: Pet
+        slug:
+          type: string
+          title: Slug
+          description: URL-safe identifier.
+          example: pet-store
+        sort_order:
+          type: integer
+          title: Sort Order
+          default: 0
+          description: Sort Order.
+          example: 1
+        virtual:
+          type: boolean
+          title: Virtual
+          default: false
+          description: Virtual.
+          example: false
+        created_at:
+          anyOf:
+          - type: string
+            description: Domain schema.
+          - type: 'null'
+            description: Domain schema.
+          title: Created At
+          description: Creation timestamp (ISO 8601).
+        updated_at:
+          anyOf:
+          - type: string
+            description: Domain schema.
+          - type: 'null'
+            description: Domain schema.
+          title: Updated At
+          description: Last update timestamp (ISO 8601).
+      type: object
+      required:
+      - version_id
+      - name
+      - slug
+      title: DomainSchema
+      description: 'A domain folder grouping a version''s classes and paths (DUW-1.1).
+
+
+        ``id`` is None for exactly one entry per version: the derived ``shared/``
+        bucket, which
+
+        collects members with no domain. A client must read ``virtual`` rather than
+        inferring
+
+        editability from the name, since a real domain may legitimately be called
+        anything else.'
+    DomainUpdateRequest:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            description: Request body for domain update.
+          - type: 'null'
+            description: Request body for domain update.
+          title: Name
+          description: Human-readable name.
+        slug:
+          anyOf:
+          - type: string
+            description: Request body for domain update.
+          - type: 'null'
+            description: Request body for domain update.
+          title: Slug
+          description: URL-safe identifier.
+        sort_order:
+          anyOf:
+          - type: integer
+            description: Request body for domain update.
+          - type: 'null'
+            description: Request body for domain update.
+          title: Sort Order
+          description: Sort Order.
+      type: object
+      title: DomainUpdateRequest
+      description: 'Request model for renaming or reordering a domain.
+
+
+        Every field is optional and only the supplied ones are written; renaming a
+        domain never moves
+
+        it in the tree unless ``sort_order`` is given too.'
     DroppedPointBody:
       properties:
         id:
@@ -76863,6 +80061,316 @@ components:
       title: PrimitiveSchema
       description: A tenant-scoped primitive type definition in the registry, including
         its JSON Schema document, namespace placement, and resolved reference edges.
+    PrimitiveScopeCounts:
+      properties:
+        standard:
+          type: integer
+          title: Standard
+          default: 0
+          description: Standard.
+          example: 1
+        core:
+          type: integer
+          title: Core
+          default: 0
+          description: Core.
+          example: 1
+        tenant:
+          type: integer
+          title: Tenant
+          default: 0
+          description: Tenant.
+          example: 1
+        custom:
+          type: integer
+          title: Custom
+          default: 0
+          description: Custom.
+          example: 1
+      type: object
+      title: PrimitiveScopeCounts
+      description: 'How many primitives match a search in each of the four type-picker
+        tabs (DWX-3.1).
+
+
+        Counted over the *match set* — the query, category and namespace narrowings
+        — before the
+
+        ``scope`` filter and before ``limit``, so the badges are the sizes of the
+        four tabs for the
+
+        query the reader typed. A count derived from the returned page would read
+        as the page size
+
+        forever.'
+    PrimitiveSearchItem:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        tenant_id:
+          type: string
+          title: Tenant Id
+          description: Tenant that owns the resource.
+          example: ten_01h2xcejqtf3fz5y5j0v8k9m2p
+        name:
+          type: string
+          title: Name
+          description: Human-readable name.
+          example: Pet
+        description:
+          anyOf:
+          - type: string
+            description: Primitive Search schema.
+          - type: 'null'
+            description: Primitive Search schema.
+          title: Description
+          description: Free-text description.
+        category:
+          type: string
+          title: Category
+          description: Classification category for the primitive type.
+          example: domain
+        schema:
+          additionalProperties: true
+          type: object
+          title: Schema
+          description: Embedded JSON Schema document.
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+            description: Primitive Search schema.
+          - type: 'null'
+            description: Primitive Search schema.
+          title: Tags
+          description: Associated tag labels.
+        created_by:
+          anyOf:
+          - type: string
+            description: Primitive Search schema.
+          - type: 'null'
+            description: Primitive Search schema.
+          title: Created By
+          description: Created By.
+        is_system:
+          type: boolean
+          title: Is System
+          default: false
+          description: True when the primitive is shipped by the platform.
+          example: false
+        is_public:
+          type: boolean
+          title: Is Public
+          default: false
+          description: True when the primitive is visible outside the authoring tenant.
+          example: false
+        usage_count:
+          type: integer
+          title: Usage Count
+          default: 0
+          description: Number of live bindings referencing the primitive.
+          example: 3
+        source:
+          type: string
+          title: Source
+          default: human
+          description: Provenance source for the record (for example human or imported).
+          example: human
+        schema_id:
+          anyOf:
+          - type: string
+            description: Primitive Search schema.
+          - type: 'null'
+            description: Primitive Search schema.
+          title: Schema Id
+          description: Canonical JSON Schema ``$id`` for the primitive.
+        draft:
+          type: string
+          title: Draft
+          default: 2020-12
+          description: JSON Schema draft identifier (for example 2020-12).
+          example: 2020-12
+        namespace:
+          anyOf:
+          - type: string
+            description: Primitive Search schema.
+          - type: 'null'
+            description: Primitive Search schema.
+          title: Namespace
+          description: Registry namespace segment for the primitive.
+        base_uri:
+          anyOf:
+          - type: string
+            description: Primitive Search schema.
+          - type: 'null'
+            description: Primitive Search schema.
+          title: Base Uri
+          description: Base URI used to resolve relative ``$ref`` values.
+        refs:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Refs
+          default: []
+          description: Resolved and unresolved ``$ref`` edges for the primitive schema.
+          maxItems: 1000
+        dependents:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Dependents
+          default: []
+          description: 'Reverse index of ``refs``: the visible types that reference
+            this one, one entry per referencing edge.'
+          maxItems: 1000
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Primitive Search schema.
+          - type: string
+            description: Primitive Search schema.
+          - type: 'null'
+            description: Primitive Search schema.
+          title: Created At
+          description: Creation timestamp (ISO 8601).
+        updated_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Primitive Search schema.
+          - type: string
+            description: Primitive Search schema.
+          - type: 'null'
+            description: Primitive Search schema.
+          title: Updated At
+          description: Last update timestamp (ISO 8601).
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+          description: Whether the resource is active.
+          example: true
+        scope:
+          type: string
+          title: Scope
+          description: 'The type-picker tab this row belongs to: standard, core, tenant
+            or custom.'
+          example: example
+      type: object
+      required:
+      - id
+      - tenant_id
+      - name
+      - category
+      - schema
+      - scope
+      title: PrimitiveSearchItem
+      description: 'One primitive as the bounded search returns it — DWX-3.1 (private-suite#2683).
+
+
+        The classic row plus the type-picker tab it belongs to. The tab is computed
+        server-side (see
+
+        ``app.primitives_search_store.SCOPE_EXPRESSION``) rather than left to the
+        client, because a
+
+        scope-filtered read whose rows the client re-classified differently would
+        put a type in a tab
+
+        the server says is empty. A separate model rather than a field on ``PrimitiveSchema``
+        so the
+
+        classic listing''s contract is untouched.'
+    PrimitiveSearchPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PrimitiveSearchItem'
+          type: array
+          title: Items
+          description: At most `limit` primitives, in the picker's order.
+          maxItems: 100
+        counts:
+          $ref: '#/components/schemas/PrimitiveScopeCounts'
+          description: Per-tab totals over the match set, for the picker's badges.
+        total:
+          type: integer
+          title: Total
+          description: Rows matching within the applied scope, before the limit —
+            so a client can say its page is a slice rather than implying it is the
+            whole.
+          default: 0
+          example: 1
+        limit:
+          type: integer
+          title: Limit
+          description: 'Rows returned at most: the limit actually applied.'
+          default: 0
+          example: 50
+        query:
+          type: string
+          title: Query
+          description: The query these rows answer, normalized (trimmed).
+          default: ''
+          example: example
+        scope:
+          anyOf:
+          - type: string
+            description: Primitive Search Page schema.
+          - type: 'null'
+            description: Primitive Search Page schema.
+          title: Scope
+          description: The scope filter applied, if any.
+        namespace:
+          anyOf:
+          - type: string
+            description: Primitive Search Page schema.
+          - type: 'null'
+            description: Primitive Search Page schema.
+          title: Namespace
+          description: The namespace filter applied, normalized, if any.
+        category:
+          anyOf:
+          - type: string
+            description: Primitive Search Page schema.
+          - type: 'null'
+            description: Primitive Search Page schema.
+          title: Category
+          description: The category filter applied, if any.
+        next_cursor:
+          anyOf:
+          - type: string
+            description: Primitive Search Page schema.
+          - type: 'null'
+            description: Primitive Search Page schema.
+          title: Next Cursor
+          description: Opaque token for the following page, or null when this was
+            the last one.
+        truncated:
+          type: boolean
+          title: Truncated
+          description: More rows matched in this scope than the page carries.
+          default: false
+          example: false
+      type: object
+      title: PrimitiveSearchPage
+      description: 'One bounded page of the primitives registry — DWX-3.1 (private-suite#2683).
+
+
+        What ``GET /v1/primitives/{tenant_slug}`` answers once the caller asks a bounded
+        question
+
+        (``q``, ``scope``, ``namespace``, ``limit`` or ``cursor``). Callers that ask
+        none of them still
+
+        get the classic unbounded array, so the pre-existing dialogs are unaffected.'
     PrimitiveUpdateRequest:
       properties:
         name:
@@ -80520,6 +84028,18 @@ components:
       - message
       title: ReleaseSourceBody
       description: Where the release was built from.
+    RenewalRequest:
+      properties:
+        autoRenew:
+          type: boolean
+          title: Autorenew
+          description: Whether the edge may obtain and renew certificates.
+          example: false
+      type: object
+      required:
+      - autoRenew
+      title: RenewalRequest
+      description: Switch automatic certificate renewal for a domain.
     RepositoryConflictPolicyOut:
       properties:
         repositoryId:
@@ -82568,7 +86088,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-03T13:46:56Z'
+          example: '2026-08-07T23:55:47Z'
       additionalProperties: false
       type: object
       required:
@@ -83586,6 +87106,93 @@ components:
       - modified
       title: SchemasChangeSection
       description: Component schema name changes (``components.schemas``).
+    ScopedCatalogPage:
+      properties:
+        items:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Items
+          description: Items.
+          maxItems: 100
+        total:
+          type: integer
+          title: Total
+          description: Total.
+          example: 1
+        limit:
+          type: integer
+          title: Limit
+          description: 'The most items this response could have carried: the effective
+            page size for a domain listing, or the server''s id cap for an explicit
+            selection.'
+          example: 50
+        scope:
+          type: string
+          title: Scope
+          description: 'Which selector produced this page: ''ids'' or ''domain''.'
+          example: example
+        domain_id:
+          anyOf:
+          - type: string
+            description: Scoped Catalog Page schema.
+          - type: 'null'
+            description: Scoped Catalog Page schema.
+          title: Domain Id
+          description: The domain listed, or null for the derived 'shared/' bucket
+            and for id selections.
+        missing_ids:
+          items:
+            type: string
+          type: array
+          title: Missing Ids
+          description: Ids the caller named that resolved to nothing in this version
+            — deleted since the selection was made, belonging to another version,
+            or malformed. Always empty for a domain listing.
+          maxItems: 1000
+        next_cursor:
+          anyOf:
+          - type: string
+            description: Scoped Catalog Page schema.
+          - type: 'null'
+            description: Scoped Catalog Page schema.
+          title: Next Cursor
+          description: Opaque token for the following page, or null when this page
+            is the last. Same cursor format as the export and import manifest surfaces.
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - scope
+      title: ScopedCatalogPage
+      description: 'One bounded slice of a version''s catalog (DUW-1.2).
+
+
+        Shared by the scoped class and path reads, because a client pages both the
+        same way and a
+
+        second identically-shaped model would only invite the two to drift apart.
+        ``items`` stays
+
+        loosely typed for the same reason the legacy full-version read does: a class
+        carries JSONB
+
+        ``schema``/``canvas_metadata`` and nested property rows, a path carries JSONB
+        ``metadata`` and
+
+        operations, and pinning either here would make an additive column a breaking
+        change.
+
+
+        ``total`` is the size of the *whole* selection, not of this page — the folder''s
+        membership for
+
+        a domain listing — so the workspace can compare it against its node budget
+        before hydrating
+
+        anything further.'
     SecretRefBody:
       properties:
         id:
@@ -91306,6 +94913,45 @@ components:
       title: TenantsMeResponse
       description: Paginated list of tenants for the current principal (JWT user or
         API key tenant).
+    TlsPolicyBody:
+      properties:
+        minVersion:
+          type: string
+          title: Minversion
+          description: Minimum TLS version the edge negotiates.
+          example: 1.0.0
+        hstsMaxAgeSeconds:
+          type: integer
+          title: Hstsmaxageseconds
+          description: Strict-Transport-Security max-age sent.
+          example: 1
+        renewalWindowDays:
+          type: integer
+          title: Renewalwindowdays
+          description: Lead time before expiry at which renewal runs.
+          example: 1
+        issuer:
+          type: string
+          title: Issuer
+          description: The certificate authority the edge orders from.
+          example: example
+      type: object
+      required:
+      - minVersion
+      - hstsMaxAgeSeconds
+      - renewalWindowDays
+      - issuer
+      title: TlsPolicyBody
+      description: 'What the edge is configured to do for every custom domain.
+
+
+        A policy, not a measurement — ``CertificateBody.protocol`` is the measurement.
+        Both are
+
+        reported so a host negotiating less than the policy is visible as a discrepancy
+        rather than
+
+        hidden behind the configured value.'
     TraceBody:
       properties:
         id:
@@ -93856,13 +97502,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-03T13:46:57Z'
+          example: '2026-08-07T23:55:47Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-03T13:46:57Z'
+          example: '2026-08-07T23:55:47Z'
         outcome:
           anyOf:
           - type: string
@@ -94652,6 +98298,32 @@ components:
         the schema
 
         cannot hold credential material, so the full record is always safe to return.'
+    VerifyResponse:
+      properties:
+        domain:
+          $ref: '#/components/schemas/DomainBody'
+          description: Domain.
+        verified:
+          type: boolean
+          title: Verified
+          description: Verified.
+          example: false
+        detail:
+          type: string
+          title: Detail
+          description: What was observed — the actionable part of a failure.
+          example: example
+        tlsPolicy:
+          $ref: '#/components/schemas/TlsPolicyBody'
+          description: Tls Policy.
+      type: object
+      required:
+      - domain
+      - verified
+      - detail
+      - tlsPolicy
+      title: VerifyResponse
+      description: The outcome of an ownership check.
     VersionBranchCreateRequest:
       properties:
         name:
@@ -96875,6 +100547,634 @@ components:
       - hasMore
       title: WorkflowAuditPaginationOut
       description: Offset and/or cursor pagination metadata.
+    WorkspaceCustomActionCreate:
+      properties:
+        name:
+          type: string
+          title: Name
+          description: Human-readable name.
+          example: Pet
+        subject:
+          type: string
+          title: Subject
+          description: Subject.
+          example: example
+        nameContains:
+          anyOf:
+          - type: string
+            description: Workspace Custom Action Create schema.
+          - type: 'null'
+            description: Workspace Custom Action Create schema.
+          title: Namecontains
+          description: Name Contains.
+        effects:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Effects
+          description: Effects.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - subject
+      - effects
+      title: WorkspaceCustomActionCreate
+      description: 'Request body for creating a custom palette action.
+
+
+        Field-level validation (vocabulary, lengths, URL scheme) lives in
+
+        ``workspace_custom_action_rules`` rather than here, so the rules stay pure,
+        testable and
+
+        shared with PATCH; ``extra="forbid"`` still rejects unknown top-level fields
+        at the schema.'
+    WorkspaceCustomActionListResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          default: true
+          description: Success.
+          example: false
+        actions:
+          items:
+            $ref: '#/components/schemas/WorkspaceCustomActionOut'
+          type: array
+          title: Actions
+          description: Actions.
+          maxItems: 1000
+      type: object
+      title: WorkspaceCustomActionListResponse
+      description: Envelope for listing a tenant's custom palette actions.
+    WorkspaceCustomActionOut:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        name:
+          type: string
+          title: Name
+          description: The sentence the palette row draws; may carry one {subject}
+            placeholder.
+          example: Pet
+        subject:
+          type: string
+          enum:
+          - class
+          - path
+          - property
+          - any
+          title: Subject
+          description: Which kind of palette subject the action offers itself for.
+          example: class
+        nameContains:
+          anyOf:
+          - type: string
+            description: Response payload for workspace custom action.
+          - type: 'null'
+            description: Response payload for workspace custom action.
+          title: Namecontains
+          description: Case-insensitive substring the subject's label must contain;
+            null matches every subject of the kind.
+        effects:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Effects
+          description: Ordered declarative effects, each validated against the closed
+            vocabulary.
+          maxItems: 1000
+        createdBy:
+          anyOf:
+          - type: string
+            description: Response payload for workspace custom action.
+          - type: 'null'
+            description: Response payload for workspace custom action.
+          title: Createdby
+          description: Created By.
+        createdAt:
+          type: string
+          format: date-time
+          title: Createdat
+          description: Created At.
+          example: example
+        updatedAt:
+          type: string
+          format: date-time
+          title: Updatedat
+          description: Updated At.
+          example: example
+      type: object
+      required:
+      - id
+      - name
+      - subject
+      - effects
+      - createdAt
+      - updatedAt
+      title: WorkspaceCustomActionOut
+      description: 'One tenant-defined ⌘K palette action (DUW-5.5).
+
+
+        A declaration, never a script: the matcher (``subject`` kind plus the optional
+
+        ``nameContains`` narrowing) says when the palette offers the row, and ``effects``
+        is an
+
+        ordered list from the closed vocabulary of ``workspace_custom_action_rules``
+        saying what ⏎
+
+        performs. The workspace client interprets it; nothing here executes.'
+    WorkspaceCustomActionUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            description: Workspace Custom Action Update schema.
+          - type: 'null'
+            description: Workspace Custom Action Update schema.
+          title: Name
+          description: Human-readable name.
+        subject:
+          anyOf:
+          - type: string
+            description: Workspace Custom Action Update schema.
+          - type: 'null'
+            description: Workspace Custom Action Update schema.
+          title: Subject
+          description: Subject.
+        nameContains:
+          anyOf:
+          - type: string
+            description: Workspace Custom Action Update schema.
+          - type: 'null'
+            description: Workspace Custom Action Update schema.
+          title: Namecontains
+          description: Name Contains.
+        effects:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+            description: Workspace Custom Action Update schema.
+          - type: 'null'
+            description: Workspace Custom Action Update schema.
+          title: Effects
+          description: Effects.
+      additionalProperties: false
+      type: object
+      title: WorkspaceCustomActionUpdate
+      description: 'Request body for patching a custom palette action (all fields
+        optional).
+
+
+        ``nameContains`` distinguishes absent from null: absent leaves the narrowing
+        alone, an
+
+        explicit null clears it. The route reads ``model_fields_set`` to tell the
+        two apart.'
+    WorkspaceDomainCounts:
+      properties:
+        class_count:
+          type: integer
+          title: Class Count
+          description: Object schemas — the schemas lens's 'N classes' badge.
+          example: 1
+        path_count:
+          type: integer
+          title: Path Count
+          description: Paths in this folder.
+          example: 1
+        op_count:
+          type: integer
+          title: Op Count
+          description: Operations across those paths — the paths lens's 'N ops'.
+          example: 1
+        enum_count:
+          type: integer
+          title: Enum Count
+          description: Enums and unions — the 'Enums & unions' group's size.
+          example: 1
+      type: object
+      required:
+      - class_count
+      - path_count
+      - op_count
+      - enum_count
+      title: WorkspaceDomainCounts
+      description: 'The four numbers every lens badges a folder with (DUW-1.3).
+
+
+        ``class_count`` and ``enum_count`` *partition* the folder''s classes — they
+        do not overlap and
+
+        do not nest — because the mockup badges ``customers/ 3 classes`` above a list
+        of three objects
+
+        and one enum, and drawing the enum inside the count would contradict the list
+        beneath it.
+
+
+        Each count covers the folder''s whole membership, never the member list returned
+        beside it.'
+    WorkspaceDomainSummary:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            description: Workspace Domain schema.
+          - type: 'null'
+            description: Workspace Domain schema.
+          title: Id
+          description: The domain's UUID, or null for the derived 'shared/' bucket,
+            which is the absence of a domain and so has no row to identify.
+        name:
+          type: string
+          title: Name
+          description: Human-readable name.
+          example: Pet
+        slug:
+          type: string
+          title: Slug
+          description: URL-safe identifier.
+          example: pet-store
+        sort_order:
+          type: integer
+          title: Sort Order
+          description: Sort Order.
+          example: 1
+        virtual:
+          type: boolean
+          title: Virtual
+          description: 'True for ''shared/'' only: a folder that cannot be renamed,
+            reordered or deleted because it is derived from membership rather than
+            stored.'
+          default: false
+          example: false
+        counts:
+          $ref: '#/components/schemas/WorkspaceDomainCounts'
+          description: Counts.
+        classes:
+          items:
+            $ref: '#/components/schemas/WorkspaceSummaryClass'
+          type: array
+          title: Classes
+          description: Classes.
+          maxItems: 1000
+        paths:
+          items:
+            $ref: '#/components/schemas/WorkspaceSummaryPath'
+          type: array
+          title: Paths
+          description: Paths.
+          maxItems: 1000
+        classes_truncated:
+          type: boolean
+          title: Classes Truncated
+          description: The folder holds more classes than member_limit returned. Continue
+            with GET /v1/workspace/{tenant}/version/{version_id}/classes?domain_id=…,
+            which pages.
+          default: false
+          example: false
+        paths_truncated:
+          type: boolean
+          title: Paths Truncated
+          description: The folder holds more paths than member_limit returned. Continue
+            with GET /v1/workspace/{tenant}/version/{version_id}/paths?domain_id=…
+          default: false
+          example: false
+      type: object
+      required:
+      - name
+      - slug
+      - sort_order
+      - counts
+      title: WorkspaceDomainSummary
+      description: 'One domain folder: identity, counts, and a bounded slice of its
+        members (DUW-1.3).'
+    WorkspacePropertyHit:
+      properties:
+        name:
+          type: string
+          title: Name
+          description: Human-readable name.
+          example: Pet
+        class_count:
+          type: integer
+          title: Class Count
+          description: How many of this version's live classes carry a property of
+            this name — the band's 'used by 14 classes'. Counted over the whole version,
+            not over the owners listed below, and counting each class once however
+            many times it carries the name.
+          example: 1
+        owners:
+          items:
+            $ref: '#/components/schemas/WorkspacePropertyOwner'
+          type: array
+          title: Owners
+          description: The classes carrying it, alphabetically, capped at owner_limit.
+            The first is the one an activation opens.
+          maxItems: 1000
+        owners_truncated:
+          type: boolean
+          title: Owners Truncated
+          description: More classes carry this property than are listed here. Their
+            number is class_count.
+          default: false
+          example: false
+      type: object
+      required:
+      - name
+      - class_count
+      title: WorkspacePropertyHit
+      description: One property name the query matched, and how widely the version
+        uses it (DUW-5.3).
+    WorkspacePropertyOwner:
+      properties:
+        class_id:
+          type: string
+          title: Class Id
+          description: Class identifier the resource is attached to.
+          example: cls_01h2xcejqtf3fz5y5j0v8k9m2p
+        class_name:
+          type: string
+          title: Class Name
+          description: Class Name.
+          example: Example
+        domain_id:
+          anyOf:
+          - type: string
+            description: Workspace Property Owner schema.
+          - type: 'null'
+            description: Workspace Property Owner schema.
+          title: Domain Id
+          description: The folder this class lives in, or null for the derived 'shared/'
+            bucket.
+        kind:
+          type: string
+          title: Kind
+          description: 'Which tree group the class belongs to: ''object'', ''enum''
+            or ''union'' — the same classification the domain summary applies, so
+            one icon table serves both.'
+          example: example
+      type: object
+      required:
+      - class_id
+      - class_name
+      - kind
+      title: WorkspacePropertyOwner
+      description: 'One class carrying a matched property (DUW-5.3).
+
+
+        Shallow for the same reason every other workspace row is: the palette draws
+        a name, an icon and
+
+        a folder badge, and hydrates the class only once the reader opens it.'
+    WorkspacePropertySearch:
+      properties:
+        version_id:
+          type: string
+          title: Version Id
+          description: The version record UUID this searched.
+          example: 1.0.0
+        query:
+          type: string
+          title: Query
+          description: The query these hits answer, normalized (trimmed).
+          example: example
+        properties:
+          items:
+            $ref: '#/components/schemas/WorkspacePropertyHit'
+          type: array
+          title: Properties
+          description: Properties.
+          maxItems: 1000
+        total:
+          type: integer
+          title: Total
+          description: Property names that matched in total, before the cap — so a
+            client can say its answer is a slice rather than implying it is the whole.
+          example: 1
+        limit:
+          type: integer
+          title: Limit
+          description: 'Property names returned at most: the limit actually applied.'
+          example: 50
+        owner_limit:
+          type: integer
+          title: Owner Limit
+          description: 'Owning classes per property: the limit actually applied.'
+          example: 50
+        truncated:
+          type: boolean
+          title: Truncated
+          description: More names matched than this response lists.
+          default: false
+          example: false
+      type: object
+      required:
+      - version_id
+      - query
+      - total
+      - limit
+      - owner_limit
+      title: WorkspacePropertySearch
+      description: 'Properties of one version whose name matches a query (DUW-5.3).
+
+
+        The ⌘K palette''s `Properties` band in one read. The usage counts are the
+        point: they are an
+
+        aggregate over ``apiome.class_properties`` that a client could only reproduce
+        by hydrating
+
+        every class in the version, which is the read the unified workspace exists
+        to delete.'
+    WorkspaceSummary:
+      properties:
+        version_id:
+          type: string
+          title: Version Id
+          description: The version record UUID this summarizes.
+          example: 1.0.0
+        version_badge:
+          anyOf:
+          - type: string
+            description: Workspace schema.
+          - type: 'null'
+            description: Workspace schema.
+          title: Version Badge
+          description: The version's own badge, e.g. 'v2.1'. Repeated on every class
+            row so a tree row is renderable on its own.
+        member_limit:
+          type: integer
+          title: Member Limit
+          description: Member rows returned per folder, per kind — the limit actually
+            applied after clamping, not necessarily the one requested.
+          example: 50
+        domains:
+          items:
+            $ref: '#/components/schemas/WorkspaceDomainSummary'
+          type: array
+          title: Domains
+          description: 'Tree order: live domains by sort_order then slug, then ''shared/''
+            last. Empty folders are included, with zeroes.'
+          maxItems: 1000
+        totals:
+          $ref: '#/components/schemas/WorkspaceDomainCounts'
+          description: The same four counts across the whole version — the sum of
+            every folder's, so a client sizing a full hydration against its node budget
+            need not add up.
+      type: object
+      required:
+      - version_id
+      - member_limit
+      - totals
+      title: WorkspaceSummary
+      description: 'Every domain folder of one version, counted and shallowly listed
+        (DUW-1.3).
+
+
+        One response the workspace tree renders all three lens panels from — combined,
+        schemas and
+
+        paths — with no further request. The per-path *schema* rows the combined lens
+        nests under a
+
+        path are the schema↔path index of DUW-1.4 and are not part of this response.'
+    WorkspaceSummaryClass:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        name:
+          type: string
+          title: Name
+          description: Human-readable name.
+          example: Pet
+        kind:
+          type: string
+          title: Kind
+          description: 'Which tree group this class belongs to: ''object'' for the
+            Schemas group, ''enum'' or ''union'' for the Enums & unions group.'
+          example: example
+        version_badge:
+          anyOf:
+          - type: string
+            description: Workspace Summary Class schema.
+          - type: 'null'
+            description: Workspace Summary Class schema.
+          title: Version Badge
+          description: The badge the tree prints beside the row, e.g. 'v2.1'. A class
+            has no version of its own — this is the label of the version it was read
+            from, repeated per row so a row renders without consulting the envelope.
+      type: object
+      required:
+      - id
+      - name
+      - kind
+      title: WorkspaceSummaryClass
+      description: 'One class as the workspace tree draws it (DUW-1.3).
+
+
+        Deliberately shallow: a tree row needs a label, an icon and a badge, so this
+        carries no schema
+
+        body, no properties and no tags. Those arrive from the scoped read (DUW-1.2)
+        when the user
+
+        opens the class, which is the whole point of splitting the two.'
+    WorkspaceSummaryOperation:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        operation:
+          type: string
+          title: Operation
+          description: HTTP method, upper-case.
+          example: GET
+        operation_id:
+          anyOf:
+          - type: string
+            description: Workspace Summary Operation schema.
+          - type: 'null'
+            description: Workspace Summary Operation schema.
+          title: Operation Id
+          description: The spec's operationId, drawn beside the verb in the paths
+            lens.
+        summary:
+          anyOf:
+          - type: string
+            description: Workspace Summary Operation schema.
+          - type: 'null'
+            description: Workspace Summary Operation schema.
+          title: Summary
+          description: Short summary suitable for navigation and reference docs.
+        deprecated:
+          type: boolean
+          title: Deprecated
+          default: false
+          description: Deprecated.
+          example: false
+      type: object
+      required:
+      - id
+      - operation
+      title: WorkspaceSummaryOperation
+      description: One operation of one path, as the tree draws it (DUW-1.3).
+    WorkspaceSummaryPath:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        pathname:
+          type: string
+          title: Pathname
+          description: HTTP path template (for example ``/pets/{petId}``).
+          example: /pets/{petId}
+        op_count:
+          type: integer
+          title: Op Count
+          description: Operations on this path — the per-path '2 ops' badge.
+          example: 1
+        operations:
+          items:
+            $ref: '#/components/schemas/WorkspaceSummaryOperation'
+          type: array
+          title: Operations
+          description: Operations.
+          maxItems: 1000
+      type: object
+      required:
+      - id
+      - pathname
+      - op_count
+      title: WorkspaceSummaryPath
+      description: 'One path with its operations, as the tree draws it (DUW-1.3).
+
+
+        Operations are complete rather than capped: ``apiome.path_operation`` is unique
+        on
+
+        ``(version_path_id, operation)``, so their number is bounded by the HTTP method
+        vocabulary
+
+        rather than by the catalog.'
     WriteBudgetRequest:
       properties:
         label:
