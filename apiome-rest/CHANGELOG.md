@@ -5,6 +5,55 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.261.0] - 2026-08-07
+
+### Added
+- **Bounded primitives search (DWX-3.1, private-suite#2683)** — `GET
+  /v1/primitives/{tenant_slug}` has always answered with *every* primitive a tenant
+  can see. A tenant that has imported a standard library has thousands of rows, and
+  the unified workspace's type picker — a 320px rail — cannot be built on a read like
+  that. The endpoint now takes `q`, `scope`, `namespace`, `limit` and `cursor`, and
+  answers those with at most `limit` rows plus the four type-picker tab counts
+  (`app.primitives_search_store`, `PrimitiveSearchPage`).
+
+  **Both shapes, one path.** A caller that asks none of the five bounded parameters
+  gets the classic JSON array, from the same `get_primitives_for_tenant` read, with
+  `category` working exactly as before — the classic property dialogs are unaffected
+  and keep working until private-suite's DWX-8.3 retires their callers. Asking any one
+  of the five switches the response to the paged envelope. The two shapes list the
+  same catalog: the same visibility scope (`is_system` ∪ the caller's own rows) and
+  the same `(namespace, name)` deduplication, so a primitive is never reachable
+  through one and not the other.
+
+  **The scope classification is the client's rule, in three places that must agree.**
+  The four tabs — Standard, Core, Tenant, Custom — are derived in the designer today
+  by `classifyPrimitive`. A server that filtered by scope while the client grouped by
+  its own rule would silently hide types, so the rule is now written three times over
+  one shared fixture (`tests/fixtures/primitive_scope_cases.json`): the TypeScript
+  original, `classify_scope` in Python, and `SCOPE_EXPRESSION` in SQL. `pytest` checks
+  Python against the fixture and SQL against Python over real rows; the designer's jest
+  suite checks the TypeScript half against its copy of the same cases.
+
+  **The cursor is keyset, not an offset.** It carries the sort key of the last row
+  handed out, so a primitive created mid-scroll cannot shift a page boundary and make
+  a row repeat or vanish; a live-DB test walks 5,000 rows and asserts each is visited
+  exactly once. It is opaque, and a token this endpoint did not mint is a 400 rather
+  than a silently ignored parameter that would restart a paging client at page one
+  forever. An unknown `scope` is likewise a 400 — a misspelling that quietly listed
+  every tab would make an unbounded read look like a bounded one.
+
+  Tenancy is unchanged and enforced by construction: another tenant's private types
+  are not filtered out of the result, they are never in the visibility CTE, so no
+  query, namespace, cursor or `$ref` reaches one.
+
+  `apiome-db/scripts/V244__primitives_bounded_search_indexes_2683.sql` adds the
+  read-path indexes: a `(namespace, name, tenant_id)` b-tree for the dedupe and the
+  cursor ordering, an `(is_system, source, namespace)` b-tree for the scope
+  classification, and `pg_trgm` GIN indexes so a leading-wildcard `ILIKE` is not a
+  sequential scan of the registry. Nothing there changes a column, a constraint or a
+  value, and — as in V230 — the trigram block degrades to a `NOTICE` where the
+  migration role cannot install contrib extensions.
+
 ## [1.260.0] - 2026-08-05
 
 ### Added

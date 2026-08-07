@@ -7,7 +7,7 @@ All endpoints are tenant-scoped and require authentication via JWT token or API 
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Union
 from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -25,11 +25,15 @@ from .models import (
     PrimitiveImportStageRequest,
     PrimitiveImportStageResult,
     PrimitiveSchema,
+    PrimitiveScopeCounts,
+    PrimitiveSearchItem,
+    PrimitiveSearchPage,
     PrimitiveUpdateRequest,
     RegistryHealthResponse,
     UnresolvedRefPrimitive,
     UnresolvedRefsResponse,
 )
+from . import primitives_search_store as search_store
 from .primitives_bundle import (
     BundleError,
     parse_type_def_bundle,
@@ -583,31 +587,140 @@ def determine_category_from_schema(schema: Dict[str, Any]) -> str:
     return 'object'
 
 
-@router.get("/{tenant_slug}")
+_SEARCH_Q_DESCRIPTION = (
+    "Text to match, case-insensitively, anywhere in a primitive's name, namespace, registry "
+    "$ref, description or tags — the five fields the type picker's client-side filter has always "
+    "spanned — or in its JSON Schema $id. '%' and '_' match themselves rather than acting as "
+    "wildcards. Asking this, or any other bounded parameter, switches the response to the paged "
+    "envelope."
+)
+
+_SEARCH_SCOPE_DESCRIPTION = (
+    "Restrict to one type-picker tab: "
+    + ", ".join(search_store.SCOPES)
+    + ". Classified server-side exactly as the designer's `classifyPrimitive` classifies it, so a "
+      "tab and its badge can never disagree. An unrecognized value is a 400, never an empty page."
+)
+
+_SEARCH_NAMESPACE_DESCRIPTION = (
+    "Restrict to one registry namespace, e.g. `std/v0/types`. Matched exactly against the "
+    "namespace with its trailing slashes removed; child namespaces are not included."
+)
+
+_SEARCH_LIMIT_DESCRIPTION = (
+    f"Rows to return. Default {search_store.DEFAULT_LIMIT}, clamped to {search_store.MAX_LIMIT}; "
+    "0 returns the tab counts alone. No response ever exceeds it — that bound is the reason this "
+    "endpoint exists."
+)
+
+_SEARCH_CURSOR_DESCRIPTION = (
+    "Opaque token from a previous response's `next_cursor`, to continue after its last row. "
+    "Keyset rather than an offset, so a primitive created mid-scroll cannot make a row repeat or "
+    "vanish. A token this endpoint did not mint is a 400."
+)
+
+
+@router.get(
+    "/{tenant_slug}",
+    # Declared rather than left to `response_model=None`, so the spec keeps describing both shapes
+    # this path can answer with. The union member a response matches is decided by the request's
+    # parameters, not by the body — see the docstring.
+    response_model=Union[List[PrimitiveSchema], PrimitiveSearchPage],
+    responses={400: {"description": "Unknown `scope`, or a `cursor` this endpoint did not mint."}},
+)
 async def list_primitives(
     tenant_slug: str,
     category: Optional[str] = Query(None, description="Filter by category"),
+    q: Optional[str] = Query(None, description=_SEARCH_Q_DESCRIPTION),
+    scope: Optional[str] = Query(None, description=_SEARCH_SCOPE_DESCRIPTION),
+    namespace: Optional[str] = Query(None, description=_SEARCH_NAMESPACE_DESCRIPTION),
+    limit: Optional[int] = Query(None, ge=0, description=_SEARCH_LIMIT_DESCRIPTION),
+    cursor: Optional[str] = Query(None, description=_SEARCH_CURSOR_DESCRIPTION),
     auth_data: Dict[str, Any] = Depends(validate_authentication)
-) -> List[PrimitiveSchema]:
-    """
-    List all primitives for a tenant.
+) -> Union[List[PrimitiveSchema], PrimitiveSearchPage]:
+    """List a tenant's primitives — unbounded by default, bounded on request (DWX-3.1, #2683).
+
+    Two shapes behind one path, and which one a caller gets is decided by the question it asked:
+
+    - **No bounded parameter** — the classic behaviour, unchanged: a JSON array of every primitive
+      the tenant can see, optionally filtered by ``category``. The classic property dialogs read
+      this and are unaffected by this ticket.
+    - **Any of ``q``, ``scope``, ``namespace``, ``limit`` or ``cursor``** — a
+      :class:`~app.models.PrimitiveSearchPage`: at most ``limit`` rows, the four type-picker tab
+      counts for the query, and a cursor to continue with. A tenant that has imported a standard
+      library has thousands of rows, and no surface in the unified workspace may read a catalog of
+      that size; this is the shape that lets the type picker exist.
+
+    The two shapes list the same catalog — the same visibility scope, the same
+    ``(namespace, name)`` deduplication — so a primitive is never visible through one and not the
+    other. See :mod:`app.primitives_search_store`.
 
     Supports authentication via:
     - JWT token in Authorization header (Bearer token)
     - API key in X-API-Key header
 
     Args:
-        tenant_slug: The tenant slug
-        category: Optional category filter
+        tenant_slug: The tenant slug. Decorative: the authoritative tenant is the token's, so a
+            slug naming another tenant cannot widen what this returns.
+        category: Optional category filter, honoured by both shapes.
+        q: Optional text to match; see :data:`_SEARCH_Q_DESCRIPTION`.
+        scope: Optional type-picker tab to restrict to.
+        namespace: Optional exact namespace filter.
+        limit: Optional page size, clamped to :data:`app.primitives_search_store.MAX_LIMIT`.
+        cursor: Optional opaque continuation token.
         auth_data: Authentication data (injected by dependency)
 
     Returns:
-        List of primitives for the tenant
-    """
-    # Get primitives
-    primitives = db.get_primitives_for_tenant(auth_data['tenant_id'], category)
+        Every visible primitive, or one bounded page of them with the tab counts.
 
-    return [PrimitiveSchema(**p) for p in primitives]
+    Raises:
+        HTTPException: 400 when ``scope`` is not one of the four tabs, or when ``cursor`` did not
+            come from this endpoint.
+    """
+    tenant_id = auth_data['tenant_id']
+
+    # A bounded question is any of the five; ``category`` alone is not one, because it has always
+    # been part of the unbounded listing and switching its shape would break the classic dialogs.
+    if q is None and scope is None and namespace is None and limit is None and cursor is None:
+        primitives = db.get_primitives_for_tenant(tenant_id, category)
+        return [PrimitiveSchema(**p) for p in primitives]
+
+    try:
+        resolved_scope = search_store.normalize_scope(scope)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    try:
+        resolved_cursor = search_store.decode_cursor(cursor)
+    except search_store.InvalidCursorError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    resolved_query = search_store.normalize_query(q)
+    resolved_namespace = search_store.normalize_namespace(namespace)
+
+    page = search_store.search_primitives(
+        db,
+        tenant_id=tenant_id,
+        query=resolved_query,
+        scope=resolved_scope,
+        namespace=resolved_namespace,
+        category=category,
+        limit=search_store.clamp_limit(limit),
+        cursor=resolved_cursor,
+    )
+
+    return PrimitiveSearchPage(
+        items=[PrimitiveSearchItem(**row) for row in page["items"]],
+        counts=PrimitiveScopeCounts(**page["counts"]),
+        total=page["total"],
+        limit=page["limit"],
+        query=resolved_query,
+        scope=resolved_scope,
+        namespace=resolved_namespace,
+        category=category,
+        next_cursor=page["next_cursor"],
+        truncated=page["truncated"],
+    )
 
 
 @router.get("/{tenant_slug}/imports")
