@@ -49,12 +49,38 @@ export interface ImportClassesInput {
   arrayMergeStrategy?: ArrayMergeStrategy;
 }
 
+/** One class the import wrote, with the id it landed under (private-suite#2675). */
+export interface ImportedClassRef {
+  /** The `apiome.classes` UUID the class now lives at. */
+  id: string;
+  /** The class name as written, after naming conventions and renames. */
+  name: string;
+  /** True for a newly created class; false when an existing class was overwritten or merged. */
+  created: boolean;
+}
+
+/** One selected entry the import did not write, and why (private-suite#2675). */
+export interface ImportSkippedClass {
+  /** The class name as it would have been written. */
+  name: string;
+  /** Why the entry was skipped, in the user's terms. */
+  reason: string;
+}
+
 export interface ImportClassesResult {
   success: boolean;
   importedCount?: number;
   skippedCount?: number;
   error?: string;
   importedClasses?: string[];
+  /**
+   * The written classes with their ids, in write order (private-suite#2675).
+   * `importedClasses` above predates this and carries the same names; it stays
+   * for existing callers.
+   */
+  imported?: ImportedClassRef[];
+  /** The skipped entries by name, each with its reason (private-suite#2675). */
+  skipped?: ImportSkippedClass[];
   /** Normalization warnings (e.g. reserved name detection #756). */
   warnings?: string[];
 }
@@ -311,6 +337,8 @@ export async function importClassesToVersion(input: ImportClassesInput): Promise
 
     // Import classes (importer already filtered by selectedSchemas; names may be transformed by naming convention)
     const importedClasses: string[] = [];
+    const imported: ImportedClassRef[] = [];
+    const skipped: ImportSkippedClass[] = [];
     let skippedCount = 0;
 
     for (const cls of norm.classes) {
@@ -320,15 +348,21 @@ export async function importClassesToVersion(input: ImportClassesInput): Promise
         if (existingClassId) {
           await overwriteClassWithProperties(existingClassId, classToWrite, propertyIdMap);
           importedClasses.push(classToWrite.name);
+          imported.push({ id: existingClassId, name: classToWrite.name, created: false });
         } else {
-          await writeClassWithProperties(projectId, versionId, classToWrite, propertyIdMap);
+          const classId = await writeClassWithProperties(projectId, versionId, classToWrite, propertyIdMap);
           importedClasses.push(classToWrite.name);
+          imported.push({ id: classId, name: classToWrite.name, created: true });
         }
       } catch (error: any) {
         // If class already exists and we weren't overwriting, skip it
         if (!existingClassId && error.message?.includes('already exists')) {
           console.log(`Class "${cls.name}" already exists, skipping`);
           skippedCount++;
+          skipped.push({
+            name: cls.name,
+            reason: 'a class with this name already exists in this version',
+          });
         } else {
           throw error;
         }
@@ -351,6 +385,8 @@ export async function importClassesToVersion(input: ImportClassesInput): Promise
       importedCount: importedClasses.length,
       skippedCount,
       importedClasses,
+      imported,
+      skipped: skipped.length > 0 ? skipped : undefined,
       warnings: norm.warnings.length > 0 ? norm.warnings : undefined,
     };
   } catch (error: any) {
