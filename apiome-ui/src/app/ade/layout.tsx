@@ -29,11 +29,13 @@ export default function RootLayout({
         enableSystem
         storageKey="theme"
       >
+        {/* Hive design language (HIVE-1.1, #5274) — kept in lockstep with the
+            root layout's RadixTheme so /ade and the rest of the app match. */}
         <RadixTheme
-          accentColor="indigo"
-          grayColor="slate"
+          accentColor="blue"
+          grayColor="sand"
           panelBackground="solid"
-          radius="medium"
+          radius="large"
           scaling="100%"
         >
           <ThemeProvider>

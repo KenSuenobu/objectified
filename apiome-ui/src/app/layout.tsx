@@ -36,11 +36,14 @@ export default function RootLayout({
           enableSystem
           storageKey="theme"
         >
+          {/* Hive design language (HIVE-1.1, #5274): azure accent, warm "sand" grey
+              and the 14 px card radius, so Radix primitives sit on the same
+              palette and geometry as the token layer in globals.css. */}
           <RadixTheme
-            accentColor="indigo"
-            grayColor="slate"
+            accentColor="blue"
+            grayColor="sand"
             panelBackground="solid"
-            radius="medium"
+            radius="large"
             scaling="100%"
           >
             <ThemeRegistry>
