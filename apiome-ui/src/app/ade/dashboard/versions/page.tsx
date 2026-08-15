@@ -36,6 +36,7 @@ import {
   FileOutput,
   FlaskConical,
   History,
+  Upload,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import {
@@ -106,6 +107,8 @@ import RelationshipGraphDialog from './RelationshipGraphDialog';
 import VersionLineageSnippet from './VersionLineageSnippet';
 import VersionHistoryGraphPanel from './VersionHistoryGraphPanel';
 import ProjectConversionPanel from './ProjectConversionPanel';
+import ImportDialog from '../../../components/ade/dashboard/ImportDialog';
+import { findNewlyImportedProject } from './imported-project';
 import { useConversionHistory } from '../../../components/ade/dashboard/catalog/useConversionHistory';
 import { DEFAULT_HISTORY_WINDOW } from './version-history-dag';
 import { toast } from 'sonner';
@@ -446,6 +449,8 @@ const Versions = () => {
   const [versions, setVersions] = useState<Version[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  /** Spec importer opened from this screen's header (#5260) — same dialog the Projects screen uses. */
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [showSunsetScheduleDialog, setShowSunsetScheduleDialog] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [publishVersionId, setPublishVersionId] = useState<string | null>(null);
@@ -936,8 +941,15 @@ const Versions = () => {
       .catch(() => setHasClassSchemaMap({}));
   }, [currentTenantId, versions]);
 
-  const loadProjects = async () => {
-    if (!currentTenantId) return;
+  /**
+   * Reload the tenant's projects into state.
+   *
+   * @returns The freshly loaded projects, or `null` when the load was skipped or failed. Callers
+   *   that must inspect the result immediately (the post-import selector switch, #5260) read the
+   *   return value rather than the state, which React has not committed yet.
+   */
+  const loadProjects = async (): Promise<Project[] | null> => {
+    if (!currentTenantId) return null;
     try {
       // include_catalog: the proxy strips catalog items by default (#4587); this page needs the
       // full list — see the comment in loadProjects' success branch below.
@@ -951,13 +963,36 @@ const Versions = () => {
         // project here for the publish gate (MFI-23.8) and catalog deep-links must keep working.
         // The *selector options* exclude catalog items instead — see `selectableProjects` (#4587).
         setProjects(data.projects);
+        return data.projects as Project[];
       } else {
         throw new Error(data.error || 'Failed to load projects');
       }
     } catch (error) {
       console.error('Failed to load projects:', error);
       setProjects([]);
+      return null;
     }
+  };
+
+  /**
+   * Land an import started from this screen's header (#5260).
+   *
+   * A spec import creates a new project, so the selector is switched to it and its revisions load
+   * through the usual `selectedProjectId` effect. When the diff cannot name a single new project —
+   * the reload failed, or the import went somewhere this list does not offer (a catalog item, an MCP
+   * endpoint) — the current project's revisions are refreshed instead, so an incremental import into
+   * the open project still shows up without a manual reload.
+   */
+  const handleImportSuccess = async () => {
+    const before = projects;
+    const refreshed = await loadProjects();
+    const imported = refreshed ? findNewlyImportedProject(before, refreshed) : null;
+    if (imported) {
+      handleSelectedProjectChange(imported.id);
+      toast.success(`Imported "${imported.name}" — showing its revisions`);
+      return;
+    }
+    if (selectedProjectId) await loadVersions();
   };
 
   const loadVersions = async (): Promise<boolean> => {
@@ -3107,6 +3142,21 @@ const Versions = () => {
                 <SelectTrigger className="w-56"><SelectValue placeholder="Select Project" /></SelectTrigger>
                 <SelectContent>{selectableProjects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
               </Select>
+              {/* Import (#5260): start an import here instead of backtracking to Projects. */}
+              <Button
+                variant="secondary"
+                data-testid="versions-import-button"
+                onClick={() => setShowImportDialog(true)}
+                disabled={!currentUserId}
+                title={
+                  currentUserId
+                    ? 'Import a specification into a new project'
+                    : 'Your session is still resolving — try again in a moment'
+                }
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Import
+              </Button>
               <Button variant="secondary" onClick={handleCompareDialogOpen} disabled={!selectedProjectId || versions.length < 2}>
                 <Copy className="h-4 w-4 mr-2" />
                 Compare
@@ -4046,6 +4096,20 @@ const Versions = () => {
       ) : null}
         </div>
       </main>
+
+      {/* Import dialog (#5260): the same importer the Projects screen opens, so both surfaces share
+          one intake. `projects` variant = native OpenAPI/Swagger sources; the alternative formats
+          stay on the Catalog importer (MFI-23.12). */}
+      {currentTenantId && currentUserId && (
+        <ImportDialog
+          open={showImportDialog}
+          onClose={() => setShowImportDialog(false)}
+          onSuccess={handleImportSuccess}
+          tenantId={currentTenantId}
+          userId={currentUserId}
+          variant="projects"
+        />
+      )}
 
       {/* New Version dialog — core version workflow; not gated by FEATURE_GITLIKE (merge/tags/etc. still are). */}
       <Dialog open={showCreateDialog} onOpenChange={(open) => !isLoading && setShowCreateDialog(open)}>
