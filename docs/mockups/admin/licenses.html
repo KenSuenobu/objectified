@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin · Licenses · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local only */
+  .lic-card { display: flex; flex-direction: column; }
+  .lic-card__head { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; }
+  .lic-card__actions { margin-left: auto; display: flex; gap: 2px; flex-shrink: 0; }
+  .lic-card__panel { border-top: 1px solid var(--border); padding: 14px 18px 16px; display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: var(--space-6); background: color-mix(in srgb, var(--bg-subtle) 55%, var(--bg-surface)); border-radius: 0 0 var(--r-lg) var(--r-lg); }
+  .seat-chip { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: var(--r-sm); background: var(--bg-inset); font-size: var(--fs-2xs); color: var(--fg-muted); font-family: var(--font-mono); }
+  .seat-chip b { color: var(--fg); font-weight: 600; }
+  .seat-row { display: grid; grid-template-columns: minmax(0,1fr) 120px 32px; gap: 8px; align-items: center; }
+  .tile-check { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; cursor: pointer; }
+  .tile-check.is-on { background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .flag-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+  .flag-row + .flag-row { border-top: 1px solid var(--border); }
+  .flag-row:hover { background: var(--bg-subtle); }
+  .flag-row .fr-title { font-size: var(--fs-sm); font-weight: 500; }
+  .flag-row .fr-sub { font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .flag-list { border: 1px solid var(--border); border-radius: var(--r-md); max-height: 320px; overflow: auto; }
+  .flag-list__head { display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; font-size: var(--fs-2xs); font-weight: 600; text-transform: uppercase; letter-spacing: var(--track-caps); color: var(--fg-subtle); border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-surface); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: var(--fs-xs); color: var(--fg-muted); }
+  .legend .sym { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 4px; font-weight: 700; font-size: 11px; }
+  .url-chip { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px; border-radius: var(--r-xs); background: var(--ok-soft); color: var(--ok-fg); font-family: var(--font-mono); font-size: var(--fs-2xs); }
+</style>
+</head>
+<body data-shell="admin" data-nav="admin-licenses" data-page="admin/licenses" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="overview.html">Admin console</a><i data-lucide="chevron-right"></i><span>Commercial</span><i data-lucide="chevron-right"></i><span>Licenses</span></div>
+          <h1 class="page-title">Licenses</h1>
+          <p class="page-desc">License plans, feature flags, flag packages and who has what.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn--ghost" data-tip="Reload licenses, flags, packages and users"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <button class="btn btn--primary" data-action="open" data-target="license-dialog"><i data-lucide="plus"></i>New license<span class="kbd">N</span></button>
+        </div>
+      </div>
+      <div class="tabs" data-tabs="lic-panels" role="tablist">
+        <button class="tab is-active" role="tab" data-action="tab" data-target="licenses"><i data-lucide="award"></i>Licenses<span class="count">5</span></button>
+        <button class="tab" role="tab" data-action="tab" data-target="flags"><i data-lucide="flag"></i>Feature flags<span class="count">8</span></button>
+        <button class="tab" role="tab" data-action="tab" data-target="packages"><i data-lucide="package"></i>Flag packages<span class="count">3</span></button>
+        <button class="tab" role="tab" data-action="tab" data-target="assignments"><i data-lucide="users"></i>Assignments<span class="count">7</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body" id="lic-panels">
+
+    <!-- ===== Licenses ===== -->
+    <section data-tab-panel="licenses" class="col gap-3">
+      <div class="row-between wrap gap-3">
+        <div class="row gap-2 wrap">
+          <span class="chip is-active" data-action="chip">All <span class="t-faint">5</span></span>
+          <span class="chip" data-action="chip">free <span class="t-faint">1</span></span>
+          <span class="chip" data-action="chip">paid <span class="t-faint">3</span></span>
+          <span class="chip" data-action="chip">sponsor <span class="t-faint">1</span></span>
+        </div>
+        <span class="t-xs t-subtle">Licenses are reusable plans — no expiry, issue or revoke; “enabled” hides a plan from assignment.</span>
+      </div>
+
+      <!-- Free -->
+      <article class="card lic-card">
+        <div class="lic-card__head">
+          <span class="icon-tile"><i data-lucide="award"></i></span>
+          <div class="grow min-w-0">
+            <div class="row gap-2 wrap"><span class="t-h4">Free</span><span class="badge">free</span><span class="t-xs t-subtle">· 3 users</span></div>
+            <div class="t-sm t-muted mt-1">Personal use. One tenant, a handful of collaborators.</div>
+            <div class="row gap-1 wrap mt-2"><span class="seat-chip">max_tenants <b>1</b></span><span class="seat-chip">max_users_per_tenant <b>5</b></span><span class="seat-chip">max_projects <b>3</b></span></div>
+          </div>
+          <div class="lic-card__actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Toggle feature flags" aria-label="Toggle feature flags"><i data-lucide="chevron-down"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="license-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-license-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div>
+        </div>
+      </article>
+
+      <!-- Team (expanded) -->
+      <article class="card lic-card">
+        <div class="lic-card__head">
+          <span class="icon-tile icon-tile--accent"><i data-lucide="award"></i></span>
+          <div class="grow min-w-0">
+            <div class="row gap-2 wrap"><span class="t-h4">Team</span><span class="badge badge--accent">paid</span><span class="t-xs t-subtle">· 2 users</span></div>
+            <div class="t-sm t-muted mt-1">Small teams shipping several APIs across a few workspaces.</div>
+            <div class="row gap-1 wrap mt-2"><span class="seat-chip">max_tenants <b>3</b></span><span class="seat-chip">max_users_per_tenant <b>25</b></span><span class="seat-chip">max_projects <b>50</b></span><span class="seat-chip">max_versions <b>500</b></span><span class="seat-chip">max_ai_requests <b>1000</b></span></div>
+          </div>
+          <div class="lic-card__actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Collapse" aria-label="Collapse feature flags" aria-expanded="true"><i data-lucide="chevron-up"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="license-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-license-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div>
+        </div>
+        <div class="lic-card__panel">
+          <div>
+            <div class="t-caps mb-2">Included feature flags</div>
+            <div class="row gap-1 wrap">
+              <span class="chip"><i data-lucide="flag"></i>Designer</span>
+              <span class="chip"><i data-lucide="flag"></i>Paths</span>
+              <span class="chip"><i data-lucide="flag"></i>Catalog import</span>
+              <span class="chip"><i data-lucide="flag"></i>Export studio</span>
+              <span class="chip"><i data-lucide="flag"></i>MCP servers</span>
+              <span class="chip"><i data-lucide="flag"></i>Lint posture<span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></span>
+            </div>
+            <div class="t-xs t-subtle mt-3">Empty copy: “No feature flags assigned to this license.”</div>
+          </div>
+          <div>
+            <div class="t-caps mb-2">Seat limits</div>
+            <dl class="kv" style="row-gap:6px">
+              <dt class="mono t-xs">max_tenants</dt><dd class="t-600 t-num">3</dd>
+              <dt class="mono t-xs">max_users_per_tenant</dt><dd class="t-600 t-num">25</dd>
+              <dt class="mono t-xs">max_projects</dt><dd class="t-600 t-num">50</dd>
+              <dt class="mono t-xs">max_versions</dt><dd class="t-600 t-num">500</dd>
+              <dt class="mono t-xs">max_ai_requests</dt><dd class="t-600 t-num">1,000</dd>
+            </dl>
+          </div>
+        </div>
+      </article>
+
+      <!-- Enterprise -->
+      <article class="card lic-card">
+        <div class="lic-card__head">
+          <span class="icon-tile icon-tile--accent"><i data-lucide="award"></i></span>
+          <div class="grow min-w-0">
+            <div class="row gap-2 wrap"><span class="t-h4">Enterprise</span><span class="badge badge--accent">paid</span><span class="t-xs t-subtle">· 1 user</span></div>
+            <div class="t-sm t-muted mt-1">Unlimited workspaces, SSO enforcement, every platform feature.</div>
+            <div class="row gap-1 wrap mt-2"><span class="seat-chip">max_tenants <b>0</b> <span class="t-faint">(unlimited)</span></span><span class="seat-chip">max_users_per_tenant <b>500</b></span><span class="seat-chip">max_ai_requests <b>10000</b></span></div>
+          </div>
+          <div class="lic-card__actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Toggle feature flags" aria-label="Toggle feature flags"><i data-lucide="chevron-down"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="license-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-license-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div>
+        </div>
+      </article>
+
+      <!-- Sponsor -->
+      <article class="card lic-card">
+        <div class="lic-card__head">
+          <span class="icon-tile icon-tile--honey"><i data-lucide="award"></i></span>
+          <div class="grow min-w-0">
+            <div class="row gap-2 wrap"><span class="t-h4">Open source sponsor</span><span class="badge badge--honey">sponsor</span><span class="t-xs t-subtle">· 1 user</span></div>
+            <div class="t-sm t-muted mt-1">Complimentary Team-level access for maintainers of sponsored projects.</div>
+            <div class="row gap-1 wrap mt-2"><span class="seat-chip">max_tenants <b>2</b></span><span class="seat-chip">max_users_per_tenant <b>10</b></span></div>
+          </div>
+          <div class="lic-card__actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Toggle feature flags" aria-label="Toggle feature flags"><i data-lucide="chevron-down"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="license-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-license-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div>
+        </div>
+      </article>
+
+      <!-- Disabled plan -->
+      <article class="card lic-card" style="opacity:.75">
+        <div class="lic-card__head">
+          <span class="icon-tile"><i data-lucide="award"></i></span>
+          <div class="grow min-w-0">
+            <div class="row gap-2 wrap"><span class="t-h4">Legacy Starter</span><span class="badge badge--accent">paid</span><span class="badge" data-status="disabled">disabled</span><span class="t-xs t-subtle">· 0 users</span></div>
+            <div class="t-sm t-muted mt-1">Retired 2025 plan; kept so historic assignments still resolve. Not offered in Assign.</div>
+            <div class="row gap-1 wrap mt-2"><span class="seat-chip">max_tenants <b>1</b></span><span class="seat-chip">max_users_per_tenant <b>3</b></span></div>
+          </div>
+          <div class="lic-card__actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Toggle feature flags" aria-label="Toggle feature flags"><i data-lucide="chevron-down"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="license-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-license-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div>
+        </div>
+      </article>
+      <div class="t-xs t-subtle">Empty: “No license plans defined.” · Loading: skeleton cards.</div>
+    </section>
+
+    <!-- ===== Feature flags ===== -->
+    <section data-tab-panel="flags" class="table-wrap" hidden>
+      <div class="table-toolbar">
+        <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter by label or name…" /></div>
+        <span class="chip is-active" data-action="chip">All <span class="t-faint">8</span></span>
+        <span class="chip" data-action="chip">Commercial <span class="t-faint">2</span></span>
+        <span class="chip" data-action="chip"><i data-lucide="eye"></i>Preview <span class="t-faint">2</span></span>
+        <span class="chip" data-action="chip">Disabled <span class="t-faint">1</span></span>
+        <span class="spacer"></span>
+        <button class="btn btn--sm" data-action="open" data-target="flag-dialog"><i data-lucide="plus"></i>New feature flag</button>
+      </div>
+      <table class="table">
+        <thead><tr><th class="sortable is-sorted">Flag <span class="sort"><i data-lucide="arrow-up"></i></span></th><th>Description</th><th>URL patterns</th><th>Licenses</th><th>Enabled</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          <tr><td><div class="cell-primary row gap-2">AI Assistant<span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></div><div class="cell-sub mono">ai_assistant</div></td><td class="t-muted" style="max-width:260px"><div class="t-truncate">LLM-assisted design, explanations and API drafting.</div></td><td><div class="row gap-1 wrap"><span class="url-chip"><i data-lucide="link"></i>/ade/studio/ai</span><span class="url-chip"><i data-lucide="link"></i>/api/ollama</span></div></td><td class="t-num t-muted">2</td><td><button class="switch is-on" role="switch" aria-checked="true" data-action="switch" aria-label="Enabled"></button></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flag-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-flag-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td></tr>
+          <tr><td><div class="cell-primary">Catalog import</div><div class="cell-sub mono">catalog_import</div></td><td class="t-muted" style="max-width:260px"><div class="t-truncate">Import specs from the shared catalog.</div></td><td><span class="url-chip"><i data-lucide="link"></i>/ade/dashboard/catalog</span></td><td class="t-num t-muted">4</td><td><button class="switch is-on" role="switch" aria-checked="true" data-action="switch" aria-label="Enabled"></button></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flag-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-flag-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td></tr>
+          <tr><td><div class="cell-primary row gap-2">Designer<span class="badge badge--violet">commercial</span></div><div class="cell-sub mono">designer</div></td><td class="t-muted" style="max-width:260px"><div class="t-truncate">Visual API designer (Studio). Shows on the home page and rail.</div></td><td><span class="url-chip"><i data-lucide="link"></i>/ade/studio</span></td><td class="t-num t-muted">5</td><td><button class="switch is-on" role="switch" aria-checked="true" data-action="switch" aria-label="Enabled"></button></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flag-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-flag-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td></tr>
+          <tr><td><div class="cell-primary">Export studio</div><div class="cell-sub mono">export_studio</div></td><td class="t-muted" style="max-width:260px"><div class="t-truncate">Multi-format export with profiles and diffs.</div></td><td><span class="url-chip"><i data-lucide="link"></i>/ade/dashboard/export</span></td><td class="t-num t-muted">3</td><td><button class="switch is-on" role="switch" aria-checked="true" data-action="switch" aria-label="Enabled"></button></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flag-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-flag-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td></tr>
+          <tr><td><div class="cell-primary row gap-2">Lint posture<span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></div><div class="cell-sub mono">lint_workspace</div></td><td class="t-muted" style="max-width:260px"><div class="t-truncate">Cross-project lint workspace with decisions and gates.</div></td><td><span class="url-chip"><i data-lucide="link"></i>/ade/dashboard/lint-workspace</span></td><td class="t-num t-muted">2</td><td><button class="switch is-on" role="switch" aria-checked="true" data-action="switch" aria-label="Enabled"></button></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flag-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-flag-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td></tr>
+          <tr><td><div class="cell-primary">MCP servers</div><div class="cell-sub mono">mcp_servers</div></td><td class="t-muted" style="max-width:260px"><div class="t-truncate">Register, browse and test MCP servers.</div></td><td><span class="url-chip"><i data-lucide="link"></i>/ade/dashboard/mcp</span></td><td class="t-num t-muted">2</td><td><button class="switch is-on" role="switch" aria-checked="true" data-action="switch" aria-label="Enabled"></button></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flag-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-flag-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td></tr>
+          <tr><td><div class="cell-primary row gap-2">Paths<span class="badge badge--violet">commercial</span></div><div class="cell-sub mono">paths</div></td><td class="t-muted" style="max-width:260px"><div class="t-truncate">Paths workspace inside Studio.</div></td><td><span class="url-chip"><i data-lucide="link"></i>/ade/studio/paths</span></td><td class="t-num t-muted">3</td><td><button class="switch is-on" role="switch" aria-checked="true" data-action="switch" aria-label="Enabled"></button></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flag-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-flag-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td></tr>
+          <tr style="opacity:.75"><td><div class="cell-primary row gap-2">SSO enforcement<span class="badge" data-status="disabled">disabled</span></div><div class="cell-sub mono">sso_enforcement</div></td><td class="t-muted" style="max-width:260px"><div class="t-truncate">Force OIDC sign-in for tenant members.</div></td><td><span class="t-faint t-xs">—</span></td><td class="t-num t-muted">1</td><td><button class="switch" role="switch" aria-checked="false" data-action="switch" aria-label="Enabled"></button></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flag-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-flag-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td></tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>8 flags · machine names <span class="mono">^[a-z0-9_]+$</span> · same table lives at <a href="feature-flags.html">Feature flags</a></span><span>Empty: “No feature flags defined yet.” + “Create your first feature flag”</span></div>
+    </section>
+
+    <!-- ===== Flag packages ===== -->
+    <section data-tab-panel="packages" class="col gap-3" hidden>
+      <div class="row-between wrap gap-3">
+        <span class="t-sm t-muted">Group several flags for faster grants on users. Deleting a package never changes existing per-user overrides.</span>
+        <button class="btn btn--sm" data-action="open" data-target="package-dialog"><i data-lucide="plus"></i>New flag package</button>
+      </div>
+      <div class="grid grid-3">
+        <article class="card card--pad">
+          <div class="row-start gap-3"><span class="icon-tile icon-tile--accent"><i data-lucide="package"></i></span><div class="grow min-w-0"><div class="t-h4">Standard features</div><div class="t-xs t-subtle mono">standard_features</div></div><div class="row gap-1"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="package-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-package-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></div>
+          <p class="t-sm t-muted mt-3">Everything a paying seat gets by default.</p>
+          <div class="row gap-1 wrap mt-3"><span class="chip"><i data-lucide="flag"></i>Designer</span><span class="chip"><i data-lucide="flag"></i>Paths</span><span class="chip"><i data-lucide="flag"></i>Catalog import</span><span class="chip"><i data-lucide="flag"></i>Export studio</span></div>
+        </article>
+        <article class="card card--pad">
+          <div class="row-start gap-3"><span class="icon-tile icon-tile--accent"><i data-lucide="package"></i></span><div class="grow min-w-0"><div class="t-h4">AI bundle</div><div class="t-xs t-subtle mono">ai_bundle</div></div><div class="row gap-1"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="package-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-package-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></div>
+          <p class="t-sm t-muted mt-3">AI assistant + MCP servers for pilots.</p>
+          <div class="row gap-1 wrap mt-3"><span class="chip"><i data-lucide="flag"></i>AI Assistant<span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></span><span class="chip"><i data-lucide="flag"></i>MCP servers</span></div>
+        </article>
+        <article class="card card--pad">
+          <div class="row-start gap-3"><span class="icon-tile icon-tile--accent"><i data-lucide="package"></i></span><div class="grow min-w-0"><div class="t-h4">Preview pack</div><div class="t-xs t-subtle mono">preview_pack</div></div><div class="row gap-1"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="package-dialog" data-tip="Edit" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-package-dialog" data-tip="Delete" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></div>
+          <p class="t-sm t-muted mt-3">Everything marked Preview, for design partners.</p>
+          <div class="t-sm t-subtle mt-3" style="font-style:italic">No flags in this package yet.</div>
+        </article>
+      </div>
+      <div class="t-xs t-subtle">Empty: “No flag packages yet. Create one to group several feature flags for faster grants on users.”</div>
+    </section>
+
+    <!-- ===== Assignments ===== -->
+    <section data-tab-panel="assignments" class="table-wrap" hidden>
+      <div class="table-toolbar">
+        <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Search users…" /></div>
+        <span class="chip is-active" data-action="chip">All <span class="t-faint">8</span></span>
+        <span class="chip" data-action="chip">No license <span class="t-faint">1</span></span>
+        <span class="chip" data-action="chip">paid <span class="t-faint">3</span></span>
+        <span class="spacer"></span>
+        <span class="t-xs t-subtle">8 users · 7 with a license</span>
+      </div>
+      <table class="table">
+        <thead><tr><th class="sortable is-sorted">User <span class="sort"><i data-lucide="arrow-up"></i></span></th><th class="sortable">Assigned license <span class="sort"><i data-lucide="arrow-up-down"></i></span></th><th>Seats</th><th>Overrides</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          <tr><td><div class="cell-primary">Ada Lovelace</div><div class="cell-sub">ada@example.com</div></td><td><span class="badge badge--accent">paid</span> Team</td><td><div class="row gap-1 wrap"><span class="seat-chip">max_tenants <b>3</b></span><span class="seat-chip">max_users_per_tenant <b>25</b></span><span class="seat-chip">+3</span></div></td><td class="t-muted t-num">0</td><td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-action="open" data-target="assign-dialog"><i data-lucide="shield-check"></i>Assign</button></div></td></tr>
+          <tr><td><div class="cell-primary">Alan Turing</div><div class="cell-sub">alan@example.com</div></td><td><span class="badge">free</span> Free</td><td><div class="row gap-1 wrap"><span class="seat-chip">max_tenants <b>1</b></span><span class="seat-chip">max_users_per_tenant <b>5</b></span><span class="seat-chip">max_projects <b>3</b></span></div></td><td class="t-muted t-num">0</td><td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-action="open" data-target="assign-dialog"><i data-lucide="shield-check"></i>Assign</button></div></td></tr>
+          <tr><td><div class="cell-primary">Edsger Dijkstra</div><div class="cell-sub">edsger@initech.com</div></td><td><span class="t-subtle" style="font-style:italic">No license</span></td><td class="t-faint">—</td><td class="t-muted t-num">0</td><td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-action="open" data-target="assign-dialog"><i data-lucide="shield-check"></i>Assign</button></div></td></tr>
+          <tr><td><div class="cell-primary">Grace Hopper</div><div class="cell-sub">grace@example.com</div></td><td><span class="badge badge--accent">paid</span> Team</td><td><div class="row gap-1 wrap"><span class="seat-chip">max_tenants <b>3</b></span><span class="seat-chip">max_users_per_tenant <b>25</b></span><span class="seat-chip">+3</span></div></td><td class="t-num"><a href="#" data-action="open" data-target="flags-drawer">1 flag</a></td><td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-action="open" data-target="assign-dialog"><i data-lucide="shield-check"></i>Assign</button></div></td></tr>
+          <tr><td><div class="cell-primary">Katherine Johnson</div><div class="cell-sub">katherine@globex.io</div></td><td><span class="badge badge--accent">paid</span> Enterprise</td><td><div class="row gap-1 wrap"><span class="seat-chip">max_tenants <b>0</b></span><span class="seat-chip">max_users_per_tenant <b>500</b></span><span class="seat-chip">max_ai_requests <b>10000</b></span></div></td><td class="t-muted t-num">0</td><td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-action="open" data-target="assign-dialog"><i data-lucide="shield-check"></i>Assign</button></div></td></tr>
+          <tr><td><div class="cell-primary">Linus Torvalds</div><div class="cell-sub">linus@example.com</div></td><td><span class="badge">free</span> Free</td><td><div class="row gap-1 wrap"><span class="seat-chip">max_tenants <b>1</b></span><span class="seat-chip">max_users_per_tenant <b>5</b></span><span class="seat-chip">max_projects <b>3</b></span></div></td><td class="t-num"><a href="#" data-action="open" data-target="flags-drawer">2 flags</a></td><td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-action="open" data-target="assign-dialog"><i data-lucide="shield-check"></i>Assign</button></div></td></tr>
+          <tr><td><div class="cell-primary">Margaret Hamilton</div><div class="cell-sub">margaret@example.com</div></td><td><span class="badge">free</span> Free</td><td><div class="row gap-1 wrap"><span class="seat-chip">max_tenants <b>1</b></span><span class="seat-chip">max_users_per_tenant <b>5</b></span><span class="seat-chip">max_projects <b>3</b></span></div></td><td class="t-muted t-num">0</td><td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-action="open" data-target="assign-dialog"><i data-lucide="shield-check"></i>Assign</button></div></td></tr>
+          <tr><td><div class="cell-primary">Radia Perlman</div><div class="cell-sub">radia@example.com</div></td><td><span class="badge badge--honey">sponsor</span> Open source sponsor</td><td><div class="row gap-1 wrap"><span class="seat-chip">max_tenants <b>2</b></span><span class="seat-chip">max_users_per_tenant <b>10</b></span></div></td><td class="t-muted t-num">0</td><td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-action="open" data-target="assign-dialog"><i data-lucide="shield-check"></i>Assign</button></div></td></tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>8 users · client-side filter</span><span>Filter miss: “No users match ‘…’.”</span></div>
+    </section>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+
+<!-- New / Edit license plan -->
+<div class="overlay" id="license-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="license-title" style="height:calc(100vh - 48px)">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="award"></i></span>
+      <div><div class="dialog__title" id="license-title">Edit — Team</div><div class="dialog__desc">Plans are reusable: type, seat quotas and the feature flags they include.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-5">
+      <div class="form-grid">
+        <div class="field"><label>Name <span class="req">*</span></label><input class="input" placeholder="e.g. Paid" value="Team" /></div>
+        <div class="field"><label>Type <span class="req">*</span></label><select class="select"><option>Free</option><option selected>Paid</option><option>Sponsor</option></select><div class="hint">Vocabulary: <span class="mono">free · paid · sponsor</span></div></div>
+        <div class="field span-2"><label>Description</label><textarea class="textarea" style="min-height:64px">Small teams shipping several APIs across a few workspaces.</textarea></div>
+      </div>
+
+      <div class="form-section" style="margin-top:0;padding-top:16px">
+        <div class="row-between"><div><div class="form-section__title">Seat limits (quotas)</div><div class="form-section__desc" style="margin-bottom:0">Stored as numeric key/value pairs on the license. Pick a preset or add a custom key. Feature access is configured separately in Included feature flags below.</div></div><button class="btn btn--sm shrink-0"><i data-lucide="plus"></i>Add limit</button></div>
+        <div class="col gap-2 mt-3">
+          <div class="seat-row t-caps"><span>Key</span><span>Value</span><span></span></div>
+          <div class="seat-row"><select class="select"><option>Select a limit…</option><option selected>max_tenants — tenants a user may create or join</option><option disabled>max_users_per_tenant — members per tenant (taken)</option><option>max_projects — projects per tenant</option><option>max_versions — versions per project</option><option>max_ai_requests — AI calls per month</option><option>Custom key…</option></select><input class="input t-num" type="number" min="0" step="1" value="3" /><button class="btn btn--ghost btn--sm btn--icon" data-tip="Remove this limit" aria-label="Remove this limit"><i data-lucide="trash-2"></i></button></div>
+          <div class="seat-row"><select class="select"><option>Select a limit…</option><option disabled>max_tenants (taken)</option><option selected>max_users_per_tenant — members per tenant</option><option>max_projects — projects per tenant</option><option>max_versions — versions per project</option><option>max_ai_requests — AI calls per month</option><option>Custom key…</option></select><input class="input t-num" type="number" min="0" step="1" value="25" /><button class="btn btn--ghost btn--sm btn--icon" data-tip="Remove this limit" aria-label="Remove this limit"><i data-lucide="trash-2"></i></button></div>
+          <div class="seat-row"><select class="select"><option selected>max_projects — projects per tenant</option></select><input class="input t-num" type="number" min="0" step="1" value="50" /><button class="btn btn--ghost btn--sm btn--icon" data-tip="Remove this limit" aria-label="Remove this limit"><i data-lucide="trash-2"></i></button></div>
+          <div class="seat-row"><select class="select"><option selected>max_versions — versions per project</option></select><input class="input t-num" type="number" min="0" step="1" value="500" /><button class="btn btn--ghost btn--sm btn--icon" data-tip="Remove this limit" aria-label="Remove this limit"><i data-lucide="trash-2"></i></button></div>
+          <div class="seat-row"><select class="select"><option selected>max_ai_requests — AI calls per month</option></select><input class="input t-num" type="number" min="0" step="1" value="1000" /><button class="btn btn--ghost btn--sm btn--icon" data-tip="Remove this limit" aria-label="Remove this limit"><i data-lucide="trash-2"></i></button></div>
+          <div class="seat-row"><div class="row gap-2"><select class="select" style="width:150px"><option selected>Custom key…</option></select><input class="input input--mono" placeholder="e.g. max_branches" value="max_branches" /></div><input class="input t-num" type="number" min="0" step="1" value="-1" /><button class="btn btn--ghost btn--sm btn--icon" data-tip="Remove this limit" aria-label="Remove this limit"><i data-lucide="trash-2"></i></button></div>
+          <div class="error t-xs t-danger row gap-1"><i data-lucide="circle-alert" style="width:13px;height:13px"></i>Value for “max_branches” must be a non-negative whole number.</div>
+        </div>
+        <div class="t-xs t-subtle mt-2">Defaults on create: <span class="mono">max_tenants=1</span>, <span class="mono">max_users_per_tenant=5</span>. Empty copy: “No seat limits yet. Click Add limit to add quotas.” Other validation: “Every seat limit needs a key…”, “Duplicate seat key ‘{k}’…”, “Name is required”.</div>
+      </div>
+
+      <div class="form-section" style="margin-top:0;padding-top:16px">
+        <div class="form-section__title">Commercial products &amp; features</div>
+        <div class="form-section__desc">Toggle which applications appear on the home page and top navigation for users assigned this license.</div>
+        <div class="t-caps mb-2">Commercial applications</div>
+        <div class="grid grid-2" style="gap:8px">
+          <label class="tile-check is-on"><input type="checkbox" class="check" checked hidden /><i data-lucide="square-check" style="color:var(--accent)"></i><div><div class="t-sm t-500">Designer</div><div class="t-2xs t-subtle mono">designer</div></div></label>
+          <label class="tile-check is-on"><input type="checkbox" checked hidden /><i data-lucide="square-check" style="color:var(--accent)"></i><div><div class="t-sm t-500">Paths</div><div class="t-2xs t-subtle mono">paths</div></div></label>
+        </div>
+        <div class="t-caps mb-2 mt-4">Additional platform features</div>
+        <div class="grid grid-2" style="gap:8px">
+          <label class="tile-check is-on"><input type="checkbox" checked hidden /><i data-lucide="square-check" style="color:var(--accent)"></i><div><div class="t-sm t-500">Catalog import</div><div class="t-2xs t-subtle mono">catalog_import</div></div></label>
+          <label class="tile-check is-on"><input type="checkbox" checked hidden /><i data-lucide="square-check" style="color:var(--accent)"></i><div><div class="t-sm t-500">Export studio</div><div class="t-2xs t-subtle mono">export_studio</div></div></label>
+          <label class="tile-check is-on"><input type="checkbox" checked hidden /><i data-lucide="square-check" style="color:var(--accent)"></i><div><div class="t-sm t-500">MCP servers</div><div class="t-2xs t-subtle mono">mcp_servers</div></div></label>
+          <label class="tile-check is-on"><input type="checkbox" checked hidden /><i data-lucide="square-check" style="color:var(--accent)"></i><div><div class="t-sm t-500 row gap-2">Lint posture<span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></div><div class="t-2xs t-subtle mono">lint_workspace</div></div></label>
+          <label class="tile-check"><input type="checkbox" hidden /><i data-lucide="square" class="t-faint"></i><div><div class="t-sm t-500 row gap-2">AI Assistant<span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></div><div class="t-2xs t-subtle mono">ai_assistant</div></div></label>
+          <label class="tile-check"><input type="checkbox" hidden /><i data-lucide="square" class="t-faint"></i><div><div class="t-sm t-500 row gap-2">SSO enforcement<span class="badge" data-status="disabled">disabled</span></div><div class="t-2xs t-subtle mono">sso_enforcement</div></div></label>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Toast on success: “License saved”</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save changes</button></div>
+  </div>
+</div>
+
+<!-- New / Edit feature flag -->
+<div class="overlay" id="flag-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="flag-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--violet"><i data-lucide="flag"></i></span>
+      <div><div class="dialog__title" id="flag-title">New feature flag</div><div class="dialog__desc">Flags gate features and URL paths; licenses include them, users can get explicit grants.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="form-grid">
+        <div class="field"><label>Machine name <span class="req">*</span></label><input class="input input--mono" placeholder="ai_assistant" autofocus /><div class="hint">Lowercase, underscores only (<span class="mono">^[a-z0-9_]+$</span>). Cannot be changed after creation.</div></div>
+        <div class="field"><label>Display label <span class="req">*</span></label><input class="input" placeholder="AI Assistant" /></div>
+        <div class="field span-2"><label>Description</label><input class="input" placeholder="What does this flag unlock?" /></div>
+        <div class="field span-2"><label class="row gap-2"><i data-lucide="link" style="width:14px;height:14px"></i>URL patterns (one per line)</label><textarea class="textarea input--mono" style="min-height:80px;color:var(--ok-fg)" placeholder="/ade/studio&#10;/api/ollama"></textarea><div class="hint">Paths that require this flag to be active. E.g. <span class="mono">/ade/studio</span> or <span class="mono">/api/ollama</span>.</div></div>
+      </div>
+      <div class="switch-row" style="padding:4px 0 0"><div><div class="sw-title row gap-2">Mark as <span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></div><div class="sw-desc">Shows the preview badge wherever the feature appears in the UI.</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div>
+      <div class="switch-row"><div><div class="sw-title">Enabled</div><div class="sw-desc">Disabled flags stay on licenses and users but grant nothing.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Validation: “Name and Label are required” · “Name must be lowercase alphanumeric + underscores only”</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create flag</button></div>
+  </div>
+</div>
+
+<!-- New / Edit flag package -->
+<div class="overlay" id="package-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="pkg-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="package"></i></span>
+      <div><div class="dialog__title" id="pkg-title">Edit package — Standard features</div><div class="dialog__desc">Bundle flags so they can be granted or removed on a user in one click.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="form-grid">
+        <div class="field"><label>Machine name <span class="req">*</span></label><input class="input input--mono" value="standard_features" disabled /><div class="hint">Cannot be changed after creation.</div></div>
+        <div class="field"><label>Display label <span class="req">*</span></label><input class="input" value="Standard features" /></div>
+        <div class="field span-2"><label>Description</label><input class="input" value="Everything a paying seat gets by default." /></div>
+      </div>
+      <div class="field">
+        <label>Flags in this package</label>
+        <div class="card card--flat" style="max-height:192px;overflow:auto">
+          <label class="list-row" style="padding:8px 12px;border-left:3px solid var(--accent)"><input type="checkbox" class="check" checked style="display:none" /><i data-lucide="square-check" style="color:var(--accent)"></i><span class="grow t-sm">Designer <span class="mono t-xs t-subtle">designer</span></span></label>
+          <label class="list-row" style="padding:8px 12px;border-left:3px solid var(--accent)"><i data-lucide="square-check" style="color:var(--accent)"></i><span class="grow t-sm">Paths <span class="mono t-xs t-subtle">paths</span></span></label>
+          <label class="list-row" style="padding:8px 12px;border-left:3px solid var(--accent)"><i data-lucide="square-check" style="color:var(--accent)"></i><span class="grow t-sm">Catalog import <span class="mono t-xs t-subtle">catalog_import</span></span></label>
+          <label class="list-row" style="padding:8px 12px;border-left:3px solid var(--accent)"><i data-lucide="square-check" style="color:var(--accent)"></i><span class="grow t-sm">Export studio <span class="mono t-xs t-subtle">export_studio</span></span></label>
+          <label class="list-row" style="padding:8px 12px;border-left:3px solid transparent"><i data-lucide="square" class="t-faint"></i><span class="grow t-sm">AI Assistant <span class="mono t-xs t-subtle">ai_assistant</span></span><span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></label>
+          <label class="list-row" style="padding:8px 12px;border-left:3px solid transparent"><i data-lucide="square" class="t-faint"></i><span class="grow t-sm">Lint posture <span class="mono t-xs t-subtle">lint_workspace</span></span><span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></label>
+          <label class="list-row" style="padding:8px 12px;border-left:3px solid transparent"><i data-lucide="square" class="t-faint"></i><span class="grow t-sm">MCP servers <span class="mono t-xs t-subtle">mcp_servers</span></span></label>
+          <label class="list-row" style="padding:8px 12px;border-left:3px solid transparent"><i data-lucide="square" class="t-faint"></i><span class="grow t-sm">SSO enforcement <span class="mono t-xs t-subtle">sso_enforcement</span></span></label>
+        </div>
+        <div class="hint">Empty copy: “Create feature flags first.”</div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Toast: “Flag package saved”</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save package</button></div>
+  </div>
+</div>
+
+<!-- Assign license -->
+<div class="overlay" id="assign-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="assign-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="shield-check"></i></span>
+      <div><div class="dialog__title" id="assign-title">Assign license — Katherine Johnson</div><div class="dialog__desc">katherine@globex.io</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="card card--flat" style="overflow:hidden">
+        <button class="list-row w-full" style="text-align:left"><span class="badge">free</span><span class="grow lr-title">Free</span></button>
+        <button class="list-row w-full" style="text-align:left"><span class="badge badge--accent">paid</span><span class="grow lr-title">Team</span></button>
+        <button class="list-row w-full" style="text-align:left;background:var(--accent-soft)"><span class="badge badge--accent">paid</span><span class="grow lr-title">Enterprise</span><i data-lucide="check" style="color:var(--accent)"></i></button>
+        <button class="list-row w-full" style="text-align:left"><span class="badge badge--honey">sponsor</span><span class="grow lr-title">Open source sponsor</span></button>
+      </div>
+      <div class="t-xs t-subtle mt-2">Disabled plans (Legacy Starter) are not offered. Click assigns immediately — toast “License assigned”.</div>
+      <hr class="mt-3 mb-3" />
+      <div class="col gap-2">
+        <button class="btn w-full" style="justify-content:flex-start" data-action="open" data-target="flags-drawer"><i data-lucide="flag"></i>Override feature flags…<i data-lucide="chevron-right" style="margin-left:auto"></i></button>
+        <button class="btn btn--danger-soft w-full" style="justify-content:flex-start" data-action="open" data-target="remove-license-dialog"><i data-lucide="circle-minus"></i>Remove license</button>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="remove-license-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="circle-minus"></i></span><div><div class="dialog__title">Remove license from Katherine Johnson?</div><div class="dialog__desc">Explicit flag grants stay; license-included features switch off. Toast “License removed”.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove license</button></div>
+  </div>
+</div>
+
+<!-- Feature-flag user overrides (shared panel) -->
+<div class="overlay overlay--drawer" id="flags-drawer" data-overlay>
+  <div class="drawer drawer--lg" role="dialog" aria-labelledby="flags-title">
+    <div class="drawer__header">
+      <span class="icon-tile icon-tile--ok"><i data-lucide="flag"></i></span>
+      <div><div class="drawer__title" id="flags-title">Feature flags — Katherine Johnson</div><div class="t-xs t-muted">katherine@globex.io · license <span class="badge badge--accent">Enterprise</span> · explicit grants sit on top of the license</div></div>
+      <button class="btn btn--ghost btn--icon" style="margin-left:auto" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer__body col gap-5">
+      <div class="legend"><span class="row gap-1"><span class="dot dot--ok"></span>Also on license</span><span class="row gap-1"><span class="sym" style="background:var(--accent);color:#fff">+</span>Add explicit grant</span><span class="row gap-1"><span class="sym" style="box-shadow:inset 0 0 0 1px var(--border-strong)">−</span>Remove explicit grant</span></div>
+      <section>
+        <div class="row gap-2 mb-1"><i data-lucide="package" class="t-subtle"></i><span class="t-h4">Feature packages</span></div>
+        <div class="t-xs t-muted mb-2">Bulk add or remove the same flags together (defined under Licenses → Flag packages).</div>
+        <div class="card card--flat">
+          <div class="list-row" style="padding:10px 14px"><div class="grow"><div class="lr-title">Standard features</div><div class="lr-sub mono">standard_features · 4 flags</div></div><button class="btn btn--sm btn--accent">Add all</button><button class="btn btn--sm">Remove all</button></div>
+          <div class="list-row" style="padding:10px 14px"><div class="grow"><div class="lr-title">AI bundle</div><div class="lr-sub mono">ai_bundle · 2 flags</div></div><button class="btn btn--sm btn--accent">Add all</button><button class="btn btn--sm">Remove all</button></div>
+          <div class="list-row" style="padding:10px 14px"><div class="grow"><div class="lr-title">Preview pack</div><div class="lr-sub mono">preview_pack · 0 flags</div></div><button class="btn btn--sm btn--accent" disabled>Add all</button><button class="btn btn--sm" disabled>Remove all</button></div>
+        </div>
+      </section>
+      <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Search flags by label or name…" /></div>
+      <div class="grid grid-2">
+        <div class="flag-list">
+          <div class="flag-list__head"><i data-lucide="flag"></i>Granted for this user<span class="badge badge--outline" style="margin-left:auto">0</span></div>
+          <div class="empty empty--inline" style="padding:18px 14px"><div class="empty__art"><span class="hex"></span><i data-lucide="flag-off"></i></div><div><div class="empty__title t-sm">No explicit grants</div><div class="empty__desc t-xs">Everything Katherine can use comes from the Enterprise license.</div></div></div>
+        </div>
+        <div class="flag-list">
+          <div class="flag-list__head"><i data-lucide="search"></i>All flags — add<span class="badge badge--outline" style="margin-left:auto">8</span></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">AI Assistant <span class="badge badge--ok" style="margin-left:4px">license</span> <span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></div><div class="fr-sub mono">ai_assistant</div></div><button class="btn btn--sm btn--icon btn--accent" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Catalog import <span class="badge badge--ok" style="margin-left:4px">license</span></div><div class="fr-sub mono">catalog_import</div></div><button class="btn btn--sm btn--icon btn--accent" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Designer <span class="badge badge--ok" style="margin-left:4px">license</span></div><div class="fr-sub mono">designer</div></div><button class="btn btn--sm btn--icon btn--accent" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Export studio <span class="badge badge--ok" style="margin-left:4px">license</span></div><div class="fr-sub mono">export_studio</div></div><button class="btn btn--sm btn--icon btn--accent" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Lint posture <span class="badge badge--ok" style="margin-left:4px">license</span> <span class="badge badge--honey"><i data-lucide="eye"></i>Preview</span></div><div class="fr-sub mono">lint_workspace</div></div><button class="btn btn--sm btn--icon btn--accent" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">MCP servers <span class="badge badge--ok" style="margin-left:4px">license</span></div><div class="fr-sub mono">mcp_servers</div></div><button class="btn btn--sm btn--icon btn--accent" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Paths <span class="badge badge--ok" style="margin-left:4px">license</span></div><div class="fr-sub mono">paths</div></div><button class="btn btn--sm btn--icon btn--accent" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row" style="opacity:.7"><div class="grow"><div class="fr-title">SSO enforcement <span class="badge badge--outline" style="margin-left:4px">disabled</span></div><div class="fr-sub mono">sso_enforcement</div></div><button class="btn btn--sm btn--icon btn--accent" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+        </div>
+      </div>
+    </div>
+    <div class="drawer__footer"><span class="t-xs t-subtle" style="margin-right:auto">Closing reloads licenses, flags and users (<code>loadAll()</code>)</span><button class="btn btn--primary" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<!-- Delete confirms -->
+<div class="overlay" id="delete-license-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete license “Legacy Starter”?</div><div class="dialog__desc">Users still on it lose their plan (they show as “No license”). This cannot be undone.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete license</button></div>
+  </div>
+</div>
+<div class="overlay" id="delete-flag-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="flag-off"></i></span><div><div class="dialog__title">Delete feature flag “SSO enforcement”?</div><div class="dialog__desc">It will be removed from all licenses, packages and per-user grants.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete flag</button></div>
+  </div>
+</div>
+<div class="overlay" id="delete-package-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="package-x"></i></span><div><div class="dialog__title">Delete package “Preview pack”?</div><div class="dialog__desc">Existing per-user overrides are not changed.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete package</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/admin/dashboard/licenses (and /feature-flags with the Feature flags tab preselected)</p>
+  <h4>Replaces</h4>
+  <ul><li><code>LicenseManagementClient.tsx</code> (+ <code>LicenseForm</code>, <code>LicenseSeatEntriesEditor</code>, <code>FlagForm</code>, <code>FlagPackageForm</code>, shared <code>Modal</code>), <code>FeatureFlagUserOverridesPanel.tsx</code> → drawer.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header Refresh + tab strip with count pills: Licenses · Feature flags · Flag packages · Assignments (count = users with a license). Per-tab CTA (New license = page primary; New feature flag / New flag package in the tab toolbar).</li>
+    <li>License card: name, type badge (<code>free</code> neutral · <code>paid</code> accent · <code>sponsor</code> honey), italic “disabled”, description, seat summary; chevron expands “Included feature flags” chips (Preview badge) + “Seat limits” dl; Edit / Delete (“Delete license ‘{name}’? This cannot be undone.” → dialog).</li>
+    <li>Feature flags: label, <code>name</code>, Preview badge, disabled, description, URL-pattern chips (mono green), enable/disable toggle → immediate <code>updateFeatureFlag({enabled})</code>, Edit, Delete (“…removed from all licenses”).</li>
+    <li>Flag packages: label, <code>name</code>, description, member chips or “No flags in this package yet.”, Edit / Delete (“Existing per-user overrides are not changed.”).</li>
+    <li>Assignments: “Search users…” client filter + count; columns User · Assigned license · Seats (key: value chips or —) · Assign → “Assign license — {name}” dialog (enabled plans, check on current, click assigns; “Override feature flags…”; “Remove license” confirm).</li>
+    <li>License form: Name, Type (Free/Paid/Sponsor), Description, Seat limits editor (presets <code>max_tenants · max_users_per_tenant · max_projects · max_versions · max_ai_requests</code> with descriptions, taken presets disabled, “Custom key…” mono input, number ≥ 0, remove; defaults on create; all validation strings), “Commercial products &amp; features” split into Commercial applications (<code>isCommercialProductFlag</code>: designer, paths, suite-contributed) and Additional platform features as checkbox tiles. Footer Create license / Save changes; toast “License saved”.</li>
+    <li>Flag form: Machine name (disabled on edit, help copy), Display label, Description, URL patterns textarea (help copy), Preview toggle; validation strings; toast “Feature flag saved”. Package form: name (disabled on edit), label, description, flag checklist (max-h 48, selected rows accent left border) or “Create feature flags first.”; toast “Flag package saved”.</li>
+    <li>Overrides drawer = shared panel (see Users notes) — here reached from Assign → “Override feature flags…”; closing triggers <code>loadAll()</code>.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Type chips on Licenses, “n users” per plan, Overrides count column on Assignments (links to the drawer), Enabled switch in the flag form (today only via API), tables sortable; feature flags rendered as a table (also the standalone Feature flags page).</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading: skeleton cards/rows per tab (replaces “Loading…” text). Empties as quoted per tab. Errors: toast “Failed to load data” or the server <code>error</code>, with Retry. Absent by design: license expiry/issue/revoke, per-tenant flag overrides.</li></ul>
+</template>
+</body>
+</html>

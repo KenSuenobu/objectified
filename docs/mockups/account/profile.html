@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profile · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only */
+  .identity { position: relative; overflow: hidden; }
+  .identity__band { height: 72px; background: linear-gradient(100deg, var(--honey-soft), var(--accent-soft) 60%, var(--bg-surface)); }
+  .identity__row { display: flex; align-items: flex-end; gap: 18px; padding: 0 var(--card-pad) var(--card-pad); margin-top: -34px; flex-wrap: wrap; }
+  .identity__row .avatar--xl { box-shadow: 0 0 0 4px var(--bg-surface); }
+  .info-tile { padding: 12px 14px; border-radius: var(--r-md); background: var(--bg-subtle); min-width: 0; }
+  .info-tile .lbl { font-size: var(--fs-2xs); font-weight: 600; letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--fg-subtle); }
+  .info-tile .val { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: 500; margin-top: 4px; min-height: 26px; }
+  .info-tile .val .btn { margin-left: auto; }
+  .mfa-box { padding: 12px 14px; border-radius: var(--r-md); box-shadow: inset 0 0 0 1px var(--border); display: flex; flex-direction: column; gap: 8px; }
+  .mfa-box .mb-title { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 600; }
+  .mfa-box .mb-title [data-lucide] { width: 15px; height: 15px; color: var(--fg-subtle); }
+  .mfa-box .mb-desc { font-size: var(--fs-xs); color: var(--fg-muted); }
+  .mfa-box .btn { align-self: flex-start; margin-top: auto; }
+  .codes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; padding: 12px 14px; border-radius: var(--r-md); background: var(--bg-inset); font-family: var(--font-mono); font-size: var(--fs-sm); }
+  .qr-wrap { display: grid; place-items: center; padding: 10px; background: #fff; border-radius: var(--r-md); box-shadow: inset 0 0 0 1px var(--border); }
+</style>
+</head>
+<body data-shell="app" data-nav="" data-page="account/profile" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Account</span><i data-lucide="chevron-right"></i><span>Profile</span></div>
+          <h1 class="page-title">Profile</h1>
+          <p class="page-desc">Your identity, password, two-factor and sign-in methods.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-action="open" data-target="edit-name"><i data-lucide="pencil"></i>Edit name</button>
+        </div>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Account">
+        <a class="tab is-active" href="profile.html" aria-current="page"><i data-lucide="circle-user"></i>Profile</a>
+        <a class="tab" href="linked-accounts.html"><i data-lucide="link"></i>Linked accounts</a>
+        <a class="tab" href="#" data-action="open" data-target="settings-pane"><i data-lucide="settings-2"></i>Preferences<span class="kbd">⌘,</span></a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Success alert (dismissible) -->
+    <div class="banner banner--ok" role="status" id="pw-success"><i data-lucide="circle-check"></i><div class="grow"><span class="banner-title">Password changed successfully.</span> <span class="banner-body">Other sessions keep working until they expire.</span></div><button class="btn btn--ghost btn--sm btn--icon" aria-label="Dismiss" data-action="toggle" data-target="pw-success"><i data-lucide="x"></i></button></div>
+
+    <!-- Identity hero -->
+    <section class="card identity">
+      <div class="identity__band"></div>
+      <div class="identity__row">
+        <span class="avatar avatar--xl avatar--hex avatar--brand">AL</span>
+        <div class="grow min-w-0" style="padding-bottom:2px">
+          <h2 class="t-h2">Ada Lovelace</h2>
+          <div class="row gap-2 wrap t-sm t-muted"><span>ada@example.com</span><span class="t-faint">·</span><span class="badge badge--ok"><i data-lucide="building-2"></i>Tenant active</span><span>Acme Corp · Owner</span></div>
+        </div>
+        <div class="row gap-2" style="padding-bottom:2px"><span class="badge badge--outline"><i data-lucide="shield-check"></i>2FA on</span><span class="badge badge--outline">Member since Mar 2026</span></div>
+      </div>
+    </section>
+
+    <div class="grid grid-main-aside">
+      <div class="col gap-6">
+        <!-- Account details -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="user"></i>Account details<span class="t-xs t-subtle t-500">Your identity and workspace information</span></div></div>
+          <div class="card__body">
+            <div class="grid grid-2" style="gap:12px">
+              <div class="info-tile"><div class="lbl">Full name</div><div class="val">Ada Lovelace<button class="btn btn--ghost btn--sm btn--icon" aria-label="Edit name" data-tip="Edit name" data-action="open" data-target="edit-name"><i data-lucide="pencil"></i></button></div></div>
+              <div class="info-tile"><div class="lbl">Email</div><div class="val">ada@example.com<span class="badge badge--ok" style="margin-left:auto">Verified</span></div></div>
+              <div class="info-tile"><div class="lbl">User ID</div><div class="val mono">usr_7d3e9a1c4b<button class="btn btn--ghost btn--sm btn--icon" aria-label="Copy user ID" data-tip="Copy user ID"><i data-lucide="copy"></i></button></div></div>
+              <div class="info-tile"><div class="lbl">Current tenant</div><div class="val"><span class="avatar avatar--xs avatar--hex avatar--brand">AC</span>Acme Corp <span class="mono t-subtle t-xs">ten_4a1b9f</span><button class="btn btn--ghost btn--sm btn--icon" aria-label="Copy tenant ID" data-tip="Copy tenant ID"><i data-lucide="copy"></i></button></div></div>
+              <div class="info-tile span-2"><div class="lbl">Last login</div><div class="val"><span class="t-num">08/15/26 09:12 AM</span><span class="t-subtle t-xs t-500">· Chrome on macOS · via GitHub · this device</span></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Security -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="shield"></i>Security<span class="t-xs t-subtle t-500">Password and account security</span></div><span class="badge" data-status="active"><i data-lucide="check"></i>Two-factor enabled</span></div>
+          <div class="card__body col gap-4">
+            <div class="row-start gap-3">
+              <span class="icon-tile icon-tile--accent"><i data-lucide="lock-keyhole"></i></span>
+              <div class="grow"><div class="t-sm t-600">Password</div><div class="t-xs t-muted">Use a strong, unique password. Change it periodically or if you suspect it has been compromised.</div><div class="t-xs t-subtle mt-1">Last changed 12 days ago</div></div>
+            </div>
+            <hr />
+            <!-- TwoFactorSettings (enrolled) -->
+            <div class="row-start gap-3">
+              <span class="icon-tile icon-tile--ok"><i data-lucide="shield-check"></i></span>
+              <div class="grow"><div class="row gap-2"><span class="t-sm t-600">Authenticator app (TOTP)</span><span class="badge badge--ok">Enabled</span></div><div class="t-xs t-muted">Require a code from Authy or Google Authenticator after your password when signing in.</div></div>
+              <button class="btn btn--sm" data-action="open" data-target="disable-2fa"><i data-lucide="shield-off"></i>Disable 2FA</button>
+            </div>
+            <div class="card card--soft" style="padding:10px 14px">
+              <div class="t-caps mb-2">Sign-in methods</div>
+              <div class="col gap-1 t-sm"><div class="row gap-2"><i data-lucide="check" style="width:14px;height:14px;color:var(--ok)"></i>Authenticator app (TOTP)</div><div class="row gap-2"><i data-lucide="check" style="width:14px;height:14px;color:var(--ok)"></i>Email OTP — available at sign-in (no separate enrollment)</div></div>
+            </div>
+            <div class="grid grid-3" style="gap:12px">
+              <div class="mfa-box"><div class="mb-title"><i data-lucide="mail"></i>Email one-time code</div><div class="mb-desc">After your password, you can request a code emailed to your account address instead of (or in addition to) using your authenticator app.</div><span class="badge badge--outline" style="margin-top:auto">Ready · SendGrid configured</span></div>
+              <div class="mfa-box"><div class="mb-title"><i data-lucide="key-round"></i>Backup codes</div><div class="mb-desc"><span class="t-600" style="color:var(--fg)">6 remaining</span> of 10. Each code works once.</div><button class="btn btn--sm" data-action="open" data-target="regen-codes"><i data-lucide="refresh-cw"></i>Regenerate backup codes</button></div>
+              <div class="mfa-box"><div class="mb-title"><i data-lucide="monitor-smartphone"></i>Trusted device</div><div class="mb-desc">This browser is trusted (skips 2FA for ~30 days when signing in).</div><button class="btn btn--sm"><i data-lucide="x"></i>Forget this device</button></div>
+            </div>
+            <div class="callout callout--accent t-xs"><span class="t-600">Recovery.</span> Store backup codes somewhere safe. If you lose your authenticator, use a backup code at sign-in (when available) or contact an admin. After recovery, regenerate codes so old ones cannot be reused.</div>
+          </div>
+          <div class="card__footer" style="justify-content:stretch"><button class="btn btn--primary w-full" data-action="open" data-target="change-password"><i data-lucide="key-round"></i>Change password</button></div>
+        </section>
+
+        <!-- State: 2FA not enrolled -->
+        <section class="card" aria-label="Security card when two-factor is off">
+          <div class="card__header"><div class="card__title"><i data-lucide="shield"></i>Security<span class="t-xs t-subtle t-500">state · not enrolled</span></div><span class="badge">Off</span></div>
+          <div class="card__body">
+            <div class="row-start gap-3">
+              <span class="icon-tile"><i data-lucide="shield-check"></i></span>
+              <div class="grow"><div class="row gap-2"><span class="t-sm t-600">Authenticator app (TOTP)</span><span class="badge">Off</span></div><div class="t-xs t-muted">Require a code from Authy or Google Authenticator after your password when signing in.</div></div>
+            </div>
+            <button class="btn btn--primary w-full mt-4" data-action="open" data-target="enable-2fa"><i data-lucide="shield-plus"></i>Enable 2FA</button>
+          </div>
+        </section>
+      </div>
+
+      <aside class="col gap-6">
+        <!-- Sign-in methods -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="log-in"></i>Sign-in methods</div><span class="t-xs t-subtle">Linked identity providers</span></div>
+          <div class="card__body">
+            <p class="t-sm t-muted">Link providers like GitHub, GitLab, or Microsoft for single sign-on, and manage or unlink them at any time.</p>
+            <div class="col gap-2 mt-3">
+              <div class="row gap-3"><span class="icon-tile icon-tile--sm"><i data-lucide="lock"></i></span><div class="grow"><div class="t-sm t-500">Password</div><div class="t-xs t-subtle">Set · changed 12 days ago</div></div><span class="badge badge--ok">Active</span></div>
+              <div class="row gap-3"><span class="icon-tile icon-tile--sm"><i data-lucide="github"></i></span><div class="grow"><div class="t-sm t-500">GitHub</div><div class="t-xs t-subtle">ada-lovelace · last used today</div></div><span class="badge badge--ok">Linked</span></div>
+              <div class="row gap-3"><span class="icon-tile icon-tile--sm"><i data-lucide="gitlab"></i></span><div class="grow"><div class="t-sm t-500">GitLab</div><div class="t-xs t-subtle">ada@example.com</div></div><span class="badge badge--ok">Linked</span></div>
+            </div>
+          </div>
+          <div class="card__footer"><a class="btn w-full" href="linked-accounts.html"><i data-lucide="link"></i>Manage linked accounts</a></div>
+        </section>
+
+        <!-- Session -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="timer"></i>Session</div><span class="t-xs t-subtle">Your current sign-in session</span></div>
+          <div class="card__body">
+            <div class="t-caps">Expires</div>
+            <div class="t-h3 t-num mt-1">08/22/26 09:12 AM</div>
+            <div class="t-sm t-muted">Friday, August 22, 2026</div>
+            <div class="meter mt-3"><div class="progress progress--ok"><span style="width:14%"></span></div><span class="meter-val">1d of 7</span></div>
+            <div class="row gap-2 t-xs t-subtle mt-3"><i data-lucide="monitor-smartphone" style="width:13px;height:13px"></i>Chrome on macOS · trusted device</div>
+          </div>
+          <div class="card__footer"><a class="btn btn--ghost btn--sm" href="../auth/login.html"><i data-lucide="log-out"></i>Sign out everywhere</a></div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Dialogs ===== -->
+<!-- Edit name -->
+<div class="overlay" id="edit-name" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="edit-name-title">
+    <div class="dialog__header"><div><div class="dialog__title" id="edit-name-title">Edit name</div><div class="dialog__desc">Update your display name.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body"><div class="field"><label for="en-name">Full name</label><input id="en-name" class="input" placeholder="Your name" value="Ada Lovelace" autofocus /><div class="hint">Shown to teammates and in activity. Enter submits.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save</button></div>
+  </div>
+</div>
+
+<!-- Change password -->
+<div class="overlay" id="change-password" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="cp-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="key-round"></i></span><div><div class="dialog__title" id="cp-title">Change password</div><div class="dialog__desc">Enter your current password and choose a new one.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="banner"><i data-lucide="info"></i><div><div class="banner-title">Password requirements</div><ul class="t-xs mt-1" style="list-style:disc;padding-left:16px"><li>At least 8 characters</li><li>One uppercase and one lowercase letter</li><li>One number or special character</li></ul></div></div>
+      <div class="field"><label for="cp-cur">Current password</label><input id="cp-cur" class="input" type="password" autocomplete="current-password" /></div>
+      <div class="field"><label for="cp-new">New password</label><input id="cp-new" class="input" type="password" autocomplete="new-password" /><div class="meter mt-1"><div class="progress progress--warn"><span style="width:55%"></span></div><span class="meter-val">Fair</span></div></div>
+      <div class="field"><label for="cp-conf">Confirm new password</label><input id="cp-conf" class="input" type="password" autocomplete="new-password" /><div class="hint">Enter on this field submits.</div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Change password</button></div>
+  </div>
+</div>
+
+<!-- Enable 2FA (3 steps) -->
+<div class="overlay" id="enable-2fa" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="e2-title" data-tabs="enroll-panels">
+    <div class="dialog__header" style="flex-direction:column;align-items:stretch;gap:14px">
+      <div class="row-start gap-3"><span class="icon-tile icon-tile--ok"><i data-lucide="shield-plus"></i></span><div><div class="dialog__title" id="e2-title">Enable two-factor authentication</div><div class="dialog__desc">Three short steps. You can’t close this while a step is in progress.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+      <ol class="stepper" data-stepper aria-label="Enrollment progress" style="justify-content:space-between">
+        <li class="step is-active" data-step="e1"><button class="row gap-2" data-action="tab" data-target="e1"><span class="step__num">1</span>Confirm password</button></li><li class="step__line" style="flex:1;width:auto"></li>
+        <li class="step" data-step="e2"><button class="row gap-2" data-action="tab" data-target="e2"><span class="step__num">2</span>Scan QR code</button></li><li class="step__line" style="flex:1;width:auto"></li>
+        <li class="step" data-step="e3"><button class="row gap-2" data-action="tab" data-target="e3"><span class="step__num">3</span>Save backup codes</button></li>
+      </ol>
+    </div>
+    <div id="enroll-panels" style="display:contents">
+      <div data-tab-panel="e1" style="display:contents">
+        <div class="dialog__body col gap-3">
+          <p class="t-sm t-muted">Confirm your password to start enrollment. You will scan a QR code next.</p>
+          <div class="field"><label for="e2-pw">Current password</label><input id="e2-pw" class="input" type="password" autocomplete="current-password" autofocus /></div>
+        </div>
+        <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="tab" data-target="e2">Continue<i data-lucide="arrow-right"></i></button></div>
+      </div>
+      <div data-tab-panel="e2" hidden style="display:contents">
+        <div class="dialog__body">
+          <p class="t-sm t-muted">Scan this QR with Authy or Google Authenticator, then enter the 6-digit code.</p>
+          <div class="grid mt-4" style="grid-template-columns:auto 1fr;gap:18px;align-items:start">
+            <div class="qr-wrap"><svg viewBox="0 0 100 100" width="152" height="152" shape-rendering="crispEdges" role="img" aria-label="QR code for otpauth URI"><rect width="100%" height="100%" fill="#fff"/><g fill="#111"><rect x="0" y="0" width="28" height="4"/><rect x="32" y="0" width="20" height="4"/><rect x="56" y="0" width="8" height="4"/><rect x="72" y="0" width="28" height="4"/><rect x="0" y="4" width="4" height="4"/><rect x="24" y="4" width="4" height="4"/><rect x="32" y="4" width="12" height="4"/><rect x="48" y="4" width="8" height="4"/><rect x="60" y="4" width="8" height="4"/><rect x="72" y="4" width="4" height="4"/><rect x="96" y="4" width="4" height="4"/><rect x="0" y="8" width="4" height="4"/><rect x="8" y="8" width="12" height="4"/><rect x="24" y="8" width="4" height="4"/><rect x="44" y="8" width="4" height="4"/><rect x="60" y="8" width="4" height="4"/><rect x="72" y="8" width="4" height="4"/><rect x="80" y="8" width="12" height="4"/><rect x="96" y="8" width="4" height="4"/><rect x="0" y="12" width="4" height="4"/><rect x="8" y="12" width="12" height="4"/><rect x="24" y="12" width="4" height="4"/><rect x="36" y="12" width="12" height="4"/><rect x="52" y="12" width="8" height="4"/><rect x="72" y="12" width="4" height="4"/><rect x="80" y="12" width="12" height="4"/><rect x="96" y="12" width="4" height="4"/><rect x="0" y="16" width="4" height="4"/><rect x="8" y="16" width="12" height="4"/><rect x="24" y="16" width="4" height="4"/><rect x="32" y="16" width="4" height="4"/><rect x="60" y="16" width="4" height="4"/><rect x="72" y="16" width="4" height="4"/><rect x="80" y="16" width="12" height="4"/><rect x="96" y="16" width="4" height="4"/><rect x="0" y="20" width="4" height="4"/><rect x="24" y="20" width="4" height="4"/><rect x="32" y="20" width="8" height="4"/><rect x="48" y="20" width="20" height="4"/><rect x="72" y="20" width="4" height="4"/><rect x="96" y="20" width="4" height="4"/><rect x="0" y="24" width="28" height="4"/><rect x="32" y="24" width="4" height="4"/><rect x="40" y="24" width="4" height="4"/><rect x="48" y="24" width="4" height="4"/><rect x="56" y="24" width="4" height="4"/><rect x="64" y="24" width="4" height="4"/><rect x="72" y="24" width="28" height="4"/><rect x="40" y="28" width="4" height="4"/><rect x="56" y="28" width="12" height="4"/><rect x="0" y="32" width="4" height="4"/><rect x="24" y="32" width="4" height="4"/><rect x="32" y="32" width="4" height="4"/><rect x="44" y="32" width="8" height="4"/><rect x="60" y="32" width="12" height="4"/><rect x="80" y="32" width="4" height="4"/><rect x="96" y="32" width="4" height="4"/><rect x="4" y="36" width="8" height="4"/><rect x="28" y="36" width="4" height="4"/><rect x="40" y="36" width="16" height="4"/><rect x="60" y="36" width="12" height="4"/><rect x="76" y="36" width="8" height="4"/><rect x="92" y="36" width="4" height="4"/><rect x="12" y="40" width="16" height="4"/><rect x="32" y="40" width="4" height="4"/><rect x="48" y="40" width="4" height="4"/><rect x="64" y="40" width="4" height="4"/><rect x="72" y="40" width="8" height="4"/><rect x="0" y="44" width="4" height="4"/><rect x="20" y="44" width="4" height="4"/><rect x="48" y="44" width="4" height="4"/><rect x="64" y="44" width="24" height="4"/><rect x="0" y="48" width="4" height="4"/><rect x="12" y="48" width="4" height="4"/><rect x="24" y="48" width="4" height="4"/><rect x="32" y="48" width="4" height="4"/><rect x="48" y="48" width="8" height="4"/><rect x="60" y="48" width="12" height="4"/><rect x="76" y="48" width="4" height="4"/><rect x="84" y="48" width="12" height="4"/><rect x="4" y="52" width="4" height="4"/><rect x="20" y="52" width="4" height="4"/><rect x="28" y="52" width="4" height="4"/><rect x="36" y="52" width="12" height="4"/><rect x="56" y="52" width="8" height="4"/><rect x="76" y="52" width="8" height="4"/><rect x="88" y="52" width="8" height="4"/><rect x="8" y="56" width="4" height="4"/><rect x="16" y="56" width="4" height="4"/><rect x="24" y="56" width="8" height="4"/><rect x="40" y="56" width="8" height="4"/><rect x="52" y="56" width="28" height="4"/><rect x="84" y="56" width="4" height="4"/><rect x="92" y="56" width="8" height="4"/><rect x="0" y="60" width="12" height="4"/><rect x="20" y="60" width="4" height="4"/><rect x="32" y="60" width="4" height="4"/><rect x="40" y="60" width="4" height="4"/><rect x="52" y="60" width="4" height="4"/><rect x="68" y="60" width="4" height="4"/><rect x="84" y="60" width="16" height="4"/><rect x="0" y="64" width="4" height="4"/><rect x="8" y="64" width="12" height="4"/><rect x="24" y="64" width="4" height="4"/><rect x="32" y="64" width="28" height="4"/><rect x="72" y="64" width="4" height="4"/><rect x="80" y="64" width="16" height="4"/><rect x="32" y="68" width="12" height="4"/><rect x="68" y="68" width="8" height="4"/><rect x="80" y="68" width="4" height="4"/><rect x="92" y="68" width="4" height="4"/><rect x="0" y="72" width="28" height="4"/><rect x="56" y="72" width="20" height="4"/><rect x="0" y="76" width="4" height="4"/><rect x="24" y="76" width="4" height="4"/><rect x="32" y="76" width="12" height="4"/><rect x="48" y="76" width="4" height="4"/><rect x="64" y="76" width="4" height="4"/><rect x="88" y="76" width="12" height="4"/><rect x="0" y="80" width="4" height="4"/><rect x="8" y="80" width="12" height="4"/><rect x="24" y="80" width="4" height="4"/><rect x="36" y="80" width="4" height="4"/><rect x="44" y="80" width="12" height="4"/><rect x="60" y="80" width="4" height="4"/><rect x="72" y="80" width="8" height="4"/><rect x="88" y="80" width="12" height="4"/><rect x="0" y="84" width="4" height="4"/><rect x="8" y="84" width="12" height="4"/><rect x="24" y="84" width="4" height="4"/><rect x="44" y="84" width="4" height="4"/><rect x="56" y="84" width="8" height="4"/><rect x="68" y="84" width="20" height="4"/><rect x="92" y="84" width="4" height="4"/><rect x="0" y="88" width="4" height="4"/><rect x="8" y="88" width="12" height="4"/><rect x="24" y="88" width="4" height="4"/><rect x="40" y="88" width="20" height="4"/><rect x="64" y="88" width="4" height="4"/><rect x="72" y="88" width="8" height="4"/><rect x="84" y="88" width="8" height="4"/><rect x="0" y="92" width="4" height="4"/><rect x="24" y="92" width="4" height="4"/><rect x="32" y="92" width="4" height="4"/><rect x="44" y="92" width="8" height="4"/><rect x="56" y="92" width="4" height="4"/><rect x="64" y="92" width="8" height="4"/><rect x="80" y="92" width="4" height="4"/><rect x="88" y="92" width="4" height="4"/><rect x="96" y="92" width="4" height="4"/><rect x="0" y="96" width="28" height="4"/><rect x="32" y="96" width="32" height="4"/><rect x="76" y="96" width="8" height="4"/><rect x="88" y="96" width="12" height="4"/></g></svg></div>
+            <div class="col gap-3">
+              <div><div class="t-caps mb-1">Or enter this URI</div><div class="code" style="white-space:pre-wrap;word-break:break-all;font-size:var(--fs-2xs);padding-right:40px">otpauth://totp/Apiome:ada%40example.com?secret=JBSWY3DPEHPK3PXP&amp;issuer=Apiome&amp;digits=6&amp;period=30<button class="btn btn--ghost btn--sm btn--icon copy" aria-label="Copy URI"><i data-lucide="copy"></i></button></div></div>
+              <div class="field"><label for="e2-code">Authentication code</label><input id="e2-code" class="input input--mono" inputmode="numeric" maxlength="6" placeholder="000000" style="letter-spacing:.3em" /><div class="hint">Enter submits · “Enter the 6-digit code from your authenticator app.” if invalid</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="tab" data-target="e3">Confirm and enable</button></div>
+      </div>
+      <div data-tab-panel="e3" hidden style="display:contents">
+        <div class="dialog__body col gap-3">
+          <div class="banner banner--ok"><i data-lucide="circle-check"></i><div><span class="banner-title">Two-factor is on.</span> Store these one-time codes somewhere safe. You can regenerate a new set later from this page.</div></div>
+          <div class="codes"><span>4H7K-2P9Q</span><span>M3XR-8TWA</span><span>Q1ZD-6BNF</span><span>7YCE-3JLS</span><span>K9VU-5HRD</span><span>P2GT-4MXW</span><span>B8NQ-1ZKA</span><span>T6JF-9CYE</span><span>W3LS-7RVD</span><span>D5HA-2QMP</span></div>
+          <div class="row gap-2"><button class="btn btn--sm"><i data-lucide="copy"></i>Copy codes</button><button class="btn btn--sm btn--ghost"><i data-lucide="download"></i>Download .txt</button></div>
+        </div>
+        <div class="dialog__footer"><button class="btn btn--primary" data-action="close">Done</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Regenerate backup codes (2 steps) -->
+<div class="overlay" id="regen-codes" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="rg-title" data-tabs="regen-panels">
+    <div class="dialog__header" style="flex-direction:column;align-items:stretch;gap:14px">
+      <div class="row-start gap-3"><span class="icon-tile icon-tile--warn"><i data-lucide="refresh-cw"></i></span><div><div class="dialog__title" id="rg-title">Regenerate backup codes</div><div class="dialog__desc">Enter your password. This replaces your existing backup codes immediately.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+      <ol class="stepper" data-stepper aria-label="Progress" style="justify-content:space-between">
+        <li class="step is-active" data-step="r1"><button class="row gap-2" data-action="tab" data-target="r1"><span class="step__num">1</span>Confirm password</button></li><li class="step__line" style="flex:1;width:auto"></li>
+        <li class="step" data-step="r2"><button class="row gap-2" data-action="tab" data-target="r2"><span class="step__num">2</span>Save new codes</button></li>
+      </ol>
+    </div>
+    <div id="regen-panels" style="display:contents">
+      <div data-tab-panel="r1" style="display:contents">
+        <div class="dialog__body"><div class="field"><label for="rg-pw">Current password</label><input id="rg-pw" class="input" type="password" autocomplete="current-password" autofocus /></div><div class="banner banner--warn mt-3"><i data-lucide="triangle-alert"></i><div>Your 6 remaining codes stop working the moment new ones are issued.</div></div></div>
+        <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="tab" data-target="r2">Regenerate</button></div>
+      </div>
+      <div data-tab-panel="r2" hidden style="display:contents">
+        <div class="dialog__body col gap-3">
+          <p class="t-sm t-muted">Copy these codes now. The previous set is no longer valid.</p>
+          <div class="codes"><span>9QAX-3LTP</span><span>F2MD-7RKV</span><span>H8ZS-1WCE</span><span>N4BJ-6PYA</span><span>R7TL-2GXQ</span><span>V5KE-8DMS</span><span>C3WP-4HNZ</span><span>J6RY-9AFT</span><span>L1QM-5VBD</span><span>X8ZC-2KTH</span></div>
+          <button class="btn btn--sm" style="align-self:flex-start"><i data-lucide="copy"></i>Copy codes</button>
+        </div>
+        <div class="dialog__footer"><button class="btn btn--primary" data-action="close">Done</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Disable 2FA -->
+<div class="overlay" id="disable-2fa" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="d2-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="shield-off"></i></span><div><div class="dialog__title" id="d2-title">Disable two-factor authentication</div><div class="dialog__desc">Enter your password to turn off authenticator codes on this account.</div></div></div>
+    <div class="dialog__body"><div class="field"><label for="d2-pw">Current password</label><input id="d2-pw" class="input" type="password" autocomplete="current-password" autofocus /></div><p class="t-xs t-muted mt-3">Backup codes and the trusted-device cookie are cleared too. You can re-enable 2FA any time.</p></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Disable 2FA</button></div>
+  </div>
+</div>
+
+<script>
+  // Mock-only: keep the dialog steppers in sync with the tab panels they drive.
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-action="tab"][data-target]'); if (!b) return;
+    var grp = b.closest('[data-tabs]'); if (!grp) return;
+    var stepper = grp.querySelector('[data-stepper]'); if (!stepper) return;
+    var steps = Array.prototype.slice.call(stepper.querySelectorAll('.step')); var idx = steps.findIndex(function (s) { return s.getAttribute('data-step') === b.getAttribute('data-target'); }); if (idx < 0) return;
+    steps.forEach(function (s, i) { s.classList.toggle('is-done', i < idx); s.classList.toggle('is-active', i === idx); });
+    stepper.querySelectorAll('.step__line').forEach(function (l, i) { l.classList.toggle('is-done', i < idx); });
+  });
+</script>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/profile</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/profile/page.tsx</code>, <code>TwoFactorSettings.tsx</code>; the profile menu entry “View Profile” now lives in the rail user menu.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header “Profile” + description; success Alert (dismissible); identity hero (gradient band, initials avatar, name or “Unnamed user”, “Tenant active” badge when a current tenant exists, email, Edit name).</li>
+    <li>Account details tiles: Full name (+ pencil), Email, User ID (mono + copy, title “Copy User ID”, green check for 2 s), Current tenant (mono id + copy or “None selected”), Last login (full width; “…” while loading, <code>MM/DD/YY hh:mm AM</code>, or “—”).</li>
+    <li>Security: password guidance, embedded TwoFactorSettings (header row + Enabled/Off badge; enrolled: sign-in methods list incl. “Email OTP — available at sign-in (no separate enrollment)” when SendGrid is configured, Email one-time code box, Backup codes box with “Checking remaining codes…” / “{n} remaining” / “Remaining count unavailable” + Regenerate, Trusted device box with “Checking this browser…” / trusted / not trusted + “Forget this device” → “Working…”, recovery Alert, error Alert, Disable 2FA), footer primary “Change password”.</li>
+    <li>Sign-in methods card copy + “Manage linked accounts” → linked-accounts.html. Session card: EXPIRES + <code>toLocaleString()</code> + long weekday date.</li>
+    <li>Dialogs (cannot close while saving): Edit name (“Name cannot be empty”), Change password (requirements Alert, three fields, Enter on last submits; validation “Please enter your current password” / “Please enter a new password” / “New passwords do not match”; success banner “Password changed successfully.”), Enable 2FA 3 steps (password → QR + otpauth URI + code → backup codes + Copy codes → “Copied”; errors “Enter your current password to enable two-factor authentication.”, “Enrollment did not return a TOTP URI. Please try again.”, “Enter the 6-digit code from your authenticator app.”), Regenerate (password → new codes; “No backup codes were returned. Please try again.”), Disable (password → destructive “Disable 2FA” → “Disabling…”).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Account tab strip (Profile · Linked accounts · Preferences) so the three personal surfaces are one click apart; Preferences opens the pane (replaces ThemeSelector).</li><li>Sign-in methods card lists the concrete methods (password + linked providers) instead of prose only; session card shows remaining time + device; “Sign out everywhere”.</li><li>Password strength meter in Change password; “Download .txt” for backup codes.</li></ul>
+  <h4>States</h4>
+  <ul><li>No session → full-page skeleton (“Loading profile…”). 2FA off → second Security card variant with “Enable 2FA”. Backup-code count unavailable / trusted-device check pending → the quoted copy in the boxes. Dialog busy states: “Saving…”, “Updating…”, “Working…”, “Verifying…”, “Disabling…”.</li></ul>
+</template>
+</body>
+</html>

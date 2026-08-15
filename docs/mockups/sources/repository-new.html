@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Add a repository · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .src-option { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; cursor: pointer; text-align: left; }
+  .src-option.is-selected { box-shadow: 0 0 0 2px var(--accent) inset; background: var(--accent-soft); }
+  .acct-tile { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; cursor: pointer; }
+  .acct-tile.is-selected { box-shadow: 0 0 0 2px var(--accent) inset; }
+  .repo-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: var(--r-sm); font-size: var(--fs-sm); cursor: pointer; }
+  .repo-row:hover { background: var(--bg-subtle); }
+  .repo-row.is-selected { background: var(--accent-soft); }
+  .repo-row .desc { color: var(--fg-subtle); font-size: var(--fs-xs); margin-left: 6px; }
+</style>
+</head>
+<body data-shell="app" data-nav="repositories" data-page="sources/repository-new" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><a href="repositories.html">Repositories</a><i data-lucide="chevron-right"></i><span>Add repository</span></div>
+          <h1 class="page-title">Add a repository</h1>
+          <p class="page-desc">Register a repository so Apiome can scan it for importable specifications.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn btn--ghost" href="repositories.html">Cancel</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body page-body--narrow">
+    <div class="row-between wrap gap-3">
+      <div class="stepper">
+        <span class="step is-active"><span class="step__num">1</span>Source</span><span class="step__line"></span>
+        <span class="step"><span class="step__num">2</span>Repository</span><span class="step__line"></span>
+        <span class="step"><span class="step__num">3</span>Scan settings</span><span class="step__line"></span>
+        <span class="step"><span class="step__num">4</span>Confirm</span>
+      </div>
+      <span class="badge badge--honey" data-tip="Today only step 1 exists; steps 2–4 are the proposed split of this single screen">Steps 2–4 proposed</span>
+    </div>
+
+    <!-- Card 1: source choice -->
+    <section class="card card--pad">
+      <div class="t-h4 mb-1">Where does the repository live?</div>
+      <div class="t-xs t-muted mb-4">Choose a linked account or paste a public Git URL.</div>
+      <div class="grid grid-2">
+        <button class="src-option is-selected" role="radio" aria-checked="true">
+          <span class="icon-tile icon-tile--accent"><i data-lucide="user-check"></i></span>
+          <div><div class="t-sm t-600">Linked account</div><div class="t-xs t-muted">Pick from repos accessible via your connected GitHub, GitLab, or Bitbucket account.</div></div>
+        </button>
+        <button class="src-option" role="radio" aria-checked="false">
+          <span class="icon-tile"><i data-lucide="globe"></i></span>
+          <div><div class="t-sm t-600">Public Git URL</div><div class="t-xs t-muted">Paste the HTTPS clone URL of any public repository — no authentication required.</div></div>
+        </button>
+      </div>
+    </section>
+
+    <!-- Card 2: linked accounts -->
+    <section class="card card--pad">
+      <div class="row-between mb-3"><div class="t-h4">Linked accounts</div><a class="t-sm" href="../account/linked-accounts.html">Manage linked accounts →</a></div>
+      <div class="grid grid-3">
+        <button class="acct-tile is-selected"><i data-lucide="github"></i><div class="min-w-0"><div class="t-sm t-600">GitHub</div><div class="t-xs t-subtle mono t-truncate">ada-lovelace</div></div><i data-lucide="check" class="ml-auto" style="color:var(--accent)"></i></button>
+        <button class="acct-tile"><i data-lucide="gitlab" style="color:var(--orange)"></i><div class="min-w-0"><div class="t-sm t-600">GitLab</div><div class="t-xs t-subtle mono t-truncate">ada@example.com</div></div></button>
+        <div class="acct-tile" style="opacity:.55;cursor:default"><i data-lucide="droplet" style="color:var(--accent)"></i><div><div class="t-sm t-600">Bitbucket</div><div class="t-xs t-subtle">Not linked</div></div></div>
+      </div>
+      <div class="t-xs t-subtle mt-2">Auto-selected when exactly one account is linked. Empty: “No linked accounts yet. Connect GitHub or GitLab to browse private repositories.”</div>
+    </section>
+
+    <!-- Card 3: repository picker (GitHub) -->
+    <section class="card card--pad">
+      <div class="t-h4 mb-1">Choose a repository</div>
+      <div class="t-xs t-muted mb-3">Each row lists <span class="mono">group / repository</span> (organization or user, then repo name). Private repositories show a lock.</div>
+      <div class="input-wrap mb-2"><i data-lucide="search"></i><input class="input" placeholder="Search repositories for ada-lovelace…" /></div>
+      <div class="card card--flat" style="max-height:22rem;overflow:auto;padding:6px">
+        <div class="repo-row"><i data-lucide="folder-git-2" class="t-subtle"></i><span class="mono">acme / payments-specs</span><span class="desc">OpenAPI and AsyncAPI sources for the payments platform</span></div>
+        <div class="repo-row is-selected" aria-selected="true"><i data-lucide="folder-git-2" class="t-subtle"></i><span class="mono">acme / notifications-contracts</span><i data-lucide="lock" style="width:12px;height:12px" class="t-subtle"></i><span class="desc">Private — push/SMS contract sources</span><i data-lucide="check" class="ml-auto" style="color:var(--accent)"></i></div>
+        <div class="repo-row"><i data-lucide="folder-git-2" class="t-subtle"></i><span class="mono">acme / orders-contracts</span><span class="desc">Order lifecycle contracts</span></div>
+        <div class="repo-row"><i data-lucide="folder-git-2" class="t-subtle"></i><span class="mono">acme / inventory-events</span><i data-lucide="lock" style="width:12px;height:12px" class="t-subtle"></i><span class="desc">Private</span></div>
+        <div class="repo-row"><i data-lucide="folder-git-2" class="t-subtle"></i><span class="mono">ada-lovelace / analytical-engine</span><span class="desc">Personal experiments</span></div>
+      </div>
+      <div class="t-xs t-subtle mt-2">Non-GitHub account selected: “Browsing repositories from the dashboard is available for GitHub linked accounts. For GitLab, use Public Git URL above, or link a GitHub account.” · Other states: “Loading repositories…” · “No repositories returned for this account.” · “No repositories match ‘q’.”</div>
+    </section>
+
+    <!-- Card 4: public URL variant -->
+    <section class="card card--pad" style="opacity:.75">
+      <div class="row gap-2 mb-3"><div class="t-h4">Public clone URL</div><span class="badge badge--outline">Shown when “Public Git URL” is selected</span></div>
+      <div class="field"><label>HTTPS URL</label><div class="row gap-2"><input class="input input--mono grow" placeholder="https://github.com/org/public-repo.git" /><button class="btn">Test</button></div><div class="hint">Must be reachable without credentials. Private repositories require a linked account instead.</div></div>
+      <div class="row gap-2 mt-2 t-xs" style="color:var(--ok-fg)"><i data-lucide="circle-check" style="width:14px;height:14px"></i>URL looks reachable.</div>
+      <div class="t-xs t-subtle mt-2">Test states: “Enter an HTTPS clone URL to test.” · “Sign in to test this URL.” · API failure message · “Could not reach the test service. Check your connection and try again.”</div>
+    </section>
+
+    <!-- Error banner -->
+    <div class="banner banner--danger"><i data-lucide="circle-x"></i><div><div class="banner-title">Import failed</div><div class="banner-body t-xs">Repository API is not enabled yet. Fix the problem above and try again, or choose a different source.</div></div></div>
+
+    <!-- Proposed steps 2–4 -->
+    <section class="card card--flat" style="box-shadow:0 0 0 1.5px var(--honey) inset">
+      <div class="card__header"><div class="card__title"><i data-lucide="lightbulb"></i>Proposed steps 2–4 <span class="badge badge--honey">Redesign proposal — not in the app today</span></div></div>
+      <div class="card__body grid grid-3">
+        <div><div class="t-caps mb-2">2 · Repository</div><div class="t-xs t-muted">Remote browse moves here: account picker + searchable repo list (this screen’s cards 2–3), leaving step 1 as the source choice only.</div></div>
+        <div><div class="t-caps mb-2">3 · Scan settings</div><div class="t-xs t-muted">Branch selection (default branch pre-picked), subpath glob, auto-refresh cadence and conflict policy — today these live in repository Settings after registration.</div></div>
+        <div><div class="t-caps mb-2">4 · Confirm</div><div class="t-xs t-muted">Summary of provider, repo, branch and settings with a single “Register repository” commit; success routes to <span class="mono">/[id]/preview</span> as today.</div></div>
+      </div>
+    </section>
+
+    <div class="form-actions" style="justify-content:space-between">
+      <a class="btn btn--link" href="repositories.html">← Cancel</a>
+      <div class="row gap-2"><button class="btn" disabled>Back</button><a class="btn btn--primary" href="repository-detail.html">Continue →</a></div>
+    </div>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/repositories/new</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/repositories/new/page.tsx</code>, <code>SourceOptionCard</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header copy; step indicator “1 Source · 2 Repository · 3 Scan settings · 4 Confirm” (today only step 1 is ever active — decorative); footer “← Cancel” + Back + “Continue →”.</li>
+    <li>Source radios with verbatim copy (Linked account / Public Git URL). Linked accounts card: “Manage linked accounts →”, provider tiles with username/email mono, auto-select when exactly one, loading/empty copy.</li>
+    <li>GitHub repo picker: hint about <code>group / repository</code> rows, “Search repositories for {account}…”, 22rem scroll list, lock icon for private, descriptions; non-GitHub note verbatim; loading/error/empty/miss states.</li>
+    <li>Public URL card: HTTPS URL + Test (“Testing…”), help “Must be reachable without credentials…”, green/red result line, all validation toasts (“Enter an HTTPS clone URL.”, “Use Test and confirm the URL succeeds before continuing.”, “Pick a linked account.”, “Pick a repository from the list.”, “Select a tenant first.”).</li>
+    <li>Submit: POST /api/repositories → toast “Repository registered.” → <code>/[id]/preview</code>; 501 → “Repository API is not enabled yet.”; error banner “Import failed” + message + verbatim remediation. No PAT/SSH/OAuth entry, no name/branch/subpath inputs (unchanged).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Steps 2–4 fleshed out as a marked <em>proposal</em> card (Repository browse · Scan settings · Confirm); the live form still commits from step 1.</li></ul>
+  <h4>States</h4>
+  <ul><li>Continue enabled only when (linked) account + repo chosen, or (public) URL matches <code>https://x.y</code> and Test passed. No-tenant amber lock card.</li></ul>
+</template>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sunset timeline · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .tlx { width: 100%; overflow-x: auto; }
+  .tlx svg { min-width: 900px; width: 100%; height: 240px; }
+  .tlx text { font-family: var(--font-sans); font-size: 11px; fill: var(--fg-subtle); }
+  .tlx .ver { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; fill: var(--fg); }
+  .tlx .lane { stroke: var(--border); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: var(--fs-xs); color: var(--fg-muted); align-items: center; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+</style>
+</head>
+<body data-shell="app" data-nav="sunset" data-page="ship/sunset-timeline" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Ship</span><i data-lucide="chevron-right"></i><span>Sunset timeline</span></div>
+          <h1 class="page-title"><i data-lucide="sunset" style="width:22px;height:22px;color:var(--warn)"></i>Sunset timeline</h1>
+          <p class="page-desc">End-of-life schedule for deprecated schema revisions. Status <span class="t-600">imminent</span> means sunset within 30 days.</p>
+        </div>
+        <div class="page-actions">
+          <select class="select" style="width:220px" aria-label="Project filter"><option>All projects</option><option>Payments API</option><option>Orders Service</option><option>Inventory Events</option></select>
+          <button class="btn btn--primary" title="Download sunset-timeline.csv"><i data-lucide="download"></i>Export CSV</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="banner banner--warn"><i data-lucide="info"></i><div>Rows include the same structured warnings as compatibility checks (#507). Open a revision in <a href="../build/versions.html">Versions</a> to see banners in context. Dates come from the server (<span class="mono">versions.metadata</span>, #507).</div><a class="banner-actions t-xs" href="../build/versions.html">← Back to Projects</a></div>
+
+    <!-- Timeline visualisation (redesign convenience) -->
+    <section class="card">
+      <div class="card__header">
+        <div class="card__title"><i data-lucide="calendar-range"></i>Timeline<span class="t-xs t-subtle t-500">today → next 6 months · one lane per project</span></div>
+        <div class="legend"><span><span class="sw" style="background:var(--danger)"></span>past</span><span><span class="sw" style="background:var(--warn)"></span>imminent (≤ 30 days)</span><span><span class="sw" style="background:var(--neutral)"></span>scheduled</span><span class="t-subtle">◆ = sunset instant</span></div>
+      </div>
+      <div class="card__body tlx">
+        <svg viewBox="0 0 1000 240" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Sunset timeline: 4 entries across 3 projects between July and December 2026">
+          <!-- month grid: Jul(40) Aug(200) Sep(360) Oct(520) Nov(680) Dec(840) -->
+          <g class="lane" stroke-dasharray="3 3"><line x1="40" y1="26" x2="40" y2="196"/><line x1="200" y1="26" x2="200" y2="196"/><line x1="360" y1="26" x2="360" y2="196"/><line x1="520" y1="26" x2="520" y2="196"/><line x1="680" y1="26" x2="680" y2="196"/><line x1="840" y1="26" x2="840" y2="196"/></g>
+          <g><text x="40" y="16">Jul 2026</text><text x="200" y="16">Aug</text><text x="360" y="16">Sep</text><text x="520" y="16">Oct</text><text x="680" y="16">Nov</text><text x="840" y="16">Dec</text></g>
+          <!-- today marker: Aug 15 ≈ x=277 -->
+          <line x1="277" y1="22" x2="277" y2="200" stroke="var(--accent)" stroke-width="1.5"/>
+          <rect x="253" y="200" width="48" height="18" rx="9" fill="var(--accent)"/><text x="262" y="213" style="fill:#fff;font-weight:600">today</text>
+
+          <!-- Lane 1: Payments API -->
+          <text x="12" y="58" class="ver" style="font-family:var(--font-sans);font-weight:600;fill:var(--fg-muted);font-size:11px">Payments API</text>
+          <!-- v2.2.0 scheduled → Sep 30 ≈ x=515 -->
+          <line x1="277" y1="76" x2="515" y2="76" stroke="var(--warn)" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+          <rect x="285" y="64" width="118" height="22" rx="6" fill="var(--warn-soft)"/><text x="293" y="79" class="ver">v2.2.0 · 46 d</text>
+          <path d="M515 68 L523 76 L515 84 L507 76 Z" fill="var(--warn)"><title>Payments API v2.2.0 — sunset 2026-09-30T00:00Z (scheduled)</title></path>
+          <text x="497" y="100">Sep 30</text>
+
+          <!-- Lane 2: Orders Service -->
+          <text x="12" y="122" class="ver" style="font-family:var(--font-sans);font-weight:600;fill:var(--fg-muted);font-size:11px">Orders Service</text>
+          <!-- v1.4.0 imminent Aug 27 ≈ x=339 -->
+          <line x1="277" y1="140" x2="339" y2="140" stroke="var(--warn)" stroke-width="3" stroke-linecap="round"/>
+          <rect x="345" y="128" width="122" height="22" rx="6" fill="var(--warn-soft)"/><text x="353" y="143" class="ver">v1.4.0 · 12 d</text>
+          <path d="M339 132 L347 140 L339 148 L331 140 Z" fill="var(--warn)"><title>Orders Service v1.4.0 — sunset 2026-08-27T00:00Z (imminent)</title></path>
+          <text x="323" y="164">Aug 27</text>
+          <!-- v1.2.0 past Jul 15 ≈ x=112 -->
+          <path d="M112 132 L120 140 L112 148 L104 140 Z" fill="var(--danger)"><title>Orders Service v1.2.0 — sunset 2026-07-15T00:00Z (past)</title></path>
+          <rect x="130" y="129" width="104" height="22" rx="6" fill="var(--danger-soft)"/><text x="138" y="144" class="ver">v1.2.0 · past</text>
+
+          <!-- Lane 3: Inventory Events -->
+          <text x="12" y="186" class="ver" style="font-family:var(--font-sans);font-weight:600;fill:var(--fg-muted);font-size:11px">Inventory Events</text>
+          <!-- v0.5.0 scheduled Nov 30 ≈ x=835 -->
+          <line x1="277" y1="182" x2="835" y2="182" stroke="var(--neutral)" stroke-width="3" stroke-linecap="round" opacity=".35"/>
+          <rect x="700" y="170" width="126" height="22" rx="6" fill="var(--neutral-soft)"/><text x="708" y="185" class="ver">v0.5.0 · 107 d</text>
+          <path d="M835 174 L843 182 L835 190 L827 182 Z" fill="var(--neutral)"><title>Inventory Events v0.5.0 — sunset 2026-11-30T00:00Z (scheduled)</title></path>
+          <text x="817" y="206">Nov 30</text>
+        </svg>
+      </div>
+      <div class="card__footer"><span>4 entries · hover a ◆ for the UTC instant · lanes follow the project filter</span><a class="t-sm" href="../build/versions.html">Schedule a sunset from Versions →</a></div>
+    </section>
+
+    <!-- Table -->
+    <section class="table-wrap">
+      <div class="scroll-x">
+      <table class="table">
+        <thead><tr>
+          <th>Project</th>
+          <th>Version line</th>
+          <th>Sunset</th>
+          <th>Timeline</th>
+          <th>Lifecycle</th>
+          <th>Successor</th>
+          <th>Notes / #507</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><div class="row gap-2"><i data-lucide="package" class="t-subtle"></i><span class="cell-primary">Orders Service</span></div></td>
+            <td class="mono">v1.2.x</td>
+            <td class="t-num" style="white-space:nowrap">2026-07-15T00:00:00Z</td>
+            <td><span class="badge badge--outline" style="color:var(--rose-fg);box-shadow:inset 0 0 0 1px var(--rose)">past</span></td>
+            <td>Sunset reached (read-only / redirect)</td>
+            <td class="mono t-xs">ver_2ab4d1e0</td>
+            <td class="t-xs t-muted" style="max-width:260px">Removed <span class="mono">GET /orders/legacy</span> — requests now 410. <a href="#" target="_blank" rel="noopener">Migration guide <i data-lucide="arrow-up-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i></a></td>
+          </tr>
+          <tr>
+            <td><div class="row gap-2"><i data-lucide="package" class="t-subtle"></i><span class="cell-primary">Orders Service</span></div></td>
+            <td class="mono">v1.4.x</td>
+            <td class="t-num" style="white-space:nowrap">2026-08-27T00:00:00Z</td>
+            <td><span class="badge badge--outline" style="color:var(--warn-fg);box-shadow:inset 0 0 0 1px var(--warn)">imminent</span></td>
+            <td>Deprecated (migrate before sunset)</td>
+            <td class="mono t-xs">ver_9cc01b77</td>
+            <td class="t-xs t-muted" style="max-width:260px">2 consumers still on this line — breaking removal of cart v1 endpoints. <a href="#" target="_blank" rel="noopener">Migration guide <i data-lucide="arrow-up-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i></a></td>
+          </tr>
+          <tr>
+            <td><div class="row gap-2"><i data-lucide="package" class="t-subtle"></i><span class="cell-primary">Payments API</span></div></td>
+            <td class="mono">v2.2.x</td>
+            <td class="t-num" style="white-space:nowrap">2026-09-30T00:00:00Z</td>
+            <td><span class="badge badge--outline">scheduled</span></td>
+            <td>Deprecated (migrate before sunset)</td>
+            <td class="mono t-xs">ver_4c8e1b09</td>
+            <td class="t-xs t-muted" style="max-width:260px">Migrate to /payment-intents before sunset.</td>
+          </tr>
+          <tr>
+            <td><div class="row gap-2"><i data-lucide="package" class="t-subtle"></i><span class="cell-primary">Inventory Events</span></div></td>
+            <td class="mono">v0.5.x</td>
+            <td class="t-num" style="white-space:nowrap">2026-11-30T00:00:00Z</td>
+            <td><span class="badge badge--outline">scheduled</span></td>
+            <td>Deprecated (migrate before sunset)</td>
+            <td class="t-faint">—</td>
+            <td class="t-xs t-muted" style="max-width:260px">No successor (end of life). Channel <span class="mono">stock.v0</span> stops emitting.</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="table-foot"><span>4 entries · CSV columns: project, versionLine, sunsetDate, timelineStatus, lifecyclePhase, successorRevisionId, deprecationMessage → <span class="mono">sunset-timeline.csv</span></span><span class="t-subtle">Export CSV disabled when the table is empty</span></div>
+    </section>
+
+    <!-- Other states -->
+    <section>
+      <div class="section-title"><h2>Other states</h2><span class="t-muted">One renders at a time in the product</span></div>
+      <div class="grid grid-3">
+        <div class="card"><div class="empty" style="padding:24px 18px"><div class="empty__art" style="width:60px;height:60px"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="sunset"></i></div><div class="empty__title t-sm">No deprecation or sunset entries</div><div class="empty__desc t-xs">Mark revisions as deprecated or set a sunset date on revision metadata to see them here.</div></div></div>
+        <div class="card card--soft" style="padding:16px;box-shadow:0 0 0 1px var(--warn) inset"><div class="row gap-3"><span class="icon-tile icon-tile--warn"><i data-lucide="lock"></i></span><div><div class="t-sm t-600">No tenant selected</div><div class="t-xs t-muted">Select a tenant to see deprecation and sunset events for your projects.</div><a class="btn btn--sm mt-2" href="../workspace/tenants.html">Go to tenants</a></div></div></div>
+        <div class="col gap-3"><div class="card" style="padding:12px 16px"><div class="row gap-2 t-sm t-muted"><span class="spinner"></span>Loading schedule…</div></div><div class="banner banner--danger"><i data-lucide="circle-x"></i><div class="t-xs">Could not load the sunset schedule: 503 Service Unavailable</div></div><div class="card" style="padding:12px 16px"><div class="t-sm t-muted">Signed out: “Sign in to view the sunset timeline.”</div></div></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/versions/sunset-timeline</p>
+  <h4>Replaces</h4>
+  <ul><li><code>versions/sunset-timeline/page.tsx</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: back link to Projects (moved into the warning banner), Sun icon + amber title, subtitle incl. “Status imminent means sunset within 30 days” and the #507 sourcing note, project filter select (All projects + projects), Export CSV (disabled when empty; file <span class="mono">sunset-timeline.csv</span> with the exact column list).</li>
+    <li>Warning alert: “Rows include the same structured warnings as compatibility checks (#507). Open a revision in Versions to see banners in context.” (only when a row has warnings).</li>
+    <li>Table columns: Project (Package icon + name) · Version line (mono) · Sunset (UTC instant or —) · Timeline (outline badge with raw status imminent amber / past rose / other slate) · Lifecycle (“Sunset reached (read-only / redirect)” / “Deprecated (migrate before sunset)”) · Successor (mono revision id or —) · Notes / #507 (first warning or deprecation message + external “Migration guide” link, new tab).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Horizontal SVG timeline above the table: month grid, azure “today” marker, one lane per project, ◆ sunset instants colored by status (past/imminent/scheduled) with day countdown chips and native tooltips; follows the project filter. The current app is a plain table only.</li></ul>
+  <h4>States</h4>
+  <ul><li>Session loading “Loading…”; signed out “Sign in to view the sunset timeline.”; no tenant amber card “No tenant selected … Go to Tenants”; loading “Loading schedule…”; empty EmptyState “No deprecation or sunset entries …”; error alert with message.</li></ul>
+</template>
+</body>
+</html>

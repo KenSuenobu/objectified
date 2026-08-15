@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Published · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .url-code { font-family: var(--font-mono); font-size: var(--fs-2xs); background: var(--bg-inset); border-radius: var(--r-sm); padding: 3px 7px; display: inline-block; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mock-cell { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+  .mock-cell .mock-url { display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-muted); max-width: 185px; }
+  .mock-cell .mock-url code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mock-cell .row > .t-xs { white-space: nowrap; }
+  .pub-table th:nth-child(1), .pub-table td:nth-child(1) { min-width: 210px; }
+  .pub-table td { vertical-align: top; padding-top: 10px; padding-bottom: 10px; }
+  .flyout { position: absolute; right: 100%; top: 0; margin-right: 6px; }
+</style>
+</head>
+<body data-shell="app" data-nav="published" data-page="ship/published" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Ship</span><i data-lucide="chevron-right"></i><span>Published</span></div>
+          <h1 class="page-title">Published versions</h1>
+          <p class="page-desc">Published, locked versions with access URLs, visibility and hosted mocks.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn" href="../workspace/api-keys.html"><i data-lucide="key-round"></i>API keys</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Search -->
+    <div class="row-between wrap gap-3">
+      <div class="input-wrap" style="width:340px"><i data-lucide="search"></i><input class="input" placeholder="Search by project name, version, or description..." aria-label="Search published versions" /></div>
+      <span class="t-xs t-subtle">Client-side filter over project name · version · description · tenant name. No sorting or paging on this screen.</span>
+    </div>
+
+    <!-- Table -->
+    <section class="table-wrap">
+      <div class="scroll-x">
+      <table class="table pub-table">
+        <thead><tr>
+          <th>Project / Version</th>
+          <th>Visibility</th>
+          <th>Access URL</th>
+          <th>Mock</th>
+          <th>Published</th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+          <!-- Payments 2.3.1 public, mock on -->
+          <tr>
+            <td><div class="cell-primary">Payments API</div><div class="row gap-2 mt-1"><span class="mono" style="color:var(--accent-fg);font-weight:600">v2.3.1</span><span class="badge badge--info" title="Locked"><i data-lucide="lock"></i>Locked</span></div><div class="cell-sub t-truncate" style="max-width:220px">Card, refund and payout endpoints.</div></td>
+            <td><button class="badge" data-status="public" data-tip="Click to change to private" data-action="open" data-target="vis-confirm"><i data-lucide="globe"></i>Public</button></td>
+            <td><span class="url-code" title="schema/acme/payments-api/2.3.1">schema/acme/payments-api/2.3.1</span></td>
+            <td>
+              <div class="mock-cell">
+                <div class="row gap-2"><button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Mock for version 2.3.1" data-action="switch" title="Disable the hosted mock for this version"></button><span class="t-xs t-muted">Mock on</span></div>
+                <div class="mock-url" title="https://mock.apiome.dev/acme/payments-api/2.3.1"><code>mock.apiome.dev/acme/payments-api/2.3.1</code><button class="btn btn--ghost btn--sm btn--icon" title="Copy mock URL" aria-label="Copy mock URL" style="width:22px;height:22px"><i data-lucide="copy"></i></button></div>
+                <div class="row gap-2"><a class="t-xs row gap-1" href="#" data-action="open" data-target="scenario-dialog"><i data-lucide="flask-conical" style="width:12px;height:12px"></i>Scenarios</a><svg class="sparkline sparkline--ok" style="width:80px;height:20px" viewBox="0 0 80 20" preserveAspectRatio="none" role="img" aria-label="Mock requests for v2.3.1, last 30 days"><path class="fill" d="M0 16 L8 14 L16 15 L24 10 L32 12 L40 8 L48 9 L56 5 L64 7 L72 4 L80 6 L80 20 L0 20Z"/><path d="M0 16 L8 14 L16 15 L24 10 L32 12 L40 8 L48 9 L56 5 L64 7 L72 4 L80 6"/></svg></div>
+              </div>
+            </td>
+            <td class="t-num t-muted" style="white-space:nowrap">08/03/26 10:05 AM<div class="cell-sub">by Grace Hopper</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <!-- Payments 2.2.0 private -->
+          <tr>
+            <td><div class="cell-primary">Payments API</div><div class="row gap-2 mt-1"><span class="mono" style="color:var(--accent-fg);font-weight:600">v2.2.0</span><span class="badge badge--info" title="Locked"><i data-lucide="lock"></i>Locked</span></div><div class="cell-sub t-truncate" style="max-width:220px">Card tokenisation + 3DS challenge flow.</div></td>
+            <td><button class="badge" data-status="private" data-tip="Click to change to public" data-action="open" data-target="vis-confirm"><i data-lucide="lock"></i>Private</button></td>
+            <td><span class="url-code" title="schema/acme/payments-api/2.2.0">schema/acme/payments-api/2.2.0</span></td>
+            <td><div class="mock-cell"><div class="row gap-2"><button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Mock for version 2.2.0" data-action="switch" title="Serve spec-accurate mock responses for this version"></button><span class="t-xs t-muted">Mock off</span></div></div></td>
+            <td class="t-num t-muted" style="white-space:nowrap">06/11/26 08:30 AM<div class="cell-sub">by Ada Lovelace</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="key-dialog" data-tip="Private — needs an API key" aria-label="API key required"><i data-lucide="key-round"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <!-- Orders 1.9.2 public -->
+          <tr>
+            <td><div class="cell-primary">Orders Service</div><div class="row gap-2 mt-1"><span class="mono" style="color:var(--accent-fg);font-weight:600">v1.9.2</span><span class="badge badge--info" title="Locked"><i data-lucide="lock"></i>Locked</span></div><div class="cell-sub t-truncate" style="max-width:220px">Order lifecycle: cart → checkout → fulfilment.</div></td>
+            <td><button class="badge" data-status="public" data-tip="Click to change to private" data-action="open" data-target="vis-confirm"><i data-lucide="globe"></i>Public</button></td>
+            <td><span class="url-code" title="schema/acme/orders-service/1.9.2">schema/acme/orders-service/1.9.2</span></td>
+            <td><div class="mock-cell"><div class="row gap-2"><button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Mock for version 1.9.2" data-action="switch" title="Serve spec-accurate mock responses for this version"></button><span class="t-xs t-muted">Mock off</span></div></div></td>
+            <td class="t-num t-muted" style="white-space:nowrap">08/12/26 04:40 PM<div class="cell-sub">by Grace Hopper</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <!-- Orders 1.4.0 private (sunsetting) -->
+          <tr>
+            <td><div class="cell-primary">Orders Service</div><div class="row gap-2 mt-1"><span class="mono" style="color:var(--accent-fg);font-weight:600">v1.4.0</span><span class="badge badge--info" title="Locked"><i data-lucide="lock"></i>Locked</span><span class="badge" data-status="deprecated">Deprecated</span></div><div class="cell-sub t-truncate" style="max-width:220px">Legacy order flow — sunsets 27 Aug 2026.</div></td>
+            <td><button class="badge" data-status="private" data-tip="Click to change to public" data-action="open" data-target="vis-confirm"><i data-lucide="lock"></i>Private</button></td>
+            <td><span class="url-code" title="schema/acme/orders-service/1.4.0">schema/acme/orders-service/1.4.0</span></td>
+            <td><div class="mock-cell"><div class="row gap-2"><button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Mock for version 1.4.0" data-action="switch"></button><span class="t-xs t-muted">Mock off</span></div></div></td>
+            <td class="t-num t-muted" style="white-space:nowrap">01/20/26 09:15 AM<div class="cell-sub">by Linus Torvalds</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="table-foot"><span>Showing 4 of 4 published version(s) <span style="color:var(--accent-fg)">(filtered)</span> when searching</span><span class="t-subtle">Visibility button disabled while a change is in flight · copied-URL state resets after 2 s</span></div>
+    </section>
+
+    <!-- Other states -->
+    <section>
+      <div class="section-title"><h2>Other states</h2><span class="t-muted">One renders at a time in the product</span></div>
+      <div class="grid grid-3">
+        <div class="card"><div class="empty" style="padding:28px 20px"><div class="empty__art" style="width:64px;height:64px"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="eye"></i></div><div class="empty__title">No published versions</div><div class="empty__desc">You don’t have any published versions yet. Publish a version to make it available via API.</div><div class="empty__actions"><a class="btn btn--sm" href="../build/versions.html">Go to versions</a></div></div></div>
+        <div class="card"><div class="empty" style="padding:28px 20px"><div class="empty__art" style="width:64px;height:64px"><span class="hex"></span><i data-lucide="search"></i></div><div class="empty__title">No matching versions</div><div class="empty__desc">No published versions match your search query.</div></div></div>
+        <div class="col gap-3">
+          <div class="card card--soft" style="padding:16px;box-shadow:0 0 0 1px var(--warn) inset"><div class="row gap-3"><span class="icon-tile icon-tile--warn"><i data-lucide="lock"></i></span><div><div class="t-sm t-600">No tenant selected</div><div class="t-xs t-muted">Please select a tenant before managing publications.</div><a class="btn btn--sm mt-2" href="../workspace/tenants.html">Go to tenants</a></div></div></div>
+          <div class="banner banner--danger"><i data-lucide="circle-x"></i><div class="t-xs">Failed to update visibility: 503 Service Unavailable</div></div>
+          <div class="card" style="padding:12px 16px"><div class="row gap-2 t-sm t-muted"><span class="spinner"></span>Loading published versions...</div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- Row kebab menu with View fly-out -->
+<div class="overlay" id="row-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:250px 60px 0 0">
+  <div class="menu relative" role="menu" style="min-width:208px;overflow:visible">
+    <div class="menu__item" aria-haspopup="menu" aria-expanded="true"><i data-lucide="eye"></i>View<i data-lucide="chevron-left" style="margin-left:auto"></i></div>
+    <div class="menu flyout" role="menu" style="min-width:190px">
+      <a class="menu__item" href="#" target="_blank" data-tip="View OpenAPI spec"><i data-lucide="file-json-2"></i>OpenAPI</a>
+      <a class="menu__item" href="#" target="_blank" data-tip="View in Arazzo"><i data-lucide="workflow"></i>Arazzo</a>
+      <a class="menu__item" href="#" target="_blank" aria-disabled="true" style="opacity:.55" data-tip="Create an API key to access private versions"><i data-lucide="braces"></i>JSON Schema</a>
+    </div>
+    <a class="menu__item" href="#" target="_blank"><i data-lucide="panel-top"></i>Swagger UI<i data-lucide="arrow-up-right" style="margin-left:auto"></i></a>
+    <button class="menu__item w-full"><i data-lucide="copy"></i>Copy URL</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full" data-action="open" data-target="vis-confirm"><i data-lucide="lock"></i>Make private</button>
+  </div>
+</div>
+
+<!-- Visibility confirm -->
+<div class="overlay" id="vis-confirm" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="globe"></i></span><div><div class="dialog__title">Change visibility to PUBLIC</div><div class="dialog__desc">Change visibility to PUBLIC?<br /><br />This will make the OpenAPI Specification public without requiring an API Key.</div></div></div>
+    <div class="dialog__body t-xs t-subtle">Private direction: “Change visibility to PRIVATE? This will restrict access by requiring an API Key.” Toast on success: “Visibility changed to public|private.”</div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Change visibility</button></div>
+  </div>
+</div>
+
+<!-- API key dialog -->
+<div class="overlay" id="key-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="key-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--violet"><i data-lucide="key-round"></i></span><div><div class="dialog__title" id="key-title">API key required</div><div class="dialog__desc">This version is private. Enter your tenant API key so the opened URL includes authentication (query <span class="mono">api_key</span>). Create or manage keys on the <a href="../workspace/api-keys.html">API Keys page</a>. If you choose “Remember this key” below, private OpenAPI, Swagger UI, Arazzo, and JSON Schema links skip this prompt next time on this device.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="field"><label>API key</label><input class="input input--mono" type="password" placeholder="sk_..." /></div>
+      <label class="check"><input type="checkbox" checked />Remember this key on this browser for the current tenant (local storage only).</label>
+      <button class="btn btn--link btn--sm" style="align-self:flex-start;color:var(--warn-fg)"><i data-lucide="eraser"></i>Clear saved key from this browser</button>
+      <div class="t-2xs t-subtle">Toast on clear: “Saved API key removed from this browser.” Saved key (<span class="mono">apiome.previewApiKey.v1:&lt;tenantId&gt;</span>) auto-appends <span class="mono">?api_key=…</span> so this prompt is skipped.</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" disabled title="Enter a key first">Open with key</button></div>
+  </div>
+</div>
+
+<!-- Mock scenarios -->
+<div class="overlay" id="scenario-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="sc-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="flask-conical"></i></span><div><div class="dialog__title" id="sc-title">Mock scenarios for v2.3.1</div><div class="dialog__desc">Curated situations consumers select per request with the <span class="mono">X-Mock-Scenario</span> header. Add several responses to one operation to build a per-call sequence; requests without the header keep the default mock behavior.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <fieldset class="card card--flat" style="padding:12px 14px;border:0">
+        <div class="row gap-2"><input class="input input--mono" value="quota-exceeded" placeholder="scenario-name (e.g. quota-exceeded)" style="width:200px" /><input class="input grow" placeholder="Description (optional)" /><button class="btn btn--ghost btn--icon" aria-label="Remove scenario"><i data-lucide="trash-2"></i></button></div>
+        <div class="card card--soft mt-2" style="padding:10px 12px">
+          <div class="row gap-2"><input class="input input--mono input--sm grow" value="GET /orders" placeholder="Operation (e.g. GET /pets/{petId})" /><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove"><i data-lucide="trash-2"></i></button></div>
+          <div class="row gap-2 mt-2"><input class="input input--sm" value="429" placeholder="Status" style="width:80px" /><input class="input input--sm" placeholder="Media type (default application/json)" style="width:230px" /><label class="check t-xs"><input type="checkbox" />Off-spec</label></div>
+          <div class="grid grid-2 mt-2"><textarea class="textarea input--mono" style="min-height:48px" placeholder='Headers as JSON, e.g. {"Retry-After": "60"} (optional)'></textarea><textarea class="textarea input--mono" style="min-height:48px" placeholder='Body as JSON; leave blank for an empty response body. Supports {{templates}}'></textarea></div>
+        </div>
+        <div class="row gap-3 mt-2"><button class="btn btn--link btn--sm">+ Add operation override</button><button class="btn btn--link btn--sm">+ Add scenario chaos</button></div>
+      </fieldset>
+      <button class="btn btn--sm" style="align-self:flex-start"><i data-lucide="plus"></i>Add scenario</button>
+      <fieldset class="card card--flat" style="padding:12px 14px;border:0">
+        <div class="t-sm t-600">Latency &amp; chaos</div>
+        <div class="row wrap gap-3 mt-2"><label class="t-xs col" style="gap:4px">Delay ms<input class="input input--sm" style="width:90px" /></label><label class="t-xs col" style="gap:4px">± Jitter ms<input class="input input--sm" style="width:90px" /></label><label class="t-xs col" style="gap:4px">Error rate %<input class="input input--sm" style="width:90px" /></label><button class="btn btn--link btn--sm" style="align-self:flex-end">+ Add route override</button></div>
+      </fieldset>
+      <div class="t-xs t-subtle">Empty: “No scenarios defined yet. Add one to get started — for example quota-exceeded returning HTTP 429 from a list operation.” · “Loading scenarios…” · toasts “Scenarios saved for v2.3.1.” / “Failed to load|save scenarios for v2.3.1.”</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save scenarios</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/published</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/published/{page,PublishedVersions}.tsx</code>, <code>VersionMockCell</code>, <code>MockScenarioEditor</code> (published surface).</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Search panel filtering project name / version / description / tenant (client-side); footer “Showing X of Y published version(s)” + blue “(filtered)”.</li>
+    <li>Columns: Project/Version (bold name, mono indigo vX, blue Lock chip when locked, truncated description) · Visibility (clickable Public ok+Globe / Private violet+Lock badge with “Click to change to…” tooltip) · Access URL (<span class="mono">schema/{tenant}/{project}/{version}</span> code) · Mock (VersionMockCell: switch + tooltips, Mock on/off label, mock base URL + Copy, Scenarios link, 30-day sparkline) · Published (date + “by creator”) · kebab.</li>
+    <li>Kebab menu: View fly-out (OpenAPI / Arazzo / JSON Schema — disabled with “Create an API key to access private versions” when private and no enabled key), Swagger UI, Copy URL (toasts), divider, Make Private/Public. All viewers open in a new tab.</li>
+    <li>Dialogs: visibility confirm (exact PUBLIC/PRIVATE copy, “Change Visibility” button), “API key required” (password input sk_…, Enter submits, Remember checkbox default on, Clear saved key, localStorage note), Mock scenarios editor.</li>
+    <li>No unpublish/delete here (visibility toggle only — unpublish lives on Versions); no sorting/paging/column filters.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Deprecated pill on sunsetting rows (links the story to Sunset timeline); API keys shortcut in the header.</li></ul>
+  <h4>States</h4>
+  <ul><li>No tenant → amber Lock card “No Tenant Selected … Go to Tenants”; loading “Loading published versions...”; empty “No Published Versions …”; search miss “No Matching Versions …”; visibility error alert. Mock toasts “Mock enabled for vX — the mock URL is ready to share.” / “Mock disabled for vX.” / “Failed to enable|disable mock for vX.”</li></ul>
+</template>
+</body>
+</html>

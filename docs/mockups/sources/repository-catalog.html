@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Discovered specs · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .fmt { white-space: nowrap; }
+  .table td.t-num { white-space: nowrap; }
+</style>
+</head>
+<body data-shell="app" data-nav="repositories" data-page="sources/repository-catalog" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><a href="repositories.html">Repositories</a><i data-lucide="chevron-right"></i><span>Discovered specs</span></div>
+          <h1 class="page-title">Discovered specs</h1>
+          <p class="page-desc">Every spec the scanner has found across all repositories in this tenant. 128 indexed.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn"><i data-lucide="refresh-cw"></i>Refresh</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <a class="tab" href="repositories.html"><i data-lucide="folder-git-2"></i>Repositories <span class="count">4</span></a>
+        <a class="tab is-active" href="repository-catalog.html"><i data-lucide="library"></i>Discovered specs <span class="count">128</span></a>
+        <a class="tab" href="repository-telemetry.html"><i data-lucide="activity"></i>Quota &amp; rate limits</a>
+        <a class="tab" href="webhook-allowlist.html"><i data-lucide="shield-check"></i>Webhook IP allowlist</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Filter panel (mirrored to the URL) -->
+    <section class="card" style="padding:12px 14px">
+      <div class="row wrap gap-2">
+        <div class="input-wrap grow" style="min-width:240px;max-width:340px"><i data-lucide="search"></i><input class="input" placeholder="Search path, format, repository or project…" /></div>
+        <select class="select" style="width:160px" aria-label="Format"><option>All formats</option><option>OpenAPI (64)</option><option>Arazzo (5)</option><option>AsyncAPI (12)</option><option>JSON Schema (31)</option><option>GraphQL (7)</option><option>Protobuf (6)</option><option>Other (3)</option></select>
+        <select class="select" style="width:180px" aria-label="Repository"><option>All repositories</option><option>payments-specs (41)</option><option>orders-contracts (39)</option><option>platform-schemas (34)</option><option>legacy-soap (14)</option></select>
+        <select class="select" style="width:160px" aria-label="Project"><option>All projects</option><option>Payments API (9)</option><option>Orders Service (4)</option><option>Unmapped (98)</option></select>
+        <select class="select" style="width:160px" aria-label="Status"><option>All statuses</option><option>Needs attention (3)</option><option>Imported (17)</option><option>Mapped (9)</option><option>Discovered (99)</option></select>
+        <select class="select" style="width:190px" aria-label="Sort"><option>Sort: Recent activity</option><option>Sort: Repository</option><option>Sort: Path</option><option>Sort: Format</option><option>Sort: Status</option></select>
+      </div>
+      <div class="row wrap gap-4 mt-3">
+        <label class="check t-xs"><input type="checkbox" checked/> Only importable spec types</label>
+        <label class="check t-xs"><input type="checkbox"/> Include non-default branches</label>
+        <button class="btn btn--ghost btn--sm ml-auto"><i data-lucide="x"></i>Clear filters</button>
+        <span class="t-2xs t-subtle">Filters mirror to the URL (bookmarkable); stale responses discarded by sequence.</span>
+      </div>
+    </section>
+
+    <!-- Table -->
+    <section class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Spec</th><th>Repository</th><th>Format</th><th>Project</th><th>Status</th><th class="t-right">Size</th><th>Last activity</th></tr></thead>
+        <tbody>
+          <tr class="is-clickable">
+            <td><a class="mono t-xs" href="repository-detail.html"><span class="t-faint">specs/payments/</span><span class="t-600">openapi.yaml</span></a></td>
+            <td><a href="repository-detail.html">payments-specs</a><div class="cell-sub mono">main</div></td>
+            <td><span class="fmt fmt--openapi">openapi</span></td>
+            <td><a href="../build/projects.html">Payments API</a></td>
+            <td><span class="badge" data-status="completed" title="At least one import of this file has produced a version.">Imported</span></td>
+            <td class="t-right t-num">64 KB</td><td class="t-num t-muted">08/15/26</td>
+          </tr>
+          <tr class="is-clickable">
+            <td><a class="mono t-xs" href="repository-detail.html"><span class="t-faint">specs/refunds/</span><span class="t-600">openapi.yaml</span></a><div class="mt-1"><span class="badge badge--warn"><i data-lucide="unlink"></i>2 unresolved external $refs</span></div></td>
+            <td><a href="repository-detail.html">payments-specs</a><div class="cell-sub mono">main</div></td>
+            <td><span class="fmt fmt--openapi">openapi</span></td>
+            <td><a href="../build/projects.html">Payments API</a></td>
+            <td><span class="badge" data-status="warning" title="Quality scoring failed, or the last scan left external $refs unresolved. Open the spec to see why.">Needs attention</span></td>
+            <td class="t-right t-num">38 KB</td><td class="t-num t-muted">08/14/26</td>
+          </tr>
+          <tr class="is-clickable">
+            <td><a class="mono t-xs" href="repository-detail.html"><span class="t-faint">events/</span><span class="t-600">settlement.asyncapi.yaml</span></a></td>
+            <td><a href="repository-detail.html">payments-specs</a><div class="cell-sub mono">main</div></td>
+            <td><span class="fmt fmt--asyncapi">asyncapi</span></td>
+            <td><a href="../build/projects.html">Inventory Events</a></td>
+            <td><span class="badge" data-status="completed">Imported</span></td>
+            <td class="t-right t-num">21 KB</td><td class="t-num t-muted">08/09/26</td>
+          </tr>
+          <tr class="is-clickable">
+            <td><a class="mono t-xs" href="repository-detail.html"><span class="t-faint">contracts/orders/</span><span class="t-600">orders.v2.yaml</span></a></td>
+            <td><a href="repository-detail.html">orders-contracts</a><div class="cell-sub mono">main</div></td>
+            <td><span class="fmt fmt--openapi">openapi</span></td>
+            <td><a href="../build/projects.html">Orders Service</a></td>
+            <td><span class="badge badge--info" title="Bound to a project, but no import has run yet.">Mapped</span></td>
+            <td class="t-right t-num">52 KB</td><td class="t-num t-muted">08/13/26</td>
+          </tr>
+          <tr class="is-clickable">
+            <td><a class="mono t-xs" href="repository-detail.html"><span class="t-faint">schemas/</span><span class="t-600">money.schema.json</span></a></td>
+            <td><a href="repository-detail.html">platform-schemas</a><div class="cell-sub mono">master</div></td>
+            <td><span class="fmt fmt--jsonschema">json_schema</span></td>
+            <td><span class="t-faint">Unmapped</span></td>
+            <td><span class="badge badge--outline" title="Indexed by the scanner and not yet mapped to a project.">Discovered</span></td>
+            <td class="t-right t-num">4 KB</td><td class="t-num t-muted">08/12/26</td>
+          </tr>
+          <tr class="is-clickable">
+            <td><a class="mono t-xs" href="repository-detail.html"><span class="t-faint">protos/payouts/v1/</span><span class="t-600">payout.proto</span></a></td>
+            <td><a href="repository-detail.html">orders-contracts</a><div class="cell-sub mono">main</div></td>
+            <td><span class="fmt fmt--proto">protobuf</span></td>
+            <td><span class="t-faint">Unmapped</span></td>
+            <td><span class="badge badge--outline">Discovered</span></td>
+            <td class="t-right t-num">4 KB</td><td class="t-num t-muted">08/11/26</td>
+          </tr>
+          <tr class="is-clickable">
+            <td><a class="mono t-xs" href="repository-detail.html"><span class="t-faint">wsdl/</span><span class="t-600">billing.wsdl</span></a></td>
+            <td><a href="repository-detail.html">legacy-soap</a><div class="cell-sub mono">trunk</div></td>
+            <td><span class="fmt fmt--wsdl">other</span></td>
+            <td><span class="t-faint">Unmapped</span></td>
+            <td><span class="badge" data-status="warning">Needs attention</span></td>
+            <td class="t-right t-num">210 KB</td><td class="t-num t-muted">08/08/26</td>
+          </tr>
+          <tr class="is-clickable">
+            <td><a class="mono t-xs" href="repository-detail.html"><span class="t-faint">workflows/</span><span class="t-600">refund-flow.arazzo.yaml</span></a></td>
+            <td><a href="repository-detail.html">payments-specs</a><div class="cell-sub mono">main</div></td>
+            <td><span class="fmt fmt--proto" style="background:var(--accent-soft);color:var(--accent-fg)">arazzo</span></td>
+            <td><a href="../build/projects.html">Payments API</a></td>
+            <td><span class="badge" data-status="completed">Imported</span></td>
+            <td class="t-right t-num">9 KB</td><td class="t-num t-muted">08/07/26</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>Showing 1–8 of 128</span><span class="pager"><button class="btn btn--ghost btn--sm" disabled>Prev</button><button class="btn btn--ghost btn--sm">Next</button></span></div>
+    </section>
+
+    <!-- Status vocabulary + states -->
+    <section class="grid grid-2">
+      <div class="card card--pad">
+        <div class="t-h4 mb-2">Status vocabulary</div>
+        <div class="col gap-2 t-xs">
+          <div class="row-start gap-2"><span class="badge" data-status="warning" style="flex-shrink:0">Needs attention</span><span class="t-muted">Quality scoring failed, or the last scan left external $refs unresolved. Open the spec to see why.</span></div>
+          <div class="row-start gap-2"><span class="badge" data-status="completed" style="flex-shrink:0">Imported</span><span class="t-muted">At least one import of this file has produced a version.</span></div>
+          <div class="row-start gap-2"><span class="badge badge--info" style="flex-shrink:0">Mapped</span><span class="t-muted">Bound to a project, but no import has run yet.</span></div>
+          <div class="row-start gap-2"><span class="badge badge--outline" style="flex-shrink:0">Discovered</span><span class="t-muted">Indexed by the scanner and not yet mapped to a project.</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="empty" style="padding:24px">
+          <div class="empty__art" style="width:56px;height:56px"><span class="hex"></span><i data-lucide="library"></i></div>
+          <div class="empty__title t-sm">No specs discovered yet</div>
+          <div class="empty__desc t-xs">Register a repository and run a scan; discovered specs land here automatically.</div>
+          <div class="empty__actions"><a class="btn btn--sm btn--primary" href="repository-new.html">Register a repository</a></div>
+        </div>
+        <div class="card__footer t-xs"><span>Filtered miss: “No specs match these filters — Widen the search, or clear the filters to see the whole catalog.” + Clear filters · Error: “Could not load the spec catalog” + Retry · Loading: “Loading discovered specs…”</span></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/repositories/catalog</p>
+  <h4>Replaces</h4>
+  <ul><li><code>RepositorySpecCatalog</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: back to Repositories (crumb), title + “Every spec the scanner has found across all repositories in this tenant. N indexed.”, Refresh.</li>
+    <li>Filters: search (path/format/repository/project, 250 ms debounce), facet selects Format / Repository / Project / Status with “Label (count)” options, Sort (Repository / Path / Format / Status / Recent activity); checkboxes “Only importable spec types” (default on) + “Include non-default branches”; ghost “Clear filters” when active; filters mirrored to the URL via router.replace; facets fetched once; stale responses discarded.</li>
+    <li>Columns: Spec (dimmed dir + mono filename, link → owning repo Files deep link, amber “N unresolved external $ref(s)”) · Repository (link + branch) · Format pill · Project (link or “Unmapped”) · Status · Size · Last activity; row hover; footer “Showing a–b of N” + Prev/Next (50/page).</li>
+    <li>Status vocabulary with verbatim tooltips (Needs attention / Imported / Mapped / Discovered). Empty / filtered / error / loading / no-tenant copy verbatim.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Sub-nav tab row; status-vocabulary reference card beside the empty-state preview (mock aid).</li></ul>
+  <h4>States</h4>
+  <ul><li>No-tenant card: “The spec catalog spans the repositories of one tenant…” + Go to Tenants.</li></ul>
+</template>
+</body>
+</html>

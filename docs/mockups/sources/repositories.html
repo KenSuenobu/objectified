@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Repositories · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only */
+  .view-grid, .view-list, .view-empty { display: contents; }
+  .repo-card { display: flex; flex-direction: column; }
+  .scanbars { display: flex; align-items: flex-end; gap: 2px; height: 22px; }
+  .scanbars > span { width: 6px; border-radius: 2px 2px 0 0; background: var(--ok); opacity: .8; }
+  .scanbars > span.is-fail { background: var(--danger); }
+  .refresh-chip { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 8px; border-radius: var(--r-full); font-size: var(--fs-2xs); font-weight: 600; box-shadow: inset 0 0 0 1px var(--border-strong); }
+</style>
+</head>
+<body data-shell="app" data-nav="repositories" data-page="sources/repositories" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Bring in</span><i data-lucide="chevron-right"></i><span>Repositories</span></div>
+          <h1 class="page-title">Repositories</h1>
+          <p class="page-desc">Browse repositories registered to this workspace and pick one to explore its files.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-tip="Queue a scan of every repository"><i data-lucide="refresh-cw"></i>Rescan all</button>
+          <a class="btn btn--primary" href="repository-new.html"><i data-lucide="plus"></i>Add repository</a>
+        </div>
+      </div>
+      <div class="tabs">
+        <a class="tab is-active" href="repositories.html"><i data-lucide="folder-git-2"></i>Repositories <span class="count">4</span></a>
+        <a class="tab" href="repository-catalog.html"><i data-lucide="library"></i>Discovered specs <span class="count">128</span></a>
+        <a class="tab" href="repository-telemetry.html"><i data-lucide="activity"></i>Quota &amp; rate limits</a>
+        <a class="tab" href="webhook-allowlist.html"><i data-lucide="shield-check"></i>Webhook IP allowlist</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- KPI strip -->
+    <section class="stat-grid stat-grid--4">
+      <div class="stat" data-tip="2 GitHub · 1 GitLab · 0 Bitbucket · 1 public URL"><div class="stat__label"><i data-lucide="folder-git-2"></i>Repositories</div><div class="stat__value">4</div><div class="stat__foot"><span>2 GitHub · 1 GitLab · 1 public URL</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="files"></i>Files indexed</div><div class="stat__value">3,412</div><div class="stat__foot"><span>across all default branches</span></div></div>
+      <div class="stat" data-tip="Needs import-event aggregation per tenant + repo (API not wired yet)."><div class="stat__label"><i data-lucide="upload"></i>Imports (30d)</div><div class="stat__value t-faint">—</div><div class="stat__foot"><span>aggregation not wired yet</span></div></div>
+      <div class="stat" data-tip="Some repos need attention"><div class="stat__label"><i data-lucide="radar"></i>Last scan</div><div class="stat__value">2h<small>ago</small></div><div class="stat__foot"><span class="row gap-1"><span class="dot dot--warn"></span>Some repos need attention</span></div></div>
+    </section>
+
+    <!-- Refresh activity (RAR-5.5) -->
+    <section class="card">
+      <div class="card__header"><div class="card__title"><i data-lucide="refresh-cw"></i>Refresh activity</div><span class="t-xs t-subtle">7 specs tracked · 3 refreshed (24h)</span></div>
+      <div class="card__body">
+        <div class="row wrap gap-2 mb-3">
+          <span class="refresh-chip" style="color:var(--warn-fg)"><span class="dot dot--warn"></span>Stale 2</span>
+          <span class="refresh-chip" style="color:var(--violet-fg)"><span class="dot dot--violet"></span>Diverged 1</span>
+          <span class="refresh-chip" style="color:var(--danger-fg)"><span class="dot dot--danger"></span>Failed 1</span>
+          <span class="refresh-chip t-faint">Refreshing 0</span>
+          <span class="refresh-chip" style="color:var(--ok-fg)"><span class="dot dot--ok"></span>Up to date 3</span>
+        </div>
+        <div class="col gap-1 t-sm">
+          <a class="row gap-2" href="repository-detail.html"><i data-lucide="folder-git-2" class="t-subtle"></i><span class="t-500">acme/payments-specs</span><span class="t-xs t-muted">2 stale · 1 diverged</span><i data-lucide="chevron-right" class="t-faint ml-auto"></i></a>
+          <a class="row gap-2" href="repository-detail.html"><i data-lucide="folder-git-2" class="t-subtle"></i><span class="t-500">acme/legacy-soap</span><span class="t-xs t-muted">1 failed</span><i data-lucide="chevron-right" class="t-faint ml-auto"></i></a>
+        </div>
+        <div class="t-xs t-subtle mt-2">Healthy variant: “All repositories healthy — nothing stale, diverged, or failed.” · Empty: “Import a spec from a repository and its auto-refresh health will appear here.”</div>
+      </div>
+    </section>
+
+    <!-- Filter bar -->
+    <div class="row-between wrap gap-3">
+      <div class="row gap-2 wrap">
+        <div class="input-wrap" style="width:250px"><i data-lucide="search"></i><input class="input" placeholder="Search repositories…" /></div>
+        <select class="select" style="width:150px" aria-label="Provider"><option>All providers</option><option>GitHub</option><option>GitLab</option><option>Bitbucket</option><option>Public URL</option></select>
+        <select class="select" style="width:180px" aria-label="Visibility"><option>All visibilities</option><option>Public</option><option>Private (linked account)</option></select>
+        <select class="select" style="width:190px" aria-label="Sort"><option>Sort: Recently scanned</option><option>Sort: Name</option></select>
+      </div>
+      <div class="segmented segmented--sm" data-tabs="views">
+        <button class="is-active" data-action="tab" data-target="grid" data-tip="Grid"><i data-lucide="layout-grid"></i>Grid</button>
+        <button data-action="tab" data-target="list" data-tip="List"><i data-lucide="list"></i>List</button>
+        <button data-action="tab" data-target="empty" data-tip="Mockup only: preview the empty state" style="opacity:.55"><i data-lucide="circle-dashed"></i></button>
+      </div>
+    </div>
+
+    <div id="views">
+    <!-- ===== Grid view ===== -->
+    <section class="grid grid-3" data-tab-panel="grid">
+      <!-- payments-specs: ready + warnings -->
+      <article class="card card--hover repo-card" role="button" tabindex="0" onclick="location.href='repository-detail.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--a">PS</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">payments-specs</div><div class="t-xs t-subtle mono t-truncate">acme/payments-specs</div></div>
+            <div class="row gap-1">
+              <span data-tip="Health: Warnings — 3 of 4 scans succeeded in the last 30 days (75%)."><i data-lucide="triangle-alert" style="color:var(--warn)"></i></span>
+              <span class="badge" data-status="active">Ready</span>
+              <button class="btn btn--ghost btn--sm btn--icon" aria-label="Repository actions" data-action="open" data-target="repo-menu" onclick="event.stopPropagation()"><i data-lucide="ellipsis"></i></button>
+            </div>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">OpenAPI and AsyncAPI sources for the payments platform; scanned on push.</p>
+          <div class="row wrap gap-2 mt-2 t-xs t-muted"><span class="badge badge--outline"><i data-lucide="github"></i>GitHub</span><span class="row gap-1"><i data-lucide="git-branch" style="width:12px;height:12px"></i>main</span><span>1,204 files</span></div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><span class="t-xs t-subtle">2h ago</span><span class="scanbars" data-tip="Last 10 scans"><span style="height:60%"></span><span style="height:80%"></span><span style="height:70%"></span><span class="is-fail" style="height:40%"></span><span style="height:75%"></span><span style="height:90%"></span><span style="height:66%"></span><span style="height:88%"></span><span style="height:72%"></span><span style="height:95%"></span></span></div>
+      </article>
+      <!-- orders-contracts: scanning -->
+      <article class="card card--hover repo-card" role="button" tabindex="0" onclick="location.href='repository-detail.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--c">OC</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">orders-contracts</div><div class="t-xs t-subtle mono t-truncate">acme/orders-contracts</div></div>
+            <div class="row gap-1">
+              <span data-tip="Health: Healthy — No scan failures, spec parse errors or credential problems."><i data-lucide="circle-check" style="color:var(--ok)"></i></span>
+              <span class="badge badge--info"><span class="spinner" style="width:10px;height:10px;border-width:1.5px"></span>Scanning</span>
+              <button class="btn btn--ghost btn--sm btn--icon" aria-label="Repository actions" data-action="open" data-target="repo-menu" onclick="event.stopPropagation()"><i data-lucide="ellipsis"></i></button>
+            </div>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Order lifecycle contracts, JSON Schema + Protobuf. Polled every 2 s while scanning.</p>
+          <div class="row wrap gap-2 mt-2 t-xs t-muted"><span class="badge badge--outline"><i data-lucide="github"></i>GitHub</span><span class="row gap-1"><i data-lucide="git-branch" style="width:12px;height:12px"></i>main</span><span>986 files</span></div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><span class="t-xs t-subtle">just now</span><div class="meter" style="width:120px"><div class="progress progress--thin"><span style="width:58%"></span></div><span class="meter-val">58%</span></div></div>
+      </article>
+      <!-- platform-schemas (GitLab, ready) -->
+      <article class="card card--hover repo-card" role="button" tabindex="0" onclick="location.href='repository-detail.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--d">PS</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">platform-schemas</div><div class="t-xs t-subtle mono t-truncate">acme-group/platform-schemas</div></div>
+            <div class="row gap-1">
+              <span data-tip="Health: Healthy — No scan failures, spec parse errors or credential problems."><i data-lucide="circle-check" style="color:var(--ok)"></i></span>
+              <span class="badge" data-status="active">Ready</span>
+              <button class="btn btn--ghost btn--sm btn--icon" aria-label="Repository actions" data-action="open" data-target="repo-menu" onclick="event.stopPropagation()"><i data-lucide="ellipsis"></i></button>
+            </div>
+          </div>
+          <p class="t-sm t-muted" style="min-height:40px"><span class="t-faint">No description</span></p>
+          <div class="row wrap gap-2 mt-2 t-xs t-muted"><span class="badge badge--outline"><i data-lucide="gitlab" style="color:var(--orange)"></i>GitLab</span><span class="row gap-1"><i data-lucide="git-branch" style="width:12px;height:12px"></i>master</span><span>412 files</span></div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><span class="t-xs t-subtle">yesterday</span><div class="meter" style="width:120px" data-tip="Importable share of indexed files"><div class="progress progress--ok progress--thin"><span style="width:34%"></span></div><span class="meter-val">34%</span></div></div>
+      </article>
+      <!-- legacy-soap: error -->
+      <article class="card card--hover repo-card" role="button" tabindex="0" style="box-shadow:0 0 0 1px var(--danger) inset, var(--shadow-sm)" onclick="location.href='repository-detail.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--e">LS</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">legacy-soap</div><div class="t-xs t-subtle mono t-truncate">git.example.org/acme/legacy-soap</div></div>
+            <div class="row gap-1">
+              <span data-tip="Health: Error — No scans finished in the last 30 days."><i data-lucide="circle-x" style="color:var(--danger)"></i></span>
+              <span class="badge" data-status="error">Error</span>
+              <button class="btn btn--ghost btn--sm btn--icon" aria-label="Repository actions" data-action="open" data-target="repo-menu" onclick="event.stopPropagation()"><i data-lucide="ellipsis"></i></button>
+            </div>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">WSDL archive registered by public URL. Last scan failed: clone timed out.</p>
+          <div class="row wrap gap-2 mt-2 t-xs t-muted"><span class="badge badge--outline"><i data-lucide="globe"></i>Public URL</span><span class="row gap-1"><i data-lucide="git-branch" style="width:12px;height:12px"></i>trunk</span><span>810 files</span></div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><span class="t-xs t-danger">Scan failed</span><span class="t-xs t-subtle">—</span></div>
+      </article>
+      <!-- Add tile -->
+      <a class="card card--flat empty empty--dashed" style="min-height:200px;justify-content:center;background:transparent" href="repository-new.html">
+        <div class="empty__art" style="width:56px;height:56px"><span class="hex"></span><i data-lucide="plus"></i></div>
+        <div class="empty__title t-sm">Add repository</div>
+        <div class="empty__desc t-xs">Linked GitHub account, or any public Git URL.</div>
+      </a>
+    </section>
+
+    <!-- ===== List view ===== -->
+    <section class="table-wrap" data-tab-panel="list" hidden>
+      <table class="table">
+        <thead><tr><th>Repository</th><th>Provider</th><th>Branch</th><th class="t-right">Files</th><th>Health</th><th>Status</th><th>Last scan</th><th>Importable</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          <tr class="is-clickable">
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--a">PS</span><div><div class="cell-primary">payments-specs</div><div class="cell-sub mono">acme/payments-specs</div></div></div></td>
+            <td><span class="badge badge--outline"><i data-lucide="github"></i>GitHub</span></td>
+            <td class="mono t-xs">main</td>
+            <td class="t-right t-num">1,204</td>
+            <td><span class="badge badge--warn"><i data-lucide="triangle-alert"></i>Warnings</span></td>
+            <td><span class="badge" data-status="active">Ready</span></td>
+            <td class="t-muted">2h ago</td>
+            <td><span class="scanbars"><span style="height:60%"></span><span style="height:80%"></span><span class="is-fail" style="height:40%"></span><span style="height:75%"></span><span style="height:90%"></span></span></td>
+            <td><div class="cell-actions"><a class="btn btn--ghost btn--sm" href="repository-detail.html">Detail →</a><button class="btn btn--ghost btn--sm btn--icon" aria-label="Repository actions" data-action="open" data-target="repo-menu"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--c">OC</span><div><div class="cell-primary">orders-contracts</div><div class="cell-sub mono">acme/orders-contracts</div></div></div></td>
+            <td><span class="badge badge--outline"><i data-lucide="github"></i>GitHub</span></td>
+            <td class="mono t-xs">main</td>
+            <td class="t-right t-num">986</td>
+            <td><span class="badge badge--ok"><i data-lucide="circle-check"></i>Healthy</span></td>
+            <td><span class="badge badge--info">Scanning</span></td>
+            <td class="t-muted">just now</td>
+            <td><span class="spinner"></span></td>
+            <td><div class="cell-actions"><a class="btn btn--ghost btn--sm" href="repository-detail.html">Detail →</a><button class="btn btn--ghost btn--sm btn--icon" aria-label="Repository actions" data-action="open" data-target="repo-menu"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--d">PS</span><div><div class="cell-primary">platform-schemas</div><div class="cell-sub mono">acme-group/platform-schemas</div></div></div></td>
+            <td><span class="badge badge--outline"><i data-lucide="gitlab" style="color:var(--orange)"></i>GitLab</span></td>
+            <td class="mono t-xs">master</td>
+            <td class="t-right t-num">412</td>
+            <td><span class="badge badge--ok"><i data-lucide="circle-check"></i>Healthy</span></td>
+            <td><span class="badge" data-status="active">Ready</span></td>
+            <td class="t-muted">yesterday</td>
+            <td><div class="meter" style="width:90px"><div class="progress progress--ok progress--thin"><span style="width:34%"></span></div><span class="meter-val">34%</span></div></td>
+            <td><div class="cell-actions"><a class="btn btn--ghost btn--sm" href="repository-detail.html">Detail →</a><button class="btn btn--ghost btn--sm btn--icon" aria-label="Repository actions" data-action="open" data-target="repo-menu"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--e">LS</span><div><div class="cell-primary">legacy-soap</div><div class="cell-sub mono">git.example.org/acme/legacy-soap</div></div></div></td>
+            <td><span class="badge badge--outline"><i data-lucide="globe"></i>Public URL</span></td>
+            <td class="mono t-xs">trunk</td>
+            <td class="t-right t-num">810</td>
+            <td><span class="badge badge--danger"><i data-lucide="circle-x"></i>Error</span></td>
+            <td><span class="badge" data-status="error">Error</span></td>
+            <td class="t-danger">Scan failed</td>
+            <td class="t-faint">—</td>
+            <td><div class="cell-actions"><a class="btn btn--ghost btn--sm" href="repository-detail.html">Detail →</a><button class="btn btn--ghost btn--sm btn--icon" aria-label="Repository actions" data-action="open" data-target="repo-menu"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>Showing 4 of 4 repositories</span></div>
+    </section>
+
+    <!-- ===== Empty state ===== -->
+    <section class="card" data-tab-panel="empty" hidden>
+      <div class="empty" style="padding:56px 24px">
+        <div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="folder-git-2"></i></div>
+        <div class="empty__title">No repositories yet</div>
+        <div class="empty__desc">Register a Git repository through a linked account or a public clone URL. After the API is enabled, scans and file indexing appear here.</div>
+        <div class="empty__actions"><a class="btn btn--primary" href="repository-new.html"><i data-lucide="plus"></i>Add repository</a></div>
+      </div>
+      <div class="card__footer"><span class="t-xs">Filtered miss: “No matches — Try adjusting search or filters.” · No tenant: amber lock card “No tenant selected — Select a tenant to manage repositories.” + Go to Tenants.</span></div>
+    </section>
+    </div>
+  </div>
+</main>
+
+<!-- Row menu -->
+<div class="overlay" id="repo-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:320px 80px 0 0">
+  <div class="menu" role="menu" aria-label="Repository actions" style="width:230px">
+    <a class="menu__item" href="repository-detail.html"><i data-lucide="folder-open"></i>Open detail</a>
+    <a class="menu__item" href="repository-detail.html"><i data-lucide="refresh-cw"></i>Rescan</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item is-danger" href="#" data-action="open" data-target="remove-dialog"><i data-lucide="trash-2"></i>Remove from list</a>
+  </div>
+</div>
+<!-- Remove confirm -->
+<div class="overlay" id="remove-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="rm-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span><div><div class="dialog__title" id="rm-title">Remove from this workspace?</div><div class="dialog__desc">Remove “payments-specs” from this workspace? You can add the repository again later from Add repository.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove from list</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/repositories</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/repositories/page.tsx</code>, <code>RepositoryKpiCard</code>, <code>RepositoryRefreshActivityCard</code>, <code>RepositoryIndexSnapshot</code>, <code>RepositoryHealthBadge</code>, <code>repositoryStoreUi.tsx</code> row menu + remove AlertDialog.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header CTAs: Spec catalog / Quota &amp; limits / Webhook IPs (now the sub-nav tab row) · Rescan all (stub → toast “Rescan all repositories will run when scan jobs are wired to the API.”) · Add repository.</li>
+    <li>KPIs: Repositories (provider-split tooltip) · Files indexed · Imports (30d) always “—” with the not-wired tooltip · Last scan (healthy/attention/no-scans tooltip). Refresh activity card: “N specs tracked · N refreshed (24h)”, Stale/Diverged/Failed/Refreshing/Up-to-date chips (zero muted), ≤5 affected repos → <code>/[id]/preview?tab=specs</code>, healthy/empty copy.</li>
+    <li>Filters: search (name/full_name/branch) · Provider · Visibility (Public / “Private (linked account)”) · Sort (Recently scanned / Name) · Grid/List persisted in <code>apiome-dashboard-repositories-view</code>.</li>
+    <li>Card: gradient hex initials, name, mono full_name, compact health icon + status pill (Pending/Scanning/Ready/Error/Archived) + row menu, description or “No description”, ProviderBadge · branch · N files, footer last-scan + index snapshot (scan sparkline, importable-% bar, spinner, or “—”). Table columns Repository / Provider / Branch / Files / Health / Status / Last scan / Importable / Actions (Detail → + menu), foot “Showing X of Y repositories”.</li>
+    <li>Remove flow: menu “Remove from list” → AlertDialog with verbatim copy → toast “Repository removed.” 2 s polling while any repo pending/scanning.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Sub-nav tab row (Repositories / Discovered specs / Quota &amp; rate limits / Webhook IP allowlist) replacing the four header buttons; “Add repository” dashed tile in grid view; empty-state preview toggle (mock only).</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading “Loading repositories…” (skeleton cards) · empty + filtered-miss copy verbatim · load error toast “Could not load repositories.” · no-tenant amber lock card.</li></ul>
+</template>
+</body>
+</html>

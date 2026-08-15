@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin · Auth providers · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local only */
+  .prov-row { display: grid; grid-template-columns: 150px minmax(0,1fr); gap: 6px 16px; align-items: start; padding: 10px 0; }
+  .prov-row + .prov-row { border-top: 1px solid var(--border); }
+  .prov-row > label { font-size: var(--fs-sm); font-weight: 500; padding-top: 8px; }
+  .prov-row .ctl { max-width: 460px; }
+  .fb { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: var(--r-full); background: var(--neutral-soft); color: var(--neutral-fg); font-size: var(--fs-2xs); font-weight: 500; white-space: nowrap; }
+  .fb [data-lucide] { width: 11px; height: 11px; }
+  .prov-brand { width: 36px; height: 36px; border-radius: var(--r-md); display: grid; place-items: center; background: var(--bg-subtle); font-weight: 700; font-size: var(--fs-sm); }
+  .remove-confirm { border-radius: var(--r-md); background: var(--rose-soft); color: var(--rose-fg); padding: 12px 14px; font-size: var(--fs-sm); }
+  .btn--rose { --_bg: var(--rose); --_fg: #fff; --_bd: transparent; }
+  .btn--rose:hover { background: color-mix(in srgb, var(--rose) 88%, black); }
+  .pick { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: var(--r-md); text-align: left; }
+  .pick:hover { background: var(--bg-subtle); }
+  .pick[aria-disabled="true"] { opacity: .55; }
+</style>
+</head>
+<body data-shell="admin" data-nav="admin-settings" data-page="admin/settings" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="overview.html">Admin console</a><i data-lucide="chevron-right"></i><span>Platform</span><i data-lucide="chevron-right"></i><span>Auth providers</span></div>
+          <h1 class="page-title">Auth providers</h1>
+          <p class="page-desc">Sign-in providers — database values override .env; blank fields fall back to .env.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn--primary" data-action="open" data-target="add-provider-dialog"><i data-lucide="plus"></i>Add provider<span class="kbd">N</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body page-body--narrow">
+
+    <!-- GitHub — enabled from database, secret stored -->
+    <section class="card card--pad" aria-labelledby="gh-title">
+      <div class="row gap-3 mb-2">
+        <span class="prov-brand"><i data-lucide="github"></i></span>
+        <div class="grow min-w-0"><div class="t-h3" id="gh-title">GitHub</div><div class="t-xs t-subtle mono">github</div></div>
+        <span class="badge badge--ok badge--dot">Enabled (database)</span>
+      </div>
+      <div class="prov-row">
+        <label>Enablement</label>
+        <div class="ctl col gap-2">
+          <div class="segmented" role="radiogroup" aria-label="GitHub enablement" data-tabs>
+            <button class="is-active" data-action="tab"><i data-lucide="circle-check"></i>Enabled</button>
+            <button data-action="tab"><i data-lucide="circle-off"></i>Disabled</button>
+            <button data-action="tab"><i data-lucide="file-cog"></i>Use .env</button>
+          </div>
+          <div class="hint">“Enabled” forces this provider on using the database credentials below; “Use .env” derives enablement from environment variables.</div>
+        </div>
+      </div>
+      <div class="prov-row">
+        <label for="gh-client">Client ID</label>
+        <div class="ctl col gap-1"><input class="input input--mono" id="gh-client" value="Iv1.9ad02c8f31a6b7e2" placeholder="Falls back to .env when blank" /></div>
+      </div>
+      <div class="prov-row">
+        <label for="gh-secret">Client secret</label>
+        <div class="ctl col gap-2">
+          <div class="row gap-2"><input class="input" id="gh-secret" type="password" placeholder="Secret is set — type a new value to replace it" style="max-width:340px" /><span class="badge badge--ok"><i data-lucide="key-round"></i>Secret: set</span></div>
+          <div class="hint">Write-only: the stored value is never shown. <a href="#" style="color:var(--rose-fg)">Clear stored secret</a></div>
+        </div>
+      </div>
+      <div class="prov-row">
+        <label for="gh-oauth">OAuth base URL</label>
+        <div class="ctl col gap-1"><div class="row gap-2"><input class="input input--mono" id="gh-oauth" placeholder="Default: https://github.com" style="max-width:340px" /><span class="fb"><i data-lucide="file-cog"></i>using .env fallback</span></div><div class="hint">GitHub Enterprise OAuth host (GITHUB_OAUTH_BASE_URL)</div></div>
+      </div>
+      <div class="prov-row">
+        <label for="gh-api">API base URL</label>
+        <div class="ctl col gap-1"><div class="row gap-2"><input class="input input--mono" id="gh-api" placeholder="Default: https://api.github.com" style="max-width:340px" /><span class="fb"><i data-lucide="file-cog"></i>using .env fallback</span></div><div class="hint">GitHub Enterprise API host (GITHUB_API_BASE_URL)</div></div>
+      </div>
+      <div class="banner banner--ok mt-3"><i data-lucide="shield-check"></i><span>Database configuration is complete — this provider can be enabled.</span></div>
+      <div class="row gap-2 mt-4">
+        <button class="btn btn--accent" disabled data-tip="No unsaved changes">Save</button>
+        <button class="btn"><i data-lucide="shield-check"></i>Validate</button>
+        <button class="btn" style="color:var(--rose-fg)"><i data-lucide="trash-2"></i>Remove</button>
+        <span class="t-sm t-ok row gap-1"><i data-lucide="check" style="width:14px;height:14px"></i>Saved</span>
+        <span class="t-xs t-subtle ml-auto">Last changed Aug 14, 2026, 17:02 by admin</span>
+      </div>
+    </section>
+
+    <!-- Google — fully env-derived -->
+    <section class="card card--pad" aria-labelledby="gg-title">
+      <div class="row gap-3 mb-2">
+        <span class="prov-brand" style="color:#4285F4">G</span>
+        <div class="grow min-w-0"><div class="t-h3" id="gg-title">Google</div><div class="t-xs t-subtle mono">google</div></div>
+        <span class="badge badge--outline">Env-derived</span>
+      </div>
+      <div class="prov-row">
+        <label>Enablement</label>
+        <div class="ctl col gap-2">
+          <div class="row gap-2 wrap">
+            <div class="segmented" role="radiogroup" aria-label="Google enablement" data-tabs>
+              <button data-action="tab"><i data-lucide="circle-check"></i>Enabled</button>
+              <button data-action="tab"><i data-lucide="circle-off"></i>Disabled</button>
+              <button class="is-active" data-action="tab"><i data-lucide="file-cog"></i>Use .env</button>
+            </div>
+            <span class="fb"><i data-lucide="file-cog"></i>using .env fallback</span>
+          </div>
+          <div class="hint">“Enabled” forces this provider on using the database credentials below; “Use .env” derives enablement from environment variables.</div>
+        </div>
+      </div>
+      <div class="prov-row">
+        <label for="gg-client">Client ID</label>
+        <div class="ctl col gap-1"><div class="row gap-2"><input class="input input--mono" id="gg-client" placeholder="Falls back to .env when blank" style="max-width:340px" /><span class="fb"><i data-lucide="file-cog"></i>using .env fallback</span></div></div>
+      </div>
+      <div class="prov-row">
+        <label for="gg-secret">Client secret</label>
+        <div class="ctl col gap-2">
+          <div class="row gap-2"><input class="input" id="gg-secret" type="password" placeholder="Enter client secret" style="max-width:340px" /><span class="badge badge--outline"><i data-lucide="key-round"></i>Secret: not set</span><span class="fb"><i data-lucide="file-cog"></i>using .env fallback</span></div>
+          <div class="hint">Write-only: the stored value is never shown.</div>
+        </div>
+      </div>
+      <div class="prov-row">
+        <label for="gg-domain">Workspace domain</label>
+        <div class="ctl col gap-1"><div class="row gap-2"><input class="input input--mono" id="gg-domain" placeholder="Default: any domain" style="max-width:340px" /><span class="fb"><i data-lucide="file-cog"></i>using .env fallback</span></div><div class="hint">Restrict sign-in to one Google Workspace domain (GOOGLE_WORKSPACE_DOMAIN)</div></div>
+      </div>
+      <div class="banner banner--warn mt-3"><i data-lucide="triangle-alert"></i><span>Not ready to enable — missing: client_id, client_secret. Save the missing values on this card first; .env values do not count toward enabling here.</span></div>
+      <div class="row gap-2 mt-4">
+        <button class="btn btn--accent" disabled data-tip="No unsaved changes">Save</button>
+        <button class="btn"><i data-lucide="shield-check"></i>Validate</button>
+        <button class="btn" style="color:var(--rose-fg)"><i data-lucide="trash-2"></i>Remove</button>
+      </div>
+    </section>
+
+    <!-- OIDC — save error + discovery probe -->
+    <section class="card card--pad" aria-labelledby="oidc-title">
+      <div class="row gap-3 mb-2">
+        <span class="prov-brand"><i data-lucide="fingerprint"></i></span>
+        <div class="grow min-w-0"><div class="t-h3" id="oidc-title">OIDC</div><div class="t-xs t-subtle mono">oidc</div></div>
+        <span class="badge badge--ok badge--dot">Enabled (database)</span>
+      </div>
+      <div class="prov-row">
+        <label>Enablement</label>
+        <div class="ctl col gap-2">
+          <div class="segmented" role="radiogroup" aria-label="OIDC enablement" data-tabs>
+            <button class="is-active" data-action="tab"><i data-lucide="circle-check"></i>Enabled</button>
+            <button data-action="tab"><i data-lucide="circle-off"></i>Disabled</button>
+            <button data-action="tab"><i data-lucide="file-cog"></i>Use .env</button>
+          </div>
+        </div>
+      </div>
+      <div class="prov-row">
+        <label for="oidc-client">Client ID</label>
+        <div class="ctl"><input class="input input--mono" id="oidc-client" value="apiome-platform" placeholder="Falls back to .env when blank" /></div>
+      </div>
+      <div class="prov-row">
+        <label for="oidc-secret">Client secret</label>
+        <div class="ctl col gap-2">
+          <div class="row gap-2"><input class="input" id="oidc-secret" type="password" placeholder="Secret is set — type a new value to replace it" style="max-width:340px" /><span class="badge badge--ok"><i data-lucide="key-round"></i>Secret: set</span></div>
+          <div class="banner banner--warn" style="padding:8px 10px"><i data-lucide="eraser"></i><span class="grow">The stored secret will be cleared on save; the provider then falls back to .env.</span><button class="btn btn--sm btn--ghost">Undo</button></div>
+        </div>
+      </div>
+      <div class="prov-row">
+        <label for="oidc-issuer">Issuer</label>
+        <div class="ctl col gap-1"><input class="input input--mono" id="oidc-issuer" value="https://id.acme.dev/realms/platform" /><div class="hint">OIDC issuer URL; discovery is probed on Validate (OIDC_ISSUER)</div></div>
+      </div>
+      <div class="prov-row">
+        <label for="oidc-name">Display name</label>
+        <div class="ctl col gap-1"><input class="input" id="oidc-name" value="Acme ID" placeholder="Default: OIDC" /><div class="hint">Shown on the sign-in button (OIDC_DISPLAY_NAME)</div></div>
+      </div>
+      <div class="prov-row">
+        <label for="oidc-scopes">Scopes</label>
+        <div class="ctl col gap-1"><div class="row gap-2"><input class="input input--mono" id="oidc-scopes" placeholder="Default: openid profile email" style="max-width:340px" /><span class="fb"><i data-lucide="file-cog"></i>using .env fallback</span></div><div class="hint">Space-separated scope list (OIDC_SCOPES)</div></div>
+      </div>
+      <div class="banner banner--danger mt-3"><i data-lucide="circle-alert"></i><div><div class="banner-title">Could not save</div><div class="banner-body">Missing: issuer, client_secret. Fill them in on this card, then save again.</div></div></div>
+      <div class="banner banner--warn mt-2"><i data-lucide="unplug"></i><span>OIDC discovery failed — <span class="mono">https://id.acme.dev/realms/platform/.well-known/openid-configuration</span> returned 404. Check the issuer URL.</span></div>
+      <div class="row gap-2 mt-4">
+        <button class="btn btn--accent">Save</button>
+        <button class="btn" data-action="open" data-target="probe-dialog"><i data-lucide="shield-check"></i>Validate</button>
+        <button class="btn" style="color:var(--rose-fg)"><i data-lucide="trash-2"></i>Remove</button>
+        <span class="t-xs t-subtle ml-auto">Last changed Aug 15, 2026, 09:20 by admin</span>
+      </div>
+    </section>
+
+    <!-- Okta — disabled + inline remove confirmation open -->
+    <section class="card card--pad" aria-labelledby="okta-title">
+      <div class="row gap-3 mb-2">
+        <span class="prov-brand" style="color:#00297A">O</span>
+        <div class="grow min-w-0"><div class="t-h3" id="okta-title">Okta</div><div class="t-xs t-subtle mono">okta</div></div>
+        <span class="badge badge--rose badge--dot">Disabled (database)</span>
+      </div>
+      <div class="prov-row">
+        <label>Enablement</label>
+        <div class="ctl">
+          <div class="segmented" role="radiogroup" aria-label="Okta enablement" data-tabs>
+            <button data-action="tab"><i data-lucide="circle-check"></i>Enabled</button>
+            <button class="is-active" data-action="tab"><i data-lucide="circle-off"></i>Disabled</button>
+            <button data-action="tab"><i data-lucide="file-cog"></i>Use .env</button>
+          </div>
+        </div>
+      </div>
+      <div class="prov-row">
+        <label for="okta-client">Client ID</label>
+        <div class="ctl"><input class="input input--mono" id="okta-client" value="0oa8f2k1xqWm3N" placeholder="Falls back to .env when blank" /></div>
+      </div>
+      <div class="prov-row">
+        <label for="okta-secret">Client secret</label>
+        <div class="ctl col gap-2">
+          <div class="row gap-2"><input class="input" id="okta-secret" type="password" placeholder="Secret is set — type a new value to replace it" style="max-width:340px" /><span class="badge badge--ok"><i data-lucide="key-round"></i>Secret: set</span></div>
+          <div class="hint">Write-only: the stored value is never shown. <a href="#" style="color:var(--rose-fg)">Clear stored secret</a></div>
+        </div>
+      </div>
+      <div class="prov-row">
+        <label for="okta-issuer">Issuer</label>
+        <div class="ctl col gap-1"><input class="input input--mono" id="okta-issuer" value="https://acme.okta.com/oauth2/default" /><div class="hint">Okta authorization-server issuer (OKTA_ISSUER)</div></div>
+      </div>
+      <div class="remove-confirm mt-3" role="alertdialog" aria-label="Remove Okta configuration">
+        <div class="row-start gap-2"><i data-lucide="triangle-alert" style="width:15px;height:15px;margin-top:2px"></i><span>Remove the stored Okta configuration? This deletes its database row — client ID, stored secret, enablement override, and settings. The stored secret cannot be recovered. Sign-in for this provider falls back to .env.</span></div>
+        <div class="row gap-2 mt-3"><button class="btn btn--sm btn--rose">Remove provider</button><button class="btn btn--sm">Cancel</button></div>
+      </div>
+      <div class="row gap-2 mt-4">
+        <button class="btn btn--accent" disabled data-tip="No unsaved changes">Save</button>
+        <button class="btn"><i data-lucide="shield-check"></i>Validate</button>
+        <button class="btn" disabled style="color:var(--rose-fg)"><i data-lucide="trash-2"></i>Remove</button>
+        <span class="t-xs t-subtle ml-auto">Last changed Jul 30, 2026, 11:44 by admin</span>
+      </div>
+    </section>
+
+    <!-- Empty / registry footnote -->
+    <div class="empty empty--dashed" style="padding:20px">
+      <div class="t-sm t-muted">8 more providers can be configured: GitLab, Microsoft, AWS, Keycloak, Auth0, LINE, VK, WeChat.</div>
+      <div class="t-xs t-subtle">Only configured providers get a card. When none are configured: “No providers configured.” · “Click Add to add a new provider.”</div>
+      <button class="btn btn--sm mt-2" data-action="open" data-target="add-provider-dialog"><i data-lucide="plus"></i>Add provider</button>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+
+<!-- Add provider · step 1: pick -->
+<div class="overlay" id="add-provider-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="add-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--rose"><i data-lucide="key-square"></i></span>
+      <div><div class="dialog__title" id="add-title">Add provider</div><div class="dialog__desc">Pick a sign-in provider to store database configuration for. Esc closes.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="input-wrap mb-3"><i data-lucide="search"></i><input class="input" placeholder="Search providers…" autofocus /></div>
+      <div class="grid grid-2" style="gap:4px" role="listbox" aria-label="Unconfigured providers">
+        <button class="pick" data-action="open" data-target="configure-provider-dialog" role="option"><span class="prov-brand" style="color:#EE7A08">a0</span><div><div class="t-sm t-600">Auth0</div><div class="t-xs t-subtle mono">auth0</div></div></button>
+        <button class="pick" data-action="open" data-target="configure-provider-dialog" role="option"><span class="prov-brand" style="color:#FF9900">aws</span><div><div class="t-sm t-600">AWS</div><div class="t-xs t-subtle mono">aws</div></div></button>
+        <button class="pick" data-action="open" data-target="configure-provider-dialog" role="option"><span class="prov-brand" style="color:#FC6D26"><i data-lucide="gitlab"></i></span><div><div class="t-sm t-600">GitLab</div><div class="t-xs t-subtle mono">gitlab</div></div></button>
+        <button class="pick" data-action="open" data-target="configure-provider-dialog" role="option"><span class="prov-brand" style="color:#4D4D4D">K</span><div><div class="t-sm t-600">Keycloak</div><div class="t-xs t-subtle mono">keycloak</div></div></button>
+        <button class="pick" data-action="open" data-target="configure-provider-dialog" role="option"><span class="prov-brand" style="color:#06C755">L</span><div><div class="t-sm t-600">LINE</div><div class="t-xs t-subtle mono">line</div></div></button>
+        <button class="pick" data-action="open" data-target="configure-provider-dialog" role="option"><span class="prov-brand" style="color:#00A4EF">M</span><div><div class="t-sm t-600">Microsoft</div><div class="t-xs t-subtle mono">azure</div></div></button>
+        <button class="pick" data-action="open" data-target="configure-provider-dialog" role="option"><span class="prov-brand" style="color:#0077FF">VK</span><div><div class="t-sm t-600">VK</div><div class="t-xs t-subtle mono">vk</div></div></button>
+        <button class="pick" aria-disabled="true" role="option"><span class="prov-brand" style="color:#07C160">W</span><div><div class="t-sm t-600 row gap-2">WeChat<span class="badge badge--warn">Coming soon</span></div><div class="t-xs t-subtle mono">wechat</div></div></button>
+      </div>
+      <div class="t-xs t-subtle mt-3">Sorted by label; Enter picks the first available match. Empties: “All providers are already configured.” · “No providers match “{q}”.” Coming-soon providers are listed but disabled; their card body reads “This provider is on the roadmap. Configuration will be available once its sign-in integration ships.”</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Add provider · step 2: configure -->
+<div class="overlay" id="configure-provider-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="conf-title">
+    <div class="dialog__header">
+      <span class="prov-brand" style="color:#00297A">M</span>
+      <div><div class="dialog__title" id="conf-title">Configure Microsoft</div><div class="dialog__desc mono t-xs">azure · the card appears in the list only after a successful save</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="prov-row" style="border-top:0">
+        <label>Enablement</label>
+        <div class="ctl col gap-2">
+          <div class="segmented" role="radiogroup" aria-label="Microsoft enablement" data-tabs>
+            <button data-action="tab"><i data-lucide="circle-check"></i>Enabled</button>
+            <button data-action="tab"><i data-lucide="circle-off"></i>Disabled</button>
+            <button class="is-active" data-action="tab"><i data-lucide="file-cog"></i>Use .env</button>
+          </div>
+          <div class="hint">“Enabled” forces this provider on using the database credentials below; “Use .env” derives enablement from environment variables.</div>
+        </div>
+      </div>
+      <div class="prov-row">
+        <label for="az-client">Client ID</label>
+        <div class="ctl"><input class="input input--mono" id="az-client" placeholder="Falls back to .env when blank" /></div>
+      </div>
+      <div class="prov-row">
+        <label for="az-secret">Client secret</label>
+        <div class="ctl col gap-2"><div class="row gap-2"><input class="input" id="az-secret" type="password" placeholder="Enter client secret" style="max-width:320px" /><span class="badge badge--outline"><i data-lucide="key-round"></i>Secret: not set</span></div><div class="hint">Write-only: the stored value is never shown.</div></div>
+      </div>
+      <div class="prov-row">
+        <label for="az-tenant">Tenant</label>
+        <div class="ctl col gap-1"><input class="input input--mono" id="az-tenant" placeholder="Default: common" /><div class="hint">Entra ID tenant id or “common” (AZURE_TENANT)</div></div>
+      </div>
+      <div class="prov-row">
+        <label for="az-authority">Authority base URL</label>
+        <div class="ctl col gap-1"><input class="input input--mono" id="az-authority" placeholder="Default: https://login.microsoftonline.com" /><div class="hint">Sovereign-cloud authority override (AZURE_AUTHORITY_BASE_URL)</div></div>
+      </div>
+      <div class="banner banner--danger mt-3" style="display:none"><i data-lucide="circle-alert"></i><span>Save failed — check the values and retry.</span></div>
+    </div>
+    <div class="dialog__footer"><button class="btn left" data-action="open" data-target="add-provider-dialog"><i data-lucide="arrow-left"></i>Back</button><button class="btn" data-action="close">Cancel</button><button class="btn btn--accent" disabled data-tip="Nothing to save yet">Save</button></div>
+  </div>
+</div>
+
+<!-- OIDC discovery probe result -->
+<div class="overlay" id="probe-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="probe-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="radar"></i></span>
+      <div><div class="dialog__title" id="probe-title">OIDC discovery probe</div><div class="dialog__desc mono t-xs">POST /api/admin/auth-providers/oidc/probe-discovery</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-3">
+      <dl class="kv">
+        <dt>Issuer</dt><dd class="mono t-xs">https://id.acme.dev/realms/platform</dd>
+        <dt>Discovery URL</dt><dd class="mono t-xs">…/.well-known/openid-configuration</dd>
+        <dt>Result</dt><dd><span class="badge badge--danger badge--dot">404 Not Found</span></dd>
+      </dl>
+      <div class="banner banner--warn"><i data-lucide="unplug"></i><span>Discovery failed — the issuer did not serve an OpenID configuration document. Check the realm path; the provider stays saved but cannot be validated as complete.</span></div>
+      <div class="card card--soft" style="padding:10px 12px">
+        <div class="t-caps mb-1">On success this shows</div>
+        <div class="t-xs t-muted">authorization_endpoint · token_endpoint · jwks_uri · supported scopes, plus the emerald banner “Database configuration is complete — this provider can be enabled.”</div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn left"><i data-lucide="refresh-cw"></i>Probe again</button><button class="btn btn--primary" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/admin/dashboard/settings</p>
+  <h4>Replaces</h4>
+  <ul><li><code>AuthProviderSettingsClient.tsx</code> (+ <code>EnablementChip</code>, <code>FallbackBadge</code>, provider brand icons via <code>getProviderBrand</code>); API stays <code>/api/admin/auth-providers*</code> + <code>lib/auth/admin-provider-config.ts</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header CTA “Add provider” (disabled while loading/failed); centered narrow column of cards — one per <em>configured</em> provider only.</li>
+    <li>Registry (all <code>status: available</code>): github GitHub · gitlab GitLab · azure Microsoft · google Google · okta Okta · aws AWS · keycloak Keycloak · oidc OIDC · auth0 Auth0 · line LINE · vk VK · wechat WeChat. Coming-soon treatment (amber chip, dashed card, disabled in picker, roadmap copy) is kept for future registry entries — illustrated on the WeChat picker row.</li>
+    <li>Card header: brand icon, label, <code>provider_id</code>, EnablementChip “Enabled (database)” emerald / “Disabled (database)” rose / “Env-derived” slate.</li>
+    <li>Rows: Enablement 3-way <b>Enabled | Disabled | Use .env</b> with FallbackBadge “using .env fallback” when stored <code>enabled</code> is null + the exact help copy; Client ID (“Falls back to .env when blank”) with per-field fallback badge (<code>client_id_source === 'env-fallback'</code>); Client secret (write-only password, placeholder switches on <code>secret_set</code>, chip “Secret: set/not set”, “Clear stored secret” → pending amber note “The stored secret will be cleared on save; the provider then falls back to .env.” + Undo).</li>
+    <li>Provider extras (<code>PROVIDER_EXTRA_FIELDS</code>, “Default: {default}” placeholder + “{help} ({ENV_KEY})” hints): github OAuth/API base URLs · gitlab Base URL · azure Tenant + Authority base URL · google Workspace domain · okta/aws/keycloak/auth0 Issuer · oidc Issuer + Display name + Scopes.</li>
+    <li>Notices: save error “Missing: a, b. Fill them in on this card, then save again.” (422 <code>missing_fields</code>); validation emerald “Database configuration is complete…” / amber “Not ready to enable — missing: … .env values do not count toward enabling here.” / amber OIDC discovery error; inline remove confirmation (rose panel, exact copy incl. conditional “stored secret” sentences) with “Remove provider” / Cancel.</li>
+    <li>Action row: Save (disabled until dirty, “Saving…”), Validate (“Validating…”; for oidc also POSTs <code>probe-discovery</code>), Remove, inline “✓ Saved”, “Last changed {datetime} by {updated_by}”.</li>
+    <li>Add Provider dialog: step 1 search (autofocus, Enter picks first available) + listbox of unconfigured providers sorted by label; step 2 “Configure {label}” with the same fields; footer ← Back / Save (disabled until dirty) / Cancel; the card appears only after a successful PUT. Esc/backdrop/Cancel close.</li>
+    <li>401/403 anywhere → “Your admin session has expired. Sign out and back in, then retry.”</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Discovery probe result dialog (issuer, discovery URL, status, endpoints on success) instead of only an inline message; registry footnote listing unconfigured providers; <code>N</code> shortcut. Nothing else — this screen is auth providers only (no SMTP/LLM/change-report sections; do not invent).</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading: skeleton cards (replaces “Loading provider configuration…”). Load error: rose banner “Could not load provider configuration…” + Retry. Empty: dashed box “No providers configured.” / “Click Add to add a new provider.” Save/validate/remove per-card notices as above.</li></ul>
+</template>
+</body>
+</html>

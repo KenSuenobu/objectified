@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Linked accounts · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only */
+  .provider { display: flex; flex-direction: column; }
+  .provider.is-soon { opacity: .55; }
+  .provider .pat-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .provider .pat-row [data-lucide] { width: 15px; height: 15px; color: var(--fg-subtle); }
+  .last-method { display: flex; align-items: flex-start; gap: 6px; margin-top: 4px; font-size: var(--fs-2xs); color: var(--warn-fg); max-width: 46ch; white-space: normal; }
+  .last-method [data-lucide] { width: 12px; height: 12px; margin-top: 2px; flex-shrink: 0; }
+</style>
+</head>
+<body data-shell="app" data-nav="" data-page="account/linked-accounts" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Account</span><i data-lucide="chevron-right"></i><span>Linked accounts</span></div>
+          <h1 class="page-title">Linked accounts</h1>
+          <p class="page-desc">Link external accounts for single sign-on and repository access.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn" href="#add-provider"><i data-lucide="plus"></i>Link a provider</a>
+        </div>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Account">
+        <a class="tab" href="profile.html"><i data-lucide="circle-user"></i>Profile</a>
+        <a class="tab is-active" href="linked-accounts.html" aria-current="page"><i data-lucide="link"></i>Linked accounts<span class="count">2</span></a>
+        <a class="tab" href="#" data-action="open" data-target="settings-pane"><i data-lucide="settings-2"></i>Preferences<span class="kbd">⌘,</span></a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- ?linked=true → success alert (URL cleaned) -->
+    <div class="banner banner--ok" role="status" id="linked-ok"><i data-lucide="circle-check"></i><div class="grow"><span class="banner-title">Account linked successfully!</span> <span class="banner-body">GitLab is now a sign-in method for ada@example.com.</span></div><button class="btn btn--ghost btn--sm btn--icon" aria-label="Dismiss" data-action="toggle" data-target="linked-ok"><i data-lucide="x"></i></button></div>
+
+    <!-- Linked accounts table -->
+    <section class="table-wrap">
+      <div class="table-toolbar"><span class="t-sm t-600">Linked accounts</span><span class="t-xs t-subtle">Providers you can sign in with today</span><span class="spacer"></span><span class="badge badge--outline"><i data-lucide="lock"></i>Password also set</span></div>
+      <table class="table">
+        <thead><tr><th>Account</th><th>Linked</th><th>Last login</th><th class="t-right">Actions</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><div class="row gap-3"><span class="icon-tile icon-tile--sm"><i data-lucide="github"></i></span><div><div class="cell-primary">GitHub</div><div class="cell-sub">ada-lovelace</div></div></div></td>
+            <td class="t-num t-muted">03/02/26 10:14 AM</td>
+            <td class="t-num t-muted">08/15/26 09:12 AM</td>
+            <td><div class="cell-actions"><button class="btn btn--sm btn--danger-soft" data-action="open" data-target="unlink-github"><i data-lucide="unlink"></i>Unlink</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="row gap-3"><span class="icon-tile icon-tile--sm"><i data-lucide="gitlab"></i></span><div><div class="cell-primary">GitLab</div><div class="cell-sub">ada@example.com</div></div></div></td>
+            <td class="t-num t-muted">08/15/26 09:40 AM</td>
+            <td class="t-muted">—</td>
+            <td><div class="cell-actions"><button class="btn btn--sm btn--danger-soft" data-action="open" data-target="unlink-gitlab"><i data-lucide="unlink"></i>Unlink</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>2 linked accounts</span><span>Hover a row for actions</span></div>
+    </section>
+
+    <!-- Add a provider -->
+    <section id="add-provider">
+      <div class="section-title"><h2>Add a provider</h2><span class="t-muted">Enabled providers come from the registry (DB over env); unconfigured ones are hidden.</span></div>
+      <div class="grid grid-2">
+        <!-- GitHub: linked + PAT -->
+        <div class="card card--pad provider">
+          <div class="row-start gap-3">
+            <span class="icon-tile"><i data-lucide="github"></i></span>
+            <div class="grow min-w-0"><div class="row gap-2 wrap"><span class="t-sm t-600">GitHub</span><span class="badge badge--ok">Linked</span><span class="badge badge--mono"><i data-lucide="key-round"></i>PAT ••••••a1b2c3</span></div><div class="t-xs t-subtle mt-1">ada-lovelace · linked 03/02/26</div></div>
+          </div>
+          <div class="pat-row"><i data-lucide="key-round"></i><div class="grow"><div class="t-sm t-500">Personal Access Token</div><div class="t-xs t-muted">PAT set (ends in ••••••a1b2c3).</div></div><button class="btn btn--sm" data-action="open" data-target="pat-update"><i data-lucide="pencil"></i>Update</button><button class="btn btn--sm btn--ghost" style="color:var(--danger-fg)" data-action="open" data-target="remove-pat">Remove</button></div>
+        </div>
+        <!-- GitLab: linked, no PAT -->
+        <div class="card card--pad provider">
+          <div class="row-start gap-3">
+            <span class="icon-tile"><i data-lucide="gitlab"></i></span>
+            <div class="grow min-w-0"><div class="row gap-2 wrap"><span class="t-sm t-600">GitLab</span><span class="badge badge--ok">Linked</span></div><div class="t-xs t-subtle mt-1">ada@example.com · linked today</div></div>
+          </div>
+          <div class="pat-row"><i data-lucide="key-round"></i><div class="grow"><div class="t-sm t-500">Personal Access Token</div><div class="t-xs t-muted">Optional: add a PAT for direct repo access.</div></div><button class="btn btn--sm" data-action="open" data-target="pat-add"><i data-lucide="plus"></i>Add</button></div>
+        </div>
+        <!-- Microsoft -->
+        <div class="card card--pad provider">
+          <div class="row-start gap-3">
+            <span class="icon-tile"><i data-lucide="key-round"></i></span>
+            <div class="grow min-w-0"><div class="row gap-2 wrap"><span class="t-sm t-600">Microsoft</span></div><div class="t-xs t-subtle mt-1">Entra ID / Azure AD single sign-on</div></div>
+            <button class="btn btn--sm"><i data-lucide="plus"></i>Link</button>
+          </div>
+        </div>
+        <!-- Google -->
+        <div class="card card--pad provider">
+          <div class="row-start gap-3">
+            <span class="icon-tile"><i data-lucide="key-round"></i></span>
+            <div class="grow min-w-0"><div class="row gap-2 wrap"><span class="t-sm t-600">Google</span></div><div class="t-xs t-subtle mt-1">Google Workspace or personal account</div></div>
+            <button class="btn btn--sm"><i data-lucide="plus"></i>Link</button>
+          </div>
+        </div>
+        <!-- Okta: coming soon -->
+        <div class="card card--pad provider is-soon" aria-disabled="true">
+          <div class="row-start gap-3">
+            <span class="icon-tile"><i data-lucide="key-round"></i></span>
+            <div class="grow min-w-0"><div class="row gap-2 wrap"><span class="t-sm t-600">Okta</span><span class="badge">Coming soon</span></div><div class="t-xs t-subtle mt-1">Enterprise SSO via Okta OIDC</div></div>
+            <button class="btn btn--sm" disabled><i data-lucide="plus"></i>Link</button>
+          </div>
+        </div>
+        <!-- Keycloak: coming soon -->
+        <div class="card card--pad provider is-soon" aria-disabled="true">
+          <div class="row-start gap-3">
+            <span class="icon-tile"><i data-lucide="key-round"></i></span>
+            <div class="grow min-w-0"><div class="row gap-2 wrap"><span class="t-sm t-600">Keycloak</span><span class="badge">Coming soon</span></div><div class="t-xs t-subtle mt-1">Self-hosted realm sign-in</div></div>
+            <button class="btn btn--sm" disabled><i data-lucide="plus"></i>Link</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="banner"><i data-lucide="info"></i><div>You can link multiple providers. Once linked, you can sign in with any of them.</div></div>
+
+    <!-- ===== States ===== -->
+    <section>
+      <div class="section-title"><h2>States</h2><span class="t-muted">Empty · only sign-in method · loading</span></div>
+      <div class="grid grid-2" style="align-items:start">
+        <div class="table-wrap">
+          <div class="table-toolbar"><span class="t-sm t-600">Linked accounts</span><span class="t-xs t-subtle">state · empty</span></div>
+          <div class="empty">
+            <div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="link"></i></div>
+            <div class="empty__title">No linked accounts</div>
+            <div class="empty__desc">Link a provider below to sign in with SSO and manage repository access.</div>
+            <div class="empty__actions"><a class="btn" href="#add-provider"><i data-lucide="plus"></i>Link a provider</a></div>
+          </div>
+        </div>
+        <div class="col gap-4">
+          <div class="table-wrap">
+            <div class="table-toolbar"><span class="t-sm t-600">Linked accounts</span><span class="t-xs t-subtle">state · only sign-in method (no password)</span></div>
+            <table class="table">
+              <thead><tr><th>Account</th><th>Linked</th><th>Last login</th><th class="t-right">Actions</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="row-start gap-3"><span class="icon-tile icon-tile--sm"><i data-lucide="github"></i></span><div><div class="cell-primary">GitHub</div><div class="cell-sub">ada-lovelace</div><div class="last-method"><i data-lucide="triangle-alert"></i>Only sign-in method — set a password or link another provider to remove it.</div></div></div></td>
+                  <td class="t-num t-muted">03/02/26 10:14 AM</td>
+                  <td class="t-num t-muted">08/15/26 09:12 AM</td>
+                  <td><div class="cell-actions" style="opacity:1"><span data-tip="This is your only sign-in method. Set a password or link another provider before unlinking it."><button class="btn btn--sm btn--danger-soft" disabled><i data-lucide="unlink"></i>Unlink</button></span></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-wrap" aria-busy="true">
+            <div class="table-toolbar"><span class="t-sm t-600">Linked accounts</span><span class="t-xs t-subtle">state · loading</span></div>
+            <table class="table">
+              <thead><tr><th>Account</th><th>Linked</th><th>Last login</th><th class="t-right">Actions</th></tr></thead>
+              <tbody>
+                <tr><td><div class="row gap-3"><span class="skeleton" style="width:28px;height:28px;border-radius:6px"></span><div><div class="skeleton" style="width:64px;height:12px"></div><div class="skeleton mt-1" style="width:96px;height:10px"></div></div></div></td><td><span class="skeleton" style="display:inline-block;width:72px;height:12px"></span></td><td><span class="skeleton" style="display:inline-block;width:72px;height:12px"></span></td><td></td></tr>
+                <tr><td><div class="row gap-3"><span class="skeleton" style="width:28px;height:28px;border-radius:6px"></span><div><div class="skeleton" style="width:52px;height:12px"></div><div class="skeleton mt-1" style="width:104px;height:10px"></div></div></div></td><td><span class="skeleton" style="display:inline-block;width:72px;height:12px"></span></td><td><span class="skeleton" style="display:inline-block;width:32px;height:12px"></span></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ===== Dialogs ===== -->
+<!-- Update PAT (GitHub) -->
+<div class="overlay" id="pat-update" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="pu-title">
+    <div class="dialog__header"><span class="icon-tile"><i data-lucide="github"></i></span><div><div class="dialog__title" id="pu-title">Update Personal Access Token</div><div class="dialog__desc">GitHub · ada-lovelace</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="field"><label for="pu-token">Token</label><input id="pu-token" class="input input--mono" type="password" placeholder="Paste your token" autofocus /><div class="hint">Used to authenticate with GitHub’s API. Stored encrypted; only the last 6 characters are shown afterwards.</div></div>
+      <div class="banner"><i data-lucide="info"></i><div><div class="banner-title">Required scopes</div><div class="mono t-xs mt-1">repo (or public_repo), read:org, read:user, user:email</div></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Update token</button></div>
+  </div>
+</div>
+
+<!-- Add PAT (GitLab) -->
+<div class="overlay" id="pat-add" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="pa-title">
+    <div class="dialog__header"><span class="icon-tile"><i data-lucide="gitlab"></i></span><div><div class="dialog__title" id="pa-title">Add Personal Access Token</div><div class="dialog__desc">GitLab · ada@example.com</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="field is-invalid"><label for="pa-token">Token</label><input id="pa-token" class="input input--mono" type="password" placeholder="Paste your token" autofocus /><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>Personal Access Token is required</div><div class="hint">Used to authenticate with GitLab’s API.</div></div>
+      <div class="banner"><i data-lucide="info"></i><div><div class="banner-title">Required scopes</div><div class="mono t-xs mt-1">read_api, read_repository, read_user</div></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Add token</button></div>
+  </div>
+</div>
+
+<!-- Unlink confirms -->
+<div class="overlay" id="unlink-github" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="ug-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="unlink"></i></span><div><div class="dialog__title" id="ug-title">Unlink GitHub account?</div><div class="dialog__desc">Are you sure you want to unlink your GitHub account (ada-lovelace)? You can still sign in with your password or GitLab. The stored PAT is removed too.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Unlink</button></div>
+  </div>
+</div>
+<div class="overlay" id="unlink-gitlab" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="ul-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="unlink"></i></span><div><div class="dialog__title" id="ul-title">Unlink GitLab account?</div><div class="dialog__desc">Are you sure you want to unlink your GitLab account (ada@example.com)? You can still sign in with your password or GitHub.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Unlink</button></div>
+  </div>
+</div>
+
+<!-- Remove PAT confirm -->
+<div class="overlay" id="remove-pat" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="rp-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="key-round"></i></span><div><div class="dialog__title" id="rp-title">Remove Personal Access Token?</div><div class="dialog__desc">Are you sure you want to remove the Personal Access Token for GitHub (••••••a1b2c3)? Repository imports that rely on it will fall back to the OAuth grant.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/linked-accounts</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/linked-accounts/LinkedAccountsClient.tsx</code>; the two <code>useDialog().confirm</code> calls become <code>.dialog--sm</code> confirms.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header + description; success/error Alerts (dismissible; <code>?linked=true</code> → “Account linked successfully!”, <code>?error=</code> shown, URL cleaned).</li>
+    <li>Table: Account (brand tile, provider label, username|email; amber “Only sign-in method — set a password or link another provider to remove it.” when last method) · Linked (<code>MM/DD/YY hh:mm AM</code>) · Last login (or “—”) · Actions (red Unlink; disabled + title “This is your only sign-in method…” when last method).</li>
+    <li>Empty: “No Linked Accounts” / “Link a provider below to sign in with SSO and manage repository access.”</li>
+    <li>“Add a provider” cards for enabled providers + coming-soon registry entries: tile, label, badges “Coming soon” (50 % card), “Linked”, “🔑 PAT ••••••{suffix}”; “+ Link” (hidden when linked, disabled if unavailable) → GET <code>/api/auth/link/{provider}</code> then <code>signIn(provider,{callbackUrl})</code>; github/gitlab when linked get the Personal Access Token row (“PAT set (ends in ••••••xxxxxx).” / “Optional: add a PAT for direct repo access.”; Add/Update, Remove).</li>
+    <li>Dialogs: Add|Update Personal Access Token (“{Provider} · {username|email}”, Token password input “Paste your token”, helper “Used to authenticate with {Provider}’s API.”, scopes Alert — GitHub <code>repo (or public_repo), read:org, read:user, user:email</code>, GitLab <code>read_api, read_repository, read_user</code>; Cancel / Add token|Update token). Confirms “Unlink {Provider} Account” and “Remove Personal Access Token”.</li>
+    <li>Messages: “Successfully unlinked {Provider} account”, “Successfully added|updated Personal Access Token”, “Successfully removed Personal Access Token for {Provider}”, “Personal Access Token is required”, “No linked account found. Please link your account first.”, “Failed to load linked accounts”, “Failed to initiate account linking: …” → toasts / inline error.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Account tab strip with a linked count; “Password also set” hint in the toolbar; provider one-liners; PAT storage hint; skeleton loading rows.</li></ul>
+  <h4>States</h4>
+  <ul><li>Empty, only-sign-in-method (disabled Unlink + note), loading skeleton; buttons disabled while <code>isLoading</code>; no session → skeleton (“Loading linked accounts…”).</li></ul>
+</template>
+</body>
+</html>

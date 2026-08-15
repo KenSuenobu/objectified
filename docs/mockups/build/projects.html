@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Projects · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (no new tokens) */
+  .proj-card .proj-scores { display: flex; gap: 14px; }
+  .proj-card .proj-score { display: flex; align-items: center; gap: 8px; }
+  .proj-card .proj-score .lbl { font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .view-cards, .view-table { display: contents; }
+</style>
+</head>
+<body data-shell="app" data-nav="projects" data-page="build/projects" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Build</span><i data-lucide="chevron-right"></i><span>Projects</span></div>
+          <h1 class="page-title">Projects</h1>
+          <p class="page-desc">4 projects · avg quality <span class="t-600" style="color:var(--fg)">84</span> · 3 active · 1 deleted</p>
+        </div>
+        <div class="page-actions">
+          <label class="row gap-2 t-sm t-muted" style="margin-right:6px"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button>Show deleted</label>
+          <button class="btn" data-action="open" data-target="import-dialog"><i data-lucide="upload"></i>Import<span class="kbd">I</span></button>
+          <button class="btn btn--primary" data-action="open" data-target="create-dialog"><i data-lucide="plus"></i>New project<span class="kbd">N</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Toolbar: search · view chips · view toggle · sort -->
+    <div class="row-between wrap gap-3">
+      <div class="row gap-2 wrap">
+        <div class="input-wrap" style="width:280px"><i data-lucide="search"></i><input class="input" placeholder="Filter projects…  ( / )" /></div>
+        <span class="chip is-active" data-action="chip">All <span class="t-faint">4</span></span>
+        <span class="chip" data-action="chip">Active <span class="t-faint">3</span></span>
+        <span class="chip" data-action="chip"><i data-lucide="triangle-alert"></i>Needs attention <span class="t-faint">1</span></span>
+        <span class="chip" data-action="chip" data-tip="Turn on Show deleted to use this view">Deleted <span class="t-faint">1</span></span>
+      </div>
+      <div class="row gap-2">
+        <button class="btn btn--sm btn--ghost"><i data-lucide="arrow-up-down"></i>Sorted by name<i data-lucide="chevron-down"></i></button>
+        <div class="segmented segmented--sm" data-tabs="views">
+          <button class="is-active" data-action="tab" data-target="cards" data-tip="Cards"><i data-lucide="layout-grid"></i>Cards</button>
+          <button data-action="tab" data-target="table" data-tip="Table"><i data-lucide="list"></i>Table</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="views">
+    <!-- ===== Cards view ===== -->
+    <section class="grid grid-3" data-tab-panel="cards">
+      <!-- card 1 -->
+      <article class="card card--hover proj-card" role="button" tabindex="0" style="display:flex;flex-direction:column">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--a">PA</span>
+            <div class="grow min-w-0">
+              <div class="row gap-2"><span class="t-h4 t-truncate">Payments API</span><span class="badge badge--violet">Finance</span></div>
+              <div class="t-xs t-subtle mono t-truncate">prj_8f2a1c · payments-api</div>
+            </div>
+            <span class="badge badge--dot" data-status="active">Active</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Card, refund and payout endpoints for the merchant platform. Idempotent writes; webhook events for settlement.</p>
+          <div class="row-between mt-4">
+            <div class="proj-scores">
+              <button class="proj-score" data-action="open" data-target="scores-dialog" data-tip="Open quality score history"><span class="ring ring--sm" style="--p:88;--c:var(--ok)"><span>88</span></span><span class="lbl">Quality</span></button>
+              <button class="proj-score" data-action="open" data-target="scores-dialog" data-tip="Open lint report"><span class="ring ring--sm" style="--p:100;--c:var(--ok)"><span>A</span></span><span class="lbl">Lint</span></button>
+              <span class="proj-score" data-tip="Technical debt (not yet computed)"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">6 versions</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span><span class="t-xs">Ada Lovelace</span></div><span class="t-xs t-subtle" title="2026-08-15T09:12:00Z">updated 2h ago</span></div>
+      </article>
+      <!-- card 2 -->
+      <article class="card card--hover proj-card" role="button" tabindex="0" style="display:flex;flex-direction:column">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--c">OS</span>
+            <div class="grow min-w-0">
+              <div class="row gap-2"><span class="t-h4 t-truncate">Orders Service</span><span class="badge badge--violet">E-commerce</span></div>
+              <div class="t-xs t-subtle mono t-truncate">prj_3b91de · orders-service</div>
+            </div>
+            <span class="badge badge--dot" data-status="active">Active</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Order lifecycle: cart → checkout → fulfilment. Published v1.9.2 is consumed by 3 partner teams.</p>
+          <div class="row-between mt-4">
+            <div class="proj-scores">
+              <button class="proj-score" data-action="open" data-target="scores-dialog"><span class="ring ring--sm" style="--p:94;--c:var(--ok)"><span>94</span></span><span class="lbl">Quality</span></button>
+              <button class="proj-score" data-action="open" data-target="scores-dialog"><span class="ring ring--sm" style="--p:100;--c:var(--ok)"><span>A</span></span><span class="lbl">Lint</span></button>
+              <span class="proj-score"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">5 versions</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--b">GH</span><span class="t-xs">Grace Hopper</span></div><span class="t-xs t-subtle">updated 3d ago</span></div>
+      </article>
+      <!-- card 3 -->
+      <article class="card card--hover proj-card" role="button" tabindex="0" style="display:flex;flex-direction:column">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--d">IE</span>
+            <div class="grow min-w-0">
+              <div class="row gap-2"><span class="t-h4 t-truncate">Inventory Events</span><span class="badge badge--violet">Logistics</span></div>
+              <div class="t-xs t-subtle mono t-truncate">prj_c07e44 · inventory-events</div>
+            </div>
+            <span class="badge badge--dot" data-status="active">Active</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Stock-level and reservation events. Imported from AsyncAPI; needs channel descriptions before publish.</p>
+          <div class="row-between mt-4">
+            <div class="proj-scores">
+              <button class="proj-score" data-action="open" data-target="scores-dialog"><span class="ring ring--sm" style="--p:63;--c:var(--warn)"><span>63</span></span><span class="lbl">Quality</span></button>
+              <button class="proj-score" data-action="open" data-target="scores-dialog"><span class="ring ring--sm" style="--p:70;--c:var(--warn)"><span>C</span></span><span class="lbl">Lint</span></button>
+              <span class="proj-score"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">2 versions</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span><span class="t-xs">Ada Lovelace</span></div><span class="t-xs t-subtle">updated yesterday</span></div>
+      </article>
+      <!-- card 4: deleted (needs attention) -->
+      <article class="card proj-card" style="display:flex;flex-direction:column;box-shadow:0 0 0 1px var(--warn) inset, var(--shadow-sm);opacity:.9">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--e">LG</span>
+            <div class="grow min-w-0">
+              <div class="row gap-2"><span class="t-h4 t-truncate">Legacy Gateway</span></div>
+              <div class="t-xs t-subtle mono t-truncate">prj_11aa09 · legacy-gateway</div>
+            </div>
+            <span class="badge badge--dot badge--warn">Deleted</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Soft-deleted 6 days ago by Ada. Restore it, or permanently delete to free the slug.</p>
+          <div class="row-between mt-4">
+            <div class="row gap-2"><span class="t-xs t-muted">Empty project</span></div>
+            <span class="t-xs mono t-muted">0 versions</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto;background:var(--warn-soft);color:var(--warn-fg);border-radius:0 0 var(--r-lg) var(--r-lg)"><button class="btn btn--sm"><i data-lucide="undo-2"></i>Undelete</button><button class="btn btn--sm btn--danger-soft" data-action="open" data-target="perma-dialog"><i data-lucide="trash-2"></i>Permanently delete</button></div>
+      </article>
+      <!-- New project tile -->
+      <button class="card card--flat empty empty--dashed" style="min-height:220px;justify-content:center;background:transparent" data-action="open" data-target="create-dialog">
+        <div class="empty__art" style="width:56px;height:56px"><span class="hex"></span><i data-lucide="plus"></i></div>
+        <div class="empty__title t-sm">New project</div>
+        <div class="empty__desc t-xs">Start blank, from a template, or design it with AI.</div>
+      </button>
+    </section>
+
+    <!-- ===== Table view (hidden until toggled) ===== -->
+    <section class="table-wrap" data-tab-panel="table" hidden>
+      <table class="table">
+        <thead><tr>
+          <th class="cell-check"><label class="check"><input type="checkbox" aria-label="Select all"/></label></th>
+          <th class="sortable is-sorted">Project <span class="sort"><i data-lucide="arrow-up"></i></span></th>
+          <th class="sortable">Description <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable"><i data-lucide="trending-up" style="display:inline-block;width:12px;height:12px;vertical-align:-2px"></i> Quality trend <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable t-right">Versions <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Status <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Created by <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Updated <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--a">PA</span><div><div class="cell-primary">Payments API <span class="badge badge--violet" style="margin-left:4px">Finance</span></div><div class="cell-sub mono">payments-api</div></div></div></td>
+            <td class="t-muted" style="max-width:280px"><div class="t-truncate">Card, refund and payout endpoints for the merchant platform.</div></td>
+            <td><button class="row gap-2" data-action="open" data-target="scores-dialog" data-tip="Open quality score history"><svg class="sparkline sparkline--ok" style="width:72px;height:28px" viewBox="0 0 72 28" preserveAspectRatio="none"><path class="fill" d="M0 20 L12 18 L24 19 L36 12 L48 10 L60 8 L72 4 L72 28 L0 28Z"/><path d="M0 20 L12 18 L24 19 L36 12 L48 10 L60 8 L72 4"/></svg><span class="t-sm t-600 t-num">88 <span class="t-subtle t-500">(B)</span></span></button></td>
+            <td class="t-right mono">6</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="t-sm">Ada Lovelace</div><div class="cell-sub">ada@example.com</div></td>
+            <td class="t-num t-muted">08/15/26 09:12 AM</td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--c">OS</span><div><div class="cell-primary">Orders Service <span class="badge badge--violet" style="margin-left:4px">E-commerce</span></div><div class="cell-sub mono">orders-service</div></div></div></td>
+            <td class="t-muted" style="max-width:280px"><div class="t-truncate">Order lifecycle: cart → checkout → fulfilment.</div></td>
+            <td><button class="row gap-2" data-action="open" data-target="scores-dialog"><svg class="sparkline sparkline--ok" style="width:72px;height:28px" viewBox="0 0 72 28" preserveAspectRatio="none"><path class="fill" d="M0 14 L12 12 L24 10 L36 9 L48 6 L60 5 L72 3 L72 28 L0 28Z"/><path d="M0 14 L12 12 L24 10 L36 9 L48 6 L60 5 L72 3"/></svg><span class="t-sm t-600 t-num">94 <span class="t-subtle t-500">(A)</span></span></button></td>
+            <td class="t-right mono">5</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="t-sm">Grace Hopper</div><div class="cell-sub">grace@example.com</div></td>
+            <td class="t-num t-muted">08/12/26 04:40 PM</td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--d">IE</span><div><div class="cell-primary">Inventory Events <span class="badge badge--violet" style="margin-left:4px">Logistics</span></div><div class="cell-sub mono">inventory-events</div></div></div></td>
+            <td class="t-muted" style="max-width:280px"><div class="t-truncate">Stock-level and reservation events.</div></td>
+            <td><button class="row gap-2" data-action="open" data-target="scores-dialog"><svg class="sparkline sparkline--warn" style="width:72px;height:28px" viewBox="0 0 72 28" preserveAspectRatio="none"><path class="fill" d="M0 22 L24 20 L48 16 L72 12 L72 28 L0 28Z"/><path d="M0 22 L24 20 L48 16 L72 12"/></svg><span class="t-sm t-600 t-num">63 <span class="t-subtle t-500">(C)</span></span></button></td>
+            <td class="t-right mono">2</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="t-sm">Ada Lovelace</div><div class="cell-sub">ada@example.com</div></td>
+            <td class="t-num t-muted">08/14/26 11:03 AM</td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr style="opacity:.75">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--e">LG</span><div><div class="cell-primary">Legacy Gateway</div><div class="cell-sub mono">legacy-gateway</div></div></div></td>
+            <td class="t-muted"><span class="t-faint">No description</span></td>
+            <td class="t-muted">Empty project</td>
+            <td class="t-right mono">0</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span> <span class="badge badge--danger"><i data-lucide="trash-2"></i>Deleted</span></td>
+            <td><div class="t-sm">Ada Lovelace</div><div class="cell-sub">ada@example.com</div></td>
+            <td class="t-num t-muted">08/09/26 02:15 PM</td>
+            <td><div class="cell-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Undelete project" style="color:var(--ok)"><i data-lucide="undo-2"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>4 projects · sorted by name ↑</span><span class="row gap-2"><span>Rows per page</span><select class="select select--sm" style="width:64px"><option>25</option></select></span></div>
+    </section>
+    </div>
+
+    <!-- Portfolio quality trend -->
+    <section class="card">
+      <div class="card__header"><div class="card__title"><i data-lucide="trending-up"></i>Portfolio quality trend<span class="t-xs t-subtle t-500">Average quality across projects after each import (this browser)</span></div><span class="badge badge--ok">avg 84</span></div>
+      <div class="card__body">
+        <div class="chart-area" style="height:140px">
+          <svg viewBox="0 0 800 140" preserveAspectRatio="none">
+            <g stroke="var(--border)" stroke-dasharray="3 3"><line x1="0" y1="20" x2="800" y2="20"/><line x1="0" y1="65" x2="800" y2="65"/><line x1="0" y1="110" x2="800" y2="110"/></g>
+            <path d="M0 95 C120 90, 200 80, 300 70 S 500 55, 620 40 S 760 30, 800 26 L800 140 L0 140Z" fill="color-mix(in srgb, var(--ok) 12%, transparent)"/>
+            <path d="M0 95 C120 90, 200 80, 300 70 S 500 55, 620 40 S 760 30, 800 26" fill="none" stroke="var(--ok)" stroke-width="2"/>
+            <circle cx="800" cy="26" r="4" fill="var(--ok)"/>
+          </svg>
+          <div class="t-2xs t-faint" style="position:absolute;left:0;top:12px">100</div><div class="t-2xs t-faint" style="position:absolute;left:0;top:57px">85</div><div class="t-2xs t-faint" style="position:absolute;left:0;top:102px">70</div>
+        </div>
+        <div class="row-between t-xs t-subtle mt-2"><span>start</span><span>mid</span><span>now</span></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- Create project -->
+<div class="overlay" id="create-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-labelledby="create-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--honey"><i data-lucide="folder-plus"></i></span>
+      <div><div class="dialog__title" id="create-title">New project</div><div class="dialog__desc">Start from a template, fill in the basics, or describe the API and let AI draft it.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="tabs mb-4" style="border-bottom:1px solid var(--border)" data-tabs="create-tabs">
+        <button class="tab is-active" data-action="tab" data-target="manual"><i data-lucide="file-pen-line"></i>Create manually</button>
+        <button class="tab" data-action="tab" data-target="ai"><i data-lucide="bot"></i>Design with AI<span class="badge badge--honey">Beta</span></button>
+      </div>
+      <div id="create-tabs">
+      <div data-tab-panel="manual">
+        <div class="card card--soft mb-4" style="padding:12px 14px">
+          <div class="row-between gap-3">
+            <div class="row gap-3"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="layers"></i></span><div><div class="t-sm t-600">Starting template</div><div class="t-xs t-muted">Presets OpenAPI fields (summary, contact, license, terms). You can edit everything before continuing.</div></div></div>
+            <select class="select" style="width:240px"><option>Blank</option><option>Public REST API</option><option>Internal / private API</option><option>Partner / B2B integration</option><option>Microservice boundary</option><option>OpenAPI design starter</option></select>
+          </div>
+        </div>
+        <div class="grid grid-2 gap-6">
+          <div class="form-section" style="margin:0;padding:0;border:0">
+            <div class="form-section__title">Basic information</div>
+            <div class="col gap-4 mt-3">
+              <div class="field"><label>Project name <span class="req">*</span></label><input class="input" placeholder="e.g. Payments API" value="Notifications API" autofocus /></div>
+              <div class="field"><label>Slug <span class="req">*</span></label><input class="input input--mono" value="notifications-api" /><div class="hint">URL-friendly identifier — lowercase letters, numbers and dashes. Suggested from the name.</div></div>
+              <div class="field"><label>Description</label><textarea class="textarea" placeholder="What does this API do, and for whom?"></textarea></div>
+              <div class="field"><label>Domain category</label><select class="select"><option>None</option><option>IoT device schemas</option><option>Social media entities</option><option>Gaming</option><option>Travel &amp; hospitality</option><option>Media &amp; entertainment</option><option>E-commerce</option><option>Healthcare</option><option>Finance</option><option>SaaS</option><option>Education</option><option>Real estate</option><option>Logistics</option></select><div class="hint">Optional. Classifies the kind of entities and schemas this project models.</div></div>
+            </div>
+          </div>
+          <div class="form-section" style="margin:0;padding:0;border:0">
+            <div class="form-section__title">API metadata <span class="t-xs t-subtle t-500">(OpenAPI info)</span></div>
+            <div class="col gap-4 mt-3">
+              <div class="field"><label>API summary</label><input class="input" placeholder="One line shown in Browse and exports" /></div>
+              <div class="field"><label>Terms of service URL</label><div class="input-wrap"><input class="input" placeholder="https://example.com/terms" style="padding-left:11px" /><span class="input-suffix"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Open URL"><i data-lucide="external-link"></i></button></span></div></div>
+              <div class="grid grid-2"><div class="field"><label>Contact name</label><input class="input" /></div><div class="field"><label>Contact email</label><input class="input" placeholder="api@acme.dev" /></div></div>
+              <div class="field"><label>Contact URL</label><input class="input" placeholder="https://" /></div>
+              <div class="field"><label>License (SPDX)</label><select class="select"><option>Select a license…</option><option>Apache License 2.0 (Apache-2.0)</option><option>MIT License (MIT)</option><option>BSD 3-Clause (BSD-3-Clause)</option></select><div class="hint">Auto-fills license name and URL.</div></div>
+              <div class="grid grid-2"><div class="field"><label>License name</label><input class="input" /></div><div class="field"><label>License URL</label><input class="input" /></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-tab-panel="ai" hidden>
+        <div class="row-between mb-3"><div class="row gap-2 t-sm"><span class="t-muted">Model</span><select class="select select--sm" style="width:200px"><option>llama3.1:8b</option><option>qwen2.5-coder:14b</option></select></div><button class="btn btn--link btn--sm">Reset conversation</button></div>
+        <div class="card card--soft" style="min-height:300px;display:flex;flex-direction:column">
+          <div class="empty" style="padding:32px 24px 20px"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="bot"></i></div><div class="empty__title">Describe the API you want</div><div class="empty__desc">I’ll draft an OpenAPI 3.1 specification you can refine in conversation, then import as a project.</div>
+            <div class="row gap-2 wrap mt-3" style="justify-content:center"><span class="chip">💬 Blog API with posts and comments</span><span class="chip">🛒 E-commerce with products and orders</span><span class="chip">🔐 User management with authentication</span></div></div>
+          <div class="row gap-2" style="padding:12px;margin-top:auto"><input class="input grow" placeholder="Describe your API or ask for changes… (Enter to send)" /><button class="btn btn--primary"><i data-lucide="send-horizontal"></i>Send</button></div>
+        </div>
+        <div class="t-xs t-subtle mt-2 row gap-1"><i data-lucide="info" style="width:12px;height:12px"></i>AI can make mistakes — review before importing. Assistant replies that contain a spec get an “Import this spec” button that opens the import wizard preloaded.</div>
+      </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">You can change everything later in project settings.</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create project</button></div>
+  </div>
+</div>
+
+<!-- Project scores -->
+<div class="overlay" id="scores-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog">
+    <div class="dialog__header"><div><div class="dialog__title">Project scores — Payments API</div><div class="dialog__desc">Quality scores (0–100) recorded in this browser when an import finishes. History is stored locally and not synced.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-4" style="border-bottom:1px solid var(--border)" data-tabs="score-tabs"><button class="tab is-active" data-action="tab" data-target="trend">Trend</button><button class="tab" data-action="tab" data-target="quality">Quality</button><button class="tab" data-action="tab" data-target="lint">Lint <span class="count">2</span></button></div>
+      <div id="score-tabs">
+        <div data-tab-panel="trend">
+          <div class="chart-area" style="height:160px"><svg viewBox="0 0 700 160" preserveAspectRatio="none"><g stroke="var(--border)"><line x1="0" y1="10" x2="700" y2="10"/><line x1="0" y1="50" x2="700" y2="50"/><line x1="0" y1="90" x2="700" y2="90"/><line x1="0" y1="130" x2="700" y2="130"/></g><path d="M0 110 L100 104 L200 96 L300 80 L400 70 L500 52 L600 40 L700 29 L700 160 L0 160Z" fill="color-mix(in srgb, var(--accent) 12%, transparent)"/><path d="M0 110 L100 104 L200 96 L300 80 L400 70 L500 52 L600 40 L700 29" fill="none" stroke="var(--accent)" stroke-width="2"/><g fill="var(--accent)"><circle cx="0" cy="110" r="3"/><circle cx="100" cy="104" r="3"/><circle cx="200" cy="96" r="3"/><circle cx="300" cy="80" r="3"/><circle cx="400" cy="70" r="3"/><circle cx="500" cy="52" r="3"/><circle cx="600" cy="40" r="3"/><circle cx="700" cy="29" r="4"/></g></svg></div>
+          <div class="row-between t-xs t-subtle mt-1"><span>Jun 2, 10:14</span><span>Aug 15, 09:12</span></div>
+          <table class="table table--dense mt-3"><thead><tr><th>Recorded</th><th>Overall</th><th>Grade</th></tr></thead><tbody><tr><td class="t-num">Aug 15, 09:12</td><td class="t-600 t-ok">88</td><td>B</td></tr><tr><td class="t-num">Aug 2, 16:40</td><td class="t-600 t-ok">85</td><td>B</td></tr><tr><td class="t-num">Jul 20, 11:02</td><td class="t-600 t-warn">79</td><td>C</td></tr></tbody></table>
+        </div>
+        <div data-tab-panel="quality" hidden>
+          <div class="row gap-4"><div class="ring ring--lg" style="--p:88;--c:var(--ok)"><span>88</span></div><div><div class="t-h3">Grade B</div><div class="t-xs t-muted">From import on Aug 15, 09:12</div></div></div>
+          <div class="grid grid-2 mt-4"><div class="card card--flat card--pad"><div class="t-xs t-muted">Documentation</div><div class="t-h4">22 / 25</div><div class="meter mt-1"><div class="progress progress--ok"><span style="width:88%"></span></div><span class="meter-val">88%</span></div></div><div class="card card--flat card--pad"><div class="t-xs t-muted">Consistency</div><div class="t-h4">18 / 25</div><div class="meter mt-1"><div class="progress progress--warn"><span style="width:72%"></span></div><span class="meter-val">72%</span></div></div></div>
+          <div class="card card--flat mt-3" style="padding:12px 14px"><div class="row gap-2"><span class="badge badge--warn">medium</span><span class="badge badge--outline">naming</span><span class="t-sm t-600">Operation ids mix camelCase and snake_case</span></div><div class="t-xs t-muted mt-1">Suggestion: pick one convention; the style guide “Acme REST” enforces camelCase.</div><div class="mono t-2xs t-subtle mt-1">paths./refunds.post.operationId</div></div>
+        </div>
+        <div data-tab-panel="lint" hidden>
+          <div class="banner banner--neutral mb-3"><i data-lucide="info"></i><span>From import on Aug 15, 09:12 · 0 errors, 2 warnings. The lint letter grade on the card derives from the overall quality score.</span></div>
+          <div class="card card--flat" style="padding:12px 14px"><div class="row gap-2"><span class="badge" data-status="warning">warning</span><span class="badge badge--outline">schema</span><span class="t-sm t-600">Schema <span class="mono">Refund</span> has no description</span></div><div class="mono t-2xs t-subtle mt-1">components.schemas.Refund</div></div>
+          <div class="card card--flat mt-2" style="padding:12px 14px"><div class="row gap-2"><span class="badge" data-status="warning">warning</span><span class="badge badge--outline">response</span><span class="t-sm t-600">Missing 4xx response on <span class="mono">POST /payouts</span></span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Permanent delete -->
+<div class="overlay" id="perma-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Permanently delete “Legacy Gateway”?</div><div class="dialog__desc">This removes all versions, publications, classes and properties. It cannot be undone.</div></div></div>
+    <div class="dialog__body"><div class="field"><label>Type <span class="mono">legacy-gateway</span> to confirm</label><input class="input input--mono" placeholder="legacy-gateway" /></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" disabled>Delete everything</button></div>
+  </div>
+</div>
+
+<!-- Row actions menu (illustrative placement) -->
+<div class="overlay" id="row-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:300px 60px 0 0">
+  <div class="menu" role="menu"><a class="menu__item" href="../build/versions.html"><i data-lucide="git-branch"></i>Open versions</a><a class="menu__item" href="#"><i data-lucide="pencil"></i>Edit project</a><a class="menu__item" href="#"><i data-lucide="copy"></i>Duplicate</a><div class="menu__sep"></div><a class="menu__item is-danger" href="#"><i data-lucide="trash-2"></i>Delete project</a></div>
+</div>
+
+<!-- Import wizard entry (full wizard mockup lives in build/import-wizard.html) -->
+<div class="overlay" id="import-dialog" data-overlay>
+  <div class="dialog dialog--sm"><div class="dialog__header"><div><div class="dialog__title">Import a specification</div><div class="dialog__desc">The full 5-step wizard is mocked in <a href="import-wizard.html">import-wizard.html</a>.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close"><i data-lucide="x"></i></button></div><div class="dialog__footer"><a class="btn btn--primary" href="import-wizard.html">Open wizard mockup</a></div></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/projects</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/projects/page.tsx</code>, <code>ProjectsDashboardProjectCard</code>, <code>CreateProjectManualFormFields</code>, <code>ProjectQualityHistoryDialog</code>, <code>PortfolioQualityTrendChart</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header summary “N projects · avg quality · N active · N deleted”; Cards/Table toggle; search; view chips All/Active/Needs attention/Deleted (Deleted gated by “Show deleted”); sort menu; Import + New project.</li>
+    <li>Card: hex initials avatar, domain-category pill, mono id·slug, status pill, 2-line summary, Quality/Lint/Debt rings, versions count, creator, updated time; deleted/disabled cards get the amber treatment + Undelete / Permanently delete.</li>
+    <li>Table: sortable columns Project · Description · Quality trend (sparkline → scores dialog) · Versions · Status · Created by · Updated · actions; deleted rows carry the red Deleted pill and Undelete icon.</li>
+    <li>Create dialog: template select, Basic info + API metadata (same fields, SPDX list), “Design with AI” tab (model select, prompt chips, chat, “Import this spec”). Edit dialog = same form minus template + 4 stat tiles (not shown; reuse).</li>
+    <li>Scores dialog: Trend / Quality / Lint tabs with the same copy and empty states. Portfolio trend chart with 70/85/100 gridlines.</li>
+    <li>Confirms: Delete (soft) / Undelete / Permanently delete → replaced by <code>.dialog--sm</code> with type-to-confirm instead of the double native confirm.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Row selection + bulk bar (delete/undelete), keyboard <code>N</code>/<code>I</code>/<code>/</code>, “New project” dashed tile in cards view.</li></ul>
+  <h4>States</h4>
+  <ul><li>No tenant: <code>.empty</code> with lock art “Pick a workspace first” + “Go to Tenants”. Empty: “No projects yet — create one or import a spec.” Filter miss: inline “No projects match your filters or search.”</li></ul>
+</template>
+</body>
+</html>

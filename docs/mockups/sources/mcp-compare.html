@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MCP server comparison · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .grade { display: inline-flex; align-items: center; gap: 6px; }
+  .grade__letter { width: 22px; height: 22px; border-radius: var(--r-xs); display: grid; place-items: center; font-weight: 700; font-size: var(--fs-xs); color: #fff; background: var(--neutral); flex-shrink: 0; }
+  .grade[data-grade="A"] .grade__letter { background: var(--ok); }
+  .grade[data-grade="B"] .grade__letter { background: color-mix(in srgb, var(--ok) 70%, var(--honey)); }
+  .grade[data-grade="C"] .grade__letter { background: var(--warn); }
+  .grade[data-grade="-"] .grade__letter { background: var(--bg-inset); color: var(--fg-subtle); }
+  .cmp th, .cmp td { text-align: left; }
+  .cmp th.srv, .cmp td.srv { width: 24%; }
+  .cmp tr.differs td { background: color-mix(in srgb, var(--warn) 9%, transparent); }
+  .cmp tr.section td { background: var(--bg-subtle); font-size: var(--fs-2xs); font-weight: 600; letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--fg-subtle); height: 30px; }
+  .cmp thead th { height: auto; padding: 12px 14px; text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); color: var(--fg); vertical-align: top; }
+  .picker-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: var(--r-md); }
+  .picker-row:hover { background: var(--bg-subtle); }
+  .picker-row.is-disabled { opacity: .5; }
+</style>
+</head>
+<body data-shell="app" data-nav="mcp" data-page="sources/mcp-compare" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Bring in</span><i data-lucide="chevron-right"></i><a href="mcp-servers.html">MCP servers</a><i data-lucide="chevron-right"></i><span>Compare</span></div>
+          <h1 class="page-title">Server comparison</h1>
+          <p class="page-desc">Pick 2–3 discovered servers and compare surface, quality, safety, docs, latency and trust.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-tip="Reload the catalog"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <button class="btn btn--primary"><i data-lucide="git-compare-arrows"></i>Compare (3)</button>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="MCP Servers sections">
+        <a class="tab" href="mcp-servers.html"><i data-lucide="server"></i>Servers<span class="count">6</span></a>
+        <a class="tab" href="mcp-analytics.html"><i data-lucide="bar-chart-3"></i>Analytics<span class="badge badge--honey" title="Feature in preview">Preview</span></a>
+        <a class="tab" href="mcp-capabilities.html"><i data-lucide="layers"></i>Capabilities<span class="count">65</span></a>
+        <a class="tab is-active" href="mcp-compare.html" aria-current="page"><i data-lucide="git-compare-arrows"></i>Compare</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="grid grid-aside-main" style="grid-template-columns:340px minmax(0,1fr)">
+      <!-- Picker -->
+      <aside class="card" style="align-self:start;position:sticky;top:150px">
+        <div class="card__header"><div class="card__title"><i data-lucide="list-checks"></i>Choose servers to compare</div><span class="t-xs t-subtle">3 of 3 selected</span></div>
+        <div style="padding:8px;max-height:16rem;overflow:auto" class="col gap-0">
+          <label class="picker-row"><span class="check"><input type="checkbox" checked /></span><div class="grow min-w-0"><div class="t-sm t-500">Globex geo tools</div><div class="t-xs t-subtle">tools.globex.io · 15 tools</div></div></label>
+          <label class="picker-row is-disabled" title="Up to 3 servers"><span class="check"><input type="checkbox" disabled /></span><div class="grow min-w-0"><div class="t-sm t-500">Inventory events bridge</div><div class="t-xs t-subtle">mcp.acme.dev · 5 tools</div></div></label>
+          <label class="picker-row is-disabled" title="Up to 3 servers"><span class="check"><input type="checkbox" disabled /></span><div class="grow min-w-0"><div class="t-sm t-500">Local dev filesystem</div><div class="t-xs t-subtle">(local) · 4 tools</div></div></label>
+          <label class="picker-row"><span class="check"><input type="checkbox" checked /></span><div class="grow min-w-0"><div class="t-sm t-500">Orders assistant</div><div class="t-xs t-subtle">mcp.acme.dev · 8 tools</div></div></label>
+          <label class="picker-row"><span class="check"><input type="checkbox" checked /></span><div class="grow min-w-0"><div class="t-sm t-500">Payments tools</div><div class="t-xs t-subtle">mcp.acme.dev · 12 tools</div></div></label>
+        </div>
+        <div class="card__footer"><span class="t-xs t-subtle">Select at least two servers. Only servers with a current version are listed.</span><button class="btn btn--ghost btn--sm">Clear</button></div>
+      </aside>
+
+      <!-- Comparison panel -->
+      <div class="col gap-4 min-w-0">
+        <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><span><span class="banner-title">Protocol versions differ.</span> These servers negotiated different MCP protocol revisions (2025-06-18, 2025-03-26), and at least one is unknown — some capabilities and annotations may not be comparable like-for-like.</span></div>
+
+        <div class="table-wrap">
+          <table class="table table--dense cmp">
+            <thead><tr>
+              <th style="width:28%">Metric</th>
+              <th class="srv"><div class="row gap-2"><span class="grade" data-grade="A"><span class="grade__letter">A</span></span><div><div class="t-600">Acme Payments MCP</div><div class="t-xs t-subtle t-500">Payments tools</div></div></div><div class="row gap-1 mt-2"><span class="badge">streamable_http</span><span class="badge badge--info">finance</span></div></th>
+              <th class="srv"><div class="row gap-2"><span class="grade" data-grade="B"><span class="grade__letter">B</span></span><div><div class="t-600">Orders assistant</div></div></div><div class="row gap-1 mt-2"><span class="badge">http+sse (legacy)</span><span class="badge badge--info">finance</span></div></th>
+              <th class="srv"><div class="row gap-2"><span class="grade" data-grade="B"><span class="grade__letter">B</span></span><div><div class="t-600">Globex Geo</div><div class="t-xs t-subtle t-500">Globex geo tools</div></div></div><div class="row gap-1 mt-2"><span class="badge">streamable_http</span><span class="badge badge--info">geo</span></div></th>
+            </tr></thead>
+            <tbody>
+              <tr class="section"><td colspan="4">Surface</td></tr>
+              <tr class="differs"><td>Tools</td><td class="t-num">12</td><td class="t-num">8</td><td class="t-num">15</td></tr>
+              <tr class="differs"><td>Resources</td><td class="t-num">4</td><td class="t-num">2</td><td class="t-num">0</td></tr>
+              <tr class="differs"><td>Resource templates</td><td class="t-num">2</td><td class="t-num">0</td><td class="t-num">0</td></tr>
+              <tr class="differs"><td>Prompts</td><td class="t-num">3</td><td class="t-num">1</td><td class="t-num">2</td></tr>
+              <tr class="differs"><td>Total capabilities</td><td class="t-num t-600">21</td><td class="t-num t-600">11</td><td class="t-num t-600">17</td></tr>
+              <tr class="section"><td colspan="4">Quality</td></tr>
+              <tr class="differs"><td>Grade</td><td>A</td><td>B</td><td>B</td></tr>
+              <tr class="differs"><td>Score</td><td class="t-num">94</td><td class="t-num">82</td><td class="t-num">78</td></tr>
+              <tr class="section"><td colspan="4">Safety posture</td></tr>
+              <tr class="differs"><td>Destructive tools</td><td class="t-num">2</td><td class="t-num">1</td><td class="t-num">0</td></tr>
+              <tr class="differs"><td>Unannotated tools</td><td class="t-num">3</td><td class="t-num">2</td><td class="t-num">9</td></tr>
+              <tr><td>Destructive w/o auth</td><td class="t-num">0</td><td class="t-num">0</td><td class="t-num">0</td></tr>
+              <tr class="differs"><td>Auth</td><td><span class="badge badge--ok">bearer</span></td><td><span class="badge badge--violet">OAuth 2.1</span></td><td><span class="badge badge--ok">header</span></td></tr>
+              <tr class="section"><td colspan="4">Documentation coverage</td></tr>
+              <tr class="differs"><td>Items described</td><td class="t-num">90%</td><td class="t-num">82%</td><td class="t-num">65%</td></tr>
+              <tr class="differs"><td>Items titled</td><td class="t-num">100%</td><td class="t-num">100%</td><td class="t-num">71%</td></tr>
+              <tr class="differs"><td>Tool params documented</td><td class="t-num">71%</td><td class="t-num">60%</td><td class="t-num">44%</td></tr>
+              <tr class="differs"><td>Tools with output schema</td><td class="t-num">58%</td><td class="t-num">25%</td><td class="t-num">N/A</td></tr>
+              <tr class="section"><td colspan="4">Tool latency &amp; reliability</td></tr>
+              <tr class="differs"><td>Slowest tool (p95)</td><td class="t-num">1.8 s</td><td class="t-num">640 ms</td><td class="t-num t-subtle">—</td></tr>
+              <tr class="differs"><td>Error rate</td><td class="t-num">1.2%</td><td class="t-num">0.4%</td><td class="t-num t-subtle">—</td></tr>
+              <tr class="differs"><td>Calls (window)</td><td class="t-num">1,240</td><td class="t-num">312</td><td class="t-num t-subtle">—</td></tr>
+              <tr class="section"><td colspan="4">Composite trust</td></tr>
+              <tr class="differs"><td>Overall trust</td><td><span class="badge badge--ok">84/100</span></td><td><span class="badge badge--warn">76/100</span></td><td><span class="badge badge--warn">64/100</span></td></tr>
+              <tr class="differs"><td>Quality</td><td class="t-num">94</td><td class="t-num">82</td><td class="t-num">78</td></tr>
+              <tr class="differs"><td>Safety</td><td class="t-num">78</td><td class="t-num">60</td><td class="t-num">45</td></tr>
+              <tr class="differs"><td>Documentation</td><td class="t-num">86</td><td class="t-num">70</td><td class="t-num">62</td></tr>
+              <tr class="differs"><td>Stability</td><td class="t-num">91</td><td class="t-num">88</td><td class="t-num">70</td></tr>
+              <tr class="differs"><td>Responsiveness</td><td class="t-num">72</td><td class="t-num">80</td><td class="t-subtle">Not measured</td></tr>
+              <tr><td>Trust radar</td>
+                <td><svg viewBox="0 0 200 200" style="width:120px" role="img" aria-label="Payments tools trust radar"><g fill="none" stroke="var(--border-strong)"><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3"/><polygon points="100,60 138,87.6 123.5,132.4 76.5,132.4 62,87.6"/><line x1="100" y1="100" x2="100" y2="20"/><line x1="100" y1="100" x2="176.1" y2="75.3"/><line x1="100" y1="100" x2="147" y2="164.7"/><line x1="100" y1="100" x2="53" y2="164.7"/><line x1="100" y1="100" x2="23.9" y2="75.3"/></g><polygon points="100,24.8 159.3,80.7 140.5,155.7 57.2,158.9 45.2,82.2" fill="color-mix(in srgb, var(--ok) 25%, transparent)" stroke="var(--ok)" stroke-width="2"/></svg></td>
+                <td><svg viewBox="0 0 200 200" style="width:120px" role="img" aria-label="Orders assistant trust radar"><g fill="none" stroke="var(--border-strong)"><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3"/><polygon points="100,60 138,87.6 123.5,132.4 76.5,132.4 62,87.6"/><line x1="100" y1="100" x2="100" y2="20"/><line x1="100" y1="100" x2="176.1" y2="75.3"/><line x1="100" y1="100" x2="147" y2="164.7"/><line x1="100" y1="100" x2="53" y2="164.7"/><line x1="100" y1="100" x2="23.9" y2="75.3"/></g><polygon points="100,34.4 145.6,85.2 132.9,145.3 58.6,157 39.1,80.2" fill="color-mix(in srgb, var(--warn) 25%, transparent)" stroke="var(--warn)" stroke-width="2"/></svg></td>
+                <td><svg viewBox="0 0 200 200" style="width:120px" role="img" aria-label="Globex geo tools trust radar, responsiveness not measured"><g fill="none" stroke="var(--border-strong)"><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3"/><polygon points="100,60 138,87.6 123.5,132.4 76.5,132.4 62,87.6"/><line x1="100" y1="100" x2="100" y2="20"/><line x1="100" y1="100" x2="176.1" y2="75.3"/><line x1="100" y1="100" x2="147" y2="164.7"/><line x1="100" y1="100" x2="53" y2="164.7"/><line x1="100" y1="100" x2="23.9" y2="75.3"/></g><polygon points="100,37.6 134.2,88.9 129.2,140.1 67.1,145.3 100,100" fill="color-mix(in srgb, var(--warn) 25%, transparent)" stroke="var(--warn)" stroke-width="2"/></svg></td></tr>
+            </tbody>
+          </table>
+          <div class="table-foot"><span>Rows whose cells differ are tinted amber · “—” = missing · radar tone by band: strong ≥80 green, fair ≥50 amber, weak red, gap neutral</span></div>
+        </div>
+
+        <!-- Capability overlap -->
+        <div class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="layers"></i>Capability overlap</div><span class="t-xs t-muted">31 distinct tools across these servers — 1 shared by all, 3 shared by two or more.</span></div>
+          <div class="card__body col gap-4">
+            <div class="table-wrap card--flat" style="box-shadow:none">
+              <table class="table table--dense"><thead><tr><th>Shared tool</th><th class="t-center">Payments tools</th><th class="t-center">Orders assistant</th><th class="t-center">Globex geo tools</th></tr></thead><tbody>
+                <tr><td class="mono">search</td><td class="t-center"><i data-lucide="check" aria-label="present" style="color:var(--ok);display:inline-block"></i></td><td class="t-center"><i data-lucide="check" aria-label="present" style="color:var(--ok);display:inline-block"></i></td><td class="t-center"><i data-lucide="check" aria-label="present" style="color:var(--ok);display:inline-block"></i></td></tr>
+                <tr><td class="mono">get_customer</td><td class="t-center"><i data-lucide="check" aria-label="present" style="color:var(--ok);display:inline-block"></i></td><td class="t-center"><i data-lucide="check" aria-label="present" style="color:var(--ok);display:inline-block"></i></td><td class="t-center t-faint" aria-label="absent">·</td></tr>
+                <tr><td class="mono">geocode</td><td class="t-center t-faint" aria-label="absent">·</td><td class="t-center"><i data-lucide="check" aria-label="present" style="color:var(--ok);display:inline-block"></i></td><td class="t-center"><i data-lucide="check" aria-label="present" style="color:var(--ok);display:inline-block"></i></td></tr>
+              </tbody></table>
+            </div>
+            <div class="grid grid-3">
+              <div class="card card--soft" style="padding:12px 14px"><div class="t-sm t-600 mb-2">Unique to Payments tools</div><div class="col gap-1 mono t-xs t-muted"><span>payments.search</span><span>payments.refund</span><span>payouts.create</span><span>merchant.get</span><span>disputes.list</span><span class="t-subtle">+5 more</span></div></div>
+              <div class="card card--soft" style="padding:12px 14px"><div class="t-sm t-600 mb-2">Unique to Orders assistant</div><div class="col gap-1 mono t-xs t-muted"><span>list_orders</span><span>cancel_order</span><span>track_shipment</span><span>apply_coupon</span><span class="t-subtle">+1 more</span></div></div>
+              <div class="card card--soft" style="padding:12px 14px"><div class="t-sm t-600 mb-2">Unique to Globex geo tools</div><div class="col gap-1 mono t-xs t-muted"><span>geo.search</span><span>geo.reverse</span><span>route.plan</span><span>tiles.fetch</span><span>isochrone</span><span class="t-subtle">+7 more</span></div></div>
+            </div>
+            <div class="t-xs t-subtle">Variants: “No tools are shared between these servers.” · “No unique tools.”</div>
+          </div>
+        </div>
+
+        <!-- States -->
+        <div class="grid grid-2">
+          <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="git-compare-arrows"></i></div><div><div class="empty__title">Select two or three servers to compare</div><div class="empty__desc">Tick servers in the picker, then run Compare to see surface counts, grade, safety, documentation, latency and trust side by side. Picker empty: “No discovered MCP servers to compare yet. Register and discover servers in the catalog first.”</div></div><span class="badge badge--outline ml-auto">state</span></div></div>
+          <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="circle-alert"></i></div><div><div class="empty__title">Comparison unavailable</div><div class="empty__desc">One of the version fetches failed. Each source (version · trust · reliability) degrades independently; “Comparing servers…” while loading.</div></div><button class="btn btn--sm ml-auto"><i data-lucide="refresh-cw"></i>Retry</button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/mcp/compare</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/mcp/compare/page.tsx</code>, <code>ServerComparisonPanel</code>, <code>mcpServerCompareUi.ts</code> (+ trust/reliability/doc-coverage/safety helpers), <code>charts/Radar</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header “Server Comparison” + Refresh (“Reload the catalog”); section tabs.</li>
+    <li>Picker “Choose servers to compare” + “n of 3 selected”, scrollable checkbox rows (name, host, “n tool(s)”), rows disabled at the cap, Compare (n) disabled until ≥2, Clear, hint “Select at least two servers.”; picker sourced from browse endpoints with a current version, name-sorted.</li>
+    <li>Protocol banner (amber when distinct known versions &gt; 1; gray “At least one server’s MCP protocol version is unknown.”).</li>
+    <li>Metric table: header per server (grade glyph, display name, endpoint subtitle if different, transport + category badges); sections Surface · Quality · Safety posture · Documentation coverage · Tool latency &amp; reliability · Composite trust (+ per-axis rows + Trust radar row, “Not measured” gaps); differing rows tinted amber; “—” for missing.</li>
+    <li>Capability overlap: summary sentence, shared-tools presence matrix (check / ·, aria present/absent), “Unique to {name}” cards.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Compare (n) mirrored as the header primary; sticky picker; radar tone legend in the table foot.</li></ul>
+  <h4>States</h4>
+  <ul><li>Catalog loading/error; picker empty; “Comparing servers…”; “Comparison unavailable”; “Select two or three servers to compare”; null before first run renders nothing.</li></ul>
+</template>
+</body>
+</html>

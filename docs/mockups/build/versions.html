@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Versions · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .ver-cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .ver-cell .ver-line { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .versions-table th:nth-child(1), .versions-table td:nth-child(1) { width: 235px; min-width: 235px; }
+  .versions-table th:nth-child(3), .versions-table td:nth-child(3) { width: 110px; }
+  .versions-table th:nth-child(4), .versions-table td:nth-child(4) { width: 178px; }
+  .versions-table th:nth-child(5), .versions-table td:nth-child(5) { width: 118px; }
+  .versions-table th:nth-child(6), .versions-table td:nth-child(6) { width: 138px; }
+  .versions-table th:nth-child(7), .versions-table td:nth-child(7) { width: 88px; }
+  .versions-table td { vertical-align: top; padding-top: 10px; padding-bottom: 10px; }
+  .ver-cell .ver-link { font-family: var(--font-mono); font-weight: 600; color: var(--fg); }
+  .fork-box { display: inline-flex; gap: 6px; align-items: center; padding: 3px 8px; border-radius: var(--r-sm); background: var(--violet-soft); color: var(--violet-fg); font-size: var(--fs-2xs); }
+  .flag { display: inline-flex; align-items: center; gap: 4px; height: 16px; padding: 0 5px; border-radius: var(--r-xs); background: var(--honey-soft); color: var(--honey-fg); font-size: 10px; font-weight: 600; letter-spacing: .02em; }
+  .flag [data-lucide] { width: 10px; height: 10px; }
+  .mock-cell { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+  .mock-cell .row > .t-xs { white-space: nowrap; }
+  .mock-cell .mock-url { display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-muted); max-width: 165px; }
+  .mock-cell .mock-url code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gate { padding: 12px 14px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; }
+  .gate + .gate { margin-top: 10px; }
+  .gate__title { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 600; }
+  .gate__title [data-lucide] { width: 14px; height: 14px; color: var(--fg-subtle); }
+  .gate ul.findings { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-xs); }
+  .gate ul.findings li { display: flex; gap: 8px; align-items: baseline; }
+  .gate .tag { white-space: nowrap; }
+  .art-row .fmt { flex-shrink: 0; }
+  .lineage { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-muted); flex-wrap: wrap; }
+  .lineage .cur { color: var(--fg); font-weight: 600; }
+  .lifecycle-select { width: 170px; }
+  .page-title { white-space: nowrap; flex-wrap: wrap; row-gap: 6px; }
+  .page-header__row > .min-w-0 { flex: 1 1 auto; }
+  .page-actions { flex-wrap: wrap; justify-content: flex-end; }
+</style>
+</head>
+<body data-shell="app" data-nav="projects" data-page="build/versions" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div class="min-w-0">
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Build</span><i data-lucide="chevron-right"></i><a href="projects.html">Projects</a><i data-lucide="chevron-right"></i><span>Payments API</span></div>
+          <h1 class="page-title">Payments API
+            <span class="fmt fmt--openapi">OpenAPI 3.1</span>
+            <span class="badge badge--dot" data-status="draft" title="Head revision v2.4.0 is a draft">v2.4.0 draft</span>
+            <span class="badge badge--ok" title="Stored quality score of the head revision (#5259)"><i data-lucide="shield-check"></i>B · 88</span>
+          </h1>
+          <p class="page-desc">Revisions and releases for this project · <a href="../ship/sunset-timeline.html">Sunset timeline (EOL schedule)</a></p>
+        </div>
+        <div class="page-actions">
+          <select class="select" style="width:190px" aria-label="Select project" title="Catalog items are excluded — convert one to OpenAPI to make it publishable"><option>Payments API</option><option>Orders Service</option><option>Inventory Events</option><option disabled>Legacy Gateway (deleted)</option></select>
+          <button class="btn" data-action="open" data-target="import-dialog" title="Import a specification into a new project"><i data-lucide="upload"></i>Import</button>
+          <a class="btn" href="version-dialogs.html#compare" title="Compare two revisions (needs at least 2 versions)"><i data-lucide="git-compare-arrows"></i>Compare</a>
+          <button class="btn btn--icon" disabled title="Merge branches — create at least two named branches to merge (FEATURE_GITLIKE)" aria-label="Merge branches"><i data-lucide="git-merge"></i></button>
+          <button class="btn btn--primary" data-action="open" data-target="new-version" title="Start a new version (fresh release line, defaults to a minor bump)"><i data-lucide="git-fork"></i>New version</button>
+        </div>
+      </div>
+      <div class="tabs" data-tabs="main-views" role="tablist" aria-label="Versions views">
+        <button class="tab is-active" data-action="tab" data-target="timeline" role="tab"><i data-lucide="scroll-text"></i>Timeline<span class="count">6</span></button>
+        <button class="tab" data-action="tab" data-target="changes" role="tab"><i data-lucide="git-compare-arrows"></i>Changes<span class="count">4</span></button>
+        <a class="tab" href="version-dialogs.html#change-report" role="tab" title="FEATURE_GITLIKE + NEXT_PUBLIC_CHANGE_REPORT_UI"><i data-lucide="file-text"></i>Change report<span class="flag"><i data-lucide="flag"></i>gitlike</span></a>
+        <a class="tab" href="version-dialogs.html#test-bench" role="tab"><i data-lucide="flask-conical"></i>Test bench<span class="badge badge--rose" title="1 test suite whose latest run has a previously-passing payload now failing. Open the Test Bench tab for the verdict diff."><i data-lucide="trending-down"></i>Suite regression</span></a>
+        <button class="tab" data-action="tab" data-target="conversion" role="tab" title="Only when the project was produced by a catalog conversion"><i data-lucide="history"></i>Conversion</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- [GITLIKE] ServerAheadPushBanner -->
+  <div class="banner banner--warn banner--bar" role="status">
+    <i data-lucide="cloud-alert"></i>
+    <div><span class="banner-title">Server is ahead of your last push.</span> <span class="banner-body">Another revision landed on <span class="mono">main</span> after your base (409 STALE_HEAD). Pull first, or open a merge.</span></div>
+    <div class="banner-actions"><span class="flag" title="Compiled but hidden today (FEATURE_GITLIKE=false)"><i data-lucide="flag"></i>gitlike</span><button class="btn btn--sm"><i data-lucide="download"></i>Pull</button><a class="btn btn--sm" href="version-dialogs.html#merge"><i data-lucide="git-merge"></i>Open merge</a></div>
+  </div>
+
+  <div class="page-body" id="main-views">
+    <!-- ================= TIMELINE (default view) ================= -->
+    <div data-tab-panel="timeline" class="col gap-6">
+
+      <!-- Banners: compatibility · what's new · deprecation -->
+      <div class="col gap-2">
+        <div class="banner banner--ok"><i data-lucide="shield-check"></i><div><span class="banner-title">Compatible.</span> <span class="banner-body">Parent → head check recorded 2h ago: <span class="mono">v2.3.1 → v2.4.0</span> has 3 additive changes and no breaking changes.</span></div><div class="banner-actions"><a class="btn btn--sm btn--ghost" href="version-dialogs.html#compare">View report</a></div></div>
+        <div class="banner"><i data-lucide="sparkles"></i><div><span class="banner-title">What’s new in v2.4.0 (draft).</span> <span class="banner-body">Refund reasons on <span class="mono">POST /refunds</span>, payout webhook events, <span class="mono">Idempotency-Key</span> documented on all writes.</span></div><div class="banner-actions"><button class="btn btn--sm btn--ghost" data-action="tab" data-target="changes">Open changes</button></div></div>
+        <div class="banner banner--warn"><i data-lucide="sunset"></i><div><span class="banner-title">v2.2.0 is deprecated — sunset 30 Sep 2026 00:00 UTC.</span> <span class="banner-body">Successor <span class="mono">v2.3.1</span>. Consumers see the same warning on compatibility checks (#507).</span></div><div class="banner-actions"><a class="btn btn--sm btn--ghost" href="../ship/sunset-timeline.html">Sunset timeline</a><a class="btn btn--sm btn--ghost" href="#" target="_blank" rel="noopener">Migration guide <i data-lucide="arrow-up-right"></i></a></div></div>
+      </div>
+
+        <!-- Related artifacts + project facts -->
+        <div class="grid" style="grid-template-columns:minmax(0,1fr) 380px">
+          <section class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="link"></i>Related artifacts</div><a class="t-xs" href="../sources/catalog.html">Show all representations</a></div>
+            <div>
+              <div class="list-row art-row"><div class="grow min-w-0"><div class="lr-title"><a href="../sources/catalog-item.html">payments-api.graphql</a></div><div class="lr-sub row gap-2 mt-1"><span class="fmt fmt--graphql">GraphQL</span><span class="badge badge--outline">HTTP</span><span>Converted</span></div></div><button class="btn btn--sm btn--ghost">Unlink</button></div>
+              <div class="list-row art-row"><div class="grow min-w-0"><div class="lr-title"><a href="../sources/catalog-item.html">payments.proto</a></div><div class="lr-sub row gap-2 mt-1"><span class="fmt fmt--proto">Protobuf</span><span class="badge badge--outline">gRPC</span><span>Linked</span></div></div><button class="btn btn--sm btn--ghost">Unlink</button></div>
+              <div class="list-row art-row" style="opacity:.7"><div class="grow min-w-0"><div class="lr-title t-strike t-muted">payments-legacy.wsdl</div><div class="lr-sub row gap-2 mt-1"><span class="fmt fmt--wsdl">WSDL</span><span>Deleted</span></div></div></div>
+            </div>
+            <div class="card__footer" style="flex-direction:column;align-items:stretch;gap:8px">
+              <button class="btn btn--sm" style="align-self:flex-start"><i data-lucide="sparkles"></i>Suggest links</button>
+              <div class="card card--flat" style="border:1.5px dashed var(--border-strong);box-shadow:none;padding:10px 12px"><div class="row-between gap-2"><div class="min-w-0"><div class="t-sm t-600 t-truncate">payments-events.asyncapi.yaml</div><div class="t-xs t-subtle">Same title and servers · <span class="fmt fmt--asyncapi" style="height:18px">AsyncAPI</span></div></div><button class="btn btn--sm">Link</button></div></div>
+            </div>
+          </section>
+
+          <section class="card card--pad">
+            <div class="t-h4 mb-3">Project</div>
+            <dl class="kv">
+              <dt>Id</dt><dd class="mono">prj_8f2a1c</dd>
+              <dt>Slug</dt><dd class="mono">payments-api</dd>
+              <dt>Head</dt><dd class="mono">v2.4.0 · ver_9d3f7a21</dd>
+              <dt>Last published</dt><dd class="mono">v2.3.1 · 08/03/26</dd>
+              <dt>Owner</dt><dd>Ada Lovelace</dd>
+              <dt>Compat gate</dt><dd><span class="badge badge--ok">on merge · on rollback</span></dd>
+              <dt>Publishable</dt><dd>Yes (not a catalog item)</dd>
+            </dl>
+            <hr class="mt-4 mb-3" />
+            <div class="col gap-2">
+              <a class="btn btn--sm" href="../studio/editor.html"><i data-lucide="pen-tool"></i>Open in Studio<i data-lucide="arrow-up-right"></i></a>
+              <a class="btn btn--sm" href="../ship/published.html"><i data-lucide="globe"></i>Published surface</a>
+              <a class="btn btn--sm" href="../ship/export-studio.html"><i data-lucide="package-open"></i>Export studio</a>
+            </div>
+          </section>
+        </div>
+
+          <!-- Timeline filter bar -->
+          <section class="card" style="padding:12px 16px">
+            <div class="row wrap gap-3">
+              <span class="t-caps" style="margin-right:4px">Timeline</span>
+              <div class="input-wrap" style="width:230px"><i data-lucide="search"></i><input class="input" placeholder="Message, changelog, commit…" aria-label="Search revisions" /></div>
+              <select class="select" style="width:150px" aria-label="Author"><option>All authors</option><option>Ada Lovelace</option><option>Grace Hopper</option><option>Linus Torvalds</option></select>
+              <label class="row gap-2 t-sm t-muted">From <input class="input" type="date" value="2026-06-01" style="width:140px" aria-label="From date" /></label>
+              <label class="row gap-2 t-sm t-muted">To <input class="input" type="date" style="width:140px" aria-label="To date" /></label>
+              <button class="btn btn--ghost btn--sm"><i data-lucide="rotate-ccw"></i>Reset</button>
+            </div>
+          </section>
+
+          <!-- [GITLIKE] Version tags + Named branches chip panels -->
+          <section class="card" style="padding:12px 16px">
+            <div class="row-between wrap gap-3">
+              <div class="row wrap gap-2">
+                <span class="t-caps">Version tags</span><span class="flag" title="Compiled but hidden today (FEATURE_GITLIKE=false)"><i data-lucide="flag"></i>gitlike</span>
+                <span class="chip" title="Release channel: stable · protected"><i data-lucide="tag"></i>stable → v2.3.1 <i data-lucide="lock" style="width:11px;height:11px"></i></span>
+                <span class="chip" title="Message: last 2.2 line release"><i data-lucide="tag"></i>lts-2.2 → v2.2.0</span>
+                <button class="btn btn--sm btn--ghost">Protect</button><button class="btn btn--sm btn--ghost">Remove</button>
+              </div>
+              <div class="row wrap gap-2">
+                <span class="t-caps">Named branches</span>
+                <span class="chip is-active"><i data-lucide="git-branch"></i>main <span class="badge badge--outline" style="background:var(--bg-surface);color:var(--fg-muted)">default</span></span>
+                <span class="chip"><i data-lucide="git-branch"></i>feature/payouts <span class="badge badge--outline">protected</span></span>
+                <button class="btn btn--sm btn--ghost">Unprotect</button><button class="btn btn--sm btn--ghost">Remove</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- [GITLIKE] history graph strip -->
+          <a class="card card--flat card--link" href="version-dialogs.html#history" style="padding:10px 16px">
+            <div class="row-between gap-3"><div class="row gap-2 t-sm"><i data-lucide="git-graph" class="t-subtle"></i><span class="t-600">Revision history graph</span><span class="flag"><i data-lucide="flag"></i>gitlike</span><span class="t-muted">Left-to-right lanes, merge parents dashed — mocked in Version dialogs.</span></div><i data-lucide="chevron-right" class="t-faint"></i></div>
+          </a>
+
+          <!-- Versions table -->
+          <section class="table-wrap">
+            <div class="table-toolbar">
+              <select class="select select--sm lifecycle-select" aria-label="Lifecycle filter"><option>All lifecycles</option><option>Stable</option><option>Beta</option><option>Deprecated</option><option>Archived</option></select>
+              <select class="select select--sm" style="width:200px" aria-label="History filter" title="Filter revisions reachable from a tag"><option>All revisions</option><option>Tag stable → v2.3.1</option><option>Tag lts-2.2 → v2.2.0</option></select>
+              <span class="chip is-active" data-action="chip">All <span class="t-faint">6</span></span>
+              <span class="chip" data-action="chip">Drafts <span class="t-faint">2</span></span>
+              <span class="chip" data-action="chip">Published <span class="t-faint">4</span></span>
+              <span class="spacer"></span>
+              <button class="btn btn--sm btn--ghost"><i data-lucide="arrow-up-down"></i>Sorted by created ↓<i data-lucide="chevron-down"></i></button>
+            </div>
+            <div class="scroll-x">
+            <table class="table versions-table">
+              <thead><tr>
+                <th class="sortable">Version <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+                <th class="sortable">Revision / changelog <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+                <th class="sortable">Status <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+                <th>Mock</th>
+                <th class="sortable">Created by <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+                <th class="sortable is-sorted" aria-sort="descending">Created <span class="sort"><i data-lucide="arrow-down"></i></span></th>
+                <th><span class="sr-only">Actions</span></th>
+              </tr></thead>
+              <tbody>
+                <!-- v2.4.0 draft head -->
+                <tr>
+                  <td>
+                    <div class="ver-cell">
+                      <div class="ver-line"><a class="ver-link" href="#" data-action="open" data-target="spec-viewer" title="View spec">v2.4.0</a><span class="badge badge--ok" title="Revision lifecycle (#739)">Stable</span><span class="badge badge--outline">HEAD</span><button class="badge badge--ok" data-action="open" data-target="lint-report" title="Quality score 88/100 — open lint report"><i data-lucide="shield-check"></i>B · 88</button></div>
+                      <div class="t-2xs t-subtle mono">ver_9d3f7a21</div>
+                    </div>
+                  </td>
+                  <td style="max-width:260px"><div class="cell-primary t-truncate">Add refund reasons and payout webhooks</div><div class="cell-sub t-truncate">- added: RefundReason enum · - added: payout.settled event · Idempotency-Key documented</div></td>
+                  <td><span class="badge badge--dot" data-status="draft">Draft</span></td>
+                  <td>
+                    <div class="mock-cell">
+                      <div class="row gap-2"><button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Mock for version 2.4.0" data-action="switch" title="Enable a private draft mock for parallel development (requires API key)"></button><span class="t-xs t-muted">Draft mock off</span></div>
+                    </div>
+                  </td>
+                  <td><div class="t-sm">Ada Lovelace</div><div class="cell-sub">ada@example.com</div></td>
+                  <td class="t-num t-muted" style="white-space:nowrap">08/15/26 09:12</td>
+                  <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="publish-dialog" data-tip="Publish" style="color:var(--ok)"><i data-lucide="lock"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-version" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+                </tr>
+                <!-- v2.3.1 published, tagged, mock on -->
+                <tr>
+                  <td>
+                    <div class="ver-cell">
+                      <div class="ver-line"><a class="ver-link" href="#" data-action="open" data-target="spec-viewer" title="View spec">v2.3.1</a><span class="badge badge--ok" title="Revision lifecycle (#739)">Stable</span><span class="badge badge--outline" title="Published — read-only"><i data-lucide="lock"></i>Published</span><span class="tag" title="Release channel: stable" style="background:var(--honey-soft);color:var(--honey-fg)">stable</span><button class="badge badge--ok" data-action="open" data-target="lint-report" title="Quality score 94/100 — open lint report"><i data-lucide="shield-check"></i>A · 94</button></div>
+                      <div class="t-2xs t-subtle mono">ver_4c8e1b09</div>
+                    </div>
+                  </td>
+                  <td style="max-width:260px"><div class="cell-primary t-truncate">Patch: fix Refund.amount minimum</div><div class="cell-sub t-truncate">- fixed: Refund.amount minimum 0.01 · docs: currency examples</div></td>
+                  <td><span class="badge badge--dot" data-status="published"><i data-lucide="circle-check"></i>Published</span></td>
+                  <td>
+                    <div class="mock-cell">
+                      <div class="row gap-2"><button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Mock for version 2.3.1" data-action="switch" title="Disable the hosted mock for this version"></button><span class="t-xs t-muted">Mock on</span></div>
+                      <div class="mock-url" title="https://mock.apiome.dev/acme/payments-api/2.3.1"><code>mock.apiome.dev/acme/payments-api/2.3.1</code><button class="btn btn--ghost btn--sm btn--icon" title="Copy mock URL" aria-label="Copy mock URL" style="width:22px;height:22px"><i data-lucide="copy"></i></button></div>
+                      <div class="row gap-2"><a class="t-xs row gap-1" href="version-dialogs.html#mocks"><i data-lucide="flask-conical" style="width:12px;height:12px"></i>Scenarios</a><svg class="sparkline sparkline--ok" style="width:80px;height:20px" viewBox="0 0 80 20" preserveAspectRatio="none" role="img" aria-label="Mock requests for v2.3.1, last 30 days"><path class="fill" d="M0 16 L8 14 L16 15 L24 10 L32 12 L40 8 L48 9 L56 5 L64 7 L72 4 L80 6 L80 20 L0 20Z"/><path d="M0 16 L8 14 L16 15 L24 10 L32 12 L40 8 L48 9 L56 5 L64 7 L72 4 L80 6"/></svg></div>
+                    </div>
+                  </td>
+                  <td><div class="t-sm">Grace Hopper</div><div class="cell-sub">grace@example.com</div></td>
+                  <td class="t-num t-muted" style="white-space:nowrap">08/02/26 16:40<div class="cell-sub t-ok">Published 08/03/26</div></td>
+                  <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="unpublish-confirm" data-tip="Unpublish" style="color:var(--orange)"><i data-lucide="lock-open"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-version" data-tip="Edit (admin: deprecation metadata only)"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+                </tr>
+                <!-- v2.3.0 published + disabled -->
+                <tr>
+                  <td>
+                    <div class="ver-cell">
+                      <div class="ver-line"><a class="ver-link" href="#" data-action="open" data-target="spec-viewer" title="View spec">v2.3.0</a><span class="badge badge--ok" title="Revision lifecycle (#739)">Stable</span><span class="badge badge--outline" title="Published — read-only"><i data-lucide="lock"></i>Published</span><button class="badge badge--warn" data-action="open" data-target="lint-report" title="Quality score 71/100 — open lint report"><i data-lucide="shield-check"></i>C · 71</button></div>
+                      <div class="t-2xs t-subtle mono">ver_77ab0c5e</div>
+                    </div>
+                  </td>
+                  <td style="max-width:260px"><div class="cell-primary t-truncate">Payouts resource + settlement reports</div><div class="cell-sub t-truncate">- added: /payouts, /payouts/{id}/report · - breaking: none</div></td>
+                  <td><div class="row gap-1 wrap"><span class="badge badge--dot" data-status="published"><i data-lucide="circle-check"></i>Published</span><span class="badge" data-status="error" title="enabled = false">Disabled</span></div></td>
+                  <td><div class="mock-cell"><div class="row gap-2"><button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Mock for version 2.3.0" data-action="switch" title="Serve spec-accurate mock responses for this version"></button><span class="t-xs t-muted">Mock off</span></div></div></td>
+                  <td><div class="t-sm">Linus Torvalds</div><div class="cell-sub">linus@example.com</div></td>
+                  <td class="t-num t-muted" style="white-space:nowrap">07/21/26 11:30<div class="cell-sub t-ok">Published 07/22/26</div></td>
+                  <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-version" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+                </tr>
+                <!-- v2.2.0 published, deprecated, forked -->
+                <tr>
+                  <td>
+                    <div class="ver-cell">
+                      <div class="ver-line"><a class="ver-link" href="#" data-action="open" data-target="spec-viewer" title="View spec">v2.2.0</a><span class="badge" data-status="deprecated" title="Revision lifecycle (#739)">Deprecated</span><span class="badge badge--outline" title="Published — read-only"><i data-lucide="lock"></i>Published</span><span class="tag" title="Message: last 2.2 line release" style="background:var(--honey-soft);color:var(--honey-fg)">lts-2.2</span><button class="badge badge--ok" data-action="open" data-target="lint-report" title="Quality score 82/100 — open lint report"><i data-lucide="shield-check"></i>B · 82</button></div>
+                      <div class="fork-box" title="Forked revision"><i data-lucide="git-fork" style="width:11px;height:11px"></i>Fork · from v1.9.0 (Orders Service) · Upstream project: Orders Service</div>
+                    </div>
+                  </td>
+                  <td style="max-width:260px"><div class="cell-primary t-truncate">Card tokenisation + 3DS challenge flow</div><div class="cell-sub t-truncate">Sunset 2026-09-30 · successor v2.3.1 · “Migrate to /payment-intents before sunset.”</div></td>
+                  <td><span class="badge badge--dot" data-status="published"><i data-lucide="circle-check"></i>Published</span></td>
+                  <td><div class="mock-cell"><div class="row gap-2"><button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Mock for version 2.2.0" data-action="switch"></button><span class="t-xs t-muted">Mock off</span></div></div></td>
+                  <td><div class="t-sm">Ada Lovelace</div><div class="cell-sub">ada@example.com</div></td>
+                  <td class="t-num t-muted" style="white-space:nowrap">06/10/26 14:15<div class="cell-sub t-ok">Published 06/11/26</div></td>
+                  <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="sunset-dialog" data-tip="Schedule sunset (EOL)"><i data-lucide="sunset"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+                </tr>
+                <!-- v2.1.0 archived, locked -->
+                <tr style="opacity:.8">
+                  <td>
+                    <div class="ver-cell">
+                      <div class="ver-line"><a class="ver-link" href="#" data-action="open" data-target="spec-viewer" title="View spec">v2.1.0</a><span class="badge" data-status="archived" title="Revision lifecycle (#739)">Archived</span><span class="badge badge--outline" title="Published — read-only"><i data-lucide="lock"></i>Published</span><span class="badge badge--outline" title="Revision locked: non-admins cannot delete"><i data-lucide="shield"></i>Locked</span><button class="badge badge--outline" data-action="open" data-target="lint-report" title="Not scored yet — click to lint this version">Lint —</button></div>
+                      <div class="t-2xs t-subtle mono">ver_1f0e9d88</div>
+                    </div>
+                  </td>
+                  <td style="max-width:260px"><div class="cell-primary t-truncate">Initial public release</div><div class="cell-sub t-faint">—</div></td>
+                  <td><span class="badge badge--dot" data-status="published"><i data-lucide="circle-check"></i>Published</span></td>
+                  <td><div class="mock-cell"><div class="row gap-2"><button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Mock for version 2.1.0" data-action="switch"></button><span class="t-xs t-muted">Mock off</span></div></div></td>
+                  <td><div class="t-sm">Ada Lovelace</div><div class="cell-sub">ada@example.com</div></td>
+                  <td class="t-num t-muted" style="white-space:nowrap">03/02/26 10:00<div class="cell-sub t-ok">Published 03/02/26</div></td>
+                  <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+                </tr>
+                <!-- v2.0.0-beta.1 draft beta -->
+                <tr>
+                  <td>
+                    <div class="ver-cell">
+                      <div class="ver-line"><a class="ver-link" href="#" data-action="open" data-target="spec-viewer" title="View spec">v2.0.0-beta.1</a><span class="badge" data-status="beta" title="Revision lifecycle (#739)">Beta</span><button class="badge badge--outline" data-action="open" data-target="lint-report" title="Not scored yet — click to lint this version">Lint —</button></div>
+                      <div class="t-2xs t-subtle mono">ver_b3d1e6a0</div>
+                    </div>
+                  </td>
+                  <td style="max-width:260px"><div class="cell-primary t-truncate">Experimental: instant payouts</div><div class="cell-sub t-truncate">Spike for instant payouts; not for release.</div></td>
+                  <td><span class="badge badge--dot" data-status="draft">Draft</span></td>
+                  <td><div class="mock-cell"><div class="row gap-2"><button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Mock for version 2.0.0-beta.1" data-action="switch" title="Disable the private draft mock (requires API key at runtime)"></button><span class="t-xs t-muted">Private mock on</span><span class="badge badge--violet">PRIVATE</span></div><div class="mock-url" title="https://mock.apiome.dev/acme/payments-api/2.0.0-beta.1"><code>mock.apiome.dev/acme/payments-api/2.0.0-beta.1</code><button class="btn btn--ghost btn--sm btn--icon" title="Copy mock URL" aria-label="Copy mock URL" style="width:22px;height:22px"><i data-lucide="copy"></i></button></div><div class="row gap-2"><a class="t-xs row gap-1" href="version-dialogs.html#mocks"><i data-lucide="flask-conical" style="width:12px;height:12px"></i>Scenarios</a><span class="t-2xs t-faint">No requests yet</span></div></div></td>
+                  <td><div class="t-sm">Linus Torvalds</div><div class="cell-sub">linus@example.com</div></td>
+                  <td class="t-num t-muted" style="white-space:nowrap">02/14/26 15:48</td>
+                  <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="publish-dialog" data-tip="Publish" style="color:var(--ok)"><i data-lucide="lock"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-version" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Row actions"><i data-lucide="ellipsis"></i></button></div></td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+            <div class="table-foot"><span>6 revisions · sorted by created ↓ · lifecycle filter: all</span><span>Head <span class="mono">v2.4.0</span> · last published <span class="mono">v2.3.1</span></span></div>
+          </section>
+
+          <!-- Other states (mockup) -->
+          <section>
+            <div class="section-title"><h2>Other states</h2><span class="t-muted">Shown here for reference — one renders at a time in the product</span></div>
+            <div class="grid grid-2">
+              <div class="card"><div class="empty" style="padding:28px 20px"><div class="empty__art" style="width:64px;height:64px"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="package"></i></div><div class="empty__title">No versions yet</div><div class="empty__desc">Get started by creating your first version — or import a spec into this project.</div><div class="empty__actions"><button class="btn btn--primary btn--sm" data-action="open" data-target="new-version"><i data-lucide="git-fork"></i>New version</button><button class="btn btn--sm" data-action="open" data-target="import-dialog"><i data-lucide="upload"></i>Import</button></div></div></div>
+              <div class="col gap-3">
+                <div class="card" style="padding:14px 16px"><div class="row gap-2 t-sm t-muted"><i data-lucide="filter-x" class="t-subtle"></i>No revisions match this lifecycle filter…</div><button class="btn btn--sm btn--ghost mt-2">Clear lifecycle filter</button></div>
+                <div class="card" style="padding:14px 16px"><div class="row gap-2 t-sm t-muted"><i data-lucide="filter-x" class="t-subtle"></i>No revisions match your timeline filters (search, author, or date range)…</div><button class="btn btn--sm btn--ghost mt-2">Reset timeline filters</button></div>
+                <div class="banner banner--danger"><i data-lucide="shield-off"></i><div>You do not have permission to view branch metadata for this project.</div></div>
+                <div class="table-wrap"><table class="table table--dense"><tbody><tr><td><span class="skeleton" style="display:inline-block;width:90px;height:12px">v0.0.0</span></td><td><span class="skeleton" style="display:inline-block;width:220px;height:12px">loading</span></td><td><span class="skeleton" style="display:inline-block;width:60px;height:12px">status</span></td><td><span class="skeleton" style="display:inline-block;width:110px;height:12px">Loading versions...</span></td></tr></tbody></table></div>
+              </div>
+            </div>
+          </section>
+    </div>
+
+    <!-- ================= CHANGES tab (VersionChangesPanel) ================= -->
+    <div data-tab-panel="changes" hidden>
+      <section class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="git-compare-arrows"></i>Changes<span class="t-xs t-subtle t-500">Stored <span class="mono">ctg.changelog.v1</span> classification per published revision</span></div><span class="t-xs t-subtle row gap-2"><span class="spinner" style="width:12px;height:12px"></span>Refreshing…</span></div>
+        <div class="grid" style="grid-template-columns:288px minmax(0,1fr);gap:0">
+          <div style="border-right:1px solid var(--border);padding:12px">
+            <div class="t-caps mb-2" style="padding:0 6px">Published versions</div>
+            <div class="vtabs">
+              <button class="tab is-active" aria-pressed="true"><span class="mono">v2.3.1</span><span class="badge badge--warn" style="margin-left:auto">Non-breaking</span></button>
+              <button class="tab" aria-pressed="false"><span class="mono">v2.3.0</span><span class="badge badge--danger" style="margin-left:auto">Breaking</span></button>
+              <button class="tab" aria-pressed="false"><span class="mono">v2.2.0</span><span class="badge" style="margin-left:auto">Docs-only</span></button>
+              <button class="tab" aria-pressed="false"><span class="mono">v2.1.0</span><span class="badge badge--ok" style="margin-left:auto">Initial</span></button>
+            </div>
+          </div>
+          <div class="card__body">
+            <div class="row wrap gap-2"><span class="t-h3 mono">v2.3.0 → v2.3.1</span><span class="badge badge--warn">Non-breaking</span><span class="badge badge--outline">2 non-breaking</span><span class="badge badge--outline">1 docs-only</span></div>
+            <div class="mt-4">
+              <div class="t-caps mb-2">Non-breaking · 2 changes</div>
+              <div class="card card--flat"><div style="padding:8px 12px;border-bottom:1px solid var(--border)"><code class="t-xs">components.schemas.Refund</code></div>
+                <div class="list-row" style="padding:10px 12px"><div class="grow"><div class="t-sm">Property <span class="mono">amount</span> minimum changed 0 → 0.01</div><div class="t-xs t-subtle mono">#/components/schemas/Refund/properties/amount/minimum</div></div><a class="btn btn--sm btn--ghost" href="version-dialogs.html#compare" title="Open this change in the diff view">View in diff</a></div>
+                <div class="list-row" style="padding:10px 12px"><div class="grow"><div class="t-sm">Added example <span class="mono">currency: "EUR"</span> <span class="badge badge--warn" style="margin-left:4px">UNCLASSIFIED</span></div><div class="t-xs t-subtle mono">#/components/schemas/Refund/properties/currency/example</div></div><a class="btn btn--sm btn--ghost" href="version-dialogs.html#compare" title="Open this change in the diff view">View in diff</a></div>
+              </div>
+              <div class="t-caps mb-2 mt-4">Docs-only · 1 change</div>
+              <div class="card card--flat"><div style="padding:8px 12px;border-bottom:1px solid var(--border)"><code class="t-xs">paths./refunds.post</code></div>
+                <div class="list-row" style="padding:10px 12px"><div class="grow"><div class="t-sm">Description reworded (idempotency guidance)</div><div class="t-xs t-subtle mono">#/paths/~1refunds/post/description</div></div><a class="btn btn--sm btn--ghost" href="version-dialogs.html#compare">View in diff</a></div>
+              </div>
+              <div class="t-xs t-subtle mt-3">Totals: 0 breaking · 2 non-breaking · 1 docs-only</div>
+            </div>
+            <div class="banner banner--neutral mt-4"><i data-lucide="info"></i><div>Selecting <span class="mono">v2.1.0</span> shows <span class="badge badge--ok">Initial publication</span> — “v2.1.0 is the first published version on this line — there is no baseline to compare against.” A 404 shows “Changelog not available yet — classification runs right after publish.”</div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= CONVERSION tab (ProjectConversionPanel) ================= -->
+    <div data-tab-panel="conversion" hidden>
+      <section class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="history"></i>Conversion history</div></div>
+        <div class="card__body">
+          <p class="t-sm t-muted">This project was produced by converting a catalog item. Each entry links a revision of this project to the conversion that created it.</p>
+          <div class="table-wrap mt-3" style="box-shadow:0 0 0 1px var(--border) inset">
+            <table class="table table--dense">
+              <thead><tr><th>When</th><th>Revision</th><th>Fidelity</th><th>Flags</th><th>Snapshot</th><th>Mode</th><th>Source</th></tr></thead>
+              <tbody>
+                <tr><td class="t-num t-muted">08/01/26 09:12</td><td><a href="#" class="mono">→ v2.3.0</a></td><td><span class="badge badge--ok">A · 92</span></td><td><span class="badge badge--outline">Re-converted</span></td><td><span class="tag">snapshot 7f3a9c</span></td><td>lossless</td><td><a href="../sources/catalog-item.html">Open catalog item: payments-api.graphql</a></td></tr>
+                <tr><td class="t-num t-muted">06/10/26 14:15</td><td><a href="#" class="mono">→ v2.2.0</a></td><td><span class="badge badge--warn">B · 81</span></td><td><span class="badge badge--warn">Source changed since</span></td><td><span class="t-subtle">No stored snapshot</span></td><td>best-effort</td><td><span class="t-subtle">Source catalog item no longer exists</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card__footer"><span>Open the catalog item to replay a conversion’s stored evidence graph.</span><button class="btn btn--sm btn--ghost"><i data-lucide="rotate-ccw"></i>Retry</button></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== OVERLAYS ===================== -->
+
+<!-- New version -->
+<div class="overlay" id="new-version" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="nv-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="git-fork"></i></span><div><div class="dialog__title" id="nv-title">New version</div><div class="dialog__desc">Start a new schema version for this project. Pick a bump strategy (defaults to minor), then describe the release.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div>Branch list could not be loaded. Branch names may be missing; you can still pick a revision below if your role allows.</div></div>
+      <div class="form-section" style="margin:0;padding:0;border:0">
+        <div class="form-section__title">Copy source</div>
+        <div class="grid grid-2 mt-3">
+          <div class="field"><label>Copy from version</label><select class="select"><option>Create blank version</option><option selected>🔒 v2.3.1 — Patch: fix Refund.amount minimum</option><option>🔒 v2.3.0 — Payouts resource + settlement reports</option><option>v2.4.0 — Add refund reasons and payout webhooks</option></select><div class="hint">With ≥2 named branches this becomes “Base copy on branch tip” — like picking which line to extend in git. <span class="flag"><i data-lucide="flag"></i>gitlike</span></div></div>
+          <div class="card card--soft" style="padding:10px 12px">
+            <div class="t-caps mb-1">Branch context</div>
+            <div class="row gap-2 mb-2"><span class="chip" style="height:22px"><i data-lucide="git-branch"></i>main</span><span class="t-xs t-subtle">branches at this tip</span></div>
+            <div class="lineage"><span>v2.1.0</span><i data-lucide="arrow-right" style="width:12px;height:12px"></i><span>v2.2.0</span><i data-lucide="arrow-right" style="width:12px;height:12px"></i><span>v2.3.0</span><i data-lucide="arrow-right" style="width:12px;height:12px"></i><span class="cur">v2.3.1 (source)</span></div>
+            <div class="mono t-2xs t-faint mt-1">o---o---o---●</div>
+            <span class="sr-only">Source revision chain: v2.1.0 → v2.2.0 → v2.3.0 → v2.3.1. Branches at this tip: main.</span>
+          </div>
+        </div>
+        <div class="banner mt-3"><i data-lucide="info"></i><div>Classes and properties will be copied from the selected revision.<div class="t-xs mt-1" style="opacity:.85"><span class="t-600">Compatibility</span> — after you create a new version, the service records a parent→head compatibility check; results appear as banners on the Versions list.</div></div></div>
+      </div>
+      <div class="form-section">
+        <div class="form-section__title">Version</div>
+        <div class="grid grid-2 mt-3">
+          <div class="field"><label>Version strategy</label><select class="select"><option>Auto-generate version</option><option>Manual entry</option></select></div>
+          <div class="field"><label>Bump strategy</label><select class="select"><option>Minor - x.y+1.0</option><option>Patch - x.y.z+1</option></select><div class="hint row gap-1"><i data-lucide="info" style="width:12px;height:12px"></i>Version <span class="t-600 mono">2.5.0</span> will be created</div></div>
+          <div class="field span-2" hidden><label>Version ID</label><input class="input input--mono" placeholder="e.g., 1.0.0" /></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section__title">Describe the release</div>
+        <div class="col gap-4 mt-3">
+          <div class="field"><label>Message <span class="req">*</span></label><textarea class="textarea" style="min-height:64px" placeholder="Short summary (commit message)"></textarea></div>
+          <div class="grid grid-2">
+            <div class="field"><label>External reference <span class="t-subtle t-500">(optional)</span></label><input class="input" placeholder="e.g. LINEAR-42, JIRA-123" /><div class="hint">External reference must be at most 120 characters.</div></div>
+            <div class="field"><label>Changelog <span class="t-subtle t-500">(markdown, optional)</span></label><textarea class="textarea input--mono" style="min-height:64px" placeholder="Release notes, breaking bullets (- breaking: …)"></textarea></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">On success: “Version created. Copied 42 class(es).”</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create version</button></div>
+  </div>
+</div>
+
+<!-- Edit version -->
+<div class="overlay" id="edit-version" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="ev-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="pencil"></i></span><div><div class="dialog__title" id="ev-title">Edit version <span class="mono t-muted">v2.3.1</span></div><div class="dialog__desc">Lifecycle, deprecation and sunset metadata; notes for drafts.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="banner"><i data-lucide="lock"></i><div>Published revision — notes are frozen. As a tenant admin you can update deprecation and sunset metadata only (#748).</div></div>
+      <div class="grid grid-2">
+        <div class="field"><label>Version ID</label><input class="input input--mono" value="2.3.1" disabled /></div>
+        <div class="field"><label>Lifecycle</label><select class="select"><option>Stable</option><option>Beta</option><option>Deprecated</option><option>Archived</option></select><div class="hint">Semantic governance tag (#739). Setting Deprecated sets revision deprecation (#507) for consumers.</div></div>
+        <div class="field span-2"><label>Deprecation message</label><textarea class="textarea" style="min-height:64px" placeholder="Tell consumers what to migrate to"></textarea></div>
+        <div class="field"><label>Sunset <span class="t-subtle t-500">(local time → stored as UTC)</span></label><input class="input" type="datetime-local" /><div class="hint">Requires lifecycle Deprecated when set. Successor is optional… Cleared if empty.</div></div>
+        <div class="field"><label>Successor revision</label><select class="select"><option>No successor (end of life)</option><option>v2.4.0 · draft</option><option>Other revision (a1b2c3d4…)</option></select><div class="hint">Optional. Pick the replacement by version label…</div></div>
+        <div class="field span-2"><label>Revision note <span class="req">*</span></label><input class="input" value="Patch: fix Refund.amount minimum" disabled /></div>
+        <div class="field span-2"><label>Changelog <span class="t-subtle t-500">(markdown)</span></label><textarea class="textarea input--mono" disabled>- fixed: Refund.amount minimum 0.01
+- docs: currency examples</textarea><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>Set lifecycle to Deprecated when scheduling a sunset.</div></div>
+      </div>
+      <div class="callout t-xs">Archived + admin: “This revision is archived (read-only). You can change its lifecycle or use revision lock; notes cannot be edited here.”</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save changes</button></div>
+  </div>
+</div>
+
+<!-- Schedule sunset -->
+<div class="overlay" id="sunset-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="ss-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="sunset"></i></span><div><div class="dialog__title" id="ss-title">Schedule sunset (EOL)</div><div class="dialog__desc">Set lifecycle to Deprecated, enter a required sunset date and time (stored in UTC), and optionally the successor revision. Entries appear on the <a href="../ship/sunset-timeline.html">sunset timeline</a>.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="grid grid-2">
+        <div class="field"><label>Revision</label><input class="input input--mono" value="v2.2.0" readonly /></div>
+        <div class="field"><label>Lifecycle</label><select class="select"><option>Deprecated</option><option>Stable</option><option>Beta</option><option>Archived</option></select><div class="hint">A sunset date requires <span class="t-600">Deprecated</span>.</div></div>
+      </div>
+      <div class="field"><label>Deprecation message</label><textarea class="textarea" style="min-height:64px">Migrate to /payment-intents before sunset.</textarea></div>
+      <div class="field"><label>Sunset date and time <span class="req">*</span></label><input class="input" type="datetime-local" value="2026-09-30T02:00" /><div class="hint">Required. Local time is converted to UTC for storage. To clear a sunset, use Edit version from the row menu.</div></div>
+      <div class="field"><label>Successor revision</label><select class="select"><option>v2.4.0 · head (default)</option><option selected>v2.3.1 · published</option><option>No successor (end of life)</option></select></div>
+      <div class="callout t-xs">Disabled in the row menu when: published + non-admin (“Only a tenant admin can set sunset on a published revision”) or archived (“Archived revisions are read-only”).</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save</button></div>
+  </div>
+</div>
+
+<!-- Publish version (with guardrails) -->
+<div class="overlay" id="publish-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-labelledby="pv-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="lock"></i></span><div><div class="dialog__title" id="pv-title">Publish v2.4.0</div><div class="dialog__desc">Once published, this version will become read-only. To make any additional edits after publishing, either create a new version, or unpublish this version.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="grid" style="grid-template-columns:minmax(0,1fr) 380px;gap:24px">
+        <div class="col gap-4">
+          <div class="field"><label>Visibility</label><div class="grid grid-2">
+            <label class="card card--flat card--selected" style="padding:10px 12px;cursor:pointer"><span class="radio"><input type="radio" name="vis" checked /><span class="t-600">Private</span></span><div class="t-xs t-muted mt-1" style="padding-left:24px">Access requires an API Key.</div></label>
+            <label class="card card--flat" style="padding:10px 12px;cursor:pointer"><span class="radio"><input type="radio" name="vis" /><span class="t-600">Public</span></span><div class="t-xs t-muted mt-1" style="padding-left:24px">OpenAPI Specification will be public without requiring an API Key.</div></label>
+          </div></div>
+          <div class="field"><label>Revision note <span class="req">*</span></label><input class="input" value="Add refund reasons and payout webhooks" /><div class="hint">Short summary frozen with this publish</div></div>
+          <div class="field"><label>Changelog <span class="t-subtle t-500">(markdown)</span></label><textarea class="textarea input--mono" style="min-height:96px">- added: RefundReason enum on POST /refunds
+- added: payout.settled webhook event
+- docs: Idempotency-Key on all writes</textarea><div class="hint">Release notes; use - breaking: lines for migration docs</div></div>
+          <!-- [GITLIKE+env] Publication change report -->
+          <div class="card card--flat" style="padding:12px 14px">
+            <div class="row-between"><div class="t-sm t-600 row gap-2">Publication change report<span class="flag"><i data-lucide="flag"></i>gitlike</span></div><button class="btn btn--sm btn--ghost"><i data-lucide="refresh-cw"></i>Refresh preview</button></div>
+            <div class="grid grid-2 mt-2"><div class="field"><label class="t-xs">Compare against</label><select class="select select--sm"><option>Automatic (recommended prior published revision)</option><option>Initial publication report only (no prior baseline)</option><option>Choose a published revision…</option></select></div><div class="field"><label class="t-xs">Published revision</label><select class="select select--sm" disabled><option>v2.3.1</option></select></div></div>
+            <div class="t-xs t-subtle mt-2">Diff: v2.3.1 → v2.4.0</div>
+            <div class="code mt-2" style="max-height:110px"><span class="c-c"># Payments API v2.4.0 — change report</span>
+<span class="c-k">Added</span> RefundReason (enum), payout.settled (event)
+<span class="c-k">Docs</span> Idempotency-Key documented on POST /refunds, POST /payouts
+<span class="c-c">Rendered by template semver 1.0.1 (project default)</span></div>
+          </div>
+          <label class="check"><input type="checkbox" checked /><span>Force publish (ignore validation errors)</span></label>
+          <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div>Publish prechecks will be bypassed — missing class descriptions, OpenAPI build, backward-compatibility gates, style-guide error violations, the breaking-change guardrail, and evidence-backed verification policy are not enforced. A reason is required and recorded in the audit trail.</div></div>
+          <div class="field is-invalid"><label>Force publish reason <span class="req">*</span></label><textarea class="textarea" style="min-height:64px" placeholder="Why the gates are being bypassed (audit trail)"></textarea><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>Enter a reason for force publishing — it is recorded in the audit trail.</div></div>
+        </div>
+        <div>
+          <div class="t-caps mb-2">Publish gates</div>
+          <!-- PublishGuideViolationsPanel -->
+          <div class="gate">
+            <div class="row-between"><div class="gate__title"><i data-lucide="book-open-check"></i>Style guide</div><div class="row gap-1"><span class="badge badge--rose">1 error</span><span class="badge badge--warn">3 warnings</span><span class="badge badge--info">2 info</span></div></div>
+            <div class="t-xs t-subtle mt-1">Violations under Acme REST guide</div>
+            <div class="banner banner--danger mt-2" style="padding:8px 10px"><i data-lucide="circle-x"></i><div class="t-xs">1 error-level violation blocks publishing. Fix it or use force publish with a reason.</div></div>
+            <details class="mt-2" open><summary class="t-xs t-600" style="cursor:pointer">Blocking error violations (1)</summary><ul class="findings"><li><span class="tag">operation-4xx-response</span><span class="mono t-subtle">paths./payouts.post</span><span>Missing 4xx response</span></li></ul></details>
+          </div>
+          <!-- BreakingPublishGuardrailPanel -->
+          <div class="gate" style="background:var(--warn-soft)">
+            <div class="row-between"><div class="gate__title"><i data-lucide="octagon-alert"></i>Breaking changes</div><span class="badge" data-status="blocked">Blocked</span></div>
+            <div class="t-xs t-subtle mt-1">v2.4.0 versus v2.3.1</div>
+            <div class="t-xs mt-2">Removed required property <span class="mono">Refund.legacyCode</span>. Publishing is blocked by your tenant policy — bump the major version or use force publish with a reason.</div>
+            <div class="t-xs mt-1">Recommended version: <span class="mono t-600">3.0.0</span></div>
+            <details class="mt-2"><summary class="t-xs t-600" style="cursor:pointer">Breaking changes (1)</summary><ul class="findings"><li><span class="tag" style="color:var(--rose-fg)">property-removed</span><span class="mono t-subtle">#/components/schemas/Refund/properties/legacyCode</span></li></ul></details>
+            <div class="t-2xs t-subtle mt-1">Other statuses: Warning · Compatible release · Initial publication · Guardrail off · Not checked</div>
+          </div>
+          <!-- VerificationPolicyDecisionPanel -->
+          <div class="gate">
+            <div class="row-between"><div class="gate__title"><i data-lucide="badge-check"></i>Verification policy</div><div class="row gap-1"><span class="badge badge--ok">Passed</span><button class="btn btn--sm btn--ghost btn--icon" title="Re-evaluate" aria-label="Re-evaluate"><i data-lucide="refresh-cw"></i></button></div></div>
+            <div class="t-xs t-subtle mt-1">enforcement: block · evaluationId: <span class="mono">eval_5c1a…</span></div>
+            <div class="t-xs t-subtle">Cited evidence runs: <span class="mono">run_88a2</span>, <span class="mono">run_88a7</span></div>
+            <ul class="findings"><li><span class="mono">contract-tests</span><span class="t-ok">pass</span></li><li><span class="mono">schema-roundtrip</span><span class="t-ok">pass</span></li><li><span class="mono">security-scan</span><span class="t-ok">pass</span></li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Blocked errors: “Resolve style-guide error violations or enable force publish with a reason.” · “This revision has breaking changes without a major-version bump. Publish as 3.0.0 or enable force publish with a reason.”</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" disabled title="Enter a force publish reason">Publish</button></div>
+  </div>
+</div>
+
+<!-- Unpublish confirm -->
+<div class="overlay" id="unpublish-confirm" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="lock-open"></i></span><div><div class="dialog__title">Unpublish v2.3.1?</div><div class="dialog__desc">Best practice is to keep it published. Consumers of the published URL will get 404 until it is republished. Are you sure?</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Unpublish</button></div>
+  </div>
+</div>
+
+<!-- Delete confirm [GITLIKE] -->
+<div class="overlay" id="delete-confirm" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span><div><div class="dialog__title">Delete version v2.0.0-beta.1?</div><div class="dialog__desc">This action cannot be undone. Locked revisions: “This revision is locked by policy and cannot be deleted (tenant admins may override).”</div></div></div>
+    <div class="dialog__footer"><span class="left flag"><i data-lucide="flag"></i>gitlike</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete</button></div>
+  </div>
+</div>
+
+<!-- Freeze schema confirm [GITLIKE] -->
+<div class="overlay" id="freeze-confirm" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="snowflake"></i></span><div><div class="dialog__title">Freeze schema for v2.4.0?</div><div class="dialog__desc">This will capture the current class schemas for this version into the database so the version can be used in the Database section. Only versions with no schema captured yet can be frozen. Continue?</div></div></div>
+    <div class="dialog__footer"><span class="left flag"><i data-lucide="flag"></i>gitlike</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Freeze schema</button></div>
+  </div>
+</div>
+
+<!-- Spec viewer -->
+<div class="overlay" id="spec-viewer" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-labelledby="sv-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="file-json-2"></i></span><div><div class="dialog__title" id="sv-title">OpenAPI 3.1.0 specification</div><div class="dialog__desc">Payments API — v2.3.1</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="segmented segmented--sm mb-3" data-tabs="sv-tabs"><button class="is-active" data-action="tab" data-target="json">JSON</button><button data-action="tab" data-target="yaml">YAML</button></div>
+      <div id="sv-tabs">
+        <pre class="code code--dark code--lines" data-tab-panel="json" style="max-height:300px"><span>{</span><span>  <span class="c-n">"openapi"</span>: <span class="c-s">"3.1.0"</span>,</span><span>  <span class="c-n">"info"</span>: { <span class="c-n">"title"</span>: <span class="c-s">"Payments API"</span>, <span class="c-n">"version"</span>: <span class="c-s">"2.3.1"</span> },</span><span>  <span class="c-n">"paths"</span>: {</span><span>    <span class="c-n">"/refunds"</span>: { <span class="c-n">"post"</span>: { <span class="c-n">"operationId"</span>: <span class="c-s">"createRefund"</span>, … } },</span><span>    <span class="c-n">"/payouts"</span>: { <span class="c-n">"get"</span>: { <span class="c-n">"operationId"</span>: <span class="c-s">"listPayouts"</span>, … } }</span><span>  },</span><span>  <span class="c-n">"components"</span>: { <span class="c-n">"schemas"</span>: { <span class="c-n">"Refund"</span>: { … }, <span class="c-n">"Payout"</span>: { … } } }</span><span>}</span></pre>
+        <pre class="code code--dark code--lines" data-tab-panel="yaml" hidden style="max-height:300px"><span><span class="c-n">openapi</span>: <span class="c-s">3.1.0</span></span><span><span class="c-n">info</span>:</span><span>  <span class="c-n">title</span>: Payments API</span><span>  <span class="c-n">version</span>: 2.3.1</span><span><span class="c-n">paths</span>:</span><span>  /refunds: { post: { operationId: createRefund } }</span></pre>
+      </div>
+      <div class="grid grid-2 mt-4">
+        <div class="card card--flat" style="padding:12px 14px"><div class="t-sm t-600">Convert to any format</div><div class="t-xs t-muted mt-1">This version is held in the normalized model, so it can be transcoded to any target format. Fidelity varies — pick a target to open it in the Export Studio.</div><div class="t-caps mt-2">Best-fidelity targets</div><div class="row wrap gap-1 mt-1"><span class="badge badge--ok" title="Export to AsyncAPI — 98% preserved">AsyncAPI 98%</span><span class="badge badge--ok" title="Export to JSON Schema — 96% preserved">JSON Schema 96%</span><span class="badge badge--ok">Postman 92%</span></div><div class="t-caps mt-2">Lossy targets</div><div class="row wrap gap-1 mt-1"><span class="badge badge--warn" title="Export to GraphQL — 74% preserved">GraphQL 74%</span><span class="badge badge--danger" title="Types only">Protobuf 41%</span></div><a class="btn btn--sm mt-3" href="version-dialogs.html#export"><i data-lucide="package-open"></i>Export this version</a></div>
+        <div class="card card--flat" style="padding:12px 14px"><div class="t-sm t-600">Recent exports</div><div class="list-row" style="padding:8px 0"><div class="grow"><div class="t-sm">GraphQL SDL</div><div class="t-xs t-subtle">2 days ago</div></div><span class="badge badge--warn">lossy</span><button class="btn btn--sm btn--ghost" title="Re-run this GraphQL export in the Studio with its options pre-filled">Re-run in Studio</button></div><div class="list-row" style="padding:8px 0"><div class="grow"><div class="t-sm">JSON Schema bundle</div><div class="t-xs t-subtle">last week</div></div><span class="badge badge--ok">lossless</span><button class="btn btn--sm btn--ghost">Re-run in Studio</button></div></div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button><button class="btn"><i data-lucide="copy"></i>Copy</button><button class="btn btn--primary"><i data-lucide="download"></i>Download <span class="mono t-xs" style="opacity:.8">payments-api-2-3-1-openapi.json</span></button></div>
+  </div>
+</div>
+
+<!-- Lint report (compact; full LintReportDialog mocked in version-dialogs.html) -->
+<div class="overlay" id="lint-report" data-overlay>
+  <div class="dialog dialog--lg" role="dialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="shield-check"></i></span><div><div class="dialog__title">Quality &amp; lint report — v2.4.0</div><div class="dialog__desc">Server-computed quality score and itemized findings for this version.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="row gap-4"><span class="ring ring--lg" style="--p:88;--c:var(--ok)"><span>B</span></span><div><div class="t-h3">Score 88/100</div><div class="row gap-1 mt-1"><span class="badge badge--rose">1 error</span><span class="badge badge--warn">3 warning</span><span class="badge badge--info">2 info</span><span class="badge badge--outline">Guide: Acme REST</span></div><div class="t-xs t-subtle mt-1">Compatibility vs base: safe</div></div></div>
+      <div class="banner banner--warn mt-3"><i data-lucide="clock"></i><div>The stored quality score (B · 88) is out of date — this report was recomputed from the current revision.</div></div>
+      <div class="row-between mt-4"><span class="t-caps">Findings</span><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button>Group by rule</label></div>
+      <div class="divide-y mt-2" style="box-shadow:0 0 0 1px var(--border) inset;border-radius:var(--r-md)">
+        <div class="row-start gap-3" style="padding:10px 12px"><span class="badge" data-status="error">error</span><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="tag" title="Every operation should declare at least one 4xx response">operation-4xx-response</span><span class="badge badge--outline" title="Style guide that produced this violation">Acme REST</span><a href="#" class="t-xs">View rule ↗</a></div><div class="mono t-2xs t-subtle mt-1">paths./payouts.post</div><div class="t-sm">Missing 4xx response</div></div></div>
+        <div class="row-start gap-3" style="padding:10px 12px"><span class="badge" data-status="warning">warning</span><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="tag">schema-description</span><span class="badge badge--outline">Acme REST</span><a href="#" class="t-xs">View rule ↗</a></div><div class="mono t-2xs t-subtle mt-1">components.schemas.RefundReason</div><div class="t-sm">Schema has no description</div></div></div>
+      </div>
+      <div class="t-xs t-subtle mt-2"><a href="version-dialogs.html#lint">Open the full report gallery card →</a></div>
+    </div>
+    <div class="dialog__footer"><button class="btn btn--ghost"><i data-lucide="maximize-2"></i>Expand</button><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Row actions menu -->
+<div class="overlay" id="row-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:330px 420px 0 0">
+  <div class="menu" role="menu" style="min-width:320px">
+    <a class="menu__item" href="#" data-action="open" data-target="spec-viewer"><i data-lucide="eye"></i>View spec</a>
+    <a class="menu__item" href="version-dialogs.html#export" title="Convert this version to another API format (fidelity shown per target)"><i data-lucide="file-output"></i>Export to another format…</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="version-dialogs.html#compare" aria-disabled="true" style="opacity:.55" title="This revision is already the current head"><i data-lucide="git-compare"></i>Compare with current<span class="flag" style="margin-left:auto"><i data-lucide="flag"></i>gitlike</span></a>
+    <a class="menu__item" href="version-dialogs.html#history"><i data-lucide="waypoints"></i>Relationship graph<span class="flag" style="margin-left:auto"><i data-lucide="flag"></i>gitlike</span></a>
+    <a class="menu__item" href="version-dialogs.html#branch"><i data-lucide="git-branch-plus"></i>Branch from here<span class="flag" style="margin-left:auto"><i data-lucide="flag"></i>gitlike</span></a>
+    <a class="menu__item" href="version-dialogs.html#rollback"><i data-lucide="undo-2"></i>Rollback branch to this revision…<span class="flag" style="margin-left:auto"><i data-lucide="flag"></i>gitlike</span></a>
+    <a class="menu__item" href="version-dialogs.html#fork"><i data-lucide="git-fork"></i>Fork to another project…<span class="flag" style="margin-left:auto"><i data-lucide="flag"></i>gitlike</span></a>
+    <a class="menu__item" href="version-dialogs.html#tag"><i data-lucide="tag"></i>Tag this revision<span class="flag" style="margin-left:auto"><i data-lucide="flag"></i>gitlike</span></a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#" data-action="open" data-target="sunset-dialog"><i data-lucide="sunset"></i>Schedule sunset (EOL)…</a>
+    <a class="menu__item" href="#" data-action="open" data-target="edit-version"><i data-lucide="pencil"></i>Edit</a>
+    <a class="menu__item" href="#" data-action="open" data-target="publish-dialog" style="color:var(--ok-fg)"><i data-lucide="lock" style="color:var(--ok)"></i>Publish</a>
+    <a class="menu__item" href="#" data-action="open" data-target="unpublish-confirm" style="color:var(--orange-fg)"><i data-lucide="lock-open" style="color:var(--orange)"></i>Unpublish</a>
+    <a class="menu__item" href="#" data-action="open" data-target="freeze-confirm"><i data-lucide="snowflake"></i>Freeze schema<span class="flag" style="margin-left:auto"><i data-lucide="flag"></i>gitlike</span></a>
+    <a class="menu__item" href="#"><i data-lucide="shield"></i>Lock revision (delete policy)<span class="flag" style="margin-left:auto"><i data-lucide="flag"></i>gitlike</span></a>
+    <div class="menu__sep"></div>
+    <a class="menu__item is-danger" href="#" data-action="open" data-target="delete-confirm"><i data-lucide="trash-2"></i>Delete<span class="flag" style="margin-left:auto"><i data-lucide="flag"></i>gitlike</span></a>
+  </div>
+</div>
+
+<!-- Import wizard entry -->
+<div class="overlay" id="import-dialog" data-overlay>
+  <div class="dialog dialog--sm"><div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="upload"></i></span><div><div class="dialog__title">Import a specification</div><div class="dialog__desc">Imports always create a new project; on success this page switches to it (“Imported ‘Name’ — showing its revisions”). Full wizard: <a href="import-wizard.html">import-wizard.html</a>.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><a class="btn btn--primary" href="import-wizard.html">Open wizard</a></div></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/versions?projectId=prj_8f2a1c</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/versions/page.tsx</code> (6.3k lines) — header, main-view tab strip, timeline filter bar, table, row menu, New/Edit/Publish/Sunset dialogs, confirms; <code>VersionChangesPanel</code>, <code>ProjectConversionPanel</code>, <code>ProjectRelatedArtifactsSection</code>, <code>VersionLintBadge</code>, <code>VersionMockCell</code>, <code>VersionLineageSnippet</code>, <code>PublishGuideViolationsPanel</code>, <code>BreakingPublishGuardrailPanel</code>, <code>VerificationPolicyDecisionPanel</code>, <code>ServerAheadPushBanner</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: breadcrumb Projects › project; project select (catalog items excluded); Import (#5260, disabled until session resolves), Compare (≥2 versions), Merge branches [gitlike], New version (tooltip kept). Sunset timeline link in the description.</li>
+    <li>Main tabs Timeline · Changes · Change report [gitlike+env] · Test bench (+ SuiteRegressionBadge) · Conversion (only with provenance rows). Changes + Conversion are inline panels; Change report / Test bench live in <code>version-dialogs.html</code>.</li>
+    <li>Timeline filter bar (search “Message, changelog, commit…”, author, from/to, Reset). Table toolbar: Lifecycle filter (server-side) + History filter (tags). Sortable Version · Revision/changelog · Status · Mock · Created by · Created · Actions.</li>
+    <li>Version cell: mono link (View spec) · lifecycle badge (#739 tooltip) · Published lock chip · Locked shield chip · amber tag chips · <code>VersionLintBadge</code> (stored score, “Lint —” unscored) · violet fork box. Status: Published/Draft + Disabled. Mock cell: switch (aria/tooltips per published/draft), Mock on/Private mock on/Mock off/Draft mock off, PRIVATE badge, URL + copy, Scenarios link, 30-day sparkline. Created: MM/DD/YY + green Published date.</li>
+    <li>Row menu: View spec · Export to another format… · [gitlike] Compare with current (disabled on head) · Relationship graph · Branch from here · Rollback… · Fork… · Tag · Schedule sunset (EOL)… · Edit · Publish/Unpublish · [gitlike] Freeze schema · Lock/Unlock revision · Delete. Flag-gated items are rendered with a honey “gitlike” flag instead of being hidden.</li>
+    <li>Dialogs: New version (copy source + lineage snippet + compat note; strategy/bump “Version 2.5.0 will be created”; message/external ref/changelog with limits), Edit version (published-admin frozen notes, archived note, validation copy), Schedule sunset, Publish (visibility, note, changelog, three gate panels, force publish + reason, [gitlike] publication change report), Unpublish/Delete/Freeze confirms as <code>.dialog--sm</code>, OpenAPI viewer (JSON/YAML, VersionExportPanel cards, Copy/Download).</li>
+    <li>Related artifacts panel (rows with format/protocol pills, Converted/Linked, Unlink, deleted struck-through, Suggest links → dashed suggestion + Link, “Show all representations”).</li>
+    <li>[gitlike] Version tags / Named branches chip panels (Protect/Unprotect/Remove, default/protected pills), ServerAheadPushBanner (Pull / Open merge), history graph strip.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Project title with format pill, head status and stored quality badge; Compatibility / What’s new / Deprecation banners; quick Draft/Published chips; hover row actions (publish/edit/sunset) in addition to the menu; project facts aside with Studio/Published/Export links.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading “Loading versions...” (skeleton row); empty “No versions yet — Get started by creating your first version”; lifecycle-filter / tag-filter / timeline-filter empties with Clear/Reset buttons; branch 401/403 “You do not have permission to view branch metadata for this project.”; toasts (Version created., Only owner or admin can publish/unpublish, Catalog items cannot be published…, Sunset schedule saved., Mock enabled for vX…) unchanged.</li></ul>
+</template>
+</body>
+</html>

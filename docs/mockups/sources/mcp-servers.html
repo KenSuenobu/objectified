@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MCP servers · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: MCP grade glyph + card helpers (candidates for hive.css) */
+  .grade { display: inline-flex; align-items: center; gap: 6px; }
+  .grade__letter { width: 28px; height: 28px; border-radius: var(--r-sm); display: grid; place-items: center; font-weight: 700; font-size: var(--fs-sm); color: #fff; background: var(--neutral); flex-shrink: 0; }
+  .grade--sm .grade__letter { width: 22px; height: 22px; font-size: var(--fs-xs); border-radius: var(--r-xs); }
+  .grade--lg .grade__letter { width: 40px; height: 40px; font-size: var(--fs-xl); border-radius: var(--r-md); }
+  .grade[data-grade="A"] .grade__letter { background: var(--ok); }
+  .grade[data-grade="B"] .grade__letter { background: color-mix(in srgb, var(--ok) 70%, var(--honey)); }
+  .grade[data-grade="C"] .grade__letter { background: var(--warn); }
+  .grade[data-grade="D"] .grade__letter { background: var(--orange); }
+  .grade[data-grade="F"] .grade__letter { background: var(--danger); }
+  .grade[data-grade="-"] .grade__letter { background: var(--bg-inset); color: var(--fg-subtle); }
+  .grade__score { font-size: var(--fs-xs); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--fg-muted); }
+  .mcp-card { display: flex; flex-direction: column; padding: 16px 18px; color: inherit; }
+  .mcp-card:hover { text-decoration: none; }
+  .mcp-card .caps { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-muted); }
+  .facets { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px 20px; }
+  @media (max-width: 1100px) { .facets { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  .facet__label { font-size: var(--fs-2xs); font-weight: 600; letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--fg-subtle); margin-bottom: 6px; }
+  .host-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .host-head h3 { font-size: var(--fs-lg); font-weight: 600; letter-spacing: -0.01em; }
+  .stage-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stage-strip > div { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--r-md); background: var(--bg-subtle); font-size: var(--fs-xs); font-weight: 500; }
+  .stage-strip .n { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-surface); box-shadow: 0 0 0 1px var(--border-strong) inset; font-size: var(--fs-2xs); font-weight: 700; }
+  .radio-card { display: flex; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; cursor: pointer; }
+  .radio-card.is-selected { box-shadow: 0 0 0 2px var(--accent) inset; background: var(--accent-soft); }
+  .tracker { display: flex; align-items: center; justify-content: center; gap: 0; }
+  .tracker .node { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--fg-muted); width: 130px; }
+  .tracker .node .dot-lg { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-inset); color: var(--fg-subtle); }
+  .tracker .node.is-done .dot-lg { background: var(--ok); color: #fff; }
+  .tracker .node.is-active .dot-lg { background: var(--accent-soft); color: var(--accent-fg); }
+  .tracker .node.is-failed .dot-lg { background: var(--danger); color: #fff; }
+  .tracker .link { width: 48px; height: 2px; background: var(--border-strong); margin-bottom: 22px; }
+  .tracker .link.is-done { background: var(--ok); }
+</style>
+</head>
+<body data-shell="app" data-nav="mcp" data-page="sources/mcp-servers" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Bring in</span><i data-lucide="chevron-right"></i><span>MCP servers</span></div>
+          <h1 class="page-title">MCP servers</h1>
+          <p class="page-desc">Every MCP server in this workspace, grade-led and grouped by host.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-tip="Reload the catalog"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <button class="btn btn--primary" data-action="open" data-target="add-mcp-dialog" data-tip="Add an MCP server to the catalog"><i data-lucide="plus"></i>Add MCP server</button>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="MCP Servers sections">
+        <a class="tab is-active" href="mcp-servers.html" aria-current="page"><i data-lucide="server"></i>Servers<span class="count">6</span></a>
+        <a class="tab" href="mcp-analytics.html"><i data-lucide="bar-chart-3"></i>Analytics<span class="badge badge--honey" title="Feature in preview">Preview</span></a>
+        <a class="tab" href="mcp-capabilities.html"><i data-lucide="layers"></i>Capabilities<span class="count">65</span></a>
+        <a class="tab" href="mcp-compare.html"><i data-lucide="git-compare-arrows"></i>Compare</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Toolbar: search · filters · sort · density -->
+    <section class="card">
+      <div class="row-between wrap gap-3" style="padding:12px 16px">
+        <div class="input-wrap" style="width:340px;max-width:100%"><i data-lucide="search"></i><input class="input" placeholder="Search by name, host, URL, or category…" aria-label="Search the catalog" /></div>
+        <div class="row gap-2 wrap">
+          <button class="btn btn--soft" aria-expanded="true" data-action="toggle" data-target="facet-panel"><i data-lucide="sliders-horizontal"></i>Filters<span class="badge badge--ink">2</span></button>
+          <label class="row gap-2 t-sm t-muted">Sort<select class="select select--sm" style="width:170px" aria-label="Sort"><option>Grade</option><option>Name</option><option>Last discovered</option><option>Capabilities</option><option>Health</option></select></label>
+          <div class="segmented segmented--sm" role="group" aria-label="Layout density" data-tabs="density-views">
+            <button class="is-active" data-action="tab" data-target="grid" aria-pressed="true"><i data-lucide="layout-grid"></i>Grid<span class="sr-only"> view</span></button>
+            <button data-action="tab" data-target="list" aria-pressed="false"><i data-lucide="list"></i>Dense list<span class="sr-only"> view</span></button>
+          </div>
+        </div>
+      </div>
+      <div id="facet-panel" class="card--soft" style="padding:14px 16px;border-top:1px solid var(--border);border-radius:0 0 var(--r-lg) var(--r-lg)">
+        <div class="facets">
+          <div><div class="facet__label">Host</div><div class="row wrap gap-1"><span class="chip" data-action="chip">mcp.acme.dev <span class="t-faint">3</span></span><span class="chip" data-action="chip">tools.globex.io <span class="t-faint">2</span></span><span class="chip" data-action="chip">(local) <span class="t-faint">1</span></span></div></div>
+          <div><div class="facet__label">Grade</div><div class="row wrap gap-1"><span class="chip is-active" data-action="chip" aria-pressed="true">A <span class="t-faint">1</span></span><span class="chip is-active" data-action="chip" aria-pressed="true">B <span class="t-faint">2</span></span><span class="chip" data-action="chip">C <span class="t-faint">1</span></span><span class="chip" data-action="chip">D <span class="t-faint">1</span></span><span class="chip" data-action="chip">F <span class="t-faint">0</span></span></div></div>
+          <div><div class="facet__label">Transport</div><div class="row wrap gap-1"><span class="chip" data-action="chip">streamable_http <span class="t-faint">3</span></span><span class="chip" data-action="chip">http+sse (legacy) <span class="t-faint">2</span></span><span class="chip" data-action="chip">stdio <span class="t-faint">1</span></span></div></div>
+          <div><div class="facet__label">Safety</div><div class="row wrap gap-1"><span class="chip" data-action="chip"><i data-lucide="triangle-alert"></i>Has destructive <span class="t-faint">2</span></span><span class="chip" data-action="chip"><i data-lucide="eye"></i>Read-only only <span class="t-faint">1</span></span></div></div>
+          <div><div class="facet__label">Complexity</div><div class="row wrap gap-1"><span class="chip" data-action="chip">simple <span class="t-faint">2</span></span><span class="chip" data-action="chip">moderate <span class="t-faint">2</span></span><span class="chip" data-action="chip">complex <span class="t-faint">1</span></span><span class="chip" data-action="chip">unknown <span class="t-faint">1</span></span></div></div>
+          <div><div class="facet__label">Protocol</div><div class="row wrap gap-1"><span class="chip" data-action="chip">2025-06-18 <span class="t-faint">3</span></span><span class="chip" data-action="chip">2025-03-26 <span class="t-faint">2</span></span><span class="chip" data-action="chip">unknown <span class="t-faint">1</span></span></div></div>
+          <div><div class="facet__label">Health</div><div class="row wrap gap-1"><span class="chip" data-action="chip"><span class="dot dot--ok"></span>healthy <span class="t-faint">4</span></span><span class="chip" data-action="chip"><span class="dot dot--danger"></span>failing <span class="t-faint">1</span></span><span class="chip" data-action="chip"><span class="dot"></span>undiscovered <span class="t-faint">0</span></span><span class="chip" data-action="chip">disabled <span class="t-faint">0</span></span><span class="chip" data-action="chip">quarantined <span class="t-faint">1</span></span></div></div>
+          <div><div class="facet__label">Visibility</div><div class="row wrap gap-1"><span class="chip" data-action="chip">public <span class="t-faint">2</span></span><span class="chip" data-action="chip">private <span class="t-faint">4</span></span></div></div>
+          <div><div class="facet__label">Auth</div><div class="row wrap gap-1"><span class="chip" data-action="chip">bearer <span class="t-faint">2</span></span><span class="chip" data-action="chip">OAuth 2.1 <span class="t-faint">1</span></span><span class="chip" data-action="chip">header <span class="t-faint">1</span></span><span class="chip" data-action="chip">No auth <span class="t-faint">2</span></span></div></div>
+          <div><div class="facet__label">Category</div><div class="row wrap gap-1"><span class="chip" data-action="chip">finance <span class="t-faint">2</span></span><span class="chip" data-action="chip">geo <span class="t-faint">1</span></span><span class="chip" data-action="chip">logistics <span class="t-faint">1</span></span><span class="chip" data-action="chip">developer-tools <span class="t-faint">1</span></span><span class="chip" data-action="chip">crm <span class="t-faint">1</span></span></div></div>
+        </div>
+        <div class="row-between mt-3"><span class="t-xs t-subtle">Facets AND together; values within a facet OR. Counts reflect the full catalog.</span><button class="btn btn--ghost btn--sm"><i data-lucide="x"></i>Clear all filters</button></div>
+      </div>
+    </section>
+
+    <!-- Saved searches + collections strips -->
+    <div class="grid grid-2">
+      <section class="card">
+        <div class="row-between wrap gap-2" style="padding:10px 16px">
+          <div class="row gap-2 wrap">
+            <span class="t-caps" style="margin-right:4px">Saved searches</span>
+            <button class="btn btn--sm btn--pill" style="background:var(--honey-soft);color:var(--honey-fg);box-shadow:none" data-tip="Run saved view: Ungraded destructive servers"><i data-lucide="pin"></i>Ungraded destructive servers</button>
+            <button class="btn btn--sm btn--pill" style="background:var(--honey-soft);color:var(--honey-fg);box-shadow:none" data-tip="Run saved view: Public A/B servers"><i data-lucide="pin"></i>Public A/B servers</button>
+          </div>
+          <div class="row gap-1">
+            <button class="btn btn--sm" data-action="open" data-target="save-search-dialog"><i data-lucide="bookmark"></i>Save search</button>
+            <button class="btn btn--sm btn--ghost" aria-expanded="true" data-action="toggle" data-target="saved-list">Saved (3)<i data-lucide="chevron-up"></i></button>
+          </div>
+        </div>
+        <ul id="saved-list" class="divide-y" style="border-top:1px solid var(--border)">
+          <li class="list-row"><div class="grow min-w-0"><div class="lr-title row gap-2">Ungraded destructive servers <span class="badge" data-status="pinned">pinned</span></div><div class="lr-sub">Filters: Grade —, Safety Has destructive · Sort Grade</div></div><div class="row gap-1"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Run saved search" aria-label="Run"><i data-lucide="play"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Unpin view" aria-label="Unpin"><i data-lucide="pin-off"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete saved search" aria-label="Delete" style="color:var(--danger)"><i data-lucide="trash-2"></i></button></div></li>
+          <li class="list-row"><div class="grow min-w-0"><div class="lr-title row gap-2">Public A/B servers <span class="badge" data-status="pinned">pinned</span></div><div class="lr-sub">Query: <span class="mono">acme</span> · Filters: Visibility public, Grade A B</div></div><div class="row gap-1"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Run saved search" aria-label="Run"><i data-lucide="play"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Unpin view" aria-label="Unpin"><i data-lucide="pin-off"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete saved search" aria-label="Delete" style="color:var(--danger)"><i data-lucide="trash-2"></i></button></div></li>
+          <li class="list-row"><div class="grow min-w-0"><div class="lr-title">Legacy SSE transports</div><div class="lr-sub">Filters: Transport http+sse (legacy) · Sort Last discovered</div></div><div class="row gap-1"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Run saved search" aria-label="Run"><i data-lucide="play"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Pin as catalog view" aria-label="Pin"><i data-lucide="pin"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete saved search" aria-label="Delete" style="color:var(--danger)"><i data-lucide="trash-2"></i></button></div></li>
+        </ul>
+      </section>
+      <section class="card">
+        <div class="row-between wrap gap-2" style="padding:10px 16px">
+          <div class="row gap-2"><span class="t-caps">Collections</span><span class="t-xs t-subtle">Curated lists you can publish to Browse</span></div>
+          <div class="row gap-1">
+            <button class="btn btn--sm" data-action="open" data-target="create-collection-dialog"><i data-lucide="plus"></i>New collection</button>
+            <button class="btn btn--sm btn--ghost" aria-expanded="true" data-action="toggle" data-target="collections-list"><i data-lucide="folder-open"></i>Collections (2)<i data-lucide="chevron-up"></i></button>
+          </div>
+        </div>
+        <ul id="collections-list" class="divide-y" style="border-top:1px solid var(--border)">
+          <li class="list-row"><div class="grow min-w-0"><div class="lr-title row gap-2">Approved geo tools <span class="badge" data-status="published">published</span></div><div class="lr-sub">2 endpoints · Vetted for the field-ops assistants</div></div><div class="row gap-1"><button class="btn btn--ghost btn--sm" data-action="open" data-target="rename-collection-dialog">Rename</button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Unpublish collection" aria-label="Unpublish"><i data-lucide="globe"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Copy share link" aria-label="Copy share link"><i data-lucide="copy"></i></button><a class="btn btn--ghost btn--sm" href="#" target="_blank" rel="noopener">View<i data-lucide="arrow-up-right"></i></a><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete collection" aria-label="Delete" style="color:var(--danger)" data-action="open" data-target="delete-collection-dialog"><i data-lucide="trash-2"></i></button></div></li>
+          <li class="list-row"><div class="grow min-w-0"><div class="lr-title">Finance assistants</div><div class="lr-sub">3 endpoints · Payments, orders and CRM connectors for the finance team</div></div><div class="row gap-1"><button class="btn btn--ghost btn--sm" data-action="open" data-target="rename-collection-dialog">Rename</button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Publish collection" aria-label="Publish"><i data-lucide="globe"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete collection" aria-label="Delete" style="color:var(--danger)" data-action="open" data-target="delete-collection-dialog"><i data-lucide="trash-2"></i></button></div></li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- Totals + shadowed-names alert -->
+    <div class="row-between wrap gap-3">
+      <div class="t-sm t-muted"><span class="t-600" style="color:var(--fg)">3</span> hosts · <span class="t-600" style="color:var(--fg)">6</span> endpoints · <span class="t-600" style="color:var(--fg)">65</span> capabilities <span class="t-subtle">· filtered by 2 facet values</span></div>
+      <span class="t-xs t-subtle">Sorted by grade · A→F, unscored last</span>
+    </div>
+    <section class="banner banner--danger" role="alert" style="flex-direction:column;align-items:stretch;gap:0;padding:0">
+      <button class="row-start gap-3 w-full" style="padding:10px 14px;text-align:left" aria-expanded="true" data-action="toggle" data-target="shadow-list">
+        <i data-lucide="bell"></i>
+        <div class="grow"><div class="banner-title">2 shadowed names</div><div class="banner-body t-xs">1 same-host, 1 cross-host — duplicate capabilities across enabled endpoints (tool shadowing, OWASP MCP09)</div></div>
+        <i data-lucide="chevron-up"></i>
+      </button>
+      <ul id="shadow-list" style="padding:0 14px 12px 40px" class="col gap-2">
+        <li class="row gap-3 wrap t-sm"><span class="badge badge--rose">Same host</span><span class="mono">tool:search</span><span class="t-xs">exposed by 2 endpoints</span><span class="t-xs" style="opacity:.85">Payments tools, Orders assistant</span></li>
+        <li class="row gap-3 wrap t-sm"><span class="badge badge--warn">Cross host</span><span class="mono">prompt:summarize</span><span class="t-xs">exposed by 2 endpoints</span><span class="t-xs" style="opacity:.85">Payments tools, Globex geo tools</span></li>
+      </ul>
+    </section>
+
+    <div id="density-views">
+    <!-- ================= GRID density ================= -->
+    <div data-tab-panel="grid" class="col gap-6">
+      <!-- Host: mcp.acme.dev -->
+      <section>
+        <div class="host-head"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="server"></i></span><h3>mcp.acme.dev</h3><span class="badge">3 endpoints</span><span class="badge badge--outline">44 capabilities</span><span class="t-xs t-subtle">2 healthy · 1 degraded</span></div>
+        <div class="grid grid-3">
+          <a class="card card--hover mcp-card" href="mcp-endpoint.html" aria-label="Open Payments tools">
+            <div class="row-start gap-3">
+              <span class="grade" data-grade="A"><span class="grade__letter">A</span><span class="grade__score">94</span></span>
+              <div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--a" title="Server logo">PT</span><span class="t-h4 t-truncate">Payments tools</span><i data-lucide="arrow-right" class="t-faint" style="margin-left:auto"></i></div><div class="t-xs t-subtle mono t-truncate">mcp.acme.dev · /payments/mcp</div></div>
+            </div>
+            <div class="row wrap gap-1 mt-3"><span class="badge badge--ok">Published</span><span class="badge">streamable_http</span><span class="badge" data-status="public">Public</span><span class="badge badge--ok">bearer</span></div>
+            <div class="row-between mt-3"><span class="caps" title="tools / resources / resource templates / prompts">12t · 4r · 2rt · 3p <span class="t-faint">·</span> 5 versions</span><span class="badge badge--dot" data-status="healthy">Healthy</span></div>
+            <div class="row-between mt-2"><span class="t-xs t-subtle row gap-1"><i data-lucide="clock" style="width:12px;height:12px"></i>Last discovered 5m ago</span><span></span></div>
+          </a>
+          <a class="card card--hover mcp-card" href="mcp-endpoint.html" aria-label="Open Orders assistant">
+            <div class="row-start gap-3">
+              <span class="grade" data-grade="B"><span class="grade__letter">B</span><span class="grade__score">82</span></span>
+              <div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--c">OA</span><span class="t-h4 t-truncate">Orders assistant</span><i data-lucide="arrow-right" class="t-faint" style="margin-left:auto"></i></div><div class="t-xs t-subtle mono t-truncate">mcp.acme.dev · /orders/sse</div></div>
+            </div>
+            <div class="row wrap gap-1 mt-3"><span class="badge">Unpublished</span><span class="badge">http+sse (legacy)</span><span class="badge" data-status="private">Private</span><span class="badge badge--violet">OAuth 2.1</span></div>
+            <div class="row-between mt-3"><span class="caps" title="tools / resources / resource templates / prompts">8t · 2r · 0rt · 1p <span class="t-faint">·</span> 3 versions</span><span class="badge badge--dot" data-status="healthy">Healthy</span></div>
+            <div class="row-between mt-2"><span class="t-xs t-subtle row gap-1"><i data-lucide="clock" style="width:12px;height:12px"></i>Last discovered 2h ago</span><span class="badge badge--honey" title="This endpoint's surface has versioned since your last visit"><i data-lucide="sparkles"></i>Changed</span></div>
+          </a>
+          <a class="card card--hover mcp-card" href="mcp-endpoint.html" aria-label="Open Inventory events bridge">
+            <div class="row-start gap-3">
+              <span class="grade" data-grade="C"><span class="grade__letter">C</span><span class="grade__score">61</span></span>
+              <div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--d">IE</span><span class="t-h4 t-truncate">Inventory events bridge</span><i data-lucide="arrow-right" class="t-faint" style="margin-left:auto"></i></div><div class="t-xs t-subtle mono t-truncate">mcp.acme.dev · /inventory/mcp</div></div>
+            </div>
+            <div class="row wrap gap-1 mt-3"><span class="badge">Unpublished</span><span class="badge">streamable_http</span><span class="badge" data-status="private">Private</span><span class="badge">No auth</span></div>
+            <div class="row-between mt-3"><span class="caps" title="tools / resources / resource templates / prompts">5t · 6r · 1rt · 0p <span class="t-faint">·</span> 2 versions</span><span class="badge badge--dot" data-status="degraded">Degraded</span></div>
+            <div class="row-between mt-2"><span class="t-xs t-subtle row gap-1"><i data-lucide="clock" style="width:12px;height:12px"></i>Last discovered 3d ago</span><span class="badge badge--warn" title="Stale — last known good Aug 12, 2026 09:40">Stale</span></div>
+          </a>
+        </div>
+      </section>
+      <!-- Host: tools.globex.io -->
+      <section>
+        <div class="host-head"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="server"></i></span><h3>tools.globex.io</h3><span class="badge">2 endpoints</span><span class="badge badge--outline">17 capabilities</span><span class="t-xs t-subtle">1 healthy · 1 failing</span></div>
+        <div class="grid grid-3">
+          <a class="card card--hover mcp-card" href="mcp-endpoint.html" aria-label="Open Globex geo tools">
+            <div class="row-start gap-3">
+              <span class="grade" data-grade="B"><span class="grade__letter">B</span><span class="grade__score">78</span></span>
+              <div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--b">GG</span><span class="t-h4 t-truncate">Globex geo tools</span><i data-lucide="arrow-right" class="t-faint" style="margin-left:auto"></i></div><div class="t-xs t-subtle mono t-truncate">tools.globex.io · /geo/mcp</div></div>
+            </div>
+            <div class="row wrap gap-1 mt-3"><span class="badge badge--ok">Published</span><span class="badge">streamable_http</span><span class="badge" data-status="public">Public</span><span class="badge badge--ok">header</span></div>
+            <div class="row-between mt-3"><span class="caps" title="tools / resources / resource templates / prompts">15t · 0r · 0rt · 2p <span class="t-faint">·</span> 7 versions</span><span class="badge badge--dot" data-status="healthy">Healthy</span></div>
+            <div class="row-between mt-2"><span class="t-xs t-subtle row gap-1"><i data-lucide="clock" style="width:12px;height:12px"></i>Last discovered 1h ago</span><span></span></div>
+          </a>
+          <a class="card card--hover mcp-card" href="mcp-endpoint.html" aria-label="Open Legacy CRM connector" style="box-shadow:0 0 0 1px var(--danger) inset, var(--shadow-sm)">
+            <div class="row-start gap-3">
+              <span class="grade" data-grade="-" aria-label="Unscored"><span class="grade__letter">—</span><span class="grade__score">Unscored</span></span>
+              <div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--e">LC</span><span class="t-h4 t-truncate">Legacy CRM connector</span><i data-lucide="arrow-right" class="t-faint" style="margin-left:auto"></i></div><div class="t-xs t-subtle mono t-truncate">tools.globex.io · /crm/sse</div></div>
+            </div>
+            <div class="row wrap gap-1 mt-3"><span class="badge">Unpublished</span><span class="badge">http+sse (legacy)</span><span class="badge" data-status="private">Private</span><span class="badge badge--ok">bearer</span></div>
+            <div class="row-between mt-3"><span class="caps" title="tools / resources / resource templates / prompts">0t · 0r · 0rt · 0p <span class="t-faint">·</span> 1 version</span><span class="badge badge--dot badge--danger">Unreachable</span></div>
+            <div class="row-between mt-2"><span class="t-xs t-subtle row gap-1"><i data-lucide="clock" style="width:12px;height:12px"></i>Last discovered 6d ago</span><span class="badge badge--danger" title="Quarantined — last known good Jul 30, 2026 14:02">Quarantined</span></div>
+          </a>
+          <!-- loading skeleton card (state) -->
+          <div class="card mcp-card" aria-busy="true" aria-label="Loading endpoint">
+            <div class="row-start gap-3"><span class="skeleton" style="width:28px;height:28px"></span><div class="grow"><div class="skeleton" style="height:14px;width:60%"></div><div class="skeleton mt-2" style="height:10px;width:80%"></div></div></div>
+            <div class="row gap-1 mt-3"><span class="skeleton" style="height:18px;width:64px"></span><span class="skeleton" style="height:18px;width:90px"></span><span class="skeleton" style="height:18px;width:52px"></span></div>
+            <div class="skeleton mt-3" style="height:12px;width:70%"></div>
+            <div class="skeleton mt-2" style="height:12px;width:45%"></div>
+          </div>
+        </div>
+      </section>
+      <!-- Host: (local) -->
+      <section>
+        <div class="host-head"><span class="icon-tile icon-tile--sm"><i data-lucide="terminal"></i></span><h3>(local)</h3><span class="badge">1 endpoint</span><span class="badge badge--outline">4 capabilities</span><span class="t-xs t-subtle">1 healthy</span></div>
+        <div class="grid grid-3">
+          <a class="card card--hover mcp-card" href="mcp-endpoint.html" aria-label="Open Local dev filesystem">
+            <div class="row-start gap-3">
+              <span class="grade" data-grade="D"><span class="grade__letter">D</span><span class="grade__score">44</span></span>
+              <div class="grow min-w-0"><div class="row gap-2"><span class="t-h4 t-truncate">Local dev filesystem</span><i data-lucide="arrow-right" class="t-faint" style="margin-left:auto"></i></div><div class="t-xs t-subtle mono t-truncate">(local) · npx @modelcontextprotocol/server-filesystem</div></div>
+            </div>
+            <div class="row wrap gap-1 mt-3"><span class="badge">Unpublished</span><span class="badge">stdio</span><span class="badge" data-status="private">Private</span><span class="badge">No auth</span></div>
+            <div class="row-between mt-3"><span class="caps" title="tools / resources / resource templates / prompts">4t · 0r · 0rt · 0p <span class="t-faint">·</span> 1 version</span><span class="badge badge--dot" data-status="healthy">Healthy</span></div>
+            <div class="row-between mt-2"><span class="t-xs t-subtle row gap-1"><i data-lucide="clock" style="width:12px;height:12px"></i>Last discovered 20m ago</span><span></span></div>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= DENSE LIST density ================= -->
+    <div data-tab-panel="list" hidden class="col gap-6">
+      <section>
+        <div class="host-head"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="server"></i></span><h3>mcp.acme.dev</h3><span class="badge">3 endpoints</span><span class="badge badge--outline">44 capabilities</span><span class="t-xs t-subtle">2 healthy · 1 degraded</span></div>
+        <div class="table-wrap divide-y">
+          <a class="list-row card--link" href="mcp-endpoint.html" aria-label="Open Payments tools"><span class="grade grade--sm" data-grade="A"><span class="grade__letter">A</span></span><div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--a">PT</span><span class="lr-title">Payments tools</span></div><div class="lr-sub row gap-2"><span class="mono">12t · 4r · 2rt · 3p · 5 versions</span><span class="dot dot--ok" title="Healthy"></span></div></div><div class="row gap-1"><span class="badge badge--ok">Published</span><span class="badge">streamable_http</span><span class="badge" data-status="public">Public</span><span class="badge badge--ok">bearer</span></div><span class="t-xs t-subtle" style="width:70px;text-align:right">5m ago</span><i data-lucide="arrow-right" class="t-faint"></i></a>
+          <a class="list-row card--link" href="mcp-endpoint.html" aria-label="Open Orders assistant"><span class="grade grade--sm" data-grade="B"><span class="grade__letter">B</span></span><div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--c">OA</span><span class="lr-title">Orders assistant</span><span class="badge badge--honey"><i data-lucide="sparkles"></i>Changed</span></div><div class="lr-sub row gap-2"><span class="mono">8t · 2r · 0rt · 1p · 3 versions</span><span class="dot dot--ok" title="Healthy"></span></div></div><div class="row gap-1"><span class="badge">Unpublished</span><span class="badge">http+sse (legacy)</span><span class="badge" data-status="private">Private</span><span class="badge badge--violet">OAuth 2.1</span></div><span class="t-xs t-subtle" style="width:70px;text-align:right">2h ago</span><i data-lucide="arrow-right" class="t-faint"></i></a>
+          <a class="list-row card--link" href="mcp-endpoint.html" aria-label="Open Inventory events bridge"><span class="grade grade--sm" data-grade="C"><span class="grade__letter">C</span></span><div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--d">IE</span><span class="lr-title">Inventory events bridge</span><span class="badge badge--warn">Stale</span></div><div class="lr-sub row gap-2"><span class="mono">5t · 6r · 1rt · 0p · 2 versions</span><span class="dot dot--warn" title="Degraded"></span></div></div><div class="row gap-1"><span class="badge">Unpublished</span><span class="badge">streamable_http</span><span class="badge" data-status="private">Private</span><span class="badge">No auth</span></div><span class="t-xs t-subtle" style="width:70px;text-align:right">3d ago</span><i data-lucide="arrow-right" class="t-faint"></i></a>
+        </div>
+      </section>
+      <section>
+        <div class="host-head"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="server"></i></span><h3>tools.globex.io</h3><span class="badge">2 endpoints</span><span class="badge badge--outline">17 capabilities</span><span class="t-xs t-subtle">1 healthy · 1 failing</span></div>
+        <div class="table-wrap divide-y">
+          <a class="list-row card--link" href="mcp-endpoint.html" aria-label="Open Globex geo tools"><span class="grade grade--sm" data-grade="B"><span class="grade__letter">B</span></span><div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--b">GG</span><span class="lr-title">Globex geo tools</span></div><div class="lr-sub row gap-2"><span class="mono">15t · 0r · 0rt · 2p · 7 versions</span><span class="dot dot--ok" title="Healthy"></span></div></div><div class="row gap-1"><span class="badge badge--ok">Published</span><span class="badge">streamable_http</span><span class="badge" data-status="public">Public</span><span class="badge badge--ok">header</span></div><span class="t-xs t-subtle" style="width:70px;text-align:right">1h ago</span><i data-lucide="arrow-right" class="t-faint"></i></a>
+          <a class="list-row card--link" href="mcp-endpoint.html" aria-label="Open Legacy CRM connector"><span class="grade grade--sm" data-grade="-"><span class="grade__letter">—</span></span><div class="grow min-w-0"><div class="row gap-2"><span class="avatar avatar--xs avatar--e">LC</span><span class="lr-title">Legacy CRM connector</span><span class="badge badge--danger">Quarantined</span></div><div class="lr-sub row gap-2"><span class="mono">0t · 0r · 0rt · 0p · 1 version</span><span class="dot dot--danger" title="Unreachable"></span></div></div><div class="row gap-1"><span class="badge">Unpublished</span><span class="badge">http+sse (legacy)</span><span class="badge" data-status="private">Private</span><span class="badge badge--ok">bearer</span></div><span class="t-xs t-subtle" style="width:70px;text-align:right">6d ago</span><i data-lucide="arrow-right" class="t-faint"></i></a>
+        </div>
+      </section>
+      <section>
+        <div class="host-head"><span class="icon-tile icon-tile--sm"><i data-lucide="terminal"></i></span><h3>(local)</h3><span class="badge">1 endpoint</span><span class="badge badge--outline">4 capabilities</span><span class="t-xs t-subtle">1 healthy</span></div>
+        <div class="table-wrap divide-y">
+          <a class="list-row card--link" href="mcp-endpoint.html" aria-label="Open Local dev filesystem"><span class="grade grade--sm" data-grade="D"><span class="grade__letter">D</span></span><div class="grow min-w-0"><div class="lr-title">Local dev filesystem</div><div class="lr-sub row gap-2"><span class="mono">4t · 0r · 0rt · 0p · 1 version</span><span class="dot dot--ok" title="Healthy"></span></div></div><div class="row gap-1"><span class="badge">Unpublished</span><span class="badge">stdio</span><span class="badge" data-status="private">Private</span><span class="badge">No auth</span></div><span class="t-xs t-subtle" style="width:70px;text-align:right">20m ago</span><i data-lucide="arrow-right" class="t-faint"></i></a>
+        </div>
+      </section>
+    </div>
+    </div>
+
+    <!-- No-match state (shown when filters exclude everything) -->
+    <section class="card">
+      <div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="search-x"></i></div><div><div class="empty__title">No matches</div><div class="empty__desc">No endpoints match your search and filters. Try clearing a filter or broadening the search.</div></div><button class="btn btn--sm ml-auto"><i data-lucide="x"></i>Clear all filters</button></div>
+    </section>
+
+    <!-- Empty catalog state (first run) -->
+    <section class="card card--flat empty empty--dashed" style="background:transparent">
+      <div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="network"></i></div>
+      <div class="empty__title">No MCP endpoints yet</div>
+      <div class="empty__desc">Register an MCP server in the catalog. Once it is discovered, its endpoints appear here grade-led and grouped by host, with capability counts and quality scores.</div>
+      <div class="empty__actions"><button class="btn btn--primary" data-action="open" data-target="add-mcp-dialog"><i data-lucide="plus"></i>Add MCP server</button><a class="btn btn--ghost" href="../foundations/help.html">Learn about MCP discovery</a></div>
+    </section>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- Add MCP server: register + discover flow -->
+<div class="overlay" id="add-mcp-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-labelledby="add-mcp-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="network"></i></span>
+      <div><div class="dialog__title" id="add-mcp-title">Add an MCP server</div><div class="dialog__desc">Point us at a Model Context Protocol endpoint. We’ll connect, discover its tools, resources, and prompts, lint the surface for quality, and catalog it as version 1 with an A–F grade.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="row-between wrap gap-3 mb-4">
+        <div class="stepper" aria-label="Import steps">
+          <div class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Source</div><span class="step__line is-done"></span>
+          <div class="step" style="opacity:.5" title="Skipped for MCP sources"><span class="step__num">2</span>Analyze</div><span class="step__line"></span>
+          <div class="step" style="opacity:.5" title="Skipped for MCP sources"><span class="step__num">3</span>Preview</div><span class="step__line"></span>
+          <div class="step is-active"><span class="step__num">4</span>Import</div>
+        </div>
+        <div class="segmented segmented--sm" data-tabs="add-mcp-steps" aria-label="Preview flow step (mockup)">
+          <button class="is-active" data-action="tab" data-target="cfg">1 · Configure</button>
+          <button data-action="tab" data-target="disc">2 · Discovering</button>
+          <button data-action="tab" data-target="fail">2b · Failed</button>
+          <button data-action="tab" data-target="done">3 · Done</button>
+        </div>
+      </div>
+      <div id="add-mcp-steps">
+        <!-- Step 1: config form -->
+        <div data-tab-panel="cfg">
+          <div class="stage-strip mb-4"><div><span class="n">1</span>Connect</div><div><span class="n">2</span>Discover capabilities</div><div><span class="n">3</span>Lint &amp; grade</div></div>
+          <div class="grid grid-2 gap-6">
+            <div class="col gap-4">
+              <div class="field"><label>Endpoint URL <span class="req">*</span></label><input class="input input--mono" placeholder="https://mcp.example.com/sse" value="https://mcp.acme.dev/refunds/mcp" autofocus /><div class="hint">The MCP server’s connection URL.</div></div>
+              <div class="field"><label>Display name</label><input class="input" placeholder="Defaults to the URL host" /><div class="hint">Optional — leave blank to use the host name.</div></div>
+              <div class="field"><label>Transport</label>
+                <div class="col gap-2">
+                  <label class="radio-card is-selected"><input type="radio" name="transport" checked class="sr-only" /><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="zap"></i></span><div><div class="t-sm t-600">Streamable HTTP</div><div class="t-xs t-muted">The modern MCP HTTP transport — recommended for new servers.</div></div></label>
+                  <label class="radio-card"><input type="radio" name="transport" class="sr-only" /><span class="icon-tile icon-tile--sm"><i data-lucide="radio"></i></span><div><div class="t-sm t-600">Server-Sent Events (SSE)</div><div class="t-xs t-muted">Legacy HTTP + Server-Sent Events transport.</div></div></label>
+                  <label class="radio-card"><input type="radio" name="transport" class="sr-only" /><span class="icon-tile icon-tile--sm"><i data-lucide="terminal"></i></span><div><div class="t-sm t-600">Standard I/O (stdio)</div><div class="t-xs t-muted">A local command spoken to over standard I/O.</div></div></label>
+                </div>
+              </div>
+            </div>
+            <div class="card card--soft card--pad col gap-4" style="align-self:start">
+              <div class="row gap-2"><i data-lucide="key-round" class="t-subtle"></i><span class="t-sm t-600">Authentication</span></div>
+              <div class="field"><label>Auth type</label><select class="select"><option>None (anonymous)</option><option selected>Bearer token</option><option>Custom header</option><option>OAuth 2.1 access token</option></select><div class="hint">Sent as an Authorization: Bearer header on every request.</div></div>
+              <div class="field"><label>Access token <span class="req">*</span></label><input class="input input--mono" type="password" value="••••••••••••••••••••" /><div class="hint">Stored encrypted; it is never shown again after you save it.</div></div>
+              <div class="field" style="opacity:.55"><label>Header name <span class="req">*</span></label><input class="input input--mono" placeholder="X-API-Key" disabled /><div class="hint">Only for the Custom header auth type.</div></div>
+              <div class="banner banner--neutral t-xs"><i data-lucide="info"></i><span>Validation mirrors REST: “Enter the MCP endpoint URL.” · “Enter a valid URL (including http:// or https://).” · “HTTP transports require an http:// or https:// URL.” · “Enter the access token for the selected auth type.” · “Enter the header name.” / “Enter the header value.”</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Step 2: discovery running -->
+        <div data-tab-panel="disc" hidden>
+          <div class="col" style="align-items:center;padding:12px 0 8px;gap:14px">
+            <span class="icon-tile icon-tile--lg icon-tile--accent"><span class="spinner"></span></span>
+            <div class="t-h3">Refunds MCP</div>
+            <div class="t-sm t-muted" aria-live="polite">Discovering capabilities…</div>
+            <div class="progress progress--striped" style="width:360px"><span style="width:58%"></span></div>
+            <div class="tracker mt-2">
+              <div class="node is-done"><span class="dot-lg"><i data-lucide="check"></i></span>Connect</div><span class="link is-done"></span>
+              <div class="node is-active"><span class="dot-lg"><span class="spinner"></span></span>Discover capabilities</div><span class="link"></span>
+              <div class="node"><span class="dot-lg"><i data-lucide="circle-dashed"></i></span>Lint &amp; grade</div>
+            </div>
+            <div class="t-xs t-subtle">This can take a few moments while we connect and list capabilities.</div>
+            <div class="t-2xs t-faint mono">job_2f7c19 · polling every 1.5 s</div>
+          </div>
+        </div>
+        <!-- Step 2b: discovery failed -->
+        <div data-tab-panel="fail" hidden>
+          <div class="col" style="align-items:center;padding:12px 0 8px;gap:14px">
+            <span class="icon-tile icon-tile--lg icon-tile--danger"><i data-lucide="x"></i></span>
+            <div class="t-h3">Refunds MCP</div>
+            <div class="t-sm t-danger" aria-live="polite">Discovery failed</div>
+            <div class="tracker">
+              <div class="node is-done"><span class="dot-lg"><i data-lucide="check"></i></span>Connect</div><span class="link is-done"></span>
+              <div class="node is-failed"><span class="dot-lg"><i data-lucide="x"></i></span>Discover capabilities</div><span class="link"></span>
+              <div class="node"><span class="dot-lg"><i data-lucide="circle-dashed"></i></span>Lint &amp; grade</div>
+            </div>
+            <div class="banner banner--danger" style="max-width:520px"><i data-lucide="triangle-alert"></i><div><div class="banner-title">JSON-RPC error</div><div class="banner-body t-xs">tools/list returned -32001 “Session expired” after the initialize handshake. Check the credential, then re-run discovery from the endpoint page.</div></div></div>
+          </div>
+        </div>
+        <!-- Step 3: done -->
+        <div data-tab-panel="done" hidden>
+          <div class="grid grid-2 gap-6">
+            <div class="col" style="align-items:center;padding:8px 0;gap:12px;text-align:center">
+              <span class="icon-tile icon-tile--lg icon-tile--ok"><i data-lucide="check"></i></span>
+              <div class="t-h3">Refunds MCP cataloged</div>
+              <div class="t-sm t-muted">Discovery committed catalog version 1. Its tools, resources, and prompts are now available under MCP servers.</div>
+              <div class="t-sm t-muted">3 tools · 2 resources · 1 prompt</div>
+              <a class="btn btn--sm" href="mcp-endpoint.html">View endpoint<i data-lucide="arrow-right"></i></a>
+            </div>
+            <div class="card card--flat card--pad">
+              <div class="row gap-4"><span class="ring ring--lg" style="--p:82;--c:var(--ok)"><span>82</span></span><div><div class="t-h4">Quality grade: B · 82/100</div><div class="row gap-1 mt-2"><span class="badge badge--danger">MUST 0</span><span class="badge badge--warn">SHOULD 2</span><span class="badge">Advisory 3</span></div><div class="t-xs t-subtle mt-2">The full report is on the endpoint’s Lint &amp; Score tab.</div></div></div>
+              <div class="banner banner--warn mt-4 t-xs"><i data-lucide="triangle-alert"></i><div><div class="banner-title">Variant · added without discovery</div><div class="banner-body">“Refunds MCP added — Discovery did not complete, so this server has no cataloged capabilities yet. Fix its connection or credentials, then re-run discovery from its page.”</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer">
+      <button class="btn btn--ghost left"><i data-lucide="arrow-left"></i>Back</button>
+      <button class="btn" data-action="close">Cancel</button>
+      <button class="btn btn--danger-soft" data-tip="Deletes the uncommitted endpoint">Discard</button>
+      <button class="btn" style="background:var(--warn-soft);color:var(--warn-fg);box-shadow:none" data-tip="Keeps the endpoint without capabilities">Add this server anyway</button>
+      <button class="btn btn--primary">Discover<i data-lucide="arrow-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- Save catalog search -->
+<div class="overlay" id="save-search-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="save-search-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--honey"><i data-lucide="bookmark"></i></span><div><div class="dialog__title" id="save-search-title">Save catalog search</div><div class="dialog__desc">Save the current filters, search text, and sort so you can re-run them later.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Name <span class="req">*</span></label><input class="input" placeholder="e.g. Ungraded destructive servers" autofocus /></div>
+      <div class="card card--soft t-xs t-muted" style="padding:10px 12px">Saves: Grade A, B · Sort Grade · Query “” · 2 filter values</div>
+      <label class="check"><input type="checkbox" checked />Pin as catalog view</label>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save</button></div>
+  </div>
+</div>
+
+<!-- Create collection -->
+<div class="overlay" id="create-collection-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="create-coll-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="folder-plus"></i></span><div><div class="dialog__title" id="create-coll-title">Create collection</div><div class="dialog__desc">Group related MCP endpoints into a named list. You can publish it later for a shareable browse view that only shows public endpoints.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Name <span class="req">*</span></label><input class="input" placeholder="e.g. Approved geo tools" autofocus /></div>
+      <div class="field"><label>Description <span class="t-subtle t-500">(optional)</span></label><input class="input" placeholder="Short note for your team" /></div>
+      <div class="banner banner--neutral t-xs"><i data-lucide="info"></i>Includes 3 endpoints from the current catalog view: Payments tools, Orders assistant, Globex geo tools.</div>
+      <label class="check"><input type="checkbox" />Publish immediately (public endpoints only on browse)</label>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create</button></div>
+  </div>
+</div>
+
+<!-- Rename collection (replaces window.prompt) -->
+<div class="overlay" id="rename-collection-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog"><div class="dialog__header"><div><div class="dialog__title">Rename collection</div><div class="dialog__desc">Members and publish state are unchanged.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+  <div class="dialog__body"><div class="field"><label>Name <span class="req">*</span></label><input class="input" value="Approved geo tools" autofocus /></div></div>
+  <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Rename</button></div></div>
+</div>
+
+<!-- Delete collection (replaces window.confirm) -->
+<div class="overlay" id="delete-collection-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span><div><div class="dialog__title">Delete “Approved geo tools”?</div><div class="dialog__desc">Delete this collection? Endpoints are not removed from the catalog. The public browse URL stops resolving.</div></div></div>
+  <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete collection</button></div></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/mcp</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/mcp/page.tsx</code>, <code>McpSectionTabs</code>, <code>McpCatalogToolbar</code>, <code>McpSavedSearchesPanel</code>, <code>McpCollectionsPanel</code>, <code>ShadowedNamesPanel</code>, <code>McpCatalogCard</code>, <code>ImportDialog</code> (source <code>mcp</code>) + <code>McpImportPanel</code> + <code>McpDiscoveryPanel</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: Refresh (“Reload the catalog”) + primary Add MCP server (disabled without tenant). Section tabs Servers · Analytics (Preview) · Capabilities · Compare hidden until ≥1 endpoint.</li>
+    <li>Toolbar: search (name/slug/host/URL/category), Filters button with active-value count bubble, Sort (Grade default · Name · Last discovered · Capabilities · Health), density Grid / Dense list (persisted <code>mcp.catalog.density</code>). Facets in order Host · Grade · Transport · Safety · Complexity · Protocol · Health · Visibility · Auth · Category, counts from the full catalog; Clear all filters.</li>
+    <li>Saved searches: pinned honey pills, Save search, Saved (n) toggle, manage list with Run / Pin-Unpin / Delete; “Save catalog search” dialog (name required, Pin as catalog view). Server-persisted.</li>
+    <li>Collections: New collection, Collections (n) toggle, rows with published tag, member count · description, Rename / Publish-Unpublish / Copy share link / View ↗ / Delete; “Create collection” dialog with the “Includes n endpoint(s) from the current catalog view” hint and Publish immediately.</li>
+    <li>Totals line “N hosts · N endpoints · N capabilities”; ShadowedNamesPanel banner (danger when any same-host collision, amber otherwise) with Same host / Cross host groups.</li>
+    <li>Host sections: host name, “n endpoint(s)”, “n capabilities”, health rollup; grid cards and dense-list rows carry grade glyph (+ score in grid), logo, name, host, Published/Unpublished, transport, visibility, auth badges, “t · r · rt · p” counts, versions, HealthPill, RecencyPill, FreshnessPill, Changed marker (<code>mcp.catalog.seen</code>).</li>
+    <li>Add MCP server flow: ImportDialog stepper (Analyze/Preview skipped for MCP), hero copy + 3-stage strip, Endpoint URL / Display name / Transport radio cards / Authentication (None · Bearer · Custom header · OAuth 2.1) with per-type hints, client validation messages; discovery panel polling with tracker Connect / Discover capabilities / Lint &amp; grade, failure state with Discard / Add this server anyway, done state with grade gauge + MUST/SHOULD/Advisory and “View endpoint →”.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Rename collection and Delete collection use <code>.dialog--sm</code> instead of <code>window.prompt</code>/<code>confirm</code>. Facet chips carry health dots; sort hint under the totals line; the mock segmented in the Add dialog previews each flow step.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading: skeleton card (shown in the tools.globex.io group) / “Loading the MCP catalog…”. Error: <code>.banner--danger</code> “Could not load the MCP catalog” + Retry. Empty catalog: dashed <code>.empty</code> “No MCP endpoints yet” (toolbar, panels and tabs hidden). No matches: inline <code>.empty--inline</code> “No matches”. No tenant: empty groups, Add disabled.</li></ul>
+</template>
+</body>
+</html>

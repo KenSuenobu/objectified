@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Export studio · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: export stepper pills, target cards, projection graph */
+  .xsteps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  @media (max-width: 900px) { .xsteps { grid-template-columns: repeat(2, 1fr); } }
+  .xstep { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; font-size: var(--fs-sm); font-weight: 500; color: var(--fg-muted); background: var(--bg-surface); text-align: left; }
+  .xstep .n { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: var(--fs-2xs); font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--border-strong); flex-shrink: 0; }
+  .xstep.is-done { color: var(--fg-muted); } .xstep.is-done .n { background: var(--ok); color: #fff; box-shadow: none; }
+  .xstep.is-current, .xstep.is-active { box-shadow: 0 0 0 2px var(--accent) inset; color: var(--fg); } .xstep.is-current .n, .xstep.is-active .n { background: var(--fg); color: var(--bg-surface); box-shadow: none; }
+  .tgt { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 12px 12px 10px; border-radius: var(--r-md); background: var(--bg-surface); box-shadow: 0 0 0 1px var(--border) inset; text-align: left; transition: box-shadow var(--dur-fast); }
+  .tgt:hover { box-shadow: 0 0 0 1px var(--border-strong) inset, var(--shadow-sm); }
+  .tgt[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent) inset; }
+  .tgt.is-disabled { opacity: .55; cursor: not-allowed; }
+  .tgt .tgt-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .tgt .tgt-name { font-size: var(--fs-sm); font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  .tgt .tgt-name [data-lucide] { width: 15px; height: 15px; color: var(--fg-subtle); }
+  .tgt .tgt-sub { font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .tgt .tgt-why { font-size: var(--fs-2xs); color: var(--fg-muted); }
+  .tier { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: var(--r-full); font-size: 10px; font-weight: 700; letter-spacing: .02em; }
+  .tier--lossless { background: var(--ok-soft); color: var(--ok-fg); }
+  .tier--lossy { background: var(--warn-soft); color: var(--warn-fg); }
+  .tier--types { background: var(--rose-soft); color: var(--rose-fg); }
+  .band { display: inline-flex; align-items: center; gap: 4px; height: 18px; padding: 0 6px; border-radius: var(--r-full); font-size: 10px; font-weight: 600; }
+  .band--ready { background: var(--ok-soft); color: var(--ok-fg); }
+  .band--caution { background: var(--warn-soft); color: var(--warn-fg); }
+  .band--blocked { background: var(--rose-soft); color: var(--rose-fg); }
+  .band--unavailable { background: var(--bg-inset); color: var(--fg-subtle); }
+  .fam { margin: 14px 0 8px; }
+  .lens-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-full); font-size: var(--fs-2xs); font-weight: 700; display: inline-grid; place-items: center; }
+  .proj-table td, .proj-table th { font-size: var(--fs-xs); }
+  .glyph { font-weight: 700; display: inline-block; width: 14px; text-align: center; }
+  .stage { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+  .stage + .stage { border-top: 1px solid var(--border); }
+  .stage .s-ic { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-inset); color: var(--fg-subtle); flex-shrink: 0; }
+  .stage.is-done .s-ic { background: var(--ok); color: #fff; }
+  .stage.is-active .s-ic { background: var(--accent-soft); color: var(--accent-fg); }
+  .stage.is-failed .s-ic { background: var(--danger); color: #fff; }
+  .heat td { text-align: center; font-variant-numeric: tabular-nums; }
+  .heat td:first-child { text-align: left; }
+  .heat .lvl { display: block; font-size: 9px; letter-spacing: 2px; color: var(--fg-subtle); }
+  .heat button { width: 100%; padding: 6px 4px; border-radius: var(--r-sm); }
+  .heat button:hover { background: var(--bg-subtle); }
+  .heat .h1 { background: color-mix(in srgb, var(--warn) 12%, transparent); }
+  .heat .h2 { background: color-mix(in srgb, var(--warn) 26%, transparent); }
+  .heat .h3 { background: color-mix(in srgb, var(--danger) 30%, transparent); }
+  .heat .h4 { background: color-mix(in srgb, var(--danger) 48%, transparent); color: #fff; }
+</style>
+</head>
+<body data-shell="app" data-nav="export" data-page="ship/export-studio" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Ship</span><i data-lucide="chevron-right"></i><a href="../build/versions.html">← Back to Versions</a></div>
+          <h1 class="page-title"><i data-lucide="panels-top-left" style="width:22px;height:22px;color:var(--fg-subtle)"></i>Export studio</h1>
+          <p class="page-desc">Verify a conversion before you generate it. Exporting <span class="t-600" style="color:var(--fg)">Payments API</span> (version v2.4.0).</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-tip="Copy a link that reopens this export configuration. Credentials are never included."><i data-lucide="link-2"></i>Copy link</button>
+          <button class="btn btn--primary"><i data-lucide="sparkles"></i>Generate</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Stepper (mockup: also navigates the step panels) -->
+    <ol class="xsteps" aria-label="Export steps" data-tabs="step-panels" style="list-style:none">
+      <li><button class="xstep is-done w-full" data-action="tab" data-target="st-source"><span class="n"><i data-lucide="check" style="width:12px;height:12px"></i></span>1. Source<span class="sr-only"> — completed</span></button></li>
+      <li><button class="xstep is-done w-full" data-action="tab" data-target="st-target"><span class="n"><i data-lucide="check" style="width:12px;height:12px"></i></span>2. Target<span class="sr-only"> — completed</span></button></li>
+      <li><button class="xstep is-done w-full" data-action="tab" data-target="st-options"><span class="n"><i data-lucide="check" style="width:12px;height:12px"></i></span>3. Options<span class="sr-only"> — completed</span></button></li>
+      <li><button class="xstep w-full tab is-active" aria-current="step" data-action="tab" data-target="st-verify"><span class="n">4</span>4. Verify<span class="sr-only"> — current step, 4 of 5</span></button></li>
+      <li><button class="xstep w-full" data-action="tab" data-target="st-review"><span class="n">5</span>5. Review &amp; Generate<span class="sr-only"> — not started</span></button></li>
+    </ol>
+
+    <!-- Deep-link notice -->
+    <div class="banner banner--warn" role="alert"><i data-lucide="link-2"></i><div class="grow"><div class="banner-title">Parts of this link could not be honoured</div><ul class="banner-body t-xs" style="list-style:disc;padding-left:16px"><li><span class="mono">include_examples</span> is not an option of Protocol Buffers (proto3) and was ignored. <span class="t-subtle">(options-foreign)</span></li><li>Credentials are never carried in a link: <span class="mono">registry_token</span> was redacted. <span class="t-subtle">(options-redacted)</span></li></ul><div class="t-2xs t-subtle mt-1">Other codes: target-unknown · target-unavailable · param-invalid · options-unreadable. A target problem lands you on the Target step. Source-load failures: 404 “This link points at a source or version that no longer exists…”, 403 “This export link is not available in your workspace…”, 401 “Your session has expired…”.</div></div></div>
+
+    <div id="step-panels">
+    <!-- ============ Step 1 · Source ============ -->
+    <section data-tab-panel="st-source" hidden class="col gap-4" role="group" aria-label="Step 1 of 5: Source">
+      <div class="card card--pad">
+        <div class="t-caps row gap-2 mb-3"><i data-lucide="package"></i>Source</div>
+        <div class="row-start gap-4 wrap">
+          <span class="icon-tile icon-tile--lg icon-tile--accent"><i data-lucide="file-json-2"></i></span>
+          <div class="grow min-w-0">
+            <div class="t-h2">Payments API</div>
+            <div class="t-sm t-muted">Version v2.4.0 · 36 export targets available</div>
+            <div class="row wrap gap-2 mt-3"><span class="fmt fmt--openapi">OpenAPI 3.1</span><span class="badge badge--info">REST</span><span class="chip"><span class="mono t-600">3</span>&nbsp;Services</span><span class="chip"><span class="mono t-600">18</span>&nbsp;Operations</span><span class="chip"><span class="mono t-600">42</span>&nbsp;Types</span></div>
+          </div>
+        </div>
+        <div class="callout callout--accent mt-4 t-xs">Export is scoped to this version: the fidelity badge on every target card is computed for this source, not a generic estimate. Exporting a catalog item produces an artifact — it never turns the item into a project.</div>
+      </div>
+      <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="gauge"></i></div><div><div class="empty__title">Measuring export fidelity for this source…</div><div class="empty__desc">Loading state while GET /api/export/targets computes per-target fidelity. No artifact param: indigo callout “Open the Export Studio from a source — The Studio exports a specific version…” + “Go to Versions”.</div></div><span class="badge badge--outline ml-auto">state</span></div></div>
+    </section>
+
+    <!-- ============ Step 2 · Target ============ -->
+    <section data-tab-panel="st-target" hidden class="col gap-4" role="group" aria-label="Step 2 of 5: Target">
+      <!-- Original source card (catalog origin) -->
+      <div class="card card--pad" style="box-shadow:0 0 0 1px var(--ok) inset, var(--shadow-sm)">
+        <div class="row-between wrap gap-3">
+          <div class="row gap-3"><span class="icon-tile icon-tile--ok"><i data-lucide="file-down"></i></span><div><div class="row gap-2"><span class="t-h4">Original source</span><span class="badge badge--sq badge--mono">OPENAPI</span></div><div class="t-xs t-muted" style="max-width:60ch">This item was imported as OpenAPI. Download it unchanged — lossless, no conversion. (Re-exporting to OpenAPI is offered as the original, not a round-trip.)</div></div></div>
+          <a class="btn" href="#" target="_blank"><i data-lucide="download"></i>Download original</a>
+        </div>
+      </div>
+
+      <div class="row-between wrap gap-3">
+        <div><div class="t-h3">Choose a target format</div><div class="t-xs t-muted">Fidelity badges are computed for <span class="t-600">this</span> source (version v2.4.0).</div></div>
+        <div class="row gap-3 wrap"><span class="t-xs t-muted">Source quality <span class="t-600" style="color:var(--fg)">B (84/100)</span> under <span class="t-600" style="color:var(--fg)">Acme REST</span>.</span><button class="btn btn--sm"><i data-lucide="arrow-down-narrow-wide"></i>Sorted by readiness</button></div>
+      </div>
+
+      <div role="group" aria-label="Export target formats" class="col gap-2">
+        <div class="t-caps fam">REST &amp; HTTP</div>
+        <div class="grid grid-4" style="gap:10px">
+          <button class="tgt" aria-pressed="false" title="Different paradigm — verify the conversion before generating."><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossless">lossless</span></span><span class="tgt-name"><i data-lucide="send"></i>Postman</span><span class="tgt-sub">rest</span><span class="tgt-why">Collections carry every operation and example.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="file-text"></i>RAML</span><span class="tgt-sub">rest</span><span class="tgt-why">Callbacks and webhooks are approximated.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="file-code"></i>API Blueprint</span><span class="tgt-sub">rest</span><span class="tgt-why">No components section — schemas are inlined.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="workflow"></i>Arazzo</span><span class="tgt-sub">rest</span><span class="tgt-why">Workflows synthesized from operation order.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="database"></i>OData</span><span class="tgt-sub">rest</span><span class="tgt-why">CRUD operations map to entity sets.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="landmark"></i>WSDL</span><span class="tgt-sub">rest</span><span class="tgt-why">REST verbs flattened to SOAP operations.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="stethoscope"></i>FHIR</span><span class="tgt-sub">rest</span><span class="tgt-why">Non-clinical types need profile mapping.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="type"></i>TypeSpec</span><span class="tgt-sub">rest</span><span class="tgt-why">Models and routes emit cleanly; decorators approximate vendor extensions.</span></button>
+        </div>
+        <div class="t-caps fam">RPC</div>
+        <div class="grid grid-4" style="gap:10px">
+          <button class="tgt" aria-pressed="true"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="binary"></i>Protocol Buffers (proto3)</span><span class="tgt-sub">rpc · multi-file</span><span class="tgt-why">Operations become RPCs; oneOf flattens to messages.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="plug-zap"></i>Connect RPC</span><span class="tgt-sub">rpc · multi-file</span><span class="tgt-why">HTTP semantics preserved via annotations.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="anvil"></i>Smithy</span><span class="tgt-sub">rpc</span><span class="tgt-why">Traits carry most HTTP bindings.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="cable"></i>OpenRPC</span><span class="tgt-sub">rpc</span><span class="tgt-why">JSON-RPC methods from operations.</span></button>
+        </div>
+        <div class="t-caps fam">Events</div>
+        <div class="grid grid-4" style="gap:10px">
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="radio-tower"></i>AsyncAPI 3.1</span><span class="tgt-sub">asyncapi-3 · event</span><span class="tgt-why">Request/response pairs become channels.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="cloud-lightning"></i>CloudEvents</span><span class="tgt-sub">event</span><span class="tgt-why">Only event payload schemas survive.</span></button>
+        </div>
+        <div class="t-caps fam">Data schema &amp; graph</div>
+        <div class="grid grid-4" style="gap:10px">
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="braces"></i>JSON Schema</span><span class="tgt-sub">data schema</span><span class="tgt-why">Schemas only — operations are dropped.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="feather"></i>Apache Avro</span><span class="tgt-sub">data schema · multi-file</span><span class="tgt-why">Records per type; unions approximate oneOf.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="hexagon"></i>GraphQL SDL</span><span class="tgt-sub">graph</span><span class="tgt-why">Types + synthesized Query root.</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="file-type-2"></i>XSD</span><span class="tgt-sub">data schema</span><span class="tgt-why">Complex types from schemas.</span></button>
+          <button class="tgt is-disabled" aria-pressed="false" disabled title="Requires the cobc toolchain, which is not available in this runtime."><span class="tgt-top"><span class="band band--unavailable">unavailable</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="file-archive"></i>COBOL Copybook</span><span class="tgt-sub">data schema</span><span class="tgt-why">Requires the cobc toolchain, which is not available in this runtime.</span></button>
+          <button class="tgt is-disabled" aria-pressed="false" disabled title="Blocked: source grade B is below this tenant's min_grade A for EDI targets."><span class="tgt-top"><span class="band band--blocked">blocked</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="receipt-text"></i>EDI X12</span><span class="tgt-sub">data schema</span><span class="tgt-why">Blocked: source grade B is below this tenant’s min_grade A for EDI targets.</span></button>
+        </div>
+        <div class="row mt-2"><button class="btn btn--ghost btn--sm" aria-expanded="false" data-action="toggle" data-target="all-targets"><i data-lucide="chevrons-down"></i>Show all 36 targets</button></div>
+        <div id="all-targets" hidden class="grid grid-4" style="gap:10px">
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="file-text"></i>WADL</span><span class="tgt-sub">rest</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="server"></i>z/OS Connect</span><span class="tgt-sub">rest</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="cable"></i>ONC RPC</span><span class="tgt-sub">rpc</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="cable"></i>CORBA IDL</span><span class="tgt-sub">rpc</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="flame"></i>Apache Thrift</span><span class="tgt-sub">rpc</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--lossy">lossy</span></span><span class="tgt-name"><i data-lucide="cable"></i>XML-RPC</span><span class="tgt-sub">rpc</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="zap"></i>Cap'n Proto</span><span class="tgt-sub">rpc</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="layers-2"></i>FlatBuffers</span><span class="tgt-sub">data schema</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="braces"></i>JSON Type Definition</span><span class="tgt-sub">data schema</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="file-digit"></i>ASN.1</span><span class="tgt-sub">data schema</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="banknote"></i>FIX</span><span class="tgt-sub">data schema</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="hospital"></i>HL7 v2</span><span class="tgt-sub">data schema</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="banknote"></i>ISO 20022</span><span class="tgt-sub">data schema</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--caution">check first</span><span class="tier tier--types">types-only</span></span><span class="tgt-name"><i data-lucide="credit-card"></i>ISO 8583</span><span class="tgt-sub">data schema</span></button>
+          <button class="tgt" aria-pressed="false"><span class="tgt-top"><span class="band band--ready">ready</span><span class="tier tier--lossless">lossless</span></span><span class="tgt-name"><i data-lucide="flask-conical"></i>Sample (no-op)</span><span class="tgt-sub">test</span></button>
+        </div>
+      </div>
+
+      <div class="card card--pad row-between wrap gap-3" style="box-shadow:0 0 0 2px var(--accent) inset">
+        <div class="row gap-3 wrap"><span class="t-sm">Exporting to <span class="t-600">Protocol Buffers (proto3)</span></span><span class="band band--caution">check first</span><span class="tier tier--lossy">lossy</span><span class="t-sm t-muted t-num">87% preserved</span></div>
+        <span class="t-xs t-subtle">Same-format target is filtered out — replaced by the Original source card. Order: readiness (ready → caution → blocked → unavailable, then composite score) ⇄ registry.</span>
+      </div>
+    </section>
+
+    <!-- ============ Step 3 · Options ============ -->
+    <section data-tab-panel="st-options" hidden class="col gap-4" role="group" aria-label="Step 3 of 5: Options">
+      <div class="card card--pad">
+        <div class="t-caps row gap-2"><i data-lucide="sliders-horizontal"></i>Protocol Buffers (proto3) options</div>
+        <hr class="mt-3 mb-4" />
+        <div class="form-grid">
+          <label class="check" style="align-items:flex-start"><input type="checkbox" checked /><span><span class="t-sm t-600">Emit services</span><br /><span class="t-xs t-muted">Generate service definitions with one rpc per operation.</span></span></label>
+          <label class="check" style="align-items:flex-start"><input type="checkbox" /><span><span class="t-sm t-600">Single file</span><br /><span class="t-xs t-muted">Bundle every message into one .proto instead of one file per package.</span></span></label>
+          <div class="field"><label>Field naming</label><div class="segmented" data-tabs=""><button class="is-active" data-action="tab">snake_case</button><button data-action="tab">camelCase</button><button data-action="tab">original</button></div><div class="hint">String enum rendered as a segmented row; selected value is the only override sent.</div></div>
+          <div class="field"><label>Package prefix</label><input class="input input--mono" placeholder="server default" value="acme.payments" /><div class="hint">Free string; empty → null (server default).</div></div>
+          <div class="field is-invalid"><label>Go package</label><input class="input input--mono" aria-invalid="true" /><div class="error"><i data-lucide="circle-alert" style="width:13px;height:13px"></i>Go package is required.</div></div>
+          <div class="field"><label>Syntax</label><div class="segmented" data-tabs=""><button class="is-active" data-action="tab">proto3</button><button data-action="tab" disabled title="proto2 requires the legacy emitter">proto2</button></div></div>
+        </div>
+        <div class="t-xs t-subtle mt-4">Validation vocabulary: “{Label} is required.” · “{Label} must be one of: a, b.” · “{Label} must be true or false.” · “{Label} must be text.” Complex types never render (server defaults). Continue is disabled until valid.</div>
+      </div>
+      <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="sliders-horizontal"></i></div><div><div class="empty__title">No options</div><div class="empty__desc">This target has no options — it exports with its defaults. Continue to verify the conversion.</div></div><span class="badge badge--outline ml-auto">state</span></div></div>
+    </section>
+
+    <!-- ============ Step 4 · Verify ============ -->
+    <section data-tab-panel="st-verify" class="col gap-4" role="group" aria-label="Step 4 of 5: Verify">
+      <div class="row-between wrap gap-3">
+        <div class="row gap-2"><i data-lucide="shield-check" class="t-subtle"></i><span class="t-h3">Verify the Protocol Buffers (proto3) conversion</span></div>
+        <label class="check t-sm" data-tip="Re-run verification automatically a moment after you change the target or an option."><input type="checkbox" checked />Verify automatically</label>
+      </div>
+
+      <!-- not-run + running states (reference) -->
+      <div class="grid grid-2">
+        <div class="callout callout--accent"><div class="t-sm">Run all three checks — fidelity, validation, and lint — in one pass, before you generate anything. Nothing is emitted or stored until you choose to generate. Automatic verification is on, so this configuration verifies itself in a moment.</div><button class="btn btn--primary btn--sm mt-3"><i data-lucide="sparkles"></i>Run verification</button><span class="badge badge--outline mt-2">not-run state</span></div>
+        <div class="card card--pad" role="status"><div class="col gap-2 t-sm t-muted"><span class="row gap-2"><span class="spinner"></span>Checking fidelity…</span><span class="row gap-2"><span class="spinner"></span>Checking validation…</span><span class="row gap-2"><span class="spinner"></span>Checking lint…</span></div><div class="t-xs t-subtle mt-3">Error state: “Verification did not return a result. Try again.” + Try again.</div><span class="badge badge--outline mt-2">running state</span></div>
+      </div>
+
+      <!-- Verdict banner -->
+      <div class="banner banner--warn" role="status" style="align-items:flex-start"><i data-lucide="triangle-alert"></i><div class="grow"><div class="banner-title">Lossy — acknowledge to continue</div><div class="banner-body t-sm">The artifact is valid but the conversion drops or approximates some constructs. Review the fidelity lens, then acknowledge the loss to continue.</div><div class="t-2xs t-subtle mt-1">Verdict vocabulary: <b>Clean</b> “The conversion is lossless and the emitted artifact validated cleanly. You can generate this export.” · <b>Lossy</b> (this one) · <b>Severe</b> “The target is a types-only format: … only the schemas survive and every operation and channel is dropped. Review the fidelity lens, then type the acknowledgement to continue.” · <b>Invalid — export blocked</b> “A validator re-parsed the emitted artifact and rejected it. Fix the source or choose a different target — this export cannot be generated.”</div></div></div>
+      <div class="row wrap gap-2 t-xs t-muted"><span>This verdict describes <span class="t-600" style="color:var(--fg)">Protocol Buffers (proto3) · emit_services = true · package_prefix = acme.payments</span>.</span><span class="badge badge--info" data-tip="Restored from this session — this configuration was already verified, so nothing was re-run."><i data-lucide="database-zap"></i>Cached</span><span class="t-subtle">5-min session cache keyed by source/target/options.</span></div>
+
+      <!-- Lens tabs -->
+      <div class="card">
+        <div class="tabs" role="tablist" aria-label="Verification lenses" style="padding:0 12px;border-bottom:1px solid var(--border)" data-tabs="lens-panels">
+          <button class="tab is-active" role="tab" data-action="tab" data-target="lens-fid">Fidelity<span class="lens-badge" style="background:var(--warn-soft);color:var(--warn-fg)">6</span><span class="sr-only">6 constructs affected</span></button>
+          <button class="tab" role="tab" data-action="tab" data-target="lens-val">Validation<span class="lens-badge" style="background:var(--ok-soft);color:var(--ok-fg)">0</span><span class="sr-only">0 validation problems</span></button>
+          <button class="tab" role="tab" data-action="tab" data-target="lens-lint">Lint<span class="lens-badge" style="background:var(--warn-soft);color:var(--warn-fg)">4</span><span class="sr-only">4 lint findings</span></button>
+        </div>
+        <div id="lens-panels" class="card__body">
+          <!-- Fidelity lens -->
+          <div data-tab-panel="lens-fid" class="col gap-4">
+            <div class="row-between wrap gap-2"><div><div class="t-h4">Exporting to Protocol Buffers (proto3)</div><div class="t-xs t-muted">What this conversion preserves, approximates, synthesizes, or drops.</div></div><span class="tier tier--lossy">lossy</span></div>
+            <div class="banner banner--warn t-xs"><i data-lucide="triangle-alert"></i><span><span class="t-600">Server advisory</span> <span class="badge badge--warn">warning</span> — oneOf schemas flatten to separate optional fields; a client cannot tell which variant was intended.</span></div>
+            <div class="row-start gap-6 wrap">
+              <div class="col" style="align-items:center;gap:6px"><span class="ring ring--lg" style="--p:87;--c:var(--warn)" role="img" aria-label="87% of constructs preserved"><span>87%</span></span><span class="t-xs t-subtle">preserved</span></div>
+              <div class="grow">
+                <div class="row wrap gap-2"><span class="badge badge--rose"><span class="glyph">✕</span>2 dropped</span><span class="badge badge--warn"><span class="glyph">≈</span>3 approximated</span><span class="badge badge--violet"><span class="glyph">✚</span>1 synthesized</span><span class="badge badge--ok"><span class="glyph">✓</span>57 clean</span></div>
+                <div class="t-xs t-subtle mt-2">63 constructs considered for this source.</div>
+                <button class="btn btn--sm btn--ghost mt-2" aria-expanded="true" data-action="toggle" data-target="per-construct"><i data-lucide="chevron-down"></i>Hide per-construct report (6 constructs)</button>
+              </div>
+            </div>
+            <ul id="per-construct" class="divide-y card card--flat">
+              <li class="row-start gap-3 wrap" style="padding:9px 12px"><span class="badge badge--rose"><span class="glyph">✕</span>DROP</span><span class="mono t-xs">paths./payments.get.callbacks</span><span class="badge badge--warn">warning</span><span class="t-xs t-muted grow">Callbacks are not representable in proto3.</span></li>
+              <li class="row-start gap-3 wrap" style="padding:9px 12px"><span class="badge badge--rose"><span class="glyph">✕</span>DROP</span><span class="mono t-xs">components.securitySchemes.oauth</span><span class="badge badge--warn">warning</span><span class="t-xs t-muted grow">Security schemes have no proto equivalent.</span></li>
+              <li class="row-start gap-3 wrap" style="padding:9px 12px"><span class="badge badge--warn"><span class="glyph">≈</span>APPROX</span><span class="mono t-xs">components.schemas.PaymentMethod.oneOf</span><span class="badge badge--warn">warning</span><span class="t-xs t-muted grow">oneOf flattened to optional fields. In the target: <span class="mono">message PaymentMethod</span></span></li>
+              <li class="row-start gap-3 wrap" style="padding:9px 12px"><span class="badge badge--warn"><span class="glyph">≈</span>APPROX</span><span class="mono t-xs">components.schemas.Amount.format:decimal</span><span class="t-xs t-muted grow">decimal → string with comment. In the target: <span class="mono">string amount</span></span></li>
+              <li class="row-start gap-3 wrap" style="padding:9px 12px"><span class="badge badge--warn"><span class="glyph">≈</span>APPROX</span><span class="mono t-xs">paths./refunds.post.requestBody</span><span class="t-xs t-muted grow">Multi-content body reduced to JSON. In the target: <span class="mono">rpc CreateRefund</span></span></li>
+              <li class="row-start gap-3 wrap" style="padding:9px 12px"><span class="badge badge--violet"><span class="glyph">✚</span>SYNTH</span><span class="mono t-xs">Empty message for 204 responses</span><span class="t-xs t-muted grow">Invented to satisfy the target. In the target: <span class="mono">google.protobuf.Empty</span></span></li>
+            </ul>
+            <div class="t-2xs t-subtle">Row glyph sr-text: dropped — not representable in the target · approximated — represented imperfectly · synthesized — invented to satisfy the target · clean — carried over unchanged.</div>
+            <!-- Acknowledgements -->
+            <div class="grid grid-2">
+              <div class="card card--soft card--pad">
+                <label class="check" style="align-items:flex-start"><input type="checkbox" /><span class="t-sm">I understand this conversion is lossy and want to export anyway.</span></label>
+                <div class="t-xs t-subtle mt-2">The export stays disabled until you acknowledge the fidelity loss above. <span class="badge badge--outline">checkbox mode · lossy</span></div>
+              </div>
+              <div class="card card--soft card--pad">
+                <div class="row gap-2 t-sm t-600"><i data-lucide="shield-alert" style="color:var(--rose)"></i>This export produces a types-only artifact.</div>
+                <div class="t-xs t-muted mt-1">Only the schemas will be exported — every operation and channel is dropped. To confirm you understand, type <span class="mono">export produces a types-only artifact</span> below. Generate stays disabled until it matches.</div>
+                <input class="input input--mono mt-2" placeholder="export produces a types-only artifact" style="box-shadow:0 0 0 1px var(--danger) inset" />
+                <div class="t-xs t-subtle mt-1">Matched: green border + “Acknowledged — you can generate this export.” <span class="badge badge--outline">typed mode · severe</span></div>
+              </div>
+            </div>
+          </div>
+          <!-- Validation lens -->
+          <div data-tab-panel="lens-val" hidden class="col gap-3">
+            <div class="row gap-2"><i data-lucide="shield-check" style="color:var(--ok)"></i><div><div class="t-sm t-600">The emitted artifact re-parsed with no validation errors.</div><div class="t-xs t-muted">Validated with <span class="mono">protoc 27.1</span>.</div></div></div>
+            <div class="card card--soft" style="padding:10px 12px"><div class="t-xs t-600 mb-1">Other lens states</div><ul class="t-xs t-muted col gap-1"><li><span class="badge badge--warn">unavailable</span> “The emitted artifact was <b>not validated</b> — the validator could not run on this server.” · “<span class="mono">protoc</span> is not installed on the server.”</li><li><span class="badge">not_applicable</span> “No validator matches this format — there is nothing to validate for this target.”</li><li><span class="badge badge--danger">invalid</span> findings list with file/path/line/column/rule chips; rows openable in the Review editor (↗, “Open in the Review editor”); <span class="mono">blocks_delivery</span> drives the rose badge.</li></ul></div>
+          </div>
+          <!-- Lint lens -->
+          <div data-tab-panel="lens-lint" hidden class="col gap-3">
+            <div class="banner banner--warn t-xs"><i data-lucide="info"></i><span>These findings lint the <b>emitted proto3</b> with <span class="mono">buf-style</span> — not the source’s catalog lint. <a href="../sources/catalog-item.html">View Payments API’s lint report ↗</a></span></div>
+            <div class="row wrap gap-2"><span class="badge badge--ok">B · 82/100</span><span class="badge badge--rose">0 errors</span><span class="badge badge--warn">3 warnings</span><span class="badge">1 info</span><span class="badge badge--outline">3 rules triggered</span></div>
+            <div><div class="t-caps mb-1">Warnings · 3</div>
+              <ul class="divide-y card card--flat">
+                <li class="row-start gap-3 wrap" style="padding:9px 12px"><span class="badge badge--warn">warning</span><span class="mono t-xs">FIELD_LOWER_SNAKE_CASE</span><span class="badge badge--outline">NAMING</span><span class="t-xs t-muted grow">Field “cardID” should be lower_snake_case.</span><button class="btn btn--sm btn--ghost" data-tip="Open in the Review editor"><span class="mono t-2xs">payments.proto:41</span><i data-lucide="external-link"></i></button></li>
+                <li class="row-start gap-3 wrap" style="padding:9px 12px"><span class="badge badge--warn">warning</span><span class="mono t-xs">ENUM_ZERO_VALUE_SUFFIX</span><span class="badge badge--outline">STRUCTURE</span><span class="t-xs t-muted grow">Enum zero value should be *_UNSPECIFIED.</span><button class="btn btn--sm btn--ghost" data-tip="Open in the Review editor"><span class="mono t-2xs">payments.proto:12</span><i data-lucide="external-link"></i></button></li>
+                <li class="row-start gap-3 wrap" style="padding:9px 12px"><span class="badge badge--warn">warning</span><span class="mono t-xs">SERVICE_SUFFIX</span><span class="badge badge--outline">NAMING</span><span class="t-xs t-muted grow">Service “Payments” should end in “Service”.</span><button class="btn btn--sm btn--ghost" data-tip="Open in the Review editor"><span class="mono t-2xs">payments.proto:70</span><i data-lucide="external-link"></i></button></li>
+              </ul></div>
+            <div class="t-xs t-subtle">Info · 1 — <span class="mono">COMMENT_FIELD</span> “Field has no comment.” · Clean: “The lint pack reported no findings.” · not_applicable: “No lint pack is registered for <b>{target}</b> — there is nothing to lint. The export is not blocked by lint.” Lint never gates Generate.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projection map -->
+      <section class="card" aria-label="Projection map for Protocol Buffers (proto3)">
+        <div class="card__header"><div class="card__title"><i data-lucide="network"></i>Projection map<span class="badge badge--mono" title="sha256:4c1d9a2e77b0…full hash">snapshot 4c1d9a2e77b0</span></div><div class="row gap-1"><button class="btn btn--sm btn--icon btn--ghost" aria-label="Zoom out"><i data-lucide="zoom-out"></i></button><button class="btn btn--sm btn--icon btn--ghost" aria-label="Zoom in"><i data-lucide="zoom-in"></i></button><button class="btn btn--sm btn--ghost">Reset view</button></div></div>
+        <div class="card__body col gap-3">
+          <div class="t-xs t-muted">Where this source’s constructs land in proto3, from the server’s projection manifest. The table below is the accessible equivalent of the graph — both show the same evidence.</div>
+          <div class="row wrap gap-2"><span class="badge badge--ok">✓ 51 retained</span><span class="badge badge--info">⇄ 6 transformed</span><span class="badge badge--warn">≈ 3 approximated</span><span class="badge badge--violet">＋ 1 synthesized</span><span class="badge badge--rose">× 2 dropped</span><span class="badge">⊘ 0 unavailable</span><span class="badge badge--outline">— 0 not applicable</span></div>
+          <div class="t-xs t-subtle">Graph · clean outcomes aggregated; every dropped, unavailable, or critical construct is shown individually</div>
+          <div class="chart-area" style="height:230px">
+            <svg viewBox="0 0 900 230" aria-label="Projection graph. Arrow keys move between constructs; Enter selects; Escape resets the view." role="application">
+              <g font-size="10" font-family="Inter, sans-serif" fill="var(--fg-subtle)" text-transform="uppercase"><text x="80" y="16">Source / native</text><text x="410" y="16">Canonical</text><text x="700" y="16">Destination</text></g>
+              <g stroke="var(--fg-faint)" fill="none">
+                <line x1="230" y1="50" x2="380" y2="50"/><line x1="230" y1="90" x2="380" y2="90"/><line x1="230" y1="130" x2="380" y2="130" stroke-dasharray="6 3"/><line x1="230" y1="170" x2="380" y2="170" stroke-dasharray="8 4"/>
+                <line x1="530" y1="50" x2="660" y2="50"/><line x1="530" y1="90" x2="660" y2="90"/><line x1="530" y1="130" x2="660" y2="130" stroke-dasharray="6 3"/><line x1="530" y1="170" x2="660" y2="195" stroke-dasharray="8 4"/>
+                <line x1="530" y1="205" x2="660" y2="205" stroke-dasharray="2 3"/>
+              </g>
+              <g font-size="11" font-family="JetBrains Mono, monospace" fill="var(--fg)">
+                <rect x="60" y="36" width="170" height="26" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="145" y="53" text-anchor="middle">51 clean constructs</text>
+                <rect x="60" y="76" width="170" height="26" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="145" y="93" text-anchor="middle">operations (18)</text>
+                <rect x="60" y="116" width="170" height="26" rx="6" fill="var(--warn-soft)" stroke="var(--warn)"/><text x="145" y="133" text-anchor="middle">PaymentMethod.oneOf</text>
+                <rect x="60" y="156" width="170" height="26" rx="6" fill="var(--rose-soft)" stroke="var(--rose)"/><text x="145" y="173" text-anchor="middle">callbacks · security</text>
+                <rect x="380" y="36" width="150" height="26" rx="6" fill="var(--bg-subtle)" stroke="var(--border-strong)"/><text x="455" y="53" text-anchor="middle">types</text>
+                <rect x="380" y="76" width="150" height="26" rx="6" fill="var(--bg-subtle)" stroke="var(--border-strong)"/><text x="455" y="93" text-anchor="middle">services</text>
+                <rect x="380" y="116" width="150" height="26" rx="6" fill="var(--bg-subtle)" stroke="var(--border-strong)"/><text x="455" y="133" text-anchor="middle">union types</text>
+                <rect x="380" y="156" width="150" height="26" rx="6" fill="var(--bg-subtle)" stroke="var(--border-strong)"/><text x="455" y="173" text-anchor="middle">auth · flows</text>
+                <rect x="380" y="192" width="150" height="26" rx="6" fill="var(--violet-soft)" stroke="var(--violet)"/><text x="455" y="209" text-anchor="middle">＋ Empty message</text>
+                <rect x="660" y="36" width="180" height="26" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="750" y="53" text-anchor="middle">messages (42)</text>
+                <rect x="660" y="76" width="180" height="26" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="750" y="93" text-anchor="middle">rpc (18)</text>
+                <rect x="660" y="116" width="180" height="26" rx="6" fill="var(--warn-soft)" stroke="var(--warn)"/><text x="750" y="133" text-anchor="middle">optional fields</text>
+                <rect x="660" y="156" width="180" height="26" rx="6" fill="var(--rose-soft)" stroke="var(--rose)"/><text x="750" y="173" text-anchor="middle">Omitted from dest.</text>
+                <rect x="660" y="192" width="180" height="26" rx="6" fill="var(--bg-inset)" stroke="var(--border-strong)"/><text x="750" y="209" text-anchor="middle">Unavailable lane</text>
+              </g>
+            </svg>
+          </div>
+          <div class="table-wrap card--flat" style="box-shadow:none">
+            <table class="table table--dense proj-table"><thead><tr><th>Status</th><th>Source construct</th><th>Destination</th><th>Reason</th></tr></thead><tbody>
+              <tr><td><span class="badge badge--ok">✓ Retained</span></td><td class="mono">51 constructs retained, aggregated.</td><td class="t-muted" colspan="2"><button class="btn btn--sm btn--link">Select to list them.</button></td></tr>
+              <tr class="is-selected"><td><span class="badge badge--rose">× Dropped</span></td><td class="mono">paths./payments.get.callbacks</td><td class="t-muted">Omitted from the destination</td><td><span class="badge badge--outline">Format limit</span> <a href="#" class="t-xs">docs ↗</a></td></tr>
+              <tr><td><span class="badge badge--rose">× Dropped</span></td><td class="mono">components.securitySchemes.oauth</td><td class="t-muted">Omitted from the destination</td><td><span class="badge badge--outline">Format limit</span></td></tr>
+              <tr><td><span class="badge badge--warn">≈ Approximated</span></td><td class="mono">components.schemas.PaymentMethod.oneOf</td><td class="mono t-xs">message PaymentMethod</td><td><span class="badge badge--outline">Emitter gap</span></td></tr>
+              <tr><td><span class="badge badge--violet">＋ Synthesized</span></td><td class="mono">(none)</td><td class="mono t-xs">google.protobuf.Empty</td><td><span class="badge badge--outline">Not applicable</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="row-between wrap gap-2 t-xs t-subtle" role="status"><span>Showing the first 60 of 63 evidence rows — the status counts above cover the whole manifest.</span><button class="btn btn--sm btn--ghost">Load more evidence</button></div>
+          <!-- Evidence drawer -->
+          <aside class="card card--soft card--pad" aria-label="Selected construct evidence" aria-live="polite">
+            <div class="row-between"><div class="row gap-2 wrap"><span class="badge badge--rose">× Dropped</span><span class="badge badge--warn">warning</span><span class="mono t-sm">paths./payments.get.callbacks</span></div><button class="btn btn--sm btn--icon btn--ghost" aria-label="Close evidence detail"><i data-lucide="x"></i></button></div>
+            <div class="mt-3 col gap-2 t-sm">
+              <div class="row wrap gap-2"><span class="badge badge--outline">Format limit</span><span class="mono t-xs">destination_unsupported</span></div>
+              <p class="t-muted t-xs">A format limit means the destination language cannot express this construct at all — no emitter could carry it. Protocol Buffers has no notion of out-of-band callback operations, so the callback definition is omitted from the destination.</p>
+              <dl class="kv t-xs"><dt>In the destination</dt><dd class="mono">—</dd><dt>From the source</dt><dd>Callback (<span class="mono">paths./payments.get.callbacks.onSettled</span>)</dd><dt>Documentation</dt><dd><a href="https://protobuf.dev" rel="noopener">protobuf.dev — language guide ↗</a> <span class="t-subtle">(host-allowlisted; unsafe URLs degrade to “documentation unavailable”)</span></dd></dl>
+              <div class="t-xs t-600 mt-1">What you can do</div>
+              <div class="row gap-2 wrap"><button class="btn btn--sm" data-action="tab" data-target="st-target"><i data-lucide="replace"></i>Choose a different target</button><button class="btn btn--sm" data-action="tab" data-target="st-options"><i data-lucide="sliders-horizontal"></i>Change export options</button></div>
+              <div class="t-2xs t-subtle mt-1">Evidence produced by emitter v3.2 · registry v14 · apiome 0.241.0.</div>
+            </div>
+          </aside>
+          <div class="t-2xs t-subtle">Notices: integrity error “The projection evidence failed its integrity check and was not rendered (N issues)…” · snapshot mismatch “This evidence describes snapshot X, but the fidelity summary above was computed for Y — the source changed in between. Re-run the preview for one consistent view.” · “Source-native evidence values were redacted for this view.”</div>
+        </div>
+        <div class="card__footer"><span class="t-xs t-subtle">Keyboard: arrows/Home/End move over nodes · Enter selects · Escape resets. Colour is supplemental to label + symbol + dash.</span><button class="btn btn--sm"><i data-lucide="refresh-cw"></i>Re-run verification</button></div>
+      </section>
+    </section>
+
+    <!-- ============ Step 5 · Review & Generate ============ -->
+    <section data-tab-panel="st-review" hidden class="col gap-4" role="group" aria-label="Step 5 of 5: Review &amp; Generate">
+      <div class="segmented" data-tabs="review-panels" aria-label="Review stage (mockup)">
+        <button class="is-active" data-action="tab" data-target="rv-pre">Pre-generate</button>
+        <button data-action="tab" data-target="rv-job">Job progress</button>
+        <button data-action="tab" data-target="rv-doc">Artifact</button>
+        <button data-action="tab" data-target="rv-bundle">Bundle</button>
+        <button data-action="tab" data-target="rv-map">Mapping graph</button>
+        <button data-action="tab" data-target="rv-heat">Loss heatmap</button>
+        <button data-action="tab" data-target="rv-rt">Round-trip</button>
+      </div>
+      <div id="review-panels">
+        <!-- Pre-generate -->
+        <div data-tab-panel="rv-pre" class="col gap-4">
+          <div class="banner banner--warn" role="status"><i data-lucide="triangle-alert"></i><span><span class="banner-title">Lossy — acknowledge to continue</span> <span class="t-xs">(verdict carried from Verify; acknowledged ✓)</span></span></div>
+          <div class="card card--pad">
+            <dl class="kv">
+              <dt>Source</dt><dd>Payments API · v2.4.0</dd>
+              <dt>Target</dt><dd class="row gap-2">Protocol Buffers (proto3) <span class="tier tier--lossy">lossy · 87% preserved</span></dd>
+              <dt>Options</dt><dd>Overridden: <span class="mono">emit_services, package_prefix</span> <span class="t-subtle">(or “Defaults for every option.”)</span></dd>
+            </dl>
+            <div class="form-actions"><button class="btn btn--primary"><i data-lucide="sparkles"></i>Generate</button></div>
+          </div>
+        </div>
+        <!-- Job progress -->
+        <div data-tab-panel="rv-job" hidden class="col gap-4">
+          <div class="card card--pad">
+            <div class="row-between wrap gap-2"><div class="row gap-2"><i data-lucide="file-output" class="t-subtle"></i><span class="t-h4">Generating Protocol Buffers (proto3)</span></div><span class="badge" data-status="running">running</span></div>
+            <div class="row gap-3 mt-3"><div class="progress progress--striped grow"><span style="width:62%"></span></div><span class="t-sm t-num t-600">62%</span></div>
+            <ol class="mt-4">
+              <li class="stage is-done"><span class="s-ic"><i data-lucide="check" style="width:13px;height:13px"></i></span><div><div class="t-sm t-600">Load source</div><div class="t-xs t-muted">Reconstruct the source API from its stored version.</div></div></li>
+              <li class="stage is-done"><span class="s-ic"><i data-lucide="check" style="width:13px;height:13px"></i></span><div><div class="t-sm t-600">Analyze fidelity</div><div class="t-xs t-muted">Measure what the conversion preserves, approximates, or drops.</div></div></li>
+              <li class="stage is-active"><span class="s-ic"><span class="spinner" style="width:12px;height:12px"></span></span><div><div class="t-sm t-600">Emit</div><div class="t-xs t-muted">Generate the target document through the emitter.</div></div></li>
+              <li class="stage"><span class="s-ic"><i data-lucide="circle-dashed" style="width:13px;height:13px"></i></span><div><div class="t-sm t-600">Validate</div><div class="t-xs t-muted">Re-parse the emitted artifact to prove it is well-formed.</div></div></li>
+              <li class="stage"><span class="s-ic"><i data-lucide="circle-dashed" style="width:13px;height:13px"></i></span><div><div class="t-sm t-600">Package</div><div class="t-xs t-muted">Bundle the emitted files for delivery.</div></div></li>
+            </ol>
+            <div class="code mt-3" style="max-height:90px">09:41:02 info  loaded version ver_2c91aa (412 KB)
+09:41:03 info  fidelity: 87% preserved · 2 dropped · 3 approximated
+09:41:04 info  emitting acme/payments/v1/payments.proto…</div>
+            <div class="row mt-3" style="justify-content:flex-end"><button class="btn btn--sm">Cancel</button></div>
+          </div>
+          <div class="card card--pad" style="box-shadow:0 0 0 1px var(--danger) inset, var(--shadow-sm)">
+            <div class="row gap-2"><i data-lucide="shield-x" style="color:var(--danger)"></i><span class="t-h4">The emitted artifact failed validation</span><span class="badge badge--outline ml-auto">failure-card example</span></div>
+            <p class="t-sm t-muted mt-2">protoc rejected the artifact: duplicate message name <span class="mono">Refund</span> (payments.proto:88). Review the findings, fix the source or options, then verify again.</p>
+            <div class="row gap-2 mt-3"><button class="btn btn--primary btn--sm" data-action="tab" data-target="st-verify">Review in Verify</button><button class="btn btn--sm">Retry export</button></div>
+            <div class="t-2xs t-subtle mt-3">Failure classes → title · action: SOURCE_LOAD_FAILED “Could not load the source” → Retry export · UNSUPPORTED_TARGET “Target not available” → Choose a different target · TRANSCODE_CONFIRMATION_REQUIRED “Severe conversion needs confirmation” → Acknowledge &amp; generate · STALE_PREVIEW “The preview snapshot is stale” → Refresh preview (back to Verify, resets ack) · EMIT_FAILED “The emitter failed” → Retry export · EMPTY_EMIT “The target produced no document” → Adjust options · EMITTED_ARTIFACT_INVALID (this card) → Review in Verify (re-locks Generate) · EXPORT_DELIVERY_BLOCKED “Delivery blocked by quality policy” → How to unblock this · PACKAGING_FAILED → Retry export · DELIVERY_FAILED → Retry delivery · unknown “The export failed” → Retry export. Canceled: “The export was canceled. You can start it again.”</div>
+          </div>
+        </div>
+        <!-- Single artifact -->
+        <div data-tab-panel="rv-doc" hidden class="col gap-4">
+          <div class="banner banner--ok"><i data-lucide="check-circle-2"></i><span>Generated <b class="mono">payments.proto</b>. Review it below, then download the file or a .zip bundle. <span class="t-xs">(Fetching state: “Generated proto3 — preparing your download…”)</span></span></div>
+          <!-- Delivery gate -->
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="shield-half"></i>Delivery gate</div><span class="row gap-2"><span class="badge badge--warn">allow_with_warning</span><span class="badge badge--ok"><i data-lucide="badge-check"></i>signed</span></span></div>
+            <div class="card__body col gap-2">
+              <div class="t-sm">Delivered with warnings — review the reasons below before you ship this artifact.</div>
+              <ul class="divide-y">
+                <li class="row-start gap-3" style="padding:8px 0"><span class="badge badge--warn">warning</span><span class="t-xs t-600" style="width:150px">Conversion fidelity</span><span class="t-xs t-muted">2 constructs dropped — the loss was acknowledged in Verify.</span></li>
+                <li class="row-start gap-3" style="padding:8px 0"><span class="badge badge--info">info</span><span class="t-xs t-600" style="width:150px">Source quality</span><span class="t-xs t-muted">Source grade B meets the tenant floor (C).</span></li>
+              </ul>
+              <div class="t-2xs t-subtle">Dimensions: Artifact validation · Source quality · Conversion fidelity · Tenant policy; severities info | warning | blocking; decisions allow | allow_with_warning | block. Blocked shows override instructions + mono dl (endpoint POST …, subject, target, roles). “This artifact carries a signed delivery attestation.”</div>
+            </div>
+          </div>
+          <div class="grid" style="grid-template-columns:minmax(0,22rem) minmax(0,1fr)">
+            <!-- Manifest -->
+            <div class="card min-w-0">
+              <div class="card__header"><div class="card__title"><i data-lucide="list-tree"></i>Artifact entities<span class="badge badge--outline">windowed</span></div><span class="t-xs t-subtle">63 entities · <span class="badge badge--rose">2 dropped</span></span></div>
+              <div style="padding:8px 12px;border-bottom:1px solid var(--border)"><div class="input-wrap"><i data-lucide="filter"></i><input class="input input--sm" placeholder="Filter entities (name, kind, status)…" /></div></div>
+              <div class="p-2" role="tree" aria-label="Entities in the emitted artifact" style="max-height:320px;overflow:auto">
+                <div class="tree">
+                  <div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><i data-lucide="server"></i>Services<span class="count">3</span></div>
+                  <div class="tree__children">
+                    <div class="tree__item"><span class="badge badge--sq">svc</span><span class="mono">PaymentsService</span><span class="badge badge--ok" style="margin-left:auto">retained</span></div>
+                    <div class="tree__item is-active"><span class="badge badge--sq">op</span><span class="mono">CreateRefund</span><span class="badge badge--warn" style="margin-left:auto">approximated</span></div>
+                    <div class="tree__item"><span class="badge badge--sq">op</span><span class="mono">SearchPayments</span><span class="badge badge--ok" style="margin-left:auto">retained</span></div>
+                  </div>
+                  <div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><i data-lucide="box"></i>Types<span class="count">42</span></div>
+                  <div class="tree__children">
+                    <div class="tree__item"><span class="badge badge--sq">type</span><span class="mono">PaymentMethod</span><span class="badge badge--warn" style="margin-left:auto">approximated</span></div>
+                    <div class="tree__item"><span class="badge badge--sq">type</span><span class="mono">Refund</span><span class="badge badge--ok" style="margin-left:auto">retained</span></div>
+                    <div class="tree__item"><span class="badge badge--sq">field</span><span class="mono">Refund.reason</span><span class="badge badge--ok" style="margin-left:auto">retained</span></div>
+                    <div class="tree__item"><span class="badge badge--sq">type</span><span class="mono">OAuthFlows</span><span class="badge badge--rose" style="margin-left:auto">dropped</span></div>
+                  </div>
+                  <div class="tree__item"><i data-lucide="chevron-right" class="tw"></i><i data-lucide="waves"></i>Channels<span class="count">0</span></div>
+                </div>
+              </div>
+              <div class="card__footer" aria-live="polite" style="flex-direction:column;align-items:stretch;gap:6px">
+                <div class="row gap-2 wrap t-xs"><span class="mono">operations./refunds.post</span><span class="badge badge--warn">approximated</span><span class="badge badge--outline">Emitter gap</span></div>
+                <div class="t-xs t-muted">Multi-content request body reduced to JSON. Mapped as: <span class="mono">rpc CreateRefund(CreateRefundRequest)</span> · <span class="mono">payments.proto:74 · #/service/1</span></div>
+                <div class="t-2xs t-subtle">Keyboard: ↑/↓ · ←/→ collapse/expand · Home/End · Enter/Space · type-ahead. States: “Describing the artifact…” · “The manifest lists no entities for this artifact.” · “No entities match ‘q’.” · truncation “Showing X of N entities — this manifest is truncated.” + Load more entities.</div>
+              </div>
+            </div>
+            <!-- Artifact preview -->
+            <div class="card min-w-0">
+              <div class="card__header"><div class="card__title"><i data-lucide="file-code-2"></i>Emitted payments.proto</div><span class="badge badge--ok">valid · round-trip OK</span></div>
+              <div class="row gap-1 wrap" style="padding:8px 12px;border-bottom:1px solid var(--border)" aria-label="Viewer actions">
+                <button class="btn btn--sm" data-tip="Copy this file to the clipboard"><i data-lucide="copy"></i>Copy</button>
+                <button class="btn btn--sm" data-tip="Download payments.proto"><i data-lucide="download"></i>Download file</button>
+                <button class="btn btn--sm" data-tip="Download every file in this bundle as a .zip"><i data-lucide="file-archive"></i>Download .zip</button>
+                <span class="grow"></span>
+                <button class="btn btn--sm btn--ghost" aria-pressed="false" data-tip="Wrap long lines"><i data-lucide="wrap-text"></i>Wrap</button>
+                <button class="btn btn--sm btn--ghost" aria-pressed="true" data-tip="Toggle code folding"><i data-lucide="fold-vertical"></i>Folding</button>
+                <button class="btn btn--sm btn--ghost" data-tip="Find in this file"><i data-lucide="search"></i>Find</button>
+              </div>
+              <div class="code code--lines" style="height:280px;border-radius:0"><span><span class="c-k">syntax</span> = <span class="c-s">"proto3"</span>;</span><span></span><span><span class="c-k">package</span> acme.payments.v1;</span><span></span><span><span class="c-c">// Approximated: decimal → string (format comment)</span></span><span><span class="c-k">message</span> <span class="c-n">Payment</span> {</span><span>  <span class="c-k">string</span> id = 1;</span><span>  <span class="c-k">string</span> amount = 2; <span class="c-c">// decimal</span></span><span>  PaymentMethod method = 3;</span><span>}</span><span></span><span><span class="c-c">// oneOf flattened to optional fields</span></span><span><span class="c-k">message</span> <span class="c-n">PaymentMethod</span> {</span><span>  <span class="c-k">optional</span> Card card = 1;</span><span>  <span class="c-k">optional</span> BankTransfer bank_transfer = 2;</span><span>}</span><span></span><span><span class="c-k">service</span> <span class="c-n">PaymentsService</span> {</span><span>  <span class="c-k">rpc</span> SearchPayments(SearchRequest) <span class="c-k">returns</span> (SearchResponse);</span><span>  <span class="c-k">rpc</span> CreateRefund(CreateRefundRequest) <span class="c-k">returns</span> (Refund);</span><span>}</span></div>
+              <div style="border-top:1px solid var(--border)">
+                <div class="row gap-2" style="padding:8px 12px"><span class="t-sm t-600">Problems</span><span class="badge badge--warn">3</span></div>
+                <div class="divide-y">
+                  <button class="row gap-2 w-full" style="padding:6px 12px;text-align:left"><i data-lucide="triangle-alert" style="width:13px;height:13px;color:var(--warn)"></i><span class="t-xs grow">Field “cardID” should be lower_snake_case.</span><span class="mono t-2xs t-subtle">41:3</span></button>
+                  <button class="row gap-2 w-full" style="padding:6px 12px;text-align:left"><i data-lucide="triangle-alert" style="width:13px;height:13px;color:var(--warn)"></i><span class="t-xs grow">Enum zero value should be *_UNSPECIFIED.</span><span class="mono t-2xs t-subtle">12:3</span></button>
+                </div>
+              </div>
+              <div class="card__footer" style="flex-direction:column;align-items:stretch;gap:4px">
+                <span class="t-xs t-muted">The fidelity engine predicts this export degrades some constructs — review the fidelity report.</span>
+                <span class="t-2xs t-subtle">6.2 KB (6.2 KB shown) · text/x-protobuf · protobuf. Badge vocab: invalid {syntax} · valid · emitted · valid · round-trip OK · lossy round-trip · round-trip OK. Guards: 512 KB per-file inline cap (head preview 128 KB “Show the beginning” + “Download the whole file”), 2 MB bundle viewer budget (“…loads only when you ask.” → Load into the viewer), truncated notice “Showing the first {a} of {b}…”.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Bundle explorer -->
+        <div data-tab-panel="rv-bundle" hidden class="col gap-4">
+          <div class="banner banner--ok"><i data-lucide="check-circle-2"></i><span>Generated a <b>4-file bundle</b>. Navigate the files or the artifact entities on the left, then download the .zip.</span></div>
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="folder-tree"></i>Bundle · 4 files</div><span class="t-xs t-subtle mono">acme/payments/v1/payments.proto · 6.2 KB · text/x-protobuf · protobuf</span></div>
+            <div class="grid" style="grid-template-columns:280px minmax(0,1fr);gap:0">
+              <div style="border-right:1px solid var(--border);padding:8px" role="tree" aria-label="Bundle files">
+                <div class="tree">
+                  <div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><i data-lucide="folder"></i>acme/payments/v1</div>
+                  <div class="tree__children">
+                    <div class="tree__item is-active"><i data-lucide="file-code-2"></i><span class="mono">payments.proto</span><span class="badge badge--warn" style="margin-left:auto">3</span></div>
+                    <div class="tree__item"><i data-lucide="file-code-2"></i><span class="mono">refunds.proto</span><span class="badge badge--warn" style="margin-left:auto">1</span></div>
+                    <div class="tree__item"><i data-lucide="file-code-2"></i><span class="mono">common.proto</span></div>
+                  </div>
+                  <div class="tree__item"><i data-lucide="file-text"></i><span class="mono">buf.yaml</span></div>
+                </div>
+              </div>
+              <div class="min-w-0">
+                <div class="tabs" style="padding:0 8px;border-bottom:1px solid var(--border)" aria-label="Open bundle files">
+                  <span class="tab is-active mono t-xs">payments.proto<button class="btn btn--sm btn--icon btn--ghost" aria-label="Close payments.proto (press Delete to close)" style="width:18px;height:18px;margin-left:4px"><i data-lucide="x" style="width:10px;height:10px"></i></button></span>
+                  <span class="tab mono t-xs">refunds.proto<button class="btn btn--sm btn--icon btn--ghost" aria-label="Close refunds.proto" style="width:18px;height:18px;margin-left:4px"><i data-lucide="x" style="width:10px;height:10px"></i></button></span>
+                </div>
+                <div class="row gap-1 wrap" style="padding:6px 10px;border-bottom:1px solid var(--border)"><button class="btn btn--sm"><i data-lucide="copy"></i>Copy</button><button class="btn btn--sm"><i data-lucide="download"></i>Download file</button><button class="btn btn--sm"><i data-lucide="file-archive"></i>Download .zip</button></div>
+                <div class="code" style="height:180px;border-radius:0">syntax = "proto3";
+package acme.payments.v1;
+…</div>
+                <div class="t-2xs t-subtle" style="padding:8px 12px">Per-file finding badges come from verify findings; a lens click on a located problem opens the right file + line; entity selection opens the file at its declaration line. Empty: “Select a file from the tree to view it.” Budget notice: “refunds.proto is 1.4 MB. This bundle’s viewer budget was already spent on the files before it, so it loads only when you ask.” → Load into the viewer.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Mapping graph -->
+        <div data-tab-panel="rv-map" hidden class="col gap-4">
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="network"></i>What became of each entity in proto3<span class="badge badge--mono">snapshot 4c1d9a2e77b0</span></div></div>
+            <div class="card__body col gap-3">
+              <div class="row wrap gap-2"><span class="badge badge--ok">✓ Retained 51</span><span class="badge badge--info">⇄ Transformed 6</span><span class="badge badge--warn">≈ Approximated 3</span><span class="badge badge--violet">＋ Synthesized 1</span><span class="badge badge--rose">× Dropped 2</span><span class="badge">⊘ Unavailable 0</span><span class="badge badge--outline">— Not applicable 0</span></div>
+              <div class="t-xs t-subtle">Clean rows are aggregated to keep the map readable; expand them in the table below. Dropped, approximated, synthesized, and non-info evidence is never aggregated.</div>
+              <div class="chart-area" style="height:180px">
+                <svg viewBox="0 0 900 180" role="img" aria-label="Mapping graph: canonical entities to proto3 constructs across lanes in the target, not in the target, unavailable">
+                  <g font-size="10" fill="var(--fg-subtle)" font-family="Inter, sans-serif"><text x="70" y="16">Canonical</text><text x="620" y="16">In the target</text><text x="620" y="106">Not in the target</text><text x="620" y="156">Unavailable</text></g>
+                  <g stroke="var(--fg-faint)" fill="none"><line x1="260" y1="45" x2="590" y2="45"/><line x1="260" y1="75" x2="590" y2="60" stroke-dasharray="6 3"/><line x1="260" y1="105" x2="590" y2="120" stroke-dasharray="8 4"/></g>
+                  <g font-size="11" font-family="JetBrains Mono, monospace" fill="var(--fg)">
+                    <rect x="60" y="32" width="200" height="26" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="160" y="49" text-anchor="middle">57 clean entities</text>
+                    <rect x="60" y="64" width="200" height="26" rx="6" fill="var(--warn-soft)" stroke="var(--warn)"/><text x="160" y="81" text-anchor="middle">PaymentMethod</text>
+                    <rect x="60" y="96" width="200" height="26" rx="6" fill="var(--rose-soft)" stroke="var(--rose)"/><text x="160" y="113" text-anchor="middle">securitySchemes.oauth</text>
+                    <rect x="590" y="32" width="220" height="26" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="700" y="49" text-anchor="middle">messages + rpcs</text>
+                    <rect x="590" y="110" width="220" height="26" rx="6" fill="var(--rose-soft)" stroke="var(--rose)"/><text x="700" y="127" text-anchor="middle">omitted (2)</text>
+                    <rect x="590" y="146" width="220" height="26" rx="6" fill="var(--bg-inset)" stroke="var(--border-strong)"/><text x="700" y="163" text-anchor="middle">unavailable (0)</text>
+                  </g>
+                </svg>
+              </div>
+              <div class="row-between wrap gap-2 t-xs" role="status"><span class="t-subtle">Showing 60 of 63 entities — the status counts above cover the whole artifact. Load the rest to reconcile them against the fidelity report.</span><button class="btn btn--sm btn--ghost">Load more entities</button></div>
+              <div class="banner banner--danger t-xs" role="status"><i data-lucide="scale"></i><span>Mismatch example: “This graph does not reconcile with the fidelity report for this job: dropped drawn 1, reported 2. Re-run the export for one consistent view.”</span></div>
+              <div class="table-wrap card--flat" style="box-shadow:none">
+                <table class="table table--dense proj-table"><thead><tr><th>Status</th><th>Canonical entity</th><th>Target construct</th><th>Outcome</th><th>Reason</th></tr></thead><tbody>
+                  <tr><td><span class="badge badge--ok">✓</span></td><td class="mono">51 entities retained, aggregated</td><td class="t-muted" colspan="3"><button class="btn btn--sm btn--link">Expand</button></td></tr>
+                  <tr><td><span class="badge badge--warn">≈</span></td><td class="mono">type:PaymentMethod</td><td class="mono">message PaymentMethod</td><td class="t-muted">oneOf → optional fields</td><td><span class="badge badge--outline">Emitter gap</span></td></tr>
+                  <tr><td><span class="badge badge--rose">×</span></td><td class="mono">security:oauth</td><td class="t-subtle">—</td><td class="t-muted">not in artifact</td><td><span class="badge badge--outline">Format limit</span></td></tr>
+                </tbody></table>
+              </div>
+              <div class="t-2xs t-subtle">EvidenceDrawer opens here by default on selection; “Choose a different target” / “Change export options” navigate to those steps. States: “Loading the source-to-target mapping…” · “The manifest carried no canonical entities for this artifact.” · error notice never gates export.</div>
+            </div>
+          </div>
+        </div>
+        <!-- Loss heatmap -->
+        <div data-tab-panel="rv-heat" hidden class="col gap-4">
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="flame"></i>What is the worst thing this export loses?<span class="badge badge--mono">snapshot 4c1d9a2e77b0</span></div><div class="row gap-2"><label class="check t-xs"><input type="checkbox" />Group by loss class</label><div class="row gap-1"><span class="chip is-active" data-action="chip">All kinds</span><span class="chip" data-action="chip">type</span><span class="chip" data-action="chip">operation</span><span class="chip" data-action="chip">field</span></div></div></div>
+            <div class="card__body col gap-3">
+              <div class="table-wrap card--flat" style="box-shadow:none">
+                <table class="table table--dense heat"><thead><tr><th>Entity kind</th><th>Dropped</th><th>Unavailable</th><th>Approximated</th><th>Synthesized</th><th>Preserved</th><th>Not applicable</th></tr></thead><tbody>
+                  <tr><td>service</td><td><button aria-label="service, dropped, none">0<span class="lvl">·</span></button></td><td><button aria-label="service, unavailable, none">0<span class="lvl">·</span></button></td><td><button aria-label="service, approximated, none">0<span class="lvl">·</span></button></td><td><button aria-label="service, synthesized, none">0<span class="lvl">·</span></button></td><td><button aria-label="service, preserved, low">3<span class="lvl">▪</span></button></td><td><button>0<span class="lvl">·</span></button></td></tr>
+                  <tr><td>operation</td><td><button class="h2" aria-label="operation, dropped, moderate">1<span class="lvl">▪▪</span></button></td><td><button>0<span class="lvl">·</span></button></td><td><button class="h1" aria-label="operation, approximated, low">1<span class="lvl">▪</span></button></td><td><button>0<span class="lvl">·</span></button></td><td><button>16<span class="lvl">▪▪</span></button></td><td><button>0<span class="lvl">·</span></button></td></tr>
+                  <tr><td>type</td><td><button class="h3" aria-label="type, dropped, high">1<span class="lvl">▪▪▪</span></button></td><td><button>0<span class="lvl">·</span></button></td><td><button class="h1" aria-label="type, approximated, low">2<span class="lvl">▪</span></button></td><td><button class="h1" aria-label="type, synthesized, low">1<span class="lvl">▪</span></button></td><td><button>38<span class="lvl">▪▪▪</span></button></td><td><button>0<span class="lvl">·</span></button></td></tr>
+                  <tr><td>field</td><td><button>0<span class="lvl">·</span></button></td><td><button>0<span class="lvl">·</span></button></td><td><button class="h1" aria-label="field, approximated, low">1<span class="lvl">▪</span></button></td><td><button>0<span class="lvl">·</span></button></td><td><button>142<span class="lvl">▪▪▪▪</span></button></td><td><button>0<span class="lvl">·</span></button></td></tr>
+                  <tr><td>channel</td><td><button>0<span class="lvl">·</span></button></td><td><button>0<span class="lvl">·</span></button></td><td><button>0<span class="lvl">·</span></button></td><td><button>0<span class="lvl">·</span></button></td><td><button>0<span class="lvl">·</span></button></td><td><button aria-label="channel, not applicable">—<span class="lvl">·</span></button></td></tr>
+                </tbody></table>
+              </div>
+              <div class="t-2xs t-subtle">Heat levels stated in words before colour: none · / low ▪ / moderate ▪▪ / high ▪▪▪ / severe ▪▪▪▪. Selecting a cell selects its worst finding (shared with the explorer/viewer); the evidence drawer moves here.</div>
+              <div><div class="t-caps mb-2">Ranked findings · construct × severity × loss class</div>
+                <ul class="divide-y card card--flat">
+                  <li class="row-start gap-3" style="padding:9px 12px"><span class="badge badge--rose">× Dropped</span><span class="mono t-xs grow">security:oauth (type)</span><span class="t-xs t-num t-600">score 9.6</span><details class="t-xs t-subtle"><summary style="cursor:pointer">weighting</summary>construct 2.0 × severity 2.4 × loss class 2.0</details></li>
+                  <li class="row-start gap-3" style="padding:9px 12px"><span class="badge badge--rose">× Dropped</span><span class="mono t-xs grow">operation:/payments.get.callbacks</span><span class="t-xs t-num t-600">score 8.2</span></li>
+                  <li class="row-start gap-3" style="padding:9px 12px"><span class="badge badge--warn">≈ Approximated</span><span class="mono t-xs grow">type:PaymentMethod.oneOf</span><span class="t-xs t-num t-600">score 4.1</span></li>
+                  <li class="row-start gap-3" style="padding:9px 12px"><span class="badge badge--warn">≈ Approximated</span><span class="mono t-xs grow">field:Amount.format (documentation-only down-weight)</span><span class="t-xs t-num t-600">score 0.8</span></li>
+                </ul>
+                <div class="row mt-2"><button class="btn btn--sm btn--ghost">Show more</button></div>
+              </div>
+              <div class="t-2xs t-subtle">Reconciliation strip compares per-class counts vs the manifest (partial walk vs mismatch). Empty: “Nothing was lost in this selection — every entity here is preserved.” · “No entities match this filter.” · “Ranking the fidelity findings…”.</div>
+            </div>
+          </div>
+        </div>
+        <!-- Round-trip -->
+        <div data-tab-panel="rv-rt" hidden class="col gap-4">
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="iteration-cw"></i>Round-trip comparison — proto3</div><span class="row gap-2"><span class="badge badge--info">restored from this session</span><button class="btn btn--sm">Re-run</button></span></div>
+            <div class="card__body col gap-3">
+              <div class="callout t-xs">Not-run copy: “Check the fidelity report against reality: emit this artifact, re-import it, and diff the result against the source. Runs one real emit + re-import, only when you ask.” → <b>Run round-trip check</b>. Running: “Emitting, re-importing, and comparing against the source…”. Error: “The round-trip comparison could not run — the artifact and its fidelity report are unaffected.” + Retry.</div>
+              <div class="banner banner--ok"><i data-lucide="check-circle-2"></i><span><span class="banner-title">Round trip verified</span> — every difference between the source and the re-imported artifact is explained by the fidelity report.</span></div>
+              <div><div class="t-caps mb-2">Expected differences · explained by the fidelity report (3)</div>
+                <ul class="divide-y card card--flat">
+                  <li class="row-start gap-3" style="padding:8px 12px"><span class="badge badge--danger">Removed</span><span class="mono t-xs grow">operation:/payments.get.callbacks</span><span class="glyph t-subtle">✕</span><span class="t-xs t-muted">explained by drop finding</span></li>
+                  <li class="row-start gap-3" style="padding:8px 12px"><span class="badge badge--info">Changed</span><span class="mono t-xs grow">type:PaymentMethod</span><span class="glyph t-subtle">≈</span><span class="t-xs t-muted">oneOf flattened as reported</span></li>
+                  <li class="row-start gap-3" style="padding:8px 12px"><span class="badge badge--ok">Added</span><span class="mono t-xs grow">type:Empty</span><span class="glyph t-subtle">✚</span><span class="t-xs t-muted">synthesized as reported</span></li>
+                </ul></div>
+              <div class="card card--soft card--pad">
+                <div class="row gap-2 t-sm t-600" style="color:var(--danger-fg)"><i data-lucide="bug"></i>Unexplained differences (0) <span class="badge badge--outline">fail-state example below</span></div>
+                <div class="t-xs t-muted mt-2">Fail verdict: “Fidelity report incomplete ✗ — The round trip found differences the fidelity report does not account for — likely a fidelity bug worth reporting.” Rows include “Over-claimed {construct} — reported preserved (ok), but it changed or vanished”. Link <b>Report a fidelity bug</b> (GitHub issue prefilled with reproduction coordinates): “The fidelity report does not account for these. The report link carries only reproduction coordinates (credential-shaped options withheld: registry_token) — never your API content.” Unsupported verdict: “Comparison skipped − No import adapter can re-import this format, so the round trip cannot be closed.”</div>
+              </div>
+              <div class="t-2xs t-subtle mono">source 9f2c1a7e4b0d · re-import 5d8e2b1c9a3f · adapter protobuf · apiome 0.241.0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- Recent export jobs -->
+    <section class="table-wrap">
+      <div class="table-toolbar"><span class="t-sm t-600">Recent export jobs</span><span class="spacer"></span><span class="t-xs t-subtle t-num">1–4 of 4</span><span class="pager"><button class="btn btn--sm btn--ghost" disabled>Previous</button><button class="btn btn--sm btn--ghost" disabled>Next</button></span></div>
+      <table class="table table--dense">
+        <thead><tr><th>Job</th><th>State</th><th>Target</th><th>Artifact</th><th>Progress</th></tr></thead>
+        <tbody>
+          <tr><td class="mono t-xs">job_9a41f2</td><td><span class="badge" data-status="running">running</span></td><td>Protocol Buffers (proto3)</td><td>Payments API · v2.4.0</td><td style="width:180px"><div class="meter"><div class="progress"><span style="width:62%"></span></div><span class="meter-val">62%</span></div></td></tr>
+          <tr><td class="mono t-xs">job_77b0ce</td><td><span class="badge" data-status="completed">completed</span></td><td>GraphQL SDL</td><td>Payments API · v2.4.0</td><td><div class="meter"><div class="progress progress--ok"><span style="width:100%"></span></div><span class="meter-val">100%</span></div></td></tr>
+          <tr><td class="mono t-xs">job_5c22de</td><td><span class="badge" data-status="failed">failed</span></td><td>WSDL</td><td>Orders Service · v1.9.2</td><td><div class="meter"><div class="progress progress--danger"><span style="width:64%"></span></div><span class="meter-val">64%</span></div></td></tr>
+          <tr><td class="mono t-xs">job_1d09aa</td><td><span class="badge badge--outline">canceled</span></td><td>Apache Avro</td><td>Payments API · v2.3.1</td><td><div class="meter"><div class="progress"><span style="width:31%;background:var(--fg-faint)"></span></div><span class="meter-val">31%</span></div></td></tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>Empty: “No jobs yet.” / “No jobs”. Job tracker persists in sessionStorage (30 min), polls every 1 s; terminal toasts when you navigated away: “Export to {label} is ready to download.” / “failed: {msg}.” / “was canceled.”</span></div>
+    </section>
+
+    <!-- Footer nav -->
+    <div class="row-between card card--pad" style="position:sticky;bottom:12px;box-shadow:var(--shadow-md)">
+      <button class="btn"><i data-lucide="arrow-left"></i>Back</button>
+      <div class="row gap-2">
+        <span class="t-xs t-subtle">Per step: Source → “Choose target” · Target/Options → “Continue” · Verify → “Continue to review” (tooltip “Verify the conversion (or skip it) — acknowledge any fidelity loss — to continue.”) · Review → “Generate”, then “Download .zip” + “Download payments.proto”.</span>
+        <button class="btn btn--primary" disabled data-tip="Verify the conversion (or skip it) — acknowledge any fidelity loss — to continue."><i data-lucide="arrow-right"></i>Continue to review</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/export/studio?artifact=prj_8f2a1c&amp;version=ver_2c91aa&amp;target=protobuf&amp;from=versions&amp;opts=…&amp;step=verify</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ExportStudio.tsx</code> + <code>export/*</code> (ExportTargetGrid, OriginalSourceOption, ExportOptionsForm, VerifyWorkbench + three lenses, ProjectionGraphPanel/EvidenceDrawer, GenerateProgress, DeliveryGatePanel, ExportManifestPanel, ArtifactPreviewCard/ViewerActionsBar/ProblemsPanel, BundleExplorer, ExportMappingGraphPanel, FidelityLossHeatmapPanel, RoundtripComparisonPanel), <code>RecentAsyncJobsPanel</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Route gates (session → “Sign in to use the Export Studio.”; no artifact → “Open the Export Studio from a source” + Go to Versions); URL params artifact/version/label/target/from/sourceFormat/opts/step; address-bar mirroring via replaceState; job resume from sessionStorage; recent exports recorded per artifact+version (max 8).</li>
+    <li>Header: back to Versions|Catalog, Copy link (“Link copied”, credential-shaped keys stripped, verdicts not carried, clipboard-failure toast), subtitle with source + version; 5-pill stepper with done/current/upcoming + sr-text; link-notice warning Alert with all six codes; source-load failure copy (404/403/401).</li>
+    <li>Step 1 Source: name, “Version {v} · N export targets available”, FormatPill/ProtocolPill + summary count chips (catalog origin), scope footnote.</li>
+    <li>Step 2 Target: Original source card (emerald, Download original), heading + per-source note, source-quality line + readiness⇄name sort toggle, aria-pressed cards with readiness band (ready/check first/blocked/unavailable) + fidelity tier (lossless/lossy/types-only) + paradigm/multi-file + rationale; unavailable/blocked disabled with reason, never hidden; same-format target filtered; selected headline with band + tier + % preserved. All 36 registry targets present (18 primary cards + “Show all 36 targets”).</li>
+    <li>Step 3 Options: schema-driven controls (checkbox + description, enum segmented, free string with “required”/“server default”), humanized labels, inline rose validation, complex types never rendered.</li>
+    <li>Step 4 Verify: Verify automatically (600 ms debounce), not-run/running/error states, VerdictBanner (clean/lossy/severe/invalid with exact copy), config note + Cached chip (5-min TTL), lens tablist with count badges, Fidelity lens (advisory banner, preserved-% ring, worst-first chips ✕/≈/✚/✓, per-construct report, checkbox + typed acknowledgement with the phrase “export produces a types-only artifact”), Validation lens (all four states, tool line, openable rows), Lint lens (emitted-lint note + source lint link, grade chip, grouped findings, not_applicable; never gates), ProjectionGraphPanel (snapshot chip, status chips, zoom, 3-column SVG + lanes In/Omitted/Unavailable, aggregate rows, partial + Load more, EvidenceDrawer with category chip + reason code + docs allowlist + safe remediations + provenance), integrity/mismatch/redaction notices.</li>
+    <li>Step 5 Review: verdict carried + summary dl + Generate; GenerateProgress (state badge, %, 5 stage rows with exact descriptions, event log, Cancel, canceled copy, full failure-class → title/action table incl. EMITTED_ARTIFACT_INVALID → “Review in Verify” re-lock); completed single-doc layout (DeliveryGatePanel with dimensions/severities/decisions/attestation; manifest tree ↔ viewer two-way link, filter, truncation, selected-entity detail; ArtifactPreviewCard with status badge vocab, ViewerActionsBar, content guards, ProblemsPanel, prediction hint, meta line); bundle layout (BundleExplorer tree + closable tabs + per-file finding badges + budget notice); ExportMappingGraphPanel (legend, aggregation note, lanes, ReconciliationStrip incl. mismatch, windowed table, drawer ownership); FidelityLossHeatmapPanel (group-by toggle, kind filter, kind × loss-class matrix with worded heat levels, weighted ranked list + doc-only down-weight, Show more, reconciliation, empties); RoundtripComparisonPanel (explicit run only, pass/unsupported/fail verdicts, expected vs unexplained rows, Report a fidelity bug privacy note, provenance fingerprints).</li>
+    <li>RecentAsyncJobsPanel kind=export limit=10 (Job/State/Target/Artifact/Progress + pager + empty copy); footer nav Back + per-step primary (incl. post-generate Download .zip / Download {filename}).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Stepper pills double as mockup navigation; Review sub-tabs make every stage reviewable side by side; family grouping (REST · RPC · Events · Data schema &amp; graph) over the registry order — production keeps readiness/registry ordering inside groups.</li></ul>
+  <h4>States</h4>
+  <ul><li>Every state is embedded beside its region and tagged “state”: targets loading, no-options, verify not-run/running/error, job running/failed/canceled, gate warning, manifest truncation, viewer guards, round-trip not-run/fail/unsupported, jobs empty.</li></ul>
+</template>
+<script>
+  // Mockup-only: keep nested tab groups intact when an outer tab switches (hive.js hides all panels in scope).
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-action="tab"]'); if (!t) return;
+    if (!t.closest('[data-tabs]')) {
+      var target = t.getAttribute('data-target');
+      var btn = document.querySelector('[data-tabs] [data-action="tab"][data-target="' + target + '"]');
+      if (btn) { var g0 = btn.closest('[data-tabs]'); g0.querySelectorAll('.tab, .segmented > button, .xstep').forEach(function (x) { x.classList.remove('is-active'); }); btn.classList.add('is-active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    }
+    setTimeout(function () {
+      document.querySelectorAll('[data-tabs]').forEach(function (g) {
+        var scope = document.getElementById(g.getAttribute('data-tabs')); if (!scope) return;
+        var act = g.querySelector('.is-active'); if (!act) return;
+        var id = act.getAttribute('data-target'); if (!id) return;
+        scope.querySelectorAll('[data-tab-panel]').forEach(function (p) {
+          var up = p.parentElement.closest('[data-tab-panel]');
+          if (up && scope.contains(up)) return;
+          p.hidden = p.getAttribute('data-tab-panel') !== id;
+        });
+      });
+      if (window.Hive) Hive.icons();
+    }, 0);
+  });
+</script>
+</body>
+</html>

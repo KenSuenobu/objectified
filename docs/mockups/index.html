@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Apiome Hive — mockup index</title>
+<link rel="stylesheet" href="assets/hive.css" />
+<script src="assets/hive.js" defer></script>
+<style>
+  .idx-hero { padding: 56px var(--page-pad) 36px; position: relative; overflow: clip; width: 100%; }
+  .idx-hero::before, .idx-hero::after { z-index: 0; }
+  .idx-hero__inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .idx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .idx-card { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; text-decoration: none; color: inherit; }
+  .idx-card:hover { text-decoration: none; }
+  .idx-card .t-h4 { display: flex; align-items: center; gap: 8px; }
+  .idx-card .route { font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-subtle); margin-top: 2px; }
+  .idx-card .desc { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 4px; }
+  .idx-section { max-width: 1100px; width: 100%; margin: 0 auto; padding: 0 var(--page-pad); position: relative; z-index: 1; }
+  .idx-section + .idx-section { margin-top: 36px; }
+  .idx-section__head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .idx-section__head .count { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+  .planned { opacity: .55; }
+  .planned .t-h4::after { content: "planned"; font-size: var(--fs-2xs); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-subtle); }
+</style>
+</head>
+<body data-shell="bare" data-page="index" data-root="">
+<main class="page hex-bg">
+  <section class="idx-hero glow-honey glow-azure">
+    <div class="idx-hero__inner">
+      <div class="row gap-3"><span class="brand-mark brand-mark--lg"></span><div><div class="t-h3" style="letter-spacing:-0.02em">apiome</div><div class="t-caps" style="color:var(--honey-fg)">Hive design language · mockups</div></div></div>
+      <h1 class="t-display mt-6" style="max-width:20ch">A calmer, warmer Apiome people <em style="font-style:normal;color:var(--accent)">want</em> to open.</h1>
+      <p class="t-body t-muted mt-4" style="max-width:64ch">One collapsible rail instead of two bars, warm paper surfaces with navy ink and one azure accent, jobs-to-be-done navigation, ⌘K everywhere, drawers instead of page hops, humane empty states — and a Preferences pane for theme, font size and density. Every screen below re-implements the functionality of its current route.</p>
+      <div class="row gap-2 mt-6 wrap">
+        <a class="btn btn--primary" href="home/overview.html"><i data-lucide="play"></i>Start the walkthrough</a>
+        <a class="btn" href="foundations/design-system.html"><i data-lucide="swatch-book"></i>Design system</a>
+        <a class="btn" href="DESIGN.md"><i data-lucide="file-text"></i>DESIGN.md</a>
+        <a class="btn" href="README.md"><i data-lucide="book-open"></i>README</a>
+        <button class="btn btn--ghost" data-action="open" data-target="settings-pane"><i data-lucide="settings-2"></i>Try the Preferences pane</button>
+      </div>
+      <div class="row gap-4 mt-6 t-xs t-subtle wrap">
+        <span class="row gap-1"><span class="kbd">⌘K</span> palette</span><span class="row gap-1"><span class="kbd">⌘,</span> preferences</span><span class="row gap-1"><span class="kbd">⌘\</span> collapse rail</span><span>Bottom-right bar on every page: Index · Notes (implementation notes) · Callouts · theme</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="idx-section mt-4">
+    <div class="input-wrap" style="max-width:520px"><i data-lucide="search"></i><input class="input" id="q" placeholder="Filter mockups… (route, page, feature)" /></div>
+  </div>
+
+  <!-- Foundations -->
+  <section class="idx-section mt-6" data-sec>
+    <div class="idx-section__head"><span class="icon-tile icon-tile--sm icon-tile--honey"><i data-lucide="swatch-book"></i></span><h2 class="t-h3">Foundations</h2><span class="count">4</span></div>
+    <div class="idx-grid">
+      <a class="card card--hover idx-card" href="foundations/design-system.html" data-s="tokens colors typography components badges buttons tables themes"><span class="icon-tile icon-tile--honey"><i data-lucide="palette"></i></span><div><div class="t-h4">Design system</div><div class="route">DESIGN.md §3, §7</div><div class="desc">Tokens, type scale, all nine themes, every component with states.</div></div></a>
+      <a class="card card--hover idx-card" href="foundations/shell.html" data-s="rail sidebar header drawer dialog palette layout"><span class="icon-tile icon-tile--honey"><i data-lucide="panel-left"></i></span><div><div class="t-h4">App shell</div><div class="route">DESIGN.md §5</div><div class="desc">Rail (expanded/collapsed), page header, overlays, ⌘K palette, toasts.</div></div></a>
+      <a class="card card--hover idx-card" href="foundations/settings-pane.html" data-s="preferences settings theme font size density motion"><span class="icon-tile icon-tile--honey"><i data-lucide="settings-2"></i></span><div><div class="t-h4">Preferences pane</div><div class="route">DESIGN.md §4 · replaces ThemeSelector</div><div class="desc">Theme grid, font-size slider, density, reduce motion — live on every page.</div></div></a>
+      <a class="card card--hover idx-card" href="foundations/help.html" data-s="help shortcuts keyboard docs"><span class="icon-tile icon-tile--honey"><i data-lucide="keyboard"></i></span><div><div class="t-h4">Help &amp; shortcuts</div><div class="route">user menu → Keyboard shortcuts (?)</div><div class="desc">Shortcut sheet and help entry points.</div></div></a>
+    </div>
+  </section>
+
+  <!-- Auth & entry -->
+  <section class="idx-section" data-sec>
+    <div class="idx-section__head"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="log-in"></i></span><h2 class="t-h3">Entry</h2><span class="count">6</span></div>
+    <div class="idx-grid">
+      <a class="card card--hover idx-card" href="auth/login.html" data-s="login sign in sign up sso github gitlab credentials"><span class="icon-tile icon-tile--accent"><i data-lucide="log-in"></i></span><div><div class="t-h4">Sign in / Create account</div><div class="route">/login</div><div class="desc">SSO-first card, expandable email form, error banners, sign-up variant.</div></div></a>
+      <a class="card card--hover idx-card" href="auth/two-factor.html" data-s="2fa totp otp email code"><span class="icon-tile icon-tile--accent"><i data-lucide="shield-check"></i></span><div><div class="t-h4">Two-factor</div><div class="route">/login/2fa</div><div class="desc">Authenticator / email code switcher.</div></div></a>
+      <a class="card card--hover idx-card" href="auth/signup-oauth.html" data-s="oauth signup organization slug free plan"><span class="icon-tile icon-tile--accent"><i data-lucide="user-plus"></i></span><div><div class="t-h4">Finish OAuth sign-up</div><div class="route">/signup/oauth</div><div class="desc">Name, organization, slug, Free plan.</div></div></a>
+      <a class="card card--hover idx-card" href="auth/onboarding.html" data-s="onboarding first tenant wizard organization"><span class="icon-tile icon-tile--accent"><i data-lucide="sparkles"></i></span><div><div class="t-h4">First-tenant onboarding</div><div class="route">FirstTenantOnboardingGuard</div><div class="desc">Welcome → Organization → Review → Done.</div></div></a>
+      <a class="card card--hover idx-card" href="home/launcher.html" data-s="launcher all apps home control panel designer browser resources"><span class="icon-tile icon-tile--accent"><i data-lucide="layout-grid"></i></span><div><div class="t-h4">All apps launcher</div><div class="route">/ade</div><div class="desc">Applications grid, resources, roadmap, What’s new.</div></div></a>
+      <a class="card card--hover idx-card" href="home/overview.html" data-s="home dashboard overview stats activity checklist"><span class="icon-tile icon-tile--accent"><i data-lucide="house"></i></span><div><div class="t-h4">Home</div><div class="route">/ade/dashboard</div><div class="desc">Greeting, first-run checklist, stats, continue cards, activity, attention.</div></div></a>
+    </div>
+  </section>
+
+  <!-- Build -->
+  <section class="idx-section" data-sec>
+    <div class="idx-section__head"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="hammer"></i></span><h2 class="t-h3">Build</h2><span class="count">10</span></div>
+    <div class="idx-grid">
+      <a class="card card--hover idx-card" href="build/projects.html" data-s="projects list cards table quality create ai"><span class="icon-tile icon-tile--ok"><i data-lucide="folder-kanban"></i></span><div><div class="t-h4">Projects</div><div class="route">/ade/dashboard/projects</div><div class="desc">Cards/table, chips, quality rings, create (manual + AI), scores, deletes.</div></div></a>
+      <a class="card card--hover idx-card" href="build/versions.html" data-s="versions lifecycle publish compare lint mock"><span class="icon-tile icon-tile--ok"><i data-lucide="git-branch"></i></span><div><div class="t-h4">Versions</div><div class="route">/ade/dashboard/versions?projectId</div><div class="desc">Version list, lifecycle, lint badge, mocks, publish gates, related artifacts.</div></div></a>
+      <a class="card card--hover idx-card" href="build/version-dialogs.html" data-s="publish compare diff fork merge sunset test bench export dialogs"><span class="icon-tile icon-tile--ok"><i data-lucide="layers"></i></span><div><div class="t-h4">Version dialogs</div><div class="route">Versions page overlays</div><div class="desc">Publish, compare, sunset, lint report, mock scenarios, test bench, export.</div></div></a>
+      <a class="card card--hover idx-card" href="build/import-wizard.html" data-s="import wizard file url clipboard git swaggerhub postman mcp llm"><span class="icon-tile icon-tile--ok"><i data-lucide="upload"></i></span><div><div class="t-h4">Import wizard</div><div class="route">ImportDialog (projects &amp; catalog)</div><div class="desc">Source → Analyze → Preview → Import → Done; every source tab; async jobs.</div></div></a>
+      <a class="card card--hover idx-card" href="build/primitives.html" data-s="primitives types registry namespaces resolver"><span class="icon-tile icon-tile--ok"><i data-lucide="shapes"></i></span><div><div class="t-h4">Primitives &amp; types</div><div class="route">/ade/dashboard/primitives</div><div class="desc">Registry, namespaces, resolver, settings, editor, import.</div></div></a>
+      <a class="card card--hover idx-card" href="build/primitive-detail.html" data-s="primitive detail usage test"><span class="icon-tile icon-tile--ok"><i data-lucide="shapes"></i></span><div><div class="t-h4">Primitive detail</div><div class="route">/ade/dashboard/primitives/[id]</div><div class="desc">Definition, constraints, usage, live test form.</div></div></a>
+      <a class="card card--hover idx-card" href="studio/home.html" data-s="studio home picker project version"><span class="icon-tile icon-tile--ok"><i data-lucide="pen-tool"></i></span><div><div class="t-h4">Studio home</div><div class="route">/ade/studio</div><div class="desc">Project &amp; version picker, resume cards.</div></div></a>
+      <a class="card card--hover idx-card" href="studio/editor.html" data-s="studio editor canvas classes properties class dialog"><span class="icon-tile icon-tile--ok"><i data-lucide="pen-tool"></i></span><div><div class="t-h4">Studio · Editor</div><div class="route">/ade/studio/editor</div><div class="desc">Schema canvas, tree, inspector, class edit dialog, layout tools.</div></div></a>
+      <a class="card card--hover idx-card" href="studio/paths.html" data-s="studio paths operations responses parameters"><span class="icon-tile icon-tile--ok"><i data-lucide="route"></i></span><div><div class="t-h4">Studio · Paths</div><div class="route">/ade/studio/paths</div><div class="desc">Paths list, operation editor, responses canvas.</div></div></a>
+      <a class="card card--hover idx-card" href="studio/code.html" data-s="studio code generation openapi typescript python java sql graphql"><span class="icon-tile icon-tile--ok"><i data-lucide="code-2"></i></span><div><div class="t-h4">Studio · Code</div><div class="route">/ade/studio/code</div><div class="desc">Generated formats, options, copy/download.</div></div></a>
+    </div>
+  </section>
+
+  <!-- Bring in -->
+  <section class="idx-section" data-sec>
+    <div class="idx-section__head"><span class="icon-tile icon-tile--sm icon-tile--violet"><i data-lucide="download"></i></span><h2 class="t-h3">Bring in</h2><span class="count">13</span></div>
+    <div class="idx-grid">
+      <a class="card card--hover idx-card" href="sources/catalog.html" data-s="catalog formats import bulk analysis convert"><span class="icon-tile icon-tile--violet"><i data-lucide="library"></i></span><div><div class="t-h4">Catalog</div><div class="route">/ade/dashboard/catalog</div><div class="desc">Multi-format items, filters, bulk import, analysis metrics, convert.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/catalog-item.html" data-s="catalog item detail source analysis lint projection conversions evidence"><span class="icon-tile icon-tile--violet"><i data-lucide="file-json-2"></i></span><div><div class="t-h4">Catalog item</div><div class="route">/ade/dashboard/catalog/[id]</div><div class="desc">Overview, source, analysis, lint, projection, conversions, inspectors.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/repositories.html" data-s="repositories git github gitlab bitbucket"><span class="icon-tile icon-tile--violet"><i data-lucide="git-branch"></i></span><div><div class="t-h4">Repositories</div><div class="route">/ade/dashboard/repositories</div><div class="desc">Connected repos, KPIs, sync state.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/repository-new.html" data-s="add repository provider branch"><span class="icon-tile icon-tile--violet"><i data-lucide="git-branch-plus"></i></span><div><div class="t-h4">Add repository</div><div class="route">/ade/dashboard/repositories/new</div><div class="desc">Provider, remote browse, branch selection.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/repository-detail.html" data-s="repository detail files preview map import"><span class="icon-tile icon-tile--violet"><i data-lucide="folder-git-2"></i></span><div><div class="t-h4">Repository detail</div><div class="route">/ade/dashboard/repositories/[id], /[id]/preview</div><div class="desc">Files browser, spec preview, map-and-import wizard.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/repository-catalog.html" data-s="discovered specs repository catalog"><span class="icon-tile icon-tile--violet"><i data-lucide="scan-search"></i></span><div><div class="t-h4">Discovered specs</div><div class="route">/ade/dashboard/repositories/catalog</div><div class="desc">Specs found across repositories.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/repository-telemetry.html" data-s="telemetry quota rate limits"><span class="icon-tile icon-tile--violet"><i data-lucide="gauge"></i></span><div><div class="t-h4">Quota &amp; rate limits</div><div class="route">/ade/dashboard/repositories/telemetry</div><div class="desc">Provider quota telemetry.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/webhook-allowlist.html" data-s="webhook ip allowlist"><span class="icon-tile icon-tile--violet"><i data-lucide="shield"></i></span><div><div class="t-h4">Webhook IP allowlist</div><div class="route">/ade/dashboard/repositories/webhook-ip-allowlist</div><div class="desc">Allowlist table and edits.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/mcp-servers.html" data-s="mcp servers endpoints collections saved searches trust"><span class="icon-tile icon-tile--violet"><i data-lucide="network"></i></span><div><div class="t-h4">MCP servers</div><div class="route">/ade/dashboard/mcp</div><div class="desc">Endpoint catalog, filters, collections, register, discover.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/mcp-endpoint.html" data-s="mcp endpoint detail versions insight trust notes credentials"><span class="icon-tile icon-tile--violet"><i data-lucide="server"></i></span><div><div class="t-h4">MCP endpoint</div><div class="route">/ade/dashboard/mcp/[endpointId]</div><div class="desc">Overview, versions, lint, trust posture, insight, notes, sources.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/mcp-analytics.html" data-s="mcp analytics"><span class="icon-tile icon-tile--violet"><i data-lucide="chart-line"></i></span><div><div class="t-h4">MCP analytics</div><div class="route">/ade/dashboard/mcp/analytics</div><div class="desc">Portfolio dashboards.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/mcp-capabilities.html" data-s="mcp capabilities registry presets"><span class="icon-tile icon-tile--violet"><i data-lucide="toggle-right"></i></span><div><div class="t-h4">MCP capabilities</div><div class="route">/ade/dashboard/mcp/capabilities</div><div class="desc">Capability registry and presets.</div></div></a>
+      <a class="card card--hover idx-card" href="sources/mcp-compare.html" data-s="mcp compare versions"><span class="icon-tile icon-tile--violet"><i data-lucide="git-compare"></i></span><div><div class="t-h4">MCP compare</div><div class="route">/ade/dashboard/mcp/compare</div><div class="desc">Version comparison.</div></div></a>
+    </div>
+  </section>
+
+  <!-- Ship -->
+  <section class="idx-section" data-sec>
+    <div class="idx-section__head"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="send"></i></span><h2 class="t-h3">Ship</h2><span class="count">3</span></div>
+    <div class="idx-grid">
+      <a class="card card--hover idx-card" href="ship/published.html" data-s="published versions browse unpublish"><span class="icon-tile icon-tile--accent"><i data-lucide="globe"></i></span><div><div class="t-h4">Published</div><div class="route">/ade/dashboard/published</div><div class="desc">Published surface, browse links, visibility.</div></div></a>
+      <a class="card card--hover idx-card" href="ship/sunset-timeline.html" data-s="sunset timeline deprecation"><span class="icon-tile icon-tile--accent"><i data-lucide="sunset"></i></span><div><div class="t-h4">Sunset timeline</div><div class="route">/ade/dashboard/versions/sunset-timeline</div><div class="desc">Upcoming/past sunsets, CSV export.</div></div></a>
+      <a class="card card--hover idx-card" href="ship/export-studio.html" data-s="export studio targets preflight preview verify roundtrip jobs"><span class="icon-tile icon-tile--accent"><i data-lucide="package-open"></i></span><div><div class="t-h4">Export studio</div><div class="route">/ade/dashboard/export/studio</div><div class="desc">Targets, preflight, options, preview, verify, jobs.</div></div></a>
+    </div>
+  </section>
+
+  <!-- Govern -->
+  <section class="idx-section" data-sec>
+    <div class="idx-section__head"><span class="icon-tile icon-tile--sm icon-tile--warn"><i data-lucide="shield-check"></i></span><h2 class="t-h3">Govern</h2><span class="count">4</span></div>
+    <div class="idx-grid">
+      <a class="card card--hover idx-card" href="govern/style-guides.html" data-s="style guides rules"><span class="icon-tile icon-tile--warn"><i data-lucide="book-open-check"></i></span><div><div class="t-h4">Style guides</div><div class="route">/ade/dashboard/style-guides</div><div class="desc">Guide list, create, revisions.</div></div></a>
+      <a class="card card--hover idx-card" href="govern/style-guide-detail.html" data-s="style guide rules custom yaml policy verification"><span class="icon-tile icon-tile--warn"><i data-lucide="book-open-check"></i></span><div><div class="t-h4">Style guide detail</div><div class="route">/ade/dashboard/style-guides/[guideId]</div><div class="desc">Rule catalog, custom rules editor, policy, import/export.</div></div></a>
+      <a class="card card--hover idx-card" href="govern/lint-posture.html" data-s="lint posture workspace findings decisions trends"><span class="icon-tile icon-tile--warn"><i data-lucide="shield-check"></i></span><div><div class="t-h4">Lint posture</div><div class="route">/ade/dashboard/lint-workspace</div><div class="desc">Queue, decisions with undo, trends, quality ranks, saved views.</div></div></a>
+      <a class="card card--hover idx-card" href="workspace/audit.html" data-s="access audit log export"><span class="icon-tile icon-tile--warn"><i data-lucide="scroll-text"></i></span><div><div class="t-h4">Access audit</div><div class="route">/ade/dashboard/audit</div><div class="desc">Filters, event table, detail drawer, CSV export.</div></div></a>
+    </div>
+  </section>
+
+  <!-- Workspace & account -->
+  <section class="idx-section" data-sec>
+    <div class="idx-section__head"><span class="icon-tile icon-tile--sm icon-tile--rose"><i data-lucide="users"></i></span><h2 class="t-h3">Workspace &amp; account</h2><span class="count">6</span></div>
+    <div class="idx-grid">
+      <a class="card card--hover idx-card" href="workspace/members.html" data-s="members invite roles"><span class="icon-tile icon-tile--rose"><i data-lucide="users"></i></span><div><div class="t-h4">Members</div><div class="route">/ade/dashboard/members</div><div class="desc">Member list, invite, roles, offboard.</div></div></a>
+      <a class="card card--hover idx-card" href="workspace/roles.html" data-s="roles permissions matrix"><span class="icon-tile icon-tile--rose"><i data-lucide="shield"></i></span><div><div class="t-h4">Roles</div><div class="route">/ade/dashboard/roles</div><div class="desc">Permission matrix, custom roles.</div></div></a>
+      <a class="card card--hover idx-card" href="workspace/api-keys.html" data-s="api keys scopes revoke"><span class="icon-tile icon-tile--rose"><i data-lucide="key-round"></i></span><div><div class="t-h4">API keys</div><div class="route">/ade/dashboard/api-keys</div><div class="desc">Keys table, create with scopes, reveal, revoke.</div></div></a>
+      <a class="card card--hover idx-card" href="workspace/tenants.html" data-s="tenants workspaces license mcp settings policy"><span class="icon-tile icon-tile--rose"><i data-lucide="building-2"></i></span><div><div class="t-h4">Tenants</div><div class="route">/ade/dashboard/tenants</div><div class="desc">Tenant list, admin panel: members, license &amp; plan, MCP settings, policy history.</div></div></a>
+      <a class="card card--hover idx-card" href="account/profile.html" data-s="profile security 2fa password session"><span class="icon-tile icon-tile--rose"><i data-lucide="circle-user"></i></span><div><div class="t-h4">Profile</div><div class="route">/ade/dashboard/profile</div><div class="desc">Identity, security &amp; 2FA, sign-in methods, session.</div></div></a>
+      <a class="card card--hover idx-card" href="account/linked-accounts.html" data-s="linked accounts sso pat github gitlab"><span class="icon-tile icon-tile--rose"><i data-lucide="link"></i></span><div><div class="t-h4">Linked accounts</div><div class="route">/ade/dashboard/linked-accounts</div><div class="desc">Providers, PAT management, unlink.</div></div></a>
+    </div>
+  </section>
+
+  <!-- Tools & admin -->
+  <section class="idx-section" data-sec style="margin-bottom:64px">
+    <div class="idx-section__head"><span class="icon-tile icon-tile--sm"><i data-lucide="wrench"></i></span><h2 class="t-h3">Tools &amp; admin console</h2><span class="count">10</span></div>
+    <div class="idx-grid">
+      <a class="card card--hover idx-card" href="tools/database.html" data-s="database snapshot browser records"><span class="icon-tile"><i data-lucide="database"></i></span><div><div class="t-h4">Data browser</div><div class="route">/ade/database</div><div class="desc">Version/table pickers, records grid, history &amp; restore.</div></div></a>
+      <a class="card card--hover idx-card" href="tools/migration.html" data-s="migration plans rules evaluate"><span class="icon-tile"><i data-lucide="route"></i></span><div><div class="t-h4">Migrations</div><div class="route">/ade/migration</div><div class="desc">Plans, rule templates, evaluate.</div></div></a>
+      <a class="card card--hover idx-card" href="admin/login.html" data-s="admin login password"><span class="icon-tile icon-tile--rose"><i data-lucide="lock"></i></span><div><div class="t-h4">Admin sign-in</div><div class="route">/admin</div><div class="desc">Password gate.</div></div></a>
+      <a class="card card--hover idx-card" href="admin/overview.html" data-s="admin overview stats"><span class="icon-tile icon-tile--rose"><i data-lucide="gauge"></i></span><div><div class="t-h4">Admin overview</div><div class="route">/admin/dashboard</div><div class="desc">Console shell and overview.</div></div></a>
+      <a class="card card--hover idx-card" href="admin/users.html" data-s="admin users signups approve"><span class="icon-tile icon-tile--rose"><i data-lucide="users"></i></span><div><div class="t-h4">Users</div><div class="route">/admin/dashboard/users</div><div class="desc">Pending signups, active users, licenses, flags.</div></div></a>
+      <a class="card card--hover idx-card" href="admin/tenants.html" data-s="admin tenants"><span class="icon-tile icon-tile--rose"><i data-lucide="building-2"></i></span><div><div class="t-h4">Tenants (admin)</div><div class="route">/admin/dashboard/tenants</div><div class="desc">All tenants, create/edit, delete.</div></div></a>
+      <a class="card card--hover idx-card" href="admin/licenses.html" data-s="admin licenses plans seats"><span class="icon-tile icon-tile--rose"><i data-lucide="badge-check"></i></span><div><div class="t-h4">Licenses</div><div class="route">/admin/dashboard/licenses</div><div class="desc">Plans, seats, assignments, feature flags.</div></div></a>
+      <a class="card card--hover idx-card" href="admin/feature-flags.html" data-s="admin feature flags"><span class="icon-tile icon-tile--rose"><i data-lucide="flag"></i></span><div><div class="t-h4">Feature flags</div><div class="route">/admin/dashboard/feature-flags</div><div class="desc">Flags and overrides.</div></div></a>
+      <a class="card card--hover idx-card" href="admin/templates.html" data-s="admin property templates"><span class="icon-tile icon-tile--rose"><i data-lucide="layout-template"></i></span><div><div class="t-h4">Property templates</div><div class="route">/admin/dashboard/templates</div><div class="desc">System/tenant templates, categories, usage.</div></div></a>
+      <a class="card card--hover idx-card" href="admin/settings.html" data-s="admin auth providers oidc settings"><span class="icon-tile icon-tile--rose"><i data-lucide="key-square"></i></span><div><div class="t-h4">Auth providers</div><div class="route">/admin/dashboard/settings</div><div class="desc">Provider registry, enablement, validation, discovery probe.</div></div></a>
+    </div>
+  </section>
+</main>
+<script>
+  // Filter + mark cards whose file doesn't exist yet as "planned" (file:// only)
+  document.addEventListener('DOMContentLoaded', () => {
+    const q = document.getElementById('q');
+    q.addEventListener('input', () => {
+      const v = q.value.trim().toLowerCase();
+      document.querySelectorAll('.idx-card').forEach((c) => { const t = (c.textContent + ' ' + (c.getAttribute('data-s') || '')).toLowerCase(); c.style.display = !v || t.includes(v) ? '' : 'none'; });
+      document.querySelectorAll('[data-sec]').forEach((s) => { s.style.display = [...s.querySelectorAll('.idx-card')].some((c) => c.style.display !== 'none') ? '' : 'none'; });
+    });
+  });
+</script>
+</body>
+</html>

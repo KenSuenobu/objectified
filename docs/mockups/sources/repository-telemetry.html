@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quota &amp; rate limits · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .metric-card .sparkline { height: 44px; }
+</style>
+</head>
+<body data-shell="app" data-nav="repositories" data-page="sources/repository-telemetry" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><a href="repositories.html">Repositories</a><i data-lucide="chevron-right"></i><span>Quota &amp; rate limits</span></div>
+          <h1 class="page-title">Quota &amp; rate limits</h1>
+          <p class="page-desc">How much this workspace polls and scans, and how much the quota has deferred. 9 Aug – 15 Aug.</p>
+        </div>
+        <div class="page-actions">
+          <div class="segmented segmented--sm" role="group" aria-label="Range"><button aria-pressed="false">7d</button><button class="is-active" aria-pressed="true">30d</button><button aria-pressed="false">90d</button></div>
+          <button class="btn"><i data-lucide="refresh-cw"></i>Refresh</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <a class="tab" href="repositories.html"><i data-lucide="folder-git-2"></i>Repositories <span class="count">4</span></a>
+        <a class="tab" href="repository-catalog.html"><i data-lucide="library"></i>Discovered specs <span class="count">128</span></a>
+        <a class="tab is-active" href="repository-telemetry.html"><i data-lucide="activity"></i>Quota &amp; rate limits</a>
+        <a class="tab" href="webhook-allowlist.html"><i data-lucide="shield-check"></i>Webhook IP allowlist</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Polling quota panel -->
+    <section class="card">
+      <div class="card__header"><div class="card__title"><i data-lucide="gauge"></i>Polling quota</div><span class="badge badge--warn">approaching</span></div>
+      <div class="card__body">
+        <p class="t-sm t-muted">This workspace is approaching its hourly polling ceiling. Repositories are deferred, not failed, once it is reached.</p>
+        <div class="grid grid-4 mt-3">
+          <div><div class="t-caps">Used this hour</div><div class="t-h2 t-num mt-1">412</div></div>
+          <div><div class="t-caps">Ceiling</div><div class="t-h2 t-num mt-1">500</div></div>
+          <div><div class="t-caps">Remaining</div><div class="t-h2 t-num mt-1">88</div></div>
+          <div><div class="t-caps">Window</div><div class="t-h2 t-num mt-1">60 min</div></div>
+        </div>
+        <div role="meter" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100" aria-label="Polling budget used" class="mt-4">
+          <div class="progress progress--warn" style="height:8px"><span style="width:82%"></span></div>
+          <div class="t-xs t-muted mt-1">82% of this hour’s budget</div>
+        </div>
+        <div class="t-2xs t-subtle mt-2">Other pressure copy: unlimited “No polling ceiling is being enforced for this workspace.” · comfortable “Polling is comfortably inside this workspace’s hourly ceiling.” · exhausted “This workspace has spent its hourly polling budget. Remaining repositories are deferred to the next window — they stay due and are never marked failed.” (Ceiling “Unlimited”, Remaining “—”.)</div>
+      </div>
+    </section>
+
+    <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><span>128 polls were deferred in this range — quota pressure is shaping the scan schedule. Deferred repositories stay due; nothing is marked failed.</span></div>
+
+    <!-- Metric cards -->
+    <section class="grid grid-3">
+      <div class="card card--pad metric-card">
+        <div class="row-between"><div class="t-sm t-600">Polls</div><span class="t-xs t-subtle">this hour</span></div>
+        <div class="t-h1 t-num mt-2">412</div>
+        <svg class="sparkline mt-2" viewBox="0 0 200 44" preserveAspectRatio="none" role="img"><title>Polls — last 30 days</title><path class="fill" d="M0 30 L20 28 L40 31 L60 24 L80 26 L100 20 L120 22 L140 15 L160 18 L180 10 L200 12 L200 44 L0 44Z"/><path d="M0 30 L20 28 L40 31 L60 24 L80 26 L100 20 L120 22 L140 15 L160 18 L180 10 L200 12"/></svg>
+        <div class="row-between t-xs t-muted mt-2"><span>Range total <span class="t-600 t-num">86,420</span></span><span>Busiest day 4,211</span></div>
+        <div class="t-xs t-subtle mt-1">Provider API calls made by the scheduler.</div>
+      </div>
+      <div class="card card--pad metric-card" style="box-shadow:0 0 0 1px var(--warn) inset, var(--shadow-sm)">
+        <div class="row-between"><div class="t-sm t-600 row gap-2"><i data-lucide="triangle-alert" style="color:var(--warn)"></i>Polls deferred</div><span class="t-xs t-subtle">this hour</span></div>
+        <div class="t-h1 t-num mt-2">36</div>
+        <svg class="sparkline sparkline--warn mt-2" viewBox="0 0 200 44" preserveAspectRatio="none" role="img"><title>Polls deferred — last 30 days</title><path class="fill" d="M0 42 L40 41 L80 38 L120 30 L160 22 L200 14 L200 44 L0 44Z"/><path d="M0 42 L40 41 L80 38 L120 30 L160 22 L200 14"/></svg>
+        <div class="row-between t-xs t-muted mt-2"><span>Range total <span class="t-600 t-num">128</span></span><span>Busiest day 41</span></div>
+        <div class="t-xs t-subtle mt-1">Polls pushed to the next window by the quota.</div>
+      </div>
+      <div class="card card--pad metric-card" style="box-shadow:0 0 0 1px var(--warn) inset, var(--shadow-sm)">
+        <div class="row-between"><div class="t-sm t-600 row gap-2"><i data-lucide="triangle-alert" style="color:var(--warn)"></i>Files deferred</div><span class="t-xs t-subtle">today</span></div>
+        <div class="t-h1 t-num mt-2">12</div>
+        <svg class="sparkline sparkline--warn mt-2" viewBox="0 0 200 44" preserveAspectRatio="none" role="img"><title>Files deferred — last 30 days</title><path class="fill" d="M0 40 L40 42 L80 36 L120 38 L160 30 L200 26 L200 44 L0 44Z"/><path d="M0 40 L40 42 L80 36 L120 38 L160 30 L200 26"/></svg>
+        <div class="row-between t-xs t-muted mt-2"><span>Range total <span class="t-600 t-num">64</span></span><span>Busiest day 18</span></div>
+        <div class="t-xs t-subtle mt-1">File re-index jobs held back with their poll.</div>
+      </div>
+      <div class="card card--pad metric-card">
+        <div class="row-between"><div class="t-sm t-600">Scans</div><span class="t-xs t-subtle">today</span></div>
+        <div class="t-h1 t-num mt-2">7</div>
+        <svg class="sparkline sparkline--ok mt-2" viewBox="0 0 200 44" preserveAspectRatio="none" role="img"><title>Scans — last 30 days</title><path class="fill" d="M0 34 L20 30 L40 32 L60 26 L80 30 L100 24 L120 28 L140 20 L160 24 L180 18 L200 20 L200 44 L0 44Z"/><path d="M0 34 L20 30 L40 32 L60 26 L80 30 L100 24 L120 28 L140 20 L160 24 L180 18 L200 20"/></svg>
+        <div class="row-between t-xs t-muted mt-2"><span>Range total <span class="t-600 t-num">211</span></span><span>Busiest day 14</span></div>
+        <div class="t-xs t-subtle mt-1">Full repository scans that ran to completion.</div>
+      </div>
+      <div class="card card--pad metric-card">
+        <div class="row-between"><div class="t-sm t-600">Bytes scanned</div><span class="t-xs t-subtle">today</span></div>
+        <div class="t-h1 t-num mt-2">412 MB</div>
+        <svg class="sparkline mt-2" viewBox="0 0 200 44" preserveAspectRatio="none" role="img"><title>Bytes scanned — last 30 days</title><path class="fill" d="M0 36 L20 32 L40 34 L60 28 L80 24 L100 28 L120 20 L140 24 L160 16 L180 20 L200 14 L200 44 L0 44Z"/><path d="M0 36 L20 32 L40 34 L60 28 L80 24 L100 28 L120 20 L140 24 L160 16 L180 20 L200 14"/></svg>
+        <div class="row-between t-xs t-muted mt-2"><span>Range total <span class="t-600 t-num">2.3 GB</span></span><span>Busiest day 412 MB</span></div>
+        <div class="t-xs t-subtle mt-1">Bytes read from provider blobs (412 KB / 1.4 MB / 2.3 GB formatting).</div>
+      </div>
+      <!-- Daily activity distribution -->
+      <div class="card card--pad metric-card">
+        <div class="row-between"><div class="t-sm t-600">Polls by day</div><span class="t-xs t-subtle">last 14 days</span></div>
+        <div class="bars mt-3" style="height:64px">
+          <span style="height:32%"></span><span style="height:40%"></span><span style="height:36%"></span><span style="height:52%"></span><span style="height:44%"></span><span class="is-lo" style="height:16%"></span><span class="is-lo" style="height:12%"></span><span style="height:58%"></span><span style="height:66%"></span><span class="is-mid" style="height:78%"></span><span style="height:60%"></span><span style="height:72%"></span><span class="is-hi" style="height:96%"></span><span style="height:70%"></span>
+        </div>
+        <div class="row-between t-xs t-subtle mt-2"><span>Aug 2</span><span>weekend dip</span><span>Aug 15</span></div>
+      </div>
+    </section>
+
+    <div class="callout t-xs">States kept: “Loading quota telemetry…” · error “Quota telemetry unavailable” · <span class="mono">available=false</span> → “The counters could not be read, so every series below is showing zero. That is missing data, not a quiet week.” · no-tenant lock card.</div>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/repositories/telemetry</p>
+  <h4>Replaces</h4>
+  <ul><li><code>RepositoryQuotaTelemetry</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: back crumb, title + “How much this workspace polls and scans, and how much the quota has deferred. {range}.”, range group 7d/30d/90d (<code>aria-pressed</code>), Refresh.</li>
+    <li>Polling quota panel: pressure copy (unlimited / comfortable / approaching / exhausted, verbatim), figures Used this hour · Ceiling (“Unlimited”) · Remaining (“—”) · Window (“60 min”), <code>role=meter</code> bar green/amber/red + “N% of this hour’s budget”.</li>
+    <li>Amber deferral notice; metric cards polls / polls_deferred / files_deferred / scans / bytes_scanned with API labels + descriptions, amber border + AlertTriangle on deferral metrics, big current value + “this hour”/“today”, Sparkline with “{label} — last N days” title, “Range total” / “Busiest day”, byte formatting.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Sub-nav tab row; “Polls by day” bar distribution card.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading / error / available=false / no-tenant copy verbatim (callout).</li></ul>
+</template>
+</body>
+</html>

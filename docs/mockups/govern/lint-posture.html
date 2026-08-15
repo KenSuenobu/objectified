@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lint posture · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based, no new tokens) */
+  .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .tile-btn { text-align: left; width: 100%; cursor: pointer; transition: background var(--dur-fast); }
+  .tile-btn:hover { background: var(--bg-subtle) !important; }
+  .facets { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  .facet-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .facet-group > .t-caps { margin-right: 2px; }
+  .split-bar { display: flex; height: 8px; border-radius: var(--r-full); overflow: hidden; background: var(--bg-inset); }
+  .split-bar > span:first-child { background: var(--violet); }
+  .split-bar > span:last-child { background: var(--accent); }
+  .toast-stack { bottom: 64px; }
+  .grade-chip { width: 48px; height: 48px; border-radius: var(--r-md); display: grid; place-items: center; font-size: var(--fs-2xl); font-weight: 700; letter-spacing: -0.02em; }
+  .rank-card .bars { height: 44px; }
+  .view-chip .x { margin-left: 2px; }
+  .url-line { font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-subtle); padding: 6px 12px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .url-line [data-lucide] { width: 12px; height: 12px; }
+  .finding-list .list-row { align-items: flex-start; }
+  .bulk-bar { flex-wrap: wrap; margin: 0 auto 0 0; row-gap: 8px; max-width: 740px; }
+  .bulk-bar > .t-600 { white-space: nowrap; }
+  .table .cell-sub.row { white-space: nowrap; }
+  .table td.src { white-space: nowrap; }
+</style>
+</head>
+<body data-shell="app" data-nav="lint" data-page="govern/lint-posture" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Govern</span><i data-lucide="chevron-right"></i><span>Lint posture</span></div>
+          <h1 class="page-title">Lint posture <span class="badge badge--honey badge--lg">Preview</span></h1>
+          <p class="page-desc">Catalog-wide lint findings with ownership, waiver review and remediation trends.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-tip="Reload the workspace"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <button class="btn btn--primary" data-action="open" data-target="save-view-dialog"><i data-lucide="bookmark-plus"></i>Save view</button>
+        </div>
+      </div>
+      <div class="tabs" data-tabs="lint-tabs">
+        <button class="tab is-active" data-action="tab" data-target="queue"><i data-lucide="list-checks"></i>Queue <span class="count">213</span></button>
+        <button class="tab" data-action="tab" data-target="trends"><i data-lucide="trending-up"></i>Trends</button>
+        <button class="tab" data-action="tab" data-target="ranks"><i data-lucide="medal"></i>Quality ranks</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- ===== Summary header: 4 drill-down tiles ===== -->
+    <section class="stat-grid stat-grid--4" aria-label="Posture summary">
+      <button class="stat tile-btn" data-tip="Drill down: severity=error · axis=security · state=open">
+        <div class="stat__label"><i data-lucide="shield-alert"></i>Unwaived security errors</div>
+        <div class="stat__value" style="color:var(--danger-fg)">2</div>
+        <div class="stat__foot"><span>Open · security axis</span><span class="t-danger t-600">Needs attention</span></div>
+      </button>
+      <button class="stat tile-btn" data-tip="Drill down: coverage=missing">
+        <div class="stat__label"><i data-lucide="layers"></i>Missing required coverage</div>
+        <div class="stat__value">3<small>of 12 subjects</small></div>
+        <div class="stat__foot"><span>Security axis not assessed</span></div>
+      </button>
+      <button class="stat tile-btn" data-tip="Drill down: new only">
+        <div class="stat__label"><i data-lucide="sparkles"></i>New findings</div>
+        <div class="stat__value">7</div>
+        <div class="stat__foot"><span>since the last scan</span><span class="stat__delta stat__delta--down"><i data-lucide="trending-up"></i>+3</span></div>
+      </button>
+      <button class="stat tile-btn" data-tip="Drill down: state=waiver_requested">
+        <div class="stat__label"><i data-lucide="file-check-2"></i>Waivers</div>
+        <div class="stat__value">4<small>active</small></div>
+        <div class="stat__foot"><span>3 requested · 1 expiring soon</span></div>
+      </button>
+    </section>
+
+    <!-- Grades + axes -->
+    <section class="card" style="padding:14px 18px">
+      <div class="grid grid-2 gap-6">
+        <div>
+          <div class="t-caps mb-2">Grades</div>
+          <div class="row gap-2 wrap">
+            <span class="chip" data-action="chip">A <span class="t-faint">3</span></span>
+            <span class="chip" data-action="chip">B <span class="t-faint">5</span></span>
+            <span class="chip" data-action="chip">C <span class="t-faint">2</span></span>
+            <span class="chip" data-action="chip">D <span class="t-faint">1</span></span>
+            <span class="chip" data-action="chip">F <span class="t-faint">0</span></span>
+            <span class="chip" data-action="chip">Ungraded <span class="t-faint">1</span></span>
+          </div>
+        </div>
+        <div>
+          <div class="t-caps mb-2">Axes <span class="t-500" style="text-transform:none;letter-spacing:0">· average score</span></div>
+          <div class="row gap-2 wrap">
+            <span class="badge badge--accent badge--lg" data-tip="Quality: 12 assessed, 0 not assessed">Quality · 84</span>
+            <span class="badge badge--accent badge--lg" data-tip="Protocol: 11 assessed, 1 not assessed">Protocol · 91</span>
+            <span class="badge badge--accent badge--lg" data-tip="Security: 9 assessed, 3 not assessed">Security · 72</span>
+            <span class="badge badge--lg" data-tip="Supply chain: not assessed anywhere">Supply chain · —</span>
+            <span class="badge badge--accent badge--lg" data-tip="Supportability: 12 assessed, 0 not assessed">Supportability · 78</span>
+            <span class="badge badge--accent badge--lg" data-tip="Compatibility: 10 assessed, 2 not assessed">Compatibility · 88</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Saved views bar -->
+    <section class="row gap-2 wrap" aria-label="Saved views">
+      <span class="t-caps" style="margin-right:4px">Views</span>
+      <span class="chip is-active view-chip"><i data-lucide="pin" style="color:var(--honey)"></i>New security errors <button class="btn btn--ghost btn--icon" style="width:16px;height:16px" aria-label="Unpin view" data-tip="Unpin view"><i data-lucide="pin-off" class="x"></i></button><button class="btn btn--ghost btn--icon" style="width:16px;height:16px" aria-label="Delete view" data-tip="Delete view"><i data-lucide="x" class="x"></i></button></span>
+      <span class="chip view-chip">My waivers <button class="btn btn--ghost btn--icon" style="width:16px;height:16px" aria-label="Pin view" data-tip="Pin view"><i data-lucide="pin" class="x"></i></button><button class="btn btn--ghost btn--icon" style="width:16px;height:16px" aria-label="Delete view" data-tip="Delete view"><i data-lucide="x" class="x"></i></button></span>
+      <span class="chip view-chip">Payments API only <button class="btn btn--ghost btn--icon" style="width:16px;height:16px" aria-label="Pin view" data-tip="Pin view"><i data-lucide="pin" class="x"></i></button><button class="btn btn--ghost btn--icon" style="width:16px;height:16px" aria-label="Delete view" data-tip="Delete view"><i data-lucide="x" class="x"></i></button></span>
+      <button class="btn btn--sm" data-action="open" data-target="save-view-dialog"><i data-lucide="plus"></i>Save view</button>
+      <span class="t-xs t-subtle ml-auto">Personal to you · filters, sort and paging are in the URL</span>
+    </section>
+
+    <div id="lint-tabs" class="col gap-6">
+    <!-- ================= Queue tab ================= -->
+    <section data-tab-panel="queue" class="col gap-4">
+      <div class="table-wrap">
+        <!-- Filters row 1 -->
+        <div class="table-toolbar">
+          <div class="input-wrap" style="width:300px"><i data-lucide="search"></i><input class="input" placeholder="Search rule, message, subject…  ( / )" /></div>
+          <label class="row gap-2 t-sm t-muted"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button>New only</label>
+          <label class="row gap-2 t-sm t-muted">Sort<select class="select select--sm" style="width:120px"><option>Severity</option><option>Newest</option><option>Rule</option><option>Subject</option></select></label>
+          <label class="row gap-2 t-sm t-muted">Source<select class="select select--sm" style="width:150px"><option>All scanners</option><option>spectral</option><option>apiome-security</option><option>apiome-supply</option><option>mcp-probe</option></select></label>
+          <label class="row gap-2 t-sm t-muted">Coverage<select class="select select--sm" style="width:150px"><option>Any</option><option>Missing required</option><option>Met</option></select></label>
+          <label class="row gap-2 t-sm t-muted">Subject<select class="select select--sm" style="width:150px"><option>All subjects</option><option>Catalog revisions</option><option>MCP servers</option></select></label>
+          <span class="spacer"></span>
+          <button class="btn btn--link btn--sm">Clear filters (2)</button>
+        </div>
+        <!-- Filters row 2: facet chips -->
+        <div class="facets" style="padding:10px 12px;border-bottom:1px solid var(--border)">
+          <div class="facet-group"><span class="t-caps">Severity</span>
+            <span class="chip is-active" data-action="chip" aria-pressed="true"><span class="dot dot--danger"></span>Error <span class="t-faint">21</span></span>
+            <span class="chip" data-action="chip" aria-pressed="false"><span class="dot dot--warn"></span>Warning <span class="t-faint">142</span></span>
+            <span class="chip" data-action="chip" aria-pressed="false"><span class="dot dot--info"></span>Info <span class="t-faint">50</span></span>
+          </div>
+          <div class="facet-group"><span class="t-caps">State</span>
+            <span class="chip is-active" data-action="chip" aria-pressed="true">Open <span class="t-faint">168</span></span>
+            <span class="chip" data-action="chip">Acknowledged <span class="t-faint">18</span></span>
+            <span class="chip" data-action="chip">Waiver requested <span class="t-faint">3</span></span>
+            <span class="chip" data-action="chip">Waived <span class="t-faint">4</span></span>
+            <span class="chip" data-action="chip">Fixed <span class="t-faint">14</span></span>
+            <span class="chip" data-action="chip">False positive <span class="t-faint">6</span></span>
+          </div>
+          <div class="facet-group"><span class="t-caps">Axis</span>
+            <span class="chip" data-action="chip">Quality <span class="t-faint">120</span></span>
+            <span class="chip" data-action="chip">Protocol <span class="t-faint">22</span></span>
+            <span class="chip" data-action="chip">Security <span class="t-faint">31</span></span>
+            <span class="chip" data-action="chip">Supply chain <span class="t-faint">9</span></span>
+            <span class="chip" data-action="chip">Supportability <span class="t-faint">24</span></span>
+            <span class="chip" data-action="chip">Compatibility <span class="t-faint">7</span></span>
+          </div>
+          <div class="facet-group"><span class="t-caps">Grade</span>
+            <span class="chip" data-action="chip">A <span class="t-faint">40</span></span>
+            <span class="chip" data-action="chip">B <span class="t-faint">96</span></span>
+            <span class="chip" data-action="chip">C <span class="t-faint">58</span></span>
+            <span class="chip" data-action="chip">D <span class="t-faint">19</span></span>
+            <span class="chip" data-action="chip">F <span class="t-faint">0</span></span>
+          </div>
+        </div>
+        <div class="url-line"><i data-lucide="link"></i><span>/ade/dashboard/lint-workspace<span class="t-500" style="color:var(--fg-muted)">?severity=error&amp;state=open&amp;sort=severity&amp;offset=0</span></span><span class="ml-auto">Shareable · selection clears when filters change</span></div>
+
+        <!-- Findings table -->
+        <table class="table" aria-label="Findings queue">
+          <thead><tr>
+            <th class="cell-check"><label class="check"><input type="checkbox" aria-label="Select all findings on this page"/></label></th>
+            <th>Finding</th>
+            <th>Severity</th>
+            <th>State</th>
+            <th>Subject</th>
+            <th>Axis</th>
+            <th>Source</th>
+          </tr></thead>
+          <tbody>
+            <tr class="is-clickable is-selected">
+              <td class="cell-check"><label class="check"><input type="checkbox" checked data-action="select-row" aria-label="Select finding"/></label></td>
+              <td style="max-width:400px"><div class="row gap-2"><button class="cell-primary mono" data-action="open" data-target="finding-drawer">no-http-basic</button><span class="badge badge--danger">New</span></div><div class="t-xs t-muted clamp-2">HTTP Basic auth scheme detected. Basic credentials travel with every request; prefer OAuth2 client credentials or bearer tokens.</div><div class="t-2xs t-subtle mono t-truncate">components.securitySchemes.basicAuth</div></td>
+              <td><span class="badge" data-status="error">Error</span></td>
+              <td><span class="badge" title="Policy decision: Open">Open</span></td>
+              <td><div class="cell-primary">Payments API</div><div class="cell-sub row gap-1">v2.4.0 <span class="badge badge--ok badge--sq">B</span></div></td>
+              <td class="t-sm">Security</td>
+              <td class="mono t-xs t-muted src">apiome-security</td>
+            </tr>
+            <tr class="is-clickable is-selected">
+              <td class="cell-check"><label class="check"><input type="checkbox" checked data-action="select-row" aria-label="Select finding"/></label></td>
+              <td style="max-width:400px"><div class="row gap-2"><button class="cell-primary mono" data-action="open" data-target="finding-drawer">response-4xx-defined</button></div><div class="t-xs t-muted clamp-2">POST /payouts documents no 4xx response. Clients cannot distinguish validation failures from transport errors.</div><div class="t-2xs t-subtle mono t-truncate">paths./payouts.post.responses</div></td>
+              <td><span class="badge" data-status="warning">Warning</span></td>
+              <td><span class="badge" title="Policy decision: Open">Open</span></td>
+              <td><div class="cell-primary">Payments API</div><div class="cell-sub row gap-1">v2.4.0 <span class="badge badge--ok badge--sq">B</span></div></td>
+              <td class="t-sm">Quality</td>
+              <td class="mono t-xs t-muted src">spectral</td>
+            </tr>
+            <tr class="is-clickable">
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row" aria-label="Select finding"/></label></td>
+              <td style="max-width:400px"><div class="row gap-2"><button class="cell-primary mono" data-action="open" data-target="finding-drawer">oas3-schema</button></div><div class="t-xs t-muted clamp-2">Schema <span class="mono">Refund</span>: property <span class="mono">amount</span> uses <span class="mono">type: number</span> without a format.</div><div class="t-2xs t-subtle mono t-truncate">components.schemas.Refund.properties.amount</div></td>
+              <td><span class="badge" data-status="info">Info</span></td>
+              <td><span class="badge badge--accent" title="Policy decision: Acknowledged">Acknowledged</span></td>
+              <td><div class="cell-primary">Payments API</div><div class="cell-sub row gap-1">v2.4.0 <span class="badge badge--ok badge--sq">B</span></div></td>
+              <td class="t-sm">Quality</td>
+              <td class="mono t-xs t-muted src">spectral</td>
+            </tr>
+            <tr class="is-clickable">
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row" aria-label="Select finding"/></label></td>
+              <td style="max-width:400px"><div class="row gap-2"><button class="cell-primary mono" data-action="open" data-target="finding-drawer">mcp-tool-description-missing</button><span class="badge badge--danger">New</span></div><div class="t-xs t-muted clamp-2">Tool <span class="mono">refund_payment</span> has no description; agents cannot select it reliably.</div><div class="t-2xs t-subtle mono t-truncate">tools[3].description</div></td>
+              <td><span class="badge" data-status="warning">Warning</span></td>
+              <td><span class="badge" title="Policy decision: Open">Open</span></td>
+              <td><div class="cell-primary">payments-mcp</div><div class="cell-sub row gap-1">prod endpoint <span class="tag">MCP</span> <span class="t-faint">ungraded</span></div></td>
+              <td class="t-sm">Supportability</td>
+              <td class="mono t-xs t-muted src">mcp-probe</td>
+            </tr>
+            <tr class="is-clickable">
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row" aria-label="Select finding"/></label></td>
+              <td style="max-width:400px"><div class="row gap-2"><button class="cell-primary mono" data-action="open" data-target="finding-drawer">operation-operationId-camel-case</button></div><div class="t-xs t-muted clamp-2">operationId <span class="mono">list_orders</span> is snake_case; the guide “Acme REST” requires camelCase.</div><div class="t-2xs t-subtle mono t-truncate">paths./orders.get.operationId</div></td>
+              <td><span class="badge" data-status="warning">Warning</span></td>
+              <td><span class="badge badge--orange" title="Policy decision: Waiver requested">Waiver requested</span></td>
+              <td><div class="cell-primary">Orders Service</div><div class="cell-sub row gap-1">v1.9.2 <span class="badge badge--ok badge--sq">A</span></div></td>
+              <td class="t-sm">Quality</td>
+              <td class="mono t-xs t-muted src">spectral</td>
+            </tr>
+            <tr class="is-clickable">
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row" aria-label="Select finding"/></label></td>
+              <td style="max-width:400px"><div class="row gap-2"><button class="cell-primary mono" data-action="open" data-target="finding-drawer">security-scheme-oauth2-scopes</button></div><div class="t-xs t-muted clamp-2">OAuth2 client-credentials flow declares no scopes; every token is all-or-nothing.</div><div class="t-2xs t-subtle mono t-truncate">components.securitySchemes.oauth2.flows.clientCredentials.scopes</div></td>
+              <td><span class="badge" data-status="error">Error</span></td>
+              <td><span class="badge badge--warn" title="Policy decision: Waived">Waived</span></td>
+              <td><div class="cell-primary">Orders Service</div><div class="cell-sub row gap-1">v1.9.2 <span class="badge badge--ok badge--sq">A</span></div></td>
+              <td class="t-sm">Security</td>
+              <td class="mono t-xs t-muted src">apiome-security</td>
+            </tr>
+            <tr class="is-clickable">
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row" aria-label="Select finding"/></label></td>
+              <td style="max-width:400px"><div class="row gap-2"><button class="cell-primary mono" data-action="open" data-target="finding-drawer">asyncapi-channel-description</button></div><div class="t-xs t-muted clamp-2">Channel <span class="mono">inventory/reserved</span> has no description.</div><div class="t-2xs t-subtle mono t-truncate">channels.inventory/reserved</div></td>
+              <td><span class="badge" data-status="info">Info</span></td>
+              <td><span class="badge badge--ok" title="Policy decision: Fixed">Fixed</span></td>
+              <td><div class="cell-primary">Inventory Events</div><div class="cell-sub row gap-1">v0.7.0 <span class="badge badge--warn badge--sq">C</span></div></td>
+              <td class="t-sm">Supportability</td>
+              <td class="mono t-xs t-muted src">spectral</td>
+            </tr>
+            <tr class="is-clickable">
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row" aria-label="Select finding"/></label></td>
+              <td style="max-width:400px"><div class="row gap-2"><button class="cell-primary mono" data-action="open" data-target="finding-drawer">supply-chain-unpinned-ref</button></div><div class="t-xs t-muted clamp-2">External <span class="mono">$ref</span> to https://schemas.acme.dev/common.yaml is not pinned to a digest or version.</div><div class="t-2xs t-subtle mono t-truncate">components.schemas.Money.$ref</div></td>
+              <td><span class="badge" data-status="warning">Warning</span></td>
+              <td><span class="badge badge--violet" title="Policy decision: False positive">False positive</span></td>
+              <td><div class="cell-primary">Inventory Events</div><div class="cell-sub row gap-1">v0.7.0 <span class="badge badge--warn badge--sq">C</span></div></td>
+              <td class="t-sm">Supply chain</td>
+              <td class="mono t-xs t-muted src">apiome-supply</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-foot">
+          <span>1–50 of 213 findings · page size 50</span>
+          <span class="row gap-2"><button class="btn btn--ghost btn--sm" data-action="toggle" data-target="queue-states"><i data-lucide="eye"></i>Preview states</button><span class="pager"><button class="btn btn--sm" disabled><i data-lucide="chevron-left"></i>Previous</button><button class="btn btn--sm">Next<i data-lucide="chevron-right"></i></button></span></span>
+        </div>
+      </div>
+
+      <!-- Bulk action bar (sticky; shown because 2 rows are selected) -->
+      <div class="bulk-bar" role="toolbar" aria-label="Bulk actions">
+        <span class="t-600">2 selected</span>
+        <button class="btn btn--sm"><i data-lucide="check"></i>Acknowledge</button>
+        <button class="btn btn--sm"><i data-lucide="wrench"></i>Mark fixed</button>
+        <button class="btn btn--sm"><i data-lucide="ban"></i>False positive</button>
+        <button class="btn btn--sm" data-action="open" data-target="waiver-dialog"><i data-lucide="file-signature"></i>Request waiver</button>
+        <button class="btn btn--sm" data-action="open" data-target="waiver-dialog" title="Requires waiver approval permission (lint_findings:publish)"><i data-lucide="badge-check"></i>Approve waiver</button>
+        <button class="btn btn--sm" title="Reopen — also rejects requested waivers (requires approval permission)"><i data-lucide="rotate-ccw"></i>Reopen / reject</button>
+        <span style="width:1px;height:20px;background:rgba(255,255,255,.25)"></span>
+        <input class="input input--sm" placeholder="Assign owner (user id)" style="width:180px;background:rgba(255,255,255,.1);color:inherit;box-shadow:0 0 0 1px rgba(255,255,255,.25) inset" />
+        <button class="btn btn--sm"><i data-lucide="user-plus"></i>Assign</button>
+        <button class="btn btn--sm">Clear selection</button>
+      </div>
+
+      <!-- Alternate states (toggled from the table foot) -->
+      <div id="queue-states" hidden class="col gap-4">
+        <div class="banner banner--danger"><i data-lucide="triangle-alert"></i><div><div class="banner-title">Could not load findings</div><div class="banner-body">The lint evidence service timed out (504). Retry, or narrow the filters.</div></div><div class="banner-actions"><button class="btn btn--sm"><i data-lucide="refresh-cw"></i>Retry</button></div></div>
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th class="cell-check"></th><th>Finding</th><th>Severity</th><th>State</th><th>Subject</th><th>Axis</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td colspan="7"><div class="empty empty--inline" style="justify-content:center"><div class="empty__art"><span class="hex"></span><i data-lucide="search-x"></i></div><div><div class="empty__title t-sm">No findings match the current filters.</div><div class="empty__desc t-xs">Clear a chip or widen the subject scope.</div></div></div></td></tr>
+            </tbody></table>
+        </div>
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th class="cell-check"></th><th>Finding</th><th>Severity</th><th>State</th><th>Subject</th><th>Axis</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td class="cell-check"><span class="skeleton" style="display:inline-block;width:16px;height:16px"></span></td><td><div class="skeleton" style="width:220px;height:12px"></div><div class="skeleton mt-1" style="width:340px;height:10px"></div></td><td><span class="skeleton" style="display:inline-block;width:56px;height:18px"></span></td><td><span class="skeleton" style="display:inline-block;width:64px;height:18px"></span></td><td><div class="skeleton" style="width:110px;height:12px"></div></td><td><div class="skeleton" style="width:60px;height:12px"></div></td><td><div class="skeleton" style="width:80px;height:12px"></div></td></tr>
+              <tr><td class="cell-check"><span class="skeleton" style="display:inline-block;width:16px;height:16px"></span></td><td><div class="skeleton" style="width:180px;height:12px"></div><div class="skeleton mt-1" style="width:300px;height:10px"></div></td><td><span class="skeleton" style="display:inline-block;width:56px;height:18px"></span></td><td><span class="skeleton" style="display:inline-block;width:64px;height:18px"></span></td><td><div class="skeleton" style="width:110px;height:12px"></div></td><td><div class="skeleton" style="width:60px;height:12px"></div></td><td><div class="skeleton" style="width:80px;height:12px"></div></td></tr>
+              <tr><td class="cell-check"><span class="skeleton" style="display:inline-block;width:16px;height:16px"></span></td><td><div class="skeleton" style="width:240px;height:12px"></div><div class="skeleton mt-1" style="width:260px;height:10px"></div></td><td><span class="skeleton" style="display:inline-block;width:56px;height:18px"></span></td><td><span class="skeleton" style="display:inline-block;width:64px;height:18px"></span></td><td><div class="skeleton" style="width:110px;height:12px"></div></td><td><div class="skeleton" style="width:60px;height:12px"></div></td><td><div class="skeleton" style="width:80px;height:12px"></div></td></tr>
+            </tbody></table>
+        </div>
+        <div class="card"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="lock"></i></div><div class="empty__title">No tenant selected</div><div class="empty__desc">Select a tenant to review its catalog-wide lint posture.</div><div class="empty__actions"><a class="btn btn--primary" href="../workspace/tenants.html">Go to Tenants</a></div></div></div>
+      </div>
+    </section>
+
+    <!-- ================= Trends tab ================= -->
+    <section data-tab-panel="trends" hidden class="grid grid-2">
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="wrench"></i>Remediation <span class="t-xs t-subtle t-500">last 30 days</span></div><span class="badge badge--outline">daily</span></div>
+        <div class="card__body col gap-5">
+          <div>
+            <div class="row-between"><span class="t-sm t-600">New findings</span><span class="t-xs t-muted"><span class="t-600 t-danger">64</span> in 30d</span></div>
+            <svg class="sparkline sparkline--danger mt-2" viewBox="0 0 300 36" preserveAspectRatio="none" aria-label="New findings, 30 days"><path class="fill" d="M0 30 L20 26 L40 28 L60 20 L80 22 L100 14 L120 18 L140 10 L160 16 L180 12 L200 8 L220 14 L240 9 L260 12 L280 6 L300 10 L300 36 L0 36Z"/><path d="M0 30 L20 26 L40 28 L60 20 L80 22 L100 14 L120 18 L140 10 L160 16 L180 12 L200 8 L220 14 L240 9 L260 12 L280 6 L300 10"/></svg>
+          </div>
+          <div>
+            <div class="row-between"><span class="t-sm t-600">Remediated (genuine fixes)</span><span class="t-xs t-muted"><span class="t-600 t-ok">41</span> in 30d</span></div>
+            <svg class="sparkline sparkline--ok mt-2" viewBox="0 0 300 36" preserveAspectRatio="none" aria-label="Remediated, 30 days"><path class="fill" d="M0 32 L20 31 L40 30 L60 30 L80 26 L100 27 L120 22 L140 24 L160 18 L180 20 L200 14 L220 16 L240 12 L260 10 L280 12 L300 8 L300 36 L0 36Z"/><path d="M0 32 L20 31 L40 30 L60 30 L80 26 L100 27 L120 22 L140 24 L160 18 L180 20 L200 14 L220 16 L240 12 L260 10 L280 12 L300 8"/></svg>
+          </div>
+          <div class="callout t-xs">“Remediated” counts findings that disappeared from evidence without being waived or marked false positive — genuine fixes only.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="scale"></i>Policy &amp; waivers <span class="t-xs t-subtle t-500">last 30 days</span></div><span class="badge badge--outline">daily</span></div>
+        <div class="card__body col gap-4">
+          <div>
+            <div class="row-between"><span class="t-sm t-600">Waivers granted</span><span class="t-xs t-muted"><span class="t-600 t-warn">6</span> in 30d</span></div>
+            <svg class="sparkline sparkline--warn mt-1" style="height:28px" viewBox="0 0 300 28" preserveAspectRatio="none"><path class="fill" d="M0 26 L40 26 L60 20 L80 26 L120 26 L140 18 L160 26 L200 26 L220 22 L240 26 L280 14 L300 26 L300 28 L0 28Z"/><path d="M0 26 L40 26 L60 20 L80 26 L120 26 L140 18 L160 26 L200 26 L220 22 L240 26 L280 14 L300 26"/></svg>
+          </div>
+          <div>
+            <div class="row-between"><span class="t-sm t-600">Waivers expired</span><span class="t-xs t-muted"><span class="t-600 t-accent">2</span> in 30d</span></div>
+            <svg class="sparkline mt-1" style="height:28px" viewBox="0 0 300 28" preserveAspectRatio="none"><path class="fill" d="M0 26 L100 26 L120 16 L140 26 L240 26 L260 12 L280 26 L300 26 L300 28 L0 28Z"/><path d="M0 26 L100 26 L120 16 L140 26 L240 26 L260 12 L280 26 L300 26"/></svg>
+          </div>
+          <div>
+            <div class="row-between"><span class="t-sm t-600">Marked false positive</span><span class="t-xs t-muted"><span class="t-600" style="color:var(--violet-fg)">5</span> in 30d</span></div>
+            <svg class="sparkline mt-1" style="height:28px;--accent:var(--violet)" viewBox="0 0 300 28" preserveAspectRatio="none"><path class="fill" d="M0 26 L40 22 L80 26 L100 26 L120 20 L160 26 L200 24 L220 26 L240 16 L280 26 L300 22 L300 28 L0 28Z"/><path d="M0 26 L40 22 L80 26 L100 26 L120 20 L160 26 L200 24 L220 26 L240 16 L280 26 L300 22"/></svg>
+          </div>
+          <div>
+            <div class="row-between"><span class="t-sm t-600">Policy pack publications</span><span class="t-xs t-muted"><span class="t-600 t-accent">3</span> in 30d</span></div>
+            <svg class="sparkline mt-1" style="height:28px" viewBox="0 0 300 28" preserveAspectRatio="none"><path class="fill" d="M0 26 L60 26 L80 10 L100 26 L180 26 L200 10 L220 26 L280 26 L290 10 L300 26 L300 28 L0 28Z"/><path d="M0 26 L60 26 L80 10 L100 26 L180 26 L200 10 L220 26 L280 26 L290 10 L300 26"/></svg>
+          </div>
+          <div class="callout t-xs">Policy and waiver activity is kept separate from remediation so posture changes are attributable to fixes, not rule changes.</div>
+        </div>
+      </div>
+      <div class="card span-2" style="opacity:.9">
+        <div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="chart-line"></i></div><div><div class="empty__title t-sm">No trend data yet</div><div class="empty__desc t-xs">Trends appear once lint evidence accumulates across scans. <span class="t-faint">(empty-state variant shown for reference)</span></div></div></div>
+      </div>
+    </section>
+
+    <!-- ================= Quality ranks tab ================= -->
+    <section data-tab-panel="ranks" hidden class="col gap-4">
+      <div class="row-between wrap gap-3">
+        <div><h2 class="t-h3">Quality ranks &amp; grade drift</h2><div class="t-xs t-muted">73 grades recorded between Jul 16 and Aug 15 · 42 pre-flight · 31 committed</div></div>
+        <div class="segmented segmented--sm" role="radiogroup" aria-label="Window"><button aria-pressed="false">7d</button><button class="is-active" aria-pressed="true">30d</button><button aria-pressed="false">90d</button><button aria-pressed="false">180d</button></div>
+      </div>
+      <div class="banner banner--neutral t-xs"><i data-lucide="info"></i>More formats were graded than this view shows — the busiest 6 are listed; narrow the window or filter by subject to see the rest.</div>
+      <div class="grid grid-3">
+        <!-- Import · OpenAPI -->
+        <article class="card rank-card">
+          <div class="card__header"><div class="row gap-2"><span class="badge badge--accent">Import</span><span class="fmt fmt--openapi">OpenAPI</span></div><span class="badge badge--ok badge--lg">Latest B</span></div>
+          <div class="card__body col gap-3">
+            <div class="col gap-1" style="align-items:flex-start"><span class="t-xs t-muted">28 grades · openapi-adapter</span><span class="badge badge--ok"><i data-lucide="arrow-up-right"></i>+6 pts over the window</span></div>
+            <div class="grid grid-3" style="gap:8px">
+              <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-subtle">Average score</div><div class="t-h3 t-num">84</div></div>
+              <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-subtle">Blocked</div><div class="t-h3 t-num">1</div></div>
+              <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-subtle">Best rank</div><div class="t-h3 t-num">A</div></div>
+            </div>
+            <div class="grid grid-2" style="gap:12px">
+              <div><div class="t-2xs t-subtle mb-1">Grade distribution</div><div class="bars"><span style="height:55%"></span><span style="height:100%"></span><span style="height:40%"></span><span style="height:15%" class="is-mid"></span><span style="height:4%" class="is-hi"></span><span style="height:10%" class="is-lo"></span></div><div class="row-between t-2xs t-faint mt-1"><span>A</span><span>B</span><span>C</span><span>D</span><span>F</span><span>—</span></div></div>
+              <div><div class="t-2xs t-subtle mb-1">Score trend</div><svg class="sparkline sparkline--ok" style="height:44px" viewBox="0 0 120 44" preserveAspectRatio="none"><path class="fill" d="M0 30 L20 28 L40 24 L60 26 L80 18 L100 14 L120 10 L120 44 L0 44Z"/><path d="M0 30 L20 28 L40 24 L60 26 L80 18 L100 14 L120 10"/></svg></div>
+            </div>
+            <div><div class="row-between t-2xs t-subtle mb-1"><span>Finding attribution</span><span>38% adapter · 62% specification</span></div><div class="split-bar"><span style="width:38%"></span><span style="width:62%"></span></div><div class="t-2xs t-faint mt-1">41 adapter · 67 specification — adapter findings are constructs this adapter declares it cannot read yet.</div></div>
+          </div>
+        </article>
+        <!-- Export · OpenAPI -->
+        <article class="card rank-card">
+          <div class="card__header"><div class="row gap-2"><span class="badge badge--violet">Export</span><span class="fmt fmt--openapi">OpenAPI</span></div><span class="badge badge--ok badge--lg">Latest A</span></div>
+          <div class="card__body col gap-3">
+            <div class="col gap-1" style="align-items:flex-start"><span class="t-xs t-muted">19 grades · openapi-emitter</span><span class="badge badge--ok"><i data-lucide="arrow-up-right"></i>+2 pts over the window</span></div>
+            <div class="grid grid-3" style="gap:8px">
+              <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-subtle">Average score</div><div class="t-h3 t-num">91</div></div>
+              <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-subtle">Average readiness</div><div class="t-h3 t-num">96</div></div>
+              <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-subtle">Warned</div><div class="t-h3 t-num">2</div></div>
+            </div>
+            <div class="grid grid-2" style="gap:12px">
+              <div><div class="t-2xs t-subtle mb-1">Grade distribution</div><div class="bars"><span style="height:100%"></span><span style="height:45%"></span><span style="height:12%"></span><span style="height:4%" class="is-mid"></span><span style="height:4%" class="is-hi"></span><span style="height:4%" class="is-lo"></span></div><div class="row-between t-2xs t-faint mt-1"><span>A</span><span>B</span><span>C</span><span>D</span><span>F</span><span>—</span></div></div>
+              <div><div class="t-2xs t-subtle mb-1">Score trend <span class="t-faint">· readiness dashed</span></div><svg class="sparkline sparkline--ok" style="height:44px" viewBox="0 0 120 44" preserveAspectRatio="none"><path class="fill" d="M0 18 L30 16 L60 14 L90 12 L120 10 L120 44 L0 44Z"/><path d="M0 18 L30 16 L60 14 L90 12 L120 10"/><path d="M0 12 L30 10 L60 9 L90 7 L120 6" style="stroke:var(--accent);stroke-dasharray:3 3"/></svg></div>
+            </div>
+            <div><div class="row-between t-2xs t-subtle mb-1"><span>Finding attribution</span><span>12% adapter · 88% specification</span></div><div class="split-bar"><span style="width:12%"></span><span style="width:88%"></span></div><div class="t-2xs t-faint mt-1">3 adapter · 22 specification.</div></div>
+          </div>
+        </article>
+        <!-- Import · AsyncAPI -->
+        <article class="card rank-card">
+          <div class="card__header"><div class="row gap-2"><span class="badge badge--accent">Import</span><span class="fmt fmt--asyncapi">AsyncAPI</span></div><span class="badge badge--warn badge--lg">Latest C</span></div>
+          <div class="card__body col gap-3">
+            <div class="col gap-1" style="align-items:flex-start"><span class="t-xs t-muted">4 grades · asyncapi-adapter</span><span class="badge badge--outline"><i data-lucide="arrow-right"></i>No drift (one scored run or fewer)</span></div>
+            <div class="grid grid-3" style="gap:8px">
+              <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-subtle">Average score</div><div class="t-h3 t-num">63</div></div>
+              <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-subtle">Blocked</div><div class="t-h3 t-num">0</div></div>
+              <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-subtle">Best rank</div><div class="t-h3 t-num">C</div></div>
+            </div>
+            <div class="grid grid-2" style="gap:12px">
+              <div><div class="t-2xs t-subtle mb-1">Grade distribution</div><div class="bars"><span style="height:4%"></span><span style="height:25%"></span><span style="height:100%"></span><span style="height:25%" class="is-mid"></span><span style="height:4%" class="is-hi"></span><span style="height:4%" class="is-lo"></span></div><div class="row-between t-2xs t-faint mt-1"><span>A</span><span>B</span><span>C</span><span>D</span><span>F</span><span>—</span></div></div>
+              <div><div class="t-2xs t-subtle mb-1">Score trend</div><svg class="sparkline sparkline--warn" style="height:44px" viewBox="0 0 120 44" preserveAspectRatio="none"><path class="fill" d="M0 26 L40 24 L80 26 L120 24 L120 44 L0 44Z"/><path d="M0 26 L40 24 L80 26 L120 24"/></svg></div>
+            </div>
+            <div><div class="row-between t-2xs t-subtle mb-1"><span>Finding attribution</span><span>71% adapter · 29% specification</span></div><div class="split-bar"><span style="width:71%"></span><span style="width:29%"></span></div><div class="banner banner--warn t-2xs mt-2" style="padding:6px 8px"><i data-lucide="triangle-alert" style="width:12px;height:12px"></i>Grades in this window were scored against 2 style-guide versions — compare drift with care.</div></div>
+          </div>
+        </article>
+      </div>
+      <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="medal"></i></div><div><div class="empty__title t-sm">No grades were recorded in this window.</div><div class="empty__desc t-xs">Import a specification or run an export pre-flight and its grade appears here. <span class="t-faint">(per-panel empty copy; the tab-level empty state reads “No quality-rank data yet”.)</span></div></div></div></div>
+    </section>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- Finding detail drawer (drawer-first per DESIGN §5.4) -->
+<div class="overlay overlay--drawer" id="finding-drawer" data-overlay>
+  <aside class="drawer drawer--lg" role="dialog" aria-labelledby="fd-title">
+    <div class="drawer__header">
+      <div class="grow min-w-0">
+        <div class="row gap-2 wrap"><span class="drawer__title mono" id="fd-title">no-http-basic</span><span class="badge" data-status="error">Error</span><span class="badge" title="Policy decision: Open">Open</span><span class="badge badge--danger">New</span></div>
+        <div class="t-sm t-muted mt-1">HTTP Basic auth scheme detected. Basic credentials travel with every request; prefer OAuth2 client credentials or bearer tokens.</div>
+      </div>
+      <button class="btn btn--ghost btn--icon" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer__body col gap-6">
+      <section>
+        <div class="t-caps mb-2">Evidence</div>
+        <dl class="kv">
+          <dt>Scanner</dt><dd class="mono">apiome-security <span class="t-subtle">v1.4.2</span></dd>
+          <dt>Profile</dt><dd>Acme REST · security pack</dd>
+          <dt>Evidence run</dt><dd class="mono">run_7c1e92 <span class="t-subtle">· scan of ver_2f0a91</span></dd>
+          <dt>Recorded</dt><dd class="t-num">Aug 15, 2026, 08:52 AM</dd>
+          <dt>Fingerprint</dt><dd class="mono t-truncate" title="sha256:9d1c4e0b7a3f5e21c8b6d4f0a2e7c9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3">sha256:9d1c4e0b7a3f5e21…f9a1c3</dd>
+          <dt>Location</dt><dd class="mono t-xs">path: components.securitySchemes.basicAuth, line: 412, col: 7</dd>
+        </dl>
+        <div class="banner banner--ok mt-3"><i data-lucide="lightbulb"></i><div><div class="banner-title">Remediation hint</div><div class="banner-body">Replace the <span class="mono">basic</span> scheme with an OAuth2 client-credentials flow and mark <span class="mono">basicAuth</span> deprecated for one minor version.</div></div></div>
+      </section>
+      <section>
+        <div class="t-caps mb-2">Links</div>
+        <dl class="kv">
+          <dt>Subject</dt><dd><a href="../build/versions.html">Payments API · v2.4.0 <i data-lucide="arrow-up-right" style="display:inline-block;width:12px;height:12px;vertical-align:-2px"></i></a></dd>
+          <dt>Policy</dt><dd><span class="badge" data-status="failed">Failed</span> <span class="t-xs t-muted">evaluation <span class="mono">ev_44b0c1</span></span></dd>
+          <dt>Ticket</dt><dd><a href="#">SEC-1182 <i data-lucide="arrow-up-right" style="display:inline-block;width:12px;height:12px;vertical-align:-2px"></i></a></dd>
+          <dt>Owner</dt><dd class="row gap-2"><span class="avatar avatar--xs avatar--b">GH</span>Grace Hopper</dd>
+        </dl>
+      </section>
+      <section>
+        <div class="row-between mb-2"><div class="t-caps">Remediation history</div><button class="btn btn--link btn--sm" data-action="open" data-target="lint-report-dialog"><i data-lucide="shield-check"></i>Open lint report</button></div>
+        <div class="timeline">
+          <div class="tl-item is-warn"><div class="tl-title">Open → Waiver requested <span class="t-muted t-500">“Legacy partner still on Basic; migration tracked in SEC-1182”</span></div><div class="tl-meta">by Linus Torvalds · Aug 14, 2026, 04:10 PM</div></div>
+          <div class="tl-item is-danger"><div class="tl-title">Waiver requested → Open <span class="t-muted t-500">“Rejected: no expiry proposed”</span></div><div class="tl-meta">by Grace Hopper · Aug 15, 2026, 09:02 AM</div></div>
+          <div class="tl-item"><div class="tl-title t-muted">Recorded from evidence run <span class="mono">run_7c1e92</span></div><div class="tl-meta">Aug 15, 2026, 08:52 AM</div></div>
+        </div>
+        <div class="t-xs t-subtle mt-1">Empty state reads: “No decisions recorded for this finding yet.”</div>
+      </section>
+    </div>
+    <div class="drawer__footer">
+      <a class="btn btn--ghost" href="#" style="margin-right:auto">Open full page <i data-lucide="arrow-up-right"></i></a>
+      <button class="btn" data-action="open" data-target="waiver-dialog"><i data-lucide="file-signature"></i>Request waiver</button>
+      <button class="btn btn--primary" data-action="close"><i data-lucide="check"></i>Acknowledge</button>
+    </div>
+  </aside>
+</div>
+
+<!-- Waiver dialog (request / approve) -->
+<div class="overlay" id="waiver-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="wv-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--warn"><i data-lucide="file-signature"></i></span>
+      <div><div class="dialog__title" id="wv-title">Request waiver for 2 finding(s)</div><div class="dialog__desc">Accepted risk with a deadline. Approvers see the rationale and can set the expiry when they approve.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Rationale <span class="req">*</span></label><textarea class="textarea" placeholder="Why is this finding acceptable?"></textarea><div class="hint">Required. Shown in the audit trail and the finding’s remediation history.</div></div>
+      <div class="grid grid-2">
+        <div class="field"><label>Linked ticket <span class="t-subtle t-500">(optional)</span></label><input class="input" placeholder="https://tracker/TICKET-123" /></div>
+        <div class="field"><label>Expires <span class="t-subtle t-500">(proposed, optional)</span></label><input class="input" type="date" value="2026-09-30" /><div class="hint">Required when approving.</div></div>
+      </div>
+      <div class="callout t-xs">Approving instead? The title becomes “Approve waiver for 2 finding(s)”, the expiry is required and the primary reads “Approve waiver” (needs <span class="mono">lint_findings:publish</span>).</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close" disabled>Request waiver</button></div>
+  </div>
+</div>
+
+<!-- Save view dialog -->
+<div class="overlay" id="save-view-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="sv-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="bookmark-plus"></i></span>
+      <div><div class="dialog__title" id="sv-title">Save current view</div><div class="dialog__desc">Saves the filters, sort and subject scope in the URL as a personal view.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Name</label><input class="input" placeholder="e.g. New security errors" autofocus /></div>
+      <label class="check"><input type="checkbox" checked /> Pin to toolbar</label>
+      <div class="code t-2xs">severity=error&amp;state=open&amp;sort=severity</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save</button></div>
+  </div>
+</div>
+
+<!-- LintReportDialog (shared component, opened from the drawer) -->
+<div class="overlay" id="lint-report-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="lr-title">
+    <div class="dialog__header">
+      <div class="grow"><div class="dialog__title" id="lr-title">Quality &amp; Lint report — v2.4.0</div><div class="dialog__desc">Server-computed quality score and itemized findings for this version.</div></div>
+      <button class="btn btn--ghost btn--icon" data-tip="Expand" aria-label="Expand"><i data-lucide="maximize-2"></i></button>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="row gap-3 wrap">
+        <span class="grade-chip" style="background:var(--ok-soft);color:var(--ok-fg)">B</span>
+        <div><div class="t-h3">Score 88<span class="t-subtle t-500">/100</span></div><div class="row gap-2 mt-1 wrap"><span class="badge" data-status="error">0 error</span><span class="badge" data-status="warning">5 warning</span><span class="badge" data-status="info">3 info</span><span class="badge badge--outline"><i data-lucide="book-open-check"></i>Guide: Acme REST</span><span class="badge badge--outline">Compatibility vs base: minor</span></div></div>
+      </div>
+      <div class="banner banner--warn t-xs"><i data-lucide="history"></i>The stored quality score (B · 85) is out of date — this report was recomputed from the current revision.</div>
+      <div class="row-between"><div class="t-caps">Findings</div><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button>Group by rule</label></div>
+      <div class="card card--flat finding-list divide-y">
+        <div class="list-row"><span class="badge" data-status="warning">Warning</span><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="tag" data-tip="Every operation needs a documented 4xx so clients can distinguish validation from transport errors">response-4xx-defined</span><span class="badge badge--outline">Acme REST</span><a class="t-xs" href="#">View rule <i data-lucide="arrow-up-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i></a></div><div class="mono t-2xs t-subtle mt-1">paths./payouts.post.responses</div><div class="t-sm mt-1">POST /payouts documents no 4xx response.</div></div></div>
+        <div class="list-row"><span class="badge" data-status="warning">Warning</span><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="tag">schema-description</span><span class="badge badge--outline">Acme REST</span><a class="t-xs" href="#">View rule <i data-lucide="arrow-up-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i></a></div><div class="mono t-2xs t-subtle mt-1">components.schemas.Refund</div><div class="t-sm mt-1">Schema <span class="mono">Refund</span> has no description.</div></div></div>
+        <div class="list-row"><span class="badge" data-status="info">Info</span><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="tag">oas3-schema</span><span class="badge badge--outline">Acme REST</span><a class="t-xs" href="#">View rule <i data-lucide="arrow-up-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i></a></div><div class="mono t-2xs t-subtle mt-1">components.schemas.Refund.properties.amount</div><div class="t-sm mt-1">Property <span class="mono">amount</span> uses <span class="mono">type: number</span> without a format.</div></div></div>
+        <div class="list-row"><span class="badge" data-status="info">Info</span><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="tag">operation-tag-defined</span><span class="badge badge--outline">Acme REST</span><a class="t-xs" href="#">View rule <i data-lucide="arrow-up-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i></a></div><div class="mono t-2xs t-subtle mt-1">paths./refunds.post.tags[0]</div><div class="t-sm mt-1">Tag <span class="mono">Refunds</span> is used but not declared at the top level.</div></div></div>
+      </div>
+      <div class="t-xs t-subtle">Empty reads “No findings — clean bill of health.” · loading “Loading lint report…” · failure “Lint report unavailable.” + Retry.</div>
+    </div>
+    <div class="dialog__footer"><a class="btn btn--ghost left" href="#">Score axes &amp; coverage <i data-lucide="arrow-up-right"></i></a><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Toast stack (bulk action feedback with Undo) -->
+<div class="toast-stack" aria-live="polite">
+  <div class="toast toast--ok"><i data-lucide="circle-check"></i><div class="grow"><div class="toast-title">Applied to 2 finding(s)</div><div class="toast-desc">Acknowledged · replays the previous states if you undo.</div></div><button class="btn btn--sm">Undo</button></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/lint-workspace → “Lint posture” (Preview)</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/lint-workspace/page.tsx</code>, <code>components/ade/dashboard/lint/**</code> (summary header, filters, queue table, bulk bar, waiver dialog, finding detail dialog, save-view dialog, <code>LintWorkspaceTrendsPanel</code>, <code>LintWorkspaceQualityRanksPanel</code>), <code>LintReportDialog.tsx</code>, <code>LintDecisionBadge</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Summary tiles (Unwaived security errors · Missing required coverage “of n subjects” · New findings · Waivers “requested · expiring soon”) are drill-down buttons; GRADES A–F+Ungraded chips with counts; AXES chips with average score / “—” and the assessed/not-assessed tooltip.</li>
+    <li>Saved views bar: apply / pin-unpin / delete per view + “Save view”; Save view dialog (Name, “Pin to toolbar” default on) and its toasts.</li>
+    <li>Queue filters: search, New only, Sort (Severity/Newest/Rule/Subject), Source, Coverage, Subject, “Clear filters (n)”; facet chip groups Severity / State / Axis / Grade with counts; filter/sort/offset live in the URL (mono line under the toolbar).</li>
+    <li>Table columns Finding (ruleId + NEW pill, 2-line message, mono path) · Severity · State (<code>LintDecisionBadge</code> vocabulary) · Subject (project, label, grade chip, MCP marker) · Axis · Source; select-all + row checkboxes; footer “a–b of total” Previous/Next, page size 50.</li>
+    <li>Bulk bar: n selected · Acknowledge · Mark fixed · False positive · Request waiver · Approve waiver (permission title) · Reopen / reject (title) · Assign owner input + Assign · Clear selection. Toast “Applied to n finding(s)” with Undo; partial/failed variants keep their copy.</li>
+    <li>Waiver dialog request/approve variants (Rationale required, Linked ticket, Expires proposed/required). Finding detail: Evidence (Scanner, Profile, Evidence run, Recorded, Fingerprint, Location), remediation hint, Links (Subject → versions/mcp, Policy verdict + evaluation id, Ticket), Remediation history (before → after “rationale” by actor timestamp; empty/loading/error copy).</li>
+    <li>Trends: Remediation (New findings, Remediated genuine fixes) + Policy &amp; waivers (granted, expired, false positive, policy pack publications) sparklines with “n in 30d”, both explanatory notes, empty state.</li>
+    <li>Quality ranks: header counts, 7d/30d/90d/180d window, truncation notice, per (scope, format) cards with Latest grade, drift badge, stats (Average score · Average readiness/Blocked · Best rank/Warned), grade-distribution bars, score trend (+ readiness on export), finding attribution split bar and copy, multi-guide-version notice, per-panel and tab-level empty copy.</li>
+    <li>LintReportDialog: title/description, grade chip, Score n/100, severity chips, Guide pill, Compatibility vs base, stale note, FINDINGS with Group by rule, rows severity · rule (rationale tooltip) · guide pill · View rule ↗ · path · message; empty/loading/error copy; expand button.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Finding detail is a right <strong>drawer</strong> (drawer-first, DESIGN §5.4) with “Open full page ↗”, quick Acknowledge/Request waiver and a link to the lint report; keyboard hint <code>/</code> on search; “Preview states” toggle for the mock; owner shown in Links.</li></ul>
+  <h4>States</h4>
+  <ul><li>No tenant → <code>.empty</code> lock “No tenant selected — Select a tenant to review its catalog-wide lint posture.” · Queue error banner with Retry · empty row “No findings match the current filters.” · skeleton rows while loading · Trends “No trend data yet” · Ranks “No quality-rank data yet”. Summary/trends/views failures degrade silently.</li></ul>
+</template>
+</body>
+</html>

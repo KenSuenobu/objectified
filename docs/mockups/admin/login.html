@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin sign-in · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local only */
+  .auth { min-height: 100vh; display: grid; place-items: center; padding: var(--space-8) var(--space-6); }
+  .auth__col { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: var(--space-4); }
+  .auth__card { padding: 28px 28px 24px; }
+  .auth__mark { display: flex; align-items: center; gap: 12px; }
+  .auth__mark .brand-mark { flex-shrink: 0; }
+  .admin-label { font-size: var(--fs-2xs); font-weight: 600; letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--rose-fg); }
+  .restricted { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--r-md); background: var(--rose-soft); color: var(--rose-fg); font-size: var(--fs-xs); font-weight: 500; }
+  .restricted [data-lucide] { width: 14px; height: 14px; }
+  .btn--admin { --_bg: var(--rose); --_fg: #fff; --_bd: transparent; box-shadow: 0 1px 2px rgba(20,18,14,.18); }
+  .btn--admin:hover { background: color-mix(in srgb, var(--rose) 88%, black); }
+</style>
+</head>
+<body data-shell="auth" data-nav="" data-page="admin/login">
+<main class="page hex-bg auth">
+  <div class="auth__col">
+    <!-- Brand + console label -->
+    <div class="auth__mark">
+      <span class="brand-mark brand-mark--lg"></span>
+      <div>
+        <div class="t-h3" style="line-height:1.1">apiome</div>
+        <div class="admin-label">Admin console</div>
+      </div>
+    </div>
+
+    <!-- Password gate -->
+    <section class="card auth__card" aria-labelledby="login-title">
+      <div class="row gap-3">
+        <span class="icon-tile icon-tile--rose"><i data-lucide="lock-keyhole"></i></span>
+        <div>
+          <h1 class="t-h2" id="login-title">Sign in to the admin console</h1>
+          <p class="t-sm t-muted">Shared admin password. Your session lasts 8 hours.</p>
+        </div>
+      </div>
+
+      <!-- Error state (visible for the mockup; hidden by default in the product) -->
+      <div class="banner banner--danger mt-4" role="alert">
+        <i data-lucide="circle-alert"></i>
+        <div><div class="banner-title">Authentication failed</div><div class="banner-body">Invalid password. Check with whoever manages <span class="mono">ADMIN_PASSWORD</span> and try again.</div></div>
+      </div>
+
+      <form class="col gap-4 mt-4" onsubmit="return false">
+        <div class="field is-invalid">
+          <label for="pw">Admin password</label>
+          <div class="input-wrap">
+            <i data-lucide="lock"></i>
+            <input class="input" id="pw" type="password" placeholder="Enter admin password" autofocus required autocomplete="current-password" />
+            <span class="input-suffix"><button type="button" class="btn btn--ghost btn--sm btn--icon" aria-label="Show password" data-tip="Show password"><i data-lucide="eye"></i></button></span>
+          </div>
+          <div class="hint">The field clears after a failed attempt. Press <span class="kbd">↵</span> to submit.</div>
+        </div>
+        <button class="btn btn--lg btn--admin w-full" type="submit"><i data-lucide="shield-half"></i>Sign in to admin</button>
+      </form>
+
+      <div class="restricted mt-4"><i data-lucide="triangle-alert"></i>Restricted area — unauthorised access is prohibited and attempts are rate-limited.</div>
+    </section>
+
+    <div class="row-between t-sm">
+      <a href="../home/overview.html" class="row gap-1"><i data-lucide="arrow-left" style="width:14px;height:14px"></i>Back to Apiome</a>
+      <span class="t-xs t-subtle">Session cookie · httpOnly · SameSite=strict · 8 h</span>
+    </div>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/admin (unauthenticated) → on success redirect to /admin/dashboard</p>
+  <h4>Replaces</h4>
+  <ul><li><code>app/admin/page.tsx</code>, <code>app/admin/layout.tsx</code>, <code>AdminLoginClient.tsx</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Single shared-password gate: one password field (autofocus, required, disabled while loading), submit button (disabled when empty; loading shows spinner + “Signing in…”), POST <code>/api/admin/auth</code> → <code>router.push('/admin/dashboard')</code>.</li>
+    <li>Error box with the server messages: “Invalid password”, “Admin password not configured”, “Too many failed attempts. Try again later.” (429), fallback “Authentication failed”, network fallback “An unexpected error occurred. Please try again.” The password field is cleared on failure.</li>
+    <li>Restricted-area warning strip and the “← Back to Apiome” link to <code>/</code>.</li>
+    <li>Enter submits; no username, no remember-me.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul>
+    <li>Rose “Admin console” label + <code>.brand-mark</code> instead of the red Lock badge; “Show password” eye toggle; hex canvas (<code>.hex-bg</code>).</li>
+    <li>Session facts under the card (8 h httpOnly SameSite=strict cookie) so admins know why they get bounced.</li>
+  </ul>
+  <h4>States</h4>
+  <ul>
+    <li>Default: no banner, field empty, button disabled. Loading: button spinner “Signing in…”. Error: <code>.banner--danger</code> as shown, field <code>.is-invalid</code>. Rate-limited: same banner with the 429 copy.</li>
+    <li>Already authenticated: the route redirects to <code>/admin/dashboard</code>; nothing renders.</li>
+  </ul>
+</template>
+</body>
+</html>

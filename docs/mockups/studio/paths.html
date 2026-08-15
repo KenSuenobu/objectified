@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Studio paths · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .topbar--grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; }
+  .topbar--grid .topbar__center { position: static; transform: none; }
+  .topbar__left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .pv-pill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px 0 6px; border-radius: var(--r-full); background: var(--bg-subtle); box-shadow: 0 0 0 1px var(--border) inset; font-size: var(--fs-sm); white-space: nowrap; }
+  .pv-pill:hover { background: var(--bg-inset); }
+  .pv-pill [data-lucide] { width: 14px; height: 14px; color: var(--fg-subtle); }
+  .save-state { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-xs); color: var(--fg-subtle); white-space: nowrap; }
+  .save-state [data-lucide] { width: 13px; height: 13px; color: var(--ok); }
+  .workspace__body { grid-template-rows: minmax(0, 1fr) auto; }
+  .status-bar { height: 22px; display: flex; align-items: center; gap: 14px; padding: 0 12px; font-size: var(--fs-2xs); color: var(--fg-subtle); background: var(--bg-surface); border-top: 1px solid var(--border); white-space: nowrap; }
+  .status-bar .sb-item { display: inline-flex; align-items: center; gap: 4px; }
+  .status-bar [data-lucide] { width: 11px; height: 11px; }
+  /* sidebar rail */
+  .sb { display: grid; grid-template-columns: 40px minmax(0,1fr); min-height: 0; height: 100%; }
+  .sb__rail { display: flex; flex-direction: column; gap: 2px; padding: 6px 4px; border-right: 1px solid var(--border); }
+  .sb__rail .tab { height: 32px; width: 32px; padding: 0; justify-content: center; border-radius: var(--r-sm); }
+  .sb__rail .tab.is-active { background: var(--accent-soft); color: var(--accent-fg); }
+  .sb__rail .tab.is-active::after { display: none; }
+  .sb__content { display: flex; flex-direction: column; min-height: 0; }
+  .side-search { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .side-foot { display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-top: 1px solid var(--border); margin-top: auto; }
+  .fab { width: 32px; height: 32px; }
+  .path-row { display: flex; align-items: center; gap: 6px; min-height: 30px; padding: 2px 8px; border-radius: var(--r-sm); font-size: var(--fs-xs); cursor: pointer; }
+  .path-row:hover { background: var(--bg-subtle); }
+  .path-row.is-active { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+  .path-row .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .path-row .acts { margin-left: auto; display: none; gap: 2px; }
+  .path-row:hover .acts { display: inline-flex; }
+  .path-row.is-invalid { box-shadow: inset 0 0 0 1px var(--danger); }
+  .method-pills { display: flex; gap: 3px; padding: 2px 8px 6px 26px; flex-wrap: wrap; }
+  .method-pills .method { height: 17px; min-width: 38px; font-size: 9px; cursor: pointer; }
+  .op-chip { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border-strong) inset; font-size: var(--fs-xs); cursor: grab; background: var(--bg-surface); }
+  .op-chip .method { min-width: 44px; }
+  /* canvas */
+  .canvas { position: relative; overflow: hidden; background-color: var(--bg-canvas); background-image: radial-gradient(color-mix(in srgb, var(--fg) 16%, transparent) 1px, transparent 1px); background-size: 20px 20px; }
+  .path-strip { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--bg-surface); border-bottom: 1px solid var(--border); font-size: var(--fs-sm); flex-wrap: wrap; }
+  .path-strip .seg { font-family: var(--font-mono); font-size: var(--fs-xs); }
+  .path-strip .var { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--r-full); background: var(--ok-soft); color: var(--ok-fg); font-family: var(--font-mono); font-size: var(--fs-2xs); font-weight: 600; cursor: pointer; }
+  .sample-strip { display: flex; align-items: center; gap: 8px; padding: 5px 12px; background: var(--bg-subtle); border-bottom: 1px solid var(--border); font-size: var(--fs-2xs); color: var(--fg-muted); }
+  .sample-strip [data-lucide] { width: 12px; height: 12px; }
+  .pnode { position: absolute; background: var(--bg-surface); border-radius: 8px; box-shadow: var(--shadow-sm); font-size: var(--fs-xs); z-index: 2; }
+  .pnode__head { display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 9px; border-top: 3px solid var(--_ac, var(--accent)); border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; }
+  .pnode__head .lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-subtle); }
+  .pnode__head [data-lucide] { width: 13px; height: 13px; color: var(--_ac, var(--accent)); }
+  .pnode__sec { padding: 6px 9px; border-bottom: 1px solid var(--border); }
+  .pnode__sec:last-child { border-bottom: 0; }
+  .pnode__sec .sec-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-subtle); margin-bottom: 3px; }
+  .pnode .dz { border: 1.5px dashed var(--border-strong); border-radius: 6px; padding: 5px 8px; color: var(--fg-faint); font-size: 10px; text-align: center; }
+  .pnode.is-selected { box-shadow: 0 0 0 2px var(--accent), var(--shadow-md); }
+  .pnode .hd { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg-surface); }
+  .pchip { position: absolute; display: flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border-radius: var(--r-full); background: var(--bg-surface); box-shadow: 0 0 0 1.5px var(--_ac, var(--accent)) inset, var(--shadow-sm); font-family: var(--font-mono); font-size: var(--fs-2xs); z-index: 2; }
+  .pchip .pin { width: 14px; height: 14px; border-radius: 4px; display: grid; place-items: center; background: color-mix(in srgb, var(--_ac) 15%, transparent); color: var(--_ac); font-size: 9px; font-weight: 700; }
+  .canvas .edges { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .canvas .edges path { fill: none; stroke: var(--accent); stroke-width: 1.75; }
+  .canvas .edges .lb rect { fill: var(--bg-surface); stroke: var(--border-strong); rx: 8; }
+  .canvas .edges .lb text { font: 500 9px var(--font-mono); fill: var(--fg-muted); }
+  .float { position: absolute; z-index: 5; display: flex; align-items: center; gap: 4px; padding: 4px; background: color-mix(in srgb, var(--bg-surface) 90%, transparent); backdrop-filter: blur(8px); border-radius: var(--r-md); box-shadow: var(--shadow-sm); }
+  .float--col { flex-direction: column; }
+  .help-banner { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: var(--r-md); background: color-mix(in srgb, var(--bg-surface) 94%, transparent); box-shadow: var(--shadow-md); font-size: var(--fs-2xs); color: var(--fg-muted); max-width: 92%; }
+  /* inspector */
+  .insp-section { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .insp-section h4 { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: var(--track-caps); color: var(--fg-subtle); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .insp-section h4 .badge { text-transform: none; letter-spacing: 0; }
+  .insp-section h4 .ml-auto { margin-left: auto; }
+  .prop-row { display: flex; align-items: center; gap: 6px; min-height: 28px; font-size: var(--fs-xs); }
+  .prop-row + .prop-row { border-top: 1px solid var(--border); }
+  .code-pane { background: #1B1A18; color: #EDEBE6; }
+  /* journey */
+  .jnode { position: absolute; width: 230px; border-radius: 8px; background: var(--bg-surface); box-shadow: var(--shadow-sm); padding: 8px 10px; font-size: var(--fs-xs); z-index: 2; }
+  .jnode--resp { width: 160px; }
+  .jnode.is-start { box-shadow: 0 0 0 2px var(--accent), var(--shadow-sm); }
+  .jnode--dead { box-shadow: 0 0 0 1.5px var(--warn) inset, var(--shadow-sm); }
+</style>
+</head>
+<body data-shell="studio" data-nav="studio" data-page="studio/paths" data-tenant="Acme Corp">
+<main class="page">
+<div class="workspace">
+  <div class="topbar topbar--grid" role="banner">
+    <div class="topbar__left">
+      <button class="pv-pill" data-action="open" data-target="pv-menu" aria-haspopup="menu" aria-label="Project and version picker"><span class="avatar avatar--xs avatar--hex avatar--a">PA</span><span class="t-600">Payments API</span><i data-lucide="chevron-right"></i><span class="mono">v2.4.0</span><span class="badge badge--dot" data-status="draft">Draft</span><i data-lucide="chevron-down"></i></button>
+      <span class="badge badge--outline" data-tip="Locked by you · 14m left"><i data-lucide="lock"></i>You · 14m</span>
+      <button class="badge badge--ok" data-action="open" data-target="pathq-dialog" data-tip="PATH QUALITY (0–100). Click for weighted breakdown, issues list, and letter grade."><i data-lucide="gauge"></i>PQ 82 · B</button>
+      <span class="save-state" role="status"><i data-lucide="check"></i>Saved</span>
+    </div>
+    <div class="topbar__center"><div class="segmented" aria-label="Studio views"><a href="editor.html"><i data-lucide="pen-tool"></i>Editor</a><a class="is-active" href="paths.html"><i data-lucide="route"></i>Paths</a><a href="code.html"><i data-lucide="code-2"></i>Code</a></div></div>
+    <div class="topbar__right"><button class="btn btn--sm btn--ghost btn--icon" data-action="open" data-target="class-drop" data-tip="Preview: add class to response"><i data-lucide="mouse-pointer-click"></i></button>
+      <div class="segmented segmented--sm" data-tabs="paths-modes" aria-label="Paths view mode"><button class="is-active" data-action="tab" data-target="pm-canvas"><i data-lucide="workflow"></i>Canvas</button><button data-action="tab" data-target="pm-code"><i data-lucide="code-2"></i>Code</button><button data-action="tab" data-target="pm-journey"><i data-lucide="footprints"></i>Journey</button></div>
+      <button class="btn btn--ghost btn--icon" data-action="open" data-target="git-menu" data-tip="Revision and sync (⌘G)" aria-label="Git menu"><i data-lucide="git-branch"></i></button>
+      <button class="btn btn--ghost btn--icon" data-tip="Share" aria-label="Share"><i data-lucide="share-2"></i></button>
+      <a class="btn btn--sm btn--primary" href="code.html"><i data-lucide="sparkles"></i>Generate</a>
+      <button class="btn btn--ghost btn--icon" data-tip="Canvas settings" aria-label="Canvas settings"><i data-lucide="settings-2"></i></button>
+      <button class="avatar avatar--sm avatar--a" aria-label="Account menu for Ada Lovelace">AL</button>
+    </div>
+  </div>
+
+  <div class="workspace__body">
+    <div class="split" style="grid-template-columns:300px minmax(0,1fr) 360px">
+      <!-- ===== Left: API designer sidebar ===== -->
+      <aside class="panel" aria-label="API designer sidebar">
+        <div class="panel__head"><i data-lucide="route"></i>API designer<span class="ml-auto t-2xs" style="text-transform:none;letter-spacing:0;font-weight:500">Paths</span></div>
+        <div class="panel__body sb">
+          <div class="sb__rail tabs" data-tabs="sb-panels" role="tablist" aria-label="Sidebar sections">
+            <button class="tab is-active" data-action="tab" data-target="sbp-paths" data-tip="Paths"><i data-lucide="route"></i></button>
+            <button class="tab" data-action="tab" data-target="sbp-ops" data-tip="Operations"><i data-lucide="zap"></i></button>
+            <button class="tab" data-action="tab" data-target="sbp-classes" data-tip="Classes"><i data-lucide="boxes"></i></button>
+            <button class="tab" data-action="tab" data-target="sbp-props" data-tip="Properties"><i data-lucide="list-tree"></i></button>
+            <button class="tab" data-action="tab" data-target="sbp-sec" data-tip="Security"><i data-lucide="shield-check"></i></button>
+            <button class="tab" data-action="tab" data-target="sbp-srv" data-tip="Servers"><i data-lucide="server"></i></button>
+          </div>
+          <div class="sb__content" id="sb-panels">
+            <!-- Paths -->
+            <div data-tab-panel="sbp-paths" style="display:flex;flex-direction:column;flex:1;min-height:0">
+              <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Filter paths…" style="padding-left:30px" /></div></div>
+              <div class="row-between" style="padding:8px 12px 4px"><span class="t-caps">Paths</span><span class="t-2xs t-subtle">6 total · grouped by tag</span></div>
+              <div style="overflow:auto;padding:0 6px 8px">
+                <div class="t-2xs t-caps" style="padding:6px 8px 2px;color:var(--fg-faint)">Payments</div>
+                <div class="path-row"><i data-lucide="chevron-down" style="width:12px;height:12px;opacity:.6"></i><span class="mono">/payments</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="path-dialog" data-tip="Edit path"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-path" data-tip="Delete path"><i data-lucide="trash-2"></i></button></span></div>
+                <div class="method-pills"><span class="method method--get" data-tip="Focus GET on canvas">GET</span><span class="method method--post" data-tip="Focus POST on canvas">POST</span></div>
+                <div class="path-row is-active"><i data-lucide="chevron-down" style="width:12px;height:12px;opacity:.6"></i><span class="mono">/payments/{paymentId}</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="path-dialog" data-tip="Edit path"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-path" data-tip="Delete path"><i data-lucide="trash-2"></i></button></span></div>
+                <div class="method-pills"><span class="method method--get">GET</span><span class="method method--patch">PATCH</span><span class="method method--delete">DELETE</span></div>
+                <div class="path-row"><i data-lucide="chevron-right" style="width:12px;height:12px;opacity:.6"></i><span class="mono">/payments/{paymentId}/capture</span></div>
+                <div class="t-2xs t-caps" style="padding:6px 8px 2px;color:var(--fg-faint)">Refunds</div>
+                <div class="path-row"><i data-lucide="chevron-right" style="width:12px;height:12px;opacity:.6"></i><span class="mono">/refunds</span></div>
+                <div class="path-row"><i data-lucide="chevron-right" style="width:12px;height:12px;opacity:.6"></i><span class="mono">/refunds/{refundId}</span></div>
+                <div class="t-2xs t-caps" style="padding:6px 8px 2px;color:var(--fg-faint)">Untagged</div>
+                <div class="path-row is-invalid"><i data-lucide="triangle-alert" style="width:12px;height:12px;color:var(--danger)" data-tip="Invalid path: must start with / and use valid {param} placeholders"></i><span class="mono">payouts/{id</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="path-dialog" data-tip="Edit path"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-path" data-tip="Delete path"><i data-lucide="trash-2"></i></button></span></div>
+              </div>
+              <div class="side-foot">
+                <div class="segmented segmented--sm" aria-label="Density"><button data-tip="Compact"><i data-lucide="rows-4"></i></button><button class="is-active" data-tip="Standard"><i data-lucide="rows-3"></i></button><button data-tip="Comfortable"><i data-lucide="rows-2"></i></button></div>
+                <span class="ml-auto"></span>
+                <button class="btn btn--sm btn--icon fab" data-action="open" data-target="import-paths" data-tip="Import paths from an OpenAPI specification" aria-label="Import paths"><i data-lucide="file-up"></i></button>
+                <button class="btn btn--sm btn--icon btn--primary fab" data-action="open" data-target="path-dialog" data-tip="Add a new path" aria-label="Add a new path"><i data-lucide="plus"></i></button>
+              </div>
+            </div>
+            <!-- Operations -->
+            <div data-tab-panel="sbp-ops" hidden style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto">
+              <div class="row-between" style="padding:10px 12px 4px"><span class="t-caps">HTTP operations</span></div>
+              <div class="t-2xs t-subtle" style="padding:0 12px 6px">Drag any operation onto a path on the canvas to attach it.</div>
+              <div class="col gap-2" style="padding:0 10px">
+                <div class="op-chip" draggable="true"><span class="method method--get">GET</span>Read a resource</div>
+                <div class="op-chip" draggable="true"><span class="method method--post">POST</span>Create a resource</div>
+                <div class="op-chip" draggable="true"><span class="method method--put">PUT</span>Replace a resource</div>
+                <div class="op-chip" draggable="true"><span class="method method--patch">PATCH</span>Update fields</div>
+                <div class="op-chip" draggable="true"><span class="method method--delete">DELETE</span>Remove a resource</div>
+                <div class="op-chip" draggable="true"><span class="method method--head">HEAD</span>Headers only</div>
+                <div class="op-chip" draggable="true"><span class="method method--options">OPTIONS</span>CORS preflight</div>
+              </div>
+              <div class="row-between" style="padding:12px 12px 4px"><span class="t-caps">Parameters</span></div>
+              <div class="t-2xs t-subtle" style="padding:0 12px 6px">Drag a parameter chip onto an operation to attach it.</div>
+              <div class="col gap-2" style="padding:0 10px 12px">
+                <div class="op-chip" draggable="true" style="--_ac:#2E86DE"><span class="pin" style="width:16px;height:16px;border-radius:4px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-fg);font-size:10px;font-weight:700">?</span>Query · <span class="mono">q</span> <span class="t-faint">in: query</span></div>
+                <div class="op-chip" draggable="true"><span style="width:16px;height:16px;border-radius:4px;display:grid;place-items:center;background:var(--ok-soft);color:var(--ok-fg)"><i data-lucide="braces" style="width:10px;height:10px"></i></span>Path · <span class="mono">id</span> <span class="t-faint">in: path</span></div>
+                <div class="op-chip" draggable="true"><span style="width:16px;height:16px;border-radius:4px;display:grid;place-items:center;background:var(--violet-soft);color:var(--violet-fg);font-size:10px;font-weight:700">H</span>Header · <span class="mono">Authorization</span></div>
+                <div class="op-chip" draggable="true"><span style="width:16px;height:16px;border-radius:4px;display:grid;place-items:center;background:var(--warn-soft);color:var(--warn-fg);font-size:10px;font-weight:700">C</span>Cookie · <span class="mono">session</span></div>
+              </div>
+            </div>
+            <!-- Classes -->
+            <div data-tab-panel="sbp-classes" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+              <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Filter classes…" style="padding-left:30px" /></div></div>
+              <div class="row-between" style="padding:8px 12px 2px"><span class="t-caps">Classes</span><span class="t-2xs t-subtle">Drag to canvas</span></div>
+              <div class="tree" style="padding:4px 6px;overflow:auto">
+                <div class="tree__item" draggable="true"><i data-lucide="box"></i><span class="grow">Payment</span><span class="count">Class schema</span></div>
+                <div class="tree__item" draggable="true"><i data-lucide="box"></i><span class="grow">Refund</span><span class="count">Class schema</span></div>
+                <div class="tree__item" draggable="true"><i data-lucide="box"></i><span class="grow">Money</span><span class="count">Class schema</span></div>
+                <div class="tree__item" draggable="true"><i data-lucide="box"></i><span class="grow">Problem</span><span class="count">Class schema</span></div>
+              </div>
+              <div class="t-2xs t-subtle" style="padding:6px 12px">No class you need? Create classes in the Editor view.</div>
+            </div>
+            <!-- Properties -->
+            <div data-tab-panel="sbp-props" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+              <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search properties…" style="padding-left:30px" /></div></div>
+              <div class="row-between" style="padding:8px 12px 2px"><span class="t-caps" data-tip="Drag to canvas or onto path variables for type binding">Properties</span></div>
+              <div class="tree" style="padding:4px 6px;overflow:auto">
+                <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span>id</span><div class="t-2xs t-subtle" style="line-height:1">string (uuid)</div></span></div>
+                <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span>status</span><div class="t-2xs t-subtle" style="line-height:1">enum (4)</div></span><span class="badge badge--outline" style="height:15px;font-size:9px">optional</span></div>
+                <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span>tags</span><div class="t-2xs t-subtle" style="line-height:1">string[]</div></span></div>
+                <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span>createdAt</span><div class="t-2xs t-subtle" style="line-height:1">string (date-time)</div></span></div>
+              </div>
+            </div>
+            <!-- Security -->
+            <div data-tab-panel="sbp-sec" hidden style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto">
+              <div class="row-between" style="padding:10px 12px 4px"><span class="t-caps">Security schemes</span><button class="btn btn--sm" data-action="open" data-target="scheme-dialog"><i data-lucide="plus"></i>Add</button></div>
+              <div class="t-2xs t-subtle" style="padding:0 12px 8px">Add API Key, HTTP (Basic/Bearer), or other scheme types. Drag a scheme onto a method node to apply it, or use Edit/Delete below.</div>
+              <div class="col gap-2" style="padding:0 10px 10px">
+                <div class="op-chip" draggable="true"><i data-lucide="key-round" style="width:13px;height:13px;color:var(--warn)"></i><span class="grow"><span class="t-600 mono">apiKey</span><div class="t-2xs t-subtle">Header: X-API-Key</div></span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="scheme-dialog" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-scheme" data-tip="Delete"><i data-lucide="trash-2"></i></button></div>
+                <div class="op-chip" draggable="true"><i data-lucide="shield-check" style="width:13px;height:13px;color:var(--ok)"></i><span class="grow"><span class="t-600 mono">bearerAuth</span><div class="t-2xs t-subtle">HTTP: bearer (JWT)</div></span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="scheme-dialog"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-scheme"><i data-lucide="trash-2"></i></button></div>
+                <div class="op-chip" draggable="true"><i data-lucide="fingerprint" style="width:13px;height:13px;color:var(--violet)"></i><span class="grow"><span class="t-600 mono">oauth2</span><div class="t-2xs t-subtle">OAuth2: authorizationCode, clientCredentials</div></span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="scheme-dialog"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-scheme"><i data-lucide="trash-2"></i></button></div>
+              </div>
+            </div>
+            <!-- Servers -->
+            <div data-tab-panel="sbp-srv" hidden style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto">
+              <div class="row-between" style="padding:10px 12px 4px"><span class="t-caps">Servers</span><button class="btn btn--sm" data-action="open" data-target="server-dialog"><i data-lucide="plus"></i>Add</button></div>
+              <div class="t-2xs t-subtle" style="padding:0 12px 8px">Define multiple server URLs (e.g. Production, Staging). Exported in the OpenAPI spec.</div>
+              <div class="col gap-2" style="padding:0 10px 10px">
+                <div class="op-chip"><i data-lucide="server" style="width:13px;height:13px"></i><span class="grow"><span class="t-600">Production</span> <span class="badge badge--ok" style="height:15px;font-size:9px">prod</span><div class="t-2xs t-subtle mono">https://api.acme.dev/v2</div><div class="t-2xs t-faint">Variables: region</div></span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="server-dialog" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-server" data-tip="Delete"><i data-lucide="trash-2"></i></button></div>
+                <div class="op-chip"><i data-lucide="server" style="width:13px;height:13px"></i><span class="grow"><span class="t-600">Staging</span> <span class="badge badge--warn" style="height:15px;font-size:9px">staging</span><div class="t-2xs t-subtle mono">https://staging.acme.dev/v2</div></span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="server-dialog"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-server"><i data-lucide="trash-2"></i></button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ===== Centre ===== -->
+      <section class="panel panel--muted" style="min-width:0" id="paths-modes">
+        <!-- Canvas mode -->
+        <div data-tab-panel="pm-canvas" style="display:flex;flex-direction:column;min-height:0;height:100%">
+          <div class="path-strip"><span class="t-caps" style="margin-right:2px">Path:</span><span class="seg">/payments/</span><button class="var" data-tip="Edit schema for {paymentId}, or drop a property here for type binding">{paymentId}</button></div>
+          <div class="sample-strip"><i data-lucide="eye"></i><span>Sample: <span class="mono">/payments/pay_8f2a1c</span></span><button class="btn btn--ghost btn--sm" data-tip="Copy sample URL"><i data-lucide="copy"></i>Copy</button></div>
+          <div class="canvas" style="flex:1">
+            <div class="float" style="right:12px;top:12px"><button class="btn btn--ghost btn--sm" data-tip="Arrange nodes in a top-down layered layout and fit the view. Saves with your path canvas."><i data-lucide="layout-grid"></i>Auto layout</button></div>
+            <div class="float float--col" style="left:12px;bottom:12px">
+              <button class="btn btn--ghost btn--sm btn--icon" data-tip="Zoom in" aria-label="Zoom in"><i data-lucide="plus"></i></button>
+              <button class="btn btn--ghost btn--sm btn--icon" data-tip="Zoom out" aria-label="Zoom out"><i data-lucide="minus"></i></button>
+              <button class="btn btn--ghost btn--sm btn--icon" data-tip="Fit view" aria-label="Fit view"><i data-lucide="maximize"></i></button>
+              <button class="btn btn--ghost btn--sm btn--icon" data-tip="Lock interaction" aria-label="Lock interaction"><i data-lucide="lock-open"></i></button>
+            </div>
+            <svg class="edges" aria-hidden="true">
+              <defs><marker id="parr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
+              <!-- path → GET / PATCH -->
+              <path d="M380 122 C 380 138, 165 132, 165 150" marker-end="url(#parr)"/>
+              <path d="M380 122 C 380 138, 440 132, 440 150" marker-end="url(#parr)"/>
+              <!-- GET → parameter -->
+              <path d="M165 318 C 165 336, 110 340, 100 358" marker-end="url(#parr)"/>
+              <g class="lb"><rect x="150" y="338" width="56" height="14"/><text x="178" y="348" text-anchor="middle">hasParam</text></g>
+              <!-- GET → 200 response -->
+              <path d="M165 318 C 165 380, 95 386, 95 428" marker-end="url(#parr)"/>
+              <g class="lb"><rect x="18" y="396" width="156" height="14"/><text x="96" y="406" text-anchor="middle">response 200 · application/json</text></g>
+              <!-- GET → 404 -->
+              <path d="M165 318 C 220 360, 275 386, 275 428" marker-end="url(#parr)"/>
+              <g class="lb"><rect x="228" y="396" width="90" height="14"/><text x="273" y="406" text-anchor="middle">response 404</text></g>
+              <!-- 200 → response body -->
+              <path d="M95 650 C 95 664, 280 602, 300 616" marker-end="url(#parr)"/>
+              <g class="lb"><rect x="150" y="632" width="30" height="14"/><text x="165" y="642" text-anchor="middle">body</text></g>
+              <!-- PATCH → request body -->
+              <path d="M440 356 C 440 392, 545 396, 545 430" marker-end="url(#parr)"/>
+              <g class="lb"><rect x="452" y="392" width="150" height="14"/><text x="527" y="402" text-anchor="middle">requestBody · application/json</text></g>
+              <!-- class → response body ($ref) -->
+              <path d="M475 662 L443 662" marker-end="url(#parr)" style="stroke:var(--violet)"/>
+            </svg>
+
+            <!-- Path template node -->
+            <article class="pnode is-selected" style="left:230px;top:12px;width:300px;--_ac:var(--accent)" aria-label="Path template node">
+              <div class="pnode__head"><i data-lucide="route"></i><span class="lbl">Path template</span></div>
+              <div class="pnode__sec"><div class="sec-lbl">OpenAPI path</div><input class="input input--sm mono" value="/payments/{paymentId}" /><div class="t-2xs t-faint mt-1">Start with /; use {name} for parameters. Names must be unique.</div></div>
+              <span class="hd" style="left:50%;bottom:-5px;margin-left:-4px"></span>
+            </article>
+
+            <!-- Operation: GET -->
+            <article class="pnode" style="left:60px;top:150px;width:210px;--_ac:#2E86DE" aria-label="GET operation node">
+              <span class="hd" style="left:50%;top:-5px;margin-left:-4px;background:var(--fg-subtle)"></span>
+              <div class="pnode__head"><span class="method method--get">GET</span><span class="mono t-2xs grow t-truncate">getPayment</span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-op" data-tip="Delete operation" aria-label="Delete operation"><i data-lucide="trash-2"></i></button></div>
+              <div class="pnode__sec"><div class="sec-lbl">Parameters</div><div class="t-2xs mono">: paymentId <span class="req">*</span></div></div>
+              <div class="pnode__sec"><div class="sec-lbl">Responses</div><div class="t-2xs mono">200, 404</div></div>
+              <div class="pnode__sec"><span class="badge badge--warn" style="height:16px;font-size:9px" data-tip="Security (AND): bearerAuth (payments:read)"><i data-lucide="lock"></i>bearerAuth (payments:read)</span></div>
+              <span class="hd" style="left:50%;bottom:-5px;margin-left:-4px"></span>
+            </article>
+
+            <!-- Operation: PATCH (deprecated + private variants shown) -->
+            <article class="pnode" style="left:330px;top:150px;width:220px;--_ac:#8B5CF6" aria-label="PATCH operation node">
+              <span class="hd" style="left:50%;top:-5px;margin-left:-4px;background:var(--fg-subtle)"></span>
+              <div class="pnode__head"><span class="method method--patch">PATCH</span><span class="mono t-2xs grow t-truncate">updatePayment</span><span class="badge badge--violet" style="height:15px;font-size:8px" data-tip="Hidden from Swagger (x-private)"><i data-lucide="lock"></i>Private</span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-op" aria-label="Delete operation"><i data-lucide="trash-2"></i></button></div>
+              <div class="pnode__sec"><div class="sec-lbl">Request</div><div class="dz">Drop schema here</div></div>
+              <div class="pnode__sec"><div class="sec-lbl">Parameters</div><div class="t-2xs t-faint">(No parameters)</div></div>
+              <div class="pnode__sec"><div class="sec-lbl">Responses</div><div class="t-2xs t-faint">(No responses)</div></div>
+              <div class="pnode__sec"><span class="badge badge--ok" style="height:16px;font-size:9px" data-tip="Public endpoint — no authentication required"><i data-lucide="unlock"></i>Public</span></div>
+              <span class="hd" style="left:50%;bottom:-5px;margin-left:-4px"></span>
+            </article>
+
+            <!-- Parameter chip node -->
+            <div class="pchip" style="left:30px;top:360px;--_ac:var(--ok)" role="button" aria-label="Path parameter paymentId" data-tip="paymentId · string (uuid) · required — in: path · style: simple">
+              <span class="pin"><i data-lucide="braces" style="width:9px;height:9px"></i></span>paymentId <span class="req">*</span>
+              <button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-param" data-tip="Delete parameter" aria-label="Delete parameter" style="width:18px;height:18px"><i data-lucide="trash-2" style="width:10px;height:10px"></i></button>
+            </div>
+
+            <!-- Response 200 -->
+            <article class="pnode" style="left:20px;top:430px;width:172px;--_ac:var(--ok)" aria-label="200 response node">
+              <span class="hd" style="left:50%;top:-5px;margin-left:-4px;background:var(--fg-subtle)"></span>
+              <div class="pnode__head"><i data-lucide="check"></i><span class="lbl" style="color:var(--ok-fg)">200 OK</span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-resp" data-tip="Delete response" aria-label="Delete response"><i data-lucide="trash-2"></i></button></div>
+              <div class="pnode__sec"><div class="sec-lbl">Content type map</div><div class="t-2xs mono">application/json → Payment</div></div>
+              <div class="pnode__sec"><div class="sec-lbl">Headers</div><div class="t-2xs mono">X-Request-Id</div></div>
+              <div class="pnode__sec"><div class="sec-lbl">Links</div><div class="t-2xs mono">refunds→listRefunds</div></div>
+              <span class="hd" style="left:50%;bottom:-5px;margin-left:-4px"></span>
+            </article>
+
+            <!-- Response 404 -->
+            <article class="pnode" style="left:205px;top:430px;width:140px;--_ac:var(--warn)" aria-label="404 response node">
+              <span class="hd" style="left:50%;top:-5px;margin-left:-4px;background:var(--fg-subtle)"></span>
+              <div class="pnode__head"><i data-lucide="triangle-alert"></i><span class="lbl" style="color:var(--warn-fg)">404 Not Found</span></div>
+              <div class="pnode__sec"><div class="dz">Drop class or property to set schema</div></div>
+              <div class="pnode__sec"><div class="sec-lbl">Headers</div><div class="t-2xs t-faint">(none)</div></div>
+            </article>
+
+            <!-- Response body node -->
+            <article class="pnode" style="left:185px;top:618px;width:250px;--_ac:var(--accent)" aria-label="Response body node">
+              <span class="hd" style="left:50%;top:-5px;margin-left:-4px;background:var(--fg-subtle)"></span>
+              <div class="pnode__head"><i data-lucide="braces"></i><span class="lbl">Response · Payment</span><button class="btn btn--ghost btn--sm btn--icon" data-tip="Edit" aria-label="Edit response body"><i data-lucide="pencil"></i></button></div>
+              <div class="pnode__sec"><div class="row gap-1"><span class="badge badge--accent" style="height:16px;font-size:9px"><i data-lucide="link-2"></i>Payment · json</span></div><div class="t-2xs t-subtle mt-1">Properties (read-only) — drop a class or property to replace this $ref</div></div>
+              <div class="pnode__sec t-2xs t-subtle">1 content type(s)</div>
+            </article>
+
+            <!-- Class node (schema ref source) -->
+            <article class="pnode" style="left:475px;top:612px;width:185px;--_ac:var(--violet)" aria-label="Class node Payment">
+              <div class="pnode__head"><i data-lucide="box"></i><span class="lbl">Payment</span><span class="badge badge--violet" style="height:15px;font-size:8px">Class</span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-class-node" data-tip="Remove class from canvas" aria-label="Remove class from canvas"><i data-lucide="trash-2"></i></button></div>
+              <div class="pnode__sec t-2xs t-muted">A charge against a customer’s payment method</div>
+            </article>
+
+            <!-- Request body node -->
+            <article class="pnode" style="left:430px;top:432px;width:230px;--_ac:var(--orange)" aria-label="Request body node">
+              <span class="hd" style="left:50%;top:-5px;margin-left:-4px;background:var(--fg-subtle)"></span>
+              <div class="pnode__head"><span class="badge badge--orange" style="height:15px;font-size:8px">REQ</span><span class="lbl">Request · UpdatePayment</span><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-reqbody" data-tip="Delete request body" aria-label="Delete request body"><i data-lucide="trash-2"></i></button></div>
+              <div class="pnode__sec"><div class="row gap-1"><span class="badge badge--orange" style="height:16px;font-size:9px"><i data-lucide="pencil"></i>3 props · json</span></div><div class="t-2xs t-subtle mt-1">Inline schema — drag properties here</div></div>
+              <div class="pnode__sec t-2xs t-subtle row gap-2">1 content type(s)<button class="btn btn--ghost btn--sm ml-auto" style="height:20px;font-size:10px">+ Add content type</button></div>
+            </article>
+
+            <!-- Security scheme node chip -->
+            <div class="pchip" style="left:578px;top:104px;--_ac:var(--warn)" role="button" aria-label="Security scheme bearerAuth" data-tip="Drag onto an operation node to apply it">
+              <span class="pin"><i data-lucide="shield-check" style="width:9px;height:9px"></i></span>bearerAuth
+            </div>
+
+            <div class="help-banner"><span class="t-600" style="color:var(--fg)">Drag &amp; drop design</span><span>Operations: sidebar → canvas</span><span>Schemas: classes/properties → operation nodes</span><span>Parameters/Responses: click operation nodes to configure</span><button class="btn btn--ghost btn--sm" data-action="eval-dismiss" onclick="this.parentElement.remove()">Dismiss</button></div>
+          </div>
+        </div>
+
+        <!-- Code mode -->
+        <div data-tab-panel="pm-code" hidden style="display:flex;flex-direction:column;min-height:0;height:100%">
+          <div class="row" style="padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-surface)"><span class="t-sm t-600">Payments API · v2.4.0</span><div class="segmented segmented--sm ml-auto"><button class="is-active">YAML</button><button>JSON</button></div></div>
+          <div class="banner banner--neutral" style="border-radius:0;font-size:var(--fs-xs)"><i data-lucide="info"></i>Editing code here does not update the canvas. Switch to Canvas to design; merged preview updates when the version or paths refresh.</div>
+          <div class="split" style="grid-template-rows:1fr 1fr;flex:1">
+            <div class="panel"><div class="panel__head">OpenAPI paths (fragment)</div><div class="panel__body"><pre class="code code--dark code--lines" style="border-radius:0;height:100%;margin:0"><span><span class="c-n">/payments/{paymentId}</span>:</span><span>  <span class="c-k">get</span>:</span><span>    <span class="c-n">operationId</span>: <span class="c-s">getPayment</span></span><span>    <span class="c-n">parameters</span>:</span><span>      - <span class="c-n">$ref</span>: <span class="c-s">'#/components/parameters/paymentId'</span></span><span>    <span class="c-n">responses</span>:</span><span>      <span class="c-n">'200'</span>: { <span class="c-n">$ref</span>: <span class="c-s">'#/components/responses/PaymentOk'</span> }</span><span>      <span class="c-n">'404'</span>: { <span class="c-n">description</span>: <span class="c-s">Payment not found</span> }</span></pre></div></div>
+            <div class="panel" style="border-left:0;border-top:1px solid var(--border)"><div class="panel__head">Merged OpenAPI (paths + components/schemas)</div><div class="panel__body"><pre class="code code--dark code--lines" style="border-radius:0;height:100%;margin:0"><span><span class="c-n">openapi</span>: <span class="c-s">3.2.0</span></span><span><span class="c-n">info</span>: { <span class="c-n">title</span>: <span class="c-s">Payments API</span>, <span class="c-n">version</span>: <span class="c-s">2.4.0</span> }</span><span><span class="c-n">paths</span>: <span class="c-c"># 6 paths, 10 operations</span></span><span><span class="c-n">components</span>:</span><span>  <span class="c-n">schemas</span>: <span class="c-c"># 31 schemas</span></span></pre></div></div>
+          </div>
+        </div>
+
+        <!-- Journey mode -->
+        <div data-tab-panel="pm-journey" hidden style="display:flex;flex-direction:column;min-height:0;height:100%">
+          <div class="row wrap gap-2" style="padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-surface);font-size:var(--fs-xs)" role="toolbar" aria-label="Journey trace controls">
+            <select class="select select--sm" style="width:190px" aria-label="Start point"><option>All operations (overview)</option><option>getPayment · Entry point</option><option>listRefunds · Reached by a Link</option></select>
+            <div class="segmented segmented--sm"><button class="is-active">Downstream</button><button>Upstream</button><button>Both</button></div>
+            <select class="select select--sm" style="width:130px" aria-label="Trace"><option>All responses</option><option>Happy path</option><option>Error path</option></select>
+            <select class="select select--sm" style="width:120px" aria-label="Depth"><option>Unlimited</option><option>2 hops</option><option>4 hops</option><option>6 hops</option><option>10 hops</option></select>
+            <label class="check t-xs"><input type="checkbox"/>Unresolved links only</label>
+            <button class="btn btn--sm btn--ghost">Reset</button>
+            <span class="t-2xs t-subtle ml-auto">5 shown · 3 hidden · 1 unresolved</span>
+          </div>
+          <div class="canvas" style="flex:1" role="application" aria-label="Journey graph">
+            <svg class="edges" aria-hidden="true">
+              <defs><marker id="jarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
+              <path d="M252 106 L286 106" marker-end="url(#jarr)" style="stroke-width:1.25"/>
+              <path d="M252 200 L286 200" marker-end="url(#jarr)" style="stroke-width:1.25"/>
+              <path d="M452 100 L516 100" marker-end="url(#jarr)" style="stroke-width:2"/>
+              <g class="lb"><rect x="450" y="80" width="66" height="14"/><text x="483" y="90" text-anchor="middle">link: refunds</text></g>
+              <path d="M452 200 C 484 200, 466 284, 486 284" marker-end="url(#jarr)" style="stroke-width:2;stroke-dasharray:5 4;stroke:var(--warn)"/>
+            </svg>
+            <div class="jnode is-start" style="left:20px;top:76px"><div class="row gap-2"><span class="method method--get">GET</span><span class="badge badge--accent" style="height:15px;font-size:9px">Start</span></div><div class="mono t-2xs mt-1">/payments/{paymentId}</div><div class="t-2xs t-subtle">getPayment</div></div>
+            <div class="jnode jnode--resp" style="left:290px;top:78px"><div class="row gap-1"><span style="color:var(--ok)">✓</span><span class="t-600">200</span></div><div class="t-2xs t-subtle">The payment</div></div>
+            <div class="jnode" style="left:20px;top:172px"><div class="row gap-2"><span class="method method--post">POST</span></div><div class="mono t-2xs mt-1">/refunds</div><div class="t-2xs t-subtle">createRefund</div></div>
+            <div class="jnode jnode--resp" style="left:290px;top:176px"><div class="row gap-1"><span style="color:var(--danger)">!</span><span class="t-600">422</span></div><div class="t-2xs t-subtle">Validation failed</div></div>
+            <div class="jnode" style="left:520px;top:66px;width:180px"><div class="row gap-2"><span class="method method--get">GET</span></div><div class="mono t-2xs mt-1">/refunds</div><div class="t-2xs t-subtle">listRefunds</div></div>
+            <div class="jnode jnode--dead" style="left:488px;top:252px;width:212px"><div class="row gap-1"><span style="color:var(--warn)">⚠</span><span class="t-600">Unresolved</span></div><div class="t-2xs t-muted mt-1">No operation in this version declares that operationId.</div><div class="mono t-2xs t-faint mt-1">targetRef: disputeOps#open</div></div>
+            <div class="card" style="position:absolute;right:12px;bottom:12px;width:230px;padding:10px 12px;z-index:5"><div class="row-between"><span class="t-xs t-600">getPayment</span><button class="btn btn--ghost btn--sm btn--icon" data-tip="Close details" aria-label="Close details"><i data-lucide="x"></i></button></div><div class="t-2xs t-subtle mono">GET /payments/{paymentId}</div><div class="row gap-1 mt-2"><button class="btn btn--sm">Open source</button><button class="btn btn--sm btn--ghost">Trace from here</button></div></div>
+            <div class="help-banner" style="bottom:auto;top:12px"><span>Arrow keys step between neighbours · Enter opens in Canvas · a journey is drawn from OpenAPI Link Objects</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Right: inspector ===== -->
+      <aside class="panel" aria-label="Properties panel">
+        <div class="panel__head"><div class="segmented segmented--sm" data-tabs="insp" style="margin-left:-6px"><button class="is-active" data-action="tab" data-target="insp-op"><i data-lucide="zap"></i>Operation</button><button data-action="tab" data-target="insp-param"><i data-lucide="hash"></i>Parameter</button><button data-action="tab" data-target="insp-resp"><i data-lucide="message-square-reply"></i>Response</button></div><button class="btn btn--ghost btn--sm btn--icon ml-auto" data-tip="Close panel" aria-label="Close panel"><i data-lucide="x"></i></button></div>
+        <div class="panel__body" id="insp">
+          <!-- Operation details -->
+          <div data-tab-panel="insp-op">
+            <div class="insp-section"><div class="row gap-2"><span class="method method--get">GET</span><span class="t-sm t-600 mono">getPayment</span><span class="badge badge--outline ml-auto">/payments/{paymentId}</span></div></div>
+            <div class="tabs" style="padding:0 8px;border-bottom:1px solid var(--border)" data-tabs="op-tabs"><button class="tab is-active" data-action="tab" data-target="opt-general">General</button><button class="tab" data-action="tab" data-target="opt-docs">Docs</button><button class="tab" data-action="tab" data-target="opt-tags">Tags</button><button class="tab" data-action="tab" data-target="opt-schema">Schema &amp; security</button></div>
+            <div id="op-tabs">
+              <div data-tab-panel="opt-general" class="insp-section col gap-3" style="border-bottom:0">
+                <div class="field"><label>operationId</label><input class="input input--sm mono" value="getPayment" placeholder="Auto-generated from path and verb" /><div class="hint">Must be unique among all operations in this API version. Used for codegen and clients.</div></div>
+                <label class="check t-sm"><input type="checkbox"/>deprecated</label>
+              </div>
+              <div data-tab-panel="opt-docs" hidden class="insp-section col gap-3" style="border-bottom:0">
+                <button class="btn btn--sm" style="align-self:start"><i data-lucide="sparkles"></i>Generate summary &amp; description</button>
+                <div class="field"><label>Summary</label><input class="input input--sm" value="Fetch a payment by id" placeholder="Brief summary of the operation" /></div>
+                <div class="field"><label>Description</label><textarea class="textarea" placeholder="Detailed description (Markdown supported)">Returns the payment with its current lifecycle status.</textarea><div class="hint">Live Markdown preview below — <em>*No description yet.*</em> when empty.</div></div>
+              </div>
+              <div data-tab-panel="opt-tags" hidden class="insp-section col gap-3" style="border-bottom:0">
+                <div class="row gap-1 wrap"><span class="chip" style="height:24px">Payments <i data-lucide="x" class="x" aria-label="Remove tag Payments"></i></span></div>
+                <div class="row gap-2"><input class="input input--sm grow" placeholder="e.g. Users" /><button class="btn btn--sm">Add</button></div>
+              </div>
+              <div data-tab-panel="opt-schema" hidden>
+                <div class="insp-section"><h4>Parameters <span class="badge">1</span><button class="btn btn--link btn--sm ml-auto" data-action="open" data-target="add-param">Add</button></h4>
+                  <div class="prop-row"><span class="mono">paymentId</span><span class="t-2xs t-subtle">path • required</span><span class="badge badge--ok ml-auto" style="height:15px;font-size:9px">path</span><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete" aria-label="Delete parameter"><i data-lucide="trash-2"></i></button></div>
+                </div>
+                <div class="insp-section"><h4>Request body</h4><div class="t-xs t-muted">No request body linked (GET). POST/PUT/PATCH link or create one here; OPTIONS is documented without a request body (CORS preflight).</div></div>
+                <div class="insp-section"><h4>Responses <span class="badge">2</span><span class="ml-auto row gap-1"><button class="btn btn--link btn--sm" data-tip="Add default response for catch-all error handling">Default</button><button class="btn btn--link btn--sm" data-action="open" data-target="add-resp">Add</button></span></h4>
+                  <div class="prop-row"><span class="badge badge--ok" style="height:16px;font-size:9px">200</span><span class="t-xs grow">The payment</span><button class="btn btn--ghost btn--sm btn--icon" aria-label="Delete response"><i data-lucide="trash-2"></i></button></div>
+                  <div class="prop-row"><span class="badge badge--warn" style="height:16px;font-size:9px">404</span><span class="t-xs grow">Payment not found</span><button class="btn btn--ghost btn--sm btn--icon" aria-label="Delete response"><i data-lucide="trash-2"></i></button></div>
+                </div>
+                <div class="insp-section"><h4><i data-lucide="lock" style="width:11px;height:11px"></i>Security<button class="btn btn--link btn--sm ml-auto">Add OR</button></h4>
+                  <label class="check t-xs mb-2"><input type="checkbox"/>Unsecured (public endpoint — no authentication)</label>
+                  <div class="card card--soft" style="padding:8px 10px"><div class="t-2xs t-caps mb-1">Option 1 (OR)</div><div class="row gap-2"><select class="select select--sm grow"><option>bearerAuth (HTTP: bearer)</option><option>apiKey (header: X-API-Key)</option><option>oauth2 (OAuth2)</option><option>Other (bearerAuth, oauth2...)</option></select><button class="btn btn--ghost btn--sm btn--icon" data-tip="Remove this scheme (AND)" aria-label="Remove scheme"><i data-lucide="x"></i></button></div><input class="input input--sm mt-2" value="payments:read" placeholder="Required scopes (comma-separated)" /><div class="row gap-2 mt-2"><button class="btn btn--sm btn--ghost">Add scheme (AND)</button><button class="btn btn--sm btn--ghost" style="color:var(--danger-fg)">Remove this requirement (OR)</button></div></div>
+                  <div class="hint mt-2">OR = alternative options; within an option, schemes are AND (all required).</div>
+                  <textarea class="textarea mt-2" style="min-height:48px" placeholder="Security description (documentation)"></textarea><div class="hint">Exported as x-security-description.</div>
+                </div>
+                <div class="insp-section" style="border-bottom:0"><h4>Metadata</h4><div class="t-2xs t-subtle mb-2">Visibility, OpenAPI extensions, and external documentation.</div><label class="check t-xs"><input type="checkbox"/>Hidden from public docs (x-private)</label><div class="field mt-2"><label class="t-xs">External documentation</label><input class="input input--sm" placeholder="https://docs.example.com/..." /></div><div class="row gap-2 mt-2"><input class="input input--sm mono" value="x-idempotent" style="width:120px"/><input class="input input--sm mono grow" value="true"/><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove extension"><i data-lucide="x"></i></button></div></div>
+              </div>
+            </div>
+            <div class="insp-section" style="border-top:1px solid var(--border);border-bottom:0;position:sticky;bottom:0;background:var(--bg-surface)"><button class="btn btn--primary w-full">Save</button></div>
+          </div>
+          <!-- Parameter details -->
+          <div data-tab-panel="insp-param" hidden>
+            <div class="insp-section"><div class="row gap-2"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="hash"></i></span><div><div class="t-sm t-600">Parameter details</div><div class="t-2xs t-subtle mono">paymentId · in: path</div></div></div></div>
+            <div class="insp-section"><h4>Identity</h4>
+              <div class="field"><label class="t-xs">Parameter name</label><input class="input input--sm mono" value="paymentId" list="param-names" /><datalist id="param-names"><option>id</option><option>limit</option><option>offset</option><option>page</option><option>sort</option><option>q</option><option>cursor</option></datalist></div>
+              <div class="field mt-2"><label class="t-xs">Location</label><select class="select select--sm"><option selected>Path</option><option>Query</option><option>Header</option><option>Cookie</option></select></div>
+              <div class="t-2xs t-subtle mt-2"><i data-lucide="lock" style="width:10px;height:10px;display:inline-block;vertical-align:-1px"></i> Required (path parameters are always required in OpenAPI)</div>
+            </div>
+            <div class="insp-section"><h4>Serialization</h4>
+              <div class="field"><label class="t-xs">Serialization style</label><select class="select select--sm"><option selected>simple</option><option>label</option><option>matrix</option></select><div class="hint">Path parameters: simple, label, or matrix. Query adds form, spaceDelimited, pipeDelimited, deepObject.</div></div>
+              <label class="check t-xs mt-2"><input type="checkbox"/>Explode (arrays/objects)</label>
+              <label class="check t-xs mt-1"><input type="checkbox" disabled/>allowReserved (query only)</label>
+            </div>
+            <div class="insp-section"><h4>Documentation</h4><div class="field"><label class="t-xs">Summary</label><input class="input input--sm" placeholder="Brief summary" value="Payment identifier" /></div><div class="field mt-2"><label class="t-xs">Description</label><textarea class="textarea" style="min-height:52px" placeholder="Detailed description of the parameter..."></textarea></div></div>
+            <div class="insp-section"><h4>Schema<span class="segmented segmented--sm ml-auto"><button class="is-active">Form</button><button>JSON Schema</button></span></h4>
+              <div class="row gap-1 mb-2"><span class="badge badge--accent" style="height:16px;font-size:9px">Designer link: Payment.id</span></div>
+              <div class="row gap-2 mb-2"><button class="btn btn--sm btn--ghost">Apply from Designer property</button><button class="btn btn--sm btn--ghost" data-tip="Apply format, pattern, and constraints from a primitive defined in the REST service">Apply from primitive template</button></div>
+              <div class="grid grid-2 gap-2">
+                <div class="field"><label class="t-xs">Type</label><select class="select select--sm"><option selected>String</option><option>Integer</option><option>Number</option><option>Boolean</option><option>Array</option></select></div>
+                <div class="field"><label class="t-xs">Format</label><select class="select select--sm"><option>None</option><option selected>UUID</option><option>Date (YYYY-MM-DD)</option><option>DateTime (ISO 8601)</option><option>Email</option><option>URI</option><option>Hostname</option><option>IPv4</option><option>IPv6</option></select></div>
+                <div class="field"><label class="t-xs">Min length</label><input class="input input--sm" type="number" /></div>
+                <div class="field"><label class="t-xs">Max length</label><input class="input input--sm" type="number" /></div>
+                <div class="field span-2"><label class="t-xs">Pattern (regex)</label><input class="input input--sm mono" placeholder="e.g., ^[a-z]+$" /></div>
+                <div class="field span-2"><label class="t-xs">Allowed values (comma-separated)</label><input class="input input--sm" placeholder="e.g., active, pending, completed" /></div>
+                <div class="field span-2"><label class="t-xs">Default value</label><input class="input input--sm" /><div class="hint">Optional. Used when the client omits this parameter.</div></div>
+              </div>
+            </div>
+            <div class="insp-section" style="border-bottom:0"><div class="row gap-2"><button class="btn btn--primary grow">Save changes</button><button class="btn btn--danger-soft" data-action="open" data-target="unlink-param">Unlink parameter</button></div></div>
+          </div>
+          <!-- Response properties -->
+          <div data-tab-panel="insp-resp" hidden>
+            <div class="insp-section"><div class="row gap-2"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="message-square-reply"></i></span><div><div class="t-sm t-600">Response properties</div><div class="t-2xs t-subtle">200 – OK</div></div></div></div>
+            <div class="insp-section"><h4>Status</h4><div class="row gap-2"><span class="badge badge--ok">2xx</span><input class="input input--sm mono" value="200" list="status-codes" style="width:110px" placeholder="e.g. 200, 2XX, default" /><datalist id="status-codes"><option>default</option><option>2XX</option><option>4XX</option><option>200</option><option>201</option><option>204</option><option>400</option><option>404</option><option>422</option><option>500</option></datalist></div><div class="hint mt-1">Use a specific code (e.g. 200), a range (2XX, 4XX), or default for catch-all.</div><div class="field mt-2"><label class="t-xs">Description</label><div class="row gap-2"><input class="input input--sm grow" value="The payment" placeholder="Describe this response..." /><button class="btn btn--sm" data-tip="Auto-populate description from HTTP status code"><i data-lucide="wand-2"></i>Auto</button></div></div></div>
+            <div class="insp-section"><h4>Content types <span class="badge">1</span><button class="btn btn--link btn--sm ml-auto">Add</button></h4>
+              <div class="t-2xs t-subtle mb-2">Map each media type to a schema (class reference or inline).</div>
+              <div class="tabs mb-2" style="border-bottom:1px solid var(--border)"><button class="tab is-active" style="height:28px">application/json</button></div>
+              <div class="field"><label class="t-xs">Schema binding (reuse class)</label><select class="select select--sm"><option>— None —</option><option disabled>— Inline schema — (Edit in Operation → Responses)</option><option selected>Payment</option><option>Refund</option></select></div>
+              <div class="row gap-2 mt-2"><button class="btn btn--sm btn--ghost">Add example</button><button class="btn btn--sm btn--ghost" style="color:var(--danger-fg)">Remove</button></div>
+            </div>
+            <div class="insp-section"><h4>Schema</h4><div class="t-2xs t-subtle mb-2">Define the response body schema using existing classes or create inline schemas.</div><div class="segmented segmented--sm mb-2"><button class="is-active">Class reference</button><button>Array</button><button>Object</button><button>Primitive</button></div><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" value="Payment" style="padding-left:30px" aria-label="Select class for schema reference" /></div><button class="btn btn--link btn--sm mt-2">Clear schema</button></div>
+            <div class="insp-section"><h4>Headers <span class="badge">1</span><span class="ml-auto row gap-1"><select class="select select--sm" style="width:110px" aria-label="Header template"><option>Template</option><option>Pagination</option><option>Rate limiting</option><option>CORS</option></select><button class="btn btn--link btn--sm">Add</button></span></h4>
+              <div class="t-2xs t-subtle mb-2">Headers returned with this response. Use templates for pagination, rate limiting, or CORS.</div>
+              <div class="row gap-2"><input class="input input--sm mono" value="X-Request-Id" placeholder="Header name (e.g. X-Rate-Limit)" style="width:130px"/><select class="select select--sm" style="width:90px"><option>string</option><option>integer</option><option>array</option></select><button class="btn btn--ghost btn--sm btn--icon" data-tip="Remove header" aria-label="Remove header"><i data-lucide="x"></i></button></div>
+            </div>
+            <div class="insp-section"><h4><i data-lucide="link-2" style="width:11px;height:11px"></i>Links (HATEOAS) <span class="badge">1</span><button class="btn btn--link btn--sm ml-auto">Add</button></h4>
+              <div class="col gap-1"><input class="input input--sm mono" value="refunds" placeholder="Link name (e.g. user, order)"/><input class="input input--sm mono" value="listRefunds" placeholder="operationId (e.g. getUserById)"/><div class="row gap-2"><input class="input input--sm mono grow" value="paymentId → $request.path.paymentId" readonly /><button class="btn btn--ghost btn--sm btn--icon" data-tip="Remove link" aria-label="Remove link"><i data-lucide="x"></i></button></div></div>
+            </div>
+            <div class="insp-section" style="border-bottom:0"><button class="btn btn--primary w-full">Save changes</button></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="status-bar" role="status" aria-label="Studio canvas status">
+      <span class="sb-item"><i data-lucide="folder-git-2"></i>Payments API</span>
+      <span class="sb-item"><i data-lucide="tag"></i>v2.4.0</span>
+      <span class="sb-item"><i data-lucide="route"></i>/payments/{paymentId}</span>
+      <span class="ml-auto"></span>
+      <span class="sb-item">100%</span><span class="sb-item">Grid: dots 20</span><span class="sb-item">Snap: on</span>
+      <span class="sb-item t-faint">mock states:</span><button class="sb-item t-subtle" data-action="open" data-target="paths-empty">no path selected</button>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<div class="overlay" id="pv-menu" data-overlay style="align-items:flex-start;justify-content:flex-start;padding:56px 0 0 76px;background:transparent">
+  <div class="menu" style="width:320px" role="menu"><div class="menu__label">Project · Version</div>
+    <a class="menu__item" href="#"><span class="avatar avatar--xs avatar--hex avatar--a">PA</span><span class="grow">Payments API</span><i data-lucide="check" style="color:var(--accent)"></i></a>
+    <a class="menu__item" href="#"><span class="avatar avatar--xs avatar--hex avatar--c">OS</span><span class="grow">Orders Service</span></a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#"><span class="mono grow">v2.4.0 — Add refund reasons</span><span class="badge badge--dot" data-status="draft">Draft</span><i data-lucide="check" style="color:var(--accent)"></i></a>
+    <a class="menu__item" href="#"><i data-lucide="lock" style="width:13px;height:13px"></i><span class="mono grow">v2.3.1 — Hotfix currency enum</span><span class="badge badge--dot" data-status="published">Published</span></a>
+  </div>
+</div>
+
+<div class="overlay" id="git-menu" data-overlay style="align-items:flex-start;justify-content:flex-end;padding:56px 150px 0 0;background:transparent">
+  <div class="menu" style="width:280px" role="menu">
+    <a class="menu__item" href="#"><i data-lucide="git-commit-horizontal"></i>Commit new revision…<span class="kbd">⌘↵</span></a>
+    <a class="menu__item" href="#"><i data-lucide="git-graph"></i>Show history graph…</a>
+    <a class="menu__item" href="#"><i data-lucide="arrow-down-to-line"></i>Switch to latest revision (pull)</a>
+    <a class="menu__item" href="../build/projects.html"><i data-lucide="external-link"></i>Open Versions dashboard</a>
+  </div>
+</div>
+
+<!-- Add / Edit path -->
+<div class="overlay" id="path-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Add new path">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="route"></i></span><div><div class="dialog__title">Add new path</div><div class="dialog__desc">Enter the path (e.g. /api/users, /v1/products/{id}).</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="field"><label>Path name <span class="req">*</span></label><input class="input mono" placeholder="/api/users" value="/payouts/{payoutId}" /><div class="hint">Path parameters must match the template — edit enforces param coverage.</div></div>
+      <label class="check"><input type="checkbox" checked/>Auto-create CRUD operations (GET, POST, PUT, DELETE)</label>
+      <div class="banner banner--danger" hidden><i data-lucide="triangle-alert"></i>Invalid path template — path parameters do not match template.</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Add</button></div>
+  </div>
+</div>
+
+<!-- Delete path confirm -->
+<div class="overlay" id="del-path" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete “/payments/{paymentId}”?</div><div class="dialog__desc">Deleting a path will also delete all of the associated actions and all of the associated schemas for responses and requests.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete</button></div></div></div>
+
+<!-- Import paths -->
+<div class="overlay" id="import-paths" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Import paths">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="file-up"></i></span><div><div class="dialog__title">Import paths from OpenAPI</div><div class="dialog__desc">Paste or upload an OpenAPI 3.x spec to add paths and security schemes to this version.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <button class="btn" style="align-self:start"><i data-lucide="upload"></i>Upload file (.json / .yaml / .yml)</button>
+      <textarea class="textarea mono" style="min-height:140px" placeholder="Paste OpenAPI JSON or YAML here..."></textarea>
+      <div class="t-xs t-subtle">Errors shown inline: “Please choose a JSON or YAML file.” · “Spec has no paths or security schemes to import.” · “Import failed.”</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Import</button></div>
+  </div>
+</div>
+
+<!-- Security scheme dialog -->
+<div class="overlay" id="scheme-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Add security scheme">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="shield-check"></i></span><div><div class="dialog__title">Add security scheme</div><div class="dialog__desc">API Key, HTTP (Basic/Bearer), OAuth 2.0, OpenID Connect, Mutual TLS or custom.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Scheme type</label><select class="select"><option>API Key (header, query, cookie)</option><option selected>HTTP (Basic, Bearer, custom)</option><option>OAuth 2.0</option><option>OpenID Connect</option><option>Mutual TLS</option><option>Custom</option></select><div class="hint">Read-only on edit.</div></div>
+      <div class="grid grid-2"><div class="field"><label>Scheme name</label><input class="input mono" value="bearerAuth" /></div><div class="field"><label>HTTP auth type</label><select class="select"><option>Basic</option><option selected>Bearer</option><option>Custom (e.g. Digest)</option></select></div></div>
+      <div class="grid grid-2"><div class="field"><label>Bearer format (optional)</label><input class="input" value="JWT" /></div><div class="field"><label>Description</label><input class="input" placeholder="Where to get a token" /></div></div>
+      <div class="callout t-xs">OAuth 2.0 adds per-flow checkboxes (authorizationCode / implicit / clientCredentials / password) with Authorization, Token and Refresh URLs plus scopes rows; OpenID Connect adds a Discovery URL.</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save scheme</button></div>
+  </div>
+</div>
+<div class="overlay" id="del-scheme" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete security scheme “apiKey”?</div><div class="dialog__desc">Operations using this scheme will need to be updated.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete scheme</button></div></div></div>
+
+<!-- Server dialog -->
+<div class="overlay" id="server-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Add server">
+    <div class="dialog__header"><span class="icon-tile"><i data-lucide="server"></i></span><div><div class="dialog__title">Add server</div><div class="dialog__desc">Server URLs are exported in the OpenAPI spec.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="grid grid-2"><div class="field"><label>Name (optional)</label><input class="input" placeholder="e.g. Production, Staging" /></div><div class="field"><label>Environment (optional)</label><select class="select"><option>—</option><option>Development</option><option>Staging</option><option>Production</option></select></div></div>
+      <div class="field"><label>URL <span class="req">*</span></label><input class="input mono" placeholder="https://api.example.com or /api/v1" /></div>
+      <div class="field"><label>Description (optional)</label><input class="input" /></div>
+      <div class="field"><label>Server variables (optional)</label><div class="row gap-2"><input class="input input--sm mono" placeholder="Name" style="width:100px"/><input class="input input--sm mono" placeholder="Default" style="width:100px"/><input class="input input--sm mono grow" placeholder="Enum (comma-separated)"/><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove variable"><i data-lucide="x"></i></button></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save server</button></div>
+  </div>
+</div>
+<div class="overlay" id="del-server" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete server “Staging”?</div><div class="dialog__desc">This will remove it from the OpenAPI spec.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete server</button></div></div></div>
+
+<!-- Add parameter (reuse | create) -->
+<div class="overlay" id="add-param" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Add parameter">
+    <div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="hash"></i></span><div><div class="dialog__title">Add parameter</div><div class="dialog__desc">Create a new shared parameter or reuse one from the library.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="segmented" data-tabs="ap-tabs"><button class="is-active" data-action="tab" data-target="ap-new">Create new</button><button data-action="tab" data-target="ap-reuse">Reuse library</button></div>
+      <div id="ap-tabs">
+        <div data-tab-panel="ap-new" class="col gap-3">
+          <div class="field"><label>Location</label><div class="segmented segmented--sm"><button data-tip="No path parameters left to link" aria-disabled="true">path</button><button class="is-active">query</button><button>header</button><button>cookie</button></div></div>
+          <div class="field"><label>Name</label><input class="input mono" value="expand" /></div>
+          <label class="check"><input type="checkbox"/>Required parameter</label>
+          <div class="field"><label>Summary</label><input class="input" placeholder="Brief description" /></div>
+        </div>
+        <div data-tab-panel="ap-reuse" hidden class="col gap-3">
+          <div class="t-xs t-muted">Attach a shared parameter already defined for this path version (query, header, cookie, or path).</div>
+          <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Search parameters…" style="padding-left:32px" /></div>
+          <div class="t-xs t-subtle">No unlinked parameters. Create one under “Create new” or unlink from another operation.</div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save</button></div>
+  </div>
+</div>
+
+<!-- Add response -->
+<div class="overlay" id="add-resp" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Add response">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="message-square-reply"></i></span><div><div class="dialog__title">Add response</div><div class="dialog__desc">Create a new shared response or attach one from this path version.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="segmented"><button class="is-active">Create new</button><button>Reuse library</button></div>
+      <div class="grid grid-2"><div class="field"><label>Status code</label><input class="input mono" value="200" placeholder="200, 2XX, 404, etc." /></div><div class="field"><label>Response schema type</label><select class="select"><option selected>Object (default)</option><option>String</option><option>Number</option><option>Integer</option><option>Boolean</option><option>Array</option></select></div></div>
+      <div class="field"><label class="row-between">Description <button class="btn btn--link btn--sm">Auto-fill from status code</button></label><input class="input" placeholder="Describe when this response is returned..." /></div>
+      <div class="t-xs t-subtle">Reuse: “Attach a shared response from this path version. Operations use stable links; the schema is not duplicated.”</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save</button></div>
+  </div>
+</div>
+
+<!-- Class drop choice -->
+<div class="overlay" id="class-drop" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-label="Add class to response">
+    <div class="dialog__header"><div><div class="dialog__title">Add class to response</div><div class="dialog__desc">How would you like to use “Payment” in this response?</div></div></div>
+    <div class="dialog__body col gap-2">
+      <button class="card card--flat" style="padding:12px 14px;text-align:left" data-action="close"><div class="t-sm t-600">Copy properties into response schema</div><div class="t-xs t-muted">Inline copy — edits stay local to this response.</div></button>
+      <button class="card card--flat" style="padding:12px 14px;text-align:left" data-action="close"><div class="t-sm t-600">Use as $ref (reference)</div><div class="t-xs t-muted">Keeps the schema linked to the class.</div></button>
+      <label class="check t-xs"><input type="checkbox"/>Link as array response (schema type: array)</label>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Confirms -->
+<div class="overlay" id="del-op" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete operation GET?</div><div class="dialog__desc">This will also unlink all parameters from it.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete operation</button></div></div></div>
+<div class="overlay" id="del-param" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete parameter “paymentId”?</div><div class="dialog__desc">This will remove it from all operations.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete parameter</button></div></div></div>
+<div class="overlay" id="del-resp" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete response 200?</div><div class="dialog__desc">This will unlink it from all operations and delete it permanently.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete response</button></div></div></div>
+<div class="overlay" id="del-reqbody" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete request body?</div><div class="dialog__desc">The shared body “UpdatePayment” is removed from this operation.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete request body</button></div></div></div>
+<div class="overlay" id="del-class-node" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Remove class from canvas?</div><div class="dialog__desc">The class itself will not be deleted.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove</button></div></div></div>
+<div class="overlay" id="unlink-param" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="unlink"></i></span><div><div class="dialog__title">Unlink parameter “paymentId”?</div><div class="dialog__desc">The parameter will still be available for other operations.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Unlink</button></div></div></div>
+
+<!-- Path quality dialog -->
+<div class="overlay" id="pathq-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Path quality">
+    <div class="dialog__header"><span class="ring" style="--p:82;--c:var(--ok)"><span>82</span></span><div><div class="dialog__title">PATH QUALITY · Grade B</div><div class="dialog__desc">Weighted rules over your exported OpenAPI paths: operationId, documentation, parameter typing, error responses, $ref resolution, response content, and duplicate operationIds. Recomputes when paths change (debounced).</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <table class="table table--dense"><thead><tr><th>Factor</th><th class="t-right">Value</th><th class="t-right">Weight</th><th class="t-right">Pts</th></tr></thead><tbody>
+        <tr><td>operationId coverage</td><td class="t-right t-num">100</td><td class="t-right t-num">20%</td><td class="t-right t-num">20</td></tr>
+        <tr><td>Documentation</td><td class="t-right t-num">70</td><td class="t-right t-num">25%</td><td class="t-right t-num">17.5</td></tr>
+        <tr><td>Error responses</td><td class="t-right t-num">80</td><td class="t-right t-num">25%</td><td class="t-right t-num">20</td></tr>
+        <tr><td>$ref resolution &amp; content</td><td class="t-right t-num">82</td><td class="t-right t-num">30%</td><td class="t-right t-num">24.6</td></tr>
+      </tbody></table>
+      <div class="t-sm t-600 mt-3 mb-1">Issues</div>
+      <div class="card card--flat" style="padding:8px 12px"><div class="row gap-2 t-xs"><span class="badge badge--warn">warning</span><span>PATCH /payments/{paymentId} has no error responses</span><button class="btn btn--link btn--sm ml-auto">Focus node</button></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- No-path-selected state -->
+<div class="overlay" id="paths-empty" data-overlay>
+  <div class="dialog" role="dialog"><div class="dialog__body"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="route"></i></div><div class="empty__title">Select a path</div><div class="empty__desc">Choose a path from the sidebar to start creating endpoints.</div><div class="t-xs t-subtle mt-2">Tips: drag operations from the sidebar to the canvas · drag classes/properties onto operations to define request/response schemas.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Close</button></div></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/studio/paths → private-suite designer /paths</p>
+  <h4>Replaces</h4>
+  <ul><li><code>PathsWorkspacePage</code>, <code>PathsSidebar</code>, <code>PathsCanvasView</code> + 7 node components, <code>OperationPropertiesPanel</code>, <code>ParameterPropertiesPanel</code>, <code>ResponsePropertiesPanel</code>, <code>SecuritySchemesPanel</code>, <code>ServersPanel</code>, <code>PathsCodeView</code>, <code>JourneyCanvasView</code>/<code>JourneyToolbar</code>, add/edit/delete path dialogs, import-paths dialog, <code>ClassDropChoiceDialog</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Topbar: project▸version pill, draft-lock chip, PATH QUALITY chip + breakdown dialog, Canvas | Code | Journey mode segmented (per-paths, persisted), Editor/Paths/Code route segmented.</li>
+    <li>Sidebar rail tabs Paths (grouped by tag, method pills, invalid-path row, edit/delete, Import + Add footer), Operations (7 draggable method chips + Query/Path/Header/Cookie parameter chips with hints), Classes, Properties (optional badge, type display), Security (draggable schemes, Add/Edit/Delete + confirm), Servers (env pill, variables, Add/Edit/Delete + confirm); density toggle.</li>
+    <li>Canvas: “Path:” strip with clickable {var} chips + “Sample:” copy strip; all 7 node types — path template (inline editable, hint), operation (method colour, Private/Public/security badges, Request/Parameters/Responses sections + drop zones, delete), parameter chip (location colour, required, tooltip), response (status-family accent, content-type map, headers, links, drop zones), response body ($ref badge + read-only note), request body (REQ badge, inline props, content types, add content type), class node, security-scheme chip; labelled edges (hasParam, requestBody · media, response 200 · media, body); Auto layout button; zoom controls; drag&amp;drop help banner with Dismiss.</li>
+    <li>Operation panel: General (operationId + hint, deprecated) / Docs (AI generate, summary, Markdown description) / Tags (chips + add) / Schema &amp; Security (parameters w/ Add, request-body note incl. OPTIONS copy, responses w/ Default + Add, security OR/AND builder with scopes + unsecured checkbox + x-security-description, metadata x-private + extensions + external docs); Save footer. Add Parameter (create/reuse with path-location gating) and Add Response (status/type/auto-fill description) dialogs.</li>
+    <li>Parameter panel: Identity (name datalist, location, path-required lock), Serialization (style per location, explode, allowReserved), Documentation, Schema (Form | JSON Schema, Designer link badge, apply-from-property / primitive template, type+format+lengths+pattern+enum+default), Save + Unlink confirm.</li>
+    <li>Response panel: status (role chip + datalist + hint), description + Auto toggle, content types (tabs, schema binding combobox incl. disabled inline option, examples), SchemaBuilder modes, headers (+ Pagination/Rate limiting/CORS templates), links (operationId/operationRef + params map), Save.</li>
+    <li>Code mode: fragment + merged panes, YAML|JSON toggle, “editing here does not update the canvas” note. Journey mode: toolbar (start point, direction, trace, depth, unresolved-only, reset, counts), operation/response/unresolved nodes, link edges with labels, details card (Open source / Trace from here), keyboard hint banner.</li>
+    <li>Confirms: delete operation/parameter/response/request body, remove class from canvas, unlink parameter/response, delete scheme/server, delete path with cascade copy; “no path selected” state.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Inspector panels as segmented tabs (Operation/Parameter/Response) instead of one-at-a-time replacement; state demo link in status bar.</li></ul>
+  <h4>States</h4>
+  <ul><li>No project/version → “No project selected” (shared with editor); no path → “Select a path” dialog; invalid path row + tooltip; empty drop zones; unresolved journey link warning.</li></ul>
+</template>
+</body>
+</html>

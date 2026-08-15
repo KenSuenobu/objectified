@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Catalog · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (no new tokens) */
+  .view-cards, .view-table, .view-empty { display: contents; }
+  .cat-card { display: flex; flex-direction: column; }
+  .cat-card .orbs { display: flex; gap: 14px; }
+  .cat-card .orb { display: flex; align-items: center; gap: 8px; }
+  .cat-card .orb .lbl { font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .cat-card .fmt-slot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-strong); }
+  .group-hd { display: flex; align-items: center; gap: 10px; grid-column: 1 / -1; margin-top: 8px; font-size: var(--fs-2xs); font-weight: 600; letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--fg-subtle); }
+  .group-hd::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+  .group-hd:first-child { margin-top: 0; }
+  .fmt--generic { background: var(--bg-inset); color: var(--fg-muted); }
+  .fmt-chip { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; font-size: var(--fs-xs); }
+  .fmt-chip .fc-title { font-weight: 600; }
+  .fmt-chip .fc-desc { color: var(--fg-subtle); font-size: var(--fs-2xs); }
+  .fmt-chip.is-unavailable { opacity: .6; }
+  .stepper .step { background: none; border: 0; padding: 0; }
+  .stepper .step[data-action] { cursor: pointer; }
+  .finding { display: flex; gap: 10px; padding: 8px 10px; border-radius: var(--r-sm); font-size: var(--fs-xs); }
+  .finding:hover { background: var(--bg-subtle); }
+  .finding.is-active { background: var(--accent-soft); }
+  .finding .rank { width: 22px; color: var(--fg-faint); font-family: var(--font-mono); }
+  .legend-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .proj-lane { fill: none; stroke: var(--border-strong); stroke-dasharray: 3 3; }
+  .proj-node { fill: var(--bg-surface); stroke: var(--border-strong); }
+  .proj-node.is-ok { stroke: var(--ok); } .proj-node.is-warn { stroke: var(--warn); } .proj-node.is-danger { stroke: var(--danger); } .proj-node.is-accent { stroke: var(--accent); } .proj-node.is-muted { stroke: var(--fg-faint); }
+  .proj-edge { fill: none; stroke: var(--fg-faint); stroke-width: 1.25; }
+  .proj-text { font-size: 10px; fill: var(--fg); font-family: var(--font-mono); }
+  .proj-lbl { font-size: 10px; fill: var(--fg-subtle); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  .tree-row { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px; border-radius: var(--r-sm); font-size: var(--fs-xs); }
+  .tree-row:hover { background: var(--bg-subtle); }
+  .tree-row.is-active { background: var(--accent-soft); }
+  .tree-row .kind { min-width: 66px; }
+  .fmt { white-space: nowrap; }
+  .table .cell-sub, .table td.t-num { white-space: nowrap; }
+  .table-wrap[data-tab-panel="table"] { overflow-x: auto; }
+  .tree-row .loc { margin-left: auto; color: var(--fg-subtle); font-family: var(--font-mono); font-size: var(--fs-2xs); white-space: nowrap; flex-shrink: 0; }
+  .tree-row > .mono { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tree-row .badge { flex-shrink: 0; }
+  .dialog--full .dialog__body { flex: 1; }
+</style>
+</head>
+<body data-shell="app" data-nav="catalog" data-page="sources/catalog" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Bring in</span><i data-lucide="chevron-right"></i><span>Catalog</span></div>
+          <h1 class="page-title">Catalog</h1>
+          <p class="page-desc">Non-OpenAPI specs, stored as-is and converted only when you’re ready.</p>
+        </div>
+        <div class="page-actions">
+          <label class="row gap-2 t-sm t-muted" style="margin-right:6px"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button>Show deleted</label>
+          <button class="btn btn--primary" data-action="open" data-target="import-wizard"><i data-lucide="upload"></i>Import to catalog<span class="kbd">I</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Non-publishable note (always visible, role=note) -->
+    <div class="banner" role="note">
+      <i data-lucide="info"></i>
+      <div><span class="banner-title">Catalog items are non-publishable.</span> <span class="banner-body">They come from formats that don’t map 1:1 to OpenAPI (gRPC, GraphQL, AsyncAPI, OData, WSDL, Avro, RAML, Smithy, TypeSpec, API Blueprint…). They are cataloged, versioned, diffed &amp; linted like Projects — but the only path to a publishable spec is <strong>Convert to OpenAPI</strong> (with a fidelity preview). OpenAPI/Swagger imports still land in <a href="../build/projects.html">Projects</a>.</span></div>
+    </div>
+
+    <!-- Supported import formats (collapsible; default collapsed) -->
+    <section class="card">
+      <button class="card__header w-full" style="text-align:left;border-bottom:0" data-action="toggle" data-target="fmt-panel" aria-expanded="false" aria-controls="fmt-panel">
+        <div class="card__title"><i data-lucide="layers"></i>Supported import formats<span class="t-xs t-subtle t-500">44 alternative formats importable now · 0 more recognized</span></div>
+        <div class="row gap-2"><span class="fmt fmt--proto">Protobuf</span><span class="fmt fmt--graphql">GraphQL</span><span class="fmt fmt--asyncapi">AsyncAPI</span><span class="fmt fmt--x12">EDI X12</span><span class="fmt fmt--copybook">Copybook</span><span class="fmt fmt--generic">+39</span><i data-lucide="chevron-down" class="t-subtle"></i></div>
+      </button>
+      <div id="fmt-panel" hidden style="border-top:1px solid var(--border)">
+        <div class="card__body">
+          <div class="row gap-2 mb-3"><span class="badge badge--ok">Importable now</span><span class="t-xs t-muted">Stored as-is; convert to OpenAPI later</span></div>
+          <div class="grid grid-4" style="gap:8px">
+            <a class="fmt-chip" href="#" target="_blank" rel="noopener" aria-label="gRPC / Protobuf technical documentation (opens in new tab)"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="cable"></i></span><div><div class="fc-title">gRPC / Protobuf</div><div class="fc-desc">Service + message definitions</div></div></a>
+            <a class="fmt-chip" href="#" target="_blank" rel="noopener"><span class="icon-tile icon-tile--sm icon-tile--rose"><i data-lucide="share-2"></i></span><div><div class="fc-title">GraphQL</div><div class="fc-desc">SDL schemas</div></div></a>
+            <a class="fmt-chip" href="#" target="_blank" rel="noopener"><span class="icon-tile icon-tile--sm icon-tile--violet"><i data-lucide="radio"></i></span><div><div class="fc-title">AsyncAPI</div><div class="fc-desc">Event-driven APIs</div></div></a>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--violet"><i data-lucide="cloud"></i></span><div><div class="fc-title">CloudEvents</div><div class="fc-desc">Event envelope schemas</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="plug"></i></span><div><div class="fc-title">Connect · Thrift · Cap’n Proto</div><div class="fc-desc">RPC IDLs</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="box"></i></span><div><div class="fc-title">WIT (WebAssembly) · FlatBuffers</div><div class="fc-desc">Component / buffer IDLs</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="terminal"></i></span><div><div class="fc-title">CORBA IDL · ONC RPC · XML-RPC · OpenRPC</div><div class="fc-desc">Legacy &amp; JSON RPC</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="file-code-2"></i></span><div><div class="fc-title">RAML · WADL · API Blueprint</div><div class="fc-desc">REST description formats</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="send"></i></span><div><div class="fc-title">Postman · HTTP Request File</div><div class="fc-desc">Collections &amp; .http files</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="waypoints"></i></span><div><div class="fc-title">Kong config · Gateway API HTTPRoute</div><div class="fc-desc">Gateway declarations</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="database"></i></span><div><div class="fc-title">OData · WSDL · Google Discovery</div><div class="fc-desc">Service descriptions</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="pen-line"></i></span><div><div class="fc-title">Smithy · TypeSpec</div><div class="fc-desc">Modelling languages</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--honey"><i data-lucide="workflow"></i></span><div><div class="fc-title">Arazzo</div><div class="fc-desc">Workflows (routes to Projects)</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--honey"><i data-lucide="bot"></i></span><div><div class="fc-title">LLM Tools</div><div class="fc-desc">Agent tool manifests</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--warn"><i data-lucide="braces"></i></span><div><div class="fc-title">JSON Schema · JTD · XSD · ASN.1</div><div class="fc-desc">Data schemas (JSON Schema asks first)</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--warn"><i data-lucide="table-2"></i></span><div><div class="fc-title">Avro · Kubernetes CRD · COBOL Copybook</div><div class="fc-desc">Data schemas</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--rose"><i data-lucide="heart-pulse"></i></span><div><div class="fc-title">FHIR · HL7 v2</div><div class="fc-desc">Healthcare</div></div></div>
+            <div class="fmt-chip"><span class="icon-tile icon-tile--sm icon-tile--danger"><i data-lucide="landmark"></i></span><div><div class="fc-title">EDI X12 · ISO 20022 · ISO 8583 · FIX</div><div class="fc-desc">Finance &amp; B2B</div></div></div>
+            <div class="fmt-chip is-unavailable"><span class="icon-tile icon-tile--sm"><i data-lucide="server"></i></span><div><div class="fc-title">z/OS Connect</div><div class="fc-desc t-warn">Unavailable in this runtime</div></div></div>
+          </div>
+          <div class="row gap-2 mt-4 mb-2"><span class="badge badge--outline">Recognized — not yet importable</span><span class="t-xs t-muted">Detected and labelled; import support is on the roadmap</span></div>
+          <div class="empty empty--inline empty--dashed" style="padding:12px 16px"><div class="t-xs t-subtle">Every recognized format is importable in this build — nothing is waiting on the roadmap.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats row (hidden when the catalog is empty) -->
+    <section class="stat-grid stat-grid--4">
+      <div class="stat"><div class="stat__label"><i data-lucide="library"></i>Cataloged items</div><div class="stat__value">7</div><div class="stat__foot"><span class="row gap-1"><span class="badge badge--ok">6 active</span><span class="badge badge--warn">1 disabled</span></span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="gauge"></i>Avg quality</div><div class="stat__value" style="color:var(--accent-fg)">B <small>· 82</small></div><div class="stat__foot"><span>across 7 items</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="layers"></i>Formats represented</div><div class="stat__value">5</div><div class="stat__foot"><span class="badge badge--outline t-truncate" style="max-width:100%">GraphQL · gRPC / Protobuf · AsyncAPI · EDI X12 …</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="git-merge"></i>Converted to OpenAPI</div><div class="stat__value">2</div><div class="stat__foot"><span class="badge badge--info">promotion path</span></div></div>
+    </section>
+
+    <!-- Toolbar (sticky in production) -->
+    <div class="col gap-3">
+      <div class="row-between wrap gap-3">
+        <div class="row gap-2 wrap">
+          <div class="input-wrap" style="width:230px"><i data-lucide="search"></i><input class="input" placeholder="Filter catalog…  ( / )" aria-label="Filter catalog" /></div>
+          <button class="btn" data-action="open" data-target="format-facet" aria-haspopup="menu"><i data-lucide="layers"></i>Format<span class="badge badge--ink" style="margin-left:2px">2</span><i data-lucide="chevron-down"></i></button>
+          <select class="select" style="width:136px" aria-label="Protocol"><option>All protocols</option><option>REST</option><option>RPC</option><option>Event</option><option>Graph</option><option>Data Schema</option><option>Agent</option></select>
+          <select class="select" style="width:136px" aria-label="Source"><option>All sources</option><option>Uploaded file</option><option>Source URL</option><option>Pasted content</option><option>Live discovery</option></select>
+          <select class="select" style="width:116px" aria-label="Grade"><option>Any grade</option><option>A</option><option>B</option><option>C</option><option>D</option><option>F</option><option>Unscored</option></select>
+        </div>
+      </div>
+      <div class="row-between wrap gap-3">
+        <div class="row gap-2 wrap">
+          <span class="t-caps" style="margin-right:2px">Views</span>
+          <span class="chip is-active" data-action="chip">All <span class="t-faint">8</span></span>
+          <span class="chip" data-action="chip">Active <span class="t-faint">6</span></span>
+          <span class="chip" data-action="chip"><i data-lucide="triangle-alert"></i>Needs attention <span class="t-faint">1</span></span>
+          <span class="chip" data-action="chip" data-tip="Turn on Show deleted to use this view">Deleted <span class="t-faint">1</span></span>
+          <span class="chip is-active" data-tip="Applied from ?identityGroupId= — remove to show the whole catalog" style="margin-left:6px"><i data-lucide="link-2"></i>Identity group idg_7c21e9…<i data-lucide="x" class="x"></i></span>
+        </div>
+        <div class="row gap-2 wrap">
+          <button class="btn btn--sm btn--ghost" data-action="open" data-target="sort-menu"><i data-lucide="arrow-up-down"></i>Sorted by name<i data-lucide="chevron-down"></i></button>
+          <span class="t-caps">Group</span>
+          <div class="segmented segmented--sm"><button class="is-active"><i data-lucide="rows-3"></i>Protocol</button><button>None</button></div>
+          <div class="segmented segmented--sm" data-tabs="views">
+            <button class="is-active" data-action="tab" data-target="cards" data-tip="Cards"><i data-lucide="layout-grid"></i>Cards</button>
+            <button data-action="tab" data-target="table" data-tip="Table"><i data-lucide="list"></i>Table</button>
+            <button data-action="tab" data-target="empty" data-tip="Mockup only: preview the empty state" style="opacity:.55"><i data-lucide="circle-dashed"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="views">
+    <!-- ===== Cards view (grouped by paradigm: Graph → RPC → Event → REST → Data Schema → Other) ===== -->
+    <section class="grid grid-3" data-tab-panel="cards">
+      <div class="group-hd">Graph · 2 items</div>
+      <!-- Ledger Graph -->
+      <article class="card card--hover cat-card" role="button" tabindex="0" onclick="location.href='catalog-item.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--e">LG</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">Ledger Graph</div><div class="t-xs t-subtle mono t-truncate">cat_4d1e9a · ledger-graph</div></div>
+            <span class="badge badge--dot" data-status="active">Active</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Double-entry ledger schema exposed to finance tooling. 8 queries, 4 mutations, 2 subscriptions.</p>
+          <div class="fmt-slot"><span class="fmt fmt--graphql" data-tip="Format: GraphQL">GraphQL</span><span class="badge badge--outline" data-tip="Protocol: Graph">Graph</span><span class="badge" data-tip="Source: Uploaded file"><i data-lucide="file-up"></i>Uploaded file</span></div>
+          <div class="row-between mt-3">
+            <div class="orbs">
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open quality score history"><span class="ring ring--sm" style="--p:91;--c:var(--ok)"><span>91</span></span><span class="lbl">Quality</span></button>
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open lint report"><span class="ring ring--sm" style="--p:100;--c:var(--ok)"><span>A</span></span><span class="lbl">Lint</span></button>
+              <span class="orb" data-tip="Technical debt (not yet computed)"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">3 versions</span>
+          </div>
+          <a class="row gap-2 t-xs mt-3" href="../build/versions.html" onclick="event.stopPropagation()" style="color:inherit"><span class="badge badge--ok">Converted →</span><span class="t-truncate t-accent">Ledger Graph (OpenAPI)</span></a>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span><span class="t-xs">imported by Ada Lovelace</span></div><span class="t-xs t-subtle" title="2026-08-14T16:02:00Z">updated yesterday</span></div>
+      </article>
+
+      <!-- Orders Graph (legacy) (deleted) -->
+      <article class="card cat-card" style="box-shadow:0 0 0 1px var(--warn) inset, var(--shadow-sm);opacity:.9">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--d">OG</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">Orders Graph (legacy)</div><div class="t-xs t-subtle mono t-truncate">cat_e5d019 · orders-graph-legacy</div></div>
+            <span class="badge badge--dot badge--warn">Deleted</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Soft-deleted 4 days ago by Ada. Undelete it, or permanently delete to free the slug.</p>
+          <div class="fmt-slot"><span class="fmt fmt--graphql" data-tip="Format: GraphQL">GraphQL</span><span class="badge badge--outline" data-tip="Protocol: Graph">Graph</span><span class="badge" data-tip="Source: Source URL"><i data-lucide="link"></i>Source URL</span></div>
+          <div class="row-between mt-3">
+            <div class="orbs">
+              <span class="orb"><span class="ring ring--sm" style="--p:58;--c:var(--warn)"><span>58</span></span><span class="lbl">Quality</span></span>
+              <span class="orb"><span class="ring ring--sm" style="--p:58;--c:var(--warn)"><span>C</span></span><span class="lbl">Lint</span></span>
+              <span class="orb"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">1 version</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto;background:var(--warn-soft);color:var(--warn-fg);border-radius:0 0 var(--r-lg) var(--r-lg)"><button class="btn btn--sm" data-action="open" data-target="undelete-dialog"><i data-lucide="undo-2"></i>Undelete</button><button class="btn btn--sm btn--danger-soft" data-action="open" data-target="perma-dialog"><i data-lucide="trash-2"></i>Permanently delete</button></div>
+      </article>
+
+      <div class="group-hd">RPC · 2 items</div>
+      <!-- Payouts gRPC -->
+      <article class="card card--hover cat-card" role="button" tabindex="0" onclick="location.href='catalog-item.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--a">PG</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">Payouts gRPC</div><div class="t-xs t-subtle mono t-truncate">cat_9b7c02 · payouts-grpc</div></div>
+            <span class="badge badge--dot" data-status="active">Active</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">PayoutService and LedgerSyncService from <span class="mono">acme/payouts-protos</span>. Streams settlement batches to partner banks.</p>
+          <div class="fmt-slot"><span class="fmt fmt--proto" data-tip="Format: Protobuf">Protobuf</span><span class="badge badge--outline" data-tip="Protocol: RPC">RPC</span><span class="badge" data-tip="Source: Uploaded file"><i data-lucide="git-branch"></i>Git repository</span></div>
+          <div class="row-between mt-3">
+            <div class="orbs">
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open quality score history"><span class="ring ring--sm" style="--p:78;--c:var(--accent)"><span>78</span></span><span class="lbl">Quality</span></button>
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open lint report"><span class="ring ring--sm" style="--p:78;--c:var(--accent)"><span>B</span></span><span class="lbl">Lint</span></button>
+              <span class="orb" data-tip="Technical debt (not yet computed)"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">2 versions</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--c">LT</span><span class="t-xs">imported by Linus Torvalds</span></div><span class="t-xs t-subtle">updated 2h ago</span></div>
+      </article>
+
+      <!-- Ledger Sync gRPC -->
+      <article class="card card--hover cat-card" role="button" tabindex="0" onclick="location.href='catalog-item.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--c">LS</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">Ledger Sync gRPC</div><div class="t-xs t-subtle mono t-truncate">cat_a8c113 · ledger-sync-grpc</div></div>
+            <span class="badge badge--dot" data-status="active">Active</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Batch cursor sync between the payouts ledger and the general ledger. Bulk-imported alongside Payouts gRPC.</p>
+          <div class="fmt-slot"><span class="fmt fmt--proto" data-tip="Format: Protobuf">Protobuf</span><span class="badge badge--outline" data-tip="Protocol: RPC">RPC</span><span class="badge" data-tip="Source: Uploaded file"><i data-lucide="git-branch"></i>Git repository</span></div>
+          <div class="row-between mt-3">
+            <div class="orbs">
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open quality score history"><span class="ring ring--sm" style="--p:88;--c:var(--accent)"><span>88</span></span><span class="lbl">Quality</span></button>
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open lint report"><span class="ring ring--sm" style="--p:88;--c:var(--accent)"><span>B</span></span><span class="lbl">Lint</span></button>
+              <span class="orb" data-tip="Technical debt (not yet computed)"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">1 version</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--c">LT</span><span class="t-xs">imported by Linus Torvalds</span></div><span class="t-xs t-subtle">updated 2h ago</span></div>
+      </article>
+
+      <div class="group-hd">Event · 2 items</div>
+      <!-- Fulfilment Events (needs attention) -->
+      <article class="card card--hover cat-card" role="button" tabindex="0" onclick="location.href='catalog-item.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--b">FE</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">Fulfilment Events</div><div class="t-xs t-subtle mono t-truncate">cat_1f0a77 · fulfilment-events</div></div>
+            <span class="badge badge--dot" data-status="active">Active</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Warehouse pick/pack/ship channels. Fetched from the fulfilment team’s schema registry.</p>
+          <div class="fmt-slot"><span class="fmt fmt--asyncapi" data-tip="Format: AsyncAPI">AsyncAPI 2.6</span><span class="badge badge--outline" data-tip="Protocol: Event">Event</span><span class="badge" data-tip="Source: Source URL"><i data-lucide="link"></i>Source URL</span></div>
+          <div class="row-between mt-3">
+            <div class="orbs">
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open quality score history"><span class="ring ring--sm" style="--p:66;--c:var(--warn)"><span>66</span></span><span class="lbl">Quality</span></button>
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open lint report"><span class="ring ring--sm" style="--p:66;--c:var(--warn)"><span>C</span></span><span class="lbl">Lint</span></button>
+              <span class="orb" data-tip="Technical debt (not yet computed)"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">1 version</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--b">GH</span><span class="t-xs">imported by Grace Hopper</span></div><span class="t-xs t-subtle">updated 5d ago</span></div>
+      </article>
+
+      <!-- Rider Notifications -->
+      <article class="card card--hover cat-card" role="button" tabindex="0" onclick="location.href='catalog-item.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--e">RN</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">Rider Notifications</div><div class="t-xs t-subtle mono t-truncate">cat_5d77f0 · rider-notifications</div></div>
+            <span class="badge badge--dot" data-status="active">Active</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Push and SMS notification channels for the courier app. Kafka + MQTT bindings.</p>
+          <div class="fmt-slot"><span class="fmt fmt--asyncapi" data-tip="Format: AsyncAPI">AsyncAPI 3.0</span><span class="badge badge--outline" data-tip="Protocol: Event">Event</span><span class="badge" data-tip="Source: Pasted content"><i data-lucide="clipboard"></i>Pasted content</span></div>
+          <div class="row-between mt-3">
+            <div class="orbs">
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open quality score history"><span class="ring ring--sm" style="--p:93;--c:var(--ok)"><span>93</span></span><span class="lbl">Quality</span></button>
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open lint report"><span class="ring ring--sm" style="--p:100;--c:var(--ok)"><span>A</span></span><span class="lbl">Lint</span></button>
+              <span class="orb" data-tip="Technical debt (not yet computed)"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">2 versions</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--b">GH</span><span class="t-xs">imported by Grace Hopper</span></div><span class="t-xs t-subtle">updated 6d ago</span></div>
+      </article>
+
+      <div class="group-hd">Data schema · 2 items</div>
+      <!-- Claims 837P (converted, X12) -->
+      <article class="card card--hover cat-card" role="button" tabindex="0" onclick="location.href='catalog-item.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--c">CL</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">Claims 837P</div><div class="t-xs t-subtle mono t-truncate">cat_c3a5e1 · claims-837p</div></div>
+            <span class="badge badge--dot" data-status="active">Active</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">Professional healthcare claim interchange from the Contoso Health clearinghouse (005010X222A1).</p>
+          <div class="fmt-slot"><span class="fmt fmt--x12" data-tip="Format: EDI X12">EDI X12</span><span class="badge badge--outline" data-tip="Protocol: Data Schema">Data Schema</span><span class="badge" data-tip="Source: Uploaded file"><i data-lucide="file-up"></i>Uploaded file</span></div>
+          <div class="row-between mt-3">
+            <div class="orbs">
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open quality score history"><span class="ring ring--sm" style="--p:84;--c:var(--accent)"><span>84</span></span><span class="lbl">Quality</span></button>
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open lint report"><span class="ring ring--sm" style="--p:84;--c:var(--accent)"><span>B</span></span><span class="lbl">Lint</span></button>
+              <span class="orb" data-tip="Technical debt (not yet computed)"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">2 versions</span>
+          </div>
+          <a class="row gap-2 t-xs mt-3" href="../build/versions.html" onclick="event.stopPropagation()" style="color:inherit"><span class="badge badge--ok">Re-converted →</span><span class="t-truncate t-accent">Claims 837P (OpenAPI)</span></a>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span><span class="t-xs">imported by Ada Lovelace</span></div><span class="t-xs t-subtle">updated 3h ago</span></div>
+      </article>
+      <!-- Policy Master copybook (disabled) -->
+      <article class="card card--hover cat-card" role="button" tabindex="0" style="box-shadow:0 0 0 1px var(--warn) inset, var(--shadow-sm)" onclick="location.href='catalog-item.html'">
+        <div style="padding:16px 18px 0">
+          <div class="row-start gap-3">
+            <span class="avatar avatar--lg avatar--hex avatar--d">PM</span>
+            <div class="grow min-w-0"><div class="t-h4 t-truncate">Policy Master copybook</div><div class="t-xs t-subtle mono t-truncate">cat_77e2b4 · policy-master-record</div></div>
+            <span class="badge badge--dot" data-status="disabled">Disabled</span>
+          </div>
+          <p class="t-sm t-muted mt-3" style="min-height:40px">POLICY-MASTER-RECORD layout (1,024 bytes) from the mainframe policy admin system.</p>
+          <div class="fmt-slot"><span class="fmt fmt--copybook" data-tip="Format: COBOL Copybook">COBOL Copybook</span><span class="badge badge--outline" data-tip="Protocol: Data Schema">Data Schema</span><span class="badge" data-tip="Source: Pasted content"><i data-lucide="clipboard"></i>Pasted content</span></div>
+          <div class="row-between mt-3">
+            <div class="orbs">
+              <button class="orb" data-action="open" data-target="quality-dialog" data-tip="Open quality score history"><span class="ring ring--sm" style="--p:72;--c:var(--accent)"><span>72</span></span><span class="lbl">Quality</span></button>
+              <button class="orb" data-action="open" data-target="lint-dialog" data-tip="Open lint report"><span class="ring ring--sm" style="--p:72;--c:var(--accent)"><span>B</span></span><span class="lbl">Lint</span></button>
+              <span class="orb" data-tip="Technical debt (not yet computed)"><span class="ring ring--sm" style="--p:0;--c:var(--fg-faint)"><span>—</span></span><span class="lbl">Debt</span></span>
+            </div>
+            <span class="t-xs mono t-muted">1 version</span>
+          </div>
+        </div>
+        <div class="card__footer" style="margin-top:auto"><div class="row gap-2"><span class="avatar avatar--xs avatar--e">MH</span><span class="t-xs">imported by Margaret Hamilton</span></div><span class="t-xs t-subtle">updated 12d ago</span></div>
+      </article>
+    </section>
+
+    <!-- ===== Table view ===== -->
+    <section class="table-wrap" data-tab-panel="table" hidden>
+      <table class="table">
+        <thead><tr>
+          <th class="cell-check"><label class="check"><input type="checkbox" aria-label="Select all"/></label></th>
+          <th class="sortable is-sorted" aria-sort="ascending">Artifact <span class="sort"><i data-lucide="arrow-up"></i></span></th>
+          <th class="sortable">Format <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Protocol <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Source <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable t-right">Quality <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Grade <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Status <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Updated <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--c">CL</span><div><div class="cell-primary"><a href="catalog-item.html" style="color:inherit">Claims 837P</a> <a class="badge badge--ok" href="../build/versions.html" style="margin-left:4px">Re-converted →</a></div><div class="cell-sub mono">claims-837p · cat_c3a5e1</div></div></div></td>
+            <td><span class="fmt fmt--x12">EDI X12</span></td>
+            <td><span class="badge badge--outline">Data Schema</span></td>
+            <td><span class="badge"><i data-lucide="file-up"></i>Uploaded file</span></td>
+            <td class="t-right"><button class="t-600 t-num" style="color:var(--accent-fg)" data-action="open" data-target="lint-dialog" aria-label="Open quality score">84</button></td>
+            <td><button class="badge badge--sq badge--mono badge--ok" data-action="open" data-target="lint-dialog" aria-label="Open lint report" data-tip="Grade B">B</button></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td class="t-num t-muted"><div>08/15/26</div><div class="cell-sub">09:41 AM</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" data-tip="Actions" aria-label="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--b">FE</span><div><div class="cell-primary">Fulfilment Events</div><div class="cell-sub mono">fulfilment-events · cat_1f0a77</div></div></div></td>
+            <td><span class="fmt fmt--asyncapi">AsyncAPI 2.6</span></td>
+            <td><span class="badge badge--outline">Event</span></td>
+            <td><span class="badge"><i data-lucide="link"></i>Source URL</span></td>
+            <td class="t-right"><button class="t-600 t-num" style="color:var(--warn-fg)" data-action="open" data-target="lint-dialog">66</button></td>
+            <td><button class="badge badge--sq badge--mono badge--warn" data-action="open" data-target="lint-dialog" data-tip="Grade C">C</button></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td class="t-num t-muted"><div>08/10/26</div><div class="cell-sub">02:15 PM</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" aria-label="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--e">LG</span><div><div class="cell-primary">Ledger Graph <a class="badge badge--ok" href="../build/versions.html" style="margin-left:4px">Converted →</a></div><div class="cell-sub mono">ledger-graph · cat_4d1e9a</div></div></div></td>
+            <td><span class="fmt fmt--graphql">GraphQL</span></td>
+            <td><span class="badge badge--outline">Graph</span></td>
+            <td><span class="badge"><i data-lucide="file-up"></i>Uploaded file</span></td>
+            <td class="t-right"><button class="t-600 t-num" style="color:var(--ok-fg)" data-action="open" data-target="lint-dialog">91</button></td>
+            <td><button class="badge badge--sq badge--mono badge--ok" data-action="open" data-target="lint-dialog" data-tip="Grade A">A</button></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td class="t-num t-muted"><div>08/14/26</div><div class="cell-sub">04:02 PM</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" aria-label="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr style="opacity:.75">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--d">OG</span><div><div class="cell-primary">Orders Graph (legacy)</div><div class="cell-sub mono">orders-graph-legacy · cat_e5d019</div></div></div></td>
+            <td><span class="fmt fmt--graphql">GraphQL</span></td>
+            <td><span class="badge badge--outline">Graph</span></td>
+            <td><span class="badge"><i data-lucide="link"></i>Source URL</span></td>
+            <td class="t-right"><span class="t-600 t-num" style="color:var(--warn-fg)">58</span></td>
+            <td><span class="badge badge--sq badge--mono badge--warn">C</span></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span> <span class="badge badge--danger"><i data-lucide="trash-2"></i>Deleted</span></td>
+            <td class="t-num t-muted"><div>08/11/26</div><div class="cell-sub">11:20 AM</div></td>
+            <td><div class="cell-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Undelete catalog item" style="color:var(--ok)" data-action="open" data-target="undelete-dialog" aria-label="Undelete catalog item"><i data-lucide="undo-2"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu-deleted" aria-label="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--a">PG</span><div><div class="cell-primary">Payouts gRPC</div><div class="cell-sub mono">payouts-grpc · cat_9b7c02</div></div></div></td>
+            <td><span class="fmt fmt--proto">Protobuf</span></td>
+            <td><span class="badge badge--outline">RPC</span></td>
+            <td><span class="badge"><i data-lucide="git-branch"></i>Git repository</span></td>
+            <td class="t-right"><button class="t-600 t-num" style="color:var(--accent-fg)" data-action="open" data-target="lint-dialog">78</button></td>
+            <td><button class="badge badge--sq badge--mono badge--ok" data-action="open" data-target="lint-dialog" data-tip="Grade B">B</button></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td class="t-num t-muted"><div>08/15/26</div><div class="cell-sub">07:58 AM</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" aria-label="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--d">PM</span><div><div class="cell-primary">Policy Master copybook</div><div class="cell-sub mono">policy-master-record · cat_77e2b4</div></div></div></td>
+            <td><span class="fmt fmt--copybook">COBOL Copybook</span></td>
+            <td><span class="badge badge--outline">Data Schema</span></td>
+            <td><span class="badge"><i data-lucide="clipboard"></i>Pasted content</span></td>
+            <td class="t-right"><span class="t-faint" title="No quality score captured yet">—</span></td>
+            <td><span class="badge badge--sq badge--mono badge--outline" data-tip="No grade captured yet">–</span></td>
+            <td><span class="badge badge--dot" data-status="disabled">Disabled</span></td>
+            <td class="t-num t-muted"><div>08/03/26</div><div class="cell-sub">09:00 AM</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" aria-label="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--c">LS</span><div><div class="cell-primary">Ledger Sync gRPC</div><div class="cell-sub mono">ledger-sync-grpc · cat_a8c113</div></div></div></td>
+            <td><span class="fmt fmt--proto">Protobuf</span></td>
+            <td><span class="badge badge--outline">RPC</span></td>
+            <td><span class="badge"><i data-lucide="git-branch"></i>Git repository</span></td>
+            <td class="t-right"><button class="t-600 t-num" style="color:var(--accent-fg)" data-action="open" data-target="lint-dialog">88</button></td>
+            <td><button class="badge badge--sq badge--mono badge--ok" data-action="open" data-target="lint-dialog" data-tip="Grade B">B</button></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td class="t-num t-muted"><div>08/15/26</div><div class="cell-sub">07:58 AM</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" aria-label="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable">
+            <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--e">RN</span><div><div class="cell-primary">Rider Notifications</div><div class="cell-sub mono">rider-notifications · cat_5d77f0</div></div></div></td>
+            <td><span class="fmt fmt--asyncapi">AsyncAPI 3.0</span></td>
+            <td><span class="badge badge--outline">Event</span></td>
+            <td><span class="badge"><i data-lucide="clipboard"></i>Pasted content</span></td>
+            <td class="t-right"><button class="t-600 t-num" style="color:var(--ok-fg)" data-action="open" data-target="lint-dialog">93</button></td>
+            <td><button class="badge badge--sq badge--mono badge--ok" data-action="open" data-target="lint-dialog" data-tip="Grade A">A</button></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td class="t-num t-muted"><div>08/09/26</div><div class="cell-sub">10:31 AM</div></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" aria-label="Actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <!-- skeleton row: list refetching after Show deleted toggle -->
+          <tr aria-busy="true"><td class="cell-check"></td><td><div class="row gap-3"><span class="avatar avatar--sm skeleton"></span><div><div class="skeleton" style="width:140px;height:12px">.</div><div class="skeleton mt-1" style="width:90px;height:10px">.</div></div></div></td><td><span class="skeleton" style="display:inline-block;width:64px;height:20px">.</span></td><td><span class="skeleton" style="display:inline-block;width:48px;height:18px">.</span></td><td><span class="skeleton" style="display:inline-block;width:92px;height:18px">.</span></td><td class="t-right"><span class="skeleton" style="display:inline-block;width:24px;height:14px">.</span></td><td><span class="skeleton" style="display:inline-block;width:20px;height:18px">.</span></td><td><span class="skeleton" style="display:inline-block;width:64px;height:18px">.</span></td><td><span class="skeleton" style="display:inline-block;width:110px;height:12px">.</span></td><td></td></tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>8 items · sorted by Artifact ↑</span><span class="row gap-2"><span>Rows per page</span><select class="select select--sm" style="width:64px"><option>25</option><option>50</option></select></span></div>
+    </section>
+
+    <!-- ===== Empty state (mock preview) ===== -->
+    <section class="card" data-tab-panel="empty" hidden>
+      <div class="empty" style="padding:56px 24px">
+        <div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="book-open"></i></div>
+        <div class="empty__title">Your catalog is empty</div>
+        <div class="empty__desc">The catalog holds <strong>OpenAPI-worthy non-OpenAPI imports</strong> — specs in formats other than OpenAPI/Swagger that aren’t publishable Projects yet. Bring in a supported source (gRPC/Protobuf, GraphQL, AsyncAPI, X12…); it is stored in its original format and converted only when you’re ready.</div>
+        <div class="empty__actions"><button class="btn btn--primary" data-action="open" data-target="import-wizard"><i data-lucide="upload"></i>Import to catalog</button><a class="btn" href="#">Supported formats</a></div>
+      </div>
+      <div class="card__footer"><span class="t-xs">Filter miss variant: “No catalog items match your filters or search.” with a <em>Clear filters</em> link.</span></div>
+    </section>
+    </div>
+
+    <!-- Bulk bar (appears with row selection in table view) -->
+    <div class="bulk-bar" hidden id="bulk-bar"><span>2 selected</span><button class="btn btn--sm"><i data-lucide="git-merge"></i>Convert…</button><button class="btn btn--sm"><i data-lucide="file-output"></i>Export…</button><button class="btn btn--sm"><i data-lucide="trash-2"></i>Delete</button><button class="btn btn--sm btn--icon" aria-label="Clear selection"><i data-lucide="x"></i></button></div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+
+<!-- Format facet menu -->
+<div class="overlay" id="format-facet" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-start;padding:330px 0 0 610px">
+  <div class="menu" role="menu" style="width:260px">
+    <div class="row-between" style="padding:6px 10px 4px"><span class="menu__label" style="padding:0">Formats</span><button class="btn btn--link btn--sm">Clear</button></div>
+    <label class="menu__item check"><input type="checkbox" checked/> gRPC / Protobuf <span class="t-faint ml-auto mono">2</span></label>
+    <label class="menu__item check"><input type="checkbox" checked/> GraphQL <span class="t-faint ml-auto mono">2</span></label>
+    <label class="menu__item check"><input type="checkbox"/> AsyncAPI <span class="t-faint ml-auto mono">2</span></label>
+    <label class="menu__item check"><input type="checkbox"/> EDI X12 <span class="t-faint ml-auto mono">1</span></label>
+    <label class="menu__item check"><input type="checkbox"/> COBOL Copybook <span class="t-faint ml-auto mono">1</span></label>
+    <div class="menu__sep"></div>
+    <div class="t-2xs t-subtle" style="padding:2px 10px 6px">Empty selection shows every format. Families vanish from this list when their last item is deleted.</div>
+  </div>
+</div>
+
+<!-- Sort menu -->
+<div class="overlay" id="sort-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:330px 300px 0 0">
+  <div class="menu" role="menu" style="width:220px">
+    <div class="menu__label">Sort by</div>
+    <a class="menu__item" href="#"><i data-lucide="check" style="color:var(--accent)"></i>Name<span class="t-faint ml-auto">↑</span></a>
+    <a class="menu__item" href="#"><span style="width:15px"></span>Created<span class="t-faint ml-auto">↕</span></a>
+    <a class="menu__item" href="#"><span style="width:15px"></span>Updated<span class="t-faint ml-auto">↕</span></a>
+    <a class="menu__item" href="#"><span style="width:15px"></span>Quality<span class="t-faint ml-auto">↕</span></a>
+    <a class="menu__item" href="#"><span style="width:15px"></span>Grade<span class="t-faint ml-auto">↕</span></a>
+    <a class="menu__item" href="#"><span style="width:15px"></span>Format<span class="t-faint ml-auto">↕</span></a>
+    <div class="menu__sep"></div>
+    <div class="t-2xs t-subtle" style="padding:2px 10px 6px">Click the active column again to flip direction.</div>
+  </div>
+</div>
+
+<!-- Row actions menu (non-deleted) -->
+<div class="overlay" id="row-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:300px 60px 0 0">
+  <div class="menu" role="menu" style="width:290px">
+    <a class="menu__item" href="catalog-item.html"><i data-lucide="file-search"></i>Details</a>
+    <a class="menu__item" href="../build/versions.html"><i data-lucide="git-branch"></i>View versions</a>
+    <a class="menu__item" href="#" data-action="open" data-target="lint-dialog"><i data-lucide="shield-check"></i>Lint</a>
+    <a class="menu__item" href="../ship/export-studio.html" title="Produce a document in another API format. Unlike Convert, this never turns the item into a project."><i data-lucide="file-output"></i>Export to another format…</a>
+    <a class="menu__item" href="#" data-action="open" data-target="convert-dialog"><i data-lucide="git-merge"></i>Convert to OpenAPI project</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item is-danger" href="#" data-action="open" data-target="delete-dialog"><i data-lucide="trash-2"></i>Delete item</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item is-danger" href="#" data-action="open" data-target="perma-dialog"><i data-lucide="flame"></i>Permanently delete</a>
+  </div>
+</div>
+<!-- Row actions menu (deleted row) -->
+<div class="overlay" id="row-menu-deleted" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:400px 60px 0 0">
+  <div class="menu" role="menu" style="width:260px">
+    <a class="menu__item" href="#" data-action="open" data-target="undelete-dialog"><i data-lucide="undo-2"></i>Undelete item</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item is-danger" href="#" data-action="open" data-target="perma-dialog"><i data-lucide="flame"></i>Permanently delete</a>
+  </div>
+</div>
+
+<!-- Delete (soft) -->
+<div class="overlay" id="delete-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="del-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span><div><div class="dialog__title" id="del-title">Delete “Fulfilment Events”?</div><div class="dialog__desc">This soft-deletes the catalog item (it is hidden from the catalog). You can undelete it later by turning on “Show deleted”.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete item</button></div>
+  </div>
+</div>
+<!-- Undelete -->
+<div class="overlay" id="undelete-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="undel-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="undo-2"></i></span><div><div class="dialog__title" id="undel-title">Undelete “Orders Graph (legacy)”?</div><div class="dialog__desc">It will return to the catalog with the same enabled/disabled state it had before deletion.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Undelete</button></div>
+  </div>
+</div>
+<!-- Permanent delete (replaces the two native confirms with one type-to-confirm) -->
+<div class="overlay" id="perma-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="perma-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title" id="perma-title">Permanently delete “Orders Graph (legacy)”?</div><div class="dialog__desc">Removes the item, every revision, its lint reports and conversion history. This cannot be undone — this is your last chance to cancel.</div></div></div>
+    <div class="dialog__body"><div class="field"><label>Type <span class="mono">orders-graph-legacy</span> to confirm</label><input class="input input--mono" placeholder="orders-graph-legacy" /></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" disabled>Yes, delete everything</button></div>
+  </div>
+</div>
+
+<!-- Quality & lint report (server-computed) -->
+<div class="overlay" id="lint-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="lint-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="shield-check"></i></span><div><div class="dialog__title" id="lint-title">Quality &amp; lint report — Fulfilment Events</div><div class="dialog__desc">Server-computed quality score and itemized findings for this catalog item’s latest revision.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="row wrap gap-2 mb-3"><span class="badge badge--lg badge--sq badge--mono badge--warn">C</span><span class="t-sm t-600">Score 66/100</span><span class="badge badge--danger">1 error</span><span class="badge badge--warn">4 warnings</span><span class="badge badge--info">2 info</span><span class="badge badge--outline">Guide: Acme AsyncAPI baseline</span><span class="badge badge--outline">Compatibility vs base: no breaking changes</span></div>
+      <div class="banner banner--neutral mb-3"><i data-lucide="info"></i><span>Converted OpenAPI lint of this item scores <strong>B · 74/100</strong>. The score above is the one captured when the source was imported.</span></div>
+      <div class="row-between mb-2"><span class="t-caps">Findings · 7</span><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button>Group by rule</label></div>
+      <div class="col gap-2">
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="badge" data-status="error">error</span><span class="tag">asyncapi-channel-no-description</span><span class="t-sm t-600">Channel <span class="mono">warehouse/pick/started</span> has no description</span><a class="ml-auto t-xs" href="#">View rule</a></div><div class="mono t-2xs t-subtle mt-1">channels.warehouse/pick/started · line 42</div></div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="badge" data-status="warning">warning</span><span class="tag">asyncapi-message-examples</span><span class="t-sm t-600">Message <span class="mono">PickStarted</span> declares no examples</span><a class="ml-auto t-xs" href="#">View rule</a></div><div class="mono t-2xs t-subtle mt-1">components.messages.PickStarted · line 118</div></div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="badge" data-status="warning">warning</span><span class="tag">asyncapi-server-security</span><span class="t-sm t-600">Server <span class="mono">production</span> declares no security requirement</span><a class="ml-auto t-xs" href="#">View rule</a></div><div class="mono t-2xs t-subtle mt-1">servers.production · line 9</div></div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="badge" data-status="info">info</span><span class="tag">asyncapi-tags-alphabetical</span><span class="t-sm t-600">Tags are not sorted alphabetically</span></div><div class="mono t-2xs t-subtle mt-1">tags · line 14</div></div>
+        <div class="t-xs t-subtle t-center" style="padding:6px">3 more findings…</div>
+      </div>
+      <div class="empty empty--inline empty--dashed mt-3" style="padding:10px 14px"><div class="t-xs t-subtle">Clean variant: “No findings — clean bill of health.” · Loading: “Loading lint report…” · Error: “Lint report unavailable.” + Retry</div></div>
+    </div>
+    <div class="dialog__footer"><a class="btn btn--ghost left" href="catalog-item.html">Open Lint &amp; score tab <i data-lucide="arrow-up-right"></i></a><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Project scores (browser-local history; opened from the quality orb when no server score exists) -->
+<div class="overlay" id="quality-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="q-title">
+    <div class="dialog__header"><div><div class="dialog__title" id="q-title">Project scores — Policy Master copybook</div><div class="dialog__desc">Quality scores (0–100) recorded in this browser when an import finishes. History is stored locally and is not synced across devices.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-4" style="border-bottom:1px solid var(--border)" data-tabs="q-tabs"><button class="tab" data-action="tab" data-target="q-trend">Trend</button><button class="tab is-active" data-action="tab" data-target="q-quality">Quality</button><button class="tab" data-action="tab" data-target="q-lint">Lint <span class="count">1</span></button></div>
+      <div id="q-tabs">
+        <div data-tab-panel="q-trend" hidden>
+          <div class="chart-area" style="height:150px"><svg viewBox="0 0 700 150" preserveAspectRatio="none"><g stroke="var(--border)"><line x1="0" y1="10" x2="700" y2="10"/><line x1="0" y1="45" x2="700" y2="45"/><line x1="0" y1="80" x2="700" y2="80"/><line x1="0" y1="115" x2="700" y2="115"/><line x1="0" y1="149" x2="700" y2="149"/></g><path d="M0 100 L350 70 L700 49 L700 150 L0 150Z" fill="color-mix(in srgb, var(--accent) 12%, transparent)"/><path d="M0 100 L350 70 L700 49" fill="none" stroke="var(--accent)" stroke-width="2"/><g fill="var(--accent)"><circle cx="0" cy="100" r="3"/><circle cx="350" cy="70" r="3"/><circle cx="700" cy="49" r="4"/></g></svg></div>
+          <div class="row-between t-xs t-subtle mt-1"><span>Jul 3, 09:00</span><span>Aug 3, 09:00</span></div>
+          <table class="table table--dense mt-3"><thead><tr><th>Recorded</th><th>Overall</th><th>Grade</th></tr></thead><tbody><tr><td class="t-num">Aug 3, 09:00</td><td class="t-600" style="color:var(--accent-fg)">72</td><td>B</td></tr><tr><td class="t-num">Jul 20, 14:12</td><td class="t-600" style="color:var(--warn-fg)">61</td><td>C</td></tr><tr><td class="t-num">Jul 3, 09:00</td><td class="t-600" style="color:var(--warn-fg)">52</td><td>C</td></tr></tbody></table>
+        </div>
+        <div data-tab-panel="q-quality">
+          <div class="row gap-4"><div class="ring ring--lg" style="--p:72;--c:var(--accent)"><span>72</span></div><div><div class="t-h3">Grade B</div><div class="t-xs t-muted">From import on Aug 3, 09:00 · Good — minor improvements needed</div></div></div>
+          <div class="grid grid-3 mt-4"><div class="card card--flat card--pad"><div class="t-xs t-muted">Documentation</div><div class="t-h4">14 / 25</div><div class="meter mt-1"><div class="progress progress--warn"><span style="width:56%"></span></div><span class="meter-val">56%</span></div></div><div class="card card--flat card--pad"><div class="t-xs t-muted">Structure</div><div class="t-h4">23 / 25</div><div class="meter mt-1"><div class="progress progress--ok"><span style="width:92%"></span></div><span class="meter-val">92%</span></div></div><div class="card card--flat card--pad"><div class="t-xs t-muted">Consistency</div><div class="t-h4">18 / 25</div><div class="meter mt-1"><div class="progress"><span style="width:72%"></span></div><span class="meter-val">72%</span></div></div></div>
+          <div class="card card--flat mt-3" style="padding:12px 14px"><div class="row gap-2"><span class="badge badge--warn">medium</span><span class="badge badge--outline">documentation</span><span class="t-sm t-600">31 elementary items carry no comment</span></div><div class="t-xs t-muted mt-1">Suggestion: add <span class="mono">*</span> comment lines above PIC clauses so field descriptions survive normalization.</div></div>
+        </div>
+        <div data-tab-panel="q-lint" hidden>
+          <div class="banner banner--neutral mb-3"><i data-lucide="info"></i><span>0 errors, 1 warning recorded from the import on Aug 3, 09:00.</span></div>
+          <div class="card card--flat" style="padding:12px 14px"><div class="row gap-2"><span class="badge" data-status="warning">warning</span><span class="tag">copybook-occurs-depending-on</span><span class="t-sm t-600">Table <span class="mono">RIDER-TABLE</span> uses OCCURS DEPENDING ON without a recorded controller</span></div></div>
+        </div>
+      </div>
+      <div class="empty empty--inline empty--dashed mt-3" style="padding:10px 14px"><div class="t-xs t-subtle">Empty: “No snapshots yet. Import a specification to record the first score.” · Partial: “This snapshot only records the overall score (N). Import again to capture category breakdown and quality reasons.”</div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Conversion preview (Convert to OpenAPI project) -->
+<div class="overlay" id="convert-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-labelledby="cv-title" style="height:calc(100vh - 48px)">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="git-merge"></i></span>
+      <div class="grow"><div class="dialog__title" id="cv-title">Convert to OpenAPI project — Payouts gRPC</div><div class="dialog__desc">Review what the Protobuf source can and cannot carry onto OpenAPI before creating a project. Nothing is created until you convert.</div>
+        <div class="row wrap gap-2 mt-2"><span class="badge badge--lg badge--sq badge--mono badge--ok">B</span><span class="t-sm t-600">Fidelity 74/100</span><span class="badge badge--warn">medium fidelity</span><span class="badge badge--outline">−26 penalty</span></div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="banner banner--warn mb-3" role="alert"><i data-lucide="triangle-alert"></i><div><div class="banner-title">Partial fidelity — some constructs had to be inferred</div><div class="banner-body t-xs">The fidelity of the original API may not be complete enough to create a fully defined OpenAPI specification — review the gaps below before converting. Streaming RPCs and <span class="mono">oneof</span> unions are approximated.</div></div></div>
+      <div class="tabs mb-3" style="border-bottom:1px solid var(--border)" data-tabs="cv-tabs"><button class="tab is-active" data-action="tab" data-target="cv-summary">Summary</button><button class="tab" data-action="tab" data-target="cv-graph">Projection graph</button><button class="tab" data-action="tab" data-target="cv-doc">Conversion</button></div>
+      <div id="cv-tabs">
+        <div data-tab-panel="cv-summary">
+          <div class="grid grid-2 gap-4">
+            <div>
+              <div class="t-caps mb-2">What the source provides (6)</div>
+              <div class="col gap-2">
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Operations</span><span class="badge badge--ok">from source · 9</span></div><div class="t-xs t-muted mt-1">Each unary RPC becomes <span class="mono">POST /{package}.{Service}/{Method}</span>. e.g. <span class="mono">CreatePayout</span>, <span class="mono">GetPayout</span></div></div>
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Schemas</span><span class="badge badge--ok">from source · 14</span></div><div class="t-xs t-muted mt-1">Messages map to component schemas; enums keep their names.</div></div>
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Request bodies</span><span class="badge badge--ok">from source · 9</span></div><div class="t-xs t-muted mt-1">Input messages become <span class="mono">application/json</span> bodies.</div></div>
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Streaming RPCs</span><span class="badge badge--warn">partial · 2</span></div><div class="t-xs t-muted mt-1"><span class="mono">StreamSettlements</span> is emitted as a paged POST — server streaming has no OpenAPI form.</div></div>
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Unions (oneof)</span><span class="badge badge--info">inferred · 3</span></div><div class="t-xs t-muted mt-1">Emitted as <span class="mono">oneOf</span> with a synthesized discriminator.</div></div>
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Tags</span><span class="badge badge--info">inferred · 2</span></div><div class="t-xs t-muted mt-1">One tag per service.</div></div>
+              </div>
+            </div>
+            <div>
+              <div class="t-caps mb-2">What OpenAPI favors but is missing (4)</div>
+              <div class="col gap-2">
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">API title &amp; version</span><span class="badge badge--outline">inferred</span></div><div class="t-xs t-muted mt-1">Protobuf has no <span class="mono">info</span> block — supply them below.</div></div>
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Servers</span><span class="badge badge--outline">inferred</span></div><div class="t-xs t-muted mt-1">No endpoint is declared in .proto files.</div></div>
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Error responses</span><span class="badge badge--outline">no OpenAPI form</span></div><div class="t-xs t-muted mt-1">gRPC status codes are not response schemas; a generic <span class="mono">default</span> response is synthesized.</div></div>
+                <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Security schemes</span><span class="badge badge--outline">no OpenAPI form</span></div><div class="t-xs t-muted mt-1">Channel credentials live outside the IDL.</div></div>
+              </div>
+              <div class="card card--soft mt-3" style="padding:12px 14px">
+                <div class="t-sm t-600">Fill cheap gaps (optional)</div>
+                <div class="t-xs t-muted mb-3">Values you supply here flow into the converted spec, closing gaps the source did not carry.</div>
+                <div class="col gap-3">
+                  <div class="field"><label>Title</label><input class="input" placeholder="Payouts gRPC" value="Payouts API" /></div>
+                  <div class="grid grid-2"><div class="field"><label>Version</label><input class="input input--mono" placeholder="1.0.0" value="1.0.0" /></div><div class="field"><label>Servers</label><input class="input input--mono" placeholder="https://api.example.com" value="https://payouts.acme.dev" /></div></div>
+                  <div class="row gap-2"><button class="btn btn--sm"><i data-lucide="refresh-cw"></i>Apply &amp; recompute preview</button><span class="t-2xs t-subtle">Recomputes fidelity and the graph; re-asks for acknowledgement.</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div data-tab-panel="cv-graph" hidden>
+          <div class="row-between wrap gap-2 mb-2">
+            <div class="legend-chips"><span class="badge badge--ok">✓ Retained 21</span><span class="badge badge--info">⇄ Transformed 4</span><span class="badge badge--violet">∴ Inferred 3</span><span class="badge badge--danger">× Dropped 2</span><span class="badge badge--outline">⊘ Unavailable 1</span><span class="badge">— Not applicable 2</span></div>
+            <div class="row gap-1"><button class="btn btn--sm btn--icon" aria-label="Zoom out"><i data-lucide="zoom-out"></i></button><span class="t-xs mono t-muted">1.00×</span><button class="btn btn--sm btn--icon" aria-label="Zoom in"><i data-lucide="zoom-in"></i></button><button class="btn btn--sm btn--ghost">Reset</button><button class="btn btn--sm"><i data-lucide="copy"></i>Copy Mermaid</button><button class="btn btn--sm btn--icon" aria-label="Download .mmd"><i data-lucide="download"></i></button></div>
+          </div>
+          <div class="card card--flat" style="padding:10px;overflow:auto">
+            <svg viewBox="0 0 900 250" width="100%" height="250" role="img" aria-label="Projection graph: source constructs to OpenAPI outcome">
+              <text x="16" y="16" class="proj-lbl">Source / native</text><text x="340" y="16" class="proj-lbl">Construct</text><text x="640" y="16" class="proj-lbl">OpenAPI outcome</text>
+              <rect x="0" y="26" width="900" height="70" rx="6" class="proj-lane"/><text x="8" y="40" class="proj-lbl">In the OpenAPI document (25)</text>
+              <rect x="0" y="104" width="900" height="66" rx="6" class="proj-lane"/><text x="8" y="118" class="proj-lbl">Omitted from OpenAPI (2)</text>
+              <rect x="0" y="178" width="900" height="66" rx="6" class="proj-lane"/><text x="8" y="192" class="proj-lbl">Unavailable or not applicable (3)</text>
+              <g><rect x="16" y="52" width="150" height="26" rx="6" class="proj-node"/><text x="26" y="69" class="proj-text">rpc CreatePayout</text><path d="M166 65 C250 65, 260 65, 340 65" class="proj-edge"/><rect x="340" y="52" width="170" height="26" rx="6" class="proj-node is-ok"/><text x="350" y="69" class="proj-text">✓ operation</text><path d="M510 65 C580 65, 590 65, 640 65" class="proj-edge"/><rect x="640" y="52" width="240" height="26" rx="6" class="proj-node is-ok"/><text x="650" y="69" class="proj-text">POST /…/PayoutService/CreatePayout</text></g>
+              <g><rect x="16" y="130" width="150" height="26" rx="6" class="proj-node"/><text x="26" y="147" class="proj-text">stream Settlement</text><path d="M166 143 C250 143, 260 143, 340 143" class="proj-edge"/><rect x="340" y="130" width="170" height="26" rx="6" class="proj-node is-danger"/><text x="350" y="147" class="proj-text">× server streaming</text><path d="M510 143 C580 143, 590 143, 640 143" class="proj-edge"/><rect x="640" y="130" width="240" height="26" rx="6" class="proj-node is-muted"/><text x="650" y="147" class="proj-text">— paged POST synthesized instead</text></g>
+              <g><rect x="16" y="204" width="150" height="26" rx="6" class="proj-node"/><text x="26" y="221" class="proj-text">grpc status codes</text><path d="M166 217 C250 217, 260 217, 340 217" class="proj-edge"/><rect x="340" y="204" width="170" height="26" rx="6" class="proj-node is-muted"/><text x="350" y="221" class="proj-text">⊘ error responses</text><path d="M510 217 C580 217, 590 217, 640 217" class="proj-edge"/><rect x="640" y="204" width="240" height="26" rx="6" class="proj-node is-muted"/><text x="650" y="221" class="proj-text">default response (generic)</text></g>
+            </svg>
+          </div>
+          <!-- Evidence drawer (in-flow, appears when a node is selected) -->
+          <div class="card mt-3" style="box-shadow:0 0 0 1px var(--accent) inset, var(--shadow-sm)" aria-live="polite">
+            <div class="card__header" style="padding:10px 14px"><div class="row gap-2"><span class="mono t-sm t-600">stream Settlement</span><span class="badge badge--danger">Dropped</span><span class="badge badge--warn">warning</span><span class="t-xs t-subtle">Construct evidence · stands for 2 instances</span></div><button class="btn btn--ghost btn--sm btn--icon" aria-label="Close evidence"><i data-lucide="x"></i></button></div>
+            <div class="card__body" style="padding:12px 14px">
+              <div class="row gap-2 t-xs"><span class="badge badge--outline">capability limit</span><span class="mono t-subtle">CONV-STREAM-001</span><span class="t-muted">Server-streaming RPCs have no first-class OpenAPI equivalent; a paged POST is synthesized in its place.</span></div>
+              <div class="t-xs mt-2"><span class="t-subtle">Fidelity finding (loss):</span> Streaming RPCs — <span class="badge badge--warn">partial</span>. <span class="mono">StreamSettlements</span> is emitted as a paged POST.</div>
+              <dl class="kv mt-2 t-xs"><dt>Canonical object</dt><dd class="mono">operation:payouts.v1.PayoutService.StreamSettlements</dd><dt>From the source</dt><dd class="mono">protos/payouts/v1/payout.proto:48</dd><dt>In the OpenAPI document</dt><dd class="mono">/paths/~1payouts.v1.PayoutService~1StreamSettlements/post</dd></dl>
+              <div class="t-xs t-subtle mt-2">Evidence produced by protoc 27.1 · apiome-proto-adapter 1.8.0 · snapshot 9f3c2a71b0de.</div>
+            </div>
+          </div>
+          <div class="table-wrap mt-3" style="box-shadow:0 0 0 1px var(--border) inset">
+            <table class="table table--dense"><thead><tr><th>Status</th><th>Construct</th><th>Lands at</th><th>Scope</th><th>Reason</th></tr></thead><tbody>
+              <tr><td><span class="badge badge--ok">✓ Retained</span></td><td class="mono">rpc CreatePayout</td><td class="mono">POST /payouts.v1.PayoutService/CreatePayout</td><td>Construct</td><td class="t-muted">—</td></tr>
+              <tr><td><span class="badge badge--info">⇄ Transformed</span></td><td class="mono">oneof PayoutTarget</td><td class="mono">#/components/schemas/PayoutTarget</td><td>Construct</td><td class="t-muted"><span class="mono">CONV-ONEOF-002</span> — synthesized discriminator</td></tr>
+              <tr><td><span class="badge badge--danger">× Dropped</span></td><td class="mono">stream Settlement</td><td class="t-faint">—</td><td>Loss</td><td class="t-muted"><span class="mono">CONV-STREAM-001</span> — no OpenAPI form</td></tr>
+              <tr><td><span class="badge badge--outline">⊘ Unavailable</span></td><td class="mono">grpc status codes</td><td class="mono">responses.default</td><td>Analysis</td><td class="t-muted"><span class="mono">CONV-STATUS-004</span> — generic default response</td></tr>
+              <tr><td class="t-muted" colspan="5"><button class="btn btn--link btn--sm"><i data-lucide="chevron-right"></i>21 constructs retained in “In the OpenAPI document” (aggregated) — expand</button></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+        <div data-tab-panel="cv-doc" hidden>
+          <div class="row-between mb-2"><span class="t-caps">OpenAPI document (dry run)</span><span class="t-xs t-subtle">Read-only · 412 lines</span></div>
+          <div class="code code--dark code--lines" style="max-height:360px"><span>{</span><span>  <span class="c-n">"openapi"</span>: <span class="c-s">"3.1.0"</span>,</span><span>  <span class="c-n">"info"</span>: { <span class="c-n">"title"</span>: <span class="c-s">"Payouts API"</span>, <span class="c-n">"version"</span>: <span class="c-s">"1.0.0"</span> },</span><span>  <span class="c-n">"servers"</span>: [{ <span class="c-n">"url"</span>: <span class="c-s">"https://payouts.acme.dev"</span> }],</span><span>  <span class="c-n">"paths"</span>: {</span><span>    <span class="c-n">"/payouts.v1.PayoutService/CreatePayout"</span>: {</span><span>      <span class="c-n">"post"</span>: {</span><span>        <span class="c-n">"operationId"</span>: <span class="c-s">"PayoutService_CreatePayout"</span>,</span><span>        <span class="c-n">"tags"</span>: [<span class="c-s">"PayoutService"</span>],</span><span>        <span class="c-n">"requestBody"</span>: { <span class="c-n">"$ref"</span>: <span class="c-s">"#/components/requestBodies/CreatePayoutRequest"</span> },</span><span>        <span class="c-n">"responses"</span>: { <span class="c-n">"200"</span>: { <span class="c-n">"$ref"</span>: <span class="c-s">"#/components/responses/Payout"</span> }, <span class="c-n">"default"</span>: { <span class="c-n">"$ref"</span>: <span class="c-s">"#/components/responses/GrpcStatus"</span> } }</span><span>      }</span><span>    },</span><span>    <span class="c-c">… 8 more paths</span></span><span>  },</span><span>  <span class="c-n">"components"</span>: { <span class="c-n">"schemas"</span>: { <span class="c-n">"Payout"</span>: { … }, <span class="c-n">"PayoutTarget"</span>: { <span class="c-n">"oneOf"</span>: [ … ] } } }</span><span>}</span></div>
+          <div class="t-xs t-subtle mt-2">Absent variant: “The dry run returned no OpenAPI document to preview.”</div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><label class="check left t-xs" style="opacity:.55" title="Required only for low-fidelity conversions"><input type="checkbox" disabled/> I understand the converted spec will be incomplete and want to convert anyway.</label><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close"><i data-lucide="git-merge"></i>Convert</button></div>
+  </div>
+</div>
+
+<!-- ===== Import to catalog wizard ===== -->
+<div class="overlay" id="import-wizard" data-overlay>
+  <div class="dialog dialog--full" role="dialog" aria-labelledby="iw-title">
+    <div class="dialog__header" style="padding-bottom:8px">
+      <span class="icon-tile icon-tile--honey"><i data-lucide="upload"></i></span>
+      <div class="grow"><div class="dialog__title" id="iw-title">Import to catalog</div><div class="dialog__desc">Start with a file, URL, clipboard paste, or a Git repository. Catalog imports are stored in their original format and converted only when explicitly requested.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div style="padding:6px 22px 12px;border-bottom:1px solid var(--border)">
+      <div class="stepper" data-tabs="iw-steps" aria-label="Import steps">
+        <button class="step is-done" data-action="tab" data-target="iw-source"><span class="step__num">1</span>Source</button><span class="step__line is-done"></span>
+        <button class="step is-done" data-action="tab" data-target="iw-detect"><span class="step__num">2</span>Detect &amp; route</button><span class="step__line is-done"></span>
+        <button class="step is-done" data-action="tab" data-target="iw-options"><span class="step__num">3</span>Options</button><span class="step__line is-done"></span>
+        <button class="step is-active" data-action="tab" data-target="iw-quality"><span class="step__num">4</span>Quality</button><span class="step__line"></span>
+        <button class="step" data-action="tab" data-target="iw-import"><span class="step__num">5</span>Import</button>
+        <span class="t-xs t-subtle ml-auto">Steps are clickable in this mockup</span>
+      </div>
+    </div>
+    <div class="dialog__body" id="iw-steps" style="padding-top:16px">
+
+      <!-- Step 1 · Source -->
+      <div data-tab-panel="iw-source" hidden>
+        <div class="grid" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px">
+          <div class="col gap-4">
+            <div>
+              <div class="t-caps mb-2">Choose a source</div>
+              <div class="grid grid-4" style="gap:8px">
+                <button class="card card--flat card--pad" style="text-align:left"><span class="icon-tile icon-tile--accent"><i data-lucide="file-up"></i></span><div class="t-sm t-600 mt-2">File upload</div><div class="t-xs t-muted">Drop files or click to browse</div></button>
+                <button class="card card--flat card--pad" style="text-align:left"><span class="icon-tile icon-tile--accent"><i data-lucide="link"></i></span><div class="t-sm t-600 mt-2">URL import</div><div class="t-xs t-muted">Fetch from URL or repository</div></button>
+                <button class="card card--flat card--pad" style="text-align:left"><span class="icon-tile icon-tile--accent"><i data-lucide="clipboard-paste"></i></span><div class="t-sm t-600 mt-2">Clipboard paste</div><div class="t-xs t-muted">Paste JSON or YAML content</div></button>
+                <button class="card card--pad card--selected" style="text-align:left"><span class="icon-tile icon-tile--ink"><i data-lucide="git-branch"></i></span><div class="t-sm t-600 mt-2">Git repository</div><div class="t-xs t-muted">Import from GitHub/GitLab</div></button>
+              </div>
+            </div>
+            <div class="card card--flat card--pad">
+              <div class="form-grid">
+                <div class="field span-2"><label>Repository URL</label><input class="input input--mono" value="https://github.com/acme/payouts-protos" placeholder="https://github.com/owner/repo" /></div>
+                <div class="field"><label>Branch, tag, or commit</label><input class="input input--mono" placeholder="default branch" value="main" /></div>
+                <div class="field"><label>Path or glob</label><input class="input input--mono" placeholder="protos/**" value="protos/**" /></div>
+              </div>
+              <div class="t-xs t-subtle mt-2">Private repositories are read with your linked account credentials. Leave the path empty to consider the whole repository.</div>
+              <div class="row gap-2 mt-3"><button class="btn btn--primary"><i data-lucide="scan-search"></i>Fetch and detect</button><span class="t-xs t-muted">Other sources: dashed dropzone “Drop a source file here, or browse.” · “Document URL” + Fetch and detect · “Source content” textarea + Detect pasted source.</span></div>
+            </div>
+            <div class="empty empty--inline empty--dashed" style="padding:14px 16px"><div class="empty__art"><span class="hex"></span><i data-lucide="file-up"></i></div><div><div class="t-sm t-600">Drop a source file here, or browse.</div><div class="t-xs t-muted">.proto · .graphql · .gql · .yaml · .yml · .json · .zip · .tar · .tar.gz · .tgz — archives are unpacked and planned as bundles.</div></div><button class="btn btn--sm ml-auto">Browse files</button></div>
+          </div>
+          <div class="col gap-4">
+            <div class="card card--soft card--pad">
+              <div class="t-caps mb-2">Destination guide</div>
+              <div class="col gap-2 t-xs">
+                <div class="row-start gap-2"><span class="dot dot--info" style="margin-top:5px"></span><div><span class="t-600">Catalog only</span> — gRPC/Protobuf, GraphQL, AsyncAPI, X12, copybooks and 39 more stay non-publishable until an explicit Convert.</div></div>
+                <div class="row-start gap-2"><span class="dot dot--ok" style="margin-top:5px"></span><div><span class="t-600">Projects</span> — OpenAPI, Swagger, and Arazzo create publishable Project versions.</div></div>
+                <div class="row-start gap-2"><span class="dot dot--honey" style="margin-top:5px"></span><div><span class="t-600">JSON Schema asks first</span> — choose Catalog for later conversion, or Types/Projects as current schema.</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card__header" style="padding:10px 14px"><div class="card__title"><i data-lucide="history"></i>Recent import jobs</div><span class="t-xs t-subtle">last 5</span></div>
+              <table class="table table--dense"><thead><tr><th>Job</th><th>State</th><th>Progress</th></tr></thead><tbody>
+                <tr><td><div class="cell-primary mono t-xs">job_5e1a…</div><div class="cell-sub">payouts-grpc · 2h ago</div></td><td><span class="badge" data-status="completed">completed</span></td><td><div class="meter"><div class="progress progress--ok"><span style="width:100%"></span></div><span class="meter-val">100%</span></div></td></tr>
+                <tr><td><div class="cell-primary mono t-xs">job_2c9f…</div><div class="cell-sub">claims-837p · 3h ago</div></td><td><span class="badge" data-status="completed">completed</span></td><td><div class="meter"><div class="progress progress--ok"><span style="width:100%"></span></div><span class="meter-val">100%</span></div></td></tr>
+                <tr><td><div class="cell-primary mono t-xs">job_b71d…</div><div class="cell-sub">fleet-telemetry.avsc · yesterday</div></td><td><span class="badge" data-status="failed">failed</span></td><td><div class="meter"><div class="progress progress--danger"><span style="width:40%"></span></div><span class="meter-val">40%</span></div></td></tr>
+              </tbody></table>
+              <div class="table-foot"><span>3 jobs</span><span class="pager"><button class="btn btn--ghost btn--sm" disabled>Previous</button><button class="btn btn--ghost btn--sm" disabled>Next</button></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 · Detect & route -->
+      <div data-tab-panel="iw-detect" hidden>
+        <div class="row-between card card--flat mb-3" style="padding:8px 12px"><div class="row gap-2"><i data-lucide="git-branch" class="t-subtle"></i><span class="mono t-sm">acme/payouts-protos · main · protos/**</span><span class="fmt fmt--proto">Protobuf</span></div><button class="btn btn--ghost btn--sm" data-tip="Choose a different source"><i data-lucide="x"></i>Choose a different source</button></div>
+        <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px">
+          <div class="col gap-3">
+            <div class="card card--flat card--pad">
+              <div class="row-between"><div class="t-sm t-600">Auto-detected: Protobuf</div><span class="badge badge--ok">96% confidence</span></div>
+              <div class="t-xs t-muted mt-1">96% confidence · paradigm RPC · <span class="mono">syntax = "proto3"</span> with <span class="mono">service</span> blocks in 4 of 6 files.</div>
+              <div class="field mt-3"><label>Import as format</label><select class="select"><option>Protobuf (96% confidence)</option><option>gRPC (91% confidence)</option><option>Connect (12% confidence)</option></select><div class="hint">Detection matched more than one format. Override the assumed format if the top match is wrong.</div></div>
+            </div>
+            <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div><span class="banner-title">Ambiguous source — using Protobuf.</span> <span class="banner-body">This could also be gRPC (91%), Connect (12%).</span></div></div>
+            <div class="card card--flat card--pad">
+              <div class="row gap-2"><i data-lucide="git-commit-horizontal" class="t-subtle"></i><span class="mono t-xs">github.com/acme/payouts-protos</span></div>
+              <div class="t-xs t-muted mt-1">main · commit <span class="mono">a41f9c2</span> · protos/** · 6 files selected · root <span class="mono">protos/</span> · 2 skipped</div>
+              <details class="mt-2 t-xs"><summary class="t-accent" style="cursor:pointer">Show skipped files</summary><ul class="mono t-2xs t-subtle mt-1" style="padding-left:14px;list-style:disc"><li>protos/BUILD.bazel — not a spec</li><li>protos/README.md — not a spec</li></ul></details>
+            </div>
+            <div class="card card--flat card--pad" style="box-shadow:0 0 0 1px var(--accent) inset">
+              <div class="row gap-2"><i data-lucide="route" class="t-subtle"></i><span class="t-sm t-600">Routing decision → Catalog</span></div>
+              <div class="t-xs t-muted mt-1">Protobuf is stored as-is in the catalog and stays non-publishable until you convert it. Adapter <span class="mono">protobuf</span> is available in this runtime.</div>
+            </div>
+            <div class="banner banner--honey"><i data-lucide="layers"></i><div><div class="banner-title">This source holds 3 independent specs</div><div class="banner-body t-xs">Import them all at once — each one is detected, routed, and imported separately (3 → catalog).<br/><span class="mono">payouts/v1/payout.proto — Protobuf → Catalog</span> · <span class="mono">ledger/v1/ledger_sync.proto — Protobuf → Catalog</span> · <span class="mono">events/settlement.asyncapi.yaml — AsyncAPI → Catalog</span></div></div><div class="banner-actions"><button class="btn btn--sm">Import all 3</button></div></div>
+          </div>
+          <div class="col gap-2">
+            <div class="row-between"><span class="t-caps">Source preview</span><span class="t-xs t-subtle">read-only · protos/payouts/v1/payout.proto</span></div>
+            <div class="code code--dark code--lines" style="max-height:340px"><span><span class="c-k">syntax</span> = <span class="c-s">"proto3"</span>;</span><span><span class="c-k">package</span> payouts.v1;</span><span></span><span><span class="c-k">service</span> PayoutService {</span><span>  <span class="c-k">rpc</span> CreatePayout(CreatePayoutRequest) <span class="c-k">returns</span> (Payout);</span><span>  <span class="c-k">rpc</span> GetPayout(GetPayoutRequest) <span class="c-k">returns</span> (Payout);</span><span>  <span class="c-k">rpc</span> StreamSettlements(StreamRequest) <span class="c-k">returns</span> (<span class="c-k">stream</span> Settlement);</span><span>}</span><span></span><span><span class="c-k">message</span> Payout {</span><span>  <span class="c-n">string</span> id = 1;</span><span>  <span class="c-n">Money</span> amount = 2;</span><span>  <span class="c-k">oneof</span> target { BankAccount bank = 3; Wallet wallet = 4; }</span><span>  <span class="c-n">PayoutStatus</span> status = 5;</span><span>}</span><span><span class="c-c">// … 212 more lines</span></span></div>
+            <div class="t-2xs t-subtle">Archives: “Archive uploads have no single text document to preview…” · Git: “Repository selections have no single text document…”</div>
+            <div class="callout callout--accent t-xs mt-1">Continue is disabled when routing is <em>Projects</em> (“OpenAPI/Swagger imports land in Projects — use Projects → Import.”) or <em>Not importable yet</em>, or when the adapter is unavailable in this runtime.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 · Options -->
+      <div data-tab-panel="iw-options" hidden>
+        <div class="page-body--narrow" style="margin:0 auto;max-width:760px">
+          <div class="banner mb-4"><i data-lucide="info"></i><div><div class="banner-title">Store in catalog</div><div class="banner-body t-xs">This source will be kept verbatim as Protobuf. It will not create a Project or auto-convert to OpenAPI. Continue to review its quality score before anything is written.</div></div></div>
+          <div class="card card--flat card--pad mb-4">
+            <div class="t-sm t-600 mb-1">JSON Schema route (asks first)</div>
+            <div class="t-xs t-muted mb-3">Shown instead of the note above when the source is JSON Schema.</div>
+            <label class="radio row-start gap-3 card card--flat" style="padding:10px 12px"><input type="radio" name="js-route" checked/><div><div class="t-sm t-600">Catalog for later conversion</div><div class="t-xs t-muted">Creates a schemas-only catalog item you can convert to an OpenAPI project later.</div></div></label>
+            <label class="radio row-start gap-3 card card--flat mt-2" style="padding:10px 12px"><input type="radio" name="js-route"/><div><div class="t-sm t-600">Types/Projects as current schema</div><div class="t-xs t-muted">Opens the existing type import review with this schema preloaded (<a href="../build/primitives.html">Import primitives</a> wizard).</div></div></label>
+          </div>
+          <div class="card card--soft card--pad"><div class="t-sm t-600">No additional options</div><div class="t-xs t-muted mt-1">Continue to the quality pre-flight — nothing is written to the catalog until you confirm it there.</div></div>
+        </div>
+      </div>
+
+      <!-- Step 4 · Quality (pre-flight gate) -->
+      <div data-tab-panel="iw-quality">
+        <div class="grid" style="grid-template-columns:300px minmax(0,1fr);gap:20px">
+          <div class="col gap-3">
+            <div class="card card--flat card--pad">
+              <div class="row gap-3"><span class="ring ring--lg" style="--p:82;--c:var(--accent)"><span>B</span></span><div><div class="t-h4">Payouts gRPC</div><div class="t-xs t-muted">82/100 · <span class="badge badge--sq badge--mono badge--ok">Grade B</span></div></div></div>
+              <div class="row wrap gap-1 mt-3"><span class="badge badge--outline">0 errors</span><span class="badge badge--warn">3 warnings</span><span class="badge badge--info">2 info</span></div>
+              <dl class="kv kv--stack mt-3 t-xs"><dt>Style guide</dt><dd>Acme REST baseline (tenant default)</dd><dt>Policy</dt><dd>Threshold 70 · this source scores 82 <span class="t-ok t-600">(+12)</span></dd></dl>
+            </div>
+            <div class="banner banner--warn"><i data-lucide="circle-check"></i><div><div class="banner-title">Import allowed with warnings</div><div class="banner-body t-xs">3 SHOULD findings; nothing blocks this import. Fix them later from Lint &amp; score.</div></div></div>
+            <div class="card card--flat" style="padding:12px 14px;box-shadow:0 0 0 1px var(--warn) inset">
+              <div class="t-2xs t-caps mb-1" style="color:var(--warn-fg)">Shown when policy blocks the import</div>
+              <div class="field"><label>Why is this import necessary?</label><input class="input" placeholder="Recorded with the waiver, e.g. vendor spec we do not control" /><div class="hint">Recorded in the tenant ledger with your name; only owners and admins may override a policy block.</div></div>
+            </div>
+            <div class="t-2xs t-subtle">Other verdicts: “Import allowed” · “Policy blocks this import” · “This source cannot be imported” · “Quality could not be scored” (+ reason, remediation, code).</div>
+          </div>
+          <div class="min-w-0">
+            <div class="tabs mb-3" style="border-bottom:1px solid var(--border)" data-tabs="iw-q-tabs">
+              <button class="tab is-active" data-action="tab" data-target="q-find">Findings <span class="count">5</span></button>
+              <button class="tab" data-action="tab" data-target="q-preview">What this import adds</button>
+              <button class="tab" data-action="tab" data-target="q-bundle">Bundle files <span class="count">6</span></button>
+            </div>
+            <div id="iw-q-tabs">
+              <!-- Findings -->
+              <div data-tab-panel="q-find">
+                <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px">
+                  <div>
+                    <div class="row-between mb-1"><span class="t-caps">Ranked findings (5)</span><span class="t-2xs t-subtle">↑↓ Home End</span></div>
+                    <div class="col" role="listbox" aria-label="Ranked findings">
+                      <div class="finding is-active" role="option" aria-selected="true"><span class="rank">#1</span><div><div class="row gap-2"><span class="badge" data-status="warning">warning</span><span class="tag">proto-service-comment</span></div><div class="mt-1">Service <span class="mono">LedgerSyncService</span> has no leading comment</div><div class="t-2xs t-subtle mono">ledger/v1/ledger_sync.proto · line 12</div></div></div>
+                      <div class="finding" role="option"><span class="rank">#2</span><div><div class="row gap-2"><span class="badge" data-status="warning">warning</span><span class="tag">proto-field-names-lower-snake</span></div><div class="mt-1">Field <span class="mono">payoutId</span> should be lower_snake_case</div><div class="t-2xs t-subtle mono">payouts/v1/payout.proto · line 31</div></div></div>
+                      <div class="finding" role="option"><span class="rank">#3</span><div><div class="row gap-2"><span class="badge" data-status="warning">warning</span><span class="tag">proto-enum-zero-value</span></div><div class="mt-1"><span class="mono">PayoutStatus</span> zero value is not <span class="mono">_UNSPECIFIED</span></div><div class="t-2xs t-subtle mono">payouts/v1/payout.proto · line 58</div></div></div>
+                      <div class="finding" role="option"><span class="rank">#4</span><div><div class="row gap-2"><span class="badge" data-status="info">info</span><span class="tag">proto-package-version-suffix</span></div><div class="mt-1">Package <span class="mono">payouts.v1</span> ✓ versioned — informational</div></div></div>
+                      <div class="finding" role="option"><span class="rank">#5</span><div><div class="row gap-2"><span class="badge" data-status="info">info</span><span class="tag">proto-import-unused</span></div><div class="mt-1">Import <span class="mono">google/protobuf/empty.proto</span> is unused</div><div class="t-2xs t-subtle mono">ledger/v1/ledger_sync.proto · line 4</div></div></div>
+                    </div>
+                    <div class="t-xs t-muted mt-2">Remediation: add a <span class="mono">//</span> comment describing the service’s purpose. <a href="#">Rule docs ↗</a></div>
+                  </div>
+                  <div>
+                    <div class="row-between mb-1"><span class="t-caps">Source · line 12</span><span class="t-2xs t-subtle mono">ledger/v1/ledger_sync.proto</span></div>
+                    <div class="code code--lines" style="max-height:300px;font-size:var(--fs-2xs)"><span class="t-faint">… 8 earlier lines</span><span><span class="c-k">import</span> <span class="c-s">"google/protobuf/empty.proto"</span>;</span><span></span><span><span class="c-k">option</span> go_package = <span class="c-s">"acme/ledger/v1"</span>;</span><span style="background:var(--accent-soft)"><span class="c-k">service</span> LedgerSyncService {</span><span>  <span class="c-k">rpc</span> SyncBatch(SyncBatchRequest) <span class="c-k">returns</span> (SyncBatchResponse);</span><span>  <span class="c-k">rpc</span> GetCursor(GetCursorRequest) <span class="c-k">returns</span> (Cursor);</span><span>}</span><span class="t-faint">… 96 later lines</span></div>
+                    <div class="t-2xs t-subtle mt-2">Empty: “No lint findings — this source is clean against the resolved style guide.” · Archives without raw text: “The raw source is not available for this candidate…”</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Preview manifest -->
+              <div data-tab-panel="q-preview" hidden>
+                <div class="row-between wrap gap-2 mb-2"><div class="t-sm t-600">What this import would add <span class="t-xs t-subtle t-500">windowed</span></div><div class="row wrap gap-1"><span class="badge badge--outline">Format Protobuf</span><span class="badge badge--outline">Paradigm RPC</span><span class="badge badge--outline">Routes to Catalog</span><span class="badge">2 services</span><span class="badge">9 operations</span><span class="badge">0 channels</span><span class="badge">14 types</span><span class="badge badge--sq badge--mono badge--ok">Grade B</span><span class="t-2xs t-subtle">via protobuf adapter</span></div></div>
+                <div class="legend-chips mb-2"><span class="badge badge--ok">Mapped 21</span><span class="badge badge--warn">Partially mapped 3</span><span class="badge badge--violet">Inferred 1</span><span class="badge badge--outline">Not in canonical model 2</span><span class="badge">Not parsed by adapter 0</span></div>
+                <div class="row gap-2 mb-2"><div class="input-wrap" style="width:240px"><i data-lucide="filter"></i><input class="input input--sm" placeholder="Filter entities…" /></div><span class="t-xs t-subtle">27 of 27</span><button class="btn btn--sm btn--ghost ml-auto">Load all entities</button></div>
+                <!-- Re-import delta -->
+                <div class="card card--flat card--pad mb-3">
+                  <div class="row-between wrap gap-2"><div class="t-sm t-600">Re-import delta against Payouts gRPC (current revision)</div><div class="row gap-1"><span class="badge badge--ok">+ 2 added</span><span class="badge badge--danger">− 0 removed</span><span class="badge badge--warn">~ 3 changed</span></div></div>
+                  <div class="t-xs t-muted mt-1">Graded by <span class="mono">structural-baseline</span> (structural baseline, not a format-specific ruleset) — worst change: <span class="badge badge--warn">minor</span></div>
+                  <details class="mt-2 t-xs" open><summary style="cursor:pointer" class="t-600">Operations · 3</summary><div class="col gap-1 mt-1">
+                    <div class="row gap-2"><span class="badge badge--ok">added</span><span class="mono">PayoutService.CancelPayout</span><span class="t-subtle">new unary RPC</span><a class="ml-auto" href="#">Reveal in tree</a></div>
+                    <div class="row gap-2"><span class="badge badge--warn">changed</span><span class="badge badge--outline">minor</span><span class="mono">PayoutService.GetPayout</span><span class="t-subtle">response gained field <span class="mono">settled_at</span></span><a class="ml-auto" href="#">Reveal in tree</a></div>
+                    <div class="row gap-2"><span class="badge badge--warn">changed</span><span class="badge badge--outline">minor</span><span class="mono">LedgerSyncService.SyncBatch</span><span class="t-subtle">comment updated</span><a class="ml-auto" href="#">Reveal in tree</a></div></div></details>
+                  <details class="mt-1 t-xs"><summary style="cursor:pointer" class="t-600">Types · 2</summary></details>
+                  <div class="t-2xs t-subtle mt-2">No-op variant: “This document is identical to the current revision (fingerprint 9f3c2a71b0de…) — importing again would create an empty revision.” + <em>Skip this import</em>.</div>
+                </div>
+                <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px">
+                  <div class="card card--flat" style="padding:6px" role="tree" aria-label="Entities this import would add">
+                    <div class="tree-row"><i data-lucide="chevron-down" class="t-faint"></i><span class="tag kind">SERVICE</span><span class="mono">PayoutService</span><span class="badge badge--ok">mapped</span><a class="loc" href="#">payout.proto:8</a></div>
+                    <div class="tree-row" style="padding-left:28px"><span class="tag kind">OPERATION</span><span class="mono">CreatePayout</span><span class="badge badge--ok">mapped</span><a class="loc" href="#">payout.proto:9</a></div>
+                    <div class="tree-row" style="padding-left:28px"><span class="tag kind">OPERATION</span><span class="mono">StreamSettlements</span><span class="badge badge--warn">partially mapped</span><a class="loc" href="#">payout.proto:11</a></div>
+                    <div class="tree-row" style="padding-left:28px"><span class="tag kind">OPERATION</span><span class="mono t-strike">LegacyExport</span><span class="tag">deprecated</span><span class="badge badge--ok">mapped</span><a class="loc" href="#">payout.proto:13</a></div>
+                    <div class="tree-row"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag kind">SERVICE</span><span class="mono">LedgerSyncService</span><span class="badge badge--ok">mapped</span><a class="loc" href="#">ledger_sync.proto:12</a></div>
+                    <div class="tree-row"><i data-lucide="chevron-down" class="t-faint"></i><span class="t-caps">Types · 14</span></div>
+                    <div class="tree-row" style="padding-left:28px"><span class="tag kind">TYPE</span><span class="mono">Payout</span><span class="badge badge--ok">mapped</span><a class="loc" href="#">payout.proto:24</a></div>
+                    <div class="tree-row" style="padding-left:28px"><span class="tag kind">TYPE</span><span class="mono">PayoutTarget (oneof)</span><span class="badge badge--violet">inferred</span><a class="loc" href="#">payout.proto:31</a></div>
+                    <div class="tree-row" style="padding-left:28px"><span class="tag kind">TYPE</span><span class="mono">google.protobuf.Any</span><span class="badge badge--outline">not in canonical model</span><a class="loc" href="#">payout.proto:40</a></div>
+                    <div class="t-2xs t-subtle" style="padding:6px 8px">Provenance: Source name <span class="mono">payouts-protos</span> · Source id <span class="mono">a41f9c2</span> · Not carried over: <span class="mono">options</span>, <span class="mono">extensions</span> · adapter ledger 3 rows</div>
+                  </div>
+                  <!-- Projection graph: What the source lost coming in -->
+                  <div class="card card--flat card--pad">
+                    <div class="t-sm t-600">What the source lost coming in</div>
+                    <div class="legend-chips mt-2 mb-2"><span class="badge badge--ok">✓ Retained 21</span><span class="badge badge--info">⇄ Transformed 3</span><span class="badge badge--warn">≈ Approximated 2</span><span class="badge badge--violet">＋ Synthesized 1</span><span class="badge badge--danger">× Dropped 2</span><span class="badge badge--outline">⊘ Unavailable 0</span></div>
+                    <svg viewBox="0 0 420 150" width="100%" height="150" role="img" aria-label="Import projection graph">
+                      <text x="4" y="12" class="proj-lbl">Services</text><rect x="4" y="18" width="130" height="22" rx="5" class="proj-node is-ok"/><text x="12" y="33" class="proj-text">✓ 2 services</text>
+                      <text x="4" y="58" class="proj-lbl">Operations</text><rect x="4" y="64" width="130" height="22" rx="5" class="proj-node is-warn"/><text x="12" y="79" class="proj-text">≈ 2 streaming</text><rect x="144" y="64" width="110" height="22" rx="5" class="proj-node is-ok"/><text x="152" y="79" class="proj-text">✓ 7 unary</text>
+                      <text x="4" y="104" class="proj-lbl">Types</text><rect x="4" y="110" width="130" height="22" rx="5" class="proj-node is-info is-accent"/><text x="12" y="125" class="proj-text">⇄ 3 oneof</text><rect x="144" y="110" width="110" height="22" rx="5" class="proj-node is-danger"/><text x="152" y="125" class="proj-text">× 2 Any</text><rect x="264" y="110" width="150" height="22" rx="5" class="proj-node is-ok"/><text x="272" y="125" class="proj-text">✓ 9 messages</text>
+                      <text x="270" y="12" class="proj-lbl">Adapter limits</text><rect x="270" y="18" width="144" height="22" rx="5" class="proj-node is-muted"/><text x="278" y="33" class="proj-text">＋ 1 synthesized tag</text>
+                    </svg>
+                    <table class="table table--dense mt-2" style="font-size:var(--fs-2xs)"><thead><tr><th>Status</th><th>Source construct</th><th>Canonical entity</th><th>Family</th><th>Reason</th></tr></thead><tbody>
+                      <tr><td><span class="badge badge--danger">× Dropped</span></td><td class="mono">google.protobuf.Any</td><td class="t-faint">—</td><td>Types</td><td class="t-muted"><span class="mono">IMP-ANY-001</span></td></tr>
+                      <tr><td><span class="badge badge--warn">≈ Approximated</span></td><td class="mono">stream Settlement</td><td class="mono">operation</td><td>Operations</td><td class="t-muted"><span class="mono">IMP-STREAM-002</span></td></tr>
+                      <tr><td><span class="badge badge--info">⇄ Transformed</span></td><td class="mono">oneof target</td><td class="mono">type:PayoutTarget</td><td>Types</td><td class="t-muted"><span class="mono">IMP-ONEOF-003</span></td></tr>
+                    </tbody></table>
+                  </div>
+                </div>
+              </div>
+              <!-- Bundle files -->
+              <div data-tab-panel="q-bundle" hidden>
+                <div class="row wrap gap-2 mb-2"><span class="badge badge--outline">Files 6</span><span class="badge badge--outline">References 4</span><span class="badge badge--warn">Unresolved 1</span><span class="badge badge--outline">Entities 25</span><div class="row gap-2 ml-auto"><span class="t-xs t-muted">Entry point</span><select class="select select--sm" style="width:300px"><option>protos/payouts/v1/payout.proto — Protobuf</option><option>protos/ledger/v1/ledger_sync.proto — Protobuf</option><option>Choose the root document…</option></select><span class="t-2xs t-subtle">auto-detected</span></div></div>
+                <div class="legend-chips mb-2"><span class="badge badge--ok">Entry point 1</span><span class="badge badge--info">Imported dependency 3</span><span class="badge badge--outline">Unreferenced 1</span><span class="badge">Ignored 2</span><span class="badge badge--danger">Unreadable 0</span></div>
+                <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px">
+                  <div>
+                    <div class="row gap-2 mb-2"><div class="input-wrap" style="width:220px"><i data-lucide="filter"></i><input class="input input--sm" placeholder="Filter files…" /></div><button class="btn btn--sm btn--ghost ml-auto">Load all files</button></div>
+                    <div class="card card--flat" style="padding:6px" role="tree" aria-label="Files in this bundle">
+                      <div class="tree-row"><i data-lucide="chevron-down" class="t-faint"></i><i data-lucide="folder"></i><span class="mono">protos/</span></div>
+                      <div class="tree-row is-active" style="padding-left:24px"><i data-lucide="file-code-2"></i><span class="mono">payouts/v1/payout.proto</span><span class="badge badge--ok">Entry point</span><span class="badge badge--outline">Parsed</span><span class="loc">4.1 KB</span></div>
+                      <div class="tree-row" style="padding-left:24px"><i data-lucide="file-code-2"></i><span class="mono">payouts/v1/money.proto</span><span class="badge badge--info">Dependency</span><span class="badge badge--outline">Parsed</span><span class="loc">0.6 KB</span></div>
+                      <div class="tree-row" style="padding-left:24px"><i data-lucide="file-code-2"></i><span class="mono">ledger/v1/ledger_sync.proto</span><span class="badge badge--info">Dependency</span><span class="badge badge--outline">Parsed</span><span class="loc">3.2 KB</span></div>
+                      <div class="tree-row" style="padding-left:24px"><i data-lucide="file-code-2"></i><span class="mono">events/settlement.asyncapi.yaml</span><span class="badge badge--outline">Unreferenced</span><span class="badge badge--outline">Not analysed</span><span class="loc">2.0 KB</span></div>
+                      <div class="tree-row" style="padding-left:24px"><i data-lucide="file"></i><span class="mono t-subtle">BUILD.bazel</span><span class="badge">Ignored</span><span class="loc">0.3 KB</span></div>
+                      <div class="tree-row" style="padding-left:24px"><i data-lucide="file"></i><span class="mono t-subtle">README.md</span><span class="badge">Ignored</span><span class="loc">1.1 KB</span></div>
+                    </div>
+                  </div>
+                  <div class="col gap-2">
+                    <div class="card card--flat card--pad t-xs">
+                      <div class="mono t-sm t-600">protos/payouts/v1/payout.proto</div>
+                      <div class="row gap-1 mt-1"><span class="badge badge--ok">Entry point</span><span class="badge badge--outline">Parsed</span><span class="t-subtle">148 lines · chosen by detection</span></div>
+                      <div class="mt-2"><span class="t-600">Imports (2)</span><ul style="padding-left:14px;list-style:disc" class="t-muted mt-1"><li><span class="mono">payouts/v1/money.proto</span> — resolved</li><li><span class="mono">google/protobuf/timestamp.proto</span> — <span class="t-warn">unresolved</span></li></ul></div>
+                      <div class="mt-2 t-muted">Imported by: <span class="mono">ledger/v1/ledger_sync.proto</span></div>
+                      <div class="mt-2">Contributes 12 canonical entities: <span class="mono">PayoutService</span>, <span class="mono">Payout</span>, <span class="mono">PayoutTarget</span> …</div>
+                      <div class="t-2xs t-subtle mt-2" style="font-style:italic">Attribution follows the adapter’s source-location ledger; entities without a location are not attributed to any file.</div>
+                    </div>
+                    <div class="banner banner--warn t-xs"><i data-lucide="triangle-alert"></i><div><div class="banner-title">Unresolved imports (1)</div><div class="banner-body mono">payout.proto:3 → google/protobuf/timestamp.proto<br/>Looked for: protos/google/protobuf/timestamp.proto, google/protobuf/timestamp.proto</div></div></div>
+                    <div class="t-2xs t-subtle">Single-document variant: “This import is a single document, not a bundle — there are no bundle files to explore.”</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 · Import -->
+      <div data-tab-panel="iw-import" hidden>
+        <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px">
+          <div class="col gap-3">
+            <div class="t-caps">Single import</div>
+            <div class="card card--flat card--pad">
+              <div class="row gap-3"><span class="spinner"></span><div><div class="t-sm t-600">Storing source in catalog…</div><div class="t-xs t-muted">Polling job <span class="mono">job_7d02…</span> every 400 ms · terminal states: completed · failed · canceled · rolled-back · pending-approval</div></div></div>
+              <div class="progress progress--striped mt-3"><span style="width:62%"></span></div>
+            </div>
+            <div class="banner banner--ok"><i data-lucide="circle-check"></i><div><div class="banner-title">Stored in the catalog in its original format.</div><div class="banner-body t-xs">Use <strong>Convert to OpenAPI</strong> when ready. Payouts gRPC now has 3 revisions.</div></div><div class="banner-actions"><a class="btn btn--sm" href="catalog-item.html">Open item</a></div></div>
+            <div class="banner banner--danger"><i data-lucide="circle-x"></i><div><div class="banner-title">The import is taking longer than expected.</div><div class="banner-body t-xs">Check the catalog shortly. Taxonomy errors return you to Options with message + remediation + “(code X)”.</div></div></div>
+          </div>
+          <div class="col gap-3">
+            <div class="t-caps">Bulk import (planned specs)</div>
+            <div class="card card--flat">
+              <div class="card__header" style="padding:10px 14px"><div class="t-sm t-600">Bulk import finished: 2 imported, 1 failed of 3.</div><button class="btn btn--sm"><i data-lucide="rotate-ccw"></i>Try again</button></div>
+              <div class="divide-y">
+                <div class="list-row" style="padding:10px 14px"><span class="mono t-xs">payouts/v1/payout.proto</span><span class="fmt fmt--proto">Protobuf</span><span class="badge badge--outline">Catalog</span><span class="badge" data-status="completed">completed</span><span class="t-xs t-subtle ml-auto">Created <span class="mono">payouts-grpc</span></span></div>
+                <div class="list-row" style="padding:10px 14px"><span class="mono t-xs">ledger/v1/ledger_sync.proto</span><span class="fmt fmt--proto">Protobuf</span><span class="badge badge--outline">Catalog</span><span class="badge" data-status="completed">completed</span><span class="t-xs t-subtle ml-auto">Created <span class="mono">ledger-sync-grpc</span></span></div>
+                <div class="list-row wrap" style="padding:10px 14px"><span class="mono t-xs">events/settlement.asyncapi.yaml</span><span class="fmt fmt--asyncapi">AsyncAPI</span><span class="badge badge--outline">Catalog</span><span class="badge" data-status="failed">failed</span><span class="t-xs t-danger" style="flex-basis:100%">Unresolved $ref ./schemas/money.yaml (code IMP-REF-404)</span></div>
+              </div>
+              <details class="t-xs" style="padding:8px 14px;border-top:1px solid var(--border)"><summary style="cursor:pointer">2 files are part of no spec</summary><ul class="mono t-2xs t-subtle mt-1" style="padding-left:14px;list-style:disc"><li>BUILD.bazel — not a recognised format</li><li>README.md — documentation</li></ul></details>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer">
+      <label class="check left t-xs"><input type="checkbox"/> Skip the quality step for clean imports</label>
+      <button class="btn btn--ghost" data-action="close">Cancel</button>
+      <button class="btn">Back</button>
+      <button class="btn">Retry pre-flight</button>
+      <button class="btn btn--primary" data-action="close"><i data-lucide="upload"></i>Import</button>
+    </div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/catalog</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/catalog/page.tsx</code>, <code>CatalogItemCard</code>, <code>CatalogStatsRow</code>, <code>CatalogFormatFacet</code>, <code>CatalogNonPublishableBanner</code>, <code>CatalogSupportedFormats</code>, <code>CatalogImportDialog</code> (+ QualityStep, PreviewPanel, ReimportDelta, ProjectionGraph, BundlePanel, BulkImportPanel, RecentAsyncJobsPanel), <code>ConversionPreviewDialog</code>, <code>CatalogLintReportDialog</code>, <code>ProjectQualityHistoryDialog</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: Import CTA (only with a session user) · Show deleted switch. Non-publishable <code>role=note</code> banner (verbatim copy, not dismissible). Supported-formats collapsible (44 importable · 0 recognized-only; unavailable adapters dimmed with “Unavailable in this runtime”; doc chips open in a new tab).</li>
+    <li>Stats row (hidden when empty): Cataloged items (active/disabled badges) · Avg quality “Grade · score” tier-tinted · Formats represented (≤4 families + …) · Converted to OpenAPI (“promotion path”).</li>
+    <li>Toolbar: search (name/slug/description/format/protocol/alias tokens), Format facet (multi-select, “Formats” + Clear, pruned automatically), Cards|Table, Group Protocol|None (cards only), Views chips All/Active/Needs attention/Deleted (Deleted gated: “Turn on Show deleted to use this view”), sort menu Name/Created/Updated/Quality/Grade/Format (click active flips ↑↓); prefs persisted in <code>apiome.catalog.view-preferences.v1</code>.</li>
+    <li>Cards grouped Graph → RPC → Event → REST → Data Schema → Other with “LABEL · n items” headers; card = hex initials, name, <code>cat_xxxxx · slug</code>, status pill, 2-line summary or “No description yet.”, FormatPill + ProtocolPill + SourceBadge (or “Format pending”), Quality/Lint/Debt orbs (Debt inert “Technical debt (not yet computed)”), versions count, ConvertedBadge “Converted →/Re-converted →” (struck-through when the target project is deleted), footer “imported by … / updated …”; deleted/disabled cards get the amber treatment + Undelete / Permanently delete.</li>
+    <li>Table: Artifact · Format · Protocol · Source · Quality (button “Open quality score” or “—” “No quality score captured yet”) · Grade (GradeChip or “–”) · Status (Enabled/Disabled + red Deleted) · Updated (MM/DD/YY hh:mm) · Actions, all sortable with <code>aria-sort</code>; deleted rows keep the inline green Undelete button.</li>
+    <li>Row menu: Details · View versions · Lint · Export to another format… (tooltip kept) · Convert/Re-convert to OpenAPI project (or “to Project” for openapi/arazzo) · Delete item · Permanently delete; deleted rows: Undelete item · Permanently delete.</li>
+    <li>Quality orb → server lint report when a numeric server score exists, else browser-local Project scores (Trend/Quality/Lint); Lint orb / grade chip → lint report (grade, Score N/100, severity chips, Guide, Compatibility vs base, converted-lint note, Group by rule switch).</li>
+    <li>Import wizard: 5 steps (Source · Detect &amp; route · Options · Quality · Import); source tiles file/url/paste/git with the same fields and validation copy; Recent import jobs (Job/State/Progress, paging); detect strip, confidence card, “Import as format” override + ambiguity alert, git provenance card + skipped files, routing card, bulk banner “Import all N”, source preview; Options catalog note / JSON-Schema radios (Types hand-off opens the Import primitives wizard) / “No additional options”; Quality pre-flight (grade orb, tallies, style guide, policy threshold, verdicts, override reason box, Findings ⇄ Source, What this import adds = manifest tree + coverage legend + Re-import delta + “What the source lost coming in” projection graph + table, Bundle files = summary + entry point + roles + tree + file detail + unresolved imports); Import = job polling + terminal copy, bulk panel rows + “files part of no spec” + Try again; footer skip-quality preference.</li>
+    <li>Conversion preview: grade · Fidelity N/100 · tier pill · penalty; tier banners (high/medium/low + verbatim body); Summary (provides / missing lists with coverage badges, “Fill cheap gaps” Title/Version/Servers + Apply &amp; recompute) · Projection graph (legend, zoom/reset, Copy Mermaid, download, lanes, evidence drawer, Status/Construct/Lands at/Scope/Reason table with aggregate rows) · Conversion (read-only JSON); footer low-tier acknowledgement + Convert.</li>
+    <li>Confirms: Delete (soft) / Undelete / Permanently delete — the two native confirms become one <code>.dialog--sm</code> with type-to-confirm; toasts unchanged (“Catalog item undeleted.”, “Catalog item and all associated data have been permanently deleted.”, “Conversion complete — a new OpenAPI project was created.”).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Protocol / Source / Grade quick filters beside the Format facet; row selection + bulk bar (Convert… / Export… / Delete); “Import to catalog” label + <code>I</code> shortcut; skeleton row while refetching; empty-state preview toggle (mock only).</li><li>Identity-group filter (<code>?identityGroupId=</code>) renders as a dismissible filter chip “Identity group idg_…” in the Views row instead of a full-width banner (same “Clear filter” behaviour).</li></ul>
+  <h4>States</h4>
+  <ul>
+    <li>No session: “Loading catalog…”. No tenant: <code>.empty</code> lock “No tenant selected — Please select a tenant before browsing the catalog.” + Go to Tenants. Loading: skeleton cards/rows (<code>aria-busy</code>).</li>
+    <li>Empty (stats hidden, toolbar kept): “Your catalog is empty” + verbatim guidance. Filter miss: “No catalog items match your filters or search.” Format facet disabled when “No formats to filter yet”. Fetch error: inline <code>.banner--danger</code> with Retry (today: silent console error).</li>
+    <li>Wizard: Continue disabled on Projects / Not importable yet routing or unavailable adapter; Cancel disabled while storing; auto-advance when skip-quality is on and the verdict is non-blocking; blocked + override → “Import anyway” / “Recording waiver…”.</li>
+  </ul>
+</template>
+<script>
+/* Nested-tab safe tab switcher (same contract as hive.js; only toggles panels that belong to the clicked group's scope). Also keeps .step is-active/is-done in sync. */
+(function () {
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-action="tab"]'); if (!t) return;
+    var group = t.closest('[data-tabs]'); if (!group) return;
+    e.preventDefault(); e.stopPropagation();
+    group.querySelectorAll('.tab, .segmented > button, .segmented > a, .step').forEach(function (x) { x.classList.remove('is-active'); });
+    t.classList.add('is-active');
+    if (t.classList.contains('step')) { var seen = false; Array.prototype.forEach.call(group.children, function (c) { if (c === t) { seen = true; c.classList.remove('is-done'); return; } if (c.classList.contains('step')) c.classList.toggle('is-done', !seen); if (c.classList.contains('step__line')) c.classList.toggle('is-done', !seen); }); }
+    var id = t.getAttribute('data-target'); var scope = document.getElementById(group.getAttribute('data-tabs')); if (!id || !scope) return;
+    scope.querySelectorAll('[data-tab-panel]').forEach(function (p) { var anc = p.parentElement.closest('[data-tab-panel]'); if (anc && scope.contains(anc)) return; p.hidden = p.getAttribute('data-tab-panel') !== id; });
+    if (window.Hive) Hive.icons();
+  }, true);
+})();
+</script>
+</body>
+</html>

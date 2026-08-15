@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Data browser · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .tbl-row { display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 2px 10px; border-radius: var(--r-sm); font-size: var(--fs-sm); cursor: pointer; }
+  .tbl-row:hover { background: var(--bg-subtle); }
+  .tbl-row.is-active { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+  .tbl-row .cnt { margin-left: auto; font-variant-numeric: tabular-nums; font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .tbl-row .view-schema { display: none; margin-left: auto; }
+  .tbl-row:hover .view-schema { display: inline-flex; }
+  .tbl-row:hover .cnt { display: none; }
+  .json-cell { display: inline-block; vertical-align: middle; font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-muted); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  tr.is-deleted td { opacity: .55; }
+  tr.is-deleted td .badge { opacity: 1; }
+</style>
+</head>
+<body data-shell="app" data-nav="database" data-page="tools/database" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Tools</span><i data-lucide="chevron-right"></i><span>Data browser</span></div>
+          <h1 class="page-title">Data browser</h1>
+          <p class="page-desc">Browse and edit records stored per published class schema of a version.</p>
+        </div>
+        <div class="page-actions">
+          <div class="input-wrap" style="width:220px"><i data-lucide="folder-kanban"></i><select class="select" style="padding-left:32px" aria-label="Project"><option>Payments API</option><option>Orders Service</option><option>Inventory Events</option></select></div>
+          <div class="input-wrap" style="width:250px"><i data-lucide="tag"></i><select class="select" style="padding-left:32px" aria-label="Version"><option>🔒 v2.3.1 — Hotfix currency enum</option><option>🔒 v2.3.0 — Q2 release</option></select></div>
+          <span class="badge badge--warn badge--lg" data-tip="A newer published version exists than the selected one"><i data-lucide="info"></i>Newer schema available: consider migrating</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="grid grid-aside-main" style="grid-template-columns:280px minmax(0,1fr);align-items:start">
+      <!-- Tables sidebar -->
+      <aside class="card">
+        <div class="card__header" style="padding:12px 14px"><div class="card__title"><i data-lucide="database"></i>Tables</div><span class="t-2xs t-subtle">4 table(s) · 5,312 rows</span></div>
+        <div style="padding:10px 12px;border-bottom:1px solid var(--border)"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Filter tables…" style="padding-left:30px" /></div></div>
+        <div style="padding:8px 6px">
+          <div class="t-caps" style="padding:2px 10px 6px">Class schemas</div>
+          <div class="tbl-row is-active"><span class="dot dot--info" style="width:7px;height:7px"></span><span class="mono t-xs">Payment</span><span class="cnt">4,812</span><button class="btn btn--ghost btn--sm btn--icon view-schema" data-action="open" data-target="schema-modal" aria-label="View JSON Schema for Payment" data-tip="View JSON Schema"><i data-lucide="file-code-2"></i></button></div>
+          <div class="tbl-row"><span class="dot" style="width:7px;height:7px"></span><span class="mono t-xs">Refund</span><span class="cnt">318</span><button class="btn btn--ghost btn--sm btn--icon view-schema" data-action="open" data-target="schema-modal" aria-label="View JSON Schema for Refund" data-tip="View JSON Schema"><i data-lucide="file-code-2"></i></button></div>
+          <div class="tbl-row"><span class="dot" style="width:7px;height:7px"></span><span class="mono t-xs">Customer</span><span class="cnt">164</span><button class="btn btn--ghost btn--sm btn--icon view-schema" data-action="open" data-target="schema-modal" aria-label="View JSON Schema for Customer" data-tip="View JSON Schema"><i data-lucide="file-code-2"></i></button></div>
+          <div class="tbl-row"><span class="dot" style="width:7px;height:7px"></span><span class="mono t-xs">PaymentMethod</span><span class="cnt">18</span><button class="btn btn--ghost btn--sm btn--icon view-schema" data-action="open" data-target="schema-modal" aria-label="View JSON Schema for PaymentMethod" data-tip="View JSON Schema"><i data-lucide="file-code-2"></i></button></div>
+        </div>
+        <div class="card__footer" style="padding:8px 12px"><div class="segmented segmented--sm" aria-label="Density"><button data-tip="Compact"><i data-lucide="rows-4"></i></button><button class="is-active" data-tip="Standard"><i data-lucide="rows-3"></i></button><button data-tip="Comfortable"><i data-lucide="rows-2"></i></button></div><span class="t-2xs t-subtle">Counts refresh after edits</span></div>
+      </aside>
+
+      <!-- Records grid -->
+      <section class="col gap-4 min-w-0">
+        <div class="row-between wrap gap-3">
+          <div class="row gap-3"><h2 class="t-h3 mono">Payment</h2><span class="t-sm t-muted">4,812 record(s)</span></div>
+          <div class="row gap-2 wrap">
+            <label class="row gap-2 t-sm t-muted"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button>Show deleted</label>
+            <button class="btn btn--sm"><i data-lucide="list"></i>View all records</button>
+            <div class="input-wrap" style="width:200px"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search…" style="padding-left:30px" /></div>
+            <button class="btn btn--sm">Search</button>
+            <button class="btn btn--sm" data-action="open" data-target="ai-query"><i data-lucide="sparkles"></i>Query with AI</button>
+            <button class="btn btn--sm btn--primary" data-action="open" data-target="insert-modal"><i data-lucide="plus"></i>Insert</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table table--dense">
+            <thead><tr>
+              <th class="sortable">OID <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+              <th class="sortable">Created <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+              <th class="sortable is-sorted">Updated <span class="sort"><i data-lucide="arrow-down"></i></span></th>
+              <th class="sortable t-right">Seq <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+              <th class="sortable">Last action <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+              <th>Data</th>
+              <th><span class="sr-only">Actions</span></th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td class="mono t-xs">rec_01J8FN2K</td><td class="t-num t-muted">08/15/26, 9:02 AM</td><td class="t-num t-muted">08/15/26, 9:12 AM</td><td class="t-right t-num">3</td><td><span class="badge badge--outline">updated</span></td>
+                <td><span class="json-cell">{"id":"5f0c2d8e…","amountMinor":2599,"currency":"EUR","status":"captured","customer":…</span></td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="record-dialog" data-tip="View" aria-label="View record"><i data-lucide="file-json-2"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="insert-modal" data-tip="Edit record" aria-label="Edit record"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-record" data-tip="Delete record (data stored in event log for restore)" aria-label="Delete record"><i data-lucide="trash-2"></i></button></div></td>
+              </tr>
+              <tr>
+                <td class="mono t-xs">rec_01J8FLQ9</td><td class="t-num t-muted">08/15/26, 8:41 AM</td><td class="t-num t-muted">08/15/26, 8:41 AM</td><td class="t-right t-num">1</td><td><span class="badge badge--outline">created</span></td>
+                <td><span class="json-cell">{"id":"a3b1c9d0…","amountMinor":10400,"currency":"USD","status":"authorized"}</span></td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="record-dialog" data-tip="View" aria-label="View record"><i data-lucide="file-json-2"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="insert-modal" data-tip="Edit record" aria-label="Edit record"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-record" data-tip="Delete record (data stored in event log for restore)" aria-label="Delete record"><i data-lucide="trash-2"></i></button></div></td>
+              </tr>
+              <tr class="is-deleted">
+                <td class="mono t-xs">rec_01J8F9ZX</td><td class="t-num t-muted">08/14/26, 4:20 PM</td><td class="t-num t-muted">08/15/26, 7:58 AM</td><td class="t-right t-num">5</td><td><span class="badge badge--danger">Deleted</span></td>
+                <td><span class="json-cell">{"id":"77e0aa21…","amountMinor":880,"currency":"EUR","status":"failed"}</span></td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="record-dialog" data-tip="View" aria-label="View record"><i data-lucide="file-json-2"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="restore-record" data-tip="Restore deleted record" aria-label="Restore deleted record" style="color:var(--ok)"><i data-lucide="rotate-ccw"></i></button></div></td>
+              </tr>
+              <tr>
+                <td class="mono t-xs">rec_01J8F2MP</td><td class="t-num t-muted">08/14/26, 11:03 AM</td><td class="t-num t-muted">08/14/26, 2:16 PM</td><td class="t-right t-num">2</td><td><span class="badge badge--outline">updated</span></td>
+                <td><span class="json-cell">{"id":"c2d4e6f8…","amountMinor":45900,"currency":"GBP","status":"captured","lineItems":[…]}</span></td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="record-dialog" data-tip="View" aria-label="View record"><i data-lucide="file-json-2"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="insert-modal" data-tip="Edit record" aria-label="Edit record"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-record" data-tip="Delete record (data stored in event log for restore)" aria-label="Delete record"><i data-lucide="trash-2"></i></button></div></td>
+              </tr>
+              <tr>
+                <td class="mono t-xs">rec_01J8EYW4</td><td class="t-num t-muted">08/13/26, 6:45 PM</td><td class="t-num t-muted">08/13/26, 6:45 PM</td><td class="t-right t-num">1</td><td><span class="badge badge--outline">created</span></td>
+                <td><span class="json-cell">{"id":"91b3d5f7…","amountMinor":1250,"currency":"EUR","status":"pending"}</span></td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="record-dialog" data-tip="View" aria-label="View record"><i data-lucide="file-json-2"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="insert-modal" data-tip="Edit record" aria-label="Edit record"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-record" data-tip="Delete record (data stored in event log for restore)" aria-label="Delete record"><i data-lucide="trash-2"></i></button></div></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-foot"><span>Sorted by Updated ↓ · read-only when an older version is selected</span><span class="pager"><button class="btn btn--sm btn--ghost">Previous</button><span class="t-xs" style="padding:0 8px">Page 1 of 241</span><button class="btn btn--sm">Next</button></span></div>
+        </div>
+
+        <!-- States row -->
+        <div class="grid grid-3">
+          <div class="card"><div class="card__header" style="padding:10px 14px"><span class="t-2xs t-caps">State · no project</span></div><div class="empty" style="padding:18px 14px"><div class="empty__art" style="width:52px;height:52px"><span class="hex"></span><i data-lucide="database"></i></div><div class="empty__title t-sm">No project selected</div><div class="empty__desc t-xs">Select a project and version from the pickers above to view and query data records. Published versions have frozen schemas.</div></div></div>
+          <div class="card"><div class="card__header" style="padding:10px 14px"><span class="t-2xs t-caps">State · no table</span></div><div class="empty" style="padding:18px 14px"><div class="empty__art" style="width:52px;height:52px"><span class="hex"></span><i data-lucide="table-2"></i></div><div class="empty__title t-sm">Select a table</div><div class="empty__desc t-xs">Select a table from the left to view records, search, or query with AI.</div></div></div>
+          <div class="card"><div class="card__header" style="padding:10px 14px"><span class="t-2xs t-caps">State · empty result</span></div><div class="empty" style="padding:18px 14px"><div class="empty__art" style="width:52px;height:52px"><span class="hex"></span><i data-lucide="search-x"></i></div><div class="empty__title t-sm">No records found</div><div class="empty__desc t-xs">Click “View all records” or “Search” to load data.</div></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- Schema view modal -->
+<div class="overlay" id="schema-modal" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="JSON Schema — Payment">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="file-code-2"></i></span><div><div class="dialog__title">JSON Schema — Payment</div><div class="dialog__desc">Class schema definition for validation and insert form.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+<pre class="code code--dark code--lines" style="max-height:50vh"><span><span class="c-p">{</span></span><span>  <span class="c-n">"type"</span>: <span class="c-s">"object"</span>,</span><span>  <span class="c-n">"required"</span>: [<span class="c-s">"id"</span>, <span class="c-s">"amountMinor"</span>, <span class="c-s">"currency"</span>, <span class="c-s">"status"</span>],</span><span>  <span class="c-n">"properties"</span>: <span class="c-p">{</span></span><span>    <span class="c-n">"id"</span>: { <span class="c-n">"type"</span>: <span class="c-s">"string"</span>, <span class="c-n">"format"</span>: <span class="c-s">"uuid"</span> },</span><span>    <span class="c-n">"amountMinor"</span>: { <span class="c-n">"type"</span>: <span class="c-s">"integer"</span>, <span class="c-n">"minimum"</span>: <span class="c-k">0</span> },</span><span>    <span class="c-n">"currency"</span>: { <span class="c-n">"type"</span>: <span class="c-s">"string"</span>, <span class="c-n">"pattern"</span>: <span class="c-s">"^[A-Z]{3}$"</span> },</span><span>    <span class="c-n">"status"</span>: { <span class="c-n">"enum"</span>: [<span class="c-s">"pending"</span>, <span class="c-s">"authorized"</span>, <span class="c-s">"captured"</span>, <span class="c-s">"failed"</span>] },</span><span>    <span class="c-n">"createdAt"</span>: { <span class="c-n">"type"</span>: <span class="c-s">"string"</span>, <span class="c-n">"format"</span>: <span class="c-s">"date-time"</span> }</span><span>  <span class="c-p">}</span></span><span><span class="c-p">}</span></span></pre>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Record dialog -->
+<div class="overlay" id="record-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-label="Record">
+    <div class="dialog__header"><span class="icon-tile"><i data-lucide="file-json-2"></i></span><div><div class="dialog__title">Record — <span class="mono">rec_01J8FN2K</span></div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-3" style="border-bottom:1px solid var(--border)" data-tabs="rec-tabs"><button class="tab is-active" data-action="tab" data-target="rec-current">Current</button><button class="tab" data-action="tab" data-target="rec-history">Historical</button></div>
+      <div id="rec-tabs">
+        <div data-tab-panel="rec-current">
+          <dl class="kv mb-3"><dt>Record sequence</dt><dd class="t-num">3</dd><dt>Created</dt><dd class="t-num">08/15/26, 9:02 AM</dd><dt>Updated</dt><dd class="t-num">08/15/26, 9:12 AM</dd></dl>
+<pre class="code code--dark" style="max-height:40vh">{
+  "id": "5f0c2d8e-9b1a-4c3f-8f6e-2d7a91c04b11",
+  "amountMinor": 2599,
+  "currency": "EUR",
+  "status": "captured",
+  "customer": { "id": "cus_2201", "email": "jo@example.com" }
+}</pre>
+        </div>
+        <div data-tab-panel="rec-history" hidden>
+          <div class="grid" style="grid-template-columns:200px minmax(0,1fr);gap:16px">
+            <div class="card card--flat" style="padding:6px">
+              <div class="t-caps" style="padding:6px 8px">Events</div>
+              <button class="tbl-row is-active" style="width:100%"><span class="mono t-xs">#3 updated</span></button>
+              <button class="tbl-row" style="width:100%"><span class="mono t-xs">#2 updated</span></button>
+              <button class="tbl-row" style="width:100%"><span class="mono t-xs">#1 created</span></button>
+            </div>
+            <div>
+              <dl class="kv mb-3"><dt>Sequence</dt><dd class="t-num">3</dd><dt>Action</dt><dd>updated</dd><dt>Created at</dt><dd class="t-num">08/15/26, 9:12 AM</dd><dt>Created by</dt><dd>ada@example.com</dd></dl>
+<pre class="code code--dark" style="max-height:32vh">{
+  "id": "5f0c2d8e-9b1a-4c3f-8f6e-2d7a91c04b11",
+  "status": "captured"
+}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Insert / Edit record -->
+<div class="overlay" id="insert-modal" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Insert record">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="plus"></i></span><div><div class="dialog__title">Insert record</div><div class="dialog__desc">Insert a new record into “Payment”. Data is validated against the class schema before saving.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-3" style="border-bottom:1px solid var(--border)" data-tabs="ins-tabs"><button class="tab is-active" data-action="tab" data-target="ins-form">Form</button><button class="tab" data-action="tab" data-target="ins-json">JSON</button></div>
+      <div id="ins-tabs">
+        <div data-tab-panel="ins-form" class="col gap-4">
+          <div class="field"><label>id <span class="req">*</span> <span class="badge badge--outline" style="margin-left:4px">Required</span></label><div class="row gap-2"><input class="input mono grow" placeholder="5f0c2d8e-9b1a-4c3f-8f6e-2d7a91c04b11" /><select class="select select--sm" style="width:72px" aria-label="UUID version"><option>v4</option><option>v1</option><option>v7</option></select><button class="btn btn--sm">Generate</button></div><div class="hint">Payment identifier (UUID).</div></div>
+          <div class="grid grid-2">
+            <div class="field"><label>amountMinor <span class="req">*</span> <span class="badge badge--outline" style="margin-left:4px">Required</span></label><input class="input" type="number" step="1" placeholder="0" /><div class="hint">Amount in the currency’s minor unit.</div></div>
+            <div class="field"><label>currency <span class="req">*</span> <span class="t-2xs t-subtle">(regex: ^[A-Z]{3}$)</span></label><input class="input mono" value="EUR" /><div class="error" hidden><i data-lucide="circle-alert"></i>Value does not match required pattern</div></div>
+          </div>
+          <div class="grid grid-2">
+            <div class="field"><label>status <span class="req">*</span> <span class="badge badge--outline" style="margin-left:4px">Required</span></label><select class="select"><option>Select…</option><option>(none)</option><option selected>pending</option><option>authorized</option><option>captured</option><option>failed</option></select></div>
+            <div class="field"><label>createdAt <span class="badge badge--outline" style="margin-left:4px">Optional, Nullable</span></label><div class="row gap-2"><input class="input mono grow" placeholder="2026-08-15T09:12:00Z" /><button class="btn btn--sm">Generate</button></div></div>
+          </div>
+          <div class="grid grid-2">
+            <div class="field"><label>price <span class="badge badge--outline" style="margin-left:4px">Optional</span></label><input class="input" placeholder="0.00" /><div class="hint">Money field — 2-decimal mask.</div></div>
+            <div class="field"><label>active <span class="badge badge--outline" style="margin-left:4px">Optional</span></label><label class="check mt-2"><input type="checkbox" checked/>true</label></div>
+          </div>
+          <div class="field"><label>lineItems <span class="badge badge--outline" style="margin-left:4px">Optional</span></label><textarea class="textarea mono" style="min-height:64px" placeholder="[]"></textarea><div class="hint">JSON array — parsed on blur; kept as text until valid.</div></div>
+        </div>
+        <div data-tab-panel="ins-json" hidden class="col gap-2">
+          <div class="t-xs t-subtle">Edit the JSON below. Apply to sync into the form view.</div>
+          <textarea class="textarea mono" style="min-height:180px" placeholder='{"key": "value"}'>{
+  "amountMinor": 2599,
+  "currency": "EUR",
+  "status": "pending"
+}</textarea>
+          <button class="btn btn--sm" style="align-self:start">Apply to form</button>
+        </div>
+      </div>
+      <div class="banner banner--danger mt-3" hidden><i data-lucide="circle-alert"></i>/currency: must match pattern ^[A-Z]{3}$</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Insert</button></div>
+  </div>
+</div>
+
+<!-- Confirms -->
+<div class="overlay" id="del-record" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span><div><div class="dialog__title">Delete record?</div><div class="dialog__desc">Delete this record? The data will be stored in the event log and can be restored later.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete</button></div></div></div>
+<div class="overlay" id="restore-record" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="rotate-ccw"></i></span><div><div class="dialog__title">Restore record?</div><div class="dialog__desc">Restore this deleted record? The data will be recreated in the table.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Restore</button></div></div></div>
+
+<!-- Query using AI -->
+<div class="overlay" id="ai-query" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Query using AI">
+    <div class="dialog__header"><span class="icon-tile icon-tile--violet"><i data-lucide="sparkles"></i></span><div><div class="dialog__title">Query using AI</div><div class="dialog__desc">Ask a question about the data. The AI will suggest how to search or filter (e.g. which table or criteria).</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <textarea class="textarea" placeholder="e.g. Find all records where status is active"></textarea>
+      <div class="card card--soft" style="padding:10px 12px"><div class="t-2xs t-caps mb-1">Response</div><div class="t-sm t-muted">Search the <span class="mono">Payment</span> table with <span class="mono">status = "captured"</span>, sorted by <span class="mono">updated_at desc</span>. Use the search box with “captured”.</div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button><button class="btn btn--primary">Submit</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/database</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/database/*</code>: <code>DatabaseHeader</code>, <code>TablesSidebar</code>, <code>SchemaViewModal</code>, <code>QueryManager</code>, <code>InsertStubModal</code>, <code>QueryUsingAIPanel</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: Project + Version selects (published versions 🔒-prefixed “{version} — {note}”), status pill “Newer schema available: consider migrating” / “Latest Version”; change project resets version; isReadOnly = selected version not newest (older = browse-only, Insert/Edit/Delete/Restore hidden).</li>
+    <li>Tables sidebar: “Tables” + “{n} table(s) · {rows} rows”, filter “Filter tables…”, class rows with dot + tabular count, hover “View JSON Schema” → SchemaViewModal (“Class schema definition for validation and insert form.”); density toggle; counts refresh after mutations.</li>
+    <li>Records grid: sortable OID / Created / Updated (default desc) / Seq / Last action + Data JSON preview (80 chars) + hover actions View / Edit / Delete (“data stored in event log for restore”) / Restore on deleted rows; deleted rows dimmed with Deleted pill; “Show deleted” switch; “View all records”; Enter-to-search + Search; pager Previous / Page p of n / Next (20 per page).</li>
+    <li>Record dialog: Current (sequence/created/updated + JSON) | Historical (events list #seq action, newest pre-selected; metadata Sequence/Action/Created at/Created by; event JSON).</li>
+    <li>Insert/Edit modal: Form | JSON tabs; schema-driven widgets — UUID input + v1/v4/v7 + Generate, timestamp + Generate, money 2-dp, enum Select with “(none)”, pattern input with live regex error, boolean checkbox, array/object JSON textarea parsed on blur, requirement pills Required / Optional / Nullable, hints from summary/description; JSON “Apply to form”; validation list “{path}: {message}”; Insert / Save with busy labels.</li>
+    <li>Query using AI dialog (viewMode 'ai' exists in code but unmounted — surfaced here as a toolbar button).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Rail nav entry (today the route has no nav link — direct URL only); AI query button wired into the toolbar; state demo cards.</li></ul>
+  <h4>States</h4>
+  <ul><li>No project (“Select a project and version… Published versions have frozen schemas”), no table, no records, “Loading tables…”, dropdown empties “No projects available” / “No versions available”.</li></ul>
+</template>
+</body>
+</html>

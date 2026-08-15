@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Home · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+</head>
+<body data-shell="app" data-nav="home" data-page="home/overview" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><span>Acme Corp</span><i data-lucide="chevron-right"></i><span>Home</span></div>
+          <h1 class="page-title">Good afternoon, Ada</h1>
+          <p class="page-desc">Here’s what’s moving across your workspace. 3 projects, 14 versions, 2 published this week.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn"><i data-lucide="upload"></i>Import a spec<span class="kbd">I</span></button>
+          <button class="btn btn--primary"><i data-lucide="plus"></i>New project<span class="kbd">N</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+
+    <!-- Getting started (first-run checklist) -->
+    <section class="card card--honey" style="padding:18px 22px">
+      <div class="row-between wrap gap-4">
+        <div class="row gap-4">
+          <span class="icon-tile icon-tile--lg icon-tile--honey icon-tile--hex"><i data-lucide="rocket"></i></span>
+          <div>
+            <div class="row gap-2"><h2 class="t-h3">Get to your first published spec</h2><span class="badge badge--honey">3 / 5 done</span></div>
+            <div class="t-sm t-muted">Reach a published, browsable spec in a few steps. Dismiss anytime — you can reopen it from Help.</div>
+          </div>
+        </div>
+        <div class="row gap-2">
+          <div class="hex-grid" title="3 of 5 steps"><span class="is-on"></span><span class="is-on"></span><span class="is-on"></span><span></span><span></span></div>
+          <button class="btn btn--ghost btn--icon" data-tip="Dismiss checklist" aria-label="Dismiss getting-started checklist"><i data-lucide="x"></i></button>
+        </div>
+      </div>
+      <ol class="grid grid-5 mt-4" style="gap:8px">
+        <li class="card card--flat" style="padding:12px 14px;opacity:.75"><div class="row gap-2 t-sm t-600"><i data-lucide="circle-check" style="color:var(--ok)"></i><span class="t-strike">Create your first project</span></div><div class="t-xs t-subtle mt-1">Open the Studio to start a project.</div></li>
+        <li class="card card--flat" style="padding:12px 14px;opacity:.75"><div class="row gap-2 t-sm t-600"><i data-lucide="circle-check" style="color:var(--ok)"></i><span class="t-strike">Add a class from a template</span></div><div class="t-xs t-subtle mt-1">Browse built-in templates.</div></li>
+        <li class="card card--flat" style="padding:12px 14px;opacity:.75"><div class="row gap-2 t-sm t-600"><i data-lucide="circle-check" style="color:var(--ok)"></i><span class="t-strike">Cut a version</span></div><div class="t-xs t-subtle mt-1">Snapshot your schema as a version.</div></li>
+        <li class="card" style="padding:12px 14px;box-shadow:0 0 0 2px var(--honey), var(--shadow-sm)"><div class="row gap-2 t-sm t-600"><i data-lucide="circle" style="color:var(--honey-fg)"></i>Publish it<span class="badge badge--honey" style="margin-left:auto">Next</span></div><div class="t-xs t-subtle mt-1">Publish the version so it becomes browsable.</div><a class="btn btn--sm btn--honey mt-2" href="../build/versions.html">Go to versions <i data-lucide="arrow-right"></i></a></li>
+        <li class="card card--flat" style="padding:12px 14px"><div class="row gap-2 t-sm t-600"><i data-lucide="circle" class="t-faint"></i>View it in Browse</div><div class="t-xs t-subtle mt-1">See your published spec render publicly. <i data-lucide="arrow-up-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i></div></li>
+      </ol>
+    </section>
+
+    <!-- Stats strip -->
+    <section class="stat-grid stat-grid--6">
+      <div class="stat"><div class="stat__label"><i data-lucide="building-2"></i>Tenants</div><div class="stat__value">3</div><div class="stat__foot"><span>2 admin</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="folder-kanban"></i>Projects</div><div class="stat__value">3</div><div class="stat__foot"><span>3 created by you</span><span class="stat__delta stat__delta--up"><i data-lucide="trending-up"></i>+1</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="git-branch"></i>Versions</div><div class="stat__value">14</div><div class="stat__foot"><span>9 created by you</span><span class="stat__delta stat__delta--up"><i data-lucide="trending-up"></i>+4</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="globe"></i>Published</div><div class="stat__value">5<small>of 14</small></div><div class="stat__foot"><span>9 drafts</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="box"></i>Classes</div><div class="stat__value">128</div><div class="stat__foot"><span>schema definitions</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="braces"></i>Properties</div><div class="stat__value">1,042</div><div class="stat__foot"><span>962 in classes</span></div></div>
+    </section>
+
+    <div class="grid grid-main-aside">
+      <div class="col gap-6">
+        <!-- Continue where you left off -->
+        <section>
+          <div class="section-title"><h2>Pick up where you left off</h2><a href="../build/projects.html" class="t-sm">All projects <i data-lucide="arrow-right" style="display:inline-block;width:12px;height:12px;vertical-align:-1px"></i></a></div>
+          <div class="grid grid-3">
+            <a class="card card--hover card--link card--pad" href="../build/versions.html">
+              <div class="row-between"><span class="fmt fmt--openapi">OpenAPI 3.1</span><span class="badge badge--dot" data-status="draft">Draft</span></div>
+              <div class="t-h4 mt-3">Payments API</div>
+              <div class="t-xs t-subtle mono">v2.4.0 · 18 paths · 42 schemas</div>
+              <div class="row-between mt-4"><div class="row gap-2"><span class="ring ring--sm" style="--p:88;--c:var(--ok)"><span>88</span></span><span class="t-xs t-muted">Quality</span></div><span class="t-xs t-subtle">Edited 2h ago</span></div>
+            </a>
+            <a class="card card--hover card--link card--pad" href="../build/versions.html">
+              <div class="row-between"><span class="fmt fmt--openapi">OpenAPI 3.0</span><span class="badge badge--dot" data-status="published">Published</span></div>
+              <div class="t-h4 mt-3">Orders Service</div>
+              <div class="t-xs t-subtle mono">v1.9.2 · 14 paths · 32 schemas</div>
+              <div class="row-between mt-4"><div class="row gap-2"><span class="ring ring--sm" style="--p:94;--c:var(--ok)"><span>94</span></span><span class="t-xs t-muted">Quality</span></div><span class="t-xs t-subtle">Published 3d ago</span></div>
+            </a>
+            <a class="card card--hover card--link card--pad" href="../build/versions.html">
+              <div class="row-between"><span class="fmt fmt--asyncapi">AsyncAPI</span><span class="badge badge--dot" data-status="review">In review</span></div>
+              <div class="t-h4 mt-3">Inventory Events</div>
+              <div class="t-xs t-subtle mono">v0.7.0 · 6 channels · 11 messages</div>
+              <div class="row-between mt-4"><div class="row gap-2"><span class="ring ring--sm" style="--p:63;--c:var(--warn)"><span>63</span></span><span class="t-xs t-muted">Quality</span></div><span class="t-xs t-subtle">Edited yesterday</span></div>
+            </a>
+          </div>
+        </section>
+
+        <!-- Recent activity -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="activity"></i>Recent activity<span class="t-xs t-subtle t-500">Your latest actions</span></div><div class="segmented segmented--sm" data-tabs><button class="is-active" data-action="tab">Mine</button><button data-action="tab">Workspace</button></div></div>
+          <div>
+            <div class="list-row"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="git-branch"></i></span><div class="grow min-w-0"><div class="lr-title">Created version <span class="mono">v2.4.0</span> in Payments API</div><div class="lr-sub">Acme Corp · 2 hours ago</div></div><span class="badge badge--outline">version</span></div>
+            <div class="list-row"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="box"></i></span><div class="grow min-w-0"><div class="lr-title">Created class <span class="mono">RefundRequest</span></div><div class="lr-sub">Payments API · 3 hours ago</div></div><span class="badge badge--outline">class</span></div>
+            <div class="list-row"><span class="icon-tile icon-tile--sm icon-tile--warn"><i data-lucide="braces"></i></span><div class="grow min-w-0"><div class="lr-title">Created property <span class="mono">RefundRequest.reason</span></div><div class="lr-sub">Payments API · 3 hours ago</div></div><span class="badge badge--outline">property</span></div>
+            <div class="list-row"><span class="icon-tile icon-tile--sm icon-tile--violet"><i data-lucide="folder-kanban"></i></span><div class="grow min-w-0"><div class="lr-title">Created project <span class="t-600">Inventory Events</span></div><div class="lr-sub">Acme Corp · yesterday</div></div><span class="badge badge--outline">project</span></div>
+            <div class="list-row"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="globe"></i></span><div class="grow min-w-0"><div class="lr-title">Published <span class="mono">v1.9.2</span> of Orders Service</div><div class="lr-sub">Globex Labs · 3 days ago</div></div><span class="badge badge--outline">version</span></div>
+          </div>
+          <div class="card__footer"><span>Showing 5 of 10</span><a href="#" class="t-sm">View all activity</a></div>
+        </section>
+      </div>
+
+      <aside class="col gap-6">
+        <!-- Quick actions -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="zap"></i>Quick actions</div></div>
+          <div class="p-2">
+            <a class="menu__item" href="../build/import-wizard.html"><i data-lucide="upload"></i>Import a spec<span class="kbd">I</span></a>
+            <a class="menu__item" href="../studio/editor.html"><i data-lucide="pen-tool"></i>Open Studio<i data-lucide="arrow-up-right" style="margin-left:auto"></i></a>
+            <a class="menu__item" href="../workspace/api-keys.html"><i data-lucide="key-round"></i>Create an API key</a>
+            <a class="menu__item" href="../workspace/members.html"><i data-lucide="user-plus"></i>Invite a teammate</a>
+            <a class="menu__item" href="../sources/mcp-servers.html"><i data-lucide="network"></i>Register an MCP server</a>
+          </div>
+        </section>
+
+        <!-- Health / attention -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="bell-ring"></i>Needs attention</div><span class="badge badge--warn">3</span></div>
+          <div>
+            <a class="list-row card--link" href="../ship/sunset-timeline.html"><span class="dot dot--warn"></span><div class="grow min-w-0"><div class="lr-title">Orders Service v1.4 sunsets in 12 days</div><div class="lr-sub">2 consumers still on it</div></div><i data-lucide="chevron-right" class="t-faint"></i></a>
+            <a class="list-row card--link" href="../govern/lint-posture.html"><span class="dot dot--danger"></span><div class="grow min-w-0"><div class="lr-title">4 blocking lint findings on Payments v2.4.0</div><div class="lr-sub">Publish gate will fail</div></div><i data-lucide="chevron-right" class="t-faint"></i></a>
+            <a class="list-row card--link" href="../workspace/api-keys.html"><span class="dot dot--warn"></span><div class="grow min-w-0"><div class="lr-title">API key <span class="mono">ci-deploy</span> expires Friday</div><div class="lr-sub">Rotate before it breaks CI</div></div><i data-lucide="chevron-right" class="t-faint"></i></a>
+          </div>
+        </section>
+
+        <!-- Workspace pulse -->
+        <section class="card card--pad">
+          <div class="row-between"><div class="t-h4">Publishing pulse</div><span class="t-xs t-subtle">last 12 weeks</span></div>
+          <div class="bars mt-3"><span style="height:20%"></span><span style="height:35%"></span><span style="height:25%"></span><span style="height:55%"></span><span style="height:40%"></span><span style="height:70%"></span><span style="height:45%"></span><span style="height:80%"></span><span style="height:60%"></span><span style="height:90%"></span><span style="height:75%"></span><span style="height:100%"></span></div>
+          <div class="row-between t-xs t-subtle mt-2"><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span></div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard → “Home”</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/page.tsx</code> (stat cards + Recent Activity), <code>FirstRunChecklist.tsx</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Six stats: Tenants / Projects / Versions / Published / Classes / Properties with the same subtitles (<code>getDashboardStats</code>).</li>
+    <li>Recent activity: 10 rows, type icon per project/version/class/property, tenant badge, relative time; “Mine / Workspace” segmented is new but optional.</li>
+    <li>First-run checklist: same 5 steps &amp; completion derivation; dismiss persists <code>ade.dashboard.firstRunChecklist.dismissed</code>; hex progress replaces the “n/m done” badge.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul>
+    <li>“Pick up where you left off” cards derived from recent activity (project · latest version · lifecycle · quality score from stored lint report).</li>
+    <li>Quick actions (routes that already exist) and a “Needs attention” list fed by sunset timeline, lint gate failures and key expiry.</li>
+    <li>Header greeting uses the same time-of-day logic as the launcher.</li>
+  </ul>
+  <h4>States</h4>
+  <ul><li>Loading: skeleton stats + 5 skeleton rows. Empty activity: <code>.empty</code> “No recent activity — start a project to see it here.”</li></ul>
+</template>
+</body>
+</html>

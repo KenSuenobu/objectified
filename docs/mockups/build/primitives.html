@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Primitives &amp; types · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .ns-row [data-lucide] { width: 15px; height: 15px; }
+  .cat-pill { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: var(--r-full); background: var(--accent-soft); color: var(--accent-fg); font-size: var(--fs-2xs); font-weight: 600; font-family: var(--font-mono); }
+  .micro { display: inline-flex; align-items: center; height: 15px; padding: 0 4px; border-radius: 3px; background: var(--bg-inset); color: var(--fg-subtle); font-size: 9.5px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; }
+  .micro--warn { background: var(--warn-soft); color: var(--warn-fg); }
+  .refline { display: flex; gap: 8px; align-items: center; font-family: var(--font-mono); font-size: var(--fs-xs); padding: 4px 0; }
+  .step-pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: var(--r-full); font-size: var(--fs-xs); font-weight: 600; background: var(--bg-inset); color: var(--fg-muted); }
+  .step-pill.is-active { background: var(--fg); color: var(--bg-surface); }
+  .step-pill.is-done { background: var(--ok-soft); color: var(--ok-fg); }
+  .desc-clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+</head>
+<body data-shell="app" data-nav="primitives" data-page="build/primitives" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Build</span><i data-lucide="chevron-right"></i><span>Primitives &amp; types</span></div>
+          <h1 class="page-title">Primitives &amp; types</h1>
+          <p class="page-desc">JSON Schema 2020-12 type registry · core system &amp; tenant scopes · relative <span class="mono">$ref</span> resolution</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-action="open" data-target="import-dialog"><i data-lucide="upload"></i>Import from schema</button>
+          <button class="btn btn--primary" data-action="open" data-target="editor-dialog"><i data-lucide="plus"></i>Create primitive</button>
+        </div>
+      </div>
+      <div class="tabs" data-tabs="prim-views" role="tablist" aria-label="Primitives views">
+        <button class="tab is-active" data-action="tab" data-target="registry" role="tab"><i data-lucide="library"></i>Registry</button>
+        <button class="tab" data-action="tab" data-target="namespaces" role="tab"><i data-lucide="folder-tree"></i>Namespaces &amp; scopes</button>
+        <button class="tab" data-action="tab" data-target="resolver" role="tab"><i data-lucide="git-fork"></i>Resolver</button>
+        <button class="tab" data-action="tab" data-target="settings" role="tab"><i data-lucide="settings-2"></i>Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body" id="prim-views">
+    <!-- ================= REGISTRY ================= -->
+    <div data-tab-panel="registry" class="col gap-6">
+      <!-- KPI strip -->
+      <section class="stat-grid stat-grid--5">
+        <div class="stat"><div class="stat__label"><i data-lucide="shield"></i>Core system types</div><div class="stat__value" style="color:var(--accent-fg)">24</div><div class="stat__foot"><span class="mono">std/* · all tenants</span></div></div>
+        <div class="stat"><div class="stat__label"><i data-lucide="building-2"></i>Tenant types</div><div class="stat__value">17</div><div class="stat__foot"><span>3 namespace(s)</span></div></div>
+        <div class="stat"><div class="stat__label"><i data-lucide="download"></i>Imported schemas</div><div class="stat__value">6</div><div class="stat__foot"><span>JSON Schema + bundles</span></div></div>
+        <div class="stat"><div class="stat__label"><i data-lucide="link-2"></i>Properties bound</div><div class="stat__value">88</div><div class="stat__foot"><span>across 31 class(es)</span></div></div>
+        <div class="stat" style="background:var(--warn-soft)"><div class="stat__label"><i data-lucide="triangle-alert"></i>Unresolved $ref</div><div class="stat__value" style="color:var(--warn-fg)">3</div><div class="stat__foot"><button class="btn btn--link btn--sm" data-action="tab" data-target="resolver">open resolver →</button></div></div>
+      </section>
+
+      <div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)">
+        <!-- Type collections -->
+        <section class="card">
+          <div class="card__header">
+            <div><div class="card__title"><i data-lucide="folder-tree"></i>Type collections</div><div class="t-xs t-subtle mt-1">Grouped by parent namespace · click a row to filter types below, a column to sort</div></div>
+            <div class="row gap-2"><button class="chip is-active" aria-pressed="true" data-action="chip" data-tip="Collapse namespaces that share a parent path into one row"><i data-lucide="group"></i>Group</button>
+              <div class="segmented segmented--sm"><button class="is-active">All</button><button>System · core</button><button>Tenant</button><button>Imported</button></div></div>
+          </div>
+          <table class="table table--dense">
+            <thead><tr><th class="sortable is-sorted">Namespace <span class="sort"><i data-lucide="arrow-up"></i></span></th><th class="sortable">Scope <span class="sort"><i data-lucide="arrow-up-down"></i></span></th><th class="sortable t-right">Types <span class="sort"><i data-lucide="arrow-up-down"></i></span></th><th>Draft</th><th class="sortable t-right">Status <span class="sort"><i data-lucide="arrow-up-down"></i></span></th></tr></thead>
+            <tbody>
+              <tr class="is-clickable ns-row"><td><div class="row gap-2"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Expand std" style="width:22px;height:22px"><i data-lucide="chevron-right"></i></button><i data-lucide="folder" class="t-subtle"></i><span class="mono">std/</span><span class="micro">group</span></div><div class="cell-sub" style="padding-left:58px">2 namespace(s) · 24 type(s)</div></td><td><span class="badge" style="background:var(--ok-soft);color:var(--ok-fg)">System · core</span></td><td class="t-right mono">24</td><td class="mono t-xs">2020-12</td><td class="t-right"><span class="badge badge--ok">Resolved</span></td></tr>
+              <tr class="is-clickable ns-row"><td><div class="row gap-2" style="padding-left:26px"><i data-lucide="shapes" class="t-subtle"></i><span class="mono">std/v0/primitives</span><span class="micro">root</span></div><div class="cell-sub" style="padding-left:58px">Core scalar building blocks</div></td><td><span class="badge" style="background:var(--ok-soft);color:var(--ok-fg)">System · core</span></td><td class="t-right mono">9</td><td class="mono t-xs">2020-12</td><td class="t-right"><span class="badge badge--ok">Resolved</span></td></tr>
+              <tr class="is-clickable ns-row"><td><div class="row gap-2" style="padding-left:26px"><i data-lucide="library" class="t-subtle"></i><span class="mono">std/v0/types</span></div><div class="cell-sub" style="padding-left:58px">Seeded core types (date-time, currency-code…)</div></td><td><span class="badge" style="background:var(--ok-soft);color:var(--ok-fg)">System · core</span></td><td class="t-right mono">15</td><td class="mono t-xs">2020-12</td><td class="t-right"><span class="badge badge--ok">Resolved</span></td></tr>
+              <tr class="is-clickable is-selected ns-row"><td><div class="row gap-2"><i data-lucide="building-2" class="t-subtle"></i><span class="mono">tenant/acme/v1/types</span></div><div class="cell-sub" style="padding-left:24px">Acme business types</div></td><td><span class="badge badge--violet">Tenant</span></td><td class="t-right mono">12</td><td class="mono t-xs">2020-12</td><td class="t-right"><span class="badge badge--warn">2 unresolved</span></td></tr>
+              <tr class="is-clickable ns-row"><td><div class="row gap-2"><i data-lucide="download" class="t-subtle"></i><span class="mono">vendor/stripe/v1</span><span class="micro">imported</span></div><div class="cell-sub" style="padding-left:24px">Imported vendor schemas</div></td><td><span class="badge badge--violet">Tenant</span></td><td class="t-right mono">5</td><td class="mono t-xs">2020-12</td><td class="t-right"><span class="badge badge--warn">1 unresolved</span></td></tr>
+              <tr class="is-clickable ns-row"><td><div class="row gap-2"><i data-lucide="download" style="color:var(--warn)"></i><span class="mono">tenant/acme/scratch</span><span class="micro micro--warn">unregistered</span></div><div class="cell-sub" style="padding-left:24px">In use by types but not registered — add it from “New namespace”.</div></td><td><span class="badge badge--outline">—</span></td><td class="t-right mono">2</td><td class="mono t-xs">—</td><td class="t-right"><span class="badge badge--outline">—</span></td></tr>
+              <tr class="is-clickable ns-row"><td><div class="row gap-2"><i data-lucide="folder-minus" class="t-subtle"></i><span>Unassigned namespaces</span></div><div class="cell-sub" style="padding-left:24px">Types saved without a namespace — they belong to no collection.</div></td><td><span class="badge badge--outline">—</span></td><td class="t-right mono">1</td><td class="mono t-xs">—</td><td class="t-right"><span class="badge badge--outline">—</span></td></tr>
+            </tbody>
+          </table>
+          <div class="table-foot"><span>6 of 6 collection(s) · 1 group(s) · 1 unregistered · 1 unassigned</span><span class="t-subtle">“Loading namespaces…” · “No namespace collections match this filter.”</span></div>
+        </section>
+
+        <!-- Right rail -->
+        <aside class="col gap-6">
+          <section class="card card--pad">
+            <div class="row gap-2 t-sm t-600"><i data-lucide="waypoints" class="t-subtle"></i>Relative <span class="mono">$ref</span> resolution</div>
+            <div class="t-xs t-muted mt-1">References resolve against the type’s import-source base URL in the API server.</div>
+            <pre class="code code--dark mt-2" style="font-size:11px"><span class="c-c"># std/v0/types/date</span>
+"$ref": "../primitives/string"
+<span class="c-c"># base api.apiome.dev/types/std/v0/types/</span>
+<span class="c-c"># resolves → std/v0/primitives/string</span></pre>
+            <button class="btn btn--link btn--sm mt-2" data-action="tab" data-target="resolver">Open reference resolver →</button>
+          </section>
+          <section class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="activity"></i>Recent activity</div><span class="t-xs t-subtle">last 8 imports</span></div>
+            <div>
+              <div class="list-row" style="padding:10px 16px"><span class="dot" style="background:#0E8A5F"></span><div class="grow min-w-0"><div class="lr-title">Imported <span class="mono">acme-types-bundle.json</span> (12 type(s))</div><div class="lr-sub">Type definitions · tenant/acme/v1/types · 2 hr ago</div></div></div>
+              <div class="list-row" style="padding:10px 16px"><span class="dot dot--violet"></span><div class="grow min-w-0"><div class="lr-title">Imported <span class="mono">stripe-openapi.yaml</span> (5 type(s))</div><div class="lr-sub">OpenAPI · vendor/stripe/v1 · 1 d ago</div></div></div>
+              <div class="list-row" style="padding:10px 16px"><span class="dot dot--info"></span><div class="grow min-w-0"><div class="lr-title">Imported <span class="mono">schema</span> (1 type(s))</div><div class="lr-sub">JSON Schema · tenant/acme/v1/types · 3 d ago</div></div></div>
+            </div>
+            <div class="card__footer t-xs"><span>States: “Loading activity…” · “No import activity yet.”</span></div>
+          </section>
+        </aside>
+      </div>
+
+      <!-- Filters + types table -->
+      <section class="table-wrap">
+        <div class="table-toolbar">
+          <div class="input-wrap" style="width:260px"><i data-lucide="search"></i><input class="input" placeholder="Search primitives..." aria-label="Search primitives" /></div>
+          <span class="chip is-active" data-action="chip">Namespace: tenant/acme/v1/types <i data-lucide="x" class="x"></i></span>
+          <select class="select select--sm" style="width:150px" aria-label="Category"><option>All Categories</option><option>string</option><option>number</option><option>integer</option><option>boolean</option><option>array</option><option>object</option></select>
+          <label class="check t-sm"><input type="checkbox" checked />Show system</label>
+          <span class="spacer"></span>
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Refresh" aria-label="Refresh"><i data-lucide="refresh-cw"></i></button>
+        </div>
+        <table class="table">
+          <thead><tr>
+            <th class="sortable is-sorted" aria-sort="ascending">Name <span class="sort"><i data-lucide="arrow-up"></i></span></th>
+            <th class="sortable">Namespace <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th class="sortable">Category <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th class="sortable">Description <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th class="sortable t-right">Usage <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th class="sortable">Type <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr></thead>
+          <tbody>
+            <tr class="is-clickable">
+              <td><div class="row gap-2"><i data-lucide="file-code" class="t-subtle"></i><a class="cell-primary" href="primitive-detail.html">currency-code</a></div></td>
+              <td class="mono t-xs t-muted">std/v0/types</td>
+              <td><span class="cat-pill">string</span></td>
+              <td class="t-muted" style="max-width:300px"><div class="desc-clamp" title="ISO 4217 three-letter currency code, upper case. Seeded core type shared by every tenant.">ISO 4217 three-letter currency code, upper case. Seeded core type shared by every tenant.</div></td>
+              <td class="t-right mono">22</td>
+              <td><span class="badge badge--info"><i data-lucide="shield"></i>System</span></td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" disabled data-tip="System primitives cannot be edited" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" disabled data-tip="System primitives cannot be deleted" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td>
+            </tr>
+            <tr class="is-clickable">
+              <td><div class="row gap-2"><i data-lucide="file-code" class="t-subtle"></i><a class="cell-primary" href="primitive-detail.html">date-time</a></div></td>
+              <td class="mono t-xs t-muted">std/v0/types</td>
+              <td><span class="cat-pill">string</span></td>
+              <td class="t-muted" style="max-width:300px"><div class="desc-clamp">RFC 3339 date-time instant with offset.</div></td>
+              <td class="t-right mono">41</td>
+              <td><span class="badge badge--info"><i data-lucide="shield"></i>System</span></td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" disabled data-tip="System primitives cannot be edited" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" disabled data-tip="System primitives cannot be deleted" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td>
+            </tr>
+            <tr class="is-clickable">
+              <td><div class="row gap-2"><i data-lucide="file-code" class="t-subtle"></i><a class="cell-primary" href="primitive-detail.html">money</a></div></td>
+              <td class="mono t-xs t-muted">tenant/acme/v1/types</td>
+              <td><span class="cat-pill">object</span></td>
+              <td class="t-muted" style="max-width:300px"><div class="desc-clamp" title="Monetary amount with currency. amount is a decimal string to avoid float drift; currency $refs the core currency-code.">Monetary amount with currency. amount is a decimal string to avoid float drift; currency $refs the core currency-code.</div></td>
+              <td class="t-right mono">14</td>
+              <td><span class="badge badge--ok">Tenant</span></td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="editor-dialog" data-tip="Edit primitive" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-confirm" data-tip="Delete primitive" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td>
+            </tr>
+            <tr class="is-clickable">
+              <td><div class="row gap-2"><i data-lucide="file-code" class="t-subtle"></i><a class="cell-primary" href="primitive-detail.html">email-address</a></div></td>
+              <td class="mono t-xs t-muted">tenant/acme/v1/types</td>
+              <td><span class="cat-pill">string</span></td>
+              <td class="t-muted" style="max-width:300px"><div class="desc-clamp">RFC 5322 mailbox, lower-cased on intake.</div></td>
+              <td class="t-right mono">9</td>
+              <td><span class="badge badge--ok">Tenant</span></td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="editor-dialog" data-tip="Edit primitive" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-confirm" data-tip="Delete primitive" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td>
+            </tr>
+            <tr class="is-clickable">
+              <td><div class="row gap-2"><i data-lucide="file-code" class="t-subtle"></i><a class="cell-primary" href="primitive-detail.html">refund-reason</a></div></td>
+              <td class="t-faint">—</td>
+              <td><span class="cat-pill">string</span></td>
+              <td class="t-muted" style="max-width:300px"><div class="desc-clamp">Enum of refund reasons. Saved without a namespace.</div></td>
+              <td class="t-right mono">2</td>
+              <td><span class="badge badge--ok">Tenant</span></td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="editor-dialog" data-tip="Edit primitive" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-confirm" data-tip="Delete primitive" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td>
+            </tr>
+            <tr class="is-clickable">
+              <td><div class="row gap-2"><i data-lucide="file-code" class="t-subtle"></i><a class="cell-primary" href="primitive-detail.html">stripe-charge-id</a></div></td>
+              <td class="mono t-xs t-muted">vendor/stripe/v1</td>
+              <td><span class="cat-pill">string</span></td>
+              <td class="t-muted" style="max-width:300px"><div class="desc-clamp">Imported vendor id pattern ^ch_[A-Za-z0-9]{24}$.</div></td>
+              <td class="t-right mono">0</td>
+              <td><span class="badge badge--ok">Tenant</span></td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="editor-dialog" data-tip="Edit primitive" aria-label="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="delete-confirm" data-tip="Delete primitive" aria-label="Delete"><i data-lucide="trash-2"></i></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-foot"><span>6 of 41 types · filtered by namespace</span><span class="t-subtle">Empty: “No Primitives Found — Try adjusting your filters or create a new primitive.” · “Loading primitives…”</span></div>
+      </section>
+    </div>
+
+    <!-- ================= NAMESPACES & SCOPES ================= -->
+    <div data-tab-panel="namespaces" hidden class="col gap-6">
+      <div class="grid grid-2">
+        <section class="card card--pad"><div class="row gap-2 t-sm t-600"><i data-lucide="shield" style="color:var(--ok)"></i>System root (core)</div><div class="t-sm t-muted mt-1"><span class="mono">std/*</span> — core system types curated by the platform; visible to all tenants; immutable except by platform governance.</div><div class="mono t-xs t-subtle mt-2">api.apiome.dev/types/std/</div></section>
+        <section class="card card--pad"><div class="row gap-2 t-sm t-600"><i data-lucide="building-2" style="color:var(--violet)"></i>Tenant namespaces</div><div class="t-sm t-muted mt-1"><span class="mono">tenant/&lt;slug&gt;/*</span> — a tenant’s private types; can reference core types but are isolated from other tenants.</div><div class="mono t-xs t-subtle mt-2">api.apiome.dev/types/tenant/&lt;slug&gt;/</div></section>
+      </div>
+
+      <section class="card">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="folder-tree"></i>Namespaces</div><div class="t-xs t-subtle mt-1">Scopes &amp; base URIs across the type registry</div></div><button class="btn btn--sm" data-action="open" data-target="ns-dialog"><i data-lucide="plus"></i>New namespace</button></div>
+        <div class="scroll-x">
+        <table class="table table--dense">
+          <thead><tr><th>Namespace</th><th>Scope</th><th>Base URI</th><th>Version root</th><th class="t-right">Types</th><th>Visibility</th><th>Default</th><th><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody>
+            <tr><td><span class="mono">std/v0/primitives</span></td><td><span class="badge" style="background:var(--ok-soft);color:var(--ok-fg)">System · core</span></td><td class="mono t-xs t-muted">…/types/std/v0/primitives/</td><td class="mono">v0</td><td class="t-right mono">9</td><td>All tenants</td><td></td><td class="t-right"><span class="row gap-1 t-xs t-subtle" style="justify-content:flex-end"><i data-lucide="lock" style="width:12px;height:12px"></i>Read-only</span></td></tr>
+            <tr><td><span class="mono">std/v0/types</span></td><td><span class="badge" style="background:var(--ok-soft);color:var(--ok-fg)">System · core</span></td><td class="mono t-xs t-muted">…/types/std/v0/types/</td><td class="mono">v0</td><td class="t-right mono">15</td><td>All tenants</td><td></td><td class="t-right"><span class="row gap-1 t-xs t-subtle" style="justify-content:flex-end"><i data-lucide="lock" style="width:12px;height:12px"></i>Read-only</span></td></tr>
+            <tr><td><span class="mono">tenant/acme/v1/types</span> <span class="micro micro--warn">2 unresolved</span></td><td><span class="badge badge--violet">Tenant</span></td><td class="mono t-xs t-muted">…/types/tenant/acme/v1/types/</td><td class="mono">v1</td><td class="t-right mono">12</td><td>Tenant only</td><td><span class="row gap-1 t-xs" style="color:var(--honey-fg)"><i data-lucide="star" style="width:12px;height:12px"></i>default</span></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm" data-action="open" data-target="ns-dialog">Edit</button><button class="btn btn--ghost btn--sm" data-action="open" data-target="ns-remove" data-tip="Remove this namespace registration; its types are kept">Remove</button></div></td></tr>
+            <tr><td><span class="mono">vendor/stripe/v1</span></td><td><span class="badge badge--violet">Tenant</span></td><td class="mono t-xs t-muted">…/types/vendor/stripe/v1/</td><td class="mono">v1</td><td class="t-right mono">5</td><td>Tenant only</td><td></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm" data-action="open" data-target="ns-dialog">Edit</button><button class="btn btn--ghost btn--sm" data-action="open" data-target="ns-remove">Remove</button></div></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="table-foot"><span>4 namespaces</span><span class="t-subtle">Empty: “No Namespaces Yet — Create a tenant namespace to group your types under a scoped base URI.”</span></div>
+      </section>
+
+      <div class="grid grid-2">
+        <section class="card card--pad">
+          <div class="t-sm t-600">Scope precedence &amp; resolution order</div>
+          <div class="t-xs t-muted mt-1">How a property’s type lookup resolves, most specific first.</div>
+          <ol class="col gap-2 mt-3">
+            <li class="row-start gap-3"><span class="step-pill is-active">1</span><div><div class="t-sm t-600">Tenant namespace <span class="mono t-500">(tenant/&lt;slug&gt;/…)</span></div><div class="t-xs t-muted">Most specific — the tenant’s own private types win.</div></div></li>
+            <li class="row-start gap-3"><span class="step-pill">2</span><div><div class="t-sm t-600">Imported vendor namespaces</div><div class="t-xs t-muted">Vendor schemas imported for that tenant (vendor/…).</div></div></li>
+            <li class="row-start gap-3"><span class="step-pill">3</span><div><div class="t-sm t-600">System core <span class="mono t-500">(std/…)</span></div><div class="t-xs t-muted">Shared fallback available to every tenant.</div></div></li>
+          </ol>
+          <div class="banner banner--warn mt-3"><i data-lucide="info"></i><div class="t-xs">Core types may be referenced by tenant types; tenant types are never visible across tenants or from core.</div></div>
+        </section>
+        <section class="card card--pad">
+          <div class="t-sm t-600">Promote to core</div>
+          <div class="t-xs t-muted mt-1">Promote a vetted tenant type into <span class="mono">std/*</span> so all tenants can use it.</div>
+          <div class="row gap-2 mt-3 mono t-xs"><span class="tag">tenant/acme/v1/types/money</span><i data-lucide="arrow-right" style="width:12px;height:12px"></i><span class="tag" style="background:var(--ok-soft);color:var(--ok-fg)">std/v0/types/money</span></div>
+          <button class="btn btn--sm mt-3" disabled data-tip="Requires platform administrator approval">Request promotion</button>
+          <div class="row gap-1 t-xs t-subtle mt-2"><i data-lucide="lock" style="width:12px;height:12px"></i>requires platform admin approval</div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ================= RESOLVER ================= -->
+    <div data-tab-panel="resolver" hidden class="col gap-6">
+      <section class="card card--pad">
+        <div class="row wrap gap-3">
+          <div class="field" style="min-width:340px"><label>Resolution base</label><input class="input input--mono" value="https://api.apiome.dev/types/" readonly /><div class="hint">read-only · API server import-source root</div></div>
+          <div class="field" style="min-width:220px"><label>Namespace</label><select class="select"><option>All namespaces</option><option>std/v0/primitives</option><option>std/v0/types</option><option>tenant/acme/v1/types</option><option>vendor/stripe/v1</option></select></div>
+          <button class="btn btn--primary" style="align-self:flex-end"><i data-lucide="refresh-cw"></i>Re-resolve</button>
+          <div class="row gap-2" style="align-self:flex-end;margin-left:auto"><span class="badge badge--ok"><i data-lucide="circle-check"></i>Resolved 34</span><span class="badge badge--warn"><i data-lucide="triangle-alert"></i>Unresolved 3</span><span class="badge badge--danger"><i data-lucide="rotate-ccw"></i>Circular 1</span></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="waypoints"></i>Reference graph</div><div class="t-xs t-subtle mt-1">Each edge is one relative $ref. Cross-scope edges (tenant → core) are highlighted · click a resolved target to open its details.</div></div></div>
+        <div class="card__body mono t-xs col" style="gap:2px">
+          <div class="refline"><span style="color:var(--accent-fg)">tenant/acme/v1/types/money</span><i data-lucide="arrow-right" style="width:12px;height:12px"></i><a href="primitive-detail.html" title="View details for std/v0/types/currency-code">std/v0/types/currency-code</a><span class="t-subtle">(cross-scope: tenant → core)</span></div>
+          <div class="refline"><span style="color:var(--accent-fg)">tenant/acme/v1/types/invoice</span><i data-lucide="arrow-right" style="width:12px;height:12px"></i><a href="primitive-detail.html" title="View details for tenant/acme/v1/types/money">tenant/acme/v1/types/money</a></div>
+          <div class="refline"><span>std/v0/types/date</span><i data-lucide="arrow-right" style="width:12px;height:12px"></i><a href="primitive-detail.html">std/v0/primitives/string</a></div>
+          <div class="refline"><span style="color:var(--accent-fg)">tenant/acme/v1/types/order-line</span><i data-lucide="arrow-right" style="width:12px;height:12px"></i><span class="t-warn">vendor/stripe/v2/price (unresolved)</span></div>
+        </div>
+      </section>
+
+      <section class="table-wrap">
+        <div class="table-toolbar"><span class="t-caps" style="margin-right:6px">Reference resolution</span><div class="segmented segmented--sm"><button class="is-active">All</button><button>Resolved</button><button>Unresolved</button><button>Circular</button></div></div>
+        <table class="table table--dense">
+          <thead><tr><th>Source type</th><th>Relative $ref</th><th>Resolved target</th><th class="t-right">Status</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">money</td><td class="mono t-ok">../../../std/v0/types/currency-code</td><td><a href="primitive-detail.html" class="mono">std/v0/types/currency-code</a> <span class="micro">cross-scope</span></td><td class="t-right"><span class="badge badge--ok">Resolved</span></td></tr>
+            <tr><td class="mono">invoice</td><td class="mono t-ok">./money</td><td><a href="primitive-detail.html" class="mono">tenant/acme/v1/types/money</a></td><td class="t-right"><span class="badge badge--ok">Resolved</span></td></tr>
+            <tr><td class="mono">order-line</td><td class="mono t-warn">../../vendor/stripe/v2/price</td><td class="t-faint">—</td><td class="t-right"><span class="badge badge--warn">Unresolved</span></td></tr>
+            <tr><td class="mono">tree-node</td><td class="mono t-danger">./tree-node</td><td class="t-faint">—</td><td class="t-right"><span class="badge badge--danger">Circular</span></td></tr>
+          </tbody>
+        </table>
+        <div class="table-foot"><span>4 of 38 reference(s) shown</span><span class="t-subtle">“Resolving references…” · empty “No references to resolve — None of this tenant’s primitives carry a relative $ref yet.” · “No references match this filter.” · toasts “Re-resolved · 3 primitive(s) updated” / “Re-resolved · all statuses already current”</span></div>
+      </section>
+    </div>
+
+    <!-- ================= SETTINGS ================= -->
+    <div data-tab-panel="settings" hidden class="col gap-6" style="max-width:920px">
+      <div class="banner banner--neutral"><i data-lucide="info"></i><div>This tenant is using the registry defaults. Save to persist a tenant-specific configuration.</div></div>
+      <section class="card card--pad">
+        <div class="row-between"><div class="t-sm t-600">Registry storage</div><span class="badge badge--ok badge--dot">Connected</span></div>
+        <div class="t-xs t-muted mt-1">The registry is stored in the shared apiome-db (<span class="mono">apiome.primitives</span>) — there is no separate registry database. Storage table present: yes.</div>
+      </section>
+      <section class="card card--pad">
+        <div class="t-sm t-600 mb-2">JSON Schema dialect</div>
+        <div class="field" style="max-width:340px"><label>Default draft</label><select class="select"><option>2020-12</option><option>2019-09</option><option>draft-07 (import compatibility)</option></select></div>
+        <div class="switch-row"><div><div class="sw-title">Strict validation</div><div class="sw-desc">Reject unknown formats.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+        <div class="switch-row"><div><div class="sw-title">Allow annotation keywords</div><div class="sw-desc">Permit title, description, examples, etc.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+        <div class="switch-row"><div><div class="sw-title">Coerce imported drafts to default</div><div class="sw-desc">Upgrade older drafts to the default dialect on import.</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div>
+      </section>
+      <section class="card card--pad">
+        <div class="t-sm t-600 mb-2">Reference resolution</div>
+        <div class="grid grid-2">
+          <div class="field"><label>Resolution base URL</label><input class="input input--mono" value="https://api.apiome.dev/types/" /><div class="hint">Relative $ref resolve against this base.</div></div>
+          <div class="field"><label>$ref style</label><select class="select"><option>Relative (recommended)</option><option>Absolute $id</option><option>Anchor (#/$defs)</option></select></div>
+        </div>
+        <div class="switch-row"><div><div class="sw-title">Allow remote $ref</div><div class="sw-desc">Fetch schemas from external hosts during resolution.</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div>
+        <div class="grid grid-2 mt-2">
+          <div class="field"><label>Remote host allowlist</label><textarea class="textarea input--mono" disabled style="min-height:64px">json-schema.org
+spec.openapis.org</textarea><div class="hint">One host per line. Only used when remote $ref is allowed.</div></div>
+          <div class="col gap-4"><div class="field"><label>Max resolution depth</label><input class="input" type="number" value="12" min="1" max="64" style="width:120px" /></div><div class="field"><label>Circular ref policy</label><select class="select" style="width:180px"><option>Error</option><option>Warn</option></select></div></div>
+        </div>
+      </section>
+      <section class="card card--pad">
+        <div class="t-sm t-600 mb-2">Import defaults</div>
+        <div class="grid grid-2">
+          <div class="field"><label>Default scope</label><select class="select"><option>Tenant</option><option>System · core</option></select></div>
+          <div class="field"><label>Default target namespace</label><select class="select"><option>(none)</option><option>tenant/acme/v1/types</option><option>vendor/stripe/v1</option></select></div>
+        </div>
+        <div class="switch-row"><div><div class="sw-title">Rewrite refs to relative on import</div><div class="sw-desc">Convert absolute $ref to base-relative paths.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+        <div class="field mt-2"><label>Accepted formats</label><div class="row wrap gap-4 mt-1"><label class="check"><input type="checkbox" checked />JSON Schema 2020-12</label><label class="check"><input type="checkbox" checked />Type-definition bundle (.zip/.json)</label><label class="check"><input type="checkbox" checked />OpenAPI 3.1 components</label><label class="check"><input type="checkbox" />Avro</label><label class="check"><input type="checkbox" />Protobuf (experimental)</label></div></div>
+        <div class="switch-row"><div><div class="sw-title">Dedupe identical types</div><div class="sw-desc">Reuse an existing type when an import matches it byte-for-byte.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+      </section>
+      <section class="card card--pad">
+        <div class="t-sm t-600 mb-2">Validation &amp; publishing</div>
+        <div class="switch-row"><div><div class="sw-title">Validate on save</div><div class="sw-desc">Run dialect &amp; $ref checks before persisting.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+        <div class="switch-row"><div><div class="sw-title">Block publish on validation errors</div><div class="sw-desc">Prevent publishing types with unresolved $ref or schema errors.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+        <div class="field mt-2" style="max-width:340px"><label>Who can publish core (std/*) types</label><select class="select"><option>Platform admin</option><option>Tenant admin</option><option>Maintainer</option></select><div class="hint">Core system types are shared with all tenants; publishing is governed.</div></div>
+      </section>
+      <div class="card card--pad row-between"><span class="t-xs t-subtle">Toasts: “Registry settings saved” · “No changes to save” · “Failed to save settings” · Loading “Loading settings…”</span><div class="row gap-2"><button class="btn">Reset to defaults</button><button class="btn btn--primary" disabled title="Disabled until dirty">Save settings</button></div></div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- Create / edit primitive -->
+<div class="overlay" id="editor-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-labelledby="ped-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="shapes"></i></span><div><div class="dialog__title" id="ped-title">Create primitive</div><div class="dialog__desc">Author a JSON Schema 2020-12 type via form or raw JSON.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-4" style="border-bottom:1px solid var(--border)" data-tabs="ped-tabs"><button class="tab is-active" data-action="tab" data-target="ped-form"><i data-lucide="settings-2"></i>Form</button><button class="tab" data-action="tab" data-target="ped-json"><i data-lucide="code"></i>Advanced JSON</button></div>
+      <div id="ped-tabs">
+        <div data-tab-panel="ped-form" class="col gap-5">
+          <div class="form-section" style="margin:0;padding:0;border:0">
+            <div class="form-section__title">Basic information</div>
+            <div class="grid grid-2 mt-3">
+              <div class="field"><label>Name <span class="req">*</span></label><input class="input" value="Email Address" placeholder="e.g., Email Address, UUID" /></div>
+              <div class="field"><label>Type <span class="req">*</span></label><select class="select"><option>string</option><option>number</option><option>integer</option><option>boolean</option><option>array</option><option>object</option></select><div class="hint">Disabled on edit.</div></div>
+              <div class="field span-2"><label>Description</label><textarea class="textarea" style="min-height:56px" placeholder="Describe the purpose of this primitive">RFC 5322 mailbox, lower-cased on intake.</textarea></div>
+              <div class="field"><label>Tags</label><input class="input" value="email, contact, validation" placeholder="email, contact, validation (comma-separated)" /></div>
+              <div class="field" style="justify-content:flex-end"><label class="check"><input type="checkbox" />Nullable (allows null value)</label></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section__title">String constraints</div>
+            <div class="grid grid-4 mt-3">
+              <div class="field"><label>Format</label><select class="select"><option>None</option><option selected>Email</option><option>URI</option><option>UUID</option><option>Date (YYYY-MM-DD)</option><option>Date-Time (ISO 8601)</option><option>Time (HH:MM:SS)</option><option>Duration (ISO 8601)</option><option>Hostname</option><option>IPv4 Address</option><option>IPv6 Address</option><option>Regular Expression</option><option>JSON Pointer</option><option>Password (masked)</option><option>Base64 Encoded</option><option>Binary Data</option></select></div>
+              <div class="field"><label>Pattern (Regex)</label><input class="input input--mono" placeholder="^[a-zA-Z0-9]+$" /></div>
+              <div class="field"><label>Min length</label><input class="input" type="number" value="6" /></div>
+              <div class="field"><label>Max length</label><input class="input" type="number" value="254" /></div>
+            </div>
+            <div class="t-2xs t-subtle mt-2">number/integer → Minimum + Exclusive, Maximum + Exclusive, Multiple Of (“e.g., 0.01 for currency”) · array → Item Type, Min/Max Items, Unique Items Only · object → Min/Max Properties, Allow Additional Properties (default on) · boolean → “Boolean type has no additional constraints. Use enum if you want to restrict to specific values.”</div>
+          </div>
+          <div class="form-section">
+            <div class="form-section__title">Validation</div>
+            <div class="field mt-3"><label>Allowed values (enum)</label><div class="row wrap gap-2"><span class="chip">work <i data-lucide="x" class="x"></i></span><span class="chip">personal <i data-lucide="x" class="x"></i></span><input class="input" placeholder="Add a value..." style="width:180px" /><button class="btn btn--sm btn--icon" aria-label="Add value"><i data-lucide="plus"></i></button></div></div>
+          </div>
+          <div class="form-section">
+            <div class="form-section__title">Default &amp; examples</div>
+            <div class="grid grid-2 mt-3">
+              <div class="field"><label>Default value</label><input class="input input--mono" placeholder='"example"' /><div class="hint">For strings use quotes, for objects/arrays use JSON</div></div>
+              <div class="field"><label>Examples</label><div class="row wrap gap-2"><span class="chip mono">ada@example.com <i data-lucide="x" class="x"></i></span><input class="input" placeholder="Add an example value..." style="width:180px" /></div></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section__title">Schema preview <span class="badge badge--ok" style="margin-left:6px">✓ Valid</span></div>
+            <pre class="code mt-3" style="font-size:11px">{
+  "type": "string",
+  "format": "email",
+  "minLength": 6,
+  "maxLength": 254,
+  "examples": ["ada@example.com"]
+}</pre>
+          </div>
+        </div>
+        <div data-tab-panel="ped-json" hidden class="col gap-3">
+          <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div class="t-xs">Changes in Advanced mode will override the form. Switch to Form tab to use the visual editor.</div></div>
+          <div class="row gap-2"><span class="badge badge--ok">Valid</span><span class="t-xs t-subtle">Live Ajv (2020-12 + formats) compile — “Invalid JSON: …”, “Invalid JSON Schema: …”, “Schema must be a valid JSON object”.</span></div>
+          <pre class="code code--dark code--lines" contenteditable="true" spellcheck="false" style="min-height:220px"><span>{</span><span>  <span class="c-n">"type"</span>: <span class="c-s">"string"</span>,</span><span>  <span class="c-n">"format"</span>: <span class="c-s">"email"</span>,</span><span>  <span class="c-n">"minLength"</span>: 6,</span><span>  <span class="c-n">"maxLength"</span>: 254</span><span>}</span></pre>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">No namespace field here — namespace is not editable in the editor. Errors: “Name is required” · “Please fix schema errors before saving”.</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create</button></div>
+  </div>
+</div>
+
+<!-- Import primitives (3-step) -->
+<div class="overlay" id="import-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-labelledby="pi-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="upload"></i></span><div><div class="dialog__title" id="pi-title">Import primitives</div><div class="dialog__desc">Review detected types, resolve refs and conflicts, then import.</div></div><div class="row gap-2" style="margin-left:auto"><span class="step-pill is-done"><i data-lucide="check" style="width:11px;height:11px"></i>1 · Source</span><span class="step-pill is-active">2 · Review</span><span class="step-pill">3 · Result</span></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <!-- Step 1 recap -->
+      <details class="card card--soft" style="padding:10px 14px">
+        <summary class="t-sm t-600" style="cursor:pointer">Step 1 · Source (done) — JSON Schema · file <span class="mono">acme-types.json</span></summary>
+        <div class="col gap-3 mt-3">
+          <div class="grid grid-3">
+            <button class="card card--flat card--selected" style="padding:10px 12px;text-align:left"><div class="t-sm t-600">JSON Schema</div><div class="t-xs t-muted">A draft 2020-12 document with $defs or definitions, or a standalone type.</div></button>
+            <button class="card card--flat" style="padding:10px 12px;text-align:left"><div class="t-sm t-600">Type-def bundle</div><div class="t-xs t-muted">An Apiome bundle of interlinked types under a types container.</div></button>
+            <button class="card card--flat" style="padding:10px 12px;text-align:left"><div class="t-sm t-600">OpenAPI</div><div class="t-xs t-muted">Reuse component schemas from an OpenAPI document’s $defs / definitions.</div></button>
+          </div>
+          <div class="segmented segmented--sm"><button class="is-active">File</button><button>URL</button><button>Paste</button></div>
+          <div class="row gap-3 t-sm"><i data-lucide="file-json-2" style="color:var(--ok)"></i><span class="t-600">acme-types.json</span><span class="t-subtle">18.2 KB</span><button class="btn btn--ghost btn--sm btn--icon" aria-label="Clear file"><i data-lucide="x"></i></button></div>
+          <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2 t-sm t-600"><i data-lucide="scan-search" class="t-subtle"></i>Detected 7 JSON Schema type(s) <span class="badge badge--warn">1 invalid</span> <span class="badge badge--warn">1 without a declared type</span></div>
+            <div class="t-xs mt-2 col gap-1"><div class="row gap-2"><i data-lucide="check" style="color:var(--ok);width:12px;height:12px"></i><span class="mono">money</span></div><div class="row gap-2"><i data-lucide="check" style="color:var(--ok);width:12px;height:12px"></i><span class="mono">invoice</span></div><div class="row gap-2"><i data-lucide="triangle-alert" style="color:var(--warn);width:12px;height:12px"></i><span class="mono">metadata</span><span class="t-muted">No type was specified in the JSON Schema: this might lead to erroneous behavior</span></div><div class="row gap-2"><i data-lucide="x" style="color:var(--danger);width:12px;height:12px"></i><span class="mono">bad-schema</span><span class="t-muted">“minLength” must be a non-negative integer</span></div></div>
+            <div class="t-2xs t-subtle mt-1">Cap 12 → “+3 more not listed here — all 7 are imported and reviewed.”</div></div>
+          <div class="card card--flat" style="padding:10px 12px"><div class="t-sm t-600">Resolved 5 $ref(s) <span class="badge badge--warn">2 rewritten to resolve</span></div><div class="mono t-2xs t-muted mt-1">./currency → std/v0/types/currency-code (in this import) rewritten to ../../../std/v0/types/currency-code</div>
+            <div class="banner banner--warn mt-2"><i data-lucide="triangle-alert"></i><div class="t-xs"><b>Unresolved $ref(s)</b> — 1 $ref could not be resolved. The referenced schemas were looked up in the registry and in this document — they either do not exist, or their names did not resolve.<div class="mono mt-1">../vendor/stripe/v2/price in order-line</div>Importing these schemas will leave these references dangling until the schema is found or imported. <b>Recommendation:</b> import these refs into the namespace <b>before</b> importing this schema.</div></div></div>
+          <div class="card card--flat" style="padding:10px 12px"><div class="t-sm t-600 mb-2">Options</div><div class="row wrap gap-2"><input class="input input--sm input--mono" value="tenant/acme/v1/types" placeholder="e.g. acme/v1/types" style="width:240px" /><button class="btn btn--sm" data-tip="Read the namespace from the $id declared in this document"><i data-lucide="wand-2"></i>Extract from target</button><span class="t-xs t-ok">Extracted tenant/acme/v1/types from the document’s $id.</span></div><div class="col gap-1 mt-2"><label class="check t-xs"><input type="checkbox" />Always extract namespace automatically</label><label class="check t-xs"><input type="checkbox" checked />Map recognized formats to core JSON System types ($ref rewrite if absent)</label><label class="check t-xs"><input type="checkbox" checked />Skip definitions identical to an existing type</label></div></div>
+        </div>
+      </details>
+
+      <!-- Step 2 Review -->
+      <div class="row wrap gap-2"><span class="badge badge--ok">3 new</span><span class="badge badge--danger">1 conflict</span><span class="badge badge--warn">2 warning(s)</span><span class="badge badge--outline">1 identical</span><span class="badge badge--danger">1 invalid</span><span class="t-xs t-subtle">· 7 total</span></div>
+      <div class="col gap-2">
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><label class="check"><input type="checkbox" checked /></label><i data-lucide="file-code" class="t-subtle"></i><span class="t-sm t-600 mono">money</span><span class="t-xs t-subtle">(object)</span><span class="badge badge--ok">New</span></div><pre class="code mt-2" style="font-size:10.5px;max-height:70px">{ "type": "object", "properties": { "amount": { "type": "string" }, "currency": { "$ref": "../../../std/v0/types/currency-code" } } }</pre></div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2 wrap"><label class="check"><input type="checkbox" checked /></label><i data-lucide="file-code" class="t-subtle"></i><span class="t-sm t-600 mono">email-address</span><span class="t-xs t-subtle">(string)</span><span class="badge badge--danger">Conflict</span></div><div class="row wrap gap-2 mt-2" style="padding-left:24px"><span class="t-xs">A different type already exists. Resolve:</span><select class="select select--sm" style="width:180px"><option>Keep existing</option><option>Overwrite</option><option selected>Import as new name</option></select><input class="input input--sm input--mono" value="email-address-v2" placeholder="new_name" style="width:170px" /></div></div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><label class="check"><input type="checkbox" disabled /></label><i data-lucide="file-code" class="t-subtle"></i><span class="t-sm t-600 mono">bad-schema</span><span class="badge badge--danger">Invalid</span><span class="t-xs t-muted">Not a valid draft 2020-12 schema — cannot be imported.</span></div><div class="t-2xs t-danger mt-1" style="padding-left:24px">minLength must be a non-negative integer · Scope violation example: “Scope violation — cannot be imported into this scope.”</div></div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><label class="check"><input type="checkbox" /></label><i data-lucide="file-code" class="t-subtle"></i><span class="t-sm t-600 mono">currency-code</span><span class="badge badge--outline">Identical</span></div></div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><label class="check"><input type="checkbox" checked /></label><i data-lucide="file-code" class="t-subtle"></i><span class="t-sm t-600 mono">order-line</span><span class="badge badge--ok">New</span><span class="t-xs t-warn">1 unresolved $ref(s)</span></div></div>
+      </div>
+      <div class="t-2xs t-subtle">Validation: “Select at least one type to import” · “‘bad-schema’ is not a valid draft 2020-12 schema and cannot be imported” · “Enter a new name for the renamed type ‘email-address’”.</div>
+
+      <!-- Step 3 Result -->
+      <details class="card card--soft" style="padding:10px 14px">
+        <summary class="t-sm t-600" style="cursor:pointer">Step 3 · Result (preview)</summary>
+        <div class="col gap-2 mt-3">
+          <div class="banner banner--ok"><i data-lucide="circle-check"></i><div>Imported 3, overwritten 0, renamed 1, identical 1, skipped 1, 1 error(s)</div></div>
+          <div class="row wrap gap-2 t-xs"><span class="badge badge--ok">Imported 3</span><span class="mono">money · invoice · order-line</span></div>
+          <div class="row wrap gap-2 t-xs"><span class="badge badge--info">Renamed 1</span><span class="mono">email-address → email-address-v2</span></div>
+          <div class="row wrap gap-2 t-xs"><span class="badge badge--outline">Identical (skipped) 1</span><span class="mono">currency-code</span></div>
+          <div class="row wrap gap-2 t-xs"><span class="badge badge--danger">Errors 1</span><span class="mono">bad-schema — minLength must be a non-negative integer</span></div>
+          <div class="t-xs t-subtle">Import record: <span class="mono">imp_7e01c4</span> · footer “Done” refreshes the registry; same summary is toasted.</div>
+        </div>
+      </details>
+    </div>
+    <div class="dialog__footer"><button class="btn btn--ghost left"><i data-lucide="arrow-left"></i>Back</button><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Import 4 selected</button></div>
+  </div>
+</div>
+
+<!-- New / edit namespace -->
+<div class="overlay" id="ns-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="ns-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="folder-plus"></i></span><div><div class="dialog__title" id="ns-title">New namespace</div><div class="dialog__desc">Create a tenant namespace. The path is reserved under your tenant; system-core (std/*) namespaces are platform-governed.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Detected namespaces</label><select class="select"><option>Select a detected namespace…</option><option>tenant/acme/scratch (2 type(s))</option></select><div class="hint">Namespaces already in use by types but not yet registered as collections.</div></div>
+      <div class="field"><label>Namespace path <span class="req">*</span></label><input class="input input--mono" placeholder="tenant/acme/v1/types" value="tenant/acme/scratch" /><div class="hint">Lowercase slash-separated segments, e.g. tenant/acme/v1/types. The path is immutable once created.</div></div>
+      <div class="grid grid-2">
+        <div class="field"><label>Base URI</label><input class="input input--mono" placeholder="https://api.apiome.dev/types/tenant/acme/scratch/" /><div class="hint">Leave blank to derive from the namespace path.</div></div>
+        <div class="field"><label>Version root</label><input class="input input--mono" placeholder="(none)" /><div class="hint">Leave blank to derive from the path’s vN segment.</div></div>
+      </div>
+      <div class="field"><label>Description</label><textarea class="textarea" style="min-height:56px" placeholder="What this namespace groups together…"></textarea></div>
+      <div class="switch-row" style="border:0"><div><div class="sw-title">Default namespace</div><div class="sw-desc">New tenant types land here unless another is chosen.</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div>
+      <div class="banner banner--danger"><i data-lucide="circle-x"></i><div class="t-xs">Fix the highlighted fields before saving. (“Namespace is required.” · “Use lowercase slash-separated segments of letters, digits, '_' or '-'…” · “The 'std/' root is reserved for platform system-core namespaces.” · “Base URI must be an absolute http(s) URL.” · “Version root must be a 'v' followed by digits (e.g. v0, v1).”)</div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create namespace</button></div>
+  </div>
+</div>
+
+<!-- Remove namespace confirm -->
+<div class="overlay" id="ns-remove" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="folder-minus"></i></span><div><div class="dialog__title">Remove namespace</div><div class="dialog__desc">Remove the namespace registration “tenant/acme/v1/types”? Its 12 type(s) are not deleted — they keep this namespace path and will show as unregistered until it is registered again. It is currently the default namespace for this tenant.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove</button></div>
+  </div>
+</div>
+
+<!-- Delete primitive confirm -->
+<div class="overlay" id="delete-confirm" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span><div><div class="dialog__title">Delete primitive</div><div class="dialog__desc">Are you sure you want to delete the primitive “money”? This primitive is currently used in 14 place(s).</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/primitives</p>
+  <h4>Replaces</h4>
+  <ul><li><code>PrimitivesManagementClient</code>, <code>PrimitivesNamespaceCollections</code>, <code>PrimitivesRecentActivity</code>, <code>PrimitiveEditorDialog</code>, <code>PrimitiveImportDialog</code>, <code>PrimitivesNamespacesView</code> + <code>NamespaceEditorDialog</code>, <code>PrimitivesResolverView</code>, <code>PrimitivesSettingsView</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header actions Import from Schema + Create Primitive; KPI strip (Core system types <span class="mono">std/* · all tenants</span> / Tenant types / Imported schemas / Properties bound / Unresolved $ref amber → resolver). Tabs Registry · Namespaces &amp; scopes · Resolver · Settings.</li>
+    <li>Type collections panel: Group toggle, scope segmented All/System·core/Tenant/Imported, row kinds (registered with icons + root/imported micro-badges, group with chevron, detected “unregistered”, unassigned), footer counts. Right rail $ref explainer with the mono example + Recent activity (source-kind dots, relative times).</li>
+    <li>Types table: sortable Name/Namespace/Category/Description (3-line clamp + tooltip)/Usage/Type(System w/ Shield · Tenant)/Actions; system rows disabled Edit/Delete with tooltips; search, namespace chip with ×, category select, Show System, Refresh.</li>
+    <li>Editor dialog: Form/Advanced JSON, Basic information, per-type constraint sections (full format list), enum chip input, default &amp; examples, live schema preview “✓ Valid”, Ajv validity badge, no namespace field.</li>
+    <li>Import dialog 3 steps: source-type cards, File/URL/Paste, detected-types + $ref resolution panels with the exact unresolved-refs copy, Options (target namespace + Extract from Target + 3 checkboxes), Review badges + row states New/Identical/Conflict/Invalid with Keep existing/Overwrite/Import as new name, Result buckets + import record id.</li>
+    <li>Namespaces tab: explainer cards, table (Base URI, Version root, Visibility, ★ default, Read-only lock on system rows, Edit/Remove), remove confirm with type counts + default warning, New/Edit namespace dialog with the validation strings; Scope precedence card and disabled Promote to core.</li>
+    <li>Resolver: read-only resolution base, namespace select, Re-resolve, summary chips, reference graph with cross-scope highlight, status-filtered table, empties and toasts.</li>
+    <li>Settings: storage health pill + copy, dialect / reference resolution / import defaults / validation &amp; publishing sections with every toggle and default, Reset + Save (disabled until dirty).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>KPI unresolved card and explainer link now actually switch to the Resolver tab (fixing the dead <code>?focus=resolver</code> deep-link); quick Drafts/Published-style chips are not added — table kept 1:1.</li></ul>
+  <h4>States</h4>
+  <ul><li>No tenant → centered warning “Please select a tenant to manage primitives”. Table loading/empty, collections loading/filter-empty, activity loading/empty, resolver loading/empty, settings loading — copy quoted inline. No RBAC/feature flags in this area; gating is tenant-selected + <code>is_system</code> read-only.</li></ul>
+</template>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin · Users · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local only */
+  .toast-stack { bottom: 64px; }
+  body:has(.overlay.is-open) .toast-stack { display: none; }
+  .flag-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-md); }
+  .flag-row + .flag-row { border-top: 1px solid var(--border); border-radius: 0; }
+  .flag-row:hover { background: var(--bg-subtle); }
+  .flag-row .fr-title { font-size: var(--fs-sm); font-weight: 500; }
+  .flag-row .fr-sub { font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .flag-list { border: 1px solid var(--border); border-radius: var(--r-md); max-height: 320px; overflow: auto; }
+  .flag-list__head { display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; font-size: var(--fs-2xs); font-weight: 600; text-transform: uppercase; letter-spacing: var(--track-caps); color: var(--fg-subtle); border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-surface); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: var(--fs-xs); color: var(--fg-muted); }
+  .legend .sym { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 4px; font-weight: 700; font-size: 11px; }
+</style>
+</head>
+<body data-shell="admin" data-nav="admin-users" data-page="admin/users" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="overview.html">Admin console</a><i data-lucide="chevron-right"></i><span>Directory</span><i data-lucide="chevron-right"></i><span>Users</span></div>
+          <h1 class="page-title">Users</h1>
+          <p class="page-desc">Approve signups, create accounts, assign licenses and per-user feature flags.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn--ghost" data-tip="Reload signups, users and stats"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <button class="btn btn--primary" data-action="open" data-target="new-user-dialog"><i data-lucide="plus"></i>New user<span class="kbd">N</span></button>
+        </div>
+      </div>
+      <div class="tabs" data-tabs="user-panels" role="tablist">
+        <button class="tab" role="tab" data-action="tab" data-target="signups"><i data-lucide="user-plus"></i>Pending signups<span class="count">3</span></button>
+        <button class="tab is-active" role="tab" data-action="tab" data-target="users"><i data-lucide="users"></i>Active users<span class="count">128</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Stats -->
+    <section class="stat-grid stat-grid--4" aria-label="User stats">
+      <div class="stat"><div class="stat__label"><i data-lucide="users"></i>Total users</div><div class="stat__value">128</div><div class="stat__foot"><span>12 new this week</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="user-check"></i>Verified users</div><div class="stat__value">117</div><div class="stat__foot"><span>121 enabled</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="user-plus"></i>Pending signups</div><div class="stat__value">3</div><div class="stat__foot"><span>1 today</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="calendar"></i>Recent signups</div><div class="stat__value">12</div><div class="stat__foot"><span>Last 7 days</span></div></div>
+    </section>
+
+    <div id="user-panels">
+      <!-- ===== Pending signups ===== -->
+      <section class="table-wrap" data-tab-panel="signups" hidden>
+        <div class="table-toolbar">
+          <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter signups…  ( / )" /></div>
+          <span class="chip is-active" data-action="chip">All <span class="t-faint">3</span></span>
+          <span class="chip" data-action="chip">Today <span class="t-faint">1</span></span>
+          <span class="chip" data-action="chip">OAuth <span class="t-faint">2</span></span>
+          <span class="spacer"></span>
+          <span class="t-xs t-subtle">Approving creates a verified, enabled account</span>
+        </div>
+        <table class="table">
+          <thead><tr>
+            <th class="cell-check"><label class="check"><input type="checkbox" aria-label="Select all signups"/></label></th>
+            <th>Name</th><th>Email</th><th>Source</th><th class="sortable is-sorted">Date <span class="sort"><i data-lucide="arrow-down"></i></span></th><th><span class="sr-only">Actions</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--b">TB</span><span class="cell-primary">Tim Berners-Lee</span></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>tim@example.org</span></td>
+              <td><span class="badge badge--outline">GitHub</span></td>
+              <td class="t-num t-muted">Aug 15, 2026, 08:02</td>
+              <td><div class="cell-actions"><button class="btn btn--sm" data-action="open" data-target="approve-dialog"><i data-lucide="check"></i>Create user</button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-signup" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--c">BL</span><span class="cell-primary">Barbara Liskov</span></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>barbara@initech.com</span></td>
+              <td><span class="badge badge--outline">Direct</span></td>
+              <td class="t-num t-muted">Aug 14, 2026, 17:40</td>
+              <td><div class="cell-actions"><button class="btn btn--sm" data-action="open" data-target="approve-dialog"><i data-lucide="check"></i>Create user</button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-signup" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--d">DR</span><span class="cell-primary">Dennis Ritchie</span></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>dmr@bell-labs.example</span></td>
+              <td><span class="badge badge--outline">Google</span></td>
+              <td class="t-num t-muted">Aug 12, 2026, 11:15</td>
+              <td><div class="cell-actions"><button class="btn btn--sm" data-action="open" data-target="approve-dialog"><i data-lucide="check"></i>Create user</button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-signup" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-foot"><span>3 pending signups · newest first</span><span>Empty state: “No pending signups — new requests appear here as people sign up.”</span></div>
+      </section>
+
+      <!-- ===== Active users ===== -->
+      <section class="table-wrap" data-tab-panel="users">
+        <div class="table-toolbar">
+          <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter by name or email…  ( / )" /></div>
+          <span class="chip is-active" data-action="chip">All <span class="t-faint">128</span></span>
+          <span class="chip" data-action="chip">Unverified <span class="t-faint">11</span></span>
+          <span class="chip" data-action="chip">Disabled <span class="t-faint">7</span></span>
+          <span class="chip" data-action="chip">No license <span class="t-faint">19</span></span>
+          <span class="spacer"></span>
+          <button class="btn btn--sm btn--ghost"><i data-lucide="arrow-up-down"></i>Sorted by created<i data-lucide="chevron-down"></i></button>
+        </div>
+        <table class="table">
+          <thead><tr>
+            <th class="cell-check"><label class="check"><input type="checkbox" aria-label="Select all users"/></label></th>
+            <th class="sortable">User <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th>Email</th>
+            <th class="sortable">License <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th>Status</th>
+            <th class="sortable is-sorted">Created <span class="sort"><i data-lucide="arrow-down"></i></span></th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--a">A</span><div><div class="cell-primary">Alan Turing</div><div class="cell-sub mono">usr_4c19e2</div></div></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>alan@example.com</span></td>
+              <td><span class="badge"><i data-lucide="award"></i>Free</span></td>
+              <td><div class="row gap-1"><span class="badge badge--warn"><i data-lucide="circle-alert"></i>Unverified</span><span class="badge badge--accent">Enabled</span></div></td>
+              <td class="t-num t-muted">Aug 15, 2026, 09:12</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Mark verified" aria-label="Mark verified"><i data-lucide="circle-check"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="assign-license-dialog" data-tip="Assign license" aria-label="Assign license"><i data-lucide="award"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-user" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--e">K</span><div><div class="cell-primary">Katherine Johnson</div><div class="cell-sub mono">usr_9a02f7</div></div></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>katherine@globex.io</span></td>
+              <td><span class="badge badge--accent"><i data-lucide="award"></i>Enterprise</span></td>
+              <td><div class="row gap-1"><span class="badge" data-status="verified"><i data-lucide="circle-check"></i>Verified</span><span class="badge badge--accent">Enabled</span></div></td>
+              <td class="t-num t-muted">Aug 14, 2026, 14:03</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flags-drawer" data-tip="Manage feature flags" aria-label="Manage feature flags"><i data-lucide="flag"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="assign-license-dialog" data-tip="Assign license" aria-label="Assign license"><i data-lucide="award"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-user" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr style="opacity:.8">
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm">E</span><div><div class="cell-primary">Edsger Dijkstra</div><div class="cell-sub mono">usr_77b3c0</div></div></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>edsger@initech.com</span></td>
+              <td><span class="t-subtle" style="font-style:italic">No license</span></td>
+              <td><div class="row gap-1"><span class="badge" data-status="verified"><i data-lucide="circle-check"></i>Verified</span><span class="badge" data-status="disabled">Disabled</span></div></td>
+              <td class="t-num t-muted">Aug 13, 2026, 10:48</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Enable user" aria-label="Enable user" style="color:var(--ok)"><i data-lucide="power"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="assign-license-dialog" data-tip="Assign license" aria-label="Assign license"><i data-lucide="award"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-user" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--d">R</span><div><div class="cell-primary">Radia Perlman</div><div class="cell-sub mono">usr_e10d55</div></div></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>radia@example.com</span></td>
+              <td><span class="badge badge--honey"><i data-lucide="award"></i>Open source sponsor</span></td>
+              <td><div class="row gap-1"><span class="badge" data-status="verified"><i data-lucide="circle-check"></i>Verified</span><span class="badge badge--accent">Enabled</span></div></td>
+              <td class="t-num t-muted">Aug 11, 2026, 16:22</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flags-drawer" data-tip="Manage feature flags" aria-label="Manage feature flags"><i data-lucide="flag"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="assign-license-dialog" data-tip="Assign license" aria-label="Assign license"><i data-lucide="award"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-user" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--b">M</span><div><div class="cell-primary">Margaret Hamilton</div><div class="cell-sub mono">usr_20fa91</div></div></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>margaret@example.com</span></td>
+              <td><span class="badge"><i data-lucide="award"></i>Free</span></td>
+              <td><div class="row gap-1"><span class="badge" data-status="verified"><i data-lucide="circle-check"></i>Verified</span><span class="badge badge--accent">Enabled</span></div></td>
+              <td class="t-num t-muted">Apr 2, 2026, 08:30</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flags-drawer" data-tip="Manage feature flags" aria-label="Manage feature flags"><i data-lucide="flag"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="assign-license-dialog" data-tip="Assign license" aria-label="Assign license"><i data-lucide="award"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-user" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--c">L</span><div><div class="cell-primary">Linus Torvalds</div><div class="cell-sub mono">usr_5d7c3a</div></div></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>linus@example.com</span></td>
+              <td><span class="badge"><i data-lucide="award"></i>Free</span></td>
+              <td><div class="row gap-1"><span class="badge" data-status="verified"><i data-lucide="circle-check"></i>Verified</span><span class="badge badge--accent">Enabled</span></div></td>
+              <td class="t-num t-muted">Mar 18, 2026, 13:05</td>
+              <td><div class="cell-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flags-drawer" data-tip="Manage feature flags" aria-label="Manage feature flags"><i data-lucide="flag"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="assign-license-dialog" data-tip="Assign license" aria-label="Assign license"><i data-lucide="award"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-user" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--b">G</span><div><div class="cell-primary">Grace Hopper</div><div class="cell-sub mono">usr_b3e8a1</div></div></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>grace@example.com</span></td>
+              <td><span class="badge badge--accent"><i data-lucide="award"></i>Team</span></td>
+              <td><div class="row gap-1"><span class="badge" data-status="verified"><i data-lucide="circle-check"></i>Verified</span><span class="badge badge--accent">Enabled</span></div></td>
+              <td class="t-num t-muted">Feb 3, 2026, 10:00</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flags-drawer" data-tip="Manage feature flags" aria-label="Manage feature flags"><i data-lucide="flag"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="assign-license-dialog" data-tip="Assign license" aria-label="Assign license"><i data-lucide="award"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-user" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr>
+              <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--a">A</span><div><div class="cell-primary">Ada Lovelace</div><div class="cell-sub mono">usr_01aa7f</div></div></div></td>
+              <td><span class="row gap-2 t-muted"><i data-lucide="mail" class="t-faint"></i>ada@example.com</span></td>
+              <td><span class="badge badge--accent"><i data-lucide="award"></i>Team</span></td>
+              <td><div class="row gap-1"><span class="badge" data-status="verified"><i data-lucide="circle-check"></i>Verified</span><span class="badge badge--accent">Enabled</span></div></td>
+              <td class="t-num t-muted">Jan 12, 2026, 09:12</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="flags-drawer" data-tip="Manage feature flags" aria-label="Manage feature flags"><i data-lucide="flag"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="assign-license-dialog" data-tip="Assign license" aria-label="Assign license"><i data-lucide="award"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-user" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-foot"><span>Showing 8 of 128 · sorted by created ↓</span><span class="row gap-2"><span>Rows per page</span><select class="select select--sm" style="width:64px"><option>25</option><option>50</option></select><span class="pager"><button class="btn btn--sm btn--ghost btn--icon" aria-label="Previous page" disabled><i data-lucide="chevron-left"></i></button><span class="t-num">1 / 6</span><button class="btn btn--sm btn--ghost btn--icon" aria-label="Next page"><i data-lucide="chevron-right"></i></button></span></span></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+
+<!-- Toast (replaces the 5-second inline banner) -->
+<div class="toast-stack" aria-live="polite">
+  <div class="toast toast--ok"><i data-lucide="circle-check"></i><div><div class="toast-title">User created successfully for Alan Turing</div><div class="toast-desc">Switched to Active users · dismisses in 5 s</div></div><button class="btn btn--ghost btn--sm btn--icon" aria-label="Dismiss"><i data-lucide="x"></i></button></div>
+</div>
+
+<!-- New user -->
+<div class="overlay" id="new-user-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="new-user-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--rose"><i data-lucide="user-plus"></i></span>
+      <div><div class="dialog__title" id="new-user-title">New user</div><div class="dialog__desc">Creates an account directly, without a signup request.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Name <span class="req">*</span></label><input class="input" placeholder="Jane Doe" autofocus /></div>
+      <div class="field"><label>Email <span class="req">*</span></label><input class="input" type="email" placeholder="jane@example.com" /></div>
+      <div class="field"><label>Password <span class="req">*</span></label><input class="input" type="password" placeholder="Temporary password" minlength="8" /><div class="hint">Minimum 8 characters. Stored as a bcrypt hash; the user can change it after signing in.</div></div>
+      <div class="col gap-2">
+        <label class="check"><input type="checkbox" checked /> Mark email as verified</label>
+        <label class="check"><input type="checkbox" checked /> Enable account immediately</label>
+      </div>
+      <div class="banner banner--danger" style="display:none"><i data-lucide="circle-alert"></i><span>Name, email, and password are required</span></div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Validation: “Name, email, and password are required”</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close"><i data-lucide="user-plus"></i>Create user</button></div>
+  </div>
+</div>
+
+<!-- Assign license -->
+<div class="overlay" id="assign-license-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="assign-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="award"></i></span>
+      <div><div class="dialog__title" id="assign-title">Assign license — Linus Torvalds</div><div class="dialog__desc">linus@example.com · currently <span class="badge">Free</span></div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="t-caps mb-2">Enabled license plans</div>
+      <div class="card card--flat" style="overflow:hidden">
+        <button class="list-row w-full" style="text-align:left;background:var(--accent-soft)"><span class="dot"></span><div class="grow"><div class="lr-title">Free <span class="badge" style="margin-left:4px">free</span></div><div class="lr-sub">max tenants 1 · max users per tenant 5</div></div><i data-lucide="check" style="color:var(--accent)"></i></button>
+        <button class="list-row w-full" style="text-align:left"><span class="dot dot--info"></span><div class="grow"><div class="lr-title">Team <span class="badge badge--accent" style="margin-left:4px">paid</span></div><div class="lr-sub">max tenants 3 · max users per tenant 25 · max projects 50</div></div></button>
+        <button class="list-row w-full" style="text-align:left"><span class="dot dot--info"></span><div class="grow"><div class="lr-title">Enterprise <span class="badge badge--accent" style="margin-left:4px">paid</span></div><div class="lr-sub">unlimited tenants · max ai requests 10,000</div></div></button>
+        <button class="list-row w-full" style="text-align:left"><span class="dot dot--honey"></span><div class="grow"><div class="lr-title">Open source sponsor <span class="badge badge--honey" style="margin-left:4px">sponsor</span></div><div class="lr-sub">max tenants 2 · max users per tenant 10</div></div></button>
+      </div>
+      <hr class="mt-4 mb-3" />
+      <div class="col gap-2">
+        <button class="btn w-full" style="justify-content:flex-start" data-action="open" data-target="flags-drawer"><i data-lucide="flag"></i>Override feature flags…<i data-lucide="chevron-right" style="margin-left:auto"></i></button>
+        <button class="btn btn--danger-soft w-full" style="justify-content:flex-start" data-action="open" data-target="remove-license-dialog"><i data-lucide="circle-minus"></i>Remove license</button>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Clicking a plan assigns it immediately</span><button class="btn" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<!-- Remove license confirm -->
+<div class="overlay" id="remove-license-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="circle-minus"></i></span><div><div class="dialog__title">Remove license from Linus Torvalds?</div><div class="dialog__desc">They keep their account and explicit flag grants; license-derived features switch off at next sign-in.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove license</button></div>
+  </div>
+</div>
+
+<!-- Feature-flag user overrides (shared panel) -->
+<div class="overlay overlay--drawer" id="flags-drawer" data-overlay>
+  <div class="drawer drawer--lg" role="dialog" aria-labelledby="flags-title">
+    <div class="drawer__header">
+      <span class="icon-tile icon-tile--ok"><i data-lucide="flag"></i></span>
+      <div><div class="drawer__title" id="flags-title">Feature flags — Linus Torvalds</div><div class="t-xs t-muted">linus@example.com · license <span class="badge">Free</span> · explicit grants sit on top of the license</div></div>
+      <button class="btn btn--ghost btn--icon" style="margin-left:auto" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer__body col gap-5">
+      <div class="legend"><span class="row gap-1"><span class="dot dot--ok"></span>Also on license</span><span class="row gap-1"><span class="sym" style="background:var(--accent);color:#fff">+</span>Add explicit grant</span><span class="row gap-1"><span class="sym" style="box-shadow:inset 0 0 0 1px var(--border-strong)">−</span>Remove explicit grant</span></div>
+
+      <section>
+        <div class="row gap-2 mb-1"><i data-lucide="package" class="t-subtle"></i><span class="t-h4">Feature packages</span></div>
+        <div class="t-xs t-muted mb-2">Bulk add or remove the same flags together (defined under Licenses → Flag packages).</div>
+        <div class="card card--flat">
+          <div class="list-row" style="padding:10px 14px"><div class="grow"><div class="lr-title">Standard features</div><div class="lr-sub mono">standard_features · 4 flags</div></div><button class="btn btn--sm btn--accent">Add all</button><button class="btn btn--sm">Remove all</button></div>
+          <div class="list-row" style="padding:10px 14px"><div class="grow"><div class="lr-title">AI bundle</div><div class="lr-sub mono">ai_bundle · 2 flags</div></div><button class="btn btn--sm btn--accent">Add all</button><button class="btn btn--sm">Remove all</button></div>
+          <div class="list-row" style="padding:10px 14px"><div class="grow"><div class="lr-title">Preview pack</div><div class="lr-sub mono">preview_pack · 0 flags</div></div><button class="btn btn--sm btn--accent" disabled data-tip="This package has no flags yet">Add all</button><button class="btn btn--sm" disabled>Remove all</button></div>
+        </div>
+      </section>
+
+      <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Search flags by label or name…" /></div>
+
+      <div class="grid grid-2">
+        <div class="flag-list">
+          <div class="flag-list__head"><i data-lucide="flag"></i>Granted for this user<span class="badge badge--outline" style="margin-left:auto">2</span></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">AI Assistant <span class="badge badge--honey" style="margin-left:4px"><i data-lucide="eye"></i>Preview</span></div><div class="fr-sub mono">ai_assistant</div></div><button class="btn btn--sm btn--icon" data-tip="Remove from this user's granted flags" aria-label="Remove explicit grant"><i data-lucide="minus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Export studio <span class="badge badge--ok" style="margin-left:4px">license</span></div><div class="fr-sub mono">export_studio</div></div><button class="btn btn--sm btn--icon" data-tip="Remove from this user's granted flags" aria-label="Remove explicit grant"><i data-lucide="minus"></i></button></div>
+        </div>
+        <div class="flag-list">
+          <div class="flag-list__head"><i data-lucide="search"></i>All flags — add<span class="badge badge--outline" style="margin-left:auto">6</span></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Catalog import</div><div class="fr-sub mono">catalog_import</div></div><button class="btn btn--sm btn--icon btn--accent" data-tip="Add to this user's granted flags" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Designer <span class="badge badge--ok" style="margin-left:4px">license</span></div><div class="fr-sub mono">designer</div></div><button class="btn btn--sm btn--icon btn--accent" data-tip="Add to this user's granted flags" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Lint posture <span class="badge badge--honey" style="margin-left:4px"><i data-lucide="eye"></i>Preview</span></div><div class="fr-sub mono">lint_workspace</div></div><button class="btn btn--sm btn--icon btn--accent" data-tip="Add to this user's granted flags" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">MCP servers</div><div class="fr-sub mono">mcp_servers</div></div><button class="btn btn--sm btn--icon btn--accent" data-tip="Add to this user's granted flags" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row"><div class="grow"><div class="fr-title">Paths <span class="badge badge--ok" style="margin-left:4px">license</span></div><div class="fr-sub mono">paths</div></div><button class="btn btn--sm btn--icon btn--accent" data-tip="Add to this user's granted flags" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+          <div class="flag-row" style="opacity:.7"><div class="grow"><div class="fr-title">SSO enforcement <span class="badge badge--outline" style="margin-left:4px">disabled</span></div><div class="fr-sub mono">sso_enforcement</div></div><button class="btn btn--sm btn--icon btn--accent" data-tip="Add to this user's granted flags" aria-label="Add explicit grant"><i data-lucide="plus"></i></button></div>
+        </div>
+      </div>
+      <div class="t-xs t-subtle">Grants are boolean-true only — there is no explicit “deny”. Search filters both lists at once.</div>
+    </div>
+    <div class="drawer__footer"><span class="t-xs t-subtle" style="margin-right:auto">Changes save immediately and reload the users list on close</span><button class="btn btn--primary" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<!-- Approve signup -->
+<div class="overlay" id="approve-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="user-check"></i></span><div><div class="dialog__title">Create user account for Tim Berners-Lee?</div><div class="dialog__desc">tim@example.org · The account is created verified and enabled; the signup request is removed and the list switches to Active users.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close"><i data-lucide="check"></i>Create user</button></div>
+  </div>
+</div>
+
+<!-- Delete signup -->
+<div class="overlay" id="delete-signup-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span><div><div class="dialog__title">Delete signup request for tim@example.org?</div><div class="dialog__desc">Tim will have to sign up again. This does not block the address.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete signup</button></div>
+  </div>
+</div>
+
+<!-- Delete user -->
+<div class="overlay" id="delete-user-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete user Edsger Dijkstra?</div><div class="dialog__desc">edsger@initech.com · Removes the account, its tenant memberships, license assignment and flag overrides. This action cannot be undone.</div></div></div>
+    <div class="dialog__body"><div class="field"><label>Type <span class="mono">edsger@initech.com</span> to confirm</label><input class="input input--mono" placeholder="edsger@initech.com" /></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" disabled>Delete user</button></div>
+  </div>
+</div>
+
+<!-- Signup row menu -->
+<div class="overlay" id="menu-signup" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:392px 60px 0 0">
+  <div class="menu" role="menu" style="width:200px">
+    <button class="menu__item w-full" data-action="open" data-target="approve-dialog"><i data-lucide="user-check" style="color:var(--ok)"></i>Create user</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full is-danger" data-action="open" data-target="delete-signup-dialog"><i data-lucide="trash-2"></i>Delete signup</button>
+  </div>
+</div>
+
+<!-- User row menu (grouped) -->
+<div class="overlay" id="menu-user" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:392px 60px 0 0">
+  <div class="menu" role="menu" style="width:240px">
+    <button class="menu__item w-full"><i data-lucide="circle-x" style="color:var(--warn)"></i>Mark unverified</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full"><i data-lucide="power" style="color:var(--orange)"></i>Disable user</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full" data-action="open" data-target="assign-license-dialog"><i data-lucide="award" style="color:var(--accent)"></i>Assign license…<i data-lucide="chevron-right" style="margin-left:auto"></i></button>
+    <button class="menu__item w-full" data-action="open" data-target="flags-drawer"><i data-lucide="flag" style="color:var(--ok)"></i>Manage feature flags…</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full is-danger" data-action="open" data-target="delete-user-dialog"><i data-lucide="trash-2"></i>Delete user</button>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/admin/dashboard/users</p>
+  <h4>Replaces</h4>
+  <ul><li><code>admin/dashboard/users/page.tsx</code> + <code>UserManagementClient.tsx</code>; the shared <code>components/FeatureFlagUserOverridesPanel.tsx</code> becomes the “Feature flags — {user}” drawer.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header “New user” (primary) + Refresh (reloads stats, signups, users). Four stat cards Total users / Verified users / Pending signups / Recent signups with the same sub-lines.</li>
+    <li>Tabs Pending signups (count pill) and Active users. As today, Pending signups opens first when its count &gt; 0 (the mockup shows Active users). Signups table: Name · Email · Source (<code>signup_source</code> or “Direct”) · Date · actions; row actions Create user (→ confirm “Create user account for {name} ({email})?”, creates verified+enabled) and Delete signup (→ confirm).</li>
+    <li>Users table: User (initial avatar + name) · Email · License (badge by <code>license_type</code>: free neutral, paid accent, sponsor honey; italic “No license”) · Status (Verified/Unverified + Enabled/Disabled) · Created · actions. Kebab groups: Mark verified/unverified · Enable/Disable · Assign license… · Manage feature flags… · Delete user (type-to-confirm dialog replaces <code>window.confirm</code>).</li>
+    <li>“Assign license…” inline submenu → small dialog listing enabled plans (check on current) + “Override feature flags…” + “Remove license” (confirm). Same server actions (<code>assignUserLicense</code>, <code>removeUserLicense</code>).</li>
+    <li>New user dialog: Name, Email, Password (min 8, bcrypt hint), “Mark email as verified” + “Enable account immediately” (both default on); validation copy “Name, email, and password are required”; success switches to Active users.</li>
+    <li>Feature-flags drawer = the shared overrides panel: legend, Feature packages (Add all / Remove all, disabled when empty → “This package has no flags yet”), search over both lists, Granted for this user vs All flags — add, license chip, Preview badge, +/− per flag, A→Z by label; closing reloads.</li>
+    <li>Success/error feedback (“User created successfully for {name}”, “License assigned successfully”, “Failed to load data”…) moves from the 5-second inline banner to a bottom-right toast with the same auto-dismiss.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Client-side filter box + chips (All / Unverified / Disabled / No license), sortable columns, row selection with a bulk bar (verify / enable / assign license / delete), hover quick actions, <code>N</code> shortcut. Paging is UI-only until the admin helpers grow server paging.</li></ul>
+  <h4>States</h4>
+  <ul>
+    <li>Loading: 4 skeleton stats + 5 skeleton rows (no spinner). Empty signups: <code>.empty</code> “No pending signups — new requests appear here as people sign up.” Empty users: “No users found.” Filter miss: inline “No users match your filter.”</li>
+    <li>Errors: toast (danger) with Retry — “Failed to load data”, “Failed to create user”, “Failed to assign license”. Drawer loading: “Loading flags for {name} ({email})…”; drawer empties: “No packages defined yet.”, “No explicit grants.”, “Every flag is already explicitly granted for this user.”</li>
+    <li>Not represented (absent today, do not invent): user roles / super-admin flag, password reset (<code>clearUserPassword</code> unused), edit-name dialog.</li>
+  </ul>
+</template>
+</body>
+</html>

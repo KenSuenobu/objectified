@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Style guides · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .fieldset { border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px 16px; margin: 0; min-width: 0; }
+  .fieldset > legend { padding: 0 6px; margin-left: -6px; font-size: var(--fs-sm); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .policy-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--space-4); }
+  @media (max-width: 900px) { .policy-grid { grid-template-columns: 1fr; } }
+  .assign-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .td-nowrap { white-space: nowrap; }
+  .fingerprint { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-muted); }
+</style>
+</head>
+<body data-shell="app" data-nav="style-guides" data-page="govern/style-guides" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Govern</span><i data-lucide="chevron-right"></i><span>Style guides</span></div>
+          <h1 class="page-title">Style guides</h1>
+          <p class="page-desc">Governance rules your specs are scored against.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-action="open" data-target="create-guide-recommended"><i data-lucide="sparkles"></i>Start from Recommended</button>
+          <button class="btn btn--primary" data-action="open" data-target="create-guide"><i data-lucide="plus"></i>New guide<span class="kbd">N</span></button>
+        </div>
+      </div>
+      <div class="tabs" role="tablist" data-tabs="sg-panels">
+        <button class="tab is-active" role="tab" data-action="tab" data-target="guides"><i data-lucide="book-open-check"></i>Style guides <span class="count">4</span></button>
+        <button class="tab" role="tab" data-action="tab" data-target="quality"><i data-lucide="shield-check"></i>Import &amp; export policy</button>
+        <button class="tab" role="tab" data-action="tab" data-target="verification"><i data-lucide="shield"></i>Verification policy</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body" id="sg-panels">
+
+    <!-- ===================== Tab 1: Style guides ===================== -->
+    <section data-tab-panel="guides" class="col gap-6">
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter guides…  ( / )" aria-label="Filter style guides" /></div>
+          <span class="chip is-active" data-action="chip">All <span class="t-faint">4</span></span>
+          <span class="chip" data-action="chip">Custom <span class="t-faint">3</span></span>
+          <span class="chip" data-action="chip"><i data-lucide="badge-check"></i>Assigned <span class="t-faint">2</span></span>
+          <span class="chip" data-action="chip">Unassigned <span class="t-faint">2</span></span>
+          <span class="spacer"></span>
+          <button class="btn btn--sm btn--ghost"><i data-lucide="arrow-up-down"></i>Sorted by name<i data-lucide="chevron-down"></i></button>
+        </div>
+        <table class="table">
+          <thead><tr>
+            <th class="sortable is-sorted">Name <span class="sort"><i data-lucide="arrow-up"></i></span></th>
+            <th class="sortable t-right">Rules on <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th>Assignments</th>
+            <th class="sortable">Updated <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th style="width:200px"><span class="sr-only">Actions</span></th>
+          </tr></thead>
+          <tbody>
+            <!-- Built-in guide -->
+            <tr>
+              <td>
+                <div class="row gap-3">
+                  <span class="icon-tile icon-tile--sm icon-tile--honey"><i data-lucide="book-open-check"></i></span>
+                  <div class="min-w-0">
+                    <div class="row gap-2"><a class="cell-primary" href="style-guide-detail.html" style="color:inherit">Apiome Recommended</a><span class="badge badge--outline"><i data-lucide="lock"></i>Built-in</span></div>
+                    <div class="cell-sub t-truncate" style="max-width:420px">Apiome’s baseline OpenAPI &amp; AsyncAPI ruleset — naming, documentation, security and response hygiene.</div>
+                  </div>
+                </div>
+              </td>
+              <td class="t-right mono t-num">41 / 41</td>
+              <td><span class="t-faint">—</span></td>
+              <td class="t-muted t-num td-nowrap">—</td>
+              <td><div class="cell-actions">
+                <button class="btn btn--sm btn--ghost" data-action="open" data-target="assign-dialog">Assign…</button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Duplicate" aria-label="Duplicate Apiome Recommended" data-action="open" data-target="dup-guide"><i data-lucide="copy"></i></button>
+              </div></td>
+            </tr>
+            <!-- Tenant default (custom) -->
+            <tr>
+              <td>
+                <div class="row gap-3">
+                  <span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="book-open-check"></i></span>
+                  <div class="min-w-0">
+                    <div class="row gap-2"><a class="cell-primary" href="style-guide-detail.html" style="color:inherit">Acme REST</a><span class="badge badge--ok"><i data-lucide="badge-check"></i>Default</span></div>
+                    <div class="cell-sub t-truncate" style="max-width:420px">House rules for public REST APIs: camelCase operation ids, contact info, 4xx responses.</div>
+                  </div>
+                </div>
+              </td>
+              <td class="t-right mono t-num">34 / 41</td>
+              <td><div class="assign-chips"><span class="badge badge--ok">Tenant default</span><span class="badge badge--accent">Payments API</span></div></td>
+              <td class="t-muted t-num td-nowrap" title="2026-08-14T16:22:00Z">Aug 14, 2026</td>
+              <td><div class="cell-actions">
+                <button class="btn btn--sm btn--ghost" data-action="open" data-target="assign-dialog">Assign…</button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Duplicate" aria-label="Duplicate Acme REST" data-action="open" data-target="dup-guide"><i data-lucide="copy"></i></button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Edit" aria-label="Edit Acme REST" data-action="open" data-target="edit-guide"><i data-lucide="pencil"></i></button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Delete" aria-label="Delete Acme REST" style="color:var(--danger)" data-action="open" data-target="delete-guide"><i data-lucide="trash-2"></i></button>
+              </div></td>
+            </tr>
+            <!-- Custom guide with project assignment -->
+            <tr>
+              <td>
+                <div class="row gap-3">
+                  <span class="icon-tile icon-tile--sm icon-tile--violet"><i data-lucide="book-open-check"></i></span>
+                  <div class="min-w-0">
+                    <div class="row gap-2"><a class="cell-primary" href="style-guide-detail.html" style="color:inherit">Events (AsyncAPI)</a></div>
+                    <div class="cell-sub t-truncate" style="max-width:420px">Channel naming and message-schema descriptions for event-driven specs.</div>
+                  </div>
+                </div>
+              </td>
+              <td class="t-right mono t-num">22 / 41</td>
+              <td><div class="assign-chips"><span class="badge badge--accent">Inventory Events</span></div></td>
+              <td class="t-muted t-num td-nowrap" title="2026-08-11T10:05:00Z">Aug 11, 2026</td>
+              <td><div class="cell-actions">
+                <button class="btn btn--sm btn--ghost" data-action="open" data-target="assign-dialog">Assign…</button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Duplicate" aria-label="Duplicate Events (AsyncAPI)" data-action="open" data-target="dup-guide"><i data-lucide="copy"></i></button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Edit" aria-label="Edit Events (AsyncAPI)" data-action="open" data-target="edit-guide"><i data-lucide="pencil"></i></button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Delete" aria-label="Delete Events (AsyncAPI)" style="color:var(--danger)" data-action="open" data-target="delete-guide"><i data-lucide="trash-2"></i></button>
+              </div></td>
+            </tr>
+            <!-- Custom guide, unassigned -->
+            <tr>
+              <td>
+                <div class="row gap-3">
+                  <span class="icon-tile icon-tile--sm"><i data-lucide="book-open-check"></i></span>
+                  <div class="min-w-0">
+                    <div class="row gap-2"><a class="cell-primary" href="style-guide-detail.html" style="color:inherit">Partner API strict</a></div>
+                    <div class="cell-sub t-truncate" style="max-width:420px">Everything in Acme REST at error severity, plus mandatory examples for partner-facing schemas.</div>
+                  </div>
+                </div>
+              </td>
+              <td class="t-right mono t-num">41 / 41</td>
+              <td><span class="t-faint">—</span></td>
+              <td class="t-muted t-num td-nowrap" title="2026-08-03T09:48:00Z">Aug 3, 2026</td>
+              <td><div class="cell-actions">
+                <button class="btn btn--sm btn--ghost" data-action="open" data-target="assign-dialog">Assign…</button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Duplicate" aria-label="Duplicate Partner API strict" data-action="open" data-target="dup-guide"><i data-lucide="copy"></i></button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Edit" aria-label="Edit Partner API strict" data-action="open" data-target="edit-guide"><i data-lucide="pencil"></i></button>
+                <button class="btn btn--sm btn--ghost btn--icon" data-tip="Delete" aria-label="Delete Partner API strict" style="color:var(--danger)" data-action="open" data-target="delete-guide"><i data-lucide="trash-2"></i></button>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-foot">
+          <span class="row gap-2"><i data-lucide="info" style="width:13px;height:13px"></i>The built-in “Apiome Recommended” guide is read-only — duplicate it to customize. Open a guide to tailor its rule catalog; custom rules arrive with GOV-2.3.</span>
+          <span>4 guides</span>
+        </div>
+      </div>
+
+      <!-- Secondary states, shown side by side for reference -->
+      <div class="grid grid-2">
+        <div class="table-wrap">
+          <div class="table-toolbar"><span class="t-caps">State · empty</span></div>
+          <div class="empty" style="padding:28px 20px">
+            <div class="empty__art" style="width:64px;height:64px"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="book-open-check"></i></div>
+            <div class="empty__title">No style guides yet.</div>
+            <div class="empty__desc">Start from Apiome Recommended and tailor it, or create an empty guide and add rules as you go.</div>
+            <div class="empty__actions"><button class="btn" data-action="open" data-target="create-guide-recommended"><i data-lucide="sparkles"></i>Start from Recommended</button><button class="btn btn--primary" data-action="open" data-target="create-guide"><i data-lucide="plus"></i>New guide</button></div>
+          </div>
+        </div>
+        <div class="col gap-4">
+          <div class="table-wrap">
+            <div class="table-toolbar"><span class="t-caps">State · loading</span></div>
+            <table class="table table--dense">
+              <thead><tr><th>Name</th><th class="t-right">Rules on</th><th>Assignments</th><th>Updated</th></tr></thead>
+              <tbody>
+                <tr><td><span class="skeleton" style="display:inline-block;width:55%;max-width:160px;height:12px">…</span><div class="cell-sub"><span class="skeleton" style="display:inline-block;width:70%;max-width:240px;height:9px">…</span></div></td><td class="t-right"><span class="skeleton" style="display:inline-block;width:44px;height:12px">…</span></td><td><span class="skeleton" style="display:inline-block;width:90px;height:16px;border-radius:999px">…</span></td><td><span class="skeleton" style="display:inline-block;width:70px;height:12px">…</span></td></tr>
+                <tr><td><span class="skeleton" style="display:inline-block;width:45%;max-width:120px;height:12px">…</span><div class="cell-sub"><span class="skeleton" style="display:inline-block;width:60%;max-width:200px;height:9px">…</span></div></td><td class="t-right"><span class="skeleton" style="display:inline-block;width:44px;height:12px">…</span></td><td><span class="skeleton" style="display:inline-block;width:60px;height:16px;border-radius:999px">…</span></td><td><span class="skeleton" style="display:inline-block;width:70px;height:12px">…</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="banner banner--neutral"><i data-lucide="lock"></i><div><div class="banner-title">Read-only for members</div><div class="banner-body">Only tenant administrators can create, assign or edit style guides. You can open any guide and browse its rules; the actions column and header buttons are hidden.</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Tab 2: Import & export policy ===================== -->
+    <section data-tab-panel="quality" hidden class="col gap-6">
+      <div class="card">
+        <div class="card__header">
+          <div class="row-start gap-3">
+            <span class="icon-tile icon-tile--accent"><i data-lucide="shield-check"></i></span>
+            <div>
+              <div class="card__title">Import &amp; export quality policy</div>
+              <div class="t-xs t-muted mt-1">Applied when a document is imported and when an artifact is delivered. Resolution is per-format override → tenant → default.</div>
+            </div>
+          </div>
+          <span class="badge badge--outline badge--mono">v3</span>
+        </div>
+        <div class="card__body col gap-4">
+          <div class="banner banner--neutral" style="display:none"><i data-lucide="info"></i>Not configured — advisory</div>
+          <div class="policy-grid">
+            <fieldset class="fieldset">
+              <legend><i data-lucide="download" style="width:14px;height:14px;color:var(--fg-subtle)"></i>Import intake <span class="badge badge--rose">Blocking</span></legend>
+              <div class="col gap-4 mt-2">
+                <div class="grid grid-2">
+                  <div class="field"><label>Minimum grade</label><select class="select"><option>No floor</option><option>A</option><option>B</option><option selected>C</option><option>D</option><option>F</option></select></div>
+                  <div class="field"><label>Minimum score</label><input class="input t-num" type="number" min="0" max="100" value="70" /></div>
+                </div>
+                <div class="field"><label>Refuse findings at</label><select class="select"><option>Not gated</option><option selected>error or worse</option><option>warning or worse</option><option>info or worse</option></select></div>
+                <div class="switch-row" style="padding-bottom:0"><div><div class="sw-title">Refuse the import when a floor is missed</div><div class="sw-desc">Off keeps the policy advisory: the verdict is recorded but intake proceeds.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+              </div>
+            </fieldset>
+            <fieldset class="fieldset">
+              <legend><i data-lucide="upload" style="width:14px;height:14px;color:var(--fg-subtle)"></i>Export delivery <span class="badge">Advisory</span></legend>
+              <div class="col gap-4 mt-2">
+                <div class="grid grid-2">
+                  <div class="field"><label>Minimum grade</label><select class="select"><option>No floor</option><option>A</option><option selected>B</option><option>C</option><option>D</option><option>F</option></select></div>
+                  <div class="field"><label>Minimum score</label><input class="input t-num" type="number" min="0" max="100" value="80" /></div>
+                </div>
+                <div class="field"><label>Refuse findings at</label><select class="select"><option selected>Not gated</option><option>error or worse</option><option>warning or worse</option><option>info or worse</option></select></div>
+                <div class="switch-row" style="padding-bottom:0"><div><div class="sw-title">Refuse the export when a floor is missed</div><div class="sw-desc">Off keeps the policy advisory: the pre-flight verdict warns, delivery proceeds.</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div>
+              </div>
+            </fieldset>
+          </div>
+          <fieldset class="fieldset">
+            <legend><i data-lucide="file-signature" style="width:14px;height:14px;color:var(--fg-subtle)"></i>Overrides</legend>
+            <div class="switch-row" style="padding-top:6px"><div><div class="sw-title">Allow a blocked user to proceed by recording a waiver</div><div class="sw-desc">Waivers are accepted risk with a deadline; each one is listed under Active waivers below.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+            <div class="grid grid-2 mt-2">
+              <div class="field"><label>Roles permitted to waive</label><input class="input input--mono" value="owner, admin" placeholder="owner, admin, editor, viewer" /><div class="hint">Comma-separated role slugs (owner, admin, editor, viewer). Tenant administrators resolve to <code>owner</code>. An empty list means nobody may waive.</div></div>
+              <div class="field"><label>Waiver lifetime (hours)</label><input class="input t-num" type="number" min="1" max="8760" value="72" /><div class="hint">A waiver is honoured until it expires; the waiver-expiry sweep warns before it lapses.</div></div>
+            </div>
+          </fieldset>
+          <div class="card card--soft" style="padding:12px 14px">
+            <div class="row-between"><div class="t-sm t-600">Per-format overrides</div><span class="t-xs t-subtle">read-only · set via the REST policy API</span></div>
+            <ul class="col gap-1 mt-2 t-sm">
+              <li class="row gap-2"><code class="tag">asyncapi</code><span class="mono t-xs t-muted">{"import": {"minGrade": "D", "enforcement": "advisory"}}</span></li>
+              <li class="row gap-2"><code class="tag">proto</code><span class="mono t-xs t-muted">{"export": {"minScore": 60}}</span></li>
+            </ul>
+            <div class="t-xs t-subtle mt-2">Resolution is format override → tenant → default; the pre-flight verdict names the tier that won.</div>
+          </div>
+        </div>
+        <div class="card__footer"><span class="t-xs t-subtle">Saving creates an immutable policy version; the current one is <span class="mono">v3</span>.</span><button class="btn btn--primary" disabled>Save policy</button></div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card__header"><div><div class="card__title"><i data-lucide="history"></i>Policy versions</div><div class="t-xs t-muted mt-1">Immutable snapshots; every verdict names the version it applied.</div></div></div>
+          <div class="divide-y">
+            <div class="list-row"><span class="badge badge--outline badge--mono">v3</span><span class="fingerprint" title="sha256:9f2c1a7e44b0d3c8e5a1f6b2c9d0e7a3">9f2c1a7e44b0…</span><span class="t-xs t-subtle ml-auto t-num" title="2026-08-14T16:22:00Z">Aug 14, 2026, 04:22 PM</span><span class="row gap-2 t-xs"><span class="avatar avatar--xs avatar--a">AL</span>Ada Lovelace</span></div>
+            <div class="list-row"><span class="badge badge--outline badge--mono">v2</span><span class="fingerprint" title="sha256:41d0e6b9c2a7f8e1d3c5b6a9f0e2d4c7">41d0e6b9c2a7…</span><span class="t-xs t-subtle ml-auto t-num" title="2026-07-30T11:02:00Z">Jul 30, 2026, 11:02 AM</span><span class="row gap-2 t-xs"><span class="avatar avatar--xs avatar--b">GH</span>Grace Hopper</span></div>
+            <div class="list-row"><span class="badge badge--outline badge--mono">v1</span><span class="fingerprint" title="sha256:c7a3e9d1f5b2a8c4e6d0f3b7a1c9e5d2">c7a3e9d1f5b2…</span><span class="t-xs t-subtle ml-auto t-num" title="2026-07-02T09:15:00Z">Jul 2, 2026, 09:15 AM</span><span class="row gap-2 t-xs"><span class="avatar avatar--xs avatar--a">AL</span>Ada Lovelace</span></div>
+          </div>
+          <div class="card__footer"><span class="t-xs t-faint">Empty copy: “No policy has been saved yet.”</span></div>
+        </div>
+        <div class="card">
+          <div class="card__header"><div><div class="card__title"><i data-lucide="file-signature"></i>Active waivers</div><div class="t-xs t-muted mt-1">Accepted risk with a deadline, recorded when someone proceeded against this policy.</div></div><span class="badge badge--warn">2</span></div>
+          <div class="divide-y">
+            <div class="list-row" style="align-items:flex-start">
+              <span class="icon-tile icon-tile--sm icon-tile--warn"><i data-lucide="file-signature"></i></span>
+              <div class="grow min-w-0">
+                <div class="row gap-2 wrap"><span class="lr-title">Payments API · v2.4.0 import</span><span class="badge badge--outline">import · openapi</span><span class="t-xs t-muted">graded D (61)</span></div>
+                <div class="t-xs t-muted mt-1">“Legacy vendor spec; descriptions to be back-filled before publish.”</div>
+                <div class="t-xs t-subtle mt-1">Grace Hopper (admin) · expires Aug 17, 2026, 04:22 PM</div>
+              </div>
+            </div>
+            <div class="list-row" style="align-items:flex-start">
+              <span class="icon-tile icon-tile--sm icon-tile--warn"><i data-lucide="file-signature"></i></span>
+              <div class="grow min-w-0">
+                <div class="row gap-2 wrap"><span class="lr-title">Orders Service · v1.9.2 export (Postman)</span><span class="badge badge--outline">export · postman</span><span class="t-xs t-muted">graded C (74)</span></div>
+                <div class="t-xs t-muted mt-1">“Partner needs the collection today; examples land in v1.9.3.”</div>
+                <div class="t-xs t-subtle mt-1">Ada Lovelace (owner) · expires Aug 16, 2026, 09:00 AM</div>
+              </div>
+            </div>
+          </div>
+          <div class="card__footer"><span class="t-xs t-faint">Empty copy: “No active waivers.”</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Tab 3: Verification policy ===================== -->
+    <section data-tab-panel="verification" hidden class="col gap-6">
+      <div class="grid grid-main-aside">
+        <div class="card">
+          <div class="card__header">
+            <div class="row-start gap-3">
+              <span class="icon-tile icon-tile--violet"><i data-lucide="shield"></i></span>
+              <div>
+                <div class="row gap-2 wrap"><div class="card__title">Verification publish &amp; deploy policy</div><span class="badge badge--outline badge--mono">v2</span><span class="badge badge--rose">Blocking</span></div>
+                <div class="t-xs t-muted mt-1">Require recent passing contract evidence (suite digests) and set whole-spec breaking posture before publish or deploy. Decisions cite exact evidence run IDs. Consumer-aware breaking acknowledgment lands with #4479.</div>
+              </div>
+            </div>
+            <button class="btn btn--sm" aria-label="Refresh policy"><i data-lucide="refresh-cw"></i>Refresh</button>
+          </div>
+          <div class="card__body col gap-4">
+            <div class="field"><label>Required suite digests (one per line)</label><textarea class="textarea input--mono" style="min-height:88px" placeholder="sha256:…">sha256:8b1f3a9c2e7d5f6a0b4c1d8e9f2a3b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a
+sha256:1c9e4d2b7a6f5e3d0c8b1a2f9e4d7c6b5a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d</textarea><div class="hint">Evidence must match one of these digests to count as passing.</div></div>
+            <div class="grid grid-2">
+              <div class="field"><label>Max evidence age (seconds)</label><input class="input t-num" type="number" placeholder="No limit" value="86400" /><div class="hint">Older evidence is treated as missing.</div></div>
+              <div class="field"><label>Required target network class</label><select class="select"><option>Any</option><option selected>public</option><option>private</option></select></div>
+            </div>
+            <div class="grid grid-2">
+              <div class="field"><label>Purpose</label><select class="select"><option selected>both</option><option>publish</option><option>deploy</option></select></div>
+              <div class="field"><label>Breaking-change action (whole-spec)</label><select class="select"><option>ignore</option><option selected>warn</option><option>block</option></select></div>
+            </div>
+            <div class="field" style="max-width:50%"><label>Enforcement</label><select class="select"><option>advisory</option><option selected>block</option></select><div class="hint">Block refuses the publish/deploy when evidence is missing or stale.</div></div>
+          </div>
+          <div class="card__footer"><span class="t-xs t-subtle">Every save creates a new immutable version.</span><button class="btn btn--primary" disabled>Save new version</button></div>
+        </div>
+        <aside class="col gap-4">
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="history"></i>Version history</div><span class="t-xs t-subtle">last 8</span></div>
+            <div class="divide-y">
+              <div class="list-row" style="padding:10px 16px"><div><div class="lr-title mono t-xs">v2 · block · warn</div><div class="lr-sub t-num">Aug 12, 2026, 02:10 PM</div></div></div>
+              <div class="list-row" style="padding:10px 16px"><div><div class="lr-title mono t-xs">v1 · advisory · warn</div><div class="lr-sub t-num">Jul 28, 2026, 10:41 AM</div></div></div>
+            </div>
+          </div>
+          <div class="callout callout--accent t-xs">Default state renders the badge <span class="badge badge--outline">Default (advisory)</span> and the amber <span class="badge badge--warn">Advisory</span> pill; loading shows “Loading policy…”.</div>
+        </aside>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ===================== Overlays ===================== -->
+
+<!-- New style guide -->
+<div class="overlay" id="create-guide" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="create-guide-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--honey"><i data-lucide="book-plus"></i></span>
+      <div><div class="dialog__title" id="create-guide-title">New style guide</div><div class="dialog__desc">Create a custom style guide, empty or copying an existing guide’s rules.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Name <span class="req">*</span></label><input class="input" placeholder="e.g. Payments API Guide" autofocus /></div>
+      <div class="field"><label>Description <span class="t-subtle t-500">(optional)</span></label><textarea class="textarea" style="min-height:64px" placeholder="What this guide enforces…"></textarea></div>
+      <div class="field"><label>Copy rules from</label><select class="select"><option selected>Empty guide (no rules)</option><option>Apiome Recommended (41 rules on)</option><option>Acme REST (34 rules on)</option><option>Events (AsyncAPI) (22 rules on)</option><option>Partner API strict (41 rules on)</option></select><div class="hint">Copies the enabled set and severities; you can tailor them afterwards.</div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" disabled>Create guide</button></div>
+  </div>
+</div>
+
+<!-- Start from Recommended (same dialog, source preselected) -->
+<div class="overlay" id="create-guide-recommended" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="create-guide-rec-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--honey"><i data-lucide="sparkles"></i></span>
+      <div><div class="dialog__title" id="create-guide-rec-title">New style guide</div><div class="dialog__desc">Create a custom style guide, empty or copying an existing guide’s rules.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Name <span class="req">*</span></label><input class="input" placeholder="e.g. Payments API Guide" value="Acme Recommended" autofocus /></div>
+      <div class="field"><label>Description <span class="t-subtle t-500">(optional)</span></label><textarea class="textarea" style="min-height:64px" placeholder="What this guide enforces…"></textarea></div>
+      <div class="field"><label>Copy rules from</label><select class="select"><option>Empty guide (no rules)</option><option selected>Apiome Recommended (41 rules on)</option><option>Acme REST (34 rules on)</option><option>Events (AsyncAPI) (22 rules on)</option><option>Partner API strict (41 rules on)</option></select></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create guide</button></div>
+  </div>
+</div>
+
+<!-- Duplicate style guide -->
+<div class="overlay" id="dup-guide" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="dup-guide-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="copy"></i></span>
+      <div><div class="dialog__title" id="dup-guide-title">Duplicate style guide</div><div class="dialog__desc">Creates an editable copy of “Acme REST” with the same rules.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Name <span class="req">*</span></label><input class="input" value="Acme REST (copy)" autofocus /></div>
+      <div class="field"><label>Description <span class="t-subtle t-500">(optional)</span></label><textarea class="textarea" style="min-height:64px">House rules for public REST APIs: camelCase operation ids, contact info, 4xx responses.</textarea></div>
+      <div class="field"><label>Copy rules from</label><select class="select"><option>Empty guide (no rules)</option><option>Apiome Recommended (41 rules on)</option><option selected>Acme REST (34 rules on)</option><option>Events (AsyncAPI) (22 rules on)</option><option>Partner API strict (41 rules on)</option></select></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create guide</button></div>
+  </div>
+</div>
+
+<!-- Edit style guide -->
+<div class="overlay" id="edit-guide" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="edit-guide-title">
+    <div class="dialog__header">
+      <span class="icon-tile"><i data-lucide="pencil"></i></span>
+      <div><div class="dialog__title" id="edit-guide-title">Edit style guide</div><div class="dialog__desc">Rename the guide or update its description.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Name <span class="req">*</span></label><input class="input" value="Acme REST" autofocus /></div>
+      <div class="field"><label>Description</label><textarea class="textarea" style="min-height:64px">House rules for public REST APIs: camelCase operation ids, contact info, 4xx responses.</textarea></div>
+      <div class="t-xs t-subtle row gap-1"><i data-lucide="info" style="width:12px;height:12px"></i>Rules and policy are edited on the guide page — <a href="style-guide-detail.html">open Acme REST</a>.</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save changes</button></div>
+  </div>
+</div>
+
+<!-- Assign guide -->
+<div class="overlay" id="assign-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="assign-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--ok"><i data-lucide="badge-check"></i></span>
+      <div><div class="dialog__title" id="assign-title">Assign “Acme REST”</div><div class="dialog__desc">Assignments take effect on the next lint run: a project-level assignment wins over the tenant default.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-5">
+      <section>
+        <div class="form-section__title">Tenant default</div>
+        <div class="form-section__desc" style="margin-bottom:10px">Applies to every project without its own assignment.</div>
+        <div class="row-between card card--soft" style="padding:10px 12px">
+          <span class="badge badge--ok badge--lg"><i data-lucide="badge-check"></i>This guide is the tenant default</span>
+          <span class="t-xs t-subtle">Otherwise: <span class="btn btn--sm" style="pointer-events:none;vertical-align:middle">Make tenant default</span></span>
+        </div>
+      </section>
+      <section>
+        <div class="form-section__title">Project assignments</div>
+        <div class="form-section__desc" style="margin-bottom:10px">Pin this guide to individual projects, overriding the tenant default.</div>
+        <div class="row gap-2">
+          <select class="select grow" aria-label="Project to assign"><option selected>Select a project…</option><option>Orders Service</option><option>Inventory Events</option></select>
+          <button class="btn"><i data-lucide="plus"></i>Assign</button>
+        </div>
+        <ul class="card card--flat mt-3 divide-y">
+          <li class="list-row" style="padding:8px 12px"><span class="avatar avatar--xs avatar--hex avatar--a">PA</span><span class="lr-title">Payments API</span><span class="lr-sub mono">prj_8f2a1c</span><button class="btn btn--ghost btn--sm btn--icon ml-auto" aria-label="Unassign Payments API" data-tip="Unassign"><i data-lucide="x"></i></button></li>
+        </ul>
+        <div class="t-xs t-faint mt-2">Empty copy: “No projects assigned to this guide.”</div>
+      </section>
+    </div>
+    <div class="dialog__footer"><button class="btn btn--primary" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<!-- Delete style guide -->
+<div class="overlay" id="delete-guide" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="delete-guide-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span>
+      <div><div class="dialog__title" id="delete-guide-title">Delete style guide</div><div class="dialog__desc">Delete “Acme REST”? Its project assignments are removed and those projects fall back to the tenant default. This cannot be undone.</div></div>
+    </div>
+    <div class="dialog__body">
+      <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><span>Acme REST is the tenant default and is pinned to <strong>Payments API</strong>. After deletion those specs are scored by Apiome Recommended.</span></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/style-guides</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/style-guides/page.tsx</code>, <code>CreateGuideDialog</code>, edit/assign dialogs, <code>QualityPolicyPanel</code>, <code>VerificationPolicyPanel</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header “Start from Recommended” + “New guide” (admin only); three tabs Style guides · Import &amp; export policy · Verification policy.</li>
+    <li>Guides table: Name (link, Built-in / Default pills, description) · Rules on (mono) · Assignments chips (Tenant default, project chips, —) · Updated · Actions Assign… / Duplicate / Edit / Delete (Edit/Delete hidden for built-in; whole column hidden for non-admin). Footnote about the read-only built-in guide and GOV-2.3.</li>
+    <li>Dialogs with the same copy: New / Duplicate style guide (Name, Description, Copy rules from; duplicate prefills “{name} (copy)”), Edit style guide, Assign “{name}” (tenant default + project assignments + unassign X + empty copy), Delete confirm (DialogProvider → <code>.dialog--sm</code>).</li>
+    <li>Import &amp; export policy: version badge / “Not configured — advisory”; Import intake &amp; Export delivery fieldsets (Blocking/Advisory legend pill, Minimum grade, Minimum score, Refuse findings at, refuse-switch); Overrides (waiver switch, roles, lifetime + helper copy); read-only per-format overrides; “Save policy” disabled unless dirty; Policy versions + Active waivers lists with empty copy.</li>
+    <li>Verification policy: badges v{n} / Default (advisory) + Blocking/Advisory; Refresh; suite digests, max evidence age, target network class, purpose, breaking-change action, enforcement; “Save new version”; version history (last 8) “v{n} · {enforcement} · {breakingChangeAction}”.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Toolbar filter + chips (All / Custom / Assigned / Unassigned) and sort; icon tiles per guide; delete confirm names affected assignments; “Read-only for members” banner replaces silently hidden controls.</li></ul>
+  <h4>States</h4>
+  <ul><li>Empty: <code>.empty</code> “No style guides yet.” with both CTAs. Loading: skeleton rows. Non-admin: read-only banner, actions hidden, policy panels disabled without save buttons. Verification default: “Default (advisory)” + “Loading policy…”. Waivers/versions empty copy shown in card footers.</li></ul>
+</template>
+</body>
+</html>

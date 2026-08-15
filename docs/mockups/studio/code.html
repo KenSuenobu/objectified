@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Studio code · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .topbar--grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; }
+  .topbar--grid .topbar__center { position: static; transform: none; }
+  .topbar__left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .pv-pill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px 0 6px; border-radius: var(--r-full); background: var(--bg-subtle); box-shadow: 0 0 0 1px var(--border) inset; font-size: var(--fs-sm); white-space: nowrap; }
+  .pv-pill:hover { background: var(--bg-inset); }
+  .pv-pill [data-lucide] { width: 14px; height: 14px; color: var(--fg-subtle); }
+  .save-state { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-xs); color: var(--fg-subtle); white-space: nowrap; }
+  .save-state [data-lucide] { width: 13px; height: 13px; color: var(--ok); }
+  .workspace__body { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .workspace__body > .code-toolbar { grid-row: 1; }
+  .workspace__body > .split { grid-row: 2; }
+  .workspace__body > .status-bar { grid-row: 3; }
+  .code-toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .status-bar { height: 22px; display: flex; align-items: center; gap: 14px; padding: 0 12px; font-size: var(--fs-2xs); color: var(--fg-subtle); background: var(--bg-surface); border-top: 1px solid var(--border); white-space: nowrap; }
+  .status-bar .sb-item { display: inline-flex; align-items: center; gap: 4px; }
+  .status-bar [data-lucide] { width: 11px; height: 11px; }
+  .fmt-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px; border-radius: var(--r-md); font-size: var(--fs-sm); color: var(--fg-muted); text-align: left; }
+  .fmt-item:hover { background: var(--bg-subtle); }
+  .fmt-item.is-active { background: var(--accent-soft); color: var(--accent-fg); font-weight: 600; }
+  .fmt-item .fmt { margin-left: auto; }
+  .fmt-item [data-lucide] { width: 15px; height: 15px; }
+  .code-view { background: #1B1A18; }
+  .code-view .code { border-radius: 0; height: 100%; margin: 0; font-size: 12px; }
+  .edit-pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: var(--r-full); background: var(--bg-subtle); font-size: var(--fs-xs); }
+  .dim-row { border-top: 1px solid var(--border); }
+  .dim-row > button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; font-size: var(--fs-xs); text-align: left; }
+  .dim-row > button:hover { background: var(--bg-subtle); }
+  .dim-row .dot { width: 7px; height: 7px; }
+  .dim-body { padding: 0 12px 10px 27px; font-size: var(--fs-2xs); color: var(--fg-muted); }
+  .finding { display: flex; align-items: flex-start; gap: 6px; padding: 4px 0; }
+  .finding .dot { margin-top: 4px; width: 6px; height: 6px; }
+  .finding .ptr { font-family: var(--font-mono); color: var(--accent-fg); cursor: pointer; }
+</style>
+</head>
+<body data-shell="studio" data-nav="studio" data-page="studio/code" data-tenant="Acme Corp">
+<main class="page">
+<div class="workspace">
+  <div class="topbar topbar--grid" role="banner">
+    <div class="topbar__left">
+      <button class="pv-pill" data-action="open" data-target="pv-menu" aria-haspopup="menu" aria-label="Project and version picker"><span class="avatar avatar--xs avatar--hex avatar--a">PA</span><span class="t-600">Payments API</span><i data-lucide="chevron-right"></i><span class="mono">v2.4.0</span><span class="badge badge--dot" data-status="draft">Draft</span><i data-lucide="chevron-down"></i></button>
+      <span class="badge badge--warn" data-tip="Readiness: warnings in Mock and example readiness"><i data-lucide="gauge"></i>Readiness · Warnings</span>
+      <span class="save-state" role="status"><i data-lucide="check"></i>Saved</span>
+    </div>
+    <div class="topbar__center"><div class="segmented" aria-label="Studio views"><a href="editor.html"><i data-lucide="pen-tool"></i>Editor</a><a href="paths.html"><i data-lucide="route"></i>Paths</a><a class="is-active" href="code.html"><i data-lucide="code-2"></i>Code</a></div></div>
+    <div class="topbar__right">
+      <button class="btn btn--ghost btn--icon" data-action="open" data-target="git-menu" data-tip="Revision and sync (⌘G)" aria-label="Git menu"><i data-lucide="git-branch"></i></button>
+      <button class="btn btn--ghost btn--icon" data-tip="Share" aria-label="Share"><i data-lucide="share-2"></i></button>
+      <button class="btn btn--sm" data-action="open" data-target="export-wizard"><i data-lucide="image-down"></i>Canvas export</button>
+      <button class="btn btn--sm btn--primary" data-action="open" data-target="download-gate"><i data-lucide="download"></i>Download</button>
+      <button class="avatar avatar--sm avatar--a" aria-label="Account menu for Ada Lovelace">AL</button>
+    </div>
+  </div>
+
+  <div class="workspace__body">
+    <!-- toolbar row -->
+    <div class="code-toolbar">
+      <span class="t-sm t-600"><i data-lucide="file-json-2" style="display:inline-block;vertical-align:-2px;width:15px;height:15px"></i> OpenAPI 3.2.0</span>
+      <span class="t-xs t-subtle">Payments API • v2.4.0</span>
+      <div class="segmented segmented--sm" aria-label="Serialization"><button>JSON</button><button class="is-active">YAML</button></div>
+      <select class="select select--sm" style="width:130px" hidden aria-label="SQL dialect"><option>PostgreSQL</option><option>MySQL</option><option>SQL Server</option><option>Oracle</option><option>SQLite</option></select>
+      <span class="ml-auto"></span>
+      <!-- SourceEditControls: view mode -->
+      <span class="row gap-2" id="sec-view">
+        <button class="btn btn--sm" data-tip="Edit this document as source" data-action="eval-edit" onclick="document.getElementById('sec-view').hidden=true;document.getElementById('sec-edit').hidden=false"><i data-lucide="pencil"></i>Edit</button>
+      </span>
+      <!-- SourceEditControls: edit mode -->
+      <span class="row gap-2" id="sec-edit" hidden>
+        <span class="edit-pill"><span class="spinner" style="width:12px;height:12px" hidden></span><span class="dot dot--warn" style="width:7px;height:7px"></span>2 warnings<span class="badge badge--warn" style="height:16px;font-size:9px">Unsaved</span></span>
+        <button class="btn btn--sm btn--ghost btn--icon" data-action="open" data-target="kbd-popover" data-tip="Edit mode shortcuts" aria-label="Edit mode shortcuts"><i data-lucide="keyboard"></i></button>
+        <button class="btn btn--sm" data-tip="Save the draft to local recovery now (Ctrl+S)"><i data-lucide="save"></i>Save draft</button>
+        <button class="btn btn--sm" data-action="open" data-target="discard-dialog" data-tip="Discard the draft and its local recovery copy"><i data-lucide="trash-2"></i>Discard</button>
+        <button class="btn btn--sm btn--accent" data-action="open" data-target="review-dialog" data-tip="Review and apply this draft to the model"><i data-lucide="upload"></i>Apply</button>
+        <button class="btn btn--sm btn--ghost btn--icon" data-action="open" data-target="leave-dialog" data-tip="Leave Edit mode" aria-label="Leave Edit mode"><i data-lucide="x"></i></button>
+        <button class="btn btn--sm btn--ghost" data-action="open" data-target="convert-dialog">Convert to JSON…</button>
+      </span>
+      <button class="btn btn--sm" data-action="toggle" data-target="readiness-panel" data-tip="Show/Hide the evidence-linked contract readiness panel"><i data-lucide="gauge"></i>Readiness · Warnings</button>
+      <button class="btn btn--sm" data-tip="Copy to clipboard"><i data-lucide="copy"></i>Copy</button>
+    </div>
+
+    <div class="split" style="grid-template-columns:250px minmax(0,1fr) 320px">
+      <!-- Left: formats & options -->
+      <aside class="panel" aria-label="Formats and options">
+        <div class="panel__head">Format</div>
+        <div class="panel__body" style="padding:8px">
+          <div class="t-2xs t-caps" style="padding:4px 10px;color:var(--fg-faint)">Primary</div>
+          <button class="fmt-item is-active"><i data-lucide="file-json-2"></i>OpenAPI Specification<span class="fmt fmt--openapi">3.2.0</span></button>
+          <button class="fmt-item"><i data-lucide="radio"></i>AsyncAPI Specification<span class="fmt fmt--asyncapi">3.0.0</span></button>
+          <button class="fmt-item"><i data-lucide="workflow"></i>Arazzo Specification<span class="fmt fmt--raml" style="background:var(--accent-soft);color:var(--accent-fg)">1.0.1</span></button>
+          <button class="fmt-item"><i data-lucide="braces"></i>JSON Schema<span class="fmt fmt--jsonschema">2020-12</span></button>
+          <div class="t-2xs t-caps" style="padding:8px 10px 4px;color:var(--fg-faint)">Secondary</div>
+          <button class="fmt-item"><i data-lucide="hexagon"></i>GraphQL SDL<span class="fmt fmt--graphql">SDL</span></button>
+          <button class="fmt-item"><i data-lucide="database"></i>SQL DDL<span class="badge badge--outline">5 dialects</span></button>
+          <div class="t-2xs t-caps" style="padding:8px 10px 4px;color:var(--fg-faint)">More targets</div>
+          <div class="t-2xs t-subtle" style="padding:0 10px 6px">Available in Control Panel export (multi-format export):</div>
+          <div class="row wrap gap-1" style="padding:0 10px 8px">
+            <span class="tag">TypeScript DTO</span><span class="tag">Pydantic</span><span class="tag">Python dataclass</span><span class="tag">SQLAlchemy</span><span class="tag">Java POJO</span><span class="tag">Scala</span><span class="tag">Protobuf</span><span class="tag">Avro</span>
+          </div>
+          <a class="btn btn--sm btn--ghost" style="margin:0 10px" href="../ship/export-studio.html"><i data-lucide="package-open"></i>Open Export studio</a>
+          <hr class="mt-3 mb-2" />
+          <div class="t-2xs t-caps" style="padding:4px 10px;color:var(--fg-faint)">Options — OpenAPI</div>
+          <div class="col gap-2" style="padding:4px 10px">
+            <label class="check t-xs"><input type="checkbox" checked disabled/>Include x-apiome-canvas metadata</label>
+            <label class="check t-xs"><input type="checkbox" checked disabled/>Project info → info block</label>
+            <div class="t-2xs t-faint">Per-generator options are fixed; only the SQL dialect is user-selectable (no DROP statements, comments on, snake_case).</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Centre: code viewer -->
+      <section class="panel code-view" aria-label="Generated code">
+        <div class="panel__body">
+<pre class="code code--dark code--lines"><span><span class="c-n">openapi</span>: <span class="c-s">3.2.0</span></span><span><span class="c-n">info</span>:</span><span>  <span class="c-n">title</span>: <span class="c-s">Payments API</span></span><span>  <span class="c-n">version</span>: <span class="c-s">2.4.0</span></span><span>  <span class="c-n">summary</span>: <span class="c-s">Card, refund and payout endpoints for the merchant platform</span></span><span>  <span class="c-n">contact</span>: { <span class="c-n">name</span>: <span class="c-s">Platform team</span>, <span class="c-n">email</span>: <span class="c-s">api@acme.dev</span> }</span><span><span class="c-n">servers</span>:</span><span>  - <span class="c-n">url</span>: <span class="c-s">https://api.acme.dev/v2</span></span><span>    <span class="c-n">description</span>: <span class="c-s">Production</span></span><span><span class="c-n">tags</span>:</span><span>  - { <span class="c-n">name</span>: <span class="c-s">Payments</span> }</span><span>  - { <span class="c-n">name</span>: <span class="c-s">Refunds</span> }</span><span><span class="c-n">paths</span>:</span><span>  <span class="c-n">/payments</span>:</span><span>    <span class="c-k">get</span>:</span><span>      <span class="c-n">operationId</span>: <span class="c-s">listPayments</span></span><span>      <span class="c-n">summary</span>: <span class="c-s">List payments</span></span><span>      <span class="c-n">parameters</span>:</span><span>        - { <span class="c-n">$ref</span>: <span class="c-s">'#/components/parameters/limit'</span> }</span><span>      <span class="c-n">responses</span>:</span><span>        <span class="c-n">'200'</span>: { <span class="c-n">$ref</span>: <span class="c-s">'#/components/responses/PaymentList'</span> }</span><span>    <span class="c-k">post</span>:</span><span>      <span class="c-n">operationId</span>: <span class="c-s">createPayment</span></span><span>      <span class="c-n">requestBody</span>: { <span class="c-n">$ref</span>: <span class="c-s">'#/components/requestBodies/CreatePayment'</span> }</span><span>  <span class="c-n">/payments/{paymentId}</span>:</span><span>    <span class="c-k">get</span>:</span><span>      <span class="c-n">operationId</span>: <span class="c-s">getPayment</span></span><span>      <span class="c-n">security</span>: [ { <span class="c-n">bearerAuth</span>: [<span class="c-s">payments:read</span>] } ]</span><span>      <span class="c-n">responses</span>:</span><span>        <span class="c-n">'200'</span>:</span><span>          <span class="c-n">description</span>: <span class="c-s">The payment</span></span><span>          <span class="c-n">links</span>:</span><span>            <span class="c-n">refunds</span>: { <span class="c-n">operationId</span>: <span class="c-s">listRefunds</span> }</span><span>        <span class="c-n">'404'</span>: { <span class="c-n">description</span>: <span class="c-s">Payment not found</span> }</span><span><span class="c-n">components</span>:</span><span>  <span class="c-n">schemas</span>:</span><span>    <span class="c-n">Payment</span>:</span><span>      <span class="c-n">type</span>: <span class="c-s">object</span></span><span>      <span class="c-n">description</span>: <span class="c-s">A charge against a customer's payment method</span></span><span>      <span class="c-n">required</span>: [<span class="c-s">id</span>, <span class="c-s">amountMinor</span>, <span class="c-s">currency</span>, <span class="c-s">status</span>]</span><span>      <span class="c-n">properties</span>:</span><span>        <span class="c-n">id</span>: { <span class="c-n">type</span>: <span class="c-s">string</span>, <span class="c-n">format</span>: <span class="c-s">uuid</span> }</span><span>        <span class="c-n">amountMinor</span>: { <span class="c-n">type</span>: <span class="c-s">integer</span>, <span class="c-n">format</span>: <span class="c-s">int64</span>, <span class="c-n">minimum</span>: <span class="c-k">0</span> }</span><span>        <span class="c-n">status</span>: { <span class="c-n">enum</span>: [<span class="c-s">pending</span>, <span class="c-s">authorized</span>, <span class="c-s">captured</span>, <span class="c-s">failed</span>] }</span><span>  <span class="c-c"># x-apiome-canvas: layout + note annotations preserved</span></span></pre>
+        </div>
+      </section>
+
+      <!-- Right: readiness panel -->
+      <aside class="panel" id="readiness-panel" aria-label="Contract readiness">
+        <div class="panel__head">Contract readiness<span class="ml-auto row gap-1"><span class="badge badge--warn">Warnings</span><button class="btn btn--ghost btn--sm btn--icon" data-tip="Re-evaluate readiness" aria-label="Re-evaluate readiness"><i data-lucide="refresh-cw"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="toggle" data-target="readiness-panel" data-tip="Close readiness panel" aria-label="Close readiness panel"><i data-lucide="x"></i></button></span></div>
+        <div class="panel__body">
+          <div class="t-xs t-muted" style="padding:10px 12px" role="status">Warnings in: Mock and example readiness, Consumer journey.</div>
+          <div class="dim-row"><button><span class="dot dot--ok"></span><span class="grow">Authoring completeness</span><span class="badge badge--ok" style="height:16px;font-size:9px">Pass</span></button></div>
+          <div class="dim-row"><button><span class="dot dot--ok"></span><span class="grow">Dialect, schema, and reference validity</span><span class="badge badge--ok" style="height:16px;font-size:9px">Pass</span></button></div>
+          <div class="dim-row"><button><span class="dot dot--ok"></span><span class="grow">Governance (reference lint)</span><span class="badge badge--ok" style="height:16px;font-size:9px">Pass</span></button></div>
+          <div class="dim-row"><button aria-expanded="true"><span class="dot dot--warn"></span><span class="grow">Mock and example readiness</span><span class="badge badge--warn" style="height:16px;font-size:9px">Warnings</span></button>
+            <div class="dim-body">
+              <div class="t-2xs t-faint mb-1">Evidence: generated document · digest a41f9c02be77 · evaluated 09:12 · fresh</div>
+              <div class="finding"><span class="dot dot--warn"></span><span>No example for <span class="mono">CreatePayment</span> request body. <span class="ptr" data-tip="Reveal in editor">Go to /components/requestBodies/CreatePayment</span></span></div>
+              <div class="finding"><span class="dot dot--warn"></span><span>Response 404 has no content example. <span class="ptr">Go to /paths/~1payments~1{paymentId}/get/responses/404</span></span></div>
+            </div>
+          </div>
+          <div class="dim-row"><button><span class="dot dot--ok"></span><span class="grow">Classified change impact</span><span class="badge badge--ok" style="height:16px;font-size:9px">Pass</span></button></div>
+          <div class="dim-row"><button aria-expanded="true"><span class="dot dot--warn"></span><span class="grow">Consumer journey</span><span class="badge badge--warn" style="height:16px;font-size:9px">Warnings</span></button>
+            <div class="dim-body"><div class="finding"><span class="dot dot--warn"></span><span>unresolved-link-target: Link <span class="mono">disputes</span> names no operationId in this version. <span class="ptr">Go to /paths/…/links/disputes</span></span></div></div>
+          </div>
+          <div class="dim-row"><button><span class="dot" style="background:var(--fg-faint)"></span><span class="grow">Provider verification</span><span class="badge badge--outline" style="height:16px;font-size:9px">Unavailable</span></button></div>
+          <div class="dim-row"><button><span class="dot" style="background:var(--fg-faint)"></span><span class="grow">Consumer compatibility</span><span class="badge badge--outline" style="height:16px;font-size:9px">Unavailable</span></button></div>
+          <div class="dim-row"><button><span class="dot" style="background:var(--fg-faint)"></span><span class="grow">Deployability</span><span class="badge badge--outline" style="height:16px;font-size:9px">Unavailable</span></button></div>
+          <div class="t-2xs t-faint" style="padding:10px 12px;border-top:1px solid var(--border)">Evaluated Aug 15, 09:12 · digest a41f9c02be77 · evidence “not yet shipped” dimensions report Unavailable.</div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="status-bar" role="status">
+      <span class="sb-item"><i data-lucide="folder-git-2"></i>Payments API</span>
+      <span class="sb-item"><i data-lucide="tag"></i>v2.4.0</span>
+      <span class="sb-item"><i data-lucide="git-branch"></i>main</span>
+      <span class="ml-auto"></span>
+      <span class="sb-item">YAML · 812 lines</span>
+      <span class="sb-item mono">payments-api-v2-4-0-openapi.yaml</span>
+      <span class="sb-item t-faint">mock states:</span><button class="sb-item t-subtle" data-action="open" data-target="recovery-dialog">recovered draft</button><button class="sb-item t-subtle" data-action="open" data-target="code-empty">no project</button>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<div class="overlay" id="pv-menu" data-overlay style="align-items:flex-start;justify-content:flex-start;padding:56px 0 0 76px;background:transparent">
+  <div class="menu" style="width:320px" role="menu">
+    <a class="menu__item" href="#"><span class="avatar avatar--xs avatar--hex avatar--a">PA</span><span class="grow">Payments API</span><i data-lucide="check" style="color:var(--accent)"></i></a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#"><span class="mono grow">v2.4.0 — Add refund reasons</span><span class="badge badge--dot" data-status="draft">Draft</span><i data-lucide="check" style="color:var(--accent)"></i></a>
+    <a class="menu__item" href="#"><i data-lucide="lock" style="width:13px;height:13px"></i><span class="mono grow">v2.3.1 — Hotfix currency enum</span><span class="badge badge--dot" data-status="published">Published</span></a>
+  </div>
+</div>
+<div class="overlay" id="git-menu" data-overlay style="align-items:flex-start;justify-content:flex-end;padding:56px 220px 0 0;background:transparent">
+  <div class="menu" style="width:280px" role="menu">
+    <a class="menu__item" href="#"><i data-lucide="git-commit-horizontal"></i>Commit new revision…<span class="kbd">⌘↵</span></a>
+    <a class="menu__item" href="#"><i data-lucide="git-graph"></i>Show history graph…</a>
+    <a class="menu__item" href="#"><i data-lucide="arrow-down-to-line"></i>Switch to latest revision (pull)</a>
+  </div>
+</div>
+
+<!-- Keyboard popover -->
+<div class="overlay" id="kbd-popover" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-label="Edit mode shortcuts">
+    <div class="dialog__header"><span class="icon-tile"><i data-lucide="keyboard"></i></span><div><div class="dialog__title">Edit mode shortcuts</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-2 t-sm">
+      <div class="row-between"><span>Save the draft to local recovery immediately.</span><span><span class="kbd">Ctrl</span><span class="kbd">S</span></span></div>
+      <div class="row-between"><span>Reformat the document in its current format.</span><span><span class="kbd">Shift</span><span class="kbd">Alt</span><span class="kbd">F</span></span></div>
+      <div class="row-between"><span>Jump to the next problem marker.</span><span class="kbd">F8</span></div>
+      <div class="row-between"><span>Jump to the previous problem marker.</span><span><span class="kbd">Shift</span><span class="kbd">F8</span></span></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Discard draft -->
+<div class="overlay" id="discard-dialog" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Discard this draft?</div><div class="dialog__desc">Your edits and their local recovery copy will be removed. The document returns to the generated source. This cannot be undone.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Keep editing</button><button class="btn btn--danger" data-action="close">Discard draft</button></div></div></div>
+
+<!-- Leave with unsaved edits -->
+<div class="overlay" id="leave-dialog" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="log-out"></i></span><div><div class="dialog__title">Leave with unsaved edits?</div><div class="dialog__desc">Your draft is saved to local recovery and will be offered again the next time you edit this document on this device.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Keep editing</button><button class="btn btn--primary" data-action="close">Save &amp; leave</button></div></div></div>
+
+<!-- Format conversion -->
+<div class="overlay" id="convert-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Convert draft">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="repeat-2"></i></span><div><div class="dialog__title">Convert draft to JSON?</div><div class="dialog__desc">The draft is rewritten through the parser, so lexical details of the current text cannot be preserved:</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-2 t-sm">
+      <div class="row gap-2"><span class="badge badge--warn">3</span><span>YAML comments are removed; JSON has no comment syntax.</span></div>
+      <div class="row gap-2"><span class="badge badge--warn">1</span><span>Anchors/aliases are expanded into copies of their values.</span></div>
+      <div class="row gap-2"><span class="badge badge--warn">2</span><span>Numeric-looking keys (for example response codes) may be reordered.</span></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Convert anyway</button></div>
+  </div>
+</div>
+
+<!-- Recovery prompt -->
+<div class="overlay" id="recovery-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Recovered draft found">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="history"></i></span><div><div class="dialog__title">Recovered draft found</div><div class="dialog__desc">A draft of this document saved Aug 14, 18:22 was recovered from this device.</div></div></div>
+    <div class="dialog__body"><div class="banner banner--warn"><i data-lucide="triangle-alert"></i>The document has changed on the server since that draft was saved. Restoring will replace the editor contents with the older draft — the server state itself stays untouched until you review and apply.</div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Discard draft</button><button class="btn btn--primary" data-action="close">Restore draft</button></div>
+  </div>
+</div>
+
+<!-- Source change review -->
+<div class="overlay" id="review-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Review source changes">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="git-pull-request"></i></span><div><div class="dialog__title">Review source changes</div><div class="dialog__desc">Applying writes these changes to the draft in one transaction. Discarding leaves the document untouched.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="row gap-2 t-sm"><span class="badge badge--ok">2 added</span><span class="badge badge--warn">3 changed</span><span class="badge badge--danger">1 removed</span><span class="badge badge--outline">41 preserved</span></div>
+      <div class="card card--flat" style="padding:0">
+        <div class="t-caps" style="padding:8px 12px;border-bottom:1px solid var(--border)">Schemas</div>
+        <div class="list-row" style="padding:8px 12px"><span class="badge badge--ok" style="height:16px;font-size:9px">Added</span><span class="mono t-xs grow">/components/schemas/Dispute</span></div>
+        <div class="list-row" style="padding:8px 12px"><span class="badge badge--warn" style="height:16px;font-size:9px">Changed</span><span class="mono t-xs grow">/components/schemas/Refund/required</span></div>
+        <div class="list-row" style="padding:8px 12px"><span class="badge badge--danger" style="height:16px;font-size:9px">Removed</span><span class="mono t-xs grow">/components/schemas/Payout</span></div>
+        <div class="t-caps" style="padding:8px 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">Operations</div>
+        <div class="list-row" style="padding:8px 12px"><span class="badge badge--warn" style="height:16px;font-size:9px">Changed</span><span class="mono t-xs grow">/paths/~1refunds/post/requestBody</span></div>
+      </div>
+      <div class="banner banner--danger"><i data-lucide="shield-alert"></i><div><div class="banner-title">Compatibility preflight — Breaking changes</div><div class="banner-body t-xs">property-removed: <span class="mono">Payout</span> (affects GET /payouts) · property-required: <span class="mono">Refund.reason</span> (affects POST /refunds). Not classified is not safe: treat these changes as potentially breaking.</div></div></div>
+      <label class="check t-xs"><input type="checkbox"/>I understand this apply includes breaking or unclassified changes for consumers of this contract.</label>
+    </div>
+    <div class="dialog__footer"><span class="left t-2xs t-subtle">Classified against the current draft revision · base a41f9c02be77</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close" disabled>Apply changes</button></div>
+  </div>
+</div>
+
+<!-- Download gate -->
+<div class="overlay" id="download-gate" data-overlay>
+  <div class="dialog" role="alertdialog" aria-label="Validation warnings">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="shield-alert"></i></span><div><div class="dialog__title">Validation warnings</div><div class="dialog__desc">The document has warnings. You can still download the file — validated against OpenAPI 3.2 + Apiome semantic checks.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-2">
+      <div class="card card--flat" style="padding:8px 12px"><div class="row gap-2 t-xs"><span class="badge badge--warn">warning</span><span>Response 404 on <span class="mono">GET /payments/{paymentId}</span> has no content.</span></div></div>
+      <div class="card card--flat" style="padding:8px 12px"><div class="row gap-2 t-xs"><span class="badge badge--warn">warning</span><span><span class="mono">CreatePayment</span> request body has no example.</span></div></div>
+      <div class="t-2xs t-subtle">Blocking errors instead open “Export blocked — fix the issues below before downloading”.</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close"><i data-lucide="download"></i>Download anyway</button></div>
+  </div>
+</div>
+
+<!-- Canvas export wizard (compact) -->
+<div class="overlay" id="export-wizard" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Canvas export">
+    <div class="dialog__header"><span class="icon-tile icon-tile--honey"><i data-lucide="image-down"></i></span><div><div class="dialog__title">Export canvas</div><div class="dialog__desc">Images, documents or diagram code — the full wizard lives on the Editor view.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="grid grid-3 gap-2">
+        <button class="card card--flat" style="padding:12px;text-align:left"><div class="t-sm t-600">PNG / JPEG / SVG</div><div class="t-2xs t-subtle">Images</div></button>
+        <button class="card card--flat" style="padding:12px;text-align:left"><div class="t-sm t-600">PDF / JSON</div><div class="t-2xs t-subtle">Documents</div></button>
+        <button class="card card--flat" style="padding:12px;text-align:left"><div class="t-sm t-600">Mermaid / PlantUML / GraphML / DOT</div><div class="t-2xs t-subtle">Diagram code</div></button>
+      </div>
+    </div>
+    <div class="dialog__footer"><a class="btn" href="editor.html">Open in Editor</a><button class="btn btn--primary" data-action="close">Export</button></div>
+  </div>
+</div>
+
+<!-- Empty state -->
+<div class="overlay" id="code-empty" data-overlay>
+  <div class="dialog" role="dialog"><div class="dialog__body"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="code-2"></i></div><div class="empty__title">No project selected</div><div class="empty__desc">Select a project and version from the picker to generate code specifications.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Close</button></div></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/studio/code → private-suite designer /code</p>
+  <h4>Replaces</h4>
+  <ul><li><code>code/page.tsx</code>, <code>SourceEditControls</code>, <code>FormatConversionDialog</code>, <code>RecoveryPromptDialog</code>, <code>SourceChangeReviewDialog</code>, <code>ContractReadinessPanel</code>, download validation AlertDialogs, <code>ExportWizard</code> entry.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: format title (“OpenAPI 3.2.0” …), “{Project} • v{version}”, JSON|YAML toggle (hidden for GraphQL/SQL), SQL dialect select (PostgreSQL/MySQL/SQL Server/Oracle/SQLite; fixed options: no DROP, comments on, snake_case), Readiness toggle with status suffix, Copy, Download.</li>
+    <li>Format list: primary OpenAPI 3.2.0 / AsyncAPI 3.0.0 (kafka) / Arazzo 1.0.1 / JSON Schema 2020-12 (+ x-apiome-note/x-apiome-canvas); secondary GraphQL SDL / SQL DDL. Extra targets (TypeScript DTO, Pydantic, Python dataclass, SQLAlchemy, Java POJO, Scala, Protobuf, Avro) exist only in apiome-ui utils — marked “available in Control Panel export” with a link.</li>
+    <li>Source edit mode: Edit button (“Edit this document as source”; gate registry all enforced) → status pill (errors/warnings/OK + Unsaved), keyboard popover (Ctrl+S / Shift+Alt+F / F8 / Shift+F8), Save draft, Discard (+confirm), Apply (disabled until valid) → Source change review (counts, grouped change list with pointers, compatibility preflight verdict + acknowledgement checkbox, conflict copy in dialog), Done (+ leave-unsaved dialog), Convert JSON↔YAML with loss list, Recovery prompt with stale note (72 h TTL noted).</li>
+    <li>Download gate: “Validation warnings … Download anyway” dialog (and Export blocked variant referenced); filename pattern in status bar.</li>
+    <li>Contract readiness: aggregate badge, Re-evaluate, close, headline role=status, 9 dimensions (Authoring completeness / Dialect-schema-reference validity / Governance / Mock &amp; example readiness / Classified change impact / Consumer journey / Provider verification / Consumer compatibility / Deployability) with Pass/Warnings/Unavailable, evidence line (source, digest 12, evaluated at, freshness), finding rows with pointer buttons, footer “Evaluated … · digest …”.</li>
+    <li>Code viewer with line numbers + syntax colouring; findings publish to inspector problems (see Editor page Contract tab).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Format list as a persistent left panel (was a select); mock-state links (recovered draft, no project).</li></ul>
+  <h4>States</h4>
+  <ul><li>“No project selected” empty; loading “Loading editor…” (spinner); readiness Stale/Fail variants use the same badge vocabulary.</li></ul>
+</template>
+</body>
+</html>

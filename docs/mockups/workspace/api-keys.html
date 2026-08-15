@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>API keys · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: row tints, scope preset radios, secret box */
+  .table tbody tr.is-expired td { background: color-mix(in srgb, var(--danger) 5%, transparent); }
+  .table tbody tr.is-disabled td { background: color-mix(in srgb, var(--fg) 2.5%, transparent); color: var(--fg-muted); }
+  .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .scope-opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); box-shadow: inset 0 0 0 1px var(--border); cursor: pointer; }
+  .scope-opt:hover { background: var(--bg-subtle); }
+  .scope-opt.is-checked { box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); }
+  .scope-opt .radio { margin-top: 2px; }
+  .scope-opt .so-title { font-size: var(--fs-sm); font-weight: 500; }
+  .scope-opt .so-hint { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 1px; }
+  .secret { display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 14px; border-radius: var(--r-md); background: var(--bg-inset); font-family: var(--font-mono); font-size: var(--fs-sm); word-break: break-all; }
+</style>
+</head>
+<body data-shell="app" data-nav="api-keys" data-page="workspace/api-keys" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Workspace</span><i data-lucide="chevron-right"></i><span>API keys</span></div>
+          <h1 class="page-title">API keys</h1>
+          <p class="page-desc">Keys for external REST access. Prefer scoped CI tokens for pipelines.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn btn--ghost" href="../foundations/help.html" data-tip="REST API reference"><i data-lucide="book-open"></i>API docs</a>
+          <button class="btn btn--primary" data-action="open" data-target="create-key-dialog"><i data-lucide="plus"></i>Create API key<span class="kbd">N</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Expiry heads-up (adds) -->
+    <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div><span class="banner-title">“Partner sync” expired on Aug 1, 2026.</span> <span class="banner-body">Requests with that key are refused — create a replacement and delete the old one.</span></div><div class="banner-actions"><button class="btn btn--sm" data-action="open" data-target="create-key-dialog">Create replacement</button></div></div>
+
+    <!-- Keys table -->
+    <section class="table-wrap">
+      <div class="table-toolbar">
+        <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter by name or prefix…" aria-label="Filter API keys" /></div>
+        <span class="chip is-active" data-action="chip">All <span class="t-faint">4</span></span>
+        <span class="chip" data-action="chip">Active <span class="t-faint">2</span></span>
+        <span class="chip" data-action="chip">Disabled <span class="t-faint">1</span></span>
+        <span class="chip" data-action="chip">Expired <span class="t-faint">1</span></span>
+        <span class="spacer"></span>
+        <span class="t-xs t-subtle">Tenant-scoped · session <span class="mono">current_tenant_id</span></span>
+      </div>
+      <table class="table">
+        <thead><tr>
+          <th>Name</th>
+          <th>Prefix</th>
+          <th>Scopes</th>
+          <th>Status</th>
+          <th>Last used</th>
+          <th>Created</th>
+          <th>Expires</th>
+          <th>Enabled</th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+          <!-- active, scoped -->
+          <tr>
+            <td><div class="row-start gap-3"><span class="icon-tile icon-tile--sm icon-tile--honey"><i data-lucide="key-round"></i></span><div class="min-w-0"><div class="cell-primary">CI contract gate</div><div class="cell-sub clamp-2" style="max-width:280px;white-space:normal">GitHub Actions job that blocks merges on breaking classified diffs.</div></div></div></td>
+            <td><span class="row gap-1"><span class="tag">key_9f31c2…</span><button class="btn btn--ghost btn--sm btn--icon" data-tip="Copy prefix" aria-label="Copy prefix"><i data-lucide="copy"></i></button></span></td>
+            <td><span class="row gap-1 wrap"><span class="badge badge--mono badge--accent">diff:read</span></span></td>
+            <td><span class="badge badge--dot" data-status="active">Active</span></td>
+            <td class="t-num t-muted">08/15/26 08:02 AM</td>
+            <td class="t-num t-muted">07/02/26 10:14 AM</td>
+            <td class="t-num t-muted">01/02/27</td>
+            <td><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enabled: CI contract gate" data-action="open" data-target="disable-dialog"></button>On</label></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete API key" aria-label="Delete API key" data-action="open" data-target="delete-key-dialog"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+          <!-- disabled -->
+          <tr class="is-disabled">
+            <td><div class="row-start gap-3"><span class="icon-tile icon-tile--sm"><i data-lucide="key-round"></i></span><div class="min-w-0"><div class="cell-primary">Nightly lint</div><div class="cell-sub clamp-2" style="max-width:280px;white-space:normal">Cron reads catalog + MCP lint gates every night at 02:00 UTC.</div></div></div></td>
+            <td><span class="row gap-1"><span class="tag">key_2ab7e0…</span><button class="btn btn--ghost btn--sm btn--icon" data-tip="Copy prefix" aria-label="Copy prefix"><i data-lucide="copy"></i></button></span></td>
+            <td><span class="row gap-1 wrap"><span class="badge badge--mono badge--accent">lint:read</span></span></td>
+            <td><span class="badge badge--dot" data-status="disabled">Disabled</span></td>
+            <td class="t-num t-muted">08/10/26 02:00 AM</td>
+            <td class="t-num t-muted">06/18/26 03:41 PM</td>
+            <td class="t-num t-muted">Never</td>
+            <td><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Enabled: Nightly lint" data-action="switch"></button>Off</label></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete API key" aria-label="Delete API key" data-action="open" data-target="delete-key-dialog"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+          <!-- expired, full access -->
+          <tr class="is-expired">
+            <td><div class="row-start gap-3"><span class="icon-tile icon-tile--sm icon-tile--danger"><i data-lucide="key-round"></i></span><div class="min-w-0"><div class="cell-primary">Partner sync</div><div class="cell-sub clamp-2" style="max-width:280px;white-space:normal">Legacy integration used by Globex to mirror published specs. Superseded by the catalog webhook.</div></div></div></td>
+            <td><span class="row gap-1"><span class="tag">key_c41d88…</span><button class="btn btn--ghost btn--sm btn--icon" data-tip="Copy prefix" aria-label="Copy prefix"><i data-lucide="copy"></i></button></span></td>
+            <td><span class="t-sm">Full access</span></td>
+            <td><span class="badge" data-status="error"><i data-lucide="circle-alert"></i>Expired</span></td>
+            <td class="t-num t-muted">07/31/26 11:58 PM</td>
+            <td class="t-num t-muted">02/01/26 09:00 AM</td>
+            <td class="t-num t-600 t-danger">08/01/26</td>
+            <td><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enabled: Partner sync" data-action="open" data-target="disable-dialog"></button>On</label></td>
+            <td><div class="cell-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete API key" aria-label="Delete API key" data-action="open" data-target="delete-key-dialog"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+          <!-- active, two scopes -->
+          <tr>
+            <td><div class="row-start gap-3"><span class="icon-tile icon-tile--sm icon-tile--honey"><i data-lucide="key-round"></i></span><div class="min-w-0"><div class="cell-primary">Terraform</div><div class="cell-sub clamp-2" style="max-width:280px;white-space:normal">Plan-time contract + lint checks in the platform IaC pipeline.</div></div></div></td>
+            <td><span class="row gap-1"><span class="tag">key_77e0a1…</span><button class="btn btn--ghost btn--sm btn--icon" data-tip="Copy prefix" aria-label="Copy prefix"><i data-lucide="copy"></i></button></span></td>
+            <td><span class="row gap-1 wrap"><span class="badge badge--mono badge--accent">diff:read</span><span class="badge badge--mono badge--accent">lint:read</span></span></td>
+            <td><span class="badge badge--dot" data-status="active">Active</span></td>
+            <td class="t-num t-muted">Never</td>
+            <td class="t-num t-muted">08/14/26 04:22 PM</td>
+            <td class="t-num t-muted">11/12/26</td>
+            <td><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enabled: Terraform" data-action="open" data-target="disable-dialog"></button>On</label></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Delete API key" aria-label="Delete API key" data-action="open" data-target="delete-key-dialog"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>4 keys · 2 active · 1 disabled · 1 expired</span><span class="row gap-2"><i data-lucide="info" style="width:12px;height:12px"></i>Scopes: <span class="mono">*</span> (full), <span class="mono">diff:read</span>, <span class="mono">lint:read</span> — <span class="mono">*</span> must stand alone.</span></div>
+    </section>
+
+
+    <!-- Reference: how keys authenticate + scope legend (adds) -->
+    <section class="grid grid-2">
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="terminal"></i>Use a key</div><span class="t-xs t-subtle">Bearer token over HTTPS</span></div>
+        <div class="card__body col gap-3">
+          <div class="code"><span class="c-c"># classified diff between two versions (diff:read)</span>
+curl -X POST \
+  https://api.apiome.dev/v1/diff/ver_1a2b/ver_3c4d/classified \
+  -H <span class="c-s">"Authorization: Bearer apk_live_…"</span> \
+  -H <span class="c-s">"Accept: application/json"</span></div>
+          <div class="t-xs t-muted">Keys are tenant-scoped: every call runs as <strong>Acme Corp</strong>. Rotate by creating a new key, switching the pipeline, then deleting the old one.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="shield-check"></i>Scope reference</div><span class="badge badge--outline">3 scopes</span></div>
+        <table class="table table--dense table--flush">
+          <thead><tr><th>Scope</th><th>Allows</th><th class="t-right">Keys</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge--mono">*</span></td><td class="t-muted">All REST operations for this tenant. Must stand alone.</td><td class="t-right mono">1</td></tr>
+            <tr><td><span class="badge badge--mono badge--accent">diff:read</span></td><td class="t-muted"><span class="mono">POST /v1/diff/…/classified</span> only — contract gates.</td><td class="t-right mono">2</td></tr>
+            <tr><td><span class="badge badge--mono badge--accent">lint:read</span></td><td class="t-muted"><span class="mono">GET …/lint</span> and <span class="mono">…/lint/gate</span> (catalog + MCP).</td><td class="t-right mono">2</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Other states -->
+    <div class="row gap-2 t-xs t-subtle" style="justify-content:flex-end"><span>Preview state:</span><div class="segmented segmented--sm" data-tabs="state-panels"><button class="is-active" data-action="tab" data-target="none">Hidden</button><button data-action="tab" data-target="empty">Empty</button><button data-action="tab" data-target="gated">No tenant</button><button data-action="tab" data-target="loading">Loading</button></div></div>
+    <div id="state-panels">
+      <div data-tab-panel="none" hidden></div>
+      <div data-tab-panel="empty" hidden class="card"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="key-round"></i></div><div class="empty__title">No API keys yet</div><div class="empty__desc">Create your first API key to access your tenant data via REST API. Scoped CI tokens can only read diffs and lint gates.</div><div class="empty__actions"><button class="btn btn--primary" data-action="open" data-target="create-key-dialog"><i data-lucide="plus"></i>Create API key</button><a class="btn" href="../foundations/help.html">Read the REST docs</a></div></div></div>
+      <div data-tab-panel="gated" hidden class="card"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="lock"></i></div><div class="empty__title">No tenant selected</div><div class="empty__desc">Please select a tenant before managing API keys.</div><div class="empty__actions"><a class="btn btn--primary" href="tenants.html">Go to Tenants <i data-lucide="arrow-right"></i></a></div></div></div>
+      <div data-tab-panel="loading" hidden class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Prefix</th><th>Scopes</th><th>Status</th><th>Last used</th><th>Created</th><th>Expires</th><th>Enabled</th><th></th></tr></thead><tbody>
+        <tr><td><span class="skeleton" style="display:inline-block;width:160px">x</span></td><td><span class="skeleton" style="display:inline-block;width:90px">x</span></td><td><span class="skeleton" style="display:inline-block;width:70px">x</span></td><td><span class="skeleton" style="display:inline-block;width:60px">x</span></td><td><span class="skeleton" style="display:inline-block;width:110px">x</span></td><td><span class="skeleton" style="display:inline-block;width:110px">x</span></td><td><span class="skeleton" style="display:inline-block;width:60px">x</span></td><td><span class="skeleton" style="display:inline-block;width:40px">x</span></td><td></td></tr>
+        <tr><td><span class="skeleton" style="display:inline-block;width:120px">x</span></td><td><span class="skeleton" style="display:inline-block;width:90px">x</span></td><td><span class="skeleton" style="display:inline-block;width:110px">x</span></td><td><span class="skeleton" style="display:inline-block;width:60px">x</span></td><td><span class="skeleton" style="display:inline-block;width:110px">x</span></td><td><span class="skeleton" style="display:inline-block;width:110px">x</span></td><td><span class="skeleton" style="display:inline-block;width:60px">x</span></td><td><span class="skeleton" style="display:inline-block;width:40px">x</span></td><td></td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- Create API key -->
+<div class="overlay" id="create-key-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="create-key-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--honey"><i data-lucide="key-round"></i></span><div><div class="dialog__title" id="create-key-title">Create API key</div><div class="dialog__desc">Create a new API key for REST API access.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="banner banner--danger" hidden><i data-lucide="circle-alert"></i><span>API key name is required</span></div>
+      <div class="field"><label>Name <span class="req">*</span></label><input class="input" placeholder="My API Key" value="Release pipeline" autofocus /><div class="hint">A descriptive name for this API key</div></div>
+      <div class="field"><label>Description</label><textarea class="textarea" style="min-height:72px" placeholder="What is this key used for?"></textarea></div>
+      <div class="field">
+        <label>Scopes</label>
+        <div class="col gap-2" role="radiogroup" aria-label="Scopes">
+          <label class="scope-opt"><span class="radio"><input type="radio" name="scope" /></span><span><div class="so-title">Full access <span class="badge badge--mono" style="margin-left:4px">*</span></div><div class="so-hint">Same as today — all REST operations for this tenant (default).</div></span></label>
+          <label class="scope-opt is-checked"><span class="radio"><input type="radio" name="scope" checked /></span><span><div class="so-title">CI: classified diff <span class="badge badge--mono badge--accent" style="margin-left:4px">diff:read</span></div><div class="so-hint">POST /v1/diff/…/classified only — recommended for contract gates.</div></span></label>
+          <label class="scope-opt"><span class="radio"><input type="radio" name="scope" /></span><span><div class="so-title">CI: lint <span class="badge badge--mono badge--accent" style="margin-left:4px">lint:read</span></div><div class="so-hint">GET …/lint and …/lint/gate only (catalog + MCP).</div></span></label>
+          <label class="scope-opt"><span class="radio"><input type="radio" name="scope" /></span><span><div class="so-title">CI: diff + lint <span class="badge badge--mono badge--accent" style="margin-left:4px">diff:read</span> <span class="badge badge--mono badge--accent">lint:read</span></div><div class="so-hint">Both CI read scopes; still no write access.</div></span></label>
+        </div>
+      </div>
+      <div class="field" style="max-width:240px"><label>Expires in (days)</label><input class="input" type="number" min="1" placeholder="Leave empty for no expiration" /><div class="hint">Leave empty for no expiration.</div></div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">MCP presets live under MCP servers → Capabilities.</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="open" data-target="key-created-dialog"><i data-lucide="key-round"></i>Create API key</button></div>
+  </div>
+</div>
+
+<!-- Key created (reveal once) -->
+<div class="overlay" id="key-created-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="key-created-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="check"></i></span><div><div class="dialog__title" id="key-created-title">API key created</div><div class="dialog__desc">“Release pipeline” · scope <span class="mono">diff:read</span> · expires never</div></div></div>
+    <div class="dialog__body col gap-3">
+      <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><span><strong>Important:</strong> This is the only time you'll see this API key. Please copy it now and store it securely.</span></div>
+      <div class="t-caps">Your API key</div>
+      <div class="secret"><code class="grow" style="font-size:inherit">apk_live_9f31c2Qm7ZtR4vB8kW2xLp0sD6hN1yE3cU5aJ</code><button class="btn btn--sm" data-tip="Copy to clipboard" aria-label="Copy to clipboard"><i data-lucide="copy"></i>Copy</button></div>
+      <div class="t-xs t-subtle">Send it as <span class="mono">Authorization: Bearer &lt;key&gt;</span>. The prefix <span class="mono">key_9f31c2…</span> is what the list shows from now on.</div>
+    </div>
+    <div class="dialog__footer"><button class="btn btn--primary" data-action="close"><i data-lucide="check"></i>I've saved my key</button></div>
+  </div>
+</div>
+
+<!-- Disable confirm (switch off) -->
+<div class="overlay" id="disable-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="disable-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="power-off"></i></span><div><div class="dialog__title" id="disable-title">Disable API key</div><div class="dialog__desc">Are you sure you want to disable “CI contract gate”? This will immediately block all requests using this key.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" style="--_bg:var(--warn);--_fg:#fff" data-action="close">Disable</button></div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="overlay" id="delete-key-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="delete-key-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title" id="delete-key-title">Delete API key</div><div class="dialog__desc">Are you sure you want to delete the API key “Partner sync”? This action cannot be undone.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close"><i data-lucide="trash-2"></i>Delete</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/api-keys</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/api-keys/page.tsx</code> (table + Create / Created / Disable / Delete dialogs), <code>utils/apiKeyScopes.ts</code> presets.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header copy “Manage API keys for external REST API access. Prefer scoped CI tokens for pipelines.” (shortened to ≤ 14 words) + primary Create API key.</li>
+    <li>Columns Name (key icon, name, 2-line description) · Prefix (mono <code>key_prefix…</code>) · Scopes (“Full access” or joined scopes) · Status pill Expired (red, alert icon) / Disabled (outline) / Active (green dot) · Last used (<code>MM/DD/YY hh:mm AM</code> or Never) · Created · Expires (Never or date; red bold when expired) · Enabled switch + On/Off · trash action.</li>
+    <li>Row tinting: expired rows red-tinted, disabled rows grey-tinted. Scope vocabulary <code>*</code>, <code>diff:read</code>, <code>lint:read</code> (<code>*</code> stands alone).</li>
+    <li>Create dialog: Name * (placeholder “My API Key”, help), Description, Scopes radio with the four presets and their hints, Expires In (Days); validation “API key name is required”; “Creating…” busy label.</li>
+    <li>Created dialog: warning “Important: This is the only time you'll see this API key…”, mono key + copy (→ “Copied!” 2 s), footer “I've saved my key”; closing clears the key.</li>
+    <li>Switch off → “Disable API Key” confirm with the exact copy; trash → “Delete API Key” confirm; turning on is immediate. No edit/rename, no re-reveal, no revoke-vs-delete distinction (kept as is).</li>
+    <li>No-tenant callout → gated <code>.empty</code> with lock and “Go to Tenants”.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Filter by name/prefix + status chips, copy-prefix button, expiry heads-up banner, footer scope legend, keyboard <code>N</code>, skeleton loading rows (today the table simply populates).</li></ul>
+  <h4>States</h4>
+  <ul><li>Empty: “No API keys yet” / “Create your first API key to access your tenant data via REST API”. Gated: “No tenant selected” / “Please select a tenant before managing API keys.” Loading: skeleton rows. Preview via the “Preview state” segmented (mock-only).</li></ul>
+</template>
+</body>
+</html>

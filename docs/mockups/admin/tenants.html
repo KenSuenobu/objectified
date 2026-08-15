@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin · Tenants · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local only */
+  .member-row { display: flex; align-items: center; gap: 10px; padding: 9px var(--card-pad); }
+  .member-row + .member-row { border-top: 1px solid var(--border); }
+  .member-row:hover { background: color-mix(in srgb, var(--fg) 2.5%, transparent); }
+  .member-row .mr-actions { margin-left: auto; opacity: 0; transition: opacity var(--dur-fast); }
+  .member-row:hover .mr-actions, .member-row:focus-within .mr-actions { opacity: 1; }
+  .user-pick { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: var(--r-md); text-align: left; }
+  .user-pick:hover { background: var(--bg-subtle); }
+</style>
+</head>
+<body data-shell="admin" data-nav="admin-tenants" data-page="admin/tenants" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="overview.html">Admin console</a><i data-lucide="chevron-right"></i><span>Directory</span><i data-lucide="chevron-right"></i><span>Tenants</span></div>
+          <h1 class="page-title">Tenants</h1>
+          <p class="page-desc">Every workspace on the platform — members, admin rights and status.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn--ghost" data-tip="Reload tenants"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <button class="btn btn--primary" data-action="open" data-target="create-tenant-dialog"><i data-lucide="plus"></i>Create tenant<span class="kbd">N</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <section class="stat-grid stat-grid--4" aria-label="Tenant stats">
+      <div class="stat"><div class="stat__label"><i data-lucide="building-2"></i>Total tenants</div><div class="stat__value">4</div><div class="stat__foot"><span>1 disabled</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="users"></i>Total users</div><div class="stat__value">23</div><div class="stat__foot"><span>memberships across tenants</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="shield"></i>Total admins</div><div class="stat__value">6</div><div class="stat__foot"><span>tenant administrators</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="circle-check"></i>Active tenants</div><div class="stat__value">3<small>of 4</small></div><div class="stat__foot"><span>enabled</span></div></div>
+    </section>
+
+    <div class="grid grid-main-aside" style="align-items:start">
+      <!-- Tenant list -->
+      <section class="table-wrap">
+        <div class="table-toolbar">
+          <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter by name or slug…  ( / )" /></div>
+          <span class="chip is-active" data-action="chip">All <span class="t-faint">4</span></span>
+          <span class="chip" data-action="chip">Enabled <span class="t-faint">3</span></span>
+          <span class="chip" data-action="chip">Disabled <span class="t-faint">1</span></span>
+          <span class="spacer"></span>
+          <span class="t-xs t-subtle">Click a row to see its members</span>
+        </div>
+        <table class="table">
+          <thead><tr>
+            <th class="sortable is-sorted">Tenant <span class="sort"><i data-lucide="arrow-up"></i></span></th>
+            <th class="sortable">Members <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th class="sortable t-right">Projects <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+            <th>Status</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr></thead>
+          <tbody>
+            <tr class="is-clickable is-selected" aria-selected="true">
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--brand">AC</span><div><div class="cell-primary">Acme Corp</div><div class="cell-sub t-truncate" style="max-width:230px"><span class="mono">acme-corp</span> · Merchant platform team</div></div></div></td>
+              <td class="t-num"><span class="row gap-2"><span class="row gap-1"><i data-lucide="users" class="t-faint" style="width:13px;height:13px"></i>12</span><span class="t-subtle">·</span><span class="row gap-1"><i data-lucide="shield" class="t-faint" style="width:13px;height:13px"></i>3 admins</span></span></td><td class="t-right t-num">4</td>
+              <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+              <td><div class="cell-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-tenant-dialog" data-tip="Edit tenant" aria-label="Edit tenant"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-tenant" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr class="is-clickable">
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--c">GL</span><div><div class="cell-primary">Globex Labs</div><div class="cell-sub t-truncate" style="max-width:230px"><span class="mono">globex-labs</span> · R&amp;D partner workspace</div></div></div></td>
+              <td class="t-num"><span class="row gap-2"><span class="row gap-1"><i data-lucide="users" class="t-faint" style="width:13px;height:13px"></i>6</span><span class="t-subtle">·</span><span class="row gap-1"><i data-lucide="shield" class="t-faint" style="width:13px;height:13px"></i>2 admins</span></span></td><td class="t-right t-num">2</td>
+              <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-tenant-dialog" data-tip="Edit tenant" aria-label="Edit tenant"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-tenant" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr class="is-clickable">
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--d">IN</span><div><div class="cell-primary">Initech</div><div class="cell-sub t-truncate" style="max-width:230px"><span class="mono">initech</span> · <span class="t-faint">No description</span></div></div></div></td>
+              <td class="t-num"><span class="row gap-2"><span class="row gap-1"><i data-lucide="users" class="t-faint" style="width:13px;height:13px"></i>4</span><span class="t-subtle">·</span><span class="row gap-1"><i data-lucide="shield" class="t-faint" style="width:13px;height:13px"></i>1 admin</span></span></td><td class="t-right t-num">1</td>
+              <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-tenant-dialog" data-tip="Edit tenant" aria-label="Edit tenant"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-tenant" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+            <tr class="is-clickable" style="opacity:.8">
+              <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--e">UH</span><div><div class="cell-primary">Umbrella Health</div><div class="cell-sub t-truncate" style="max-width:230px"><span class="mono">umbrella-health</span> · Pilot — paused until procurement clears</div></div></div></td>
+              <td class="t-num"><span class="row gap-2"><span class="row gap-1"><i data-lucide="users" class="t-faint" style="width:13px;height:13px"></i>1</span><span class="t-subtle">·</span><span class="row gap-1"><i data-lucide="shield" class="t-faint" style="width:13px;height:13px"></i>0 admins</span></span></td><td class="t-right t-num">0</td>
+              <td><span class="badge badge--dot" data-status="disabled">Disabled</span></td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Enable tenant" aria-label="Enable tenant" style="color:var(--ok)"><i data-lucide="power"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-tenant-disabled" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-foot"><span>4 tenants · sorted by name ↑</span><span>Empty: “No tenants yet — create the first workspace.”</span></div>
+      </section>
+
+      <!-- Members of the selected tenant -->
+      <aside class="card" aria-labelledby="members-title">
+        <div class="card__header">
+          <div class="card__title" id="members-title"><span class="avatar avatar--xs avatar--hex avatar--brand">AC</span>Members · Acme Corp</div>
+          <button class="btn btn--sm" data-action="open" data-target="add-user-dialog"><i data-lucide="user-plus"></i>Add user</button>
+        </div>
+        <div>
+          <div class="member-row"><span class="avatar avatar--sm avatar--a">AL</span><div class="min-w-0"><div class="t-sm t-500 row gap-2">Ada Lovelace<span class="badge badge--orange"><i data-lucide="shield"></i>Admin</span></div><div class="t-xs t-subtle t-truncate">ada@example.com</div></div><div class="mr-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-member-admin" aria-label="Member actions"><i data-lucide="ellipsis"></i></button></div></div>
+          <div class="member-row"><span class="avatar avatar--sm avatar--b">GH</span><div class="min-w-0"><div class="t-sm t-500 row gap-2">Grace Hopper<span class="badge badge--orange"><i data-lucide="shield"></i>Admin</span></div><div class="t-xs t-subtle t-truncate">grace@example.com</div></div><div class="mr-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-member-admin" aria-label="Member actions"><i data-lucide="ellipsis"></i></button></div></div>
+          <div class="member-row"><span class="avatar avatar--sm avatar--c">LT</span><div class="min-w-0"><div class="t-sm t-500 row gap-2">Linus Torvalds<span class="badge badge--orange"><i data-lucide="shield"></i>Admin</span></div><div class="t-xs t-subtle t-truncate">linus@example.com</div></div><div class="mr-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-member-admin" aria-label="Member actions"><i data-lucide="ellipsis"></i></button></div></div>
+          <div class="member-row"><span class="avatar avatar--sm avatar--d">MH</span><div class="min-w-0"><div class="t-sm t-500">Margaret Hamilton</div><div class="t-xs t-subtle t-truncate">margaret@example.com</div></div><div class="mr-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-member" aria-label="Member actions"><i data-lucide="ellipsis"></i></button></div></div>
+          <div class="member-row"><span class="avatar avatar--sm avatar--a">AT</span><div class="min-w-0"><div class="t-sm t-500 row gap-2">Alan Turing<span class="badge badge--warn">Unverified</span></div><div class="t-xs t-subtle t-truncate">alan@example.com</div></div><div class="mr-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-member" aria-label="Member actions"><i data-lucide="ellipsis"></i></button></div></div>
+          <div class="member-row"><span class="avatar avatar--sm avatar--e">RP</span><div class="min-w-0"><div class="t-sm t-500">Radia Perlman</div><div class="t-xs t-subtle t-truncate">radia@example.com</div></div><div class="mr-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-member" aria-label="Member actions"><i data-lucide="ellipsis"></i></button></div></div>
+        </div>
+        <div class="card__footer"><span>12 members · 3 admins</span><a href="#" class="t-sm">Show all 12</a></div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+
+<!-- Create tenant -->
+<div class="overlay" id="create-tenant-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="create-tenant-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--rose"><i data-lucide="building-2"></i></span>
+      <div><div class="dialog__title" id="create-tenant-title">Create tenant</div><div class="dialog__desc">A tenant is a workspace: its own members, projects and settings.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Tenant name <span class="req">*</span></label><input class="input" placeholder="Acme Corporation" value="Wayne Enterprises" autofocus /></div>
+      <div class="field"><label>Slug <span class="req">*</span></label><input class="input input--mono" placeholder="acme-corporation" value="wayne-enterprises" pattern="[a-z0-9-]+" /><div class="hint">Suggested from the name while you type (only until you edit it). Only lowercase letters, numbers and hyphens.</div></div>
+      <div class="field"><label>Description</label><textarea class="textarea" placeholder="Description of the tenant…" style="min-height:72px"></textarea></div>
+      <div class="form-section" style="margin-top:4px;padding-top:16px">
+        <div class="form-section__title">Initial user <span class="t-xs t-subtle t-500">(optional)</span></div>
+        <div class="form-section__desc" style="margin-bottom:10px">Add a user to this tenant immediately upon creation. A sample project is seeded for them, best-effort.</div>
+        <div class="field"><select class="select"><option>— No initial user —</option><option selected>Grace Hopper (grace@example.com)</option><option>Ada Lovelace (ada@example.com)</option><option>Linus Torvalds (linus@example.com)</option><option>Margaret Hamilton (margaret@example.com)</option><option>Alan Turing (alan@example.com)</option></select></div>
+        <label class="check mt-3"><input type="checkbox" checked /> <i data-lucide="shield" style="width:14px;height:14px"></i> Make this user a tenant administrator</label>
+      </div>
+      <div class="field is-invalid" style="display:none"><div class="error"><i data-lucide="circle-alert"></i>Slug is taken — try <span class="mono">wayne-enterprises-2</span></div></div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Adds the user, then seeds a sample project</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close"><i data-lucide="plus"></i>Create tenant</button></div>
+  </div>
+</div>
+
+<!-- Edit tenant -->
+<div class="overlay" id="edit-tenant-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="edit-tenant-title">
+    <div class="dialog__header">
+      <span class="avatar avatar--hex avatar--brand">AC</span>
+      <div><div class="dialog__title" id="edit-tenant-title">Edit tenant — Acme Corp</div><div class="dialog__desc mono t-xs">tnt_a1c0e9 · created Jan 12, 2026</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Tenant name <span class="req">*</span></label><input class="input" value="Acme Corp" /></div>
+      <div class="field"><label>Slug <span class="req">*</span></label><input class="input input--mono" value="acme-corp" pattern="[a-z0-9-]+" /><div class="hint">Only lowercase letters, numbers and hyphens. Changing the slug changes workspace URLs.</div></div>
+      <div class="field"><label>Description</label><textarea class="textarea" style="min-height:72px">Merchant platform team</textarea></div>
+      <div class="switch-row" style="padding:8px 0 0"><div><div class="sw-title">Enabled</div><div class="sw-desc">Disabled tenants keep their data; members can’t open the workspace.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Toast: “Tenant renamed successfully”</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save changes</button></div>
+  </div>
+</div>
+
+<!-- Add user to tenant -->
+<div class="overlay" id="add-user-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="add-user-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="user-plus"></i></span>
+      <div><div class="dialog__title" id="add-user-title">Add user to Acme Corp</div><div class="dialog__desc">Users not yet in this tenant. Click one to add them immediately.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="input-wrap mb-3"><i data-lucide="search"></i><input class="input" placeholder="Search users…" autofocus /></div>
+      <div class="col gap-1" style="max-height:320px;overflow:auto">
+        <button class="user-pick" data-action="close"><span class="avatar avatar--sm avatar--e">KJ</span><div class="min-w-0"><div class="t-sm t-500">Katherine Johnson</div><div class="t-xs t-subtle">katherine@globex.io</div></div><i data-lucide="plus" style="margin-left:auto;color:var(--accent)"></i></button>
+        <button class="user-pick" data-action="close"><span class="avatar avatar--sm">ED</span><div class="min-w-0"><div class="t-sm t-500 row gap-2">Edsger Dijkstra<span class="badge" data-status="disabled">Disabled</span></div><div class="t-xs t-subtle">edsger@initech.com</div></div><i data-lucide="plus" style="margin-left:auto;color:var(--accent)"></i></button>
+        <button class="user-pick" data-action="close"><span class="avatar avatar--sm avatar--b">BL</span><div class="min-w-0"><div class="t-sm t-500">Barbara Liskov</div><div class="t-xs t-subtle">barbara@initech.com</div></div><i data-lucide="plus" style="margin-left:auto;color:var(--accent)"></i></button>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Empty: “No available users to add”</span><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Delete tenant -->
+<div class="overlay" id="delete-tenant-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete tenant “Umbrella Health”?</div><div class="dialog__desc">Removes the workspace, its memberships and projects. This action cannot be undone.</div></div></div>
+    <div class="dialog__body"><div class="field"><label>Type <span class="mono">umbrella-health</span> to confirm</label><input class="input input--mono" placeholder="umbrella-health" /></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" disabled>Delete tenant</button></div>
+  </div>
+</div>
+
+<!-- Remove member -->
+<div class="overlay" id="remove-member-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="user-x"></i></span><div><div class="dialog__title">Remove Margaret Hamilton from Acme Corp?</div><div class="dialog__desc">She keeps her account and other memberships; she loses access to this workspace’s projects.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove from tenant</button></div>
+  </div>
+</div>
+
+<!-- Tenant row menu -->
+<div class="overlay" id="menu-tenant" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:392px 400px 0 0">
+  <div class="menu" role="menu" style="width:210px">
+    <button class="menu__item w-full" data-action="open" data-target="edit-tenant-dialog"><i data-lucide="pencil" style="color:var(--accent)"></i>Edit tenant</button>
+    <button class="menu__item w-full"><i data-lucide="power" style="color:var(--orange)"></i>Disable tenant</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full is-danger" data-action="open" data-target="delete-tenant-dialog"><i data-lucide="trash-2"></i>Delete tenant</button>
+  </div>
+</div>
+<div class="overlay" id="menu-tenant-disabled" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:530px 400px 0 0">
+  <div class="menu" role="menu" style="width:210px">
+    <button class="menu__item w-full" data-action="open" data-target="edit-tenant-dialog"><i data-lucide="pencil" style="color:var(--accent)"></i>Edit tenant</button>
+    <button class="menu__item w-full"><i data-lucide="power" style="color:var(--ok)"></i>Enable tenant</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full is-danger" data-action="open" data-target="delete-tenant-dialog"><i data-lucide="trash-2"></i>Delete tenant</button>
+  </div>
+</div>
+
+<!-- Member menus -->
+<div class="overlay" id="menu-member" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:560px 40px 0 0">
+  <div class="menu" role="menu" style="width:230px">
+    <button class="menu__item w-full" data-action="close"><i data-lucide="shield-check" style="color:var(--ok)"></i>Make administrator</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full is-danger" data-action="open" data-target="remove-member-dialog"><i data-lucide="user-x"></i>Remove from tenant</button>
+  </div>
+</div>
+<div class="overlay" id="menu-member-admin" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:440px 40px 0 0">
+  <div class="menu" role="menu" style="width:230px">
+    <button class="menu__item w-full" data-action="close"><i data-lucide="shield-x" style="color:var(--orange)"></i>Remove admin rights</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full is-danger" data-action="open" data-target="remove-member-dialog"><i data-lucide="user-x"></i>Remove from tenant</button>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/admin/dashboard/tenants</p>
+  <h4>Replaces</h4>
+  <ul><li><code>admin/dashboard/tenants/page.tsx</code> + <code>TenantManagementClient.tsx</code> (two-pane list/detail).</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header “Create tenant” (primary) + Refresh. Four stats Total tenants / Total users (Σ <code>user_count</code>) / Total admins (Σ <code>admin_count</code>) / Active tenants.</li>
+    <li>Master/detail: tenant list (name, slug, “n users · n admins”) → selected tenant’s members on the right with “Add user”. Selecting a row loads members + available users (<code>getTenantUsers</code>, <code>getAvailableUsers</code>).</li>
+    <li>Tenant kebab: Edit tenant · Disable/Enable tenant (<code>updateTenant({enabled})</code>) · Delete tenant (confirm → type-to-confirm dialog).</li>
+    <li>Member kebab: Make administrator / Remove admin rights (<code>setTenantAdmin</code>) · Remove from tenant (confirm dialog).</li>
+    <li>Create dialog: Tenant name (auto-fills slug via <code>generateSlug</code> only while slug is untouched), Slug (<code>pattern="[a-z0-9-]+"</code>, “Only lowercase letters, numbers, and hyphens”), Description, Initial user (optional) select, “Make this user a tenant administrator”; on create adds the user, optionally admin, and best-effort <code>provisionSampleProject</code>. Toasts “Tenant created successfully with admin user / with user / Tenant created successfully / Tenant created but failed to add user”.</li>
+    <li>Edit dialog: same fields minus initial user → “Save changes”, toast “Tenant renamed successfully”. Add-user dialog: clickable user cards for users not in the tenant; click adds immediately (“User added to tenant successfully”); empty “No available users to add”.</li>
+    <li>All feedback (“Admin status updated successfully”, “User removed successfully”, “Tenant enabled/disabled successfully”, “Failed to load tenants”…) via toast instead of the 5-second banner.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Tenant list becomes a sortable table that also shows the already-fetched <code>description</code>, <code>project_count</code> and <code>enabled</code> (disabled rows get the outline badge + Enable quick action). Filter box + Enabled/Disabled chips; Enabled switch inside Edit; member quick actions on hover; “Show all” when a tenant has more members than fit.</li></ul>
+  <h4>States</h4>
+  <ul>
+    <li>Loading: skeleton rows in the table, skeleton member rows. Empty tenants: <code>.empty</code> “No tenants yet — create the first workspace.” Nothing selected: aside shows <code>.empty--inline</code> “Select a tenant to view users”. Empty members: “No users in this tenant” + Add user.</li>
+    <li>Errors: toast “Failed to load tenants”, “Failed to create/update/delete tenant”, “Failed to add/remove user”, “Failed to update admin status” with Retry where a reload helps. Slug conflict shows inline “Slug is taken — try …”.</li>
+    <li>Not represented (absent today): tenant-level license or feature-flag overrides (<code>setTenantFeatureFlag</code> unused), search/paging server-side.</li>
+  </ul>
+</template>
+</body>
+</html>

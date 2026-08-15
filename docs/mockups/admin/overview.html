@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin overview · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local only */
+  .status-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: var(--fs-sm); }
+  .status-row + .status-row { border-top: 1px solid var(--border); }
+  .status-row .mono { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-subtle); }
+</style>
+</head>
+<body data-shell="admin" data-nav="admin-overview" data-page="admin/overview" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><span>Admin console</span><i data-lucide="chevron-right"></i><span>Overview</span></div>
+          <h1 class="page-title">Overview</h1>
+          <p class="page-desc">Platform-wide numbers and what needs your attention right now.</p>
+        </div>
+        <div class="page-actions">
+          <span class="badge badge--outline t-num"><i data-lucide="timer"></i>Session ends in 7 h 41 m</span>
+          <button class="btn"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <a class="btn btn--primary" href="users.html"><i data-lucide="user-check"></i>Review 3 signups</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Info banner (kept from today's overview; dismissible) -->
+    <div class="banner">
+      <i data-lucide="info"></i>
+      <div><div class="banner-title">Welcome to the admin console</div><div class="banner-body">Use the rail to move between Directory (users, tenants), Commercial (licenses, feature flags) and Platform (property templates, auth providers). Signup approval and user management live under Users.</div></div>
+      <div class="banner-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Dismiss" data-tip="Dismiss"><i data-lucide="x"></i></button></div>
+    </div>
+
+    <!-- Stats (wired to /api/admin/stats) -->
+    <section class="stat-grid stat-grid--4" aria-label="Platform stats">
+      <div class="stat"><div class="stat__label"><i data-lucide="users"></i>Total users</div><div class="stat__value">128</div><div class="stat__foot"><span>117 verified · 121 enabled</span><span class="stat__delta stat__delta--up"><i data-lucide="trending-up"></i>+12%</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="badge-check"></i>Active subscriptions</div><div class="stat__value">41</div><div class="stat__foot"><span>paid + sponsor licenses</span><span class="stat__delta stat__delta--up"><i data-lucide="trending-up"></i>+8%</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="wallet"></i>Revenue (MTD)</div><div class="stat__value">$12,480</div><div class="stat__foot"><span>Aug 1 – 15</span><span class="stat__delta stat__delta--up"><i data-lucide="trending-up"></i>+15%</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="activity"></i>System status</div><div class="stat__value" style="display:flex;align-items:center;gap:10px"><span class="dot dot--ok dot--pulse"></span>Healthy</div><div class="stat__foot"><span>REST · DB · auth responding</span><span class="t-num" style="white-space:nowrap">checked 09:41</span></div></div>
+    </section>
+
+    <div class="grid grid-main-aside">
+      <div class="col gap-6">
+        <!-- Pending approvals -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="user-plus"></i>Pending approvals<span class="badge badge--rose">3</span></div><a href="users.html" class="t-sm">Open Users <i data-lucide="arrow-right" style="display:inline-block;width:12px;height:12px;vertical-align:-1px"></i></a></div>
+          <div>
+            <div class="list-row"><span class="avatar avatar--sm avatar--b">TB</span><div class="grow min-w-0"><div class="lr-title">Tim Berners-Lee <span class="t-subtle t-500">· tim@example.org</span></div><div class="lr-sub">via GitHub · Aug 15, 2026, 08:02</div></div><div class="row gap-1"><button class="btn btn--sm" data-action="open" data-target="approve-dialog"><i data-lucide="check"></i>Create user</button><button class="btn btn--sm btn--ghost btn--icon" aria-label="Delete signup" data-tip="Delete signup"><i data-lucide="trash-2"></i></button></div></div>
+            <div class="list-row"><span class="avatar avatar--sm avatar--c">BL</span><div class="grow min-w-0"><div class="lr-title">Barbara Liskov <span class="t-subtle t-500">· barbara@initech.com</span></div><div class="lr-sub">Direct · Aug 14, 2026, 17:40</div></div><div class="row gap-1"><button class="btn btn--sm" data-action="open" data-target="approve-dialog"><i data-lucide="check"></i>Create user</button><button class="btn btn--sm btn--ghost btn--icon" aria-label="Delete signup" data-tip="Delete signup"><i data-lucide="trash-2"></i></button></div></div>
+            <div class="list-row"><span class="avatar avatar--sm avatar--d">DR</span><div class="grow min-w-0"><div class="lr-title">Dennis Ritchie <span class="t-subtle t-500">· dmr@bell-labs.example</span></div><div class="lr-sub">via Google · Aug 12, 2026, 11:15</div></div><div class="row gap-1"><button class="btn btn--sm" data-action="open" data-target="approve-dialog"><i data-lucide="check"></i>Create user</button><button class="btn btn--sm btn--ghost btn--icon" aria-label="Delete signup" data-tip="Delete signup"><i data-lucide="trash-2"></i></button></div></div>
+          </div>
+          <div class="card__footer"><span>3 signups waiting · oldest 3 days</span><span class="t-xs">Approving creates a verified, enabled account</span></div>
+        </section>
+
+        <!-- Recent signups (created users, last 7 days) -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="calendar-days"></i>Recent signups<span class="t-xs t-subtle t-500">Last 7 days · 12</span></div><span class="badge badge--ok">+12%</span></div>
+          <div class="table-wrap" style="box-shadow:none;border-radius:0">
+            <table class="table table--dense table--flush">
+              <thead><tr><th>User</th><th>Tenant</th><th>License</th><th>Source</th><th>Created</th></tr></thead>
+              <tbody>
+                <tr><td><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AT</span><div><div class="cell-primary">Alan Turing</div><div class="cell-sub">alan@example.com</div></div></div></td><td>Acme Corp</td><td><span class="badge">free</span></td><td>GitHub</td><td class="t-num t-muted">Aug 15, 09:12</td></tr>
+                <tr><td><div class="row gap-2"><span class="avatar avatar--xs avatar--e">KJ</span><div><div class="cell-primary">Katherine Johnson</div><div class="cell-sub">katherine@globex.io</div></div></div></td><td>Globex Labs</td><td><span class="badge badge--accent">paid</span></td><td>Direct</td><td class="t-num t-muted">Aug 14, 14:03</td></tr>
+                <tr><td><div class="row gap-2"><span class="avatar avatar--xs avatar--c">EH</span><div><div class="cell-primary">Edsger Dijkstra</div><div class="cell-sub">edsger@initech.com</div></div></div></td><td>Initech</td><td><span class="t-subtle" style="font-style:italic">No license</span></td><td>Google</td><td class="t-num t-muted">Aug 13, 10:48</td></tr>
+                <tr><td><div class="row gap-2"><span class="avatar avatar--xs avatar--d">RH</span><div><div class="cell-primary">Radia Perlman</div><div class="cell-sub">radia@example.com</div></div></div></td><td>Acme Corp</td><td><span class="badge">free</span></td><td>Direct</td><td class="t-num t-muted">Aug 11, 16:22</td></tr>
+              </tbody>
+            </table>
+            <div class="table-foot"><span>Showing 4 of 12</span><a href="users.html">All users</a></div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="col gap-6">
+        <!-- Session -->
+        <section class="card card--pad">
+          <div class="row gap-3"><span class="icon-tile icon-tile--rose"><i data-lucide="shield-half"></i></span><div><div class="t-h4">Admin session</div><div class="t-xs t-muted">Shared password · no per-admin identity</div></div></div>
+          <dl class="kv mt-4">
+            <dt>Started</dt><dd class="t-num">Aug 15, 2026, 09:12</dd>
+            <dt>Expires</dt><dd class="t-num">17:12 <span class="t-subtle">(8 h after sign-in)</span></dd>
+            <dt>Cookie</dt><dd><span class="mono t-xs">admin_session</span> · httpOnly · strict</dd>
+          </dl>
+          <div class="progress progress--thin mt-4" aria-label="Session elapsed"><span style="width:6%"></span></div>
+          <div class="row-between mt-3"><span class="t-xs t-subtle">Session expires after 8 hours of inactivity</span><a class="btn btn--sm" href="login.html"><i data-lucide="log-out"></i>Sign out</a></div>
+        </section>
+
+        <!-- Health -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="heart-pulse"></i>Health</div><span class="badge" data-status="healthy">healthy</span></div>
+          <div style="padding:4px var(--card-pad)">
+            <div class="status-row"><span class="dot dot--ok"></span>REST API<span class="mono">200 · 38 ms</span></div>
+            <div class="status-row"><span class="dot dot--ok"></span>Postgres<span class="mono">pool 4/20</span></div>
+            <div class="status-row"><span class="dot dot--ok"></span>Auth providers<span class="mono">4 configured</span></div>
+            <div class="status-row"><span class="dot dot--warn"></span>Async jobs<span class="mono">1 running</span></div>
+          </div>
+          <div class="card__footer"><span>Source: <span class="mono">/api/admin/stats</span></span><span class="t-xs t-num">09:41</span></div>
+        </section>
+
+        <!-- Quick links -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="zap"></i>Jump to</div></div>
+          <div class="p-2">
+            <a class="menu__item" href="users.html"><i data-lucide="users"></i>Users<span class="badge badge--rose" style="margin-left:auto">3 pending</span></a>
+            <a class="menu__item" href="tenants.html"><i data-lucide="building-2"></i>Tenants</a>
+            <a class="menu__item" href="licenses.html"><i data-lucide="badge-check"></i>Licenses</a>
+            <a class="menu__item" href="feature-flags.html"><i data-lucide="flag"></i>Feature flags</a>
+            <a class="menu__item" href="templates.html"><i data-lucide="layout-template"></i>Property templates</a>
+            <a class="menu__item" href="settings.html"><i data-lucide="key-square"></i>Auth providers</a>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <p class="t-xs t-subtle t-center">Admin console · Apiome internal use only · Session expires after 8 hours of inactivity</p>
+  </div>
+</main>
+
+<!-- Approve signup confirm (replaces window.confirm) -->
+<div class="overlay" id="approve-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="approve-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="user-check"></i></span><div><div class="dialog__title" id="approve-title">Create user account for Tim Berners-Lee?</div><div class="dialog__desc">tim@example.org · signed up via GitHub. The account is created verified and enabled; the signup request is removed.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close"><i data-lucide="check"></i>Create user</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/admin/dashboard</p>
+  <h4>Replaces</h4>
+  <ul><li><code>admin/dashboard/layout.tsx</code> + <code>AdminSidebar.tsx</code> (shell → Hive admin rail), <code>admin/dashboard/page.tsx</code> → <code>DashboardOverview.tsx</code>. The unimported <code>AdminDashboardClient.tsx</code> is deleted.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Four stat cards Total users / Active subscriptions / Revenue (MTD) / System status with the same trend deltas. Today they render “—”; the redesign fetches <code>/api/admin/stats</code> (<code>{totalUsers, activeUsers, totalRevenue, systemStatus}</code>) — extend it with verified/enabled counts, or leave the sub-lines out.</li>
+    <li>Info banner (“Admin Portal – Initial Setup” copy rewritten; dismiss persists per device).</li>
+    <li>Footer text “Admin console · Apiome internal use only” + “Session expires after 8 hours of inactivity”; Sign out (DELETE <code>/api/admin/auth</code> → <code>/admin</code>) moves to the Session card and the rail user menu.</li>
+    <li>Sidebar items map to the admin rail: Overview · Directory (Users, Tenants) · Commercial (Licenses, Feature flags) · Platform (Property templates, Auth providers) · Back to app. Density toggle → Preferences pane.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul>
+    <li>Pending approvals list (top 3 signups with Create user / Delete signup) and Recent signups table — both read the same data as Users.</li>
+    <li>Session card (start/expiry, cookie facts, elapsed meter) and Health card fed by <code>/api/admin/stats</code>.</li>
+    <li>Header primary “Review N signups” deep-links to Users → Pending tab.</li>
+  </ul>
+  <h4>Removed</h4>
+  <ul><li>Dead nav links Payment Management (<code>/admin/dashboard/payments</code>), Database Administration (<code>/database</code>), System Monitoring (<code>/monitoring</code>) — 404 today; not carried into the rail (Health card footer records the gap).</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading: skeleton stat values + 3 skeleton rows. Stats fetch error: <code>.banner--danger</code> “Couldn’t load platform stats — Retry”. Session near expiry (&lt; 15 min): header badge turns <code>badge--warn</code>. Unauthenticated: redirect to <code>/admin</code>.</li></ul>
+</template>
+</body>
+</html>

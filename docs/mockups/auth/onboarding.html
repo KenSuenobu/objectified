@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>First-tenant onboarding · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: centred wizard on the hex canvas (shared by the auth mockups) */
+  .auth { min-height: 100vh; }
+  .auth-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px var(--page-pad); }
+  .brand-word { font-size: var(--fs-xl); font-weight: 700; letter-spacing: -0.03em; }
+  .auth-center { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 32px 56px; position: relative; min-height: calc(100vh - 68px); }
+  .auth-center::before { content: ""; position: absolute; width: 560px; height: 560px; left: 50%; top: -260px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--honey) 22%, transparent), transparent); pointer-events: none; }
+  .wiz-card { position: relative; width: 100%; max-width: 560px; border-radius: var(--r-xl); box-shadow: var(--shadow-md); }
+  .wiz-card__progress { padding: 18px 28px; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--bg-subtle) 55%, var(--bg-surface)); border-radius: var(--r-xl) var(--r-xl) 0 0; }
+  .wiz-card__body { padding: 28px; }
+  .wiz-card__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 28px; border-top: 1px solid var(--border); }
+  .wiz-title { font-size: var(--fs-2xl); font-weight: 600; letter-spacing: var(--track-tight); line-height: 1.2; }
+  .stepper--fill { justify-content: space-between; }
+  .stepper--fill .step__line { flex: 1; width: auto; }
+  .status-line { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); min-height: 18px; }
+  .status-line [data-lucide], .status-line .spinner { width: 13px; height: 13px; }
+  .status-line.is-ok { color: var(--ok-fg); } .status-line.is-danger { color: var(--danger-fg); } .status-line.is-warn { color: var(--warn-fg); } .status-line.is-muted { color: var(--fg-subtle); }
+  .limits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .limits > div { background: var(--bg-surface); padding: 10px 12px; }
+  .limits .n { font-size: var(--fs-2xl); font-weight: 600; letter-spacing: var(--track-tight); line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .limits .l { font-size: var(--fs-2xs); color: var(--fg-subtle); text-transform: uppercase; letter-spacing: var(--track-caps); font-weight: 600; margin-top: 2px; }
+  .auth-states { padding: var(--space-8) var(--page-pad) var(--space-12); max-width: var(--page-max); margin: 0 auto; width: 100%; border-top: 1px solid var(--border); }
+  .auth-states .wiz-card { max-width: none; }
+</style>
+</head>
+<body data-shell="auth" data-page="auth/onboarding">
+<main class="page auth hex-bg">
+  <!-- Minimal top row: this wizard renders in place of every /ade route -->
+  <div class="auth-top">
+    <a class="row gap-2" href="../home/launcher.html" style="color:inherit"><span class="brand-mark"></span><span class="brand-word">apiome</span></a>
+    <div class="row gap-3 t-xs t-muted"><span>Signed in as <span class="t-600" style="color:var(--fg)">ada@example.com</span></span><a class="btn btn--sm btn--ghost" href="login.html"><i data-lucide="log-out"></i>Sign out</a></div>
+  </div>
+
+  <section class="auth-center">
+    <!-- ===== Step 2 · Organization (main view) ===== -->
+    <div class="card wiz-card" role="dialog" aria-labelledby="wiz-title" aria-modal="true">
+      <div class="wiz-card__progress">
+        <ol class="stepper stepper--fill" aria-label="Setup progress">
+          <li class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Welcome</li>
+          <li class="step__line is-done" aria-hidden="true"></li>
+          <li class="step is-active" aria-current="step"><span class="step__num">2</span>Organization</li>
+          <li class="step__line" aria-hidden="true"></li>
+          <li class="step"><span class="step__num">3</span>Review</li>
+        </ol>
+      </div>
+      <div class="wiz-card__body">
+        <h1 class="wiz-title" id="wiz-title">Name your organization</h1>
+        <p class="t-sm t-muted mt-1">This becomes your tenant — the workspace your projects and teammates live in.</p>
+        <form class="col gap-4 mt-5" onsubmit="return false">
+          <div class="field">
+            <label for="org-name">Organization name <span class="req">*</span></label>
+            <div class="input-wrap"><i data-lucide="building-2"></i><input id="org-name" class="input" placeholder="Acme, Inc." value="Acme Corp" autofocus required /></div>
+          </div>
+          <div class="field">
+            <label for="org-slug">URL slug</label>
+            <div class="input-wrap"><i data-lucide="hash"></i><input id="org-slug" class="input input--mono" placeholder="acme-inc" value="acme-corp" /></div>
+            <div class="hint">Lowercase letters, numbers, and dashes. Suggested from the name — edit it if you like.</div>
+            <div class="status-line is-ok" role="status" aria-live="polite"><i data-lucide="circle-check"></i>“acme-corp” is available</div>
+          </div>
+        </form>
+      </div>
+      <div class="wiz-card__foot">
+        <button class="btn"><i data-lucide="arrow-left"></i>Back</button>
+        <button class="btn btn--primary">Continue<i data-lucide="arrow-right"></i></button>
+      </div>
+    </div>
+    <p class="t-xs t-subtle t-center mt-4" style="max-width:48ch">Progress is saved server-side — come back later and the wizard resumes on this step with your values pre-filled.</p>
+  </section>
+
+  <!-- ===== Other steps + slug states ===== -->
+  <section class="auth-states">
+    <div class="section-title"><h2>Other steps</h2><span class="t-muted">Welcome → Organization → Review → Done · not dismissible · shown in place of any /ade route until you belong to a tenant</span></div>
+    <div class="grid grid-3" style="align-items:start">
+
+      <!-- Step 1 · Welcome -->
+      <div class="card wiz-card">
+        <div class="wiz-card__progress">
+          <ol class="stepper stepper--fill" aria-label="Setup progress">
+            <li class="step is-active" aria-current="step"><span class="step__num">1</span>Welcome</li><li class="step__line" aria-hidden="true"></li>
+            <li class="step"><span class="step__num">2</span>Organization</li><li class="step__line" aria-hidden="true"></li>
+            <li class="step"><span class="step__num">3</span>Review</li>
+          </ol>
+        </div>
+        <div class="wiz-card__body">
+          <span class="icon-tile icon-tile--lg icon-tile--honey icon-tile--hex"><i data-lucide="building-2"></i></span>
+          <h2 class="wiz-title mt-4">Let’s set up your first tenant</h2>
+          <p class="t-sm t-muted mt-2">Your account isn’t a member of any tenant yet. This short setup creates your organization so you can start building.</p>
+          <div class="callout callout--accent mt-4 t-sm">Expecting an invitation? Once a tenant administrator adds you, check again to continue.</div>
+        </div>
+        <div class="wiz-card__foot" style="flex-wrap:wrap">
+          <div class="row gap-2"><button class="btn"><i data-lucide="refresh-cw"></i>Check again</button><a class="btn" href="login.html">Sign out</a></div>
+          <button class="btn btn--primary">Set up your organization<i data-lucide="arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- Step 3 · Review -->
+      <div class="card wiz-card">
+        <div class="wiz-card__progress">
+          <ol class="stepper stepper--fill" aria-label="Setup progress">
+            <li class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Welcome</li><li class="step__line is-done" aria-hidden="true"></li>
+            <li class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Organization</li><li class="step__line is-done" aria-hidden="true"></li>
+            <li class="step is-active" aria-current="step"><span class="step__num">3</span>Review</li>
+          </ol>
+        </div>
+        <div class="wiz-card__body">
+          <h2 class="wiz-title">Review and create</h2>
+          <p class="t-sm t-muted mt-1">Here’s what will be created. You can change details later in tenant settings.</p>
+          <dl class="kv kv--stack mt-4" style="grid-template-columns:1fr 1fr">
+            <div><dt>Organization</dt><dd class="t-600">Acme Corp</dd></div>
+            <div><dt>URL slug</dt><dd class="mono">acme-corp</dd></div>
+          </dl>
+          <div class="card card--flat mt-4" style="padding:14px 16px">
+            <div class="row gap-2"><i data-lucide="badge-check" style="color:var(--ok)"></i><span class="t-sm t-600">Free plan</span><span class="badge badge--ok" style="margin-left:auto">No payment details</span></div>
+            <p class="t-xs t-muted mt-1">Your organization starts on the Free plan — no payment details required.</p>
+            <div class="limits mt-3"><div><div class="n">1</div><div class="l">Tenant</div></div><div><div class="n">1</div><div class="l">Project</div></div><div><div class="n">3</div><div class="l">Versions / project</div></div></div>
+            <div class="row gap-2 t-xs mt-3"><i data-lucide="check" style="color:var(--ok);width:14px;height:14px"></i>Curated sample project so your workspace is not empty</div>
+          </div>
+        </div>
+        <div class="wiz-card__foot">
+          <button class="btn"><i data-lucide="arrow-left"></i>Back</button>
+          <button class="btn btn--primary">Create organization</button>
+        </div>
+      </div>
+
+      <!-- Step 4 · Done -->
+      <div class="card wiz-card">
+        <div class="wiz-card__progress">
+          <ol class="stepper stepper--fill" aria-label="Setup progress">
+            <li class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Welcome</li><li class="step__line is-done" aria-hidden="true"></li>
+            <li class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Organization</li><li class="step__line is-done" aria-hidden="true"></li>
+            <li class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Review</li>
+          </ol>
+        </div>
+        <div class="wiz-card__body">
+          <div class="empty" style="padding:8px 0 0">
+            <div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="circle-check"></i></div>
+            <h2 class="wiz-title">Acme Corp is ready</h2>
+            <p class="empty__desc">Your organization was created on the Free plan and you’re its administrator.</p>
+            <div class="row gap-2 mt-2"><span class="avatar avatar--sm avatar--hex avatar--brand">AC</span><span class="t-sm t-600">Acme Corp</span><span class="badge badge--outline">Owner</span><span class="badge badge--honey">Free</span></div>
+          </div>
+        </div>
+        <div class="wiz-card__foot" style="justify-content:center">
+          <a class="btn btn--primary btn--lg" href="../home/overview.html">Go to your dashboard<i data-lucide="arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slug availability + validation states -->
+    <div class="section-title mt-8"><h2>Slug field states</h2><span class="t-muted">Live shape validation + 400 ms debounced <span class="mono">HEAD /v1/tenants/{slug}</span> probe · unknown availability fails open</span></div>
+    <div class="grid grid-2">
+      <div class="card card--pad">
+        <div class="t-caps mb-3">Availability line (<span class="mono" style="text-transform:none">role=status</span>)</div>
+        <div class="col gap-3">
+          <div class="status-line is-muted"><span class="spinner"></span>Checking availability…</div>
+          <div class="status-line is-ok"><i data-lucide="circle-check"></i>“acme-corp” is available</div>
+          <div class="status-line is-danger"><i data-lucide="circle-x"></i>“acme” is already taken</div>
+          <div class="status-line is-warn"><i data-lucide="triangle-alert"></i>Could not verify availability — you can still continue</div>
+        </div>
+        <div class="t-xs t-subtle mt-4">While the final probe runs, the primary button reads <span class="t-600">Checking…</span>. Clearing a hand-edited slug re-enables derivation from the name.</div>
+      </div>
+      <div class="card card--pad">
+        <div class="t-caps mb-3">Field errors</div>
+        <div class="col gap-4">
+          <div class="field is-invalid"><label>Organization name <span class="req">*</span></label><div class="input-wrap"><i data-lucide="building-2"></i><input class="input" value="" placeholder="Acme, Inc." /></div><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>Organization name is required</div></div>
+          <div class="field is-invalid"><label>URL slug</label><div class="input-wrap"><i data-lucide="hash"></i><input class="input input--mono" value="" placeholder="acme-inc" /></div><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>Could not derive a URL slug from this name — please add a slug below</div></div>
+          <div class="field is-invalid"><label>URL slug</label><div class="input-wrap"><i data-lucide="hash"></i><input class="input input--mono" value="acme" /></div><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>This slug is already taken — please choose another</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<template id="notes">
+  <p class="route">Rendered by <code>FirstTenantOnboardingGuard</code> in place of any <code>/ade/**</code> route (zero tenant memberships)</p>
+  <h4>Replaces</h4>
+  <ul><li><code>components/auth/onboarding/FirstTenantOnboardingWizard.tsx</code> + steps (<code>OrganizationStep</code>, <code>SummaryStep</code>, <code>wizard-steps.ts</code>). <code>OrganizationStep</code> is shared with <code>CreateTenantDialog</code> (workspace/tenants.html → “Create tenant”).</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Guard semantics: cannot be bypassed via deep link; no session / lookup error → fail-open. Not dismissible.</li>
+    <li>Numbered progress <code>&lt;ol aria-label="Setup progress"&gt;</code> 1 Welcome · 2 Organization · 3 Review (Done shows all ✓; active = ink, done = green ✓, upcoming = outline).</li>
+    <li>Welcome: Building2 tile, “Let’s set up your first tenant”, both paragraphs, primary “Set up your organization →”, “⟳ Check again” (<code>router.refresh()</code>), “Sign out”.</li>
+    <li>Organization: name (autofocus, “Acme, Inc.”), URL slug (auto-derived until hand-edited; clearing re-enables), helper copy, live shape validation + 400 ms debounced availability probe with the four status lines; errors “Organization name is required”, “Could not derive a URL slug…”, “This slug is already taken…”; Back / Continue (“Checking…”).</li>
+    <li>Review: dl Organization / URL slug (mono), Free plan card (limits Tenants 1 · Projects 1 · API versions per project 3, sample project bullet), error alert, Back / “Create organization” → “Creating…” (both disabled while submitting).</li>
+    <li>Done: “{tenant} is ready”, “…you’re its administrator.”, “→ Go to your dashboard” (sets <code>current_tenant_id</code>, pushes default landing, refresh).</li>
+    <li>State + funnel events persisted server-side; resumes on saved step ≤ Review with values pre-filled.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Minimal top row (brand · signed-in email · Sign out) so the wizard doesn’t float on a bare page; “Progress is saved” footnote; hex art on Done.</li></ul>
+  <h4>States</h4>
+  <ul><li>Slug: checking / available / taken / unverifiable; submitting “Creating…”; Review error alert (server message).</li></ul>
+</template>
+</body>
+</html>

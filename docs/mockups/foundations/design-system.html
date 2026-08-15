@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Design system · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .ds-toc { position: sticky; top: 92px; align-self: start; }
+  .swatch { display: flex; flex-direction: column; gap: 6px; }
+  .swatch__chip { height: 56px; border-radius: var(--r-md); box-shadow: inset 0 0 0 1px var(--border); }
+  .swatch__name { font-size: var(--fs-xs); font-weight: 600; }
+  .swatch__val { font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .type-row { display: grid; grid-template-columns: 140px 1fr 200px; gap: 16px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .type-row .meta { font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .demo { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 16px; border-radius: var(--r-md); background: var(--bg-canvas); box-shadow: inset 0 0 0 1px var(--border); }
+  .demo--col { flex-direction: column; align-items: stretch; }
+  .theme-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .theme-tile { border-radius: var(--r-md); padding: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .theme-tile .btnish { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; margin-top: 8px; }
+  .radius-demo { width: 56px; height: 56px; background: var(--bg-surface); box-shadow: var(--shadow-sm); display: grid; place-items: center; font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .shadow-demo { width: 100%; height: 64px; border-radius: var(--r-lg); background: var(--bg-surface); display: grid; place-items: center; font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  h2.ds { font-size: var(--fs-2xl); font-weight: 600; letter-spacing: -0.02em; margin: 8px 0 4px; }
+  .ds-sec { scroll-margin-top: 100px; }
+</style>
+</head>
+<body data-shell="app" data-nav="" data-page="foundations/design-system" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../index.html">Mockups</a><i data-lucide="chevron-right"></i><span>Foundations</span><i data-lucide="chevron-right"></i><span>Design system</span></div>
+          <h1 class="page-title">Hive design system <span class="badge badge--honey">v1 · proposal</span></h1>
+          <p class="page-desc">Every token and component used by the mockups, in the current theme. Switch themes in Preferences to see the token swap live.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn" href="../DESIGN.md"><i data-lucide="file-text"></i>DESIGN.md</a>
+          <button class="btn btn--primary" data-action="open" data-target="settings-pane"><i data-lucide="settings-2"></i>Open Preferences</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="grid" style="grid-template-columns:200px minmax(0,1fr);gap:32px;align-items:start">
+      <nav class="ds-toc vtabs t-sm">
+        <a class="tab is-active" href="#color">Color</a><a class="tab" href="#themes">Themes</a><a class="tab" href="#type">Typography</a><a class="tab" href="#space">Space, radius, elevation</a><a class="tab" href="#buttons">Buttons</a><a class="tab" href="#forms">Forms</a><a class="tab" href="#badges">Badges &amp; pills</a><a class="tab" href="#nav">Tabs, chips, segmented</a><a class="tab" href="#cards">Cards &amp; stats</a><a class="tab" href="#tables">Tables</a><a class="tab" href="#feedback">Feedback</a><a class="tab" href="#overlays">Overlays</a><a class="tab" href="#misc">Avatars, steps, trees</a><a class="tab" href="#promoted">Promoted components</a><a class="tab" href="#brand">Brand ornament</a>
+      </nav>
+
+      <div class="col gap-8">
+        <!-- Color -->
+        <section id="color" class="ds-sec card card--pad">
+          <h2 class="ds">Color</h2>
+          <p class="t-sm t-muted">Warm neutrals for surfaces, one accent for interaction, semantic hues for state. Every value is a CSS variable in <code>hive.css :root</code>.</p>
+          <div class="t-caps mt-5 mb-2">Surfaces</div>
+          <div class="grid grid-6">
+            <div class="swatch"><div class="swatch__chip" style="background:var(--bg-canvas)"></div><div class="swatch__name">canvas</div><div class="swatch__val">--bg-canvas</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--bg-rail)"></div><div class="swatch__name">rail</div><div class="swatch__val">--bg-rail</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--bg-surface)"></div><div class="swatch__name">surface</div><div class="swatch__val">--bg-surface</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--bg-subtle)"></div><div class="swatch__name">subtle</div><div class="swatch__val">--bg-subtle</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--bg-inset)"></div><div class="swatch__name">inset</div><div class="swatch__val">--bg-inset</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--bg-overlay)"></div><div class="swatch__name">overlay</div><div class="swatch__val">--bg-overlay</div></div>
+          </div>
+          <div class="t-caps mt-5 mb-2">Ink &amp; lines</div>
+          <div class="grid grid-6">
+            <div class="swatch"><div class="swatch__chip" style="background:var(--fg)"></div><div class="swatch__name">fg</div><div class="swatch__val">--fg</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--fg-muted)"></div><div class="swatch__name">muted</div><div class="swatch__val">--fg-muted</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--fg-subtle)"></div><div class="swatch__name">subtle</div><div class="swatch__val">--fg-subtle</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--fg-faint)"></div><div class="swatch__name">faint</div><div class="swatch__val">--fg-faint</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--border)"></div><div class="swatch__name">border</div><div class="swatch__val">--border (9%)</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--border-strong)"></div><div class="swatch__name">border strong</div><div class="swatch__val">--border-strong (18%)</div></div>
+          </div>
+          <div class="t-caps mt-5 mb-2">Accent roles</div>
+          <div class="grid grid-6">
+            <div class="swatch"><div class="swatch__chip" style="background:var(--ink)"></div><div class="swatch__name">ink (primary button)</div><div class="swatch__val">--ink · flips in dark</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--accent)"></div><div class="swatch__name">accent</div><div class="swatch__val">--accent</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--accent-soft)"></div><div class="swatch__name">accent soft</div><div class="swatch__val">--accent-soft</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--honey)"></div><div class="swatch__name">honey</div><div class="swatch__val">--honey · ornament only</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--honey-soft)"></div><div class="swatch__name">honey soft</div><div class="swatch__val">--honey-soft</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:linear-gradient(135deg,var(--brand-azure),var(--brand-navy))"></div><div class="swatch__name">brand gradient</div><div class="swatch__val">azure → navy</div></div>
+          </div>
+          <div class="t-caps mt-5 mb-2">Semantic</div>
+          <div class="grid grid-6">
+            <div class="swatch"><div class="swatch__chip" style="background:var(--ok)"></div><div class="swatch__name">ok</div><div class="swatch__val">--ok / -soft / -fg</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--warn)"></div><div class="swatch__name">warn</div><div class="swatch__val">--warn</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--danger)"></div><div class="swatch__name">danger</div><div class="swatch__val">--danger</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--violet)"></div><div class="swatch__name">violet</div><div class="swatch__val">--violet · private, domain</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--orange)"></div><div class="swatch__name">orange</div><div class="swatch__val">--orange · deprecated</div></div>
+            <div class="swatch"><div class="swatch__chip" style="background:var(--rose)"></div><div class="swatch__name">rose</div><div class="swatch__val">--rose · admin, sunset</div></div>
+          </div>
+        </section>
+
+        <!-- Themes -->
+        <section id="themes" class="ds-sec card card--pad">
+          <h2 class="ds">Themes</h2>
+          <p class="t-sm t-muted">Nine themes, one layout. Each is a swap of the tokens above on <code>html[data-theme]</code>; “Follow system” resolves to light/dark live. Pick one in <button class="btn btn--link btn--sm" data-action="open" data-target="settings-pane">Preferences</button>.</p>
+          <div class="theme-strip mt-4">
+            <div class="theme-tile" style="background:#F6F5F2;color:#1B1A17"><div class="t-sm t-600">Light</div><div class="t-2xs" style="opacity:.6">default</div><span class="btnish" style="background:#16265C;color:#fff">Primary</span> <span class="btnish" style="background:#E7F1FC;color:#12539A">Accent</span></div>
+            <div class="theme-tile" style="background:#141311;color:#EDEBE6"><div class="t-sm t-600">Dark</div><div class="t-2xs" style="opacity:.6">warm blacks</div><span class="btnish" style="background:#EDEBE6;color:#16150F">Primary</span> <span class="btnish" style="background:rgba(90,166,242,.18);color:#9CCBF8">Accent</span></div>
+            <div class="theme-tile" style="background:#000;color:#fff;box-shadow:inset 0 0 0 1px #fff"><div class="t-sm t-600">High contrast</div><div class="t-2xs" style="opacity:.8">AAA</div><span class="btnish" style="background:#fff;color:#000">Primary</span> <span class="btnish" style="background:rgba(111,184,255,.25);color:#BFE0FF">Accent</span></div>
+            <div class="theme-tile" style="background:#0C1E3A;color:#E3F2FD"><div class="t-sm t-600">Blueprint</div><div class="t-2xs" style="opacity:.6">drafting blues</div><span class="btnish" style="background:#E3F2FD;color:#0C1E3A">Primary</span> <span class="btnish" style="background:rgba(111,193,255,.2);color:#B6E1FF">Accent</span></div>
+            <div class="theme-tile" style="background:#FAFAFA;color:#212121"><div class="t-sm t-600">Whiteboard</div><div class="t-2xs" style="opacity:.6">cool neutral</div><span class="btnish" style="background:#111827;color:#fff">Primary</span> <span class="btnish" style="background:#E8EEFC;color:#1E40AF">Accent</span></div>
+            <div class="theme-tile" style="background:#002B36;color:#EEE8D5"><div class="t-sm t-600">Solarized</div><div class="t-2xs" style="opacity:.6">Schoonover</div><span class="btnish" style="background:#EEE8D5;color:#002B36">Primary</span> <span class="btnish" style="background:rgba(42,161,152,.2);color:#6FD3CB">Accent</span></div>
+            <div class="theme-tile" style="background:#2E3440;color:#ECEFF4"><div class="t-sm t-600">Nord</div><div class="t-2xs" style="opacity:.6">arctic</div><span class="btnish" style="background:#ECEFF4;color:#2E3440">Primary</span> <span class="btnish" style="background:rgba(136,192,208,.2);color:#B6DEE9">Accent</span></div>
+            <div class="theme-tile" style="background:#2B2B2B;color:#E8E8E8"><div class="t-sm t-600">Darcula</div><div class="t-2xs" style="opacity:.6">IDE</div><span class="btnish" style="background:#E8E8E8;color:#2B2B2B">Primary</span> <span class="btnish" style="background:rgba(104,151,187,.2);color:#A9C7E0">Accent</span></div>
+            <div class="theme-tile" style="background:linear-gradient(90deg,#F6F5F2 50%,#141311 50%);color:#1B1A17"><div class="t-sm t-600">Follow system</div><div class="t-2xs" style="opacity:.6">light ↔ dark</div></div>
+          </div>
+        </section>
+
+        <!-- Typography -->
+        <section id="type" class="ds-sec card card--pad">
+          <h2 class="ds">Typography</h2>
+          <p class="t-sm t-muted">Inter for UI (features <code>cv11 ss01 ss03</code>), JetBrains Mono for code and identifiers. The scale is in rem so the font-size preference scales everything.</p>
+          <div class="mt-4">
+            <div class="type-row"><span class="meta">display · 38/1.2/-.02em</span><span class="t-display">Design. Version. Publish.</span><span class="meta">.t-display · auth &amp; launcher</span></div>
+            <div class="type-row"><span class="meta">h1 · 24/1.15/-.02em</span><span class="t-h1">Payments API</span><span class="meta">.t-h1 · page titles</span></div>
+            <div class="type-row"><span class="meta">h2 · 17/600</span><span class="t-h2">Related artifacts</span><span class="meta">.t-h2 · dialog titles</span></div>
+            <div class="type-row"><span class="meta">h3 · 15/600</span><span class="t-h3">Portfolio quality trend</span><span class="meta">.t-h3 · section titles</span></div>
+            <div class="type-row"><span class="meta">h4 · 14/600</span><span class="t-h4">Starting template</span><span class="meta">.t-h4 · card titles</span></div>
+            <div class="type-row"><span class="meta">body · 14/1.5</span><span class="t-body">Card, refund and payout endpoints for the merchant platform.</span><span class="meta">default</span></div>
+            <div class="type-row"><span class="meta">sm · 13</span><span class="t-sm">Lowercase letters, numbers and dashes. Suggested from the name.</span><span class="meta">.t-sm · table cells, hints</span></div>
+            <div class="type-row"><span class="meta">xs · 12</span><span class="t-xs t-muted">Published 3 days ago · 2 consumers</span><span class="meta">.t-xs · meta lines</span></div>
+            <div class="type-row"><span class="meta">caps · 11/600/+.06em</span><span class="t-caps">Section label</span><span class="meta">.t-caps · group labels, table heads</span></div>
+            <div class="type-row"><span class="meta">mono · 13</span><span class="mono">GET /orders/{orderId} → 200 Order · prj_8f2a1c</span><span class="meta">.mono · ids, code, versions</span></div>
+          </div>
+        </section>
+
+        <!-- Space / radius / elevation -->
+        <section id="space" class="ds-sec card card--pad">
+          <h2 class="ds">Space, radius, elevation, motion</h2>
+          <div class="grid grid-3 mt-4">
+            <div><div class="t-caps mb-2">Radii</div><div class="row gap-3"><div class="radius-demo" style="border-radius:4px">4</div><div class="radius-demo" style="border-radius:6px">6</div><div class="radius-demo" style="border-radius:10px">10</div><div class="radius-demo" style="border-radius:14px">14</div><div class="radius-demo" style="border-radius:20px">20</div></div><div class="t-xs t-muted mt-2">controls 10 · cards 14 · dialogs 20</div></div>
+            <div><div class="t-caps mb-2">Elevation</div><div class="col gap-2"><div class="shadow-demo" style="box-shadow:var(--shadow-sm)">sm · cards, tables</div><div class="shadow-demo" style="box-shadow:var(--shadow-md)">md · hover</div><div class="shadow-demo" style="box-shadow:var(--shadow-lg)">lg · popovers, dialogs</div></div></div>
+            <div><div class="t-caps mb-2">Density &amp; motion</div><dl class="kv"><dt>Comfortable</dt><dd>rows 46 · controls 36 · page pad 32</dd><dt>Compact</dt><dd>rows 38 · controls 32 · page pad 24</dd><dt>Durations</dt><dd>120 / 180 / 260 ms, ease-out</dd><dt>Reduce motion</dt><dd>preference + OS setting</dd></dl></div>
+          </div>
+        </section>
+
+        <!-- Buttons -->
+        <section id="buttons" class="ds-sec card card--pad">
+          <h2 class="ds">Buttons</h2>
+          <p class="t-sm t-muted">One primary per screen. Verbs, sentence case. Icon buttons carry a tooltip. Shortcut chips (<span class="kbd">N</span>) are optional and can be hidden in Preferences.</p>
+          <div class="demo mt-4">
+            <button class="btn btn--primary"><i data-lucide="plus"></i>New project<span class="kbd">N</span></button>
+            <button class="btn btn--accent"><i data-lucide="upload-cloud"></i>Publish</button>
+            <button class="btn"><i data-lucide="upload"></i>Import</button>
+            <button class="btn btn--soft">Secondary soft</button>
+            <button class="btn btn--ghost"><i data-lucide="filter"></i>Ghost</button>
+            <button class="btn btn--danger"><i data-lucide="trash-2"></i>Delete</button>
+            <button class="btn btn--danger-soft">Danger soft</button>
+            <button class="btn btn--honey"><i data-lucide="sparkles"></i>Honey (brand CTA)</button>
+            <button class="btn btn--link">Link button</button>
+            <button class="btn" disabled>Disabled</button>
+          </div>
+          <div class="demo mt-3">
+            <button class="btn btn--sm btn--primary">Small</button><button class="btn btn--sm">Small</button><button class="btn btn--sm btn--ghost btn--icon" data-tip="Icon small"><i data-lucide="pencil"></i></button>
+            <button class="btn">Default</button><button class="btn btn--icon" data-tip="Icon"><i data-lucide="ellipsis"></i></button>
+            <button class="btn btn--lg btn--primary">Large</button>
+            <div class="btn-group"><button class="btn is-active"><i data-lucide="layout-grid"></i>Cards</button><button class="btn"><i data-lucide="list"></i>Table</button></div>
+            <button class="btn btn--pill"><i data-lucide="sparkles"></i>Pill</button>
+            <button class="btn"><span class="spinner"></span>Saving…</button>
+          </div>
+        </section>
+
+        <!-- Forms -->
+        <section id="forms" class="ds-sec card card--pad">
+          <h2 class="ds">Forms</h2>
+          <p class="t-sm t-muted">36 px controls, hairline inset borders, azure focus. Labels above, hints below, errors inline with icon.</p>
+          <div class="grid grid-2 mt-4 gap-6">
+            <div class="col gap-4">
+              <div class="field"><label>Project name <span class="req">*</span></label><input class="input" placeholder="e.g. Payments API" /></div>
+              <div class="field"><label>Slug</label><input class="input input--mono" value="payments-api" /><div class="hint">Lowercase letters, numbers and dashes.</div></div>
+              <div class="field is-invalid"><label>Email</label><input class="input" value="ada@example" /><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>Enter a valid email address.</div></div>
+              <div class="field"><label>Search</label><div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter…" /><span class="input-suffix"><span class="kbd">/</span></span></div></div>
+              <div class="field"><label>Domain category</label><select class="select"><option>None</option><option>Finance</option></select></div>
+              <div class="field"><label>Description</label><textarea class="textarea" placeholder="What does this API do?"></textarea></div>
+            </div>
+            <div class="col gap-4">
+              <div class="field"><label>Choice controls</label><div class="row gap-4 wrap"><label class="check"><input type="checkbox" checked />Checkbox</label><label class="check"><input type="checkbox" />Unchecked</label><label class="radio"><input type="radio" name="r" checked />Radio</label><label class="radio"><input type="radio" name="r" />Radio</label></div></div>
+              <div class="switch-row"><div><div class="sw-title">Allow anonymous MCP calls</div><div class="sw-desc">Switch row with title + description.</div></div><button class="switch is-on" data-action="switch"></button></div>
+              <div class="switch-row"><div><div class="sw-title">Compact density</div><div class="sw-desc">Off state.</div></div><button class="switch" data-action="switch"></button></div>
+              <div class="field"><label>Segmented</label><div class="segmented" data-tabs><button class="is-active" data-action="tab">Comfortable</button><button data-action="tab">Compact</button></div></div>
+              <div class="field"><label>Slider</label><input type="range" class="slider" min="0" max="5" value="2" /></div>
+              <div class="field"><label>Small controls</label><div class="row gap-2"><input class="input input--sm" placeholder="Small input" style="width:160px" /><select class="select select--sm" style="width:120px"><option>25 rows</option></select><span class="kbd">⌘</span><span class="kbd">K</span></div></div>
+              <div class="form-actions" style="padding-top:4px"><button class="btn">Cancel</button><button class="btn btn--primary">Save changes</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Badges -->
+        <section id="badges" class="ds-sec card card--pad">
+          <h2 class="ds">Badges, status, formats, methods</h2>
+          <p class="t-sm t-muted"><code>.badge[data-status]</code> maps the app’s real vocabulary strings to tone. Format and method pills keep fixed hues in every theme.</p>
+          <div class="t-caps mt-4 mb-2">Version lifecycle · visibility</div>
+          <div class="demo"><span class="badge badge--dot" data-status="draft">Draft</span><span class="badge badge--dot" data-status="review">In review</span><span class="badge badge--dot" data-status="published">Published</span><span class="badge badge--dot" data-status="deprecated">Deprecated</span><span class="badge badge--dot" data-status="sunset">Sunset</span><span class="badge" data-status="archived">Archived</span><span class="badge" data-status="private">Private</span><span class="badge" data-status="public">Public</span><span class="badge" data-status="disabled">Disabled</span></div>
+          <div class="t-caps mt-4 mb-2">Health · jobs · severity · maturity</div>
+          <div class="demo"><span class="badge" data-status="healthy">Healthy</span><span class="badge" data-status="degraded">Degraded</span><span class="badge" data-status="down">Down</span><span class="badge" data-status="unknown">Unknown</span><span class="badge" data-status="running"><span class="spinner" style="width:10px;height:10px;border-width:1.5px"></span>Running</span><span class="badge" data-status="completed">Completed</span><span class="badge" data-status="failed">Failed</span><span class="badge" data-status="error">error</span><span class="badge" data-status="warning">warning</span><span class="badge" data-status="info">info</span><span class="badge" data-status="hint">hint</span><span class="badge" data-status="preview">Preview</span><span class="badge" data-status="beta">Beta</span><span class="badge" data-status="new">New</span><span class="badge badge--ink">Ink</span><span class="badge badge--outline">Outline</span><span class="badge badge--mono">ver_2f81</span><span class="badge badge--lg badge--ok"><i data-lucide="check"></i>Large</span></div>
+          <div class="t-caps mt-4 mb-2">Formats · protocols</div>
+          <div class="demo"><span class="fmt fmt--openapi">OpenAPI 3.1</span><span class="fmt fmt--asyncapi">AsyncAPI</span><span class="fmt fmt--graphql">GraphQL</span><span class="fmt fmt--proto">Protobuf</span><span class="fmt fmt--jsonschema">JSON Schema</span><span class="fmt fmt--wsdl">WSDL</span><span class="fmt fmt--x12">X12</span><span class="fmt fmt--copybook">Copybook</span><span class="fmt fmt--avro">Avro</span><span class="fmt fmt--raml">RAML</span><span class="fmt fmt--wit">WIT</span><span class="fmt fmt--postman">Postman</span><span class="fmt fmt--mcp">MCP</span></div>
+          <div class="t-caps mt-4 mb-2">HTTP methods · dots · tags · chips</div>
+          <div class="demo"><span class="method method--get">GET</span><span class="method method--post">POST</span><span class="method method--put">PUT</span><span class="method method--patch">PATCH</span><span class="method method--delete">DELETE</span><span class="method method--head">HEAD</span><span class="dot dot--ok"></span><span class="dot dot--warn"></span><span class="dot dot--danger"></span><span class="dot dot--info"></span><span class="dot dot--honey"></span><span class="dot dot--ok dot--pulse"></span><span class="tag">x-apiome-id</span><span class="tag">std/uuid</span><span class="chip is-active" data-action="chip">All 24</span><span class="chip" data-action="chip">Active 20</span><span class="chip" data-action="chip"><i data-lucide="triangle-alert"></i>Needs attention 3</span><span class="chip chip--filter"><i data-lucide="plus"></i>Add filter</span></div>
+        </section>
+
+        <!-- Tabs etc -->
+        <section id="nav" class="ds-sec card card--pad">
+          <h2 class="ds">Tabs, chips, segmented, breadcrumbs</h2>
+          <div class="demo demo--col mt-4">
+            <div class="tabs" style="border-bottom:1px solid var(--border)" data-tabs><a class="tab is-active" data-action="tab" href="#nav"><i data-lucide="layout-dashboard"></i>Overview</a><a class="tab" data-action="tab" href="#nav">Versions <span class="count">6</span></a><a class="tab" data-action="tab" href="#nav">Lint <span class="count">2</span></a><a class="tab" data-action="tab" href="#nav">Settings</a></div>
+            <div class="row gap-4 wrap"><div class="tabs tabs--pills" data-tabs><a class="tab is-active" data-action="tab" href="#nav">Queue</a><a class="tab" data-action="tab" href="#nav">Trends</a><a class="tab" data-action="tab" href="#nav">Quality ranks</a></div><div class="segmented" data-tabs><button class="is-active" data-action="tab"><i data-lucide="layout-grid"></i>Cards</button><button data-action="tab"><i data-lucide="list"></i>Table</button></div><div class="segmented segmented--sm" data-tabs><button class="is-active" data-action="tab">Mine</button><button data-action="tab">Workspace</button></div><div class="crumbs"><a href="#">Acme Corp</a><i data-lucide="chevron-right"></i><a href="#">Build</a><i data-lucide="chevron-right"></i><span>Projects</span></div></div>
+          </div>
+        </section>
+
+        <!-- Cards & stats -->
+        <section id="cards" class="ds-sec card card--pad">
+          <h2 class="ds">Cards, stats, meters, charts</h2>
+          <div class="grid grid-3 mt-4">
+            <div class="card card--flat"><div class="card__header"><div class="card__title"><i data-lucide="activity"></i>Card with header</div><span class="badge badge--outline">3</span></div><div class="card__body t-sm t-muted">Body content. Cards are white surfaces with a soft shadow; <code>--flat</code> uses a hairline instead.</div><div class="card__footer"><span>Footer</span><a href="#">Action</a></div></div>
+            <div class="card card--hover card--pad"><div class="row-between"><span class="fmt fmt--openapi">OpenAPI 3.1</span><span class="badge badge--dot" data-status="draft">Draft</span></div><div class="t-h4 mt-3">Hover card</div><div class="t-xs t-subtle mono">v2.4.0 · 18 paths</div><div class="row-between mt-4"><div class="row gap-2"><span class="ring ring--sm" style="--p:88;--c:var(--ok)"><span>88</span></span><span class="t-xs t-muted">Quality</span></div><span class="t-xs t-subtle">2h ago</span></div></div>
+            <div class="card card--honey card--pad"><div class="row gap-3"><span class="icon-tile icon-tile--honey icon-tile--hex"><i data-lucide="rocket"></i></span><div><div class="t-h4">Honey card</div><div class="t-xs t-muted">Brand moments: checklists, tips.</div></div></div><div class="hex-grid mt-3"><span class="is-on"></span><span class="is-on"></span><span class="is-on"></span><span></span><span></span></div></div>
+          </div>
+          <div class="stat-grid stat-grid--4 mt-4">
+            <div class="stat"><div class="stat__label"><i data-lucide="folder-kanban"></i>Projects</div><div class="stat__value">24</div><div class="stat__foot"><span>3 created this week</span><span class="stat__delta stat__delta--up"><i data-lucide="trending-up"></i>+12%</span></div></div>
+            <div class="stat"><div class="stat__label"><i data-lucide="globe"></i>Published</div><div class="stat__value">9<small>of 61</small></div><div class="stat__foot"><span>52 drafts</span><span class="stat__delta stat__delta--flat">0</span></div></div>
+            <div class="stat"><div class="stat__label"><i data-lucide="shield-check"></i>Lint pass rate</div><div class="stat__value">86<small>%</small></div><div class="stat__foot"><span>last 30 days</span><span class="stat__delta stat__delta--down"><i data-lucide="trending-down"></i>-3%</span></div></div>
+            <div class="stat"><div class="stat__label"><i data-lucide="key-round"></i>Active keys</div><div class="stat__value">7</div><div class="stat__foot"><span>1 expiring</span></div></div>
+          </div>
+          <div class="grid grid-4 mt-4">
+            <div class="card card--flat card--pad"><div class="t-caps mb-2">Ring</div><div class="row gap-3"><span class="ring ring--lg" style="--p:94;--c:var(--ok)"><span>94</span></span><span class="ring" style="--p:63;--c:var(--warn)"><span>63</span></span><span class="ring ring--sm" style="--p:38;--c:var(--danger)"><span>38</span></span></div></div>
+            <div class="card card--flat card--pad"><div class="t-caps mb-2">Meter &amp; progress</div><div class="meter"><div class="progress"><span style="width:62%"></span></div><span class="meter-val">62%</span></div><div class="progress progress--warn mt-2"><span style="width:82%"></span></div><div class="progress progress--danger mt-2"><span style="width:100%"></span></div><div class="progress progress--striped progress--honey mt-2"><span style="width:45%"></span></div></div>
+            <div class="card card--flat card--pad"><div class="t-caps mb-2">Sparkline</div><svg class="sparkline sparkline--ok" viewBox="0 0 120 36" preserveAspectRatio="none"><path class="fill" d="M0 30 L20 26 L40 27 L60 18 L80 14 L100 10 L120 4 L120 36 L0 36Z"/><path d="M0 30 L20 26 L40 27 L60 18 L80 14 L100 10 L120 4"/></svg></div>
+            <div class="card card--flat card--pad"><div class="t-caps mb-2">Bars</div><div class="bars"><span style="height:30%"></span><span style="height:50%"></span><span style="height:40%"></span><span style="height:75%" class="is-mid"></span><span style="height:60%"></span><span style="height:100%" class="is-hi"></span><span style="height:45%"></span><span style="height:20%" class="is-lo"></span></div></div>
+          </div>
+        </section>
+
+        <!-- Tables -->
+        <section id="tables" class="ds-sec card card--pad">
+          <h2 class="ds">Tables</h2>
+          <p class="t-sm t-muted">Sticky caps header, hover-revealed row actions, selection with sticky bulk bar, footer with count and paging. Skeleton rows while loading; <code>.empty</code> inside the card when there is nothing.</p>
+          <div class="table-wrap mt-4">
+            <div class="table-toolbar"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Filter keys…" /></div><span class="chip is-active" data-action="chip">Active</span><span class="chip" data-action="chip">Revoked</span><span class="spacer"></span><button class="btn btn--sm btn--ghost"><i data-lucide="download"></i>Export CSV</button></div>
+            <table class="table">
+              <thead><tr><th class="cell-check"><label class="check"><input type="checkbox"/></label></th><th class="sortable is-sorted">Name <span class="sort"><i data-lucide="arrow-up"></i></span></th><th>Prefix</th><th>Scopes</th><th class="sortable">Last used <span class="sort"><i data-lucide="arrow-up-down"></i></span></th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                <tr class="is-selected"><td class="cell-check"><label class="check"><input type="checkbox" checked data-action="select-row"/></label></td><td><div class="cell-primary">ci-deploy</div><div class="cell-sub">Created by Ada · Aug 1</div></td><td class="mono t-xs">apk_live_7f3a…</td><td><span class="tag">*</span></td><td class="t-muted">2 minutes ago</td><td><span class="badge badge--dot" data-status="active">Active</span></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Copy prefix"><i data-lucide="copy"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Revoke"><i data-lucide="ban"></i></button></div></td></tr>
+                <tr><td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td><td><div class="cell-primary">lint-bot</div><div class="cell-sub">Created by Grace · Jul 12</div></td><td class="mono t-xs">apk_live_a91c…</td><td><span class="tag">lint:read</span> <span class="tag">diff:read</span></td><td class="t-muted">yesterday</td><td><span class="badge badge--dot" data-status="active">Active</span></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon"><i data-lucide="copy"></i></button><button class="btn btn--ghost btn--sm btn--icon"><i data-lucide="ban"></i></button></div></td></tr>
+                <tr><td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td><td><div class="cell-primary">old-agent</div><div class="cell-sub">Revoked by Ada · Jun 3</div></td><td class="mono t-xs">apk_live_0c22…</td><td><span class="tag">diff:read</span></td><td class="t-muted">Jun 2</td><td><span class="badge" data-status="revoked">Revoked</span></td><td></td></tr>
+                <tr><td class="cell-check"></td><td><div class="skeleton" style="width:120px;height:12px">.</div><div class="skeleton mt-1" style="width:80px;height:10px">.</div></td><td><div class="skeleton" style="width:90px;height:12px">.</div></td><td><div class="skeleton" style="width:60px;height:12px">.</div></td><td><div class="skeleton" style="width:70px;height:12px">.</div></td><td><div class="skeleton" style="width:56px;height:18px;border-radius:99px">.</div></td><td></td></tr>
+              </tbody>
+            </table>
+            <div class="table-foot"><span>Showing 1–4 of 12</span><div class="pager"><button class="btn btn--sm btn--ghost btn--icon"><i data-lucide="chevron-left"></i></button><button class="btn btn--sm btn--soft">1</button><button class="btn btn--sm btn--ghost">2</button><button class="btn btn--sm btn--ghost">3</button><button class="btn btn--sm btn--ghost btn--icon"><i data-lucide="chevron-right"></i></button></div></div>
+          </div>
+          <div class="bulk-bar mt-3" style="position:static;margin-top:12px"><span>1 selected</span><button class="btn btn--sm"><i data-lucide="ban"></i>Revoke</button><button class="btn btn--sm"><i data-lucide="tag"></i>Add scope</button><button class="btn btn--sm btn--icon" data-tip="Clear"><i data-lucide="x"></i></button></div>
+        </section>
+
+        <!-- Feedback -->
+        <section id="feedback" class="ds-sec card card--pad">
+          <h2 class="ds">Feedback: banners, toasts, empty states, loading</h2>
+          <div class="col gap-3 mt-4">
+            <div class="banner"><i data-lucide="info"></i><div><div class="banner-title">Filters live in the URL</div><div class="banner-body">Share this view by copying the address.</div></div><div class="banner-actions"><button class="btn btn--sm btn--ghost">Dismiss</button></div></div>
+            <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div><span class="banner-title">Server has new changes.</span> Pull to integrate or open merge.</div><div class="banner-actions"><button class="btn btn--sm">Pull</button><button class="btn btn--sm btn--primary">Open merge</button></div></div>
+            <div class="banner banner--danger"><i data-lucide="circle-x"></i><div><span class="banner-title">Couldn’t load projects.</span> The API returned 502. <a href="#">Retry</a></div></div>
+            <div class="banner banner--ok"><i data-lucide="circle-check"></i><div>Password changed successfully.</div></div>
+            <div class="banner banner--honey"><i data-lucide="sparkles"></i><div><span class="banner-title">Feature in preview.</span> Lint posture is early — tell us what’s missing.</div></div>
+            <div class="callout callout--accent">Callout: “tools/list always returns the full catalog; ceiling, defaults and anonymous flags only gate tools/call.”</div>
+          </div>
+          <div class="grid grid-3 mt-4">
+            <div class="toast toast--ok"><i data-lucide="circle-check"></i><div><div class="toast-title">Version published</div><div class="toast-desc">v2.4.0 of Payments API is now browsable.</div></div><button class="btn btn--sm btn--ghost">View</button></div>
+            <div class="toast toast--danger"><i data-lucide="circle-x"></i><div><div class="toast-title">Import failed</div><div class="toast-desc">Unsupported format: TypeSpec (planned).</div></div></div>
+            <div class="toast"><i data-lucide="undo-2"></i><div><div class="toast-title">3 findings waived</div><div class="toast-desc">Applies to Payments v2.4.0.</div></div><button class="btn btn--sm">Undo</button></div>
+          </div>
+          <div class="grid grid-2 mt-4">
+            <div class="card card--flat"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="folder-open"></i></div><div class="empty__title">No projects yet</div><div class="empty__desc">Create one from a template, import a spec, or let AI draft it.</div><div class="empty__actions"><button class="btn btn--primary"><i data-lucide="plus"></i>New project</button><button class="btn"><i data-lucide="upload"></i>Import</button></div></div></div>
+            <div class="col gap-3"><div class="card card--flat empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="lock"></i></div><div><div class="empty__title t-sm">Pick a workspace first</div><div class="empty__desc t-xs">API keys are scoped to a tenant. <a href="#">Go to Tenants</a></div></div></div><div class="card card--flat empty empty--inline empty--dashed"><div class="empty__art"><span class="hex"></span><i data-lucide="search-x"></i></div><div><div class="empty__title t-sm">No projects match your filters</div><div class="empty__desc t-xs">Try clearing the search or the “Needs attention” chip.</div></div></div><div class="row gap-3"><span class="spinner"></span><span class="t-sm t-muted">Loading projects…</span><div class="skeleton" style="width:160px;height:14px">.</div></div></div>
+          </div>
+        </section>
+
+        <!-- Overlays -->
+        <section id="overlays" class="ds-sec card card--pad">
+          <h2 class="ds">Overlays</h2>
+          <p class="t-sm t-muted">Dialogs for decisions, drawers for detail, menus for actions, the palette for everything. Try them:</p>
+          <div class="demo mt-4">
+            <button class="btn" data-action="open" data-target="ds-dialog"><i data-lucide="app-window"></i>Dialog</button>
+            <button class="btn" data-action="open" data-target="ds-confirm"><i data-lucide="triangle-alert"></i>Destructive confirm</button>
+            <button class="btn" data-action="open" data-target="ds-drawer"><i data-lucide="panel-right"></i>Drawer</button>
+            <button class="btn" data-action="open" data-target="palette"><i data-lucide="command"></i>Palette <span class="kbd">⌘K</span></button>
+            <button class="btn" data-action="open" data-target="settings-pane"><i data-lucide="settings-2"></i>Preferences <span class="kbd">⌘,</span></button>
+            <button class="btn" data-action="open" data-target="whats-new"><i data-lucide="sparkles"></i>What’s new</button>
+            <span data-tip="Tooltips are 11px ink pills"><button class="btn btn--ghost btn--icon"><i data-lucide="info"></i></button></span>
+          </div>
+          <div class="grid grid-2 mt-4">
+            <div class="menu" style="position:static;box-shadow:var(--shadow-md)"><div class="menu__label">Version</div><a class="menu__item" href="#"><i data-lucide="pencil"></i>Edit<span class="kbd">E</span></a><a class="menu__item" href="#"><i data-lucide="git-compare"></i>Compare…</a><a class="menu__item" href="#"><i data-lucide="upload-cloud"></i>Publish…</a><div class="menu__sep"></div><a class="menu__item is-danger" href="#"><i data-lucide="trash-2"></i>Delete</a></div>
+            <div class="code code--lines"><span><span class="c-k">openapi</span>: <span class="c-s">3.1.0</span></span><span><span class="c-k">info</span>:</span><span>  <span class="c-k">title</span>: <span class="c-s">Payments API</span></span><span>  <span class="c-k">version</span>: <span class="c-s">2.4.0</span></span><span class="diff-add">  <span class="c-k">summary</span>: <span class="c-s">Card, refund and payout endpoints</span></span><span class="diff-del">  <span class="c-k">x-legacy</span>: <span class="c-n">true</span></span><button class="btn btn--sm btn--ghost btn--icon copy" data-tip="Copy"><i data-lucide="copy"></i></button></div>
+          </div>
+        </section>
+
+        <!-- Misc -->
+        <section id="misc" class="ds-sec card card--pad">
+          <h2 class="ds">Avatars, steppers, timeline, tree, panels</h2>
+          <div class="grid grid-2 mt-4 gap-6">
+            <div class="col gap-4">
+              <div class="row gap-3 wrap"><span class="avatar avatar--xs avatar--a">AL</span><span class="avatar avatar--sm avatar--b">GH</span><span class="avatar avatar--c">LT</span><span class="avatar avatar--lg avatar--d">MH</span><span class="avatar avatar--xl avatar--e">AT</span><span class="avatar avatar--lg avatar--hex avatar--brand">AC</span><span class="avatar avatar--hex avatar--honey">GL</span><div class="avatar-stack"><span class="avatar avatar--sm avatar--a">AL</span><span class="avatar avatar--sm avatar--b">GH</span><span class="avatar avatar--sm avatar--c">LT</span><span class="avatar avatar--sm">+4</span></div></div>
+              <div class="stepper"><div class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Source</div><span class="step__line is-done"></span><div class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Analyze</div><span class="step__line is-done"></span><div class="step is-active"><span class="step__num">3</span>Preview</div><span class="step__line"></span><div class="step"><span class="step__num">4</span>Import</div><span class="step__line"></span><div class="step"><span class="step__num">5</span>Done</div></div>
+              <div class="timeline"><div class="tl-item is-ok"><div class="tl-title">Published v2.3.1</div><div class="tl-meta">Ada · Aug 12, 16:40</div></div><div class="tl-item is-accent"><div class="tl-title">Lint passed (0 errors, 2 warnings)</div><div class="tl-meta">CI · Aug 12, 16:38</div></div><div class="tl-item is-warn"><div class="tl-title">Deprecated v1.4 · sunset Sep 1</div><div class="tl-meta">Grace · Aug 3</div></div><div class="tl-item"><div class="tl-title">Created project</div><div class="tl-meta">Ada · Jun 2</div></div></div>
+            </div>
+            <div class="col gap-4">
+              <div class="card card--flat" style="padding:8px"><div class="tree"><div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><i data-lucide="folder"></i>Payments<span class="count">12</span></div><div class="tree__children"><div class="tree__item is-active"><i data-lucide="box"></i>Payment</div><div class="tree__item"><i data-lucide="box"></i>Refund<span class="badge badge--outline" style="margin-left:6px">deprecated</span></div><div class="tree__item"><i data-lucide="box"></i>Payout</div></div><div class="tree__item"><i data-lucide="chevron-right" class="tw"></i><i data-lucide="folder"></i>Customers<span class="count">4</span></div><div class="tree__item"><i data-lucide="chevron-right" class="tw"></i><i data-lucide="shapes"></i>Primitives<span class="count">std/9</span></div></div></div>
+              <div class="split" style="grid-template-columns:1fr 1fr;height:140px;border-radius:var(--r-md);overflow:hidden;box-shadow:inset 0 0 0 1px var(--border)"><div class="panel"><div class="panel__head">Inspector<span class="ml-auto"><i data-lucide="panel-right-close"></i></span></div><div class="panel__body p-3 t-sm t-muted">Panels have 40 px caps headers and collapse to strips.</div></div><div class="panel panel--muted"><div class="panel__head">Canvas</div><div class="panel__body p-3 t-sm t-muted">Muted panel.</div></div></div>
+              <dl class="kv"><dt>Owner</dt><dd>Ada Lovelace</dd><dt>Created</dt><dd>Jun 2, 2026</dd><dt>Id</dt><dd class="mono t-xs">prj_8f2a1c <button class="btn btn--ghost btn--sm btn--icon" data-tip="Copy"><i data-lucide="copy"></i></button></dd></dl>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- Promoted from pages -->
+        <section id="promoted" class="ds-sec card card--pad">
+          <h2 class="ds">Promoted components</h2>
+          <p class="t-sm t-muted">Added to <code>hive.css §21</code> after page authoring surfaced a repeated need. Anything a page invents locally lands here once a second page wants it.</p>
+
+          <div class="t-caps mt-5 mb-2">Save bar &amp; bulk bar</div>
+          <div class="demo demo--col">
+            <div class="save-bar" style="position:static;margin:0"><i data-lucide="circle-alert"></i><span>3 unsaved rule changes</span><button class="btn btn--sm">Discard</button><button class="btn btn--sm btn--primary">Save changes</button></div>
+            <div class="bulk-bar" style="position:static;margin:0"><span>2 selected</span><button class="btn btn--sm"><i data-lucide="check"></i>Acknowledge</button><button class="btn btn--sm"><i data-lucide="shield-check"></i>Request waiver</button><button class="btn btn--sm btn--icon" data-tip="Clear"><i data-lucide="x"></i></button></div>
+          </div>
+
+          <div class="t-caps mt-5 mb-2">Permission matrix cell · mixed switch</div>
+          <div class="demo">
+            <span class="row gap-2"><button class="perm" aria-pressed="true"><i data-lucide="check" style="width:14px;height:14px"></i></button><span class="t-xs t-muted">granted</span></span>
+            <span class="row gap-2"><button class="perm" aria-pressed="mixed"><i data-lucide="minus" style="width:14px;height:14px"></i></button><span class="t-xs t-muted">partial</span></span>
+            <span class="row gap-2"><button class="perm" aria-pressed="false"></button><span class="t-xs t-muted">denied</span></span>
+            <span class="row gap-2"><button class="perm" aria-pressed="true" disabled><i data-lucide="lock" style="width:12px;height:12px"></i></button><span class="t-xs t-muted">locked (built-in role)</span></span>
+            <span class="row gap-2" style="margin-left:16px"><button class="switch is-on"></button><span class="t-xs t-muted">on</span></span>
+            <span class="row gap-2"><button class="switch is-mixed"></button><span class="t-xs t-muted">mixed (some tools)</span></span>
+            <span class="row gap-2"><button class="switch"></button><span class="t-xs t-muted">off</span></span>
+          </div>
+
+          <div class="t-caps mt-5 mb-2">Radio-card option · selectable tile · secret box</div>
+          <div class="grid grid-3 mt-2">
+            <div class="col gap-2">
+              <label class="scope-opt is-checked"><input type="radio" name="sc" checked style="margin-top:2px" /><span><span class="t-sm t-600">Full access <span class="mono t-xs t-subtle">*</span></span><span class="t-xs t-muted" style="display:block">Every REST operation for this tenant.</span></span></label>
+              <label class="scope-opt"><input type="radio" name="sc" style="margin-top:2px" /><span><span class="t-sm t-600">Diff only <span class="mono t-xs t-subtle">diff:read</span></span><span class="t-xs t-muted" style="display:block">CI contract gates.</span></span></label>
+            </div>
+            <div class="col gap-2">
+              <label class="tile-check is-on"><input type="checkbox" checked style="margin-top:2px" /><span><span class="t-sm t-600">Designer</span><span class="t-xs t-muted" style="display:block">Visual API designer (Studio).</span></span></label>
+              <label class="tile-check"><input type="checkbox" style="margin-top:2px" /><span><span class="t-sm t-600">Export studio</span><span class="t-xs t-muted" style="display:block">Multi-format export.</span></span></label>
+            </div>
+            <div class="col gap-2">
+              <div class="secret"><span class="grow">apk_live_7f3a91c0d4e2b85f6a1c9e0d</span><button class="btn btn--sm btn--soft"><i data-lucide="copy"></i>Copy</button></div>
+              <div class="row gap-2 wrap"><span class="fb"><i data-lucide="file-cog" style="width:11px;height:11px"></i>using .env fallback</span><span class="seat-chip">max_tenants 3</span><span class="seat-chip">max_projects 50</span></div>
+            </div>
+          </div>
+
+          <div class="t-caps mt-5 mb-2">Audit event badges · split bar · fieldset</div>
+          <div class="demo demo--col">
+            <div class="row gap-2 wrap"><span class="badge ev ev--role">role.assigned</span><span class="badge ev ev--permission">permission.changed</span><span class="badge ev ev--member">member.invited</span><span class="badge ev ev--admin">admin.override</span><span class="badge ev ev--sso">sso.login</span><span class="badge ev ev--other">style_guide.updated</span></div>
+            <div style="width:100%"><div class="split-bar"><span style="width:38%"></span><span style="width:62%"></span></div><div class="row-between t-2xs t-subtle mt-1"><span>Private 38%</span><span>Public 62%</span></div></div>
+            <fieldset class="fieldset" style="width:100%"><legend>Verification policy <span class="badge badge--outline">tenant default</span></legend><div class="t-sm t-muted">Fieldsets group policy switches; the legend carries the scope badge.</div></fieldset>
+          </div>
+
+
+          <div class="t-caps mt-5 mb-2">Studio chrome (§5.5)</div>
+          <div class="demo demo--col">
+            <div class="topbar topbar--grid" style="position:static;border-radius:var(--r-md);box-shadow:inset 0 0 0 1px var(--border);border-bottom:0">
+              <div class="topbar__left"><button class="pv-pill"><span class="avatar avatar--xs avatar--hex avatar--a">PA</span><span class="t-600">Payments API</span><i data-lucide="chevron-right" style="opacity:.5"></i><span class="mono">v2.4.0</span><span class="badge badge--dot" data-status="draft">Draft</span><i data-lucide="chevrons-up-down"></i></button><span class="row gap-1 t-xs t-subtle"><span class="dot dot--ok"></span>Saved</span></div>
+              <div class="topbar__center"><div class="segmented segmented--sm"><a class="is-active" href="#promoted"><i data-lucide="pen-tool"></i>Editor</a><a href="#promoted"><i data-lucide="route"></i>Paths</a><a href="#promoted"><i data-lucide="code-2"></i>Code</a></div></div>
+              <div class="topbar__right"><button class="btn btn--sm btn--ghost btn--icon"><i data-lucide="search"></i></button><button class="btn btn--sm btn--primary"><i data-lucide="package-open"></i>Generate</button></div>
+            </div>
+            <div class="canvas" style="height:150px;border-radius:var(--r-md);box-shadow:inset 0 0 0 1px var(--border)">
+              <div class="float" style="left:10px;top:10px"><button class="btn btn--sm btn--ghost btn--icon" data-tip="Select"><i data-lucide="mouse-pointer-2"></i></button><button class="btn btn--sm btn--ghost btn--icon" data-tip="Add class"><i data-lucide="square-plus"></i></button><button class="btn btn--sm btn--ghost btn--icon" data-tip="Auto-layout"><i data-lucide="layout-grid"></i></button></div>
+              <div class="minimap"></div>
+              <div class="card" style="position:absolute;left:120px;top:44px;width:180px;padding:0;overflow:hidden"><div style="height:3px;background:var(--accent)"></div><div style="padding:8px 10px"><div class="t-sm t-600">Payment</div><div class="t-2xs t-subtle mono">7 properties</div></div></div>
+            </div>
+            <div class="status-bar" style="border-radius:var(--r-md);box-shadow:inset 0 0 0 1px var(--border);border-top:0"><span>Payments API</span><span class="mono">v2.4.0</span><span>main</span><span class="ml-auto">100% · Grid: dots 20 · Snap: on</span></div>
+          </div>
+
+          <div class="t-caps mt-5 mb-2">Divider · filled stepper · clickable stat</div>
+          <div class="grid grid-3 mt-2">
+            <div class="divider">or use your email</div>
+            <div class="stepper stepper--fill"><div class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Password</div><span class="step__line is-done"></span><div class="step is-active"><span class="step__num">2</span>Scan</div><span class="step__line"></span><div class="step"><span class="step__num">3</span>Codes</div></div>
+            <button class="stat stat--btn card card--flat"><div class="stat__label"><i data-lucide="shield-alert"></i>Unwaived security errors</div><div class="stat__value">2</div><div class="stat__foot"><span>Open · security axis</span><span class="badge badge--warn">Needs attention</span></div></button>
+          </div>
+        </section>
+
+        <!-- Brand -->
+        <section id="brand" class="ds-sec card card--pad hex-bg glow-honey" style="position:relative;overflow:hidden">
+          <h2 class="ds">Brand ornament</h2>
+          <p class="t-sm t-muted">The hex mark, honey glow and hex canvas pattern appear on auth, launcher, empty states and checklists — never inside data tables.</p>
+          <div class="row gap-6 mt-4 wrap"><span class="brand-mark brand-mark--lg"></span><span class="brand-mark"></span><span class="icon-tile icon-tile--lg icon-tile--honey icon-tile--hex"><i data-lucide="rocket"></i></span><span class="icon-tile icon-tile--lg icon-tile--accent"><i data-lucide="pen-tool"></i></span><span class="icon-tile icon-tile--lg icon-tile--ink"><i data-lucide="database"></i></span><span class="icon-tile icon-tile--lg icon-tile--violet"><i data-lucide="library"></i></span><span class="icon-tile icon-tile--lg icon-tile--rose"><i data-lucide="shield-half"></i></span><div class="hex-grid"><span class="is-on"></span><span class="is-on"></span><span class="is-ok"></span><span class="is-warn"></span><span class="is-danger"></span><span class="is-accent"></span><span></span><span></span></div></div>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="overlay" id="ds-dialog" data-overlay><div class="dialog" role="dialog"><div class="dialog__header"><div><div class="dialog__title">Dialog title</div><div class="dialog__desc">One-sentence description of the decision.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close"><i data-lucide="x"></i></button></div><div class="dialog__body col gap-4"><div class="field"><label>Label</label><input class="input" placeholder="Value" /></div><div class="field"><label>Visibility</label><div class="row gap-4"><label class="radio"><input type="radio" name="v" checked />Private</label><label class="radio"><input type="radio" name="v" />Public</label></div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save</button></div></div></div>
+<div class="overlay" id="ds-confirm" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Revoke key “ci-deploy”?</div><div class="dialog__desc">Anything using this key stops working immediately. This cannot be undone.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Revoke key</button></div></div></div>
+<div class="overlay overlay--drawer" id="ds-drawer" data-overlay><div class="drawer" role="dialog"><div class="drawer__header"><div><div class="drawer__title">Audit event</div><div class="t-xs t-muted mono">evt_9c1d · Aug 15, 09:12:44</div></div><button class="btn btn--ghost btn--icon" style="margin-left:auto" data-action="close"><i data-lucide="x"></i></button></div><div class="drawer__body col gap-4"><dl class="kv"><dt>Actor</dt><dd>Ada Lovelace</dd><dt>Action</dt><dd><span class="badge badge--info">role.assign</span></dd><dt>Target</dt><dd>Grace Hopper → Admin</dd><dt>IP</dt><dd class="mono t-xs">203.0.113.4</dd></dl><div class="code">{ "before": ["editor"], "after": ["admin"] }</div></div><div class="drawer__footer"><a class="btn btn--ghost" href="#">Open full page <i data-lucide="arrow-up-right"></i></a><button class="btn" data-action="close">Close</button></div></div></div>
+
+<template id="notes">
+  <p class="route">foundations — no route</p>
+  <h4>Purpose</h4><ul><li>Living style guide for the Hive design language; the production port is a Storybook/route (<code>/design-system</code>) built from <code>components/ui</code> once tokens land.</li></ul>
+  <h4>Implementation</h4><ul><li>Tokens → Tailwind v4 <code>@theme</code> in <code>globals.css</code> (DESIGN.md §11).</li><li>Component classes → variants on the existing <code>components/ui</code> primitives; new: Segmented, Drawer, Avatar, Stat, DataTable, Kbd, Stepper, Timeline, EmptyState (hex art).</li></ul>
+</template>
+</body>
+</html>

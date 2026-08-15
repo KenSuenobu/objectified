@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MCP analytics · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .donut { --a: 40; --b: 30; --c: 20; width: 112px; height: 112px; border-radius: 50%; position: relative; flex-shrink: 0; }
+  .donut::before { content: ""; position: absolute; inset: 14px; border-radius: 50%; background: var(--bg-surface); }
+  .donut > span { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 600; font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
+  .legend { display: grid; grid-template-columns: 1fr; gap: 6px; font-size: var(--fs-xs); color: var(--fg-muted); }
+  .legend > div { display: flex; align-items: center; gap: 8px; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .legend .n { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 500; }
+  .rank { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); font-size: var(--fs-sm); }
+  .rank:first-child { border-top: 0; }
+  .rank .pos { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-inset); font-size: var(--fs-2xs); font-weight: 700; color: var(--fg-muted); }
+</style>
+</head>
+<body data-shell="app" data-nav="mcp" data-page="sources/mcp-analytics" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Bring in</span><i data-lucide="chevron-right"></i><a href="mcp-servers.html">MCP servers</a><i data-lucide="chevron-right"></i><span>Analytics</span></div>
+          <h1 class="page-title">Catalog analytics <span class="badge badge--honey badge--lg" title="Feature in preview">Preview</span></h1>
+          <p class="page-desc">How the workspace’s MCP servers break down — category, transport, protocol, grade, health, churn and reach.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-tip="Reload catalog analytics"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <button class="btn btn--primary" data-tip="Download this dashboard as CSV (new)"><i data-lucide="download"></i>Export CSV</button>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="MCP Servers sections">
+        <a class="tab" href="mcp-servers.html"><i data-lucide="server"></i>Servers<span class="count">6</span></a>
+        <a class="tab is-active" href="mcp-analytics.html" aria-current="page"><i data-lucide="bar-chart-3"></i>Analytics<span class="badge badge--honey" title="Feature in preview">Preview</span></a>
+        <a class="tab" href="mcp-capabilities.html"><i data-lucide="layers"></i>Capabilities<span class="count">65</span></a>
+        <a class="tab" href="mcp-compare.html"><i data-lucide="git-compare-arrows"></i>Compare</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Stat row -->
+    <section class="stat-grid stat-grid--5">
+      <div class="stat"><div class="stat__label"><i data-lucide="server"></i>Endpoints</div><div class="stat__value">6</div><div class="stat__foot"><span>3 hosts</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="globe"></i>Published</div><div class="stat__value">2<small>of 6</small></div><div class="stat__foot"><span>2 public · 4 private</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="radar"></i>Discovered</div><div class="stat__value">5</div><div class="stat__foot"><span>1 never discovered</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="award"></i>Scored</div><div class="stat__value">5</div><div class="stat__foot"><span>1 unscored</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="gauge"></i>Avg score</div><div class="stat__value">71.8</div><div class="stat__foot"><span>across scored endpoints</span><span class="stat__delta stat__delta--up"><i data-lucide="trending-up"></i>+3.2</span></div></div>
+    </section>
+
+    <!-- Donuts -->
+    <section class="grid grid-3">
+      <div class="card card--pad">
+        <div class="card__title mb-4"><i data-lucide="pie-chart"></i>Category mix<span class="t-xs t-subtle t-500">% of endpoints</span></div>
+        <div class="row gap-5">
+          <div class="donut" role="img" aria-label="Category mix: finance 33%, geo 17%, logistics 17%, developer-tools 17%, crm 17%" style="background:conic-gradient(var(--accent) 0 33.3%, var(--ok) 33.3% 50%, var(--violet) 50% 66.7%, var(--warn) 66.7% 83.3%, var(--rose) 83.3% 100%)"><span>6</span></div>
+          <div class="legend grow"><div><span class="sw" style="background:var(--accent)"></span>finance<span class="n">2 (33%)</span></div><div><span class="sw" style="background:var(--ok)"></span>geo<span class="n">1 (17%)</span></div><div><span class="sw" style="background:var(--violet)"></span>logistics<span class="n">1 (17%)</span></div><div><span class="sw" style="background:var(--warn)"></span>developer-tools<span class="n">1 (17%)</span></div><div><span class="sw" style="background:var(--rose)"></span>crm<span class="n">1 (17%)</span></div></div>
+        </div>
+      </div>
+      <div class="card card--pad">
+        <div class="card__title mb-4"><i data-lucide="network"></i>Transport mix<span class="t-xs t-subtle t-500">% of endpoints</span></div>
+        <div class="row gap-5">
+          <div class="donut" role="img" aria-label="Transport mix: streamable_http 50%, http+sse 33%, stdio 17%" style="background:conic-gradient(var(--accent) 0 50%, var(--violet) 50% 83.3%, var(--neutral) 83.3% 100%)"><span>6</span></div>
+          <div class="legend grow"><div><span class="sw" style="background:var(--accent)"></span>streamable_http<span class="n">3 (50%)</span></div><div><span class="sw" style="background:var(--violet)"></span>http+sse (legacy)<span class="n">2 (33%)</span></div><div><span class="sw" style="background:var(--neutral)"></span>stdio<span class="n">1 (17%)</span></div></div>
+        </div>
+      </div>
+      <div class="card card--pad">
+        <div class="card__title mb-4"><i data-lucide="bar-chart-3"></i>Grade distribution<span class="t-xs t-subtle t-500">% of scored</span></div>
+        <div class="row gap-5">
+          <div class="donut" role="img" aria-label="Grade distribution: A 20%, B 40%, C 20%, D 20%" style="background:conic-gradient(var(--ok) 0 20%, color-mix(in srgb, var(--ok) 70%, var(--honey)) 20% 60%, var(--warn) 60% 80%, var(--danger) 80% 100%)"><span>5</span></div>
+          <div class="legend grow"><div><span class="sw" style="background:var(--ok)"></span>A<span class="n">1 (20%)</span></div><div><span class="sw" style="background:color-mix(in srgb, var(--ok) 70%, var(--honey))"></span>B<span class="n">2 (40%)</span></div><div><span class="sw" style="background:var(--warn)"></span>C<span class="n">1 (20%)</span></div><div><span class="sw" style="background:var(--danger)"></span>D<span class="n">1 (20%)</span></div><div><span class="sw" style="background:var(--danger)"></span>F<span class="n">0 (0%)</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bar series -->
+    <section class="grid grid-3">
+      <div class="card card--pad">
+        <div class="card__title mb-3"><i data-lucide="git-branch"></i>Protocol version adoption</div>
+        <div class="bars" style="height:96px"><span style="height:100%;background:var(--violet)" title="2025-06-18: 3"></span><span style="height:66%;background:var(--violet)" title="2025-03-26: 2"></span><span style="height:33%;background:var(--violet)" title="unknown: 1"></span></div>
+        <div class="row-between t-2xs t-subtle mt-1"><span>2025-06-18</span><span>2025-03-26</span><span>unknown</span></div>
+        <div class="row wrap gap-2 mt-3 t-xs t-muted"><span>2025-06-18 · <span class="t-600">3</span></span><span>2025-03-26 · <span class="t-600">2</span></span><span>unknown · <span class="t-600">1</span></span></div>
+      </div>
+      <div class="card card--pad">
+        <div class="card__title mb-3"><i data-lucide="wrench"></i>Tool-count distribution</div>
+        <div class="bars" style="height:96px"><span style="height:50%" title="0: 1"></span><span style="height:100%" title="1–5: 2"></span><span style="height:50%" title="6–10: 1"></span><span style="height:100%" title="11–20: 2"></span><span style="height:0%" title="21–50: 0"></span><span style="height:0%" title="50+: 0"></span></div>
+        <div class="row-between t-2xs t-subtle mt-1"><span>0</span><span>1–5</span><span>6–10</span><span>11–20</span><span>21–50</span><span>50+</span></div>
+        <div class="row wrap gap-2 mt-3 t-xs t-muted"><span>0 · <span class="t-600">1</span></span><span>1–5 · <span class="t-600">2</span></span><span>6–10 · <span class="t-600">1</span></span><span>11–20 · <span class="t-600">2</span></span><span>21–50 · <span class="t-600">0</span></span><span>50+ · <span class="t-600">0</span></span></div>
+      </div>
+      <div class="card card--pad">
+        <div class="card__title mb-3"><i data-lucide="heart-pulse"></i>Discovery health</div>
+        <div class="bars" style="height:96px"><span style="height:100%;background:var(--ok)" title="healthy: 4"></span><span style="height:25%;background:var(--ok)" title="failing: 1"></span><span style="height:0%;background:var(--ok)" title="undiscovered: 0"></span><span style="height:0%;background:var(--ok)" title="disabled: 0"></span><span style="height:25%;background:var(--ok)" title="quarantined: 1"></span></div>
+        <div class="row-between t-2xs t-subtle mt-1"><span>healthy</span><span>failing</span><span>undiscovered</span><span>disabled</span><span>quarantined</span></div>
+        <div class="row wrap gap-2 mt-3 t-xs t-muted"><span>healthy · <span class="t-600">4</span></span><span>failing · <span class="t-600">1</span></span><span>undiscovered · <span class="t-600">0</span></span><span>disabled · <span class="t-600">0</span></span><span>quarantined · <span class="t-600">1</span></span></div>
+      </div>
+    </section>
+
+    <!-- Leaderboards -->
+    <section class="grid grid-2">
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="flame"></i>Change-frequency leaders</div><span class="t-xs t-subtle">surface changes recorded</span></div>
+        <div class="card__body">
+          <ol>
+            <li class="rank"><span class="pos">1</span><a href="mcp-endpoint.html" class="grow">Globex geo tools</a><span class="t-muted">11 changes</span></li>
+            <li class="rank"><span class="pos">2</span><a href="mcp-endpoint.html" class="grow">Payments tools</a><span class="t-muted">9 changes</span></li>
+            <li class="rank"><span class="pos">3</span><a href="mcp-endpoint.html" class="grow">Orders assistant</a><span class="t-muted">4 changes</span></li>
+            <li class="rank"><span class="pos">4</span><a href="mcp-endpoint.html" class="grow">Inventory events bridge</a><span class="t-muted">2 changes</span></li>
+            <li class="rank"><span class="pos">5</span><a href="mcp-endpoint.html" class="grow">Local dev filesystem</a><span class="t-muted">1 change</span></li>
+          </ol>
+        </div>
+        <div class="card__footer"><span>Empty: “No surface changes recorded yet.”</span></div>
+      </div>
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="layers"></i>Top capabilities</div><span class="t-xs t-subtle">Ranked by how many endpoints expose each capability.</span></div>
+        <div class="card__body">
+          <ol>
+            <li class="rank"><span class="badge badge--sq badge--mono">TOOL</span><span class="mono grow">search</span><span class="t-muted">3 endpoints</span></li>
+            <li class="rank"><span class="badge badge--sq badge--mono">PROMPT</span><span class="mono grow">summarize</span><span class="t-muted">2 endpoints</span></li>
+            <li class="rank"><span class="badge badge--sq badge--mono">TOOL</span><span class="mono grow">list_orders</span><span class="t-muted">2 endpoints</span></li>
+            <li class="rank"><span class="badge badge--sq badge--mono">RESOURCE</span><span class="mono grow">acme://catalog</span><span class="t-muted">2 endpoints</span></li>
+            <li class="rank"><span class="badge badge--sq badge--mono">TOOL</span><span class="mono grow">geocode</span><span class="t-muted">1 endpoint</span></li>
+          </ol>
+        </div>
+        <div class="card__footer"><span>Empty: “No capabilities discovered yet.”</span><a href="mcp-capabilities.html" class="t-sm">Capability directory <i data-lucide="arrow-right" style="display:inline-block;width:12px;height:12px;vertical-align:-1px"></i></a></div>
+      </div>
+    </section>
+
+    <!-- States -->
+    <section class="grid grid-2">
+      <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="bar-chart-3"></i></div><div><div class="empty__title">No servers in the catalog yet</div><div class="empty__desc">Register and discover MCP servers to populate catalog-wide analytics — category, transport, grade and health mixes appear once the first snapshot lands.</div></div><span class="badge badge--outline ml-auto">state</span></div></div>
+      <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="circle-alert"></i></div><div><div class="empty__title">Catalog analytics unavailable</div><div class="empty__desc">The insight service returned 503 — try again in a moment. (Loading: “Loading catalog analytics…” skeleton tiles.)</div></div><button class="btn btn--sm ml-auto"><i data-lucide="refresh-cw"></i>Retry</button></div></div>
+    </section>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/mcp/analytics</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/mcp/analytics/page.tsx</code>, <code>CatalogAnalyticsDashboard</code>, <code>mcpCatalogInsightUi.ts</code>; charts <code>ui/mcp/charts/{Donut,BarSeries}</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header “Catalog Analytics” with the amber Preview pill (title “Feature in preview”), Refresh (“Reload catalog analytics”, disabled without tenant), section tabs (hidden while empty).</li>
+    <li>Stat row Endpoints · Published · Discovered · Scored · Avg score (1-decimal or —).</li>
+    <li>Donuts Category mix (% of endpoints) · Transport mix · Grade distribution (% of scored; A/B ok, C amber, D/F red) with legend “label · value (pct%)”, empty legend “No data yet.”.</li>
+    <li>Bar series Protocol version adoption (violet) · Tool-count distribution (indigo → accent; fixed buckets 0, 1–5, 6–10, 11–20, 21–50, 50+) · Discovery health (emerald), each with the wrapped label/count list beneath.</li>
+    <li>Leaderboards Change-frequency leaders (rank, name link → endpoint, “n change(s)”) and Top capabilities (uppercase itemType chip, name, “n endpoint(s)”) with their empty copy.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Export CSV primary (new convenience); public/private split under Published (data is already fetched but not rendered today); delta on Avg score; link to the Capability directory.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading “Loading catalog analytics…”; error compact empty “Catalog analytics unavailable” + message + Retry; empty catalog “No servers in the catalog yet” (tabs hidden).</li></ul>
+</template>
+</body>
+</html>

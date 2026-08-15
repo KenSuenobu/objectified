@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Import wizard · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .wiz { width: 100%; max-width: 1160px; margin: 0 auto; }
+  .wiz-card { display: flex; flex-direction: column; overflow: hidden; }
+  .wiz-card .dialog__header { padding: 20px 24px 12px; }
+  .wiz-card .dialog__body { padding: 8px 24px 20px; }
+  .wiz-card .dialog__footer { padding: 14px 24px; }
+  .wiz-steps { display: flex; align-items: center; justify-content: center; padding: 8px 24px 16px; border-bottom: 1px solid var(--border); }
+  .step-label { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: var(--track-caps); font-weight: 600; color: var(--fg-subtle); }
+  .src-tabs .tab { height: 34px; }
+  .drop { border: 1.5px dashed var(--border-strong); border-radius: var(--r-lg); padding: 28px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; background: var(--bg-canvas); }
+  .drop.is-over { border-color: var(--accent); background: var(--accent-soft); }
+  .tile { padding: 12px 14px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; }
+  .tile .tl { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: var(--track-caps); font-weight: 600; color: var(--fg-subtle); }
+  .tile .tv { font-size: var(--fs-md); font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+  .src-card { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: var(--r-lg); box-shadow: 0 0 0 1px var(--border) inset; background: var(--bg-surface); text-align: left; transition: box-shadow var(--dur-fast); }
+  .src-card:hover { box-shadow: 0 0 0 1px var(--border-strong) inset, var(--shadow-md); }
+  .src-card.is-active { box-shadow: 0 0 0 2px var(--accent) inset; }
+  .src-card.is-disabled { opacity: .6; cursor: not-allowed; }
+  .src-card .sc-title { font-size: var(--fs-sm); font-weight: 600; }
+  .src-card .sc-desc { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+  .cat-card { padding: 10px 12px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; cursor: pointer; }
+  .cat-card:hover { box-shadow: 0 0 0 1px var(--border-strong) inset; }
+  .stage { display: flex; align-items: center; gap: 8px; font-size: var(--fs-xs); }
+  .stage .st-num { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--bg-inset); color: var(--fg-muted); }
+  .stage.is-done .st-num { background: var(--ok); color: #fff; } .stage.is-active .st-num { background: var(--fg); color: var(--bg-surface); } .stage.is-failed .st-num { background: var(--danger); color: #fff; }
+  .schema-row { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border-radius: var(--r-sm); font-size: var(--fs-sm); cursor: pointer; }
+  .schema-row:hover { background: var(--bg-subtle); } .schema-row.is-active { background: var(--accent-soft); }
+  .schema-row .sr-meta { margin-left: auto; font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .log { font-family: var(--font-mono); font-size: var(--fs-2xs); line-height: 1.7; background: var(--bg-inset); border-radius: var(--r-md); padding: 10px 12px; max-height: 170px; overflow: auto; }
+  .log .l-info { color: var(--accent-fg); } .log .l-warn { color: var(--warn-fg); } .log .l-error { color: var(--danger-fg); } .log .l-skip { color: var(--fg-subtle); }
+  .chat { display: flex; flex-direction: column; gap: 10px; }
+  .bubble { max-width: 78%; padding: 10px 12px; border-radius: var(--r-lg); font-size: var(--fs-sm); }
+  .bubble--user { align-self: flex-end; background: var(--accent-soft); color: var(--accent-fg); border-bottom-right-radius: 4px; }
+  .bubble--ai { align-self: flex-start; background: var(--bg-subtle); border-bottom-left-radius: 4px; }
+  .grade-gauge { --p: 82; --c: var(--ok); width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--c) calc(var(--p) * 1%), var(--bg-inset) 0); position: relative; }
+  .grade-gauge::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: var(--bg-surface); }
+  .grade-gauge > span { position: relative; font-size: var(--fs-2xl); font-weight: 700; }
+  .kv-mini { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; font-size: var(--fs-2xs); }
+  .kv-mini dt { color: var(--fg-subtle); } .kv-mini dd { margin: 0; font-family: var(--font-mono); }
+  .flag { display: inline-flex; align-items: center; gap: 4px; height: 16px; padding: 0 5px; border-radius: var(--r-xs); background: var(--honey-soft); color: var(--honey-fg); font-size: 10px; font-weight: 600; white-space: nowrap; }
+</style>
+</head>
+<body data-shell="app" data-nav="projects" data-page="build/import-wizard" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Build</span><i data-lucide="chevron-right"></i><a href="projects.html">Projects</a><i data-lucide="chevron-right"></i><span>Import</span></div>
+          <h1 class="page-title">Import a specification</h1>
+          <p class="page-desc">Bring a spec in from a file, URL, repository, registry or MCP server. Imports always create a new project.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-action="open" data-target="jobs-drawer"><i data-lucide="list-checks"></i>Recent import jobs</button>
+          <button class="btn" data-action="open" data-target="ai-dialog"><i data-lucide="bot"></i>Design with AI<span class="badge badge--honey">Beta</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- ======================= MAIN STATE: step 2 · Analyze (intake) ======================= -->
+    <section class="card wiz wiz-card" aria-labelledby="wiz-title">
+      <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="upload"></i></span><div><div class="dialog__title" id="wiz-title">Import specification</div><div class="dialog__desc">Choose a source → analyze → preview and select schemas → import → done. Variant <span class="mono">projects</span>.</div></div><button class="btn btn--ghost btn--icon dialog__close" aria-label="Close" title="Close (rolls back a running job)"><i data-lucide="x"></i></button></div>
+      <div class="wiz-steps">
+        <div class="stepper">
+          <div class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Source</div><span class="step__line is-done"></span>
+          <div class="step is-active"><span class="step__num">2</span>Analyze</div><span class="step__line"></span>
+          <div class="step"><span class="step__num">3</span>Preview</div><span class="step__line"></span>
+          <div class="step"><span class="step__num">4</span>Import</div><span class="step__line"></span>
+          <div class="step"><span class="step__num">5</span>Done</div>
+        </div>
+      </div>
+      <div class="dialog__body col gap-4" style="padding-top:16px">
+        <div class="banner banner--danger" style="display:none"><i data-lucide="triangle-alert"></i><div>Error alert slot (AlertTriangle) — shown at the top of the body when set.</div></div>
+
+        <!-- Source tab bar (ImportSourceTabBar + extra sources) -->
+        <div class="tabs src-tabs" style="border-bottom:1px solid var(--border)" role="tablist" aria-label="Import source" data-tabs="src-panels">
+          <button class="tab is-active" role="tab" data-action="tab" data-target="src-file"><i data-lucide="file-up"></i>File</button>
+          <button class="tab" role="tab" data-action="tab" data-target="src-url"><i data-lucide="link"></i>URL</button>
+          <button class="tab" role="tab" data-action="tab" data-target="src-clip"><i data-lucide="clipboard-paste"></i>Clipboard</button>
+          <button class="tab" role="tab" data-action="tab" data-target="src-git"><i data-lucide="github"></i>Git</button>
+          <button class="tab" role="tab" data-action="tab" data-target="src-swagger"><i data-lucide="cloud"></i>SwaggerHub</button>
+          <button class="tab" role="tab" data-action="tab" data-target="src-postman"><i data-lucide="mailbox"></i>Postman</button>
+          <button class="tab" role="tab" data-action="tab" data-target="src-mcp"><i data-lucide="network"></i>MCP server</button>
+          <button class="tab" role="tab" data-action="tab" data-target="src-llm"><i data-lucide="bot"></i>Design with AI</button>
+          <button class="tab" role="tab" data-action="tab" data-target="src-registry"><i data-lucide="boxes"></i>Registry adapters</button>
+          <span class="tab" role="tab" aria-disabled="true" style="opacity:.5" title="Coming soon"><i data-lucide="package"></i>Registry</span>
+        </div>
+
+        <div id="src-panels">
+          <!-- ---------- FILE ---------- -->
+          <div data-tab-panel="src-file" class="col gap-4">
+            <div class="drop is-over" role="button" tabindex="0" aria-label="Drop files here or browse">
+              <span class="icon-tile icon-tile--lg icon-tile--accent"><i data-lucide="upload"></i></span>
+              <div class="t-sm t-600">Drop files here</div><div class="t-xs t-subtle">or</div><button class="btn btn--primary btn--sm">Browse files</button>
+              <div class="t-xs t-subtle mt-1">Supports: .yaml, .yml, .json, .zip, .graphql, .gql, .raml, .proto, .avsc, .thrift</div>
+            </div>
+            <div class="row gap-3 t-sm"><i data-lucide="file-json-2" style="color:var(--ok)"></i><span class="t-600 t-ok">payments-api-v2.4.yaml</span><span class="t-subtle">184.20 KB</span><button class="btn btn--link btn--sm" style="color:var(--danger)">Remove file</button><span class="t-xs t-subtle" style="margin-left:auto">ZIP files will be analyzed after clicking Analyze</span></div>
+            <!-- File preview card -->
+            <div class="card card--flat card--pad">
+              <div class="row-between"><div class="t-sm t-600">File preview</div><span class="t-xs t-subtle row gap-2"><span class="spinner" style="width:12px;height:12px"></span>Analyzing file...</span></div>
+              <div class="grid grid-3 mt-3">
+                <div class="tile"><div class="tl">Detected format</div><div class="tv"><i data-lucide="circle-check" style="color:var(--ok)"></i>OpenAPI 3.1</div></div>
+                <div class="tile"><div class="tl">Version</div><div class="tv mono">2.4.0</div></div>
+                <div class="tile"><div class="tl">Syntax</div><div class="tv"><i data-lucide="circle-check" style="color:var(--ok)"></i>Valid YAML</div></div>
+              </div>
+              <div class="grid grid-2 mt-3"><div><div class="tl t-caps">Title</div><div class="t-sm mt-1">Payments API</div></div><div><div class="tl t-caps">Description</div><div class="t-sm t-muted mt-1" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">Card, refund and payout endpoints for the merchant platform. Idempotent writes; webhook events for settlement.</div></div></div>
+            </div>
+            <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div><span class="banner-title">Format not available for import</span> — <span class="banner-body">The detected format WSDL 1.1 is not yet supported for import. Currently supported formats: OpenAPI 3.x, Swagger 2.x, JSON Schema, Arazzo, RAML, AsyncAPI, GraphQL, Protobuf, Thrift, Avro, and Postman.</span></div><span class="banner-actions t-2xs t-subtle">(unsupported example)</span></div>
+            <div class="banner banner--danger"><i data-lucide="circle-x"></i><div><span class="banner-title">File parse error</span> — <span class="banner-body">Unexpected token at line 42: mapping values are not allowed here. “Could not read or preview this file. Try another file or format.”</span></div><span class="banner-actions t-2xs" style="opacity:.8">(parse-error example)</span></div>
+          </div>
+
+          <!-- ---------- URL ---------- -->
+          <div data-tab-panel="src-url" hidden class="col gap-4">
+            <div class="field"><label>Specification URL</label><div class="input-wrap"><i data-lucide="globe"></i><input class="input" value="https://api.acme.dev/openapi.yaml" placeholder="https://api.example.com/openapi.yaml" /></div><div class="hint">Live errors: “URL is required” · “Only HTTP and HTTPS URLs are supported” · “Invalid URL format”. 30 s timeout.</div></div>
+            <div class="grid grid-2">
+              <div class="card card--flat card--pad"><div class="t-sm t-600 mb-2">Authentication <span class="t-subtle t-500">(optional)</span></div><div class="row wrap gap-3"><label class="radio"><input type="radio" name="auth" />None</label><label class="radio"><input type="radio" name="auth" checked />Bearer token</label><label class="radio"><input type="radio" name="auth" />API key</label><label class="radio"><input type="radio" name="auth" />Basic auth</label></div><div class="field mt-3"><label>Token</label><div class="input-wrap"><input class="input" type="password" value="••••••••••••" placeholder="Enter your bearer token" style="padding-left:11px" /><span class="input-suffix"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Show token"><i data-lucide="eye"></i></button></span></div><div class="hint">API key → Header name (default <span class="mono">X-API-Key</span>) + key · Basic → Username + Password</div></div><label class="check mt-2"><input type="checkbox" />Save credentials for future imports</label></div>
+              <div class="card card--flat card--pad"><div class="t-sm t-600 mb-2">URL options</div><div class="switch-row" style="padding:8px 0"><div><div class="sw-title">Follow redirects</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div><div class="switch-row" style="padding:8px 0"><div><div class="sw-title">Resolve external $ref URLs</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div><div class="switch-row" style="padding:8px 0"><div><div class="sw-title">Cache fetched content</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div></div>
+            </div>
+            <div class="card card--flat card--pad"><div class="t-sm t-600">Specification preview</div><div class="grid grid-3 mt-3"><div class="tile"><div class="tl">Detected format</div><div class="tv"><i data-lucide="circle-check" style="color:var(--ok)"></i>OpenAPI 3.0</div></div><div class="tile"><div class="tl">Version</div><div class="tv mono">1.9.2</div></div><div class="tile"><div class="tl">Syntax</div><div class="tv"><i data-lucide="circle-check" style="color:var(--ok)"></i>Valid YAML</div></div></div><div class="banner banner--ok mt-3"><i data-lucide="circle-check"></i><div><span class="banner-title">URL verified successfully</span> — Use the button in the dialog footer to continue to analysis.</div></div></div>
+            <div class="banner banner--danger"><i data-lucide="circle-x"></i><div><span class="banner-title">Failed to fetch specification</span> — connect ETIMEDOUT (HTTP 504). Editing the URL or auth resets the tested state.</div></div>
+          </div>
+
+          <!-- ---------- CLIPBOARD ---------- -->
+          <div data-tab-panel="src-clip" hidden class="col gap-4">
+            <div class="banner"><i data-lucide="clipboard-paste"></i><div><span class="banner-title">Paste your specification</span> — Paste JSON or YAML content directly into the editor below. The format will be auto-detected with syntax highlighting.</div></div>
+            <div class="row gap-2"><button class="btn btn--sm"><i data-lucide="clipboard"></i>Paste from clipboard</button><button class="btn btn--sm btn--danger-soft"><i data-lucide="eraser"></i>Clear</button><span class="badge badge--info">JSON detected</span><span class="t-xs t-subtle" style="margin-left:auto">1,284 characters · 62 lines</span></div>
+            <div class="field"><label>Specification content</label><pre class="code code--dark code--lines" style="min-height:200px" contenteditable="true" spellcheck="false" aria-label="Paste your OpenAPI, Swagger, or JSON Schema content here..."><span>{</span><span>  <span class="c-n">"openapi"</span>: <span class="c-s">"3.1.0"</span>,</span><span>  <span class="c-n">"info"</span>: { <span class="c-n">"title"</span>: <span class="c-s">"Orders Service"</span>, <span class="c-n">"version"</span>: <span class="c-s">"1.9.2"</span> },</span><span>  <span class="c-n">"paths"</span>: { <span class="c-n">"/orders"</span>: { <span class="c-n">"get"</span>: { <span class="c-n">"operationId"</span>: <span class="c-s">"listOrders"</span> } } }</span><span>}</span></pre></div>
+            <div class="grid grid-2"><div class="card card--flat card--pad"><div class="row-between"><span class="t-sm t-600">Content preview</span><span class="t-xs t-subtle">300 ms debounce</span></div><div class="grid grid-3 mt-2"><div class="tile"><div class="tl">Format</div><div class="tv"><i data-lucide="circle-check" style="color:var(--ok)"></i>OpenAPI 3.1</div></div><div class="tile"><div class="tl">Version</div><div class="tv mono">1.9.2</div></div><div class="tile"><div class="tl">Syntax</div><div class="tv">Valid JSON</div></div></div><div class="banner banner--ok mt-2"><i data-lucide="circle-check"></i><div><span class="banner-title">Ready for import</span> — Click “Analyze” to proceed with the import. Filename <span class="mono">pasted-spec.json</span>.</div></div></div><div class="banner banner--danger" style="align-self:start"><i data-lucide="circle-x"></i><div><span class="banner-title">Parse error</span> — Unexpected end of JSON input at position 1284.</div></div></div>
+          </div>
+
+          <!-- ---------- GIT ---------- -->
+          <div data-tab-panel="src-git" hidden class="col gap-4">
+            <div class="banner banner--warn"><i data-lucide="user-x"></i><div><span class="banner-title">No linked accounts found</span> — Please link a GitHub or GitLab account from the <a href="../account/linked-accounts.html" target="_blank" rel="noopener">Linked Accounts page</a> to import from Git repositories.</div><span class="banner-actions t-2xs" style="opacity:.8">(no-accounts example)</span></div>
+            <div class="card card--flat card--pad">
+              <div class="row-between"><div class="t-sm t-600">Saved for re-import</div><span class="t-xs t-subtle">Stored in this browser on this device. Use the same linked account to open a saved entry.</span></div>
+              <div class="list-row" style="padding:8px 0"><i data-lucide="bookmark" class="t-subtle"></i><div class="grow"><div class="t-sm">acme/payments-api</div><div class="t-xs t-subtle">Branch main · specs/openapi.yaml</div></div><button class="btn btn--sm">Open</button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove saved repository acme/payments-api"><i data-lucide="trash-2"></i></button></div>
+            </div>
+            <div class="banner"><i data-lucide="bookmark-plus"></i><div><span class="banner-title">Save for later</span> — Saves the linked account, repository, branch or tag, and optional spec path so you can re-import from the same place.</div><div class="banner-actions"><button class="btn btn--sm">Save</button></div></div>
+            <div class="card card--flat card--pad">
+              <div class="t-sm t-600 mb-2">GitHub repository</div>
+              <div class="row gap-2"><input class="input grow" value="https://github.com/acme/payments-api" placeholder="https://github.com/org/repo or org/repo" /><button class="btn">Load repository</button></div>
+              <div class="hint mt-1">Paste a GitHub URL or owner/repo, then load. Need access to private repos? <a href="../account/linked-accounts.html">Linked accounts</a></div>
+              <div class="grid grid-4 mt-3"><div class="field"><label>Branch</label><select class="select"><option>main</option><option>develop</option></select></div><div class="field"><label>Tag</label><select class="select"><option>(none)</option><option>v2.3.1</option></select><div class="hint">A tag disables Branch</div></div><div class="field span-2"><label>Spec path</label><div class="row gap-2"><input class="input input--mono grow" value="specs/openapi.yaml" placeholder="specs/openapi.yaml" /><button class="btn">Open file</button></div><div class="hint">Optional: type a path and open, or pick a file in the browser — the path updates when you select a file.</div></div></div>
+            </div>
+            <div class="grid grid-3" style="gap:0;box-shadow:0 0 0 1px var(--border) inset;border-radius:var(--r-lg);overflow:hidden">
+              <div class="panel"><div class="panel__head">Accounts</div><div class="panel__body"><div class="tree__item is-active"><i data-lucide="github"></i>GitHub · ada-lovelace</div><div class="tree__item"><i data-lucide="gitlab"></i>GitLab · ada@example.com</div><div class="tree__item"><i data-lucide="cloud"></i>AWS · acme-prod</div></div></div>
+              <div class="panel"><div class="panel__head">Repositories<div class="segmented segmented--sm ml-auto"><button class="is-active">All</button><button><i data-lucide="history"></i>History</button></div></div><div class="panel__body"><div style="padding:8px"><div class="input-wrap" style="width:100%"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search repositories..." /></div></div><div class="tree__item is-active"><i data-lucide="book"></i>payments-api <i data-lucide="lock" style="width:11px;height:11px"></i><span class="count">private</span></div><div class="tree__item"><i data-lucide="book"></i>orders-service</div><div class="tree__item"><i data-lucide="book"></i>inventory-events</div><div class="t-2xs t-subtle" style="padding:8px 10px">History: “Specs you opened from this repository on this device.” · “No recent imports…”</div></div></div>
+              <div class="panel"><div class="panel__head"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Up"><i data-lucide="arrow-left"></i></button><span class="mono" style="text-transform:none;letter-spacing:0">/specs</span></div><div class="panel__body"><div class="tree__item"><i data-lucide="corner-left-up"></i>..</div><div class="tree__item is-active"><i data-lucide="file-json-2" style="color:var(--ok)"></i>openapi.yaml</div><div class="tree__item"><i data-lucide="file-json-2" style="color:var(--ok)"></i>asyncapi.yaml</div><div class="tree__item"><i data-lucide="file"></i>README.md</div><div class="t-2xs t-subtle" style="padding:8px 10px">Empties: “Select a repository” · “Loading...” · “No files found”</div></div></div>
+            </div>
+            <div class="card card--flat card--pad"><div class="t-sm t-600">File preview: openapi.yaml</div><div class="grid grid-3 mt-2"><div class="tile"><div class="tl">Detected format</div><div class="tv"><i data-lucide="circle-check" style="color:var(--ok)"></i>OpenAPI 3.1</div></div><div class="tile"><div class="tl">Version</div><div class="tv mono">2.4.0</div></div><div class="tile"><div class="tl">Syntax</div><div class="tv">Valid YAML</div></div></div></div>
+          </div>
+
+          <!-- ---------- SWAGGERHUB ---------- -->
+          <div data-tab-panel="src-swagger" hidden class="col gap-4">
+            <div class="banner"><i data-lucide="cloud"></i><div><span class="banner-title">Import from SwaggerHub</span> — Import OpenAPI specifications from SwaggerHub. Public APIs can be accessed without authentication. Private APIs require an API key from your SwaggerHub account settings. <a href="#" target="_blank" rel="noopener">Learn how to get an API key</a></div></div>
+            <div class="grid grid-2">
+              <div class="field"><label>Owner / Organization <span class="req">*</span></label><input class="input" value="acme" placeholder="e.g., myorg" /><div class="hint">The owner or organization name in SwaggerHub</div></div>
+              <div class="field"><label>API name <span class="req">*</span></label><input class="input" value="payments-api" placeholder="e.g., petstore" /><div class="hint">Only letters, numbers, hyphens, and underscores allowed</div></div>
+              <div class="field"><label class="check"><input type="checkbox" checked />Use latest version</label><input class="input" placeholder="e.g., 1.0.0" disabled /><div class="hint">Specific version — leave blank to fetch the latest version</div></div>
+              <div class="field"><label>API key <span class="t-subtle t-500">(for private APIs)</span></label><div class="input-wrap"><input class="input" type="password" placeholder="Optional. Only required for accessing private APIs." style="padding-left:11px" /><span class="input-suffix"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Show key"><i data-lucide="eye"></i></button></span></div></div>
+            </div>
+            <div class="row gap-2"><button class="btn btn--primary btn--sm"><i data-lucide="cloud-download"></i>Test &amp; fetch</button><span class="t-xs t-subtle">Inputs change → result resets</span></div>
+            <div class="grid grid-2"><div class="banner banner--ok"><i data-lucide="circle-check"></i><div><span class="banner-title">Successfully fetched specification</span> — Fetched payments-api-2.3.1.json (Version: 2.3.1)</div></div><div class="banner banner--danger"><i data-lucide="circle-x"></i><div><span class="banner-title">Failed to fetch specification</span> — 403 Forbidden. 💡 This appears to be a private API. Make sure you have the correct API key.</div></div></div>
+            <div class="card card--flat card--pad"><div class="t-sm t-600">Specification preview</div><dl class="kv mt-2"><dt>Title</dt><dd>Payments API</dd><dt>Description</dt><dd class="t-muted">Card, refund and payout endpoints.</dd><dt>Format</dt><dd>OpenAPI 3.0</dd><dt>Version</dt><dd class="mono">2.3.1</dd></dl></div>
+          </div>
+
+          <!-- ---------- POSTMAN ---------- -->
+          <div data-tab-panel="src-postman" hidden class="col gap-4">
+            <div class="banner" style="background:var(--orange-soft);color:var(--orange-fg)"><i data-lucide="mailbox"></i><div><span class="banner-title">Import Postman collection</span> — Upload a Postman Collection v2.1 JSON file or paste its contents. It will be converted to OpenAPI 3.1 so you can import paths and schemas into Apiome. <a href="#" target="_blank" rel="noopener">Postman Collection format</a></div></div>
+            <div class="drop"><span class="icon-tile icon-tile--lg" style="background:var(--orange-soft);color:var(--orange-fg)"><i data-lucide="mailbox"></i></span><div class="t-sm t-600">Drop a Postman Collection JSON here or click to browse</div><button class="btn btn--sm" style="background:var(--orange);color:#fff">Choose file</button><div class="t-xs t-subtle">JSON only — “Please select a Postman Collection JSON file (.json)”</div></div>
+            <div class="row gap-3 t-sm"><i data-lucide="file-json-2" style="color:var(--orange)"></i><span class="t-600">Payments.postman_collection.json</span><span class="t-subtle">96.4 KB</span><button class="btn btn--link btn--sm">Remove</button></div>
+            <div class="grid grid-2"><div class="field"><label>Or paste collection JSON</label><textarea class="textarea input--mono" style="min-height:96px" placeholder='Paste the JSON exported via Export → Collection v2.1'></textarea></div><div class="field"><label>Base URL <span class="t-subtle t-500">(optional)</span></label><input class="input" placeholder="e.g. https://api.example.com" /><div class="hint">Used as the OpenAPI server URL. Leave empty to use a placeholder.</div></div></div>
+            <div class="row gap-2"><button class="btn btn--primary btn--sm"><i data-lucide="refresh-cw"></i>Convert to OpenAPI &amp; continue</button></div>
+            <div class="grid grid-2"><div class="banner banner--ok" style="flex-direction:column;align-items:stretch"><div class="row gap-2 t-600"><i data-lucide="circle-check"></i>Converted to OpenAPI 3.1</div><ul class="t-xs mt-1" style="padding-left:24px;list-style:disc;color:var(--warn-fg)"><li>3 requests had no example response — 200 responses were stubbed.</li><li>Folder “Legacy” skipped (no requests).</li></ul></div><div class="banner banner--danger"><i data-lucide="circle-x"></i><div><span class="banner-title">Conversion failed</span> — Upload a Postman Collection file or paste JSON content</div></div></div>
+            <div class="card card--flat card--pad"><div class="t-sm t-600">OpenAPI preview</div><dl class="kv mt-2"><dt>Title</dt><dd>Payments (Postman)</dd><dt>Format</dt><dd>OpenAPI 3.1 · output <span class="mono">payments-openapi.json</span></dd></dl></div>
+          </div>
+
+          <!-- ---------- MCP ---------- -->
+          <div data-tab-panel="src-mcp" hidden class="col gap-4">
+            <div class="card card--honey card--pad">
+              <div class="row-start gap-3"><span class="icon-tile icon-tile--lg icon-tile--honey icon-tile--hex"><i data-lucide="network"></i></span><div><div class="t-h4">Add an MCP server</div><div class="t-sm t-muted">Point us at a Model Context Protocol endpoint. We’ll connect, discover its tools, resources, and prompts, lint the surface for quality, and catalog it as version 1 with an A–F grade.</div></div></div>
+              <div class="row gap-6 mt-3"><div class="stage is-done"><span class="st-num">1</span>Connect</div><div class="stage is-active"><span class="st-num">2</span>Discover capabilities</div><div class="stage"><span class="st-num">3</span>Lint &amp; grade</div></div>
+            </div>
+            <div class="grid grid-2">
+              <div class="col gap-4">
+                <div class="field"><label>Endpoint URL <span class="req">*</span></label><input class="input input--mono" value="https://mcp.acme.dev/payments/sse" placeholder="https://mcp.example.com/sse" /><div class="hint">The MCP server’s connection URL.</div></div>
+                <div class="field"><label>Display name</label><input class="input" placeholder="Defaults to the URL host" /><div class="hint">Optional — leave blank to use the host name.</div></div>
+                <div class="field"><label>Transport</label><div class="col gap-2">
+                  <label class="card card--flat card--selected" style="padding:10px 12px"><span class="radio"><input type="radio" name="tr" checked /><span class="t-600">Streamable HTTP</span></span><div class="t-xs t-muted" style="padding-left:24px">The modern MCP HTTP transport — recommended for new servers.</div></label>
+                  <label class="card card--flat" style="padding:10px 12px"><span class="radio"><input type="radio" name="tr" /><span class="t-600">Server-Sent Events (SSE)</span></span><div class="t-xs t-muted" style="padding-left:24px">Legacy HTTP + Server-Sent Events transport.</div></label>
+                  <label class="card card--flat" style="padding:10px 12px"><span class="radio"><input type="radio" name="tr" /><span class="t-600">Standard I/O (stdio)</span></span><div class="t-xs t-muted" style="padding-left:24px">A local command spoken to over standard I/O.</div></label>
+                </div></div>
+                <div class="card card--flat card--pad"><div class="t-sm t-600 mb-2">Authentication</div><div class="field"><label>Auth type</label><select class="select"><option>None (anonymous)</option><option selected>Bearer token</option><option>Custom header</option><option>OAuth 2.1 access token</option></select><div class="hint">Custom header adds “Header name *” (<span class="mono">X-API-Key</span>).</div></div><div class="field mt-3"><label>Access token <span class="req">*</span></label><input class="input" type="password" value="••••••••••••••••" /><div class="hint">Stored encrypted; it is never shown again after you save it.</div></div><div class="error mt-2 t-xs" style="color:var(--danger-fg)">Validation: “Enter the MCP endpoint URL.” · “HTTP transports require an http:// or https:// URL.” · “Enter the access token for the selected auth type.”</div></div>
+              </div>
+              <!-- McpDiscoveryPanel -->
+              <div class="card card--flat card--pad col gap-3">
+                <div class="row gap-3"><span class="icon-tile icon-tile--lg icon-tile--ok"><i data-lucide="check"></i></span><div><div class="t-sm t-600 row gap-2"><i data-lucide="network" style="width:14px;height:14px"></i>mcp.acme.dev</div><div class="t-xs t-ok" aria-live="polite">Discovery complete</div></div></div>
+                <div class="t-sm">3 tools · 2 resources · 1 resource template · 1 prompt</div>
+                <div class="row gap-6"><div class="stage is-done"><span class="st-num"><i data-lucide="check" style="width:11px;height:11px"></i></span>Connect</div><div class="stage is-done"><span class="st-num"><i data-lucide="check" style="width:11px;height:11px"></i></span>Discover</div><div class="stage is-done"><span class="st-num"><i data-lucide="check" style="width:11px;height:11px"></i></span>Lint &amp; grade</div></div>
+                <div class="t-xs t-subtle">This can take a few moments while we connect and list capabilities. Polls <span class="mono">/discover/{jobId}</span> every 1.5 s — “Starting discovery…” · “Queued…” · “Discovering capabilities…” · “Discovery failed”.</div>
+                <div class="row gap-4 card card--soft" style="padding:12px"><div class="grade-gauge" style="--p:82"><span>B</span></div><div><div class="t-sm t-600">Quality grade: B · 82/100</div><div class="row gap-1 mt-1"><span class="badge badge--danger">2 MUST</span><span class="badge badge--warn">4 SHOULD</span><span class="badge badge--info">3 advisory</span></div><div class="t-xs t-subtle mt-1">The full report is on the endpoint’s Lint &amp; Score tab.</div></div></div>
+                <div class="banner banner--ok"><i data-lucide="circle-check"></i><div><span class="banner-title">mcp.acme.dev cataloged</span> — Discovery committed catalog version 1. Its tools, resources, and prompts are now available under MCP Servers. <a href="../sources/mcp-endpoint.html">View endpoint →</a></div></div>
+                <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div><span class="banner-title">mcp.acme.dev added</span> — Discovery did not complete, so this server has no cataloged capabilities yet. Fix its connection or credentials, then re-run discovery from its page.</div></div>
+                <div class="t-2xs t-subtle">MCP skips Analyze/Preview: form → Discover → Done. Footer: “Discover →” / “Starting…”; failed → Discard + “Add this server anyway”. Pre-scan failures delete the endpoint: “Could not register the MCP server.” / “Could not store the credential.” / “Could not start discovery.”</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- LLM ---------- -->
+          <div data-tab-panel="src-llm" hidden class="col gap-4">
+            <div class="row-between wrap gap-3"><div class="row gap-3"><span class="icon-tile icon-tile--honey"><i data-lucide="sparkles"></i></span><div><div class="t-h4">Design with AI</div><div class="t-xs t-muted">Generate OpenAPI specifications using natural language (Ollama)</div></div></div><div class="row gap-2 t-sm"><span class="t-muted">Model:</span><select class="select select--sm" style="width:200px"><option>llama3.1:8b</option><option>qwen2.5-coder:14b</option></select><button class="btn btn--link btn--sm">Reset conversation</button></div></div>
+            <div class="card card--soft" style="padding:14px">
+              <div class="chat">
+                <div class="bubble bubble--user">Create a payments API with refunds and payouts. Refunds need a reason enum.</div>
+                <div class="bubble bubble--ai"><div class="row gap-2 mb-2"><span class="avatar avatar--xs avatar--honey"><i data-lucide="bot" style="width:11px;height:11px"></i></span><span class="t-xs t-subtle">assistant</span></div>Here is an OpenAPI 3.1.0 specification for a Payments API with <span class="mono">/refunds</span> and <span class="mono">/payouts</span>:<pre class="code code--dark mt-2" style="font-size:11px;max-height:110px"><span class="c-c">JSON</span>
+{ "openapi": "3.1.0", "info": { "title": "Payments API", "version": "1.0.0" },
+  "paths": { "/refunds": { "post": { … } }, "/payouts": { "get": { … } } },
+  "components": { "schemas": { "Refund": { … }, "RefundReason": { "enum": [ … ] } } } }</pre><button class="btn btn--sm btn--primary mt-2"><i data-lucide="download"></i>Import this spec</button></div>
+                <div class="bubble bubble--ai t-muted"><span class="dot dot--pulse" style="display:inline-block"></span> Thinking...</div>
+              </div>
+              <div class="row gap-2 mt-3"><button class="btn btn--ghost">Back</button><input class="input grow" placeholder="Describe your API or ask for changes..." /><button class="btn btn--primary"><i data-lucide="send-horizontal"></i>Send</button></div>
+              <div class="t-xs t-subtle mt-2">AI can make mistakes — please review before importing. “Import this spec” hands the fenced JSON block to this wizard as <span class="mono">ai-generated-spec.json</span> and lands on Analyze; Back/Cancel return to the New Project → Design with AI tab.</div>
+            </div>
+            <div class="row wrap gap-2"><span class="chip">💬 Create a blog API with posts and comments</span><span class="chip">🛒 E-commerce API with products and orders</span><span class="chip">🔐 User management with authentication</span><span class="t-xs t-subtle">Empty state: “Start a conversation — Describe the API you want to create, and I’ll generate an OpenAPI 3.1.0 specification for you.”</span></div>
+          </div>
+
+          <!-- ---------- REGISTRY ADAPTERS ---------- -->
+          <div data-tab-panel="src-registry" hidden class="col gap-4">
+            <div class="banner banner--neutral"><i data-lucide="boxes"></i><div>Adapter cards come from <span class="mono">GET /api/import/sources</span> (fetched only while open; failure non-fatal). Keys <span class="mono">openapi</span>/<span class="mono">sample</span> suppressed; icon resolved from the Lucide kebab name; panel picked from <span class="mono">input_kinds</span> file &gt; url &gt; paste; discovery-only adapters render disabled.</div></div>
+            <div class="grid grid-4">
+              <button class="src-card is-active"><span class="icon-tile icon-tile--violet"><i data-lucide="file-code"></i></span><div><div class="sc-title">Avro schema</div><div class="sc-desc">.avsc · file / paste</div></div></button>
+              <button class="src-card"><span class="icon-tile icon-tile--violet"><i data-lucide="file-code"></i></span><div><div class="sc-title">Thrift IDL</div><div class="sc-desc">.thrift · file</div></div></button>
+              <button class="src-card"><span class="icon-tile icon-tile--violet"><i data-lucide="file-code"></i></span><div><div class="sc-title">WIT (WebAssembly)</div><div class="sc-desc">.wit · file / url</div></div></button>
+              <button class="src-card is-disabled" title="Coming soon"><span class="icon-tile"><i data-lucide="radar"></i></span><div><div class="sc-title">Gateway config</div><div class="sc-desc">discovery-only</div></div></button>
+            </div>
+            <div class="drop"><span class="icon-tile icon-tile--lg icon-tile--violet"><i data-lucide="upload"></i></span><div class="t-sm t-600">Drop an Avro schema here</div><div class="t-xs t-subtle">or</div><button class="btn btn--sm">Browse files</button></div>
+          </div>
+        </div>
+
+        <!-- ===== Analysis result (AnalysisPanel) ===== -->
+        <hr />
+        <div class="row-between"><div class="row gap-2"><i data-lucide="file-json-2" class="t-subtle"></i><span class="t-sm t-600">payments-api-v2.4.yaml</span><span class="fmt fmt--openapi">OpenAPI 3.1</span></div><span class="t-xs t-subtle">AnalysisPanel</span></div>
+        <div class="banner banner--ok"><i data-lucide="shield-check"></i><div><span class="banner-title">Quality gate passed.</span> <span class="banner-body">Score 74 (C) meets the tenant import threshold (≥ 50). Publishing later needs ≥ 70 and zero style-guide errors — see the score card below.</span></div></div>
+        <div class="grid grid-2">
+          <div class="card card--flat card--pad"><div class="t-sm t-600 mb-2">Specification information</div><dl class="kv"><dt>Title</dt><dd>Payments API</dd><dt>Version</dt><dd><span class="badge badge--outline mono">2.4.0</span></dd><dt>Description</dt><dd class="t-muted">Card, refund and payout endpoints for the merchant platform.</dd><dt>Contact</dt><dd>API team · api@acme.dev · acme.dev/api</dd><dt>License</dt><dd>Apache-2.0</dd><dt>Terms of service</dt><dd><a href="#">acme.dev/terms</a></dd></dl></div>
+          <div class="card card--flat card--pad"><div class="t-sm t-600 mb-2">Format detection</div><dl class="kv"><dt>Detected format</dt><dd class="row gap-2">OpenAPI 3.1 <span class="badge badge--ok">Supported</span></dd><dt>Spec version</dt><dd class="mono">3.1.0</dd><dt>Description</dt><dd class="t-muted">OpenAPI Specification v3.1 (JSON Schema 2020-12 aligned)</dd></dl><div class="grid grid-3 mt-3"><div class="tile"><div class="tl">Format</div><div class="tv">OpenAPI</div></div><div class="tile"><div class="tl">Syntax</div><div class="tv"><i data-lucide="circle-check" style="color:var(--ok)"></i>Valid YAML</div></div><div class="tile"><div class="tl">Schema</div><div class="tv"><i data-lucide="circle-check" style="color:var(--ok)"></i>Valid</div></div></div></div>
+        </div>
+        <div class="card card--flat card--pad" style="box-shadow:0 0 0 1px var(--warn) inset">
+          <div class="t-sm t-600">Feature compatibility</div>
+          <div class="t-xs t-muted mt-1">The following features in your specification are not or only partially supported by the import, or use deprecated constructs.</div>
+          <div class="divide-y mt-2">
+            <div class="row-start gap-3" style="padding:8px 0"><i data-lucide="triangle-alert" style="color:var(--warn)"></i><div class="grow"><div class="row gap-2 wrap"><span class="t-sm t-600">Webhooks</span><span class="badge badge--outline">2 uses</span></div><div class="t-xs t-muted">Top-level webhooks are stored as metadata; they are not editable in the Studio yet.</div><div class="mono t-2xs t-subtle mt-1">#/webhooks</div></div></div>
+            <div class="row-start gap-3" style="padding:8px 0"><i data-lucide="info" style="color:var(--accent)"></i><div class="grow"><div class="row gap-2 wrap"><span class="t-sm t-600">nullable keyword</span><span class="badge badge--warn">Deprecated</span><span class="badge badge--outline">5 uses</span></div><div class="t-xs t-muted">OpenAPI 3.0 <span class="mono">nullable</span> is mapped to <span class="mono">type: [T, "null"]</span>.</div><div class="row gap-1 mt-1"><span class="tag">x-nullable</span><span class="tag">x-apiome-legacy</span></div></div></div>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)">
+          <div class="card card--flat card--pad">
+            <div class="t-sm t-600 mb-2">Specification analysis</div>
+            <div class="stat-grid stat-grid--4"><div class="stat" style="padding:10px 12px"><div class="stat__label">Schemas</div><div class="stat__value" style="font-size:var(--fs-2xl)">42</div></div><div class="stat" style="padding:10px 12px"><div class="stat__label">Properties</div><div class="stat__value" style="font-size:var(--fs-2xl)">318</div></div><div class="stat" style="padding:10px 12px"><div class="stat__label">References</div><div class="stat__value" style="font-size:var(--fs-2xl)">96</div></div><div class="stat" style="padding:10px 12px"><div class="stat__label">Paths</div><div class="stat__value" style="font-size:var(--fs-2xl)">18</div></div></div>
+            <dl class="kv mt-3"><dt>External references</dt><dd>2 URLs detected</dd><dt>Circular references</dt><dd>None detected</dd><dt>Custom extensions (x-)</dt><dd class="row wrap gap-1">3 total <span class="tag">x-nullable</span><span class="tag">x-apiome-legacy</span><span class="tag">x-rate-limit</span></dd><dt>Schema composition</dt><dd class="row gap-1"><span class="badge badge--outline">allOf 6</span><span class="badge badge--outline">oneOf 2</span><span class="badge badge--outline">anyOf 0</span></dd></dl>
+          </div>
+          <div class="card card--flat card--pad">
+            <div class="row gap-4"><div class="ring ring--lg" style="--p:74;--c:var(--warn)"><span>C</span></div><div><div class="t-h3">Good — solid foundation, a few gaps</div><div class="t-xs t-subtle">Based on specification analysis · range 70–89</div><div class="t-sm mt-1"><span class="t-600 t-num">74 / 100 pts</span> <span class="t-xs t-subtle">(Design Quality 30, Documentation 20, API Best Practices 25, Security 15, Performance 10)</span></div></div></div>
+            <div class="grid grid-5 mt-3" style="gap:8px">
+              <button class="cat-card" data-action="open" data-target="cat-dialog"><div class="t-2xs t-subtle">Design</div><div class="t-sm t-600">24/30</div><div class="progress progress--thin mt-1"><span style="width:80%"></span></div><div class="t-2xs t-subtle mt-1">2 issues ›</div></button>
+              <button class="cat-card" data-action="open" data-target="cat-dialog"><div class="t-2xs t-subtle">Docs</div><div class="t-sm t-600">12/20</div><div class="progress progress--thin progress--warn mt-1"><span style="width:60%"></span></div><div class="t-2xs t-subtle mt-1">5 issues ›</div></button>
+              <button class="cat-card" data-action="open" data-target="cat-dialog"><div class="t-2xs t-subtle">Best practices</div><div class="t-sm t-600">19/25</div><div class="progress progress--thin mt-1"><span style="width:76%"></span></div><div class="t-2xs t-subtle mt-1">3 issues ›</div></button>
+              <button class="cat-card" data-action="open" data-target="cat-dialog"><div class="t-2xs t-subtle">Security</div><div class="t-sm t-600">11/15</div><div class="progress progress--thin mt-1"><span style="width:73%"></span></div><div class="t-2xs t-subtle mt-1">1 issue ›</div></button>
+              <button class="cat-card" data-action="open" data-target="cat-dialog"><div class="t-2xs t-subtle">Performance</div><div class="t-sm t-600">8/10</div><div class="progress progress--thin progress--ok mt-1"><span style="width:80%"></span></div><div class="t-2xs t-subtle mt-1">0 issues ›</div></button>
+            </div>
+            <div class="t-2xs t-subtle mt-2">Score guide: ≥90 excellent · ≥70 good · ≥50 fair · else poor.</div>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="banner banner--danger" style="flex-direction:column;align-items:stretch"><div class="row gap-2 t-600"><i data-lucide="circle-x"></i>Errors (1)</div><div class="t-xs mt-1">Duplicate operationId <span class="mono">createRefund</span> — Path: paths./refunds/legacy.post</div></div>
+          <div class="banner banner--warn" style="flex-direction:column;align-items:stretch"><div class="row gap-2 t-600"><i data-lucide="triangle-alert"></i>Warnings (7)</div><ul class="t-xs mt-1" style="padding-left:18px;list-style:disc"><li>Schema <span class="mono">Payout</span> has no description</li><li>Missing 4xx response on POST /payouts</li><li>Unused component schema <span class="mono">LegacyCard</span></li><li>Operation GET /payouts has no tags</li><li>Property <span class="mono">Refund.amount</span> has no example</li></ul><div class="t-xs t-subtle mt-1">+ 2 more warnings</div></div>
+        </div>
+      </div>
+      <div class="dialog__footer"><button class="btn btn--ghost left"><i data-lucide="arrow-left"></i>Back</button><button class="btn">Cancel</button><button class="btn btn--primary">Analyze <i data-lucide="arrow-right"></i></button></div>
+    </section>
+
+    <!-- ======================= Step 1 · Source picker ======================= -->
+    <section class="wiz">
+      <div class="section-title"><h2><span class="step-label">Step 1</span> &nbsp;Choose import source</h2><span class="t-muted">Cards navigate on click; footer “Next →” stays disabled here</span></div>
+      <div class="card" style="padding:18px 20px;background:linear-gradient(135deg, var(--accent-soft), var(--bg-surface) 60%)">
+        <div class="grid grid-3">
+          <button class="src-card is-active"><span class="icon-tile icon-tile--accent"><i data-lucide="file-up"></i></span><div><div class="sc-title">File upload</div><div class="sc-desc">Drop files or click to browse</div></div></button>
+          <button class="src-card"><span class="icon-tile icon-tile--accent"><i data-lucide="link"></i></span><div><div class="sc-title">URL import</div><div class="sc-desc">Fetch from URL or repository</div></div></button>
+          <button class="src-card"><span class="icon-tile icon-tile--accent"><i data-lucide="clipboard-paste"></i></span><div><div class="sc-title">Clipboard paste</div><div class="sc-desc">Paste JSON or YAML content</div></div></button>
+          <button class="src-card"><span class="icon-tile icon-tile--accent"><i data-lucide="github"></i></span><div><div class="sc-title">Git repository</div><div class="sc-desc">Import from GitHub/GitLab</div></div></button>
+          <button class="src-card"><span class="icon-tile icon-tile--accent"><i data-lucide="cloud"></i></span><div><div class="sc-title">SwaggerHub</div><div class="sc-desc">Import from SwaggerHub <span class="badge badge--outline">native · Projects only</span></div></div></button>
+          <button class="src-card is-disabled" title="Catalog only (variant=projects filters it out)"><span class="icon-tile" style="background:var(--orange-soft);color:var(--orange-fg)"><i data-lucide="mailbox"></i></span><div><div class="sc-title">Postman collection</div><div class="sc-desc">Import from Postman v2.1 <span class="badge badge--outline">alternative · Catalog only</span></div></div></button>
+          <button class="src-card"><span class="icon-tile icon-tile--ok"><i data-lucide="network"></i></span><div><div class="sc-title">MCP server</div><div class="sc-desc">Discover an MCP endpoint</div></div></button>
+          <button class="src-card"><span class="icon-tile icon-tile--violet"><i data-lucide="file-code"></i></span><div><div class="sc-title">Avro schema</div><div class="sc-desc">Registry adapter · scope alternative</div></div></button>
+          <button class="src-card is-disabled" title="Coming soon"><span class="icon-tile"><i data-lucide="radar"></i></span><div><div class="sc-title">Gateway config</div><div class="sc-desc">Discovery-only adapter — Coming soon</div></div></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= Step 3 · Preview ======================= -->
+    <section class="wiz">
+      <div class="section-title"><h2><span class="step-label">Step 3</span> &nbsp;Preview &amp; select schemas</h2><span class="t-muted">PreviewPanel + ImportOptionsForm · “Import →” disabled with 0 selected</span></div>
+      <div class="card wiz-card">
+        <div class="table-toolbar" style="padding:10px 16px">
+          <div class="segmented segmented--sm" data-tabs="pv-views"><button class="is-active" data-action="tab" data-target="pv-list"><i data-lucide="list"></i>List view</button><button data-action="tab" data-target="pv-diagram"><i data-lucide="waypoints"></i>Relationship diagram</button><button data-action="tab" data-target="pv-tree"><i data-lucide="folder-tree"></i>Tree view</button></div>
+          <button class="btn btn--sm btn--ghost">Select all</button><button class="btn btn--sm btn--ghost">Select none</button><span class="t-xs t-muted">39 of 42 selected</span>
+          <span class="spacer"></span>
+          <div class="input-wrap" style="width:200px"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search by name..." /></div>
+          <select class="select select--sm" style="width:130px"><option>All types</option><option>object</option><option>array</option><option>allOf</option><option>oneOf</option><option>anyOf</option><option>enum</option><option>string</option><option>number</option><option>integer</option><option>boolean</option><option>null</option><option>unknown</option></select>
+          <select class="select select--sm" style="width:130px"><option>All tags</option><option>refunds</option><option>payouts</option><option>webhooks</option></select>
+          <span class="badge badge--outline">39 of 42 schemas selected</span>
+        </div>
+        <div id="pv-views">
+          <div data-tab-panel="pv-list" class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:0">
+            <div style="border-right:1px solid var(--border);padding:12px 12px 12px 16px">
+              <div class="row-between mb-2"><span class="t-caps">Schemas to import</span><div class="row gap-1"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Sort A→Z"><i data-lucide="arrow-down-a-z"></i></button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Sort Z→A"><i data-lucide="arrow-up-z-a"></i></button></div></div>
+              <div class="col" style="gap:2px;max-height:360px;overflow:auto">
+                <label class="schema-row is-active"><input type="checkbox" class="check" checked /><i data-lucide="package" class="t-subtle"></i>Refund<span class="sr-meta">6 properties</span><i data-lucide="chevron-right" style="width:12px;height:12px"></i></label>
+                <label class="schema-row"><input type="checkbox" checked /><i data-lucide="package" class="t-subtle"></i>RefundReason<span class="sr-meta">enum</span></label>
+                <label class="schema-row"><input type="checkbox" checked /><i data-lucide="package" class="t-subtle"></i>Payout<span class="sr-meta">7 properties</span></label>
+                <label class="schema-row"><input type="checkbox" checked /><i data-lucide="package" class="t-subtle"></i>PayoutReport<span class="sr-meta">allOf · 9 properties</span></label>
+                <label class="schema-row"><input type="checkbox" checked /><i data-lucide="package" class="t-subtle"></i>Payment<span class="sr-meta">12 properties</span></label>
+                <label class="schema-row"><input type="checkbox" checked /><i data-lucide="package" class="t-subtle"></i>PaymentMethod<span class="sr-meta">oneOf · 3 variants</span></label>
+                <label class="schema-row"><input type="checkbox" /><i data-lucide="package" class="t-subtle"></i>LegacyCard<span class="sr-meta">4 properties</span></label>
+                <label class="schema-row"><input type="checkbox" checked /><i data-lucide="package" class="t-subtle"></i>WebhookEvent<span class="sr-meta">5 properties</span></label>
+                <label class="schema-row"><input type="checkbox" checked /><i data-lucide="package" class="t-subtle"></i>Customer<span class="sr-meta">8 properties</span></label>
+                <div class="t-2xs t-subtle" style="padding:6px 10px">… 33 more</div>
+              </div>
+            </div>
+            <div style="padding:12px 16px" class="col gap-3">
+              <div class="row-between"><span class="t-caps">Schema preview</span><div class="segmented segmented--sm" data-tabs="sp-tabs"><button class="is-active" data-action="tab" data-target="sp-sum">Summary</button><button data-action="tab" data-target="sp-json">JSON</button><button data-action="tab" data-target="sp-yaml">YAML</button></div></div>
+              <div class="field"><label>Import as class name</label><input class="input" placeholder="Refund" /><div class="hint">Override the class name when importing. From schema title / x-class-name when not set.</div></div>
+              <div id="sp-tabs">
+                <div data-tab-panel="sp-sum" class="col gap-3">
+                  <div><div class="t-sm t-600">Refund</div><div class="t-xs t-muted">A refund against a captured payment.</div></div>
+                  <div><div class="t-caps mb-1">Properties</div><div class="divide-y" style="font-size:var(--fs-xs)"><details open><summary class="row gap-2" style="padding:6px 0;cursor:pointer"><span class="mono">id: string</span><span class="badge badge--outline">required</span></summary><dl class="kv-mini" style="padding:2px 0 6px 16px;font-size:var(--fs-2xs)"><dt>Format</dt><dd class="mono">uuid</dd><dt>Example</dt><dd class="mono">rf_7f3a9c</dd></dl></details><div class="row gap-2" style="padding:6px 0"><span class="mono">amount: number</span><span class="badge badge--outline">required</span><span class="t-subtle">Range ≥ 0.01</span></div><div class="row gap-2" style="padding:6px 0"><span class="mono">currency: string</span><span class="t-subtle">Pattern ^[A-Z]{3}$ · Default EUR</span></div><div class="row gap-2" style="padding:6px 0"><span class="mono">reason: RefundReason</span><span class="t-subtle">Enum · Nullable</span></div></div></div>
+                  <div class="grid grid-3"><div><div class="t-caps mb-1">Relationships</div><div class="t-xs">→ Payment <span class="badge badge--outline">aggregation</span></div><div class="t-xs">→ RefundReason <span class="badge badge--outline">composition</span></div></div><div><div class="t-caps mb-1">Inherits from (allOf)</div><div class="t-xs">↑ MoneyMovement <span class="t-subtle">extends</span> · + additional properties: 2</div></div><div><div class="t-caps mb-1">Variants (oneOf) · Options (anyOf)</div><div class="t-xs">◇ CardRefund <span class="t-subtle">requires: [cardId]</span></div><div class="t-xs">◇ BankRefund <span class="t-subtle">inline schema</span></div><div class="t-xs">○ —</div></div></div>
+                </div>
+                <pre data-tab-panel="sp-json" hidden class="code code--dark" style="max-height:220px">{ "type": "object", "required": ["id","amount"], "properties": { "id": { "type": "string", "format": "uuid" }, "amount": { "type": "number", "minimum": 0.01 }, "currency": { "type": "string", "default": "EUR" }, "reason": { "$ref": "#/components/schemas/RefundReason" } } }</pre>
+                <pre data-tab-panel="sp-yaml" hidden class="code code--dark" style="max-height:220px">type: object
+required: [id, amount]
+properties:
+  id: { type: string, format: uuid }
+  amount: { type: number, minimum: 0.01 }</pre>
+              </div>
+              <div class="t-2xs t-subtle">Empty: “Select a schema to preview”.</div>
+            </div>
+          </div>
+          <div data-tab-panel="pv-diagram" hidden style="padding:16px">
+            <div class="t-xs t-muted mb-2">Preview of schema relationships. Arrows show references; labels show the property or “items”. Filter by search, type, or tag above.</div>
+            <div style="height:260px;border-radius:var(--r-md);background:radial-gradient(var(--border-strong) 1px, transparent 1px) 0 0/16px 16px, var(--bg-canvas);position:relative">
+              <div class="card" style="position:absolute;left:40px;top:30px;padding:8px 10px;width:130px"><div class="t-xs t-600 mono">Payment</div><div class="t-2xs t-subtle">12 properties</div></div>
+              <div class="card" style="position:absolute;left:280px;top:30px;padding:8px 10px;width:130px"><div class="t-xs t-600 mono">Refund</div><div class="t-2xs t-subtle">6 properties</div></div>
+              <div class="card" style="position:absolute;left:520px;top:30px;padding:8px 10px;width:130px"><div class="t-xs t-600 mono">RefundReason <span class="badge badge--outline">enum</span></div><div class="t-2xs t-subtle">—</div></div>
+              <div class="card" style="position:absolute;left:280px;top:150px;padding:8px 10px;width:130px;opacity:.5"><div class="t-xs t-600 mono">LegacyCard</div><div class="t-2xs t-subtle">4 properties · unselected</div></div>
+              <div class="card" style="position:absolute;left:520px;top:150px;padding:8px 10px;width:130px"><div class="t-xs t-600 mono">PaymentMethod <span class="badge badge--outline">oneOf</span></div><div class="t-2xs t-subtle">3 variants</div></div>
+              <svg style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true"><g stroke="var(--fg-subtle)" stroke-width="1.5" fill="none"><path d="M170 55 C220 55, 230 55, 280 55"/><path d="M410 55 C460 55, 470 55, 520 55"/><path d="M105 78 C105 140, 200 175, 280 175" opacity=".4"/><path d="M170 60 C300 100, 420 175, 520 175"/></g><text x="200" y="48" font-size="10" fill="var(--fg-subtle)">refunds · items</text><text x="440" y="48" font-size="10" fill="var(--fg-subtle)">reason</text><text x="330" y="120" font-size="10" fill="var(--fg-subtle)">method</text></svg>
+              <div class="row gap-1" style="position:absolute;left:12px;bottom:12px"><button class="btn btn--sm btn--icon" aria-label="Zoom in"><i data-lucide="plus"></i></button><button class="btn btn--sm btn--icon" aria-label="Zoom out"><i data-lucide="minus"></i></button><button class="btn btn--sm btn--icon" aria-label="Fit"><i data-lucide="maximize"></i></button></div>
+            </div>
+          </div>
+          <div data-tab-panel="pv-tree" hidden style="padding:16px">
+            <div class="row-between mb-2"><span class="t-caps">Schema tree</span><span class="t-xs t-subtle">Expand schemas to see referenced types ($ref)</span></div>
+            <div class="tree" style="max-width:420px"><div class="tree__item is-active"><i data-lucide="chevron-down" class="tw"></i><input type="checkbox" checked /><i data-lucide="package"></i>Payment<span class="count">12 properties</span></div><div class="tree__children"><div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><input type="checkbox" checked /><i data-lucide="package"></i>Refund<span class="count">6</span></div><div class="tree__children"><div class="tree__item"><i data-lucide="package"></i>RefundReason<span class="count">enum</span></div></div><div class="tree__item"><i data-lucide="chevron-right" class="tw"></i><input type="checkbox" checked /><i data-lucide="package"></i>PaymentMethod<span class="count">oneOf</span></div><div class="tree__item"><i data-lucide="chevron-right" class="tw"></i><input type="checkbox" checked /><i data-lucide="package"></i>Customer<span class="count">8</span></div></div><div class="tree__item"><i data-lucide="chevron-right" class="tw"></i><input type="checkbox" checked /><i data-lucide="package"></i>Payout<span class="count">7 properties</span></div></div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding:16px" class="col gap-4">
+          <div class="t-sm t-600">Import options</div>
+          <div class="grid grid-4">
+            <div class="field"><label>Project name</label><input class="input" value="Payments API" /><div class="hint">A new project will be created with this name</div></div>
+            <div class="field"><label>Slug</label><input class="input input--mono" value="payments-api" /><div class="hint">URL-friendly identifier</div></div>
+            <div class="field span-2"><label>Version</label><div class="row gap-3"><input class="input input--mono" value="2.4.0" disabled style="width:140px" /><label class="radio"><input type="radio" name="ver" checked />From spec</label><label class="radio"><input type="radio" name="ver" />Manual</label></div><div class="hint">Using “2.4.0” from specification · Manual: Allowed: 0-9, A-Z, a-z, . (dot), - (dash)</div></div>
+          </div>
+          <div class="card card--flat card--pad">
+            <label class="check"><input type="checkbox" checked /><span class="t-600">Apply naming convention</span></label><div class="t-xs t-muted mt-1" style="padding-left:24px">Convert class and property names to match your chosen conventions.</div>
+            <div class="grid grid-4 mt-3"><div class="field"><label>Classes</label><select class="select"><option>PascalCase</option><option>camelCase</option><option>snake_case</option><option>kebab-case</option><option>None (keep original)</option></select></div><div class="field"><label>Properties</label><select class="select"><option>camelCase</option><option>PascalCase</option><option>snake_case</option><option>kebab-case</option><option>None (keep original)</option></select></div><div class="field"><label>Class name prefix</label><input class="input" placeholder="e.g. Api" /></div><div class="field"><label>Class name suffix</label><input class="input" placeholder="e.g. Dto" /></div></div>
+            <div class="t-xs t-subtle mt-2">Prefix and suffix are applied to every imported class name (e.g. Api + User + Dto → ApiUserDto).</div>
+          </div>
+          <div class="grid grid-2">
+            <details class="card card--flat" style="padding:10px 14px" open><summary class="t-sm t-600" style="cursor:pointer">Type mapping</summary><table class="table table--dense mt-2"><thead><tr><th>External type</th><th>Map to</th></tr></thead><tbody><tr><td class="mono">string (date-time)</td><td><select class="select select--sm"><option>Keep as-is</option><option>string</option><option>string (date-time)</option><option>string (date)</option><option>string (uuid)</option><option>integer</option><option>integer (int32)</option><option>integer (int64)</option><option>number</option><option>number (float)</option><option>number (double)</option><option>boolean</option></select></td></tr><tr><td class="mono">integer (int64)</td><td><select class="select select--sm"><option>Keep as-is</option></select></td></tr></tbody></table></details>
+            <details class="card card--flat" style="padding:10px 14px"><summary class="t-sm t-600" style="cursor:pointer">Default values</summary><div class="t-xs t-muted mt-2">Per external type; JSON or plain text; placeholder “(none)”.</div></details>
+            <details class="card card--flat" style="padding:10px 14px"><summary class="t-sm t-600" style="cursor:pointer">Required field override</summary><div class="t-xs t-muted mt-2">Schema · Property · Required: “As in spec (required|optional)” / Required / Optional — sticky header, 280px scroll.</div></details>
+            <details class="card card--flat" style="padding:10px 14px"><summary class="t-sm t-600" style="cursor:pointer">Property descriptions</summary><div class="t-xs t-muted mt-2">Schema · Property · Description — placeholder “As in spec: …” or “(no description in spec)”.</div></details>
+          </div>
+          <div class="grid grid-3">
+            <div class="switch-row" style="padding:0"><div><div class="sw-title">Generate examples</div><div class="sw-desc">Auto-generate example values for properties that don’t have one.</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div>
+            <div class="switch-row" style="padding:0;border:0"><div><div class="sw-title">Dry run (preview only)</div><div class="sw-desc">Simulate the import and show what would be created. No project or data is saved.</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div>
+            <div class="switch-row" style="padding:0;border:0"><div><div class="sw-title">Incremental mode (skip failures)</div><div class="sw-desc">Import all available classes and skip any that fail. Changes are saved as each class is imported; no single transaction.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+          </div>
+        </div>
+        <div class="dialog__footer"><button class="btn btn--ghost left"><i data-lucide="arrow-left"></i>Back</button><button class="btn">Cancel</button><button class="btn btn--primary">Import <i data-lucide="arrow-right"></i></button></div>
+      </div>
+    </section>
+
+    <!-- ======================= Step 4 · Import ======================= -->
+    <section class="wiz">
+      <div class="section-title"><h2><span class="step-label">Step 4</span> &nbsp;Import progress</h2><span class="t-muted">ImportExecutionPanel · async job (Postgres-backed) polled every 1 s</span></div>
+      <div class="card wiz-card">
+        <div class="dialog__body col gap-4" style="padding-top:18px">
+          <div class="card card--flat card--pad">
+            <div class="row-between"><div class="row gap-2"><span class="t-sm t-600">Import progress</span><span class="badge" data-status="running">RUNNING</span></div><span class="t-xs t-muted">Step 3 of 5 · Estimated time remaining: about 40 seconds</span></div>
+            <div class="meter mt-3"><div class="progress progress--striped"><span style="width:62%"></span></div><span class="meter-val">62%</span></div>
+            <div class="t-sm mt-2">Importing schema 26 of 42: <span class="mono">PayoutReport</span></div>
+            <div class="row wrap gap-2 mt-3"><span class="badge badge--outline">QUEUED</span><span class="badge" data-status="running">RUNNING</span><span class="badge badge--warn">PENDING APPROVAL</span><span class="badge badge--info">COMMITTING</span><span class="badge" data-status="completed">COMPLETED</span><span class="badge" data-status="failed">FAILED</span><span class="badge badge--outline">CANCELED</span><span class="badge badge--outline">ROLLED BACK</span></div>
+            <div class="t-2xs t-subtle mt-1">Primary lines: “Waiting to start…” · “Preparing…” · “Initializing import…” · “Creating project: X” · “Creating version: X” · “Creating shared properties in library…” · “Importing schema i of n: Name” · “Working on: X” · “Verifying imported data…” · “Finalizing…”</div>
+            <div class="row gap-2 mt-3"><button class="btn btn--sm btn--danger-soft">Cancel import</button><span class="t-xs t-subtle">Pending approval → “Accept &amp; Commit” / “Reject &amp; Rollback” + “Transaction pending — changes will only be saved if you accept. Closing this dialog or rejecting will rollback all changes.” · Failed → “Retry Import” + “Cancel import”</span></div>
+          </div>
+          <div class="grid grid-2">
+            <div class="banner" style="background:var(--accent-soft)"><i data-lucide="flask-conical"></i><div><span class="banner-title">Dry run complete. No changes were saved.</span> — Review the summary below. Uncheck “Dry run (preview only)” and run again to import for real.</div></div>
+            <div class="banner banner--ok"><i data-lucide="circle-check"></i><div><span class="banner-title">Incremental import complete.</span> — Successful classes were saved; failed classes were skipped. You can open the project in Canvas or close this dialog.</div></div>
+          </div>
+          <div class="banner banner--danger" role="alert" style="flex-direction:column;align-items:stretch"><div class="row gap-2 t-600"><i data-lucide="circle-x"></i>Failures (1)</div><div class="t-xs mt-1"><span class="mono">SCHEMA_INVALID</span> — LegacyCard: property <span class="mono">expiry</span> uses an unsupported format <span class="mono">mmyy</span></div><pre class="code mt-1" style="font-size:11px;padding:6px 8px">{ "schema": "LegacyCard", "pointer": "#/properties/expiry" }</pre></div>
+          <div class="grid grid-2">
+            <div class="card card--flat card--pad">
+              <div class="t-sm t-600 mb-2">Live progress</div>
+              <div class="divide-y t-sm">
+                <div class="row gap-2" style="padding:6px 0"><i data-lucide="circle-check" style="color:var(--ok)"></i>Refund <span class="t-xs t-subtle">Imported successfully</span></div>
+                <div class="row gap-2" style="padding:6px 0"><i data-lucide="triangle-alert" style="color:var(--warn)"></i>Payout <span class="t-xs t-subtle">Imported with warnings</span><span class="t-xs t-warn" style="margin-left:auto">no description</span></div>
+                <div class="row gap-2" style="padding:6px 0"><i data-lucide="circle-x" style="color:var(--danger)"></i>LegacyCard <span class="t-xs t-subtle">Failed</span></div>
+                <div class="row gap-2" style="padding:6px 0"><span class="spinner"></span>PayoutReport <span class="t-xs t-subtle">Importing…</span></div>
+                <div class="row gap-2" style="padding:6px 0"><i data-lucide="circle" class="t-faint"></i>WebhookEvent <span class="t-xs t-subtle">Pending</span></div>
+              </div>
+              <div class="t-2xs t-subtle mt-2">Fallback: last-20 event feed (<span class="mono">time • code</span>, message; “Intentionally skipped”) or “Waiting for import events…”.</div>
+            </div>
+            <div class="card card--flat card--pad">
+              <div class="row-between"><span class="t-sm t-600">Import log</span><button class="btn btn--link btn--sm">Show more…</button></div>
+              <div class="log mt-2"><div><span class="l-info">[INFO]</span> 09:12:04 Creating project: Payments API</div><div><span class="l-info">[INFO]</span> 09:12:04 Creating version: 2.4.0</div><div><span class="l-info">[INFO]</span> 09:12:05 Creating shared properties in library…</div><div><span class="l-warn">[WARN]</span> 09:12:07 Payout: no description</div><div><span class="l-error">[ERROR]</span> 09:12:08 LegacyCard: unsupported format mmyy</div><div><span class="l-skip">[SKIPPED]</span> 09:12:08 LegacyCard skipped (incremental mode)</div><div><span class="l-info">[INFO]</span> 09:12:09 Importing schema 26 of 42: PayoutReport</div></div>
+              <details class="mt-2"><summary class="t-xs t-600" style="cursor:pointer">Import summary (technical details)</summary><pre class="code mt-1" style="font-size:11px">{ "jobId": "job_5a1c…", "state": "running", "progress": 0.62, "classesImported": 25 }</pre></details>
+            </div>
+          </div>
+        </div>
+        <div class="dialog__footer"><button class="btn btn--ghost left" disabled><i data-lucide="arrow-left"></i>Back</button><button class="btn">Cancel</button><button class="btn btn--primary" disabled>Next <i data-lucide="arrow-right"></i></button></div>
+      </div>
+    </section>
+
+    <!-- ======================= Step 5 · Done ======================= -->
+    <section class="wiz">
+      <div class="section-title"><h2><span class="step-label">Step 5</span> &nbsp;Done</h2><span class="t-muted">ImportCompletePanel + SchemaVersionScoringPanel</span></div>
+      <div class="card wiz-card">
+        <div class="dialog__body col gap-4" style="padding-top:22px">
+          <div class="empty" style="padding:8px 0 4px"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="party-popper"></i></div><div class="empty__title">Import complete!</div><div class="empty__desc">39 class(es) imported; 1 skipped due to errors. Other titles: “Dry run complete” · “Import Failed” · “Import Rolled Back” · “Import Canceled”.</div></div>
+          <div class="grid" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
+            <div class="card card--flat card--pad">
+              <div class="row-between"><span class="t-sm t-600">Import summary</span><div class="row gap-1"><span class="badge badge--outline">Incremental</span></div></div>
+              <div class="stat-grid stat-grid--3 mt-3"><div class="stat" style="padding:10px 12px"><div class="stat__label">Classes imported</div><div class="stat__value" style="font-size:var(--fs-2xl)">39</div></div><div class="stat" style="padding:10px 12px"><div class="stat__label">Properties imported</div><div class="stat__value" style="font-size:var(--fs-2xl)">302</div></div><div class="stat" style="padding:10px 12px"><div class="stat__label">Paths imported</div><div class="stat__value" style="font-size:var(--fs-2xl)">18</div></div></div>
+              <div class="grid grid-2 mt-2"><div class="tile"><div class="tl">Warning</div><div class="tv t-warn">3</div></div><div class="tile"><div class="tl">Failed</div><div class="tv t-danger">1</div></div></div>
+              <div class="banner banner--ok mt-3"><i data-lucide="badge-check"></i><div><span class="banner-title">Import verification passed</span> — Successfully verified 39 classes and 302 properties match the imported schema.</div></div>
+              <dl class="kv mt-3"><dt>Total time</dt><dd>48.2 s</dd><dt>Source</dt><dd class="mono">payments-api-v2.4.yaml</dd><dt>Target</dt><dd>Payments API / 2.4.0</dd></dl>
+              <div class="mt-3"><div class="t-caps mb-1">Imported schemas</div><div class="row wrap gap-1"><span class="badge badge--ok">✓ Refund</span><span class="badge badge--ok">✓ RefundReason</span><span class="badge badge--warn">⚠ Payout</span><span class="badge badge--ok">✓ PayoutReport</span><span class="badge badge--ok">✓ Payment</span><span class="badge badge--danger">✗ LegacyCard</span><span class="badge badge--ok">✓ WebhookEvent</span><span class="badge badge--outline">+32 more</span></div></div>
+            </div>
+            <div class="col gap-3">
+              <div class="card card--flat card--pad">
+                <div class="row-between"><span class="t-caps">Lint &amp; score v2.4.0</span><span class="badge badge--outline">Guide: Acme REST</span></div>
+                <div class="row gap-3 mt-3"><span class="ring" style="--p:74;--c:var(--warn)"><span>C</span></span><div><div class="t-h4">Score 74/100</div><div class="t-xs t-subtle">Quality snapshot appended to the project’s local history</div></div></div>
+                <div class="divide-y mt-3" style="font-size:var(--fs-xs)"><div class="row-start gap-2" style="padding:6px 0"><span class="badge" data-status="error">error</span><div><span class="tag">operation-id-unique</span> <span class="mono t-subtle">paths./refunds/legacy.post</span></div></div><div class="row-start gap-2" style="padding:6px 0"><span class="badge" data-status="warning">warning</span><div><span class="tag">schema-description</span> <span class="mono t-subtle">components.schemas.Payout</span></div></div></div>
+              </div>
+              <div class="card card--flat card--pad">
+                <div class="t-sm t-600 mb-2">Failure details</div>
+                <div class="row gap-1 mb-2"><span class="t-xs t-muted">Failed classes (1)</span><span class="badge badge--danger">LegacyCard</span></div>
+                <div class="t-xs t-muted">Errors &amp; warnings (4)</div>
+                <div class="row-start gap-2 mt-1 t-xs"><span class="badge badge--danger">error</span><span class="mono">SCHEMA_INVALID</span><span>unsupported format mmyy</span></div>
+                <div class="row-start gap-2 mt-1 t-xs"><span class="badge badge--warn">warning</span><span class="mono">NO_DESCRIPTION</span><span>Payout has no description</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="card card--flat card--pad">
+            <div class="t-sm t-600 mb-2">Next actions</div>
+            <div class="row wrap gap-2"><a class="btn btn--primary" href="../studio/editor.html"><i data-lucide="pen-tool"></i>View on canvas</a><button class="btn btn--danger-soft"><i data-lucide="undo-2"></i>Undo import</button><button class="btn" disabled>Generate docs</button><button class="btn"><i data-lucide="download"></i>Download error report</button><button class="btn" disabled>Import another</button><button class="btn" disabled>Schedule re-import</button><span class="t-xs t-subtle">Coming soon</span></div>
+            <div class="t-xs t-subtle mt-2">Dry run: “This was a preview only. No project was created — View on Canvas and Undo are not available.”</div>
+          </div>
+        </div>
+        <div class="dialog__footer"><button class="btn btn--ghost left"><i data-lucide="arrow-left"></i>Back</button><button class="btn btn--primary">Done</button></div>
+      </div>
+    </section>
+
+    <!-- ======================= Recent async jobs ======================= -->
+    <section class="wiz">
+      <div class="section-title"><h2>Recent import jobs</h2><span class="t-muted">RecentAsyncJobsPanel · <span class="mono">GET /api/catalog/import?limit=5&amp;offset=0</span> · no polling</span></div>
+      <div class="table-wrap">
+        <table class="table table--dense">
+          <thead><tr><th>Job</th><th>State</th><th>Progress</th><th>Source</th><th>Started</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">job_5a1c9e</td><td><span class="badge" data-status="running">running</span></td><td class="t-num">62%</td><td>payments-api-v2.4.yaml</td><td class="t-num t-muted">08/15/26 09:12 AM</td></tr>
+            <tr><td class="mono">job_4b77d0</td><td><span class="badge" data-status="completed">completed</span></td><td class="t-num">100%</td><td>orders-openapi.yaml</td><td class="t-num t-muted">08/14/26 04:03 PM</td></tr>
+            <tr><td class="mono">job_3c02aa</td><td><span class="badge" data-status="failed">failed</span></td><td class="t-num">41%</td><td>inventory.asyncapi.yaml</td><td class="t-num t-muted">08/13/26 11:48 AM</td></tr>
+            <tr><td class="mono">job_2f9e11</td><td><span class="badge badge--outline">rolled_back</span></td><td class="t-num">—</td><td>legacy-gateway.wsdl</td><td class="t-num t-muted">08/12/26 02:20 PM</td></tr>
+            <tr><td class="mono">job_1a30bb</td><td><span class="badge" data-status="completed">completed</span></td><td class="t-num">100%</td><td>Payments.postman_collection.json</td><td class="t-num t-muted">08/10/26 09:31 AM</td></tr>
+          </tbody>
+        </table>
+        <div class="table-foot"><span>1–5 of 12</span><span class="pager"><button class="btn btn--sm" disabled>Previous</button><button class="btn btn--sm">Next</button></span></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<div class="overlay overlay--drawer" id="jobs-drawer" data-overlay>
+  <div class="drawer" role="dialog" aria-label="Recent import jobs">
+    <div class="drawer__header"><div><div class="drawer__title">Recent import jobs</div><div class="t-xs t-muted">Shared async job store (Postgres) — survives round-robin REST replicas.</div></div><button class="btn btn--ghost btn--icon" style="margin-left:auto" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="drawer__body">
+      <table class="table table--dense"><thead><tr><th>Job</th><th>State</th><th>Progress</th></tr></thead><tbody><tr><td class="mono">job_5a1c9e</td><td><span class="badge" data-status="running">running</span></td><td>62%</td></tr><tr><td class="mono">job_4b77d0</td><td><span class="badge" data-status="completed">completed</span></td><td>100%</td></tr><tr><td class="mono">job_3c02aa</td><td><span class="badge" data-status="failed">failed</span></td><td>41%</td></tr></tbody></table>
+      <div class="banner banner--danger mt-3" role="alert"><i data-lucide="circle-x"></i><div class="t-xs">Failed to load jobs (503)</div></div>
+      <div class="t-xs t-subtle mt-2">Empty row: “No jobs yet.” · footer “No jobs” · Previous/Next disabled at bounds or while loading.</div>
+    </div>
+    <div class="drawer__footer"><span class="t-xs t-subtle" style="margin-right:auto">1–3 of 12</span><button class="btn btn--sm" disabled>Previous</button><button class="btn btn--sm">Next</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ai-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="ai-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--honey"><i data-lucide="sparkles"></i></span><div><div class="dialog__title" id="ai-title">Design with AI</div><div class="dialog__desc">Generate OpenAPI specifications using natural language</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="row-between"><div class="row gap-2 t-sm"><span class="t-muted">Model:</span><select class="select select--sm" style="width:200px"><option>llama3.1:8b</option></select></div><button class="btn btn--link btn--sm">Reset conversation</button></div>
+      <div class="card card--soft" style="min-height:260px;display:flex;flex-direction:column"><div class="empty" style="padding:28px 20px 16px"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="bot"></i></div><div class="empty__title">Start a conversation</div><div class="empty__desc">Describe the API you want to create, and I’ll generate an OpenAPI 3.1.0 specification for you. You can refine it through conversation.</div><div class="row gap-2 wrap mt-3" style="justify-content:center"><span class="chip">💬 Create a blog API with posts and comments</span><span class="chip">🛒 E-commerce API with products and orders</span><span class="chip">🔐 User management with authentication</span></div></div><div class="row gap-2" style="padding:12px;margin-top:auto"><input class="input grow" placeholder="Describe your API or ask for changes..." /><button class="btn btn--primary"><i data-lucide="send-horizontal"></i>Send</button></div></div>
+      <div class="banner banner--danger"><i data-lucide="circle-x"></i><div class="t-xs">Sorry, I encountered an error processing your request. Please try again.</div></div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">AI can make mistakes — please review before importing.</span><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="cat-dialog" data-overlay>
+  <div class="dialog" role="dialog"><div class="dialog__header" style="background:linear-gradient(135deg,var(--accent-soft),var(--bg-surface));border-radius:var(--r-xl) var(--r-xl) 0 0"><span class="icon-tile icon-tile--accent"><i data-lucide="book-open"></i></span><div><div class="dialog__title">Documentation · 12/20</div><div class="dialog__desc">Descriptions, examples and summaries on operations and schemas. These are the suggested improvements.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-2">
+      <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="badge badge--danger">high</span><span class="t-sm t-600">Schema <span class="mono">Payout</span> has no description</span></div><div class="t-xs t-muted mt-1">Suggestion: describe what a payout represents and when it settles.</div><div class="mono t-2xs t-subtle mt-1">components.schemas.Payout · Line 214</div></div>
+      <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="badge badge--warn">medium</span><span class="t-sm t-600">Property <span class="mono">Refund.amount</span> has no example</span></div><div class="t-xs t-muted mt-1">Suggestion: add <span class="mono">example: 12.5</span>.</div><div class="mono t-2xs t-subtle mt-1">components.schemas.Refund.properties.amount · Line 188</div></div>
+      <div class="t-xs t-subtle">Empty: “No issues found! Your specification meets all requirements for this category.”</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div></div>
+</div>
+
+<template id="notes">
+  <p class="route">ImportDialog (Projects · Versions · MCP servers entry points; New Project → Design with AI → “Import This Spec”)</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ImportDialog.tsx</code> + <code>ImportSourceTabBar</code>, per-source panels (File, URL, Clipboard, Git, SwaggerHub, Postman, <code>McpImportPanel</code>/<code>McpDiscoveryPanel</code>), <code>AnalysisPanel</code>, <code>PreviewPanel</code> + <code>ImportOptionsForm</code>, <code>ImportExecutionPanel</code>, <code>ImportCompletePanel</code> (+ <code>SchemaVersionScoringPanel</code>), <code>LLMImportDialog</code>/<code>LLMChatPanel</code>, <code>RecentAsyncJobsPanel</code>. The legacy <code>OpenAPIImportDialog</code> (upload → review → summary → details) is superseded by this wizard — its file/URL/SSO tabs map to File, URL and Git.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Stepper Source · Analyze · Preview · Import · Done; body error Alert slot; footer verbs by step (Back / Cancel / Analyze → / Test URL / Next → / Discover → / Import → / Close / Discard / Add this server anyway / Done) and back/close semantics (rollback running job, delete uncommitted MCP endpoint).</li>
+    <li>Source grid: 7 built-ins with scope filter (SwaggerHub native, Postman alternative), registry adapters from <code>/api/import/sources</code>, disabled “Coming soon”.</li>
+    <li>File (dropzone, allowed extensions, preview tiles, unsupported + parse-error banners, zip note) · URL (auth radios, URL options, Test URL flow, verified/failed cards) · Clipboard (paste/clear, JSON/YAML detected, counters, debounce, ready/parse error) · Git (linked accounts gate, saved bookmarks, save for later, GitHub URL/branch/tag/path, three-column Accounts/Repositories/Files browser, history) · SwaggerHub (owner/api/version/key, Test &amp; fetch, results, preview) · Postman (drop/paste/base URL, convert, warnings) · MCP (hero + stages, endpoint/name/transport/auth, discovery panel with polling states, grade gauge, done banners) · Design with AI (model, chat, Import this spec, prompt chips).</li>
+    <li>Analyze: Specification information, Format detection (+ tiles), Feature compatibility, Specification analysis (4 metrics + refs/circular/extensions/composition), Quality score (grade, tier, weights, category cards → issues dialog), Errors/Warnings cards.</li>
+    <li>Preview: List / Relationship diagram / Tree, select all/none, search/type/tag filters, schema rows, Schema preview Summary/JSON/YAML + “Import as class name”, Import options (name/slug/version From spec|Manual), naming convention, type mapping / defaults / required override / descriptions collapsibles, Generate examples / Dry run / Incremental switches.</li>
+    <li>Import: state badges (all 8), progress + primary line + ETA + step, pending-approval / retry / cancel actions, dry-run + incremental banners, Failures list, Live progress checklist, Import log, technical summary.</li>
+    <li>Done: title variants, summary tiles + health tiles, verification, meta, Lint &amp; score panel, imported schema badges, failure details, Next actions (View on Canvas, Undo import, Generate Docs, Download error report, Import Another, Schedule Re-import).</li>
+    <li>RecentAsyncJobsPanel table (Job · State · Progress, paging).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Wizard rendered as a page-level card (resumable, deep-linkable) instead of a modal; quality-gate banner in Analyze; “Recent import jobs” drawer; registry adapters get their own tab.</li></ul>
+  <h4>States</h4>
+  <ul><li>Unsupported format / parse error / fetch failure / no linked accounts / MCP discovery failed / job failed / dry run / incremental — all shown inline with the app’s copy. Not represented: <code>ImportSchemaConflictDialog</code> (#298) and <code>ConflictReport</code> (#596) — not mounted anywhere in the current app.</li></ul>
+</template>
+</body>
+</html>

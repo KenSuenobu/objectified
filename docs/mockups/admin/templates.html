@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin · Property templates · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local only */
+  .cat { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px 0 6px; border-radius: var(--r-full); background: var(--bg-subtle); font-size: var(--fs-2xs); font-weight: 500; color: var(--fg-muted); white-space: nowrap; }
+  .cat .em { font-size: 12px; line-height: 1; }
+  .stat-grid--7 { grid-template-columns: repeat(7, minmax(0,1fr)); }
+  @media (max-width: 1200px) { .stat-grid--7 { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+  .schema-pre { max-height: 240px; }
+</style>
+</head>
+<body data-shell="admin" data-nav="admin-templates" data-page="admin/templates" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="overview.html">Admin console</a><i data-lucide="chevron-right"></i><span>Platform</span><i data-lucide="chevron-right"></i><span>Property templates</span></div>
+          <h1 class="page-title">Property templates</h1>
+          <p class="page-desc">Reusable JSON-schema snippets for properties — system-wide or scoped to one tenant.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn--ghost" data-tip="Reload templates and stats"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <button class="btn btn--primary" data-action="open" data-target="template-dialog"><i data-lucide="plus"></i>New template<span class="kbd">N</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- 7 stats -->
+    <section class="stat-grid stat-grid--7" aria-label="Template stats">
+      <div class="stat"><div class="stat__label"><i data-lucide="layout-template"></i>Total templates</div><div class="stat__value">14</div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="star" style="color:var(--honey-fg)"></i>System</div><div class="stat__value">11</div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="building-2" style="color:var(--accent)"></i>Tenant</div><div class="stat__value">3</div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="circle-check" style="color:var(--ok)"></i>Enabled</div><div class="stat__value">13</div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="circle-x" style="color:var(--danger)"></i>Disabled</div><div class="stat__value">1</div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="chart-line" style="color:var(--violet)"></i>Total usage</div><div class="stat__value">486</div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="tags" style="color:var(--accent-fg)"></i>Categories</div><div class="stat__value">12</div></div>
+    </section>
+
+    <!-- Table -->
+    <section class="table-wrap">
+      <div class="table-toolbar">
+        <div class="input-wrap" style="width:300px"><i data-lucide="search"></i><input class="input" placeholder="Search by name, description, or tags…" /></div>
+        <select class="select" style="width:220px" aria-label="Category">
+          <option>All categories</option>
+          <option>🔑 Identifiers (3)</option><option>⏰ Timestamps (2)</option><option>📋 Audit Fields (1)</option><option>🚦 Status Fields (1)</option><option>📧 Contact Info (1)</option><option>📍 Address Fields (1)</option><option>💰 Money &amp; Currency (1)</option><option>🌍 Geolocation (1)</option><option>🌐 Internationalization (1)</option><option>📄 Pagination (1)</option><option>🔍 Search &amp; Filter (1)</option><option>📦 Medical-records (1)</option>
+        </select>
+        <div class="segmented segmented--sm" data-tabs role="radiogroup" aria-label="Scope">
+          <button class="is-active" data-action="tab">All</button>
+          <button data-action="tab"><i data-lucide="star"></i>System only</button>
+          <button data-action="tab"><i data-lucide="building-2"></i>Tenant only</button>
+        </div>
+        <span class="spacer"></span>
+        <span class="t-xs t-subtle">14 templates · client-side filter</span>
+      </div>
+      <table class="table">
+        <thead><tr>
+          <th class="sortable is-sorted">Template <span class="sort"><i data-lucide="arrow-up"></i></span></th>
+          <th class="sortable">Category <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th>Type</th>
+          <th>Schema type</th>
+          <th class="sortable t-right">Usage <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th>Status</th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><div class="cell-primary row gap-2">UUID<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">RFC 4122 v4 identifier used as the primary key on every resource</div></td>
+            <td><span class="cat"><span class="em">🔑</span>Identifiers</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">string (uuid)</code></td>
+            <td class="t-right t-num">128</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Email<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">RFC 5322 address, lower-cased on write</div></td>
+            <td><span class="cat"><span class="em">📧</span>Contact Info</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">string (email)</code></td>
+            <td class="t-right t-num">74</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Created At<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">Server-set creation timestamp, ISO 8601 UTC</div></td>
+            <td><span class="cat"><span class="em">⏰</span>Timestamps</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">string (date-time)</code></td>
+            <td class="t-right t-num">96</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Updated At<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">Last-modified timestamp, ISO 8601 UTC</div></td>
+            <td><span class="cat"><span class="em">⏰</span>Timestamps</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">string (date-time)</code></td>
+            <td class="t-right t-num">91</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Audit Fields<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">created_at, created_by, updated_at, updated_by as one object</div></td>
+            <td><span class="cat"><span class="em">📋</span>Audit Fields</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">object</code></td>
+            <td class="t-right t-num">22</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Status<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">Enum active · inactive · archived</div></td>
+            <td><span class="cat"><span class="em">🚦</span>Status Fields</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">string</code></td>
+            <td class="t-right t-num">18</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Postal Address<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">Street, city, region, postal code, ISO country</div></td>
+            <td><span class="cat"><span class="em">📍</span>Address Fields</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">object</code></td>
+            <td class="t-right t-num">9</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Money<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">Minor-unit integer amount + ISO 4217 currency</div></td>
+            <td><span class="cat"><span class="em">💰</span>Money &amp; Currency</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">object</code></td>
+            <td class="t-right t-num">14</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Geo Point<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">Latitude / longitude pair (WGS 84)</div></td>
+            <td><span class="cat"><span class="em">🌍</span>Geolocation</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">object</code></td>
+            <td class="t-right t-num">5</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Locale<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">BCP 47 language tag, e.g. en-GB</div></td>
+            <td><span class="cat"><span class="em">🌐</span>Internationalization</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">string</code></td>
+            <td class="t-right t-num">3</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Page Cursor<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">Opaque base64 cursor for keyset pagination</div></td>
+            <td><span class="cat"><span class="em">📄</span>Pagination</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">string</code></td>
+            <td class="t-right t-num">11</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr style="opacity:.8">
+            <td><div class="cell-primary row gap-2">Search Query<i data-lucide="star" style="width:13px;height:13px;color:var(--honey-fg)" title="System Template"></i></div><div class="cell-sub t-truncate" style="max-width:320px">Free-text query string, max 256 chars</div></td>
+            <td><span class="cat"><span class="em">🔍</span>Search &amp; Filter</span></td>
+            <td><span class="badge badge--honey">System</span></td>
+            <td><code class="tag">string</code></td>
+            <td class="t-right t-num">6</td>
+            <td><span class="badge badge--dot badge--danger">Disabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Enable template" aria-label="Enable template" style="color:var(--ok)"><i data-lucide="power"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Merchant ID</div><div class="cell-sub t-truncate" style="max-width:320px">Acme merchant identifier, prefix <span class="mono">mch_</span></div></td>
+            <td><span class="cat"><span class="em">🔑</span>Identifiers</span></td>
+            <td><span class="badge badge--accent">Tenant</span> <span class="t-xs t-subtle">Acme Corp</span></td>
+            <td><code class="tag">string</code></td>
+            <td class="t-right t-num">7</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <tr>
+            <td><div class="cell-primary row gap-2">Medical Record Number</div><div class="cell-sub t-truncate" style="max-width:320px">Hospital MRN, 8–12 digits, private to the tenant</div></td>
+            <td><span class="cat"><span class="em">📦</span>Medical-records</span></td>
+            <td><span class="badge badge--accent">Tenant</span> <span class="t-xs t-subtle">Umbrella Health</span></td>
+            <td><code class="tag">string</code></td>
+            <td class="t-right t-num">2</td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="view-dialog" data-tip="View details" aria-label="View details"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="template-dialog" data-tip="Edit template" aria-label="Edit template"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="menu-template" aria-label="More actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>Showing 14 of 14 · sorted by name ↑</span><span>Empty: “No templates found” · Loading: skeleton rows</span></div>
+    </section>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+
+<!-- Create / Edit template -->
+<div class="overlay" id="template-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="tpl-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--honey"><i data-lucide="layout-template"></i></span>
+      <div><div class="dialog__title" id="tpl-title">New template</div><div class="dialog__desc">A JSON-schema fragment users can drop onto a property. Not a change-report template.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="form-grid">
+        <div class="field"><label>Name <span class="req">*</span></label><input class="input" placeholder="e.g., UUID, Email, Created At" value="IBAN" autofocus /></div>
+        <div class="field">
+          <label class="row-between">Category <span class="req">*</span><label class="check t-xs t-muted" style="font-weight:400"><input type="checkbox" /> Create new category</label></label>
+          <select class="select"><option>Select a category…</option><option>🔑 Identifiers</option><option>⏰ Timestamps</option><option>📋 Audit Fields</option><option>🚦 Status Fields</option><option>📧 Contact Info</option><option>📍 Address Fields</option><option selected>💰 Money &amp; Currency</option><option>🌍 Geolocation</option><option>🌐 Internationalization</option><option>📄 Pagination</option><option>🔍 Search &amp; Filter</option><option>📦 Medical-records</option></select>
+          <div class="hint">With “Create new category”: text input “Enter new category name (e.g., medical, legal, custom-fields)” — converted to lowercase with hyphens (“Medical Records” → <span class="mono">medical-records</span>).</div>
+        </div>
+        <div class="field span-2"><label>Description</label><input class="input" placeholder="Brief description of the template" value="International bank account number, validated with a mod-97 check" /></div>
+        <div class="field span-2">
+          <label class="row-between">JSON schema <span class="req">*</span><span class="row gap-1"><button class="btn btn--link btn--sm" type="button"><i data-lucide="wand-sparkles"></i>Format</button></span></label>
+          <textarea class="textarea input--mono" rows="10" style="min-height:190px" spellcheck="false">{
+  "type": "string",
+  "description": "IBAN — international bank account number",
+  "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$",
+  "example": "GB29NWBK60161331926819"
+}</textarea>
+          <div class="hint">Default on create: <span class="mono">{"type":"string","description":"","example":""}</span>. Validation: “Invalid JSON schema”, “Category is required”.</div>
+        </div>
+        <div class="field span-2"><label>Tags <span class="t-xs t-subtle t-500">(comma-separated)</span></label><input class="input" placeholder="id, uuid, identifier, primary-key" value="money, bank, iban, payments" /></div>
+        <div class="span-2 row gap-6">
+          <label class="check"><input type="checkbox" checked /> <i data-lucide="star" style="width:14px;height:14px;color:var(--honey-fg)"></i> System template <span class="t-xs t-subtle">(available to every tenant)</span></label>
+          <label class="check"><input type="checkbox" checked /> Public <span class="t-xs t-subtle">(visible outside the owning tenant)</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Toast: “Template created successfully” / “Template updated successfully”</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create template</button></div>
+  </div>
+</div>
+
+<!-- View template -->
+<div class="overlay" id="view-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="view-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--honey"><i data-lucide="layout-template"></i></span>
+      <div><div class="dialog__title row gap-2" id="view-title">UUID <i data-lucide="star" style="width:16px;height:16px;color:var(--honey-fg)" title="System Template"></i></div><div class="dialog__desc">RFC 4122 v4 identifier used as the primary key on every resource</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="row gap-2 wrap"><span class="cat"><span class="em">🔑</span>Identifiers</span><span class="badge badge--honey">System</span><span class="badge badge--dot" data-status="active">Enabled</span><span class="badge badge--outline">Usage 128</span><span class="badge" data-status="public">Public</span></div>
+      <div>
+        <div class="t-caps mb-2">Tags</div>
+        <div class="row gap-1 wrap"><span class="chip"><i data-lucide="tag"></i>id</span><span class="chip"><i data-lucide="tag"></i>uuid</span><span class="chip"><i data-lucide="tag"></i>identifier</span><span class="chip"><i data-lucide="tag"></i>primary-key</span></div>
+      </div>
+      <div>
+        <div class="row-between mb-2"><span class="t-caps">JSON schema</span><button class="btn btn--sm"><i data-lucide="copy"></i>Copy</button></div>
+        <pre class="code schema-pre">{
+  "type": "string",
+  "format": "uuid",
+  "description": "Unique identifier (RFC 4122 v4)",
+  "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "readOnly": true
+}</pre>
+      </div>
+      <dl class="kv" style="grid-template-columns:max-content 1fr max-content 1fr">
+        <dt>Created</dt><dd class="t-num">Jan 12, 2026, 09:14</dd>
+        <dt>Updated</dt><dd class="t-num">Aug 2, 2026, 16:40</dd>
+        <dt>Tenant</dt><dd>— <span class="t-subtle">(system-wide)</span></dd>
+        <dt>Created by</dt><dd>Ada Lovelace</dd>
+      </dl>
+    </div>
+    <div class="dialog__footer"><button class="btn left" data-action="open" data-target="template-dialog"><i data-lucide="pencil"></i>Edit template</button><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Delete template -->
+<div class="overlay" id="delete-template-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete the template “Search Query”?</div><div class="dialog__desc">Properties already created from it keep their schema; the template disappears from pickers. Used 6 times.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete template</button></div>
+  </div>
+</div>
+
+<!-- Row menu -->
+<div class="overlay" id="menu-template" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:392px 60px 0 0">
+  <div class="menu" role="menu" style="width:220px">
+    <button class="menu__item w-full" data-action="open" data-target="view-dialog"><i data-lucide="eye"></i>View details</button>
+    <button class="menu__item w-full" data-action="open" data-target="template-dialog"><i data-lucide="pencil" style="color:var(--accent)"></i>Edit template</button>
+    <button class="menu__item w-full" data-action="close"><i data-lucide="copy"></i>Copy schema</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full" data-action="close"><i data-lucide="power" style="color:var(--danger)"></i>Disable template</button>
+    <div class="menu__sep"></div>
+    <button class="menu__item w-full is-danger" data-action="open" data-target="delete-template-dialog"><i data-lucide="trash-2"></i>Delete template</button>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/admin/dashboard/templates</p>
+  <h4>Replaces</h4>
+  <ul><li><code>PropertyTemplateManagementClient.tsx</code> (single scrolling container with its own header) → standard Hive page header + table.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header “New template” (primary) + Refresh. Seven stats: Total templates · System · Tenant · Enabled · Disabled · Total usage · Categories.</li>
+    <li>Filters: search “Search by name, description, or tags…”, category select “All categories” + “{emoji label} (count)”, mutually-exclusive System only / Tenant only (segmented instead of two checkboxes). Client-side only.</li>
+    <li>Category vocabulary (<code>categoryConfig</code>): 🔑 Identifiers · ⏰ Timestamps · 📋 Audit Fields · 🚦 Status Fields · 📧 Contact Info · 📍 Address Fields · 💰 Money &amp; Currency · 🌍 Geolocation · 🌐 Internationalization · 📄 Pagination · 🔍 Search &amp; Filter; unknown → 📦 Capitalised name.</li>
+    <li>Table: Template (name + ★ “System Template” + description) · Category chip · Type (System honey / Tenant accent) · Schema type <code>{schema.type||'object'} (format)</code> · Usage · Status · actions. Kebab: View details · Edit template · Copy schema (clipboard, toast “Schema copied to clipboard”) · Disable/Enable template (<code>togglePropertyTemplateStatus</code>) · Delete template (confirm → dialog).</li>
+    <li>Create/Edit dialog: Name, Description, Category (select or “Create new category” text input with the lowercase-hyphen hint), JSON schema textarea (10 rows, mono, default <span class="mono">{"type":"string","description":"","example":""}</span>), Tags (comma-separated), System template + Public (default on); validation “Invalid JSON schema”, “Category is required”; toasts “Template created/updated successfully”. Edit does not expose <code>enabled</code> (preserved).</li>
+    <li>View dialog: name + ★, description, category / type / status / usage / visibility, tags, JSON schema <code>pre</code> with Copy, Created / Updated / Tenant / Created by; footer Edit template / Close.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Sortable columns, hover quick actions (view/edit), tenant name next to the Tenant pill, “Format” helper on the schema textarea, keyboard <code>N</code>.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading: skeleton rows (replaces “Loading templates…” spinner row). Empty: <code>.empty</code> “No templates found”. Errors: toast “Failed to load data”, “Failed to create/update/delete template”, “Failed to toggle template status”. Absent by design: versions, default template, preview, Handlebars.</li></ul>
+</template>
+</body>
+</html>

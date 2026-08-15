@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Help &amp; shortcuts · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+</head>
+<body data-shell="app" data-nav="" data-page="foundations/help" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Help</span></div>
+          <h1 class="page-title">Help &amp; docs</h1>
+          <p class="page-desc">Guides, shortcuts, what’s new and where to ask. Reachable from the rail footer on every page.</p>
+        </div>
+        <div class="page-actions"><button class="btn" data-action="open" data-target="whats-new"><i data-lucide="sparkles"></i>What’s new</button><button class="btn btn--primary" data-action="open" data-target="shortcuts"><i data-lucide="keyboard"></i>Keyboard shortcuts <span class="kbd">?</span></button></div>
+      </div>
+    </div>
+  </header>
+  <div class="page-body">
+    <div class="input-wrap" style="max-width:560px"><i data-lucide="search"></i><input class="input input--lg" style="height:var(--control-h-lg)" placeholder="Search the guide… e.g. publish a version, import RAML, MCP trust posture" /></div>
+    <div class="grid grid-3">
+      <a class="card card--hover card--link card--pad" href="#"><span class="icon-tile icon-tile--honey"><i data-lucide="rocket"></i></span><div class="t-h4 mt-3">Get started</div><div class="t-sm t-muted mt-1">First project → first version → publish → browse. Reopens the getting-started checklist on Home.</div></a>
+      <a class="card card--hover card--link card--pad" href="#"><span class="icon-tile icon-tile--accent"><i data-lucide="book-open"></i></span><div class="t-h4 mt-3">User guide</div><div class="t-sm t-muted mt-1">Import a spec, edit classes &amp; paths, cut a version, lint &amp; quality, export fidelity, MCP quickstart.</div></a>
+      <a class="card card--hover card--link card--pad" href="#"><span class="icon-tile icon-tile--ok"><i data-lucide="terminal"></i></span><div class="t-h4 mt-3">API &amp; CLI reference</div><div class="t-sm t-muted mt-1">REST API, apiome CLI, CI diff gate recipes for GitHub / GitLab / Bitbucket.</div></a>
+      <a class="card card--hover card--link card--pad" href="#"><span class="icon-tile icon-tile--violet"><i data-lucide="youtube"></i></span><div class="t-h4 mt-3">Video walkthroughs</div><div class="t-sm t-muted mt-1">Short screencasts on YouTube <i data-lucide="arrow-up-right" style="display:inline-block;width:12px;height:12px;vertical-align:-1px"></i></div></a>
+      <a class="card card--hover card--link card--pad" href="#"><span class="icon-tile"><i data-lucide="messages-square"></i></span><div class="t-h4 mt-3">Community <span class="badge badge--outline">soon</span></div><div class="t-sm t-muted mt-1">Connect with other builders.</div></a>
+      <a class="card card--hover card--link card--pad" href="#"><span class="icon-tile icon-tile--rose"><i data-lucide="life-buoy"></i></span><div class="t-h4 mt-3">Contact support</div><div class="t-sm t-muted mt-1">Include your tenant id <span class="mono">ten_01HJ7…F8H</span> and the build <span class="mono">v0.241.0</span>.</div></a>
+    </div>
+    <section class="card">
+      <div class="card__header"><div class="card__title"><i data-lucide="keyboard"></i>Shortcuts at a glance</div><button class="btn btn--sm btn--ghost" data-action="open" data-target="shortcuts">Full sheet</button></div>
+      <div class="card__body grid grid-4 t-sm">
+        <div class="row-between"><span>Palette</span><span><span class="kbd">⌘</span><span class="kbd">K</span></span></div>
+        <div class="row-between"><span>Preferences</span><span><span class="kbd">⌘</span><span class="kbd">,</span></span></div>
+        <div class="row-between"><span>Sidebar</span><span><span class="kbd">⌘</span><span class="kbd">\</span></span></div>
+        <div class="row-between"><span>Search</span><span class="kbd">/</span></div>
+        <div class="row-between"><span>New</span><span class="kbd">N</span></div>
+        <div class="row-between"><span>Import</span><span class="kbd">I</span></div>
+        <div class="row-between"><span>Go to projects</span><span><span class="kbd">G</span><span class="kbd">P</span></span></div>
+        <div class="row-between"><span>This sheet</span><span class="kbd">?</span></div>
+      </div>
+    </section>
+  </div>
+</main>
+<template id="notes">
+  <p class="route">new — /ade/dashboard/help (proposed); replaces the “Resources” rows on the /ade launcher and the “Watch our intro video” link</p>
+  <h4>Keeps</h4><ul><li>Help &amp; tutorials (YouTube), Community (soon), Marketplace (soon) from the launcher resources; What’s new dialog (WHATS_NEW.md).</li></ul>
+  <h4>Adds</h4><ul><li>Guide search over docs/guide, shortcut sheet, support card with tenant id + build.</li></ul>
+</template>
+</body>
+</html>

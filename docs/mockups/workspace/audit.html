@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Access audit · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: event badges coloured by action prefix, hash chain */
+  .ev { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0; }
+  .ev--role { background: var(--orange-soft); color: var(--orange-fg); }
+  .ev--permission { background: var(--rose-soft); color: var(--rose-fg); }
+  .ev--member { background: var(--accent-soft); color: var(--accent-fg); }
+  .ev--admin { background: var(--violet-soft); color: var(--violet-fg); }
+  .ev--sso { background: var(--ok-soft); color: var(--ok-fg); }
+  .ev--other { background: var(--neutral-soft); color: var(--neutral-fg); }
+  .hash { font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-subtle); word-break: break-all; }
+  .chain { display: grid; grid-template-columns: 16px 1fr; gap: 6px 10px; align-items: start; }
+  .chain .dot { margin-top: 5px; }
+</style>
+</head>
+<body data-shell="app" data-nav="audit" data-page="workspace/audit" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Govern</span><i data-lucide="chevron-right"></i><span>Access audit</span></div>
+          <h1 class="page-title">Access audit</h1>
+          <p class="page-desc">Immutable record of every access &amp; permission change.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn--ghost btn--icon" data-tip="Refresh" aria-label="Refresh"><i data-lucide="refresh-cw"></i></button>
+          <button class="btn btn--primary" data-action="open" data-target="export-toast"><i data-lucide="download"></i>Export CSV</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Filters: five single-select pills (URL ?filter=…) + adds -->
+    <div class="row-between wrap gap-3">
+      <div class="row gap-2 wrap" role="radiogroup" aria-label="Event filter">
+        <span class="chip is-active" role="radio" aria-checked="true">All events <span class="t-faint">128</span></span>
+        <span class="chip" role="radio" aria-checked="false"><i data-lucide="shield"></i>Role changes <span class="t-faint">31</span></span>
+        <span class="chip" role="radio" aria-checked="false"><i data-lucide="key-square"></i>Permissions <span class="t-faint">44</span></span>
+        <span class="chip" role="radio" aria-checked="false"><i data-lucide="users"></i>Members <span class="t-faint">39</span></span>
+        <span class="chip" role="radio" aria-checked="false"><i data-lucide="shield-half"></i>Admin overrides <span class="t-faint">14</span></span>
+      </div>
+      <div class="row gap-2">
+        <div class="input-wrap" style="width:240px"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search actor, event, target…" aria-label="Search audit events" /></div>
+        <select class="select select--sm" style="width:150px" aria-label="Date range"><option>Last 30 days</option><option>Last 7 days</option><option>Last 24 hours</option><option>Last 90 days</option><option>Custom range…</option></select>
+      </div>
+    </div>
+
+    <!-- Error banner (hidden by default) -->
+    <div class="banner banner--danger" hidden><i data-lucide="circle-alert"></i><div><div class="banner-title">Failed to load audit log</div><div class="banner-body">Nothing was lost — the ledger is append-only. Try again.</div></div><div class="banner-actions"><button class="btn btn--sm">Retry</button></div></div>
+
+    <!-- Ledger -->
+    <section class="table-wrap">
+      <table class="table">
+        <thead><tr>
+          <th style="width:190px">When</th>
+          <th>Actor</th>
+          <th>Event</th>
+          <th>Target</th>
+          <th>Source</th>
+          <th><span class="sr-only">Details</span></th>
+        </tr></thead>
+        <tbody>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 15, 2026, 09:41 AM</td>
+            <td><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span><span class="mono t-xs">ada@example.com</span></div></td>
+            <td><span class="badge ev ev--role">role.assigned</span></td>
+            <td><div class="t-sm">Linus Torvalds → <strong>Release manager</strong></div><div class="cell-sub">was Editor</div></td>
+            <td><span class="badge badge--outline">web</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 15, 2026, 09:40 AM</td>
+            <td><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span><span class="mono t-xs">ada@example.com</span></div></td>
+            <td><span class="badge ev ev--permission">permission.changed</span></td>
+            <td><div class="t-sm">Release manager · <span class="mono">version:publish</span></div><div class="cell-sub">off → on</div></td>
+            <td><span class="badge badge--outline">web</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 15, 2026, 08:02 AM</td>
+            <td><div class="row gap-2"><span class="icon-tile icon-tile--sm icon-tile--honey" style="width:20px;height:20px;border-radius:50%"><i data-lucide="key-round" style="width:11px;height:11px"></i></span><span class="mono t-xs">key_9f31c2…</span></div></td>
+            <td><span class="badge ev ev--permission">permission.denied</span></td>
+            <td><div class="t-sm"><span class="mono">POST /v1/versions</span></div><div class="cell-sub">scope diff:read lacks version:create</div></td>
+            <td><span class="badge badge--outline">api_key</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 14, 2026, 04:22 PM</td>
+            <td><div class="row gap-2"><span class="avatar avatar--xs avatar--b">GH</span><span class="mono t-xs">grace@example.com</span></div></td>
+            <td><span class="badge ev ev--member">member.invited</span></td>
+            <td><div class="t-sm">margaret@example.com</div><div class="cell-sub">role Viewer · seat 4 of 5</div></td>
+            <td><span class="badge badge--outline">web</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 13, 2026, 11:15 AM</td>
+            <td><div class="row gap-2"><span class="avatar avatar--xs avatar--b">GH</span><span class="mono t-xs">grace@example.com</span></div></td>
+            <td><span class="badge ev ev--other">style_guide.updated</span></td>
+            <td><div class="t-sm">Acme REST · 3 rule severities</div><div class="cell-sub">operation-operationId → error</div></td>
+            <td><span class="badge badge--outline">web</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 12, 2026, 06:48 PM</td>
+            <td><div class="row gap-2"><span class="avatar avatar--xs avatar--brand">OP</span><span class="mono t-xs">operator@apiome.dev</span></div></td>
+            <td><span class="badge ev ev--admin">admin.override</span></td>
+            <td><div class="t-sm">Feature <span class="mono">mcp.anonymous_calls</span> → enabled</div><div class="cell-sub">tenant override · ticket OPS-2291</div></td>
+            <td><span class="badge badge--outline">admin</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 12, 2026, 10:03 AM</td>
+            <td><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span><span class="mono t-xs">ada@example.com</span></div></td>
+            <td><span class="badge ev ev--role">role.created</span></td>
+            <td><div class="t-sm">Release manager</div><div class="cell-sub">role_7d21ac · 0 permissions</div></td>
+            <td><span class="badge badge--outline">web</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 09, 2026, 02:15 PM</td>
+            <td><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span><span class="mono t-xs">ada@example.com</span></div></td>
+            <td><span class="badge ev ev--member">member.offboarded</span></td>
+            <td><div class="t-sm">bob@example.com</div><div class="cell-sub">was Editor · seat released</div></td>
+            <td><span class="badge badge--outline">web</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 07, 2026, 09:30 AM</td>
+            <td><div class="row gap-2"><span class="avatar avatar--xs avatar--b">GH</span><span class="mono t-xs">grace@example.com</span></div></td>
+            <td><span class="badge ev ev--role">role.deleted</span></td>
+            <td><div class="t-sm">Contractor</div><div class="cell-sub">1 member moved to Viewer</div></td>
+            <td><span class="badge badge--outline">web</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Aug 01, 2026, 11:58 PM</td>
+            <td><div class="row gap-2"><span class="icon-tile icon-tile--sm icon-tile--danger" style="width:20px;height:20px;border-radius:50%"><i data-lucide="key-round" style="width:11px;height:11px"></i></span><span class="mono t-xs">key_c41d88…</span></div></td>
+            <td><span class="badge ev ev--permission">permission.denied</span></td>
+            <td><div class="t-sm"><span class="mono">GET /v1/projects</span></div><div class="cell-sub">key expired</div></td>
+            <td><span class="badge badge--outline">api_key</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-action="open" data-target="event-drawer">
+            <td class="mono t-xs t-muted t-num">Jul 28, 2026, 03:12 PM</td>
+            <td><div class="row gap-2"><span class="avatar avatar--xs avatar--brand">SS</span><span class="mono t-xs">sso:okta</span></div></td>
+            <td><span class="badge ev ev--sso">sso.login</span></td>
+            <td><div class="t-sm">linus@example.com</div><div class="cell-sub">IdP group mapped → Editor</div></td>
+            <td><span class="badge badge--outline">web</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Open event"><i data-lucide="chevron-right"></i></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>1–11 of 128 events · newest first</span><span class="pager"><button class="btn btn--ghost btn--sm btn--icon" disabled aria-label="Previous page"><i data-lucide="chevron-left"></i></button><span class="t-xs" style="padding:0 6px">Page 1 of 12</span><button class="btn btn--ghost btn--sm btn--icon" aria-label="Next page"><i data-lucide="chevron-right"></i></button></span></div>
+    </section>
+
+    <div class="row-start gap-2 t-xs t-subtle"><i data-lucide="lock" style="width:13px;height:13px;margin-top:2px"></i><span>Entries are append-only and hash-chained; they cannot be edited or deleted, satisfying SOC 2 / ISO 27001 access-review evidence.</span></div>
+
+    <!-- Other states -->
+    <div class="row gap-2 t-xs t-subtle" style="justify-content:flex-end"><span>Preview state:</span><div class="segmented segmented--sm" data-tabs="state-panels"><button class="is-active" data-action="tab" data-target="none">Hidden</button><button data-action="tab" data-target="empty">Empty</button><button data-action="tab" data-target="loading">Loading</button><button data-action="tab" data-target="error">Error</button></div></div>
+    <div id="state-panels">
+      <div data-tab-panel="none" hidden></div>
+      <div data-tab-panel="empty" hidden class="card"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="scroll-text"></i></div><div class="empty__title">No audit events for this filter.</div><div class="empty__desc">Role, permission and membership changes land here the moment they happen. Try “All events” or widen the date range.</div><div class="empty__actions"><button class="btn">Show all events</button></div></div></div>
+      <div data-tab-panel="loading" hidden class="table-wrap"><table class="table"><thead><tr><th style="width:190px">When</th><th>Actor</th><th>Event</th><th>Target</th><th>Source</th><th></th></tr></thead><tbody>
+        <tr><td><span class="skeleton" style="display:inline-block;width:150px">x</span></td><td><span class="skeleton" style="display:inline-block;width:140px">x</span></td><td><span class="skeleton" style="display:inline-block;width:110px">x</span></td><td><span class="skeleton" style="display:inline-block;width:220px">x</span></td><td><span class="skeleton" style="display:inline-block;width:40px">x</span></td><td></td></tr>
+        <tr><td><span class="skeleton" style="display:inline-block;width:150px">x</span></td><td><span class="skeleton" style="display:inline-block;width:120px">x</span></td><td><span class="skeleton" style="display:inline-block;width:130px">x</span></td><td><span class="skeleton" style="display:inline-block;width:180px">x</span></td><td><span class="skeleton" style="display:inline-block;width:40px">x</span></td><td></td></tr>
+        <tr><td><span class="skeleton" style="display:inline-block;width:150px">x</span></td><td><span class="skeleton" style="display:inline-block;width:160px">x</span></td><td><span class="skeleton" style="display:inline-block;width:90px">x</span></td><td><span class="skeleton" style="display:inline-block;width:240px">x</span></td><td><span class="skeleton" style="display:inline-block;width:40px">x</span></td><td></td></tr>
+      </tbody></table></div>
+      <div data-tab-panel="error" hidden class="banner banner--danger"><i data-lucide="circle-alert"></i><div><div class="banner-title">Failed to load audit log</div><div class="banner-body">Nothing was lost — the ledger is append-only. Try again.</div></div><div class="banner-actions"><button class="btn btn--sm">Retry</button></div></div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- Event detail drawer (adds) -->
+<div class="overlay overlay--drawer" id="event-drawer" data-overlay>
+  <div class="drawer" role="dialog" aria-labelledby="event-title">
+    <div class="drawer__header">
+      <span class="icon-tile icon-tile--sm" style="background:var(--orange-soft);color:var(--orange-fg)"><i data-lucide="shield"></i></span>
+      <div class="grow min-w-0"><div class="drawer__title row gap-2"><span class="badge badge--lg ev ev--role">role.assigned</span><span class="t-sm t-muted">evt_01J5R7Q</span></div><div class="t-xs t-subtle mt-1">Aug 15, 2026, 09:41:07 AM UTC · 2 hours ago</div></div>
+      <button class="btn btn--ghost btn--icon" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer__body col gap-5">
+      <div class="callout callout--accent t-sm"><strong>Linus Torvalds</strong> was assigned the role <strong>Release manager</strong> (was Editor) by Ada Lovelace from the web console.</div>
+
+      <section>
+        <div class="t-caps mb-2">Actor</div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-3"><span class="avatar avatar--a">AL</span><div class="grow min-w-0"><div class="t-sm t-600">Ada Lovelace</div><div class="t-xs t-subtle mono">ada@example.com · usr_01a9f3 · Owner</div></div><span class="badge badge--outline">web</span></div></div>
+      </section>
+
+      <section>
+        <div class="t-caps mb-2">Target</div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-3"><span class="avatar avatar--c">LT</span><div class="grow min-w-0"><div class="t-sm t-600">Linus Torvalds</div><div class="t-xs t-subtle mono">linus@example.com · mem_4c1e77</div></div><span class="row gap-1 t-xs"><span class="badge badge--outline">Editor</span><i data-lucide="arrow-right" style="width:12px;height:12px"></i><span class="badge badge--accent">Release manager</span></span></div></div>
+      </section>
+
+      <section>
+        <div class="t-caps mb-2">Request</div>
+        <dl class="kv">
+          <dt>Request id</dt><dd class="mono t-xs">req_7f0b3d9e-2c11</dd>
+          <dt>IP</dt><dd class="mono t-xs">203.0.113.42 <span class="t-subtle">· Berlin, DE</span></dd>
+          <dt>User agent</dt><dd class="t-xs t-muted">Chrome 128 · macOS</dd>
+          <dt>Session</dt><dd class="mono t-xs">ses_91ad… <span class="t-subtle">· 2FA verified</span></dd>
+          <dt>Filter key</dt><dd class="mono t-xs">role</dd>
+        </dl>
+      </section>
+
+      <section>
+        <div class="t-caps mb-2">Hash chain</div>
+        <div class="chain">
+          <span class="dot"></span><div><div class="t-xs t-muted">Previous</div><div class="hash">sha256:4b1e…9c02a7f3e5d1b8c6a4f2e0d9c7b5a3f1e8d6c4b2a0f9e7d5c3b1a8f6e4d2c0</div></div>
+          <span class="dot dot--ok"></span><div><div class="t-xs t-muted">This entry</div><div class="hash">sha256:a90c…3f7e1d2b4c6a8e0f2d4b6c8a0e2f4d6b8a0c2e4f6a8d0b2c4e6f8a0b2d4c6e8f</div></div>
+        </div>
+        <div class="row gap-2 t-xs t-ok mt-2"><i data-lucide="badge-check" style="width:13px;height:13px"></i>Chain verified · 128 entries</div>
+      </section>
+
+      <section>
+        <div class="row-between mb-2"><div class="t-caps">Event JSON</div><button class="btn btn--ghost btn--sm"><i data-lucide="copy"></i>Copy</button></div>
+        <div class="code">{
+  <span class="c-k">"id"</span>: <span class="c-s">"evt_01J5R7Q"</span>,
+  <span class="c-k">"action"</span>: <span class="c-s">"role.assigned"</span>,
+  <span class="c-k">"occurred_at"</span>: <span class="c-s">"2026-08-15T09:41:07Z"</span>,
+  <span class="c-k">"actor"</span>: { <span class="c-k">"id"</span>: <span class="c-s">"usr_01a9f3"</span>, <span class="c-k">"label"</span>: <span class="c-s">"ada@example.com"</span> },
+  <span class="c-k">"target"</span>: { <span class="c-k">"member_id"</span>: <span class="c-s">"mem_4c1e77"</span>, <span class="c-k">"email"</span>: <span class="c-s">"linus@example.com"</span> },
+  <span class="c-k">"detail"</span>: { <span class="c-k">"from_role"</span>: <span class="c-s">"editor"</span>, <span class="c-k">"to_role"</span>: <span class="c-s">"release-manager"</span> },
+  <span class="c-k">"source"</span>: <span class="c-s">"web"</span>,
+  <span class="c-k">"tenant_id"</span>: <span class="c-s">"tnt_acme01"</span>,
+  <span class="c-k">"prev_hash"</span>: <span class="c-s">"sha256:4b1e…c0"</span>,
+  <span class="c-k">"hash"</span>: <span class="c-s">"sha256:a90c…8f"</span>
+}</div>
+      </section>
+    </div>
+    <div class="drawer__footer"><span class="t-xs t-subtle" style="margin-right:auto"><i data-lucide="lock" style="width:12px;height:12px;display:inline-block;vertical-align:-2px"></i> Read-only · append-only ledger</span><a class="btn btn--ghost" href="roles.html"><i data-lucide="shield"></i>Open role</a><a class="btn" href="members.html">Open member <i data-lucide="arrow-up-right"></i></a></div>
+  </div>
+</div>
+
+<!-- Export toast (Export CSV navigates to /api/access/audit/export) -->
+<div class="overlay" id="export-toast" data-overlay style="background:transparent;align-items:flex-end;justify-content:flex-end;padding:0 20px 20px 0;pointer-events:none">
+  <div class="toast toast--ok" style="pointer-events:auto"><i data-lucide="download"></i><div><div class="toast-title">Exporting audit log</div><div class="toast-desc">access-audit-acme-2026-08-15.csv · 128 events · downloads from /api/access/audit/export</div></div><button class="btn btn--ghost btn--sm" data-action="close">Dismiss</button></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/audit</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/audit/page.tsx</code> (filter pills, ledger table, CSV export).</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header “Immutable record of every access &amp; permission change” + Export CSV (→ <code>/api/access/audit/export</code>).</li>
+    <li>Five single-select filter pills All events / Role changes / Permissions / Members / Admin overrides (keys <code>all|role|permission|member|admin</code>; refetch <code>GET /api/access/audit?filter=…</code>).</li>
+    <li>Columns When (mono “Aug 15, 2026, 09:41 AM”) · Actor (mono <code>actor_label</code>/<code>actor_id</code>) · Event (mono badge coloured by prefix: role orange · permission rose · member sky · admin violet · sso green · else neutral) · Target (<code>target</code> or <code>detail</code>) · Source (web / api_key / admin).</li>
+    <li>Action vocabulary rows: <code>role.created/deleted/assigned</code>, <code>permission.changed/denied</code>, <code>member.invited/offboarded</code>, <code>admin.override</code>, <code>style_guide.*</code>, <code>sso.*</code>.</li>
+    <li>Footnote with lock icon: “Entries are append-only and hash-chained; they cannot be edited or deleted, satisfying SOC 2 / ISO 27001 access-review evidence.”</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul>
+    <li><strong>Event drawer</strong> per row (click row / chevron): plain-English summary, Actor card, Target card with before → after, Request kv (request id, IP, UA, session, filter key), hash-chain prev/this + “Chain verified”, Event JSON with copy, links to the role / member.</li>
+    <li>Search, date-range select, counts on the pills, pager (today: no paging, no search, no date range), Refresh icon, export toast naming the file.</li>
+  </ul>
+  <h4>States</h4>
+  <ul><li>Loading: skeleton rows (spinner today). Error: <code>.banner--danger</code> “Failed to load audit log” + Retry. Empty: “No audit events for this filter.” with “Show all events”. Preview via the “Preview state” segmented (mock-only).</li></ul>
+</template>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Primitive detail · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .prop-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; }
+  .prop-row + .prop-row { border-top: 1px solid var(--border); }
+  .prop-row .type-hint { font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .req-pill { display: inline-flex; align-items: center; height: 16px; padding: 0 6px; border-radius: var(--r-full); background: var(--rose-soft); color: var(--rose-fg); font-size: 10px; font-weight: 600; }
+  .chain-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .verdict { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--r-md); font-size: var(--fs-sm); font-weight: 500; }
+  .nested { border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 12px; margin-top: 6px; }
+</style>
+</head>
+<body data-shell="app" data-nav="primitives" data-page="build/primitive-detail" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div class="min-w-0">
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Build</span><i data-lucide="chevron-right"></i><a href="primitives.html">Primitives &amp; types</a><i data-lucide="chevron-right"></i><span class="mono">tenant/acme/v1/types</span></div>
+          <h1 class="page-title"><i data-lucide="library" style="width:22px;height:22px;color:var(--fg-subtle)"></i>money
+            <span class="badge badge--ok">Tenant</span>
+            <span class="badge badge--outline mono">object</span>
+            <span class="badge badge--info badge--mono">draft 2020-12</span>
+          </h1>
+          <p class="page-desc">Monetary amount with currency — decimal string amount plus an ISO 4217 currency ref.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn" href="primitives.html" title="Edit this type in the registry editor"><i data-lucide="pencil"></i>Edit</a>
+          <button class="btn" data-tip="Download money.schema.json"><i data-lucide="download"></i>Export</button>
+          <button class="btn btn--danger-soft" disabled data-tip="Deprecation lifecycle (sunset dates) arrives with version roots — see #3482">Deprecate</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="grid grid-main-aside">
+      <!-- MAIN column -->
+      <div class="col gap-6">
+        <!-- Description -->
+        <section class="card card--pad">
+          <p class="t-sm t-muted">Monetary amount with currency. <span class="mono">amount</span> is a decimal string to avoid float drift; <span class="mono">currency</span> $refs the core <span class="mono">currency-code</span> type. Used across payments, refunds and payout schemas.</p>
+        </section>
+
+        <!-- JSON Schema -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="braces"></i>JSON Schema (2020-12)</div><div class="row gap-2"><button class="btn btn--sm" data-tip="Copy the JSON Schema to the clipboard"><i data-lucide="copy"></i>Copy</button><button class="btn btn--sm" data-tip="Download money.schema.json"><i data-lucide="download"></i>Download</button></div></div>
+          <div class="card__body">
+            <pre class="code code--dark code--lines" style="max-height:360px"><span>{</span><span>  <span class="c-n">"$id"</span>: <span class="c-s">"https://api.apiome.dev/types/tenant/acme/v1/types/money"</span>,</span><span>  <span class="c-n">"$schema"</span>: <span class="c-s">"https://json-schema.org/draft/2020-12/schema"</span>,</span><span>  <span class="c-n">"type"</span>: <span class="c-s">"object"</span>,</span><span>  <span class="c-n">"required"</span>: [<span class="c-s">"amount"</span>, <span class="c-s">"currency"</span>],</span><span>  <span class="c-n">"properties"</span>: {</span><span>    <span class="c-n">"amount"</span>: { <span class="c-n">"type"</span>: <span class="c-s">"string"</span>, <span class="c-n">"pattern"</span>: <span class="c-s">"^-?\\d+(\\.\\d{1,4})?$"</span> },</span><span>    <span class="c-n">"currency"</span>: { <span class="c-n">"$ref"</span>: <span class="c-s">"../../../std/v0/types/currency-code"</span> },</span><span>    <span class="c-n">"note"</span>: { <span class="c-n">"type"</span>: <span class="c-s">"string"</span>, <span class="c-n">"maxLength"</span>: 140 }</span><span>  },</span><span>  <span class="c-n">"additionalProperties"</span>: false</span><span>}</span></pre>
+          </div>
+        </section>
+
+        <!-- Test this type -->
+        <section class="card">
+          <div class="card__header" role="button" tabindex="0" aria-expanded="true"><div class="card__title"><i data-lucide="flask-conical"></i>Test this type</div><div class="row gap-3"><span class="t-xs t-subtle">Validated as you type — no need to press anything.</span><i data-lucide="chevron-up" class="t-subtle"></i></div></div>
+          <div class="card__body col gap-4">
+            <div class="row-between wrap gap-2">
+              <div class="segmented segmented--sm"><button class="is-active">Single</button><button>Array</button></div>
+              <button class="btn btn--sm btn--ghost" data-tip="Reset the form to the generated example"><i data-lucide="rotate-ccw"></i>Reset</button>
+            </div>
+            <div class="verdict" style="background:var(--danger-soft);color:var(--danger-fg)" aria-live="polite"><i data-lucide="circle-x"></i>2 problem(s) found</div>
+            <div class="banner banner--neutral" style="padding:6px 10px"><i data-lucide="info"></i><div class="t-xs">Validated loosely: <span class="mono">../../../std/v0/types/currency-code</span> could not be resolved in the browser, so those constraints are not checked here.</div></div>
+            <div>
+              <div class="prop-row">
+                <label class="check" style="margin-top:2px"><input type="checkbox" checked aria-label="Include amount" /></label>
+                <div class="grow min-w-0">
+                  <div class="row gap-2 wrap"><span class="t-sm t-600 mono">amount</span><span class="type-hint">string · pattern</span><span class="req-pill">required</span></div>
+                  <div class="t-xs t-subtle">Decimal string, up to 4 decimal places.</div>
+                  <input class="input input--sm input--mono mt-1" value="12.34567" style="max-width:280px" />
+                  <div class="t-xs mt-1" style="color:var(--danger-fg)"><span class="mono">^-?\d+(\.\d{1,4})?$</span> does not match</div>
+                </div>
+              </div>
+              <div class="prop-row">
+                <label class="check" style="margin-top:2px"><input type="checkbox" checked aria-label="Include currency" /></label>
+                <div class="grow min-w-0">
+                  <div class="row gap-2 wrap"><span class="t-sm t-600 mono">currency</span><span class="type-hint">$ref ../../../std/v0/types/currency-code</span><span class="req-pill">required</span></div>
+                  <div class="t-xs t-subtle">References <span class="mono">std/v0/types/currency-code</span>, which is not resolved here — enter raw JSON and expect only local constraints to be checked.</div>
+                  <input class="input input--sm input--mono mt-1" value='"EUR"' placeholder='Raw JSON, e.g. {"a": 1}' style="max-width:280px" />
+                </div>
+              </div>
+              <div class="prop-row">
+                <label class="check" style="margin-top:2px"><input type="checkbox" aria-label="Include note" /></label>
+                <div class="grow min-w-0">
+                  <div class="row gap-2 wrap"><span class="t-sm t-600 mono">note</span><span class="type-hint">string</span></div>
+                  <div class="t-xs t-subtle">Omitted from the instance.</div>
+                </div>
+              </div>
+              <div class="nested">
+                <div class="t-xs t-600">Additional properties (string)</div>
+                <div class="t-xs t-subtle">This object takes dynamic property names, each with a string value.</div>
+                <div class="row gap-2 mt-2"><input class="input input--sm input--mono" placeholder="property name" value="amount" style="width:160px" /><input class="input input--sm" value="dup" style="width:160px" /><button class="btn btn--sm btn--ghost">Remove</button></div>
+                <div class="t-xs mt-1" style="color:var(--danger-fg)">"amount" is already a property of this object — rename or remove this row.</div>
+                <button class="btn btn--link btn--sm mt-1">Add property</button>
+              </div>
+            </div>
+            <div class="card card--flat" style="padding:10px 12px">
+              <div class="t-sm t-600" style="color:var(--danger-fg)">2 problem(s)</div>
+              <div class="t-xs mt-1 col gap-1"><div><span class="mono t-subtle">/amount</span> — must match pattern <span class="mono">^-?\d+(\.\d{1,4})?$</span></div><div><span class="mono t-subtle">(document root)</span> — must NOT have additional properties (<span class="mono">amount</span> duplicate)</div></div>
+            </div>
+            <div class="t-2xs t-subtle">Other verdicts: “Valid against this schema” (green) · “Some inputs are not valid values yet” · “Schema could not be compiled — {err}” (amber). Coercion errors: “Enter a number”, “‘x’ is not a number”, “Enter valid JSON”. Empty object: “This object declares no properties, so there is nothing to fill in.” Arrays: [i] boxes + “Add item” / “This array does not declare an item schema.”</div>
+          </div>
+        </section>
+
+        <!-- Reference resolution -->
+        <section class="card">
+          <div class="card__header"><div><div class="card__title"><i data-lucide="waypoints"></i>Reference resolution</div><div class="t-xs t-subtle mt-1">Relative $ref values resolved against the type’s base URL · click a resolved $ref to open the type it points at</div></div></div>
+          <table class="table table--dense">
+            <thead><tr><th>Relative $ref</th><th>Resolved target</th><th class="t-right">Status</th></tr></thead>
+            <tbody>
+              <tr><td><a class="mono t-xs" href="primitive-detail.html">../../../std/v0/types/currency-code</a></td><td class="mono t-xs">std/v0/types/currency-code</td><td class="t-right"><span class="badge badge--ok">resolved</span></td></tr>
+              <tr><td><span class="mono t-xs t-warn">../legacy/decimal</span></td><td class="t-faint">—</td><td class="t-right"><span class="badge badge--warn">unresolved</span></td></tr>
+            </tbody>
+          </table>
+          <div class="table-foot"><span>Base: <span class="mono">https://api.apiome.dev/types/tenant/acme/v1/types/</span></span><span class="t-subtle">Empty: “This type has no relative $ref values — it resolves to a flat schema.”</span></div>
+        </section>
+
+        <!-- Example instance -->
+        <section class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="file-json-2"></i>Example instance</div><span class="t-xs t-subtle">generated: examples[0] → default → const → enum[0] → by type · depth-bounded</span></div>
+          <div class="card__body"><pre class="code" style="font-size:12px">{
+  "amount": "12.50",
+  "currency": "EUR"
+}</pre></div>
+        </section>
+
+        <!-- Dependents -->
+        <section class="card">
+          <div class="card__header"><div><div class="card__title"><i data-lucide="git-merge"></i>Dependents</div><div class="t-xs t-subtle mt-1">Types referencing <span class="mono">tenant/acme/v1/types/money</span></div></div></div>
+          <table class="table table--dense">
+            <thead><tr><th>Type</th><th>Property</th><th>Scope</th></tr></thead>
+            <tbody>
+              <tr><td><a href="primitive-detail.html" title="View details for invoice" class="mono">invoice</a></td><td class="mono t-xs">total</td><td><span class="badge badge--violet">Tenant · acme</span></td></tr>
+              <tr><td><a href="primitive-detail.html" title="View details for order-line" class="mono">order-line</a></td><td class="mono t-xs">price</td><td><span class="badge badge--violet">Tenant · acme</span></td></tr>
+              <tr><td><a href="primitive-detail.html" title="View details for payout-summary" class="mono">payout-summary</a></td><td class="mono t-xs">netAmount</td><td><span class="badge badge--violet">Tenant · acme</span></td></tr>
+            </tbody>
+          </table>
+          <div class="table-foot"><span>3 dependents</span><span class="t-subtle">Empty: “No type in view references this one. A $ref from another type lists it here.”</span></div>
+        </section>
+      </div>
+
+      <!-- ASIDE -->
+      <aside class="col gap-6">
+        <section class="card card--pad">
+          <div class="t-h4 mb-3">Metadata</div>
+          <dl class="kv kv--stack" style="gap:10px">
+            <div><dt>$id</dt><dd class="mono t-xs" style="word-break:break-all">https://api.apiome.dev/types/tenant/acme/v1/types/money</dd></div>
+            <div><dt>Scope</dt><dd><span class="badge badge--ok">Tenant</span></dd></div>
+            <div><dt>Namespace</dt><dd class="mono t-xs">tenant/acme/v1/types</dd></div>
+            <div><dt>Version root</dt><dd class="mono t-xs">v1</dd></div>
+            <div><dt>Owner</dt><dd class="mono t-xs">acme</dd></div>
+            <div><dt>Source</dt><dd>human</dd></div>
+            <div><dt>Created</dt><dd class="t-num">2026-06-18</dd></div>
+            <div><dt>Mutability</dt><dd class="row gap-1"><i data-lucide="pencil" style="width:12px;height:12px;color:var(--ok)"></i>editable · tenant</dd></div>
+          </dl>
+          <div class="callout t-xs mt-3">System types show a <span class="badge badge--info" style="vertical-align:middle"><i data-lucide="shield"></i>System · core</span> badge, an amber <span class="t-600">immutable (core)</span> lock, and disabled Edit (“System primitives are immutable and cannot be edited”).</div>
+        </section>
+
+        <section class="card card--pad">
+          <div class="t-h4 mb-3">Used in</div>
+          <div class="stat-grid stat-grid--3" style="box-shadow:none">
+            <div class="stat" style="padding:10px 8px"><div class="stat__label">Dependent types</div><div class="stat__value" style="font-size:var(--fs-2xl)">3</div></div>
+            <div class="stat" style="padding:10px 8px"><div class="stat__label">Properties</div><div class="stat__value" style="font-size:var(--fs-2xl)">14</div></div>
+            <div class="stat" style="padding:10px 8px"><div class="stat__label">Tenants</div><div class="stat__value" style="font-size:var(--fs-2xl)">1</div></div>
+          </div>
+        </section>
+
+        <section class="card card--pad">
+          <div class="t-h4">Base chain</div>
+          <div class="t-xs t-subtle mt-1">Relative-ref chain down to a primitive · click a resolved step to open it.</div>
+          <div class="col gap-0 mt-3">
+            <div class="row gap-2" style="padding:6px 0"><span class="chain-dot" style="background:var(--ok)"></span><span class="mono t-sm t-600">object · this type</span></div>
+            <div class="row gap-2" style="padding:6px 0 6px 3px;border-left:2px solid var(--border);margin-left:4px"><i data-lucide="corner-down-right" style="width:12px;height:12px" class="t-subtle"></i><a class="mono t-sm" href="primitive-detail.html">→ std/v0/types/currency-code</a></div>
+            <div class="row gap-2" style="padding:6px 0 6px 3px;border-left:2px solid var(--border);margin-left:4px"><i data-lucide="corner-down-right" style="width:12px;height:12px" class="t-subtle"></i><a class="mono t-sm" href="primitive-detail.html">→ std/v0/primitives/string</a></div>
+            <div class="row gap-2" style="padding:6px 0 6px 3px;border-left:2px solid var(--warn);margin-left:4px"><i data-lucide="corner-down-right" style="width:12px;height:12px" style="color:var(--warn)"></i><span class="mono t-sm t-warn">→ ../legacy/decimal · unresolved</span></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/primitives/[id]</p>
+  <h4>Replaces</h4>
+  <ul><li><code>PrimitiveDetailClient</code>, <code>PrimitiveTestForm</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: back crumb, mono namespace path, name + scope/category/draft badges (system adds “immutable (core)” lock); actions Edit (system → disabled tooltip; tenant → registry editor, replacing the dead <code>?edit=id</code> link), Export (<span class="mono">money.schema.json</span>), Deprecate always disabled with the #3482 tooltip.</li>
+    <li>Main: description card; JSON Schema card with Copy (“Copied”/“Copy failed” tooltips) + Download, read-only viewer sized to content; “Test this type” collapsible (mode Single/Array, Reset tooltip, live verdict bar incl. loose-validation note, per-property include checkboxes + type hints + required pills, unresolved-$ref raw JSON hint, additionalProperties rows with duplicate-name error, pattern live match line, findings list with pointers); Reference resolution table (link on resolved, base footer); generated Example instance; Dependents table (Type link / Property / Scope).</li>
+    <li>Aside: Metadata dl ($id, scope, namespace, version root, owner, source human, created, mutability), Used-in tiles (dependent types / properties / tenants), Base chain timeline with unresolved amber step.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Nothing beyond layout — no history/version list, no inline edit (matches current).</li></ul>
+  <h4>States</h4>
+  <ul><li>“Loading type detail…”; error Alert with message. Test-form empties: empty object copy, array with no item schema, enum “(none)”.</li></ul>
+</template>
+</body>
+</html>

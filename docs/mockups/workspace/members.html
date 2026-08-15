@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Members · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .idp-card { opacity: .72; }
+  .idp-card:hover { opacity: 1; }
+  .role-select { width: 150px; }
+  .seat-strip { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--space-4); align-items: center; }
+</style>
+</head>
+<body data-shell="app" data-nav="members" data-page="workspace/members" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Workspace</span><i data-lucide="chevron-right"></i><span>Members</span></div>
+          <h1 class="page-title">Members</h1>
+          <p class="page-desc">5 members · 1 pending · who can sign in to Acme Corp and what they may do.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn" href="roles.html"><i data-lucide="shield"></i>Roles</a>
+          <button class="btn btn--primary" data-action="open" data-target="invite-dialog"><i data-lucide="user-plus"></i>Invite member<span class="kbd">N</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- ===== Member seats (license) ===== -->
+    <section class="card card--pad">
+      <div class="seat-strip">
+        <div>
+          <div class="row gap-2"><i data-lucide="users" style="width:15px;height:15px;color:var(--fg-subtle)"></i><span class="t-h4">Member seats</span><span class="badge badge--outline">Team plan</span></div>
+          <div class="meter mt-2" role="meter" aria-valuenow="4" aria-valuemin="0" aria-valuemax="5" aria-label="Member seats used"><div class="progress progress--warn"><span style="width:80%"></span></div><span class="meter-val">4 / 5</span></div>
+          <div class="t-xs t-muted mt-1">4 of 5 seats used · pending invitations count towards seats once accepted. Unlimited plans read “This plan includes unlimited member seats.”</div>
+        </div>
+        <div class="col gap-2" style="align-items:flex-end"><span class="t-sm t-600 t-num">4 of 5 seats used</span><button class="btn btn--sm btn--link" data-action="toggle" data-target="seats-full" data-tip="Mockup: preview the at-capacity state">Preview at capacity</button></div>
+      </div>
+      <div class="banner banner--warn mt-3" id="seats-full" hidden><i data-lucide="triangle-alert"></i><div><div class="banner-title">All member seats are in use</div><div class="banner-body">All member seats included in this tenant’s license are in use. Suspend or remove a member, or upgrade the plan, to add more members.</div></div><div class="banner-actions"><a class="btn btn--sm" href="tenants.html">View plan</a></div></div>
+    </section>
+
+    <!-- ===== Members table ===== -->
+    <section class="table-wrap" id="members-table">
+      <div class="table-toolbar">
+        <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter by name or email…" aria-label="Filter members" /></div>
+        <span class="chip is-active" data-action="chip">All <span class="t-faint">6</span></span>
+        <span class="chip" data-action="chip">Active <span class="t-faint">4</span></span>
+        <span class="chip" data-action="chip">Pending <span class="t-faint">1</span></span>
+        <span class="chip" data-action="chip">Suspended <span class="t-faint">1</span></span>
+        <span class="chip" data-action="chip"><i data-lucide="shield"></i>Admins <span class="t-faint">2</span></span>
+        <span class="spacer"></span>
+        <button class="btn btn--sm btn--ghost"><i data-lucide="arrow-up-down"></i>Sorted by name<i data-lucide="chevron-down"></i></button>
+      </div>
+      <table class="table">
+        <thead><tr>
+          <th class="sortable is-sorted">User <span class="sort"><i data-lucide="arrow-up"></i></span></th>
+          <th>Role</th>
+          <th class="sortable">Status <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Last active <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th class="sortable">Joined <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+          <tr class="is-clickable" data-member-email="ada@example.com">
+            <td><button class="row gap-3" data-action="open" data-target="member-drawer" style="text-align:left"><span class="avatar avatar--a">AL</span><div><div class="cell-primary">Ada Lovelace <span class="t-xs t-subtle t-500">(you)</span></div><div class="cell-sub mono">ada@example.com</div></div></button></td>
+            <td><select class="select select--sm role-select" aria-label="Role for Ada Lovelace" disabled data-tip="You cannot change your own role"><option>Owner</option></select></td>
+            <td><span class="row gap-1"><span class="badge badge--dot" data-status="active">Active</span><span class="badge badge--violet"><i data-lucide="shield"></i>Admin</span></span></td>
+            <td class="t-muted t-num">2 minutes ago</td>
+            <td class="t-muted t-num">Jan 12, 2025</td>
+            <td><div class="cell-actions" style="opacity:.35"><button class="btn btn--ghost btn--sm btn--icon" disabled aria-label="Suspend"><i data-lucide="power"></i></button><button class="btn btn--ghost btn--sm btn--icon" disabled aria-label="Offboard"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-member-email="grace@example.com">
+            <td><button class="row gap-3" data-action="open" data-target="member-drawer" style="text-align:left"><span class="avatar avatar--b">GH</span><div><div class="cell-primary">Grace Hopper</div><div class="cell-sub mono">grace@example.com</div></div></button></td>
+            <td><select class="select select--sm role-select" aria-label="Role for Grace Hopper"><option>Owner</option><option selected>Admin</option><option>Editor</option><option>Viewer</option><option>Release manager</option><option>Auditor</option></select></td>
+            <td><span class="row gap-1"><span class="badge badge--dot" data-status="active">Active</span><span class="badge badge--violet"><i data-lucide="shield"></i>Admin</span></span></td>
+            <td class="t-muted t-num">Yesterday</td>
+            <td class="t-muted t-num">Feb 3, 2025</td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="suspend-dialog" aria-label="Suspend" data-tip="Suspend"><i data-lucide="power"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="offboard-admin-dialog" aria-label="Offboard" data-tip="Offboard"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-member-email="linus@example.com">
+            <td><button class="row gap-3" data-action="open" data-target="member-drawer" style="text-align:left"><span class="avatar avatar--c">LT</span><div><div class="cell-primary">Linus Torvalds</div><div class="cell-sub mono">linus@example.com</div></div></button></td>
+            <td><select class="select select--sm role-select" aria-label="Role for Linus Torvalds"><option>Owner</option><option>Admin</option><option selected>Editor</option><option>Viewer</option><option>Release manager</option><option>Auditor</option></select></td>
+            <td><span class="badge badge--dot" data-status="active">Active</span></td>
+            <td class="t-muted t-num">3 hours ago</td>
+            <td class="t-muted t-num">Mar 18, 2025</td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="suspend-dialog" aria-label="Suspend" data-tip="Suspend"><i data-lucide="power"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="offboard-dialog" aria-label="Offboard" data-tip="Offboard"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-member-email="margaret@example.com" style="opacity:.85">
+            <td><button class="row gap-3" data-action="open" data-target="member-drawer" style="text-align:left"><span class="avatar avatar--d">MH</span><div><div class="cell-primary">Margaret Hamilton</div><div class="cell-sub mono">margaret@example.com</div></div></button></td>
+            <td><select class="select select--sm role-select" aria-label="Role for Margaret Hamilton"><option>Owner</option><option>Admin</option><option>Editor</option><option selected>Viewer</option><option>Release manager</option><option>Auditor</option></select></td>
+            <td><span class="badge badge--dot" data-status="suspended">Suspended</span></td>
+            <td class="t-muted t-num">Jul 30, 2026</td>
+            <td class="t-muted t-num">May 2, 2025</td>
+            <td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-tip="Reinstate" aria-label="Reinstate"><i data-lucide="rotate-ccw"></i>Reinstate</button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="offboard-dialog" aria-label="Offboard" data-tip="Offboard"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+          <tr class="is-clickable" data-member-email="tim@example.com">
+            <td><button class="row gap-3" data-action="open" data-target="member-drawer" style="text-align:left"><span class="avatar avatar--e">TB</span><div><div class="cell-primary">Tim Berners-Lee</div><div class="cell-sub mono">tim@example.com</div></div></button></td>
+            <td><select class="select select--sm role-select" aria-label="Role for Tim Berners-Lee"><option>Owner</option><option>Admin</option><option>Editor</option><option>Viewer</option><option selected>Release manager</option><option>Auditor</option></select></td>
+            <td><span class="badge badge--dot" data-status="active">Active</span></td>
+            <td class="t-muted t-num">Aug 14, 2026</td>
+            <td class="t-muted t-num">Jun 9, 2026</td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="suspend-dialog" aria-label="Suspend" data-tip="Suspend"><i data-lucide="power"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="offboard-dialog" aria-label="Offboard" data-tip="Offboard"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+          <!-- pending invite -->
+          <tr data-member-email="dev-partner@globex.io" style="background:color-mix(in srgb, var(--warn) 4%, transparent)">
+            <td><div class="row gap-3"><span class="avatar" style="background:var(--warn-soft);color:var(--warn-fg)"><i data-lucide="mail" style="width:14px;height:14px"></i></span><div><div class="cell-primary mono t-sm">dev-partner@globex.io</div><div class="cell-sub">Invited by Grace Hopper · Aug 13, 2026</div></div></div></td>
+            <td><select class="select select--sm role-select" aria-label="Role for dev-partner@globex.io"><option>Owner</option><option>Admin</option><option selected>Editor</option><option>Viewer</option></select></td>
+            <td><span class="badge badge--dot" data-status="pending">Pending</span></td>
+            <td class="t-muted"><span class="t-faint">—</span></td>
+            <td class="t-muted"><span class="t-faint">—</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm" data-tip="Resend the invitation email"><i data-lucide="send"></i>Resend</button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="offboard-dialog" aria-label="Cancel invite" data-tip="Cancel invite"><i data-lucide="trash-2"></i></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>6 people · 4 active · 1 pending · 1 suspended</span><span class="row gap-3"><button class="btn btn--link btn--sm" data-action="toggle" data-target="members-empty" data-tip="Mockup: preview the empty state">Preview empty state</button><span>Rows per page</span><select class="select select--sm" style="width:64px"><option>25</option></select></span></div>
+    </section>
+
+    <!-- Empty state (toggled) -->
+    <section class="card" id="members-empty" hidden>
+      <div class="empty">
+        <div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="users"></i></div>
+        <div class="empty__title">No members yet</div>
+        <div class="empty__desc">Invite teammates by email and pick a role — they get access as soon as they accept.</div>
+        <div class="empty__actions"><button class="btn btn--primary" data-action="open" data-target="invite-dialog"><i data-lucide="user-plus"></i>Invite member</button></div>
+      </div>
+    </section>
+
+    <!-- Error banner (license-seats-exhausted friendly copy), illustrative -->
+    <div class="banner banner--danger" data-testid="members-error" role="alert"><i data-lucide="circle-alert"></i><div><div class="banner-title">Could not invite dev-partner@globex.io</div><div class="banner-body">All member seats included in this tenant’s license are in use. Suspend or remove a member, or upgrade the plan, to add more members. <span class="mono t-2xs">[license-seats-exhausted]</span></div></div><div class="banner-actions"><button class="btn btn--sm">Retry</button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Dismiss"><i data-lucide="x"></i></button></div></div>
+
+    <!-- ===== SSO / SCIM ===== -->
+    <section>
+      <div class="section-title"><h2>Identity provider</h2><span class="t-muted">Enterprise identity features — coming soon</span></div>
+      <div class="grid grid-2">
+        <div class="card card--pad idp-card">
+          <div class="row-start gap-3">
+            <span class="icon-tile icon-tile--honey"><i data-lucide="key-square"></i></span>
+            <div class="grow">
+              <div class="row gap-2"><span class="t-h4">Single Sign-On (OIDC/SAML)</span><span class="badge badge--honey">Coming soon</span></div>
+              <p class="t-sm t-muted mt-1">Enforce sign-in through your identity provider and map IdP groups to Apiome roles.</p>
+            </div>
+          </div>
+          <div class="row mt-4" style="justify-content:flex-end"><button class="btn" disabled aria-disabled="true"><i data-lucide="settings-2"></i>Configure SSO</button></div>
+        </div>
+        <div class="card card--pad idp-card">
+          <div class="row-start gap-3">
+            <span class="icon-tile icon-tile--accent"><i data-lucide="key-round"></i></span>
+            <div class="grow">
+              <div class="row gap-2"><span class="t-h4">SCIM 2.0 provisioning</span><span class="badge badge--honey">Coming soon</span></div>
+              <p class="t-sm t-muted mt-1">Automatically create, update, and deactivate members from your identity provider.</p>
+            </div>
+          </div>
+          <div class="row mt-4" style="justify-content:flex-end"><button class="btn" disabled aria-disabled="true"><i data-lucide="refresh-cw"></i>Enable SCIM</button></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+
+<!-- Invite member (replaces the inline invite form) -->
+<div class="overlay" id="invite-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="invite-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="user-plus"></i></span><div><div class="dialog__title" id="invite-title">Invite member</div><div class="dialog__desc">They receive an email and appear as Pending until they accept.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="grid grid-2" style="grid-template-columns:minmax(0,1fr) 200px">
+        <div class="field"><label>Email address <span class="req">*</span></label><input class="input" type="email" placeholder="person@example.com" autofocus /><div class="hint">Validation: “Please enter an email address”.</div></div>
+        <div class="field"><label>Role</label><select class="select"><option>Default role</option><option>Owner</option><option>Admin</option><option selected>Editor</option><option>Viewer</option><option>Release manager</option><option>Auditor</option></select><div class="hint">Change it later inline.</div></div>
+      </div>
+      <div class="card card--soft" style="padding:10px 12px"><div class="row-between"><span class="t-sm">Seats after this invite</span><span class="t-sm t-600 t-num">5 of 5</span></div><div class="progress progress--danger mt-2"><span style="width:100%"></span></div><div class="t-xs t-muted mt-1">At capacity the button is disabled with “All member seats are in use — upgrade the plan to add more.”</div></div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Roles come from <a href="roles.html">Roles</a>.</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close"><i data-lucide="send"></i>Send invite</button></div>
+  </div>
+</div>
+
+<!-- Offboard confirm -->
+<div class="overlay" id="offboard-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="offboard-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="user-minus"></i></span><div><div class="dialog__title" id="offboard-title">Offboard Linus Torvalds?</div><div class="dialog__desc">They will lose all access to this tenant. Their projects, versions and audit entries stay in Acme Corp.</div></div></div>
+    <div class="dialog__body"><label class="check t-sm"><input type="checkbox" checked /> Revoke their API keys and MCP keys as well</label></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Offboard</button></div>
+  </div>
+</div>
+<div class="overlay" id="offboard-admin-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="offboard-admin-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title" id="offboard-admin-title">Offboard Grace Hopper?</div><div class="dialog__desc">They will lose all access to this tenant.</div></div></div>
+    <div class="dialog__body"><div class="banner banner--danger"><i data-lucide="shield-alert"></i><div><div class="banner-title">Grace Hopper is an administrator</div><div class="banner-body">Removing them leaves 1 administrator (you). Consider transferring ownership first.</div></div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Offboard</button></div>
+  </div>
+</div>
+
+<!-- Suspend confirm (immediate today; a light confirm is the redesign's convenience) -->
+<div class="overlay" id="suspend-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="suspend-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="power"></i></span><div><div class="dialog__title" id="suspend-title">Suspend Linus Torvalds?</div><div class="dialog__desc">They keep their seat but cannot sign in to Acme Corp until reinstated. Reinstate is one click from the row.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Suspend</button></div>
+  </div>
+</div>
+
+<!-- Member drawer (Adds: drawer-first detail) -->
+<div class="overlay overlay--drawer" id="member-drawer" data-overlay>
+  <div class="drawer" role="dialog" aria-labelledby="member-title">
+    <div class="drawer__header">
+      <span class="avatar avatar--lg avatar--c">LT</span>
+      <div class="grow min-w-0"><div class="drawer__title" id="member-title">Linus Torvalds</div><div class="t-xs t-muted mono">linus@example.com · usr_5d21ab</div></div>
+      <button class="btn btn--ghost btn--icon" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer__body col gap-6">
+      <div class="row gap-2 wrap"><span class="badge badge--dot" data-status="active">Active</span><span class="badge badge--outline">Editor</span><span class="badge badge--outline"><i data-lucide="github" style="width:11px;height:11px"></i>GitHub linked</span></div>
+      <section>
+        <div class="t-caps mb-2">Membership</div>
+        <dl class="kv">
+          <dt>Role</dt><dd><select class="select select--sm" style="width:180px" aria-label="Role for Linus Torvalds"><option>Owner</option><option>Admin</option><option selected>Editor</option><option>Viewer</option><option>Release manager</option><option>Auditor</option></select></dd>
+          <dt>Status</dt><dd>Active since Mar 18, 2025</dd>
+          <dt>Last active</dt><dd>3 hours ago · Studio · Payments API v2.4.0</dd>
+          <dt>Invited by</dt><dd>Ada Lovelace</dd>
+          <dt>Two-factor</dt><dd><span class="badge badge--ok"><i data-lucide="shield-check"></i>Enabled</span></dd>
+        </dl>
+      </section>
+      <section>
+        <div class="t-caps mb-2">Effective permissions</div>
+        <div class="row gap-1 wrap"><span class="tag">projects:view</span><span class="tag">projects:edit</span><span class="tag">versions:create</span><span class="tag">versions:edit</span><span class="tag">classes:*</span><span class="tag">properties:*</span><span class="tag">paths:*</span><span class="tag">imports:create</span><span class="t-xs t-subtle">+6 more</span></div>
+        <div class="t-xs t-muted mt-2">From role <a href="roles.html">Editor</a>. Change the role to change permissions.</div>
+      </section>
+      <section>
+        <div class="t-caps mb-2">Recent activity</div>
+        <div class="timeline">
+          <div class="tl-item is-accent"><div class="tl-title">Edited Payments API v2.4.0</div><div class="tl-meta">3 hours ago · Studio</div></div>
+          <div class="tl-item is-ok"><div class="tl-title">Imported orders-service.yaml</div><div class="tl-meta">Aug 12, 2026 · Import wizard</div></div>
+          <div class="tl-item"><div class="tl-title">Signed in with GitHub</div><div class="tl-meta">Aug 12, 2026 · 10.0.4.21</div></div>
+        </div>
+      </section>
+    </div>
+    <div class="drawer__footer"><button class="btn btn--danger-soft" data-action="open" data-target="offboard-dialog"><i data-lucide="user-minus"></i>Offboard</button><span class="grow"></span><button class="btn" data-action="open" data-target="suspend-dialog"><i data-lucide="power"></i>Suspend</button><a class="btn btn--ghost" href="audit.html">Audit trail <i data-lucide="arrow-up-right"></i></a></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/members</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/members/page.tsx</code> (header, seats card, inline invite form, members table, SSO/SCIM cards) and its native <code>window.confirm</code> offboard.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header count “{n} members · {p} pending”; error banner (<code>data-testid=members-error</code>) incl. the friendly <code>license-seats-exhausted</code> copy.</li>
+    <li>Member seats card: <code>formatSeatUsage</code> text, <code>role=meter</code> bar (ok &lt;80 %, warn ≥80 %, danger 100 %), unlimited-plan copy, at-capacity warning Alert (Preview at capacity toggle).</li>
+    <li>Invite: email + Role select (“Default role” + every role) + submit; disabled at capacity with title “All member seats are in use — upgrade the plan to add more.”; validation “Please enter an email address”. Now a dialog from the header primary instead of an inline card.</li>
+    <li>Table: User (name or email bold + mono email, <code>data-member-email</code>), Role (inline select when canEdit, aria “Role for {name}”; pill otherwise), Status pill active/pending/suspended + violet Shield “Admin” pill when <code>is_admin</code>, Actions Suspend (power) / Reinstate (rotate-ccw) / Offboard (trash, canDelete). Pending invites remain rows with status pending.</li>
+    <li>SSO / SCIM cards at 70 % opacity with “Coming soon” pills, same copy and disabled buttons.</li>
+    <li>Gates: canInvite / canEdit / canDelete = admin or <code>members:create|edit|delete</code>; own row cannot be edited/removed.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Search + status chips, Last active / Joined columns, Resend invite + Cancel invite on pending rows, Suspend confirm (was immediate), member detail drawer (membership kv, effective permissions from role, recent activity, actions), offboard option to revoke the member’s keys, admin-warning offboard variant.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading: skeleton rows; empty “No members yet” (Preview empty state toggle); no tenant: <code>.empty</code> lock “Pick a workspace first”; per-action busy disables that row’s controls.</li></ul>
+</template>
+</body>
+</html>

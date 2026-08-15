@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: auth split layout (shared verbatim by the four auth mockups) */
+  .auth { min-height: 100vh; }
+  .auth-split { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100vh; }
+  .auth-brand { position: relative; display: flex; flex-direction: column; justify-content: center; padding: 64px 72px; border-right: 1px solid var(--border); overflow: hidden; }
+  .auth-brand__inner { position: relative; max-width: 560px; }
+  .brand-word { font-size: var(--fs-2xl); font-weight: 700; letter-spacing: -0.03em; }
+  .auth-brand .grad { background: linear-gradient(90deg, var(--accent), var(--accent-fg)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .auth-form { display: flex; align-items: center; justify-content: center; padding: 48px 32px; }
+  .auth-form__inner { width: 100%; max-width: 440px; }
+  .auth-card { width: 100%; padding: 32px; border-radius: var(--r-xl); box-shadow: var(--shadow-md); }
+  .auth-card__logo { display: none; margin-bottom: 20px; }
+  .auth-title { font-size: var(--fs-2xl); font-weight: 600; letter-spacing: var(--track-tight); line-height: 1.2; }
+  .sso-btn { width: 100%; justify-content: flex-start; height: var(--control-h-lg); font-size: var(--fs-md); padding: 0 14px; }
+  .sso-btn [data-lucide] { width: 18px; height: 18px; }
+  .sso-btn .arrow { margin-left: auto; opacity: 0; transform: translateX(-4px); transition: all var(--dur-fast) var(--ease-out); }
+  .sso-btn:hover .arrow { opacity: .8; transform: none; }
+  .divider { display: flex; align-items: center; gap: 12px; width: 100%; color: var(--fg-subtle); font-size: var(--fs-xs); font-weight: 500; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border-strong); }
+  button.divider:hover { color: var(--fg); }
+  .trust { display: flex; justify-content: center; gap: 18px; font-size: var(--fs-xs); color: var(--fg-subtle); }
+  .trust span { display: inline-flex; align-items: center; gap: 5px; }
+  .trust [data-lucide] { width: 13px; height: 13px; color: var(--ok); }
+  .float-chips { position: relative; height: 190px; }
+  .float-chips > * { position: absolute; box-shadow: var(--shadow-sm); animation: float 6s ease-in-out infinite; transform: rotate(var(--rot, 0deg)); cursor: default; }
+  .float-chips > .fmt { height: 30px; padding: 0 12px; font-size: var(--fs-xs); border-radius: var(--r-md); }
+  .float-chips > .chip { height: 30px; box-shadow: 0 0 0 1px var(--border-strong) inset, var(--shadow-sm); }
+  @keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+  .auth-states { padding: var(--space-10) var(--page-pad) var(--space-12); max-width: var(--page-max); margin: 0 auto; width: 100%; border-top: 1px solid var(--border); }
+  .auth-states .auth-card { max-width: none; }
+  .sso-wait { display: grid; place-items: center; gap: 6px; padding: 22px 16px; text-align: center; }
+  .sso-wait .spinner { width: 24px; height: 24px; margin-bottom: 4px; }
+  @media (max-width: 1000px) { .auth-split { grid-template-columns: 1fr; } .auth-brand { display: none; } .auth-card__logo { display: block; } }
+</style>
+</head>
+<body data-shell="auth" data-page="auth/login">
+<main class="page auth">
+  <div class="auth-split">
+    <!-- Brand panel -->
+    <section class="auth-brand hex-bg glow-honey glow-azure" aria-label="About Apiome">
+      <div class="auth-brand__inner">
+        <div class="row gap-3"><span class="brand-mark brand-mark--lg"></span><span class="brand-word">apiome</span></div>
+        <div class="t-caps mt-8" style="color:var(--honey-fg)">The API design environment</div>
+        <h2 class="t-display mt-3">Design. Version.<br /><span class="grad">Publish your APIs.</span></h2>
+        <p class="t-muted mt-4" style="font-size:var(--fs-lg);max-width:46ch">Model your API once, then import, lint, diff, and export across every format your consumers speak — with honest fidelity at each step.</p>
+        <div class="float-chips mt-8" aria-hidden="true">
+          <span class="fmt fmt--openapi" style="left:0;top:8px;--rot:-3deg;animation-delay:0s">OpenAPI</span>
+          <span class="fmt fmt--asyncapi" style="left:120px;top:44px;--rot:2deg;animation-delay:-1.2s">AsyncAPI</span>
+          <span class="fmt fmt--graphql" style="left:250px;top:4px;--rot:-2deg;animation-delay:-2.4s">GraphQL</span>
+          <span class="fmt fmt--proto" style="left:356px;top:48px;--rot:3deg;animation-delay:-.6s">gRPC</span>
+          <span class="fmt fmt--avro" style="left:38px;top:98px;--rot:2deg;animation-delay:-3.1s">Avro</span>
+          <span class="fmt fmt--wsdl" style="left:154px;top:126px;--rot:-2deg;animation-delay:-4.2s">WSDL</span>
+          <span class="chip" style="left:276px;top:96px;--rot:2deg;animation-delay:-1.8s"><i data-lucide="braces"></i>TypeSpec</span>
+          <span class="chip" style="left:404px;top:130px;--rot:-3deg;animation-delay:-5s"><i data-lucide="hexagon"></i>OData</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sign-in card -->
+    <section class="auth-form">
+      <div class="auth-form__inner">
+        <div class="card auth-card" data-testid="login-card">
+          <div class="auth-card__logo"><span class="brand-mark brand-mark--lg"></span></div>
+          <h1 class="auth-title">Welcome back</h1>
+          <p class="t-sm t-muted mt-1">Sign in to continue to your workspace</p>
+          <p class="t-xs t-muted mt-2">New to Apiome? <a href="https://www.youtube.com/@apiomedev" target="_blank" rel="noopener">Watch our intro video →</a></p>
+
+          <div class="col gap-2 mt-5" aria-label="Single sign-on">
+            <button class="btn btn--lg sso-btn"><i data-lucide="github" aria-hidden="true"></i>Continue with GitHub<i data-lucide="arrow-right" class="arrow"></i></button>
+            <button class="btn btn--lg sso-btn"><i data-lucide="gitlab" aria-hidden="true"></i>Continue with GitLab<i data-lucide="arrow-right" class="arrow"></i></button>
+            <button class="btn btn--lg sso-btn"><i data-lucide="key-round" aria-hidden="true"></i>Continue with Microsoft<i data-lucide="arrow-right" class="arrow"></i></button>
+            <button class="btn btn--lg sso-btn"><i data-lucide="key-round" aria-hidden="true"></i>Continue with Google<i data-lucide="arrow-right" class="arrow"></i></button>
+          </div>
+
+          <button class="divider mt-5" data-action="toggle" data-target="credentials-form" aria-controls="credentials-form" aria-expanded="true">or use your email</button>
+
+          <form id="credentials-form" class="col gap-4 mt-4" onsubmit="return false">
+            <div class="field"><label for="email">Email address</label><div class="input-wrap"><i data-lucide="mail"></i><input id="email" class="input" type="email" placeholder="you@example.com" autocomplete="email" required /></div></div>
+            <div class="field"><div class="row-between"><label for="password">Password</label><a class="t-xs" href="#">Forgot your password?</a></div><div class="input-wrap"><i data-lucide="lock"></i><input id="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password" required /></div></div>
+            <button class="btn btn--primary btn--lg w-full" type="submit">Sign in<i data-lucide="arrow-right"></i></button>
+          </form>
+
+          <p class="t-sm t-muted t-center mt-5">Don’t have an account? <button class="btn btn--link t-600" type="button">Create one</button></p>
+          <div class="trust mt-4"><span><i data-lucide="shield-check"></i>Secure</span><span><i data-lucide="zap"></i>Free to start</span><span><i data-lucide="credit-card"></i>No credit card</span></div>
+        </div>
+        <p class="t-xs t-subtle t-center mt-4">By signing in, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== States (stacked below the fold) ===== -->
+  <section class="auth-states">
+    <div class="section-title"><h2>States</h2><span class="t-muted">Sign-up variant · error banner with retry · SSO redirect in progress</span></div>
+    <div class="grid grid-3" style="align-items:start">
+
+      <!-- Sign-up variant -->
+      <div class="card auth-card" aria-label="Create account card">
+        <div class="t-caps mb-3">Sign-up mode</div>
+        <h2 class="auth-title">Create your account</h2>
+        <p class="t-sm t-muted mt-1">Join thousands of developers building with Apiome</p>
+        <div class="col gap-2 mt-5">
+          <button class="btn btn--lg sso-btn"><i data-lucide="github"></i>Sign up with GitHub<i data-lucide="arrow-right" class="arrow"></i></button>
+          <button class="btn btn--lg sso-btn"><i data-lucide="gitlab"></i>Sign up with GitLab<i data-lucide="arrow-right" class="arrow"></i></button>
+          <button class="btn btn--lg sso-btn"><i data-lucide="key-round"></i>Sign up with Microsoft<i data-lucide="arrow-right" class="arrow"></i></button>
+          <button class="btn btn--lg sso-btn"><i data-lucide="key-round"></i>Sign up with Google<i data-lucide="arrow-right" class="arrow"></i></button>
+        </div>
+        <button class="divider mt-5" data-action="toggle" data-target="signup-form" aria-controls="signup-form" aria-expanded="true">or use your email</button>
+        <form id="signup-form" class="col gap-4 mt-4" onsubmit="return false">
+          <div class="field"><label for="su-name">Full name</label><div class="input-wrap"><i data-lucide="user"></i><input id="su-name" class="input" placeholder="John Doe" autocomplete="name" required /></div></div>
+          <div class="field"><label for="su-email">Email address</label><div class="input-wrap"><i data-lucide="mail"></i><input id="su-email" class="input" type="email" placeholder="you@example.com" autocomplete="email" required /></div></div>
+          <div class="field"><label for="su-pw">Password</label><div class="input-wrap"><i data-lucide="lock"></i><input id="su-pw" class="input" type="password" placeholder="••••••••" autocomplete="new-password" required /></div></div>
+          <div class="field"><label for="su-src">How did you hear about us? <span class="t-subtle t-500">(optional)</span></label><div class="input-wrap"><i data-lucide="info"></i><input id="su-src" class="input" placeholder="e.g., Google, Twitter, a friend" /></div></div>
+          <button class="btn btn--primary btn--lg w-full" type="submit">Create account<i data-lucide="arrow-right"></i></button>
+        </form>
+        <p class="t-sm t-muted t-center mt-5">Already have an account? <button class="btn btn--link t-600" type="button">Sign in</button></p>
+      </div>
+
+      <!-- Error banner variant -->
+      <div class="card auth-card" aria-label="Sign-in card with error">
+        <div class="t-caps mb-3">Error from <span class="mono">?error=sign-in-failed</span></div>
+        <h2 class="auth-title">Welcome back</h2>
+        <p class="t-sm t-muted mt-1">Sign in to continue to your workspace</p>
+        <div class="banner banner--danger mt-4" role="alert" data-testid="login-banner">
+          <i data-lucide="circle-alert"></i>
+          <div class="grow"><div class="banner-title">We couldn’t sign you in</div><div class="banner-body t-xs">Something went wrong while signing you in. Try again, or use a different method.</div></div>
+          <div class="banner-actions"><a class="btn btn--sm btn--pill" href="login.html"><i data-lucide="rotate-ccw"></i>Try again</a></div>
+        </div>
+        <div class="col gap-2 mt-4">
+          <button class="btn btn--lg sso-btn"><i data-lucide="github"></i>Continue with GitHub<i data-lucide="arrow-right" class="arrow"></i></button>
+          <button class="btn btn--lg sso-btn"><i data-lucide="gitlab"></i>Continue with GitLab<i data-lucide="arrow-right" class="arrow"></i></button>
+        </div>
+        <div class="divider mt-5">or use your email</div>
+        <form class="col gap-4 mt-4" onsubmit="return false" aria-label="Credentials (auto-expanded on CredentialsSignin)">
+          <div class="field is-invalid"><label for="er-email">Email address</label><div class="input-wrap"><i data-lucide="mail"></i><input id="er-email" class="input" type="email" value="ada@example.com" /></div></div>
+          <div class="field is-invalid"><div class="row-between"><label for="er-pw">Password</label><a class="t-xs" href="#">Forgot your password?</a></div><div class="input-wrap"><i data-lucide="lock"></i><input id="er-pw" class="input" type="password" value="wrongpass" /></div><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>Incorrect email or password.</div></div>
+          <button class="btn btn--primary btn--lg w-full" type="submit">Sign in<i data-lucide="arrow-right"></i></button>
+        </form>
+        <p class="t-sm t-muted t-center mt-5">Don’t have an account? <button class="btn btn--link t-600" type="button">Create one</button></p>
+      </div>
+
+      <!-- SSO redirecting -->
+      <div class="card auth-card" aria-label="SSO redirect in progress" aria-busy="true">
+        <div class="t-caps mb-3">SSO loading</div>
+        <h2 class="auth-title">Welcome back</h2>
+        <p class="t-sm t-muted mt-1">Sign in to continue to your workspace</p>
+        <div class="card card--soft sso-wait mt-5" role="status" aria-live="polite">
+          <span class="spinner"></span>
+          <div class="t-sm t-600">Connecting…</div>
+          <div class="t-xs t-muted">Redirecting to authentication provider</div>
+        </div>
+        <button class="divider mt-5" aria-expanded="false" disabled style="opacity:.6">or use your email</button>
+        <p class="t-sm t-muted t-center mt-5">Don’t have an account? <button class="btn btn--link t-600" type="button" disabled>Create one</button></p>
+        <div class="trust mt-4"><span><i data-lucide="shield-check"></i>Secure</span><span><i data-lucide="zap"></i>Free to start</span><span><i data-lucide="credit-card"></i>No credit card</span></div>
+        <div class="callout mt-5 t-xs">While redirecting, the submit button and the mode toggle are disabled. If the sign-up intent call fails first: <em>“Could not start sign-up. Please try again.”</em></div>
+      </div>
+    </div>
+
+    <!-- Message banner tones -->
+    <div class="section-title mt-8"><h2>Message banner tones</h2><span class="t-muted"><span class="mono">role=alert</span> for errors, <span class="mono">role=status</span> otherwise · in-page sign-up feedback outranks the URL error</span></div>
+    <div class="grid grid-3">
+      <div class="banner banner--ok" role="status"><i data-lucide="mail-check"></i><div><div class="banner-title">Check your inbox</div><div class="banner-body t-xs">We sent a verification link to ada@example.com. Verify it, then sign in.</div></div></div>
+      <div class="banner" role="status"><i data-lucide="info"></i><div><div class="banner-title">You already have an account</div><div class="banner-body t-xs">An account with this email exists — sign in instead, or use “Forgot your password?”.</div></div></div>
+      <div class="banner banner--danger" role="alert"><i data-lucide="circle-alert"></i><div class="grow"><div class="banner-title">Your session expired</div><div class="banner-body t-xs">Sign-up took too long and the session expired. Start again.</div></div><div class="banner-actions"><a class="btn btn--sm btn--pill" href="login.html"><i data-lucide="rotate-ccw"></i>Try again</a></div></div>
+    </div>
+  </section>
+</main>
+
+<template id="notes">
+  <p class="route">/login (also / → redirects here)</p>
+  <h4>Replaces</h4>
+  <ul><li><code>login/page.tsx</code>, <code>login/LoginClient.tsx</code>, <code>login/auth-error-copy.ts</code>, <code>components/auth/provider-brand.tsx</code>, the aurora CSS module.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Server redirect when a session exists (<code>resolvePostLoginRouteForUser</code>); enabled SSO providers resolved from the provider registry (DB-over-env).</li>
+    <li>Split layout: brand hero (eyebrow, “Design. Version. / Publish your APIs.”, paragraph, 8 floating format chips) + auth card; hero hidden &lt; 1000 px, card shows the mobile logo.</li>
+    <li>Card: title/sub per mode, intro-video link (sign-in), message banner (success/info/error + “Try again” pill → <code>/login?callbackUrl=…</code>), one SSO button per enabled provider (“Continue with” / “Sign up with”), “or use your email” expander (<code>aria-controls=credentials-form</code>, one-way; auto-expanded when no SSO or <code>error=CredentialsSignin</code>), fields with left icons, forgot link (sign-in), gradient submit → <code>.btn--primary</code>, mode toggle footer, trust badges (sign-in), Terms/Privacy line.</li>
+    <li>Sign-up flow: SSO click posts <code>/api/auth/signup-intent</code> first; credentials submit → <code>createSignupRequest</code> → success / duplicate (info) / error banners.</li>
+    <li>All error codes from <code>auth-error-copy.ts</code> map to the three banner tones; unknown → generic copy with retry.</li>
+    <li>Provider icons: GitHub / GitLab (Lucide brand glyphs, <code>aria-hidden</code>); Microsoft, Google, Okta, AWS, Keycloak, OIDC, Auth0, LINE, VK, WeChat → brand SVG in production, <code>key-round</code> fallback here.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Warm paper + hex canvas replaces the aurora blobs; BETA watermark (when <code>NEXT_PUBLIC_BETA_MODE</code>) becomes a small honey <code>.badge</code> next to the wordmark.</li><li>Field-level error under the password field when <code>CredentialsSignin</code> (in addition to the banner).</li></ul>
+  <h4>States</h4>
+  <ul><li>SSO redirecting: spinner tile “Connecting… / Redirecting to authentication provider”; submit + toggle disabled.</li><li>Credentials submitting: submit disabled with spinner.</li><li>Sign-up intent failure: “Could not start sign-up. Please try again.”</li><li>No SSO configured: credentials form starts expanded and the divider is a plain label.</li></ul>
+</template>
+</body>
+</html>

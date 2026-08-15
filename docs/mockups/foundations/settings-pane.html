@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preferences pane · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+</head>
+<body data-shell="app" data-nav="" data-page="foundations/settings-pane" data-tenant="Acme Corp" data-open="settings-pane">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../index.html">Mockups</a><i data-lucide="chevron-right"></i><span>Foundations</span><i data-lucide="chevron-right"></i><span>Preferences pane</span></div>
+          <h1 class="page-title">Preferences pane</h1>
+          <p class="page-desc">Theme, font size, density and motion — personal, per device, applied instantly. Replaces the “Select Theme” dialog.</p>
+        </div>
+        <div class="page-actions"><button class="btn btn--primary" data-action="open" data-target="settings-pane"><i data-lucide="settings-2"></i>Open the pane <span class="kbd">⌘,</span></button></div>
+      </div>
+    </div>
+  </header>
+  <div class="page-body">
+    <div class="banner banner--honey"><i data-lucide="sparkles"></i><div><span class="banner-title">The pane opened on the right is live.</span> Change the theme, drag the font-size slider, switch density — every mockup remembers your choice (localStorage). Close it and reopen from the gear in the rail footer, the user menu, or <span class="kbd">⌘,</span>.</div></div>
+
+    <div class="grid grid-main-aside">
+      <section class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="list-checks"></i>Anatomy &amp; behaviour</div></div>
+        <div class="card__body">
+          <table class="table table--dense">
+            <thead><tr><th>Control</th><th>Options</th><th>Effect</th><th>Persisted as</th></tr></thead>
+            <tbody>
+              <tr><td class="cell-primary">Theme</td><td>Follow system · Light · Dark · High contrast · Blueprint · Whiteboard · Solarized · Nord · Darcula</td><td>Sets <code>html[data-theme]</code> (resolved) + <code>data-theme-choice</code>; token swap only</td><td class="mono t-xs">hive.theme</td></tr>
+              <tr><td class="cell-primary">Font size</td><td>Small 14 · Compact 15 · Default 16 · Large 17 · Larger 18 · Largest 20 px</td><td><code>html[data-font-scale]</code> → root <code>font-size</code>; everything is rem so the whole UI scales</td><td class="mono t-xs">hive.fontScale</td></tr>
+              <tr><td class="cell-primary">Density</td><td>Comfortable · Compact</td><td><code>html[data-density]</code> swaps spacing tokens (row 46→38, control 36→32, page pad 32→24)</td><td class="mono t-xs">hive.density</td></tr>
+              <tr><td class="cell-primary">Reduce motion</td><td>on/off</td><td><code>html[data-motion="reduce"]</code> zeroes transitions; OS setting also honoured</td><td class="mono t-xs">hive.motion</td></tr>
+              <tr><td class="cell-primary">Collapse sidebar by default</td><td>on/off</td><td><code>html[data-rail]</code> expanded/collapsed (also <span class="kbd">⌘\</span>)</td><td class="mono t-xs">hive.rail</td></tr>
+              <tr><td class="cell-primary">Monospace for identifiers</td><td>on/off</td><td>ids/hashes/versions render in JetBrains Mono (<code>.mono</code>) or inherit sans</td><td class="mono t-xs">hive.monoIds</td></tr>
+              <tr><td class="cell-primary">Show keyboard hints</td><td>on/off</td><td>hides <code>.kbd</code> chips on buttons and menus</td><td class="mono t-xs">hive.kbdHints</td></tr>
+            </tbody>
+          </table>
+          <div class="t-caps mt-5 mb-2">Other tabs</div>
+          <dl class="kv">
+            <dt>Account</dt><dd>Links to Profile (name, email, password, 2FA) and Linked accounts — the pane never duplicates them.</dd>
+            <dt>Notifications</dt><dd>Email digest, publish/sunset alerts, lint gate failures, key expiry (new; opt-in, defaults off).</dd>
+            <dt>Shortcuts</dt><dd>Opens the shortcut sheet (<span class="kbd">?</span>).</dd>
+          </dl>
+        </div>
+      </section>
+      <aside class="col gap-4">
+        <section class="card card--pad">
+          <div class="t-h4">Why a pane, not a page</div>
+          <p class="t-sm t-muted mt-2">Preferences are glanceable, low-stakes and personal. A right drawer keeps the current screen in view so the effect of a theme or font-size change is visible immediately.</p>
+        </section>
+        <section class="card card--pad">
+          <div class="t-h4">Production notes</div>
+          <ul class="t-sm t-muted mt-2" style="padding-left:16px;list-style:disc">
+            <li>New <code>PreferencesProvider</code> owns the five attributes; keep the old <code>app-theme</code>/<code>theme</code> keys as read-through aliases for one release.</li>
+            <li>Theme grid = radiogroup; each card is a button with the swatch preview; applies on click (no Save).</li>
+            <li>Font-size slider updates <code>&lt;html&gt;</code> font-size; audit hard-coded <code>px</code> in components → tokens.</li>
+            <li>Radix Themes <code>scaling</code> follows the font scale; <code>accentColor</code> ← <code>--accent</code>.</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </div>
+</main>
+<template id="notes">
+  <p class="route">Preferences pane — replaces components/ade/ThemeSelector.tsx; reachable from rail footer, user menu, ⌘,</p>
+  <h4>Keeps (1:1)</h4><ul><li>All nine theme ids/names/descriptions from <code>config/themes.ts</code>; “Follow system” live-resolves; selection applies immediately.</li></ul>
+  <h4>Adds</h4><ul><li>Font size (6 stops), density, reduce motion, rail default, mono ids, keyboard hints; Account/Notifications/Shortcuts tabs.</li></ul>
+  <h4>Implementation</h4><ul><li>DESIGN.md §4 and §11 step 3/5. The pane markup + logic in <code>assets/hive.js → renderSettings()</code> is the reference behaviour.</li></ul>
+</template>
+</body>
+</html>

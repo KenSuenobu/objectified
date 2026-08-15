@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Webhook IP allowlist · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .cidr-chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--r-sm); background: var(--bg-inset); font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--fg-muted); }
+</style>
+</head>
+<body data-shell="app" data-nav="repositories" data-page="sources/webhook-allowlist" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><a href="repositories.html">Repositories</a><i data-lucide="chevron-right"></i><span>Webhook IP allowlist</span></div>
+          <h1 class="page-title">Webhook IP allowlist</h1>
+          <p class="page-desc">Which source addresses may deliver webhooks here. Anything else is refused before its signature is checked.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn"><i data-lucide="refresh-cw"></i>Refresh</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <a class="tab" href="repositories.html"><i data-lucide="folder-git-2"></i>Repositories <span class="count">4</span></a>
+        <a class="tab" href="repository-catalog.html"><i data-lucide="library"></i>Discovered specs <span class="count">128</span></a>
+        <a class="tab" href="repository-telemetry.html"><i data-lucide="activity"></i>Quota &amp; rate limits</a>
+        <a class="tab is-active" href="webhook-allowlist.html"><i data-lucide="shield-check"></i>Webhook IP allowlist</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Posture banner -->
+    <section class="card card--pad" style="box-shadow:0 0 0 1px var(--ok) inset, var(--shadow-sm)">
+      <div class="row-start gap-3">
+        <span class="icon-tile icon-tile--ok"><i data-lucide="shield-check"></i></span>
+        <div class="grow">
+          <div class="t-h4">Enforced</div>
+          <div class="t-sm t-muted mt-1">Webhook deliveries are accepted only from the provider-published ranges below plus this workspace’s additional ranges. Everything else is refused before signature verification.</div>
+          <div class="grid grid-3 mt-3 t-xs">
+            <div><div class="t-caps">Provider ranges refresh</div><div class="mt-1">daily</div></div>
+            <div><div class="t-caps">Empty range cache</div><div class="mt-1">Blocks deliveries</div></div>
+            <div><div class="t-caps">Trusted proxies</div><div class="mt-1">1 hop of X-Forwarded-For</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="t-2xs t-subtle mt-3">Other postures: <span class="t-600">Not enforced</span> (off) · <span class="t-600">Bypassed for this workspace</span> (amber, shows “Bypass reason: …”) · <span class="t-600">Enforced, but nothing to filter against</span> (amber, empty cache).</div>
+    </section>
+
+    <!-- Provider cards -->
+    <section class="grid grid-3">
+      <div class="card card--pad">
+        <div class="row-between"><div class="t-sm t-600 row gap-2"><i data-lucide="github"></i>GitHub</div><span class="badge badge--outline">6 ranges</span></div>
+        <div class="t-xs t-muted mt-1">Ranges from the GitHub meta API (hooks section).</div>
+        <div class="t-xs t-subtle mt-2">Last refreshed 3h ago</div>
+        <div class="row wrap gap-1 mt-2">
+          <span class="cidr-chip" title="Published by the provider">192.30.252.0/22</span>
+          <span class="cidr-chip" title="Published by the provider">185.199.108.0/22</span>
+          <span class="cidr-chip" title="Published by the provider">140.82.112.0/20</span>
+          <span class="cidr-chip" title="Published by the provider">143.55.64.0/20</span>
+          <span class="cidr-chip" title="Published by the provider">2a0a:a440::/29</span>
+          <span class="cidr-chip" title="Published by the provider">2606:50c0::/32</span>
+        </div>
+      </div>
+      <div class="card card--pad" style="box-shadow:0 0 0 1px var(--warn) inset, var(--shadow-sm)">
+        <div class="row-between"><div class="t-sm t-600 row gap-2"><i data-lucide="gitlab" style="color:var(--orange)"></i>GitLab</div><span class="badge badge--outline">2 ranges</span></div>
+        <div class="t-xs t-muted mt-1">gitlab.com published webhook egress ranges.</div>
+        <div class="t-xs mt-2" style="color:var(--warn-fg)">Last successful refresh 4 days ago — overdue.</div>
+        <div class="t-xs t-danger mt-1">Last error: HTTP 503 fetching the range list.</div>
+        <div class="row wrap gap-1 mt-2">
+          <span class="cidr-chip" title="Published by the provider">34.74.90.64/28</span>
+          <span class="cidr-chip" title="Published by the provider">34.74.226.0/24</span>
+        </div>
+      </div>
+      <div class="card card--pad">
+        <div class="row-between"><div class="t-sm t-600 row gap-2"><i data-lucide="droplet" style="color:var(--accent)"></i>Bitbucket</div><span class="badge badge--outline">0 ranges</span></div>
+        <div class="t-xs t-muted mt-1">No range list to fetch — configure ranges for this provider if it delivers here.</div>
+        <div class="t-xs t-subtle mt-2">Never refreshed.</div>
+        <div class="t-xs t-faint mt-2">No ranges cached.</div>
+      </div>
+    </section>
+
+    <!-- Additional ranges -->
+    <section class="card">
+      <div class="card__header"><div class="card__title"><i data-lucide="list-plus"></i>Additional ranges for this workspace</div><span class="t-xs t-subtle">2 ranges</span></div>
+      <div class="card__body">
+        <div class="row wrap gap-2">
+          <div class="field grow" style="min-width:200px;max-width:280px"><label class="t-xs">Address or CIDR</label><input class="input input--mono" placeholder="203.0.113.0/24" /></div>
+          <div class="field grow" style="min-width:220px"><label class="t-xs">Why</label><input class="input" placeholder="Self-hosted GitLab runner" /></div>
+          <button class="btn btn--primary" style="margin-top:18px"><i data-lucide="plus"></i>Allow range</button>
+        </div>
+        <div class="t-2xs t-subtle mt-2">Validation kept: “Enter an IP address or CIDR range.” · “That is too long to be an address.” · “A CIDR has at most one ‘/’.” · “That is not an IPv4 address.” · “That is not an IPv6 address.” · “The prefix length must be a number.” · “The prefix length cannot exceed /32.” · “This range has host bits set — did you mean a single address, or a wider range?” · “Say why this range should be allowed.”</div>
+      </div>
+      <div class="divide-y">
+        <div class="list-row">
+          <span class="cidr-chip" title="Supplied by this workspace">203.0.113.0/24</span>
+          <div class="grow min-w-0 t-xs t-muted">Self-hosted GitLab runner · added Aug 2, 2026</div>
+          <div class="row gap-1"><button class="btn btn--ghost btn--sm">Disable</button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove 203.0.113.0/24" data-action="open" data-target="remove-range"><i data-lucide="trash-2"></i></button></div>
+        </div>
+        <div class="list-row" style="opacity:.6">
+          <span class="cidr-chip" title="Supplied by this workspace">198.51.100.7</span>
+          <div class="grow min-w-0 t-xs t-muted"><span class="t-faint">No description</span> · added Jul 18, 2026 · <span class="badge badge--outline">disabled</span></div>
+          <div class="row gap-1"><button class="btn btn--ghost btn--sm">Enable</button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove 198.51.100.7" data-action="open" data-target="remove-range"><i data-lucide="trash-2"></i></button></div>
+        </div>
+      </div>
+      <div class="card__footer"><span class="t-xs t-subtle">No edit-in-place (toggle/remove only). Toasts: “Range allowed.” · “Range disabled.” · “Range enabled.” · “Range removed.” · Empty: “No additional ranges. Only the provider-published ranges above are allowed.”</span></div>
+    </section>
+
+    <!-- Enforcement -->
+    <section class="card card--pad">
+      <div class="t-h4 mb-1">Enforcement for this workspace</div>
+      <p class="t-xs t-muted" style="max-width:80ch">Bypassing the allowlist means this workspace’s repositories accept deliveries from any address. Tenant administrators only, and the reason is recorded in the audit ledger.</p>
+      <div class="row wrap gap-2 mt-3">
+        <div class="field grow" style="min-width:260px;max-width:420px"><label class="t-xs">Reason for bypassing</label><input class="input" placeholder="Vendor relay delivers from an unpublished address" /></div>
+        <button class="btn" style="margin-top:18px" data-action="open" data-target="bypass-dialog"><i data-lucide="shield-off"></i>Bypass allowlist</button>
+      </div>
+      <div class="t-xs t-subtle mt-2">Last changed Aug 1, 2026 by Grace Hopper. Bypassed state shows a primary <span class="t-600">Restore enforcement</span> instead. Requires a reason: “Say why enforcement is being turned off — the audit trail records it.” Toasts: “Enforcement bypassed for this workspace.” · “Enforcement restored.” · “That change could not be saved.”</div>
+    </section>
+
+    <div class="callout t-xs">States kept: “Loading the allowlist…” · error “Allowlist unavailable” · no-tenant lock card. Mutations re-render from the server projection; controls disabled while busy.</div>
+  </div>
+</main>
+
+<!-- Remove range confirm -->
+<div class="overlay" id="remove-range" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="rr-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span><div><div class="dialog__title" id="rr-title">Remove 203.0.113.0/24?</div><div class="dialog__desc">Deliveries from this range will be refused as soon as it is removed.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove range</button></div>
+  </div>
+</div>
+<!-- Bypass confirm -->
+<div class="overlay" id="bypass-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="bp-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="shield-off"></i></span><div><div class="dialog__title" id="bp-title">Bypass the allowlist?</div><div class="dialog__desc">This workspace’s repositories will accept webhook deliveries from any address. The reason “Vendor relay delivers from an unpublished address” is recorded in the audit ledger.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Bypass allowlist</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/repositories/webhook-ip-allowlist</p>
+  <h4>Replaces</h4>
+  <ul><li><code>RepositoryWebhookIpAllowlist</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header + subtitle verbatim; Refresh. Posture banner (enforced / off / bypassed with reason / unfiltered, ShieldCheck green or AlertTriangle amber) with facts Provider ranges refresh (“daily” / “hourly” / “every N …”) · Empty range cache (“Blocks deliveries” / “Allows, with a warning”) · Trusted proxies (“None — the socket peer is the source” / “N hop(s) of X-Forwarded-For”).</li>
+    <li>Provider cards (GitHub / GitLab / Bitbucket): name + “N ranges”, note, refresh summary (“Last refreshed …” / “Last successful refresh … — overdue.” / “Never refreshed.” / “Never refreshed successfully. Last error: …” / “No range list to fetch — …”), last error, CIDR chips with provider/deployment titles, “No ranges cached.”, amber border when stale.</li>
+    <li>Additional ranges: Address or CIDR + Why + Allow range with the full client-validation vocabulary; entry rows (mono cidr, description or “No description” · added date, Disable/Enable, trash “Remove {cidr}”); all toasts; empty copy; toggle/remove only.</li>
+    <li>Enforcement: admin help verbatim, enforced → reason input + “Bypass allowlist” (reason required copy), bypassed → primary “Restore enforcement”, “Last changed {date}.”, toasts.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Sub-nav tab row; confirm dialogs for Remove range and Bypass (replacing immediate mutation).</li></ul>
+  <h4>States</h4>
+  <ul><li>“Loading the allowlist…” · “Allowlist unavailable” · no-tenant lock card; controls disabled while busy.</li></ul>
+</template>
+</body>
+</html>

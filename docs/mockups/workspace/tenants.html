@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tenants · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .manage-grid { display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+  .manage-grid .vtabs { position: sticky; top: 0; }
+  .manage-grid .vtabs .tab { width: 100%; }
+  .manage-grid .vtabs .tab .count { margin-left: auto; }
+  .switch.is-mixed { background: color-mix(in srgb, var(--accent) 45%, var(--bg-inset)); }
+  .switch.is-mixed::after { transform: translateX(7px); }
+  .toolset-tools { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 4px; }
+  .tool-row { display: grid; grid-template-columns: minmax(0,1fr) 92px 84px 96px; align-items: center; gap: 8px; padding: 8px 0; font-size: var(--fs-sm); }
+  .tool-row + .tool-row { border-top: 1px solid var(--border); }
+  .tool-row .lbl { font-size: var(--fs-2xs); color: var(--fg-subtle); text-transform: uppercase; letter-spacing: var(--track-caps); font-weight: 600; }
+  .tool-row--head { padding: 4px 0 6px; }
+  .tool-row .row { justify-content: flex-start; }
+  .dirty-bar { position: sticky; bottom: 0; margin: 12px 0 0; padding: 10px 14px; border-radius: var(--r-md); background: var(--warn-soft); color: var(--warn-fg); box-shadow: 0 0 0 1px color-mix(in srgb, var(--warn) 30%, transparent), var(--shadow-md); display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); z-index: 2; white-space: nowrap; }
+  .dirty-bar .t-600 { flex-shrink: 0; }
+  .dirty-bar .sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; opacity: .8; font-size: var(--fs-xs); }
+  .dirty-bar .btn { --_bd: color-mix(in srgb, var(--warn) 40%, transparent); }
+  .hist-row { display: grid; grid-template-columns: 136px 140px minmax(0,1fr) 28px; gap: 12px; align-items: center; padding: 10px 0; font-size: var(--fs-sm); }
+  .hist-row + .hist-row, .hist-diff + .hist-row { border-top: 1px solid var(--border); }
+  .hist-diff { padding: 4px 0 12px 148px; font-size: var(--fs-xs); }
+  .diff-line { display: flex; gap: 6px; align-items: center; padding: 3px 0; font-family: var(--font-mono); }
+  .diff-line .from { color: var(--danger-fg); text-decoration: line-through; opacity: .85; }
+  .diff-line .to { color: var(--ok-fg); }
+  .limit-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; font-size: var(--fs-sm); }
+  .limit-row + .limit-row { border-top: 1px solid var(--border); }
+  .status-line { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); }
+</style>
+</head>
+<body data-shell="app" data-nav="tenants" data-page="workspace/tenants" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Workspace</span><i data-lucide="chevron-right"></i><span>Tenants</span></div>
+          <h1 class="page-title">Tenants</h1>
+          <p class="page-desc">Your workspaces — switch between them or manage the ones you administer.</p>
+        </div>
+        <div class="page-actions">
+          <span class="t-xs t-subtle" data-tip="Tenant limit: 3 of 5 used on the Team plan">3 / 5 tenants</span>
+          <button class="btn btn--primary" data-action="open" data-target="create-tenant"><i data-lucide="plus"></i>New tenant<span class="kbd">N</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- ===== Tenants table ===== -->
+    <section class="table-wrap" id="tenants-table">
+      <div class="table-toolbar">
+        <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter by name or slug…" aria-label="Filter tenants" /></div>
+        <span class="chip is-active" data-action="chip">All <span class="t-faint">4</span></span>
+        <span class="chip" data-action="chip"><i data-lucide="shield"></i>You administer <span class="t-faint">2</span></span>
+        <span class="chip" data-action="chip">Enabled <span class="t-faint">3</span></span>
+        <span class="spacer"></span>
+        <button class="btn btn--sm btn--ghost"><i data-lucide="arrow-up-down"></i>Sorted by name<i data-lucide="chevron-down"></i></button>
+      </div>
+      <table class="table">
+        <thead><tr>
+          <th class="sortable is-sorted">Tenant <span class="sort"><i data-lucide="arrow-up"></i></span></th>
+          <th>Description</th>
+          <th>Your role</th>
+          <th>Plan</th>
+          <th class="sortable">Status <span class="sort"><i data-lucide="arrow-up-down"></i></span></th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+          <!-- current tenant -->
+          <tr class="is-selected">
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--brand">AC</span><div><div class="cell-primary row gap-2"><span>Acme Corp</span><span class="badge badge--accent"><i data-lucide="check"></i>Current</span></div><div class="cell-sub mono">acme-corp · tnt_4a91c0</div></div></div></td>
+            <td class="t-muted" style="max-width:320px"><div class="t-truncate">Merchant platform APIs — payments, orders and logistics.</div></td>
+            <td><span class="badge badge--honey"><i data-lucide="shield-check"></i>Owner</span></td>
+            <td><span class="t-sm">Team</span> <span class="badge badge--outline" style="margin-left:4px">paid</span></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions" style="opacity:1"><button class="btn btn--sm" data-action="open" data-target="manage-drawer"><i data-lucide="sliders-horizontal"></i>Manage</button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu-current" aria-label="Tenant actions" data-tip="Tenant actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <!-- admin, not current -->
+          <tr>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--c">GL</span><div><button class="cell-primary btn--link" style="color:var(--fg)" data-tip="Select tenant">Globex Labs</button><div class="cell-sub mono">globex-labs · tnt_77be12</div></div></div></td>
+            <td class="t-muted" style="max-width:320px"><div class="t-truncate">R&amp;D sandbox for partner integrations.</div></td>
+            <td><span class="badge badge--violet"><i data-lucide="shield"></i>Admin</span></td>
+            <td><span class="t-sm">Free</span></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--sm btn--ghost" data-tip="Switch to this tenant"><i data-lucide="log-in"></i>Select</button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" aria-label="Tenant actions" data-tip="Tenant actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <!-- member only -->
+          <tr>
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--d">IN</span><div><button class="cell-primary btn--link" style="color:var(--fg)" data-tip="Select tenant">Initech</button><div class="cell-sub mono">initech · tnt_0c3d5e</div></div></div></td>
+            <td class="t-muted"><span class="t-faint">—</span></td>
+            <td><span class="badge badge--outline">Member</span></td>
+            <td><span class="t-sm">Free</span></td>
+            <td><span class="badge badge--dot" data-status="active">Enabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--sm btn--ghost" data-tip="Switch to this tenant"><i data-lucide="log-in"></i>Select</button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu-member" aria-label="Tenant actions" data-tip="Tenant actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+          <!-- disabled tenant -->
+          <tr style="opacity:.8">
+            <td><div class="row gap-3"><span class="avatar avatar--sm avatar--hex avatar--e">LH</span><div><div class="cell-primary">Legacy Holdings</div><div class="cell-sub mono">legacy-holdings · tnt_9f0a77</div></div></div></td>
+            <td class="t-muted" style="max-width:320px"><div class="t-truncate">Retired 2025 — kept for published spec URLs.</div></td>
+            <td><span class="badge badge--violet"><i data-lucide="shield"></i>Admin</span></td>
+            <td><span class="t-sm">Free</span></td>
+            <td><span class="badge badge--dot" data-status="disabled">Disabled</span></td>
+            <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="row-menu" aria-label="Tenant actions" data-tip="Tenant actions"><i data-lucide="ellipsis"></i></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>4 tenants · you administer 2</span><button class="btn btn--link btn--sm" data-action="toggle" data-target="tenants-empty" data-tip="Mockup: preview the empty state">Preview empty state</button></div>
+    </section>
+
+    <!-- ===== Empty state variant (toggled) ===== -->
+    <section class="card" id="tenants-empty" hidden>
+      <div class="empty">
+        <div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="building-2"></i></div>
+        <div class="empty__title">No tenants yet</div>
+        <div class="empty__desc">You are not a member of any tenants yet. Create your own workspace, or ask an administrator to invite you.</div>
+        <div class="empty__actions"><button class="btn btn--primary" data-action="open" data-target="create-tenant"><i data-lucide="plus"></i>Create a tenant</button><button class="btn"><i data-lucide="refresh-cw"></i>Check again</button></div>
+      </div>
+    </section>
+
+    <!-- Loading skeleton (illustrative) -->
+    <section class="table-wrap" aria-busy="true" aria-label="Loading tenants…" style="opacity:.9">
+      <div class="table-toolbar"><span class="t-xs t-subtle row gap-2"><span class="spinner"></span>Loading tenants…</span></div>
+      <table class="table"><tbody>
+        <tr><td><div class="row gap-3"><span class="skeleton avatar avatar--sm"></span><div><div class="skeleton" style="width:140px;height:12px">a</div><div class="skeleton mt-1" style="width:90px;height:10px">a</div></div></div></td><td><div class="skeleton" style="width:220px;height:12px">a</div></td><td><div class="skeleton" style="width:60px;height:18px;border-radius:999px">a</div></td><td><div class="skeleton" style="width:48px;height:12px">a</div></td><td><div class="skeleton" style="width:64px;height:18px;border-radius:999px">a</div></td><td></td></tr>
+        <tr><td><div class="row gap-3"><span class="skeleton avatar avatar--sm"></span><div><div class="skeleton" style="width:110px;height:12px">a</div><div class="skeleton mt-1" style="width:80px;height:10px">a</div></div></div></td><td><div class="skeleton" style="width:180px;height:12px">a</div></td><td><div class="skeleton" style="width:60px;height:18px;border-radius:999px">a</div></td><td><div class="skeleton" style="width:48px;height:12px">a</div></td><td><div class="skeleton" style="width:64px;height:18px;border-radius:999px">a</div></td><td></td></tr>
+      </tbody></table>
+    </section>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+
+<!-- Row menus (illustrative placement) -->
+<div class="overlay" id="row-menu-current" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:236px 60px 0 0">
+  <div class="menu" role="menu"><a class="menu__item" href="#" data-action="open" data-target="edit-tenant"><i data-lucide="pencil"></i>Edit</a><a class="menu__item" href="#" data-action="open" data-target="manage-drawer"><i data-lucide="sliders-horizontal"></i>Manage</a><div class="menu__sep"></div><span class="menu__item" style="opacity:.5;cursor:default"><i data-lucide="check"></i>Current tenant</span></div>
+</div>
+<div class="overlay" id="row-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:282px 60px 0 0">
+  <div class="menu" role="menu"><a class="menu__item" href="#" data-action="open" data-target="edit-tenant"><i data-lucide="pencil"></i>Edit</a><a class="menu__item" href="#" data-action="open" data-target="manage-drawer"><i data-lucide="sliders-horizontal"></i>Manage</a><div class="menu__sep"></div><a class="menu__item" href="#"><i data-lucide="log-in"></i>Select</a></div>
+</div>
+<div class="overlay" id="row-menu-member" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:328px 60px 0 0">
+  <div class="menu" role="menu"><a class="menu__item" href="#"><i data-lucide="log-in"></i>Select</a><div class="menu__sep"></div><span class="menu__item t-subtle" style="cursor:default"><i data-lucide="lock"></i>Manage — admins only</span></div>
+</div>
+
+<!-- Create tenant (OrganizationStep, shared with onboarding) -->
+<div class="overlay" id="create-tenant" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="create-tenant-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--honey icon-tile--hex"><i data-lucide="building-2"></i></span>
+      <div><div class="dialog__title" id="create-tenant-title">Create a tenant</div><div class="dialog__desc">A new workspace for projects and teammates. You can switch between your tenants from the workspace switcher at any time.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="t-h3">Name your organization</div>
+      <div class="t-sm t-muted mt-1">This becomes your tenant — the workspace your projects and teammates live in.</div>
+      <div class="col gap-4 mt-4">
+        <div class="field"><label>Organization name <span class="req">*</span></label><input class="input" placeholder="Acme, Inc." value="Acme Europe" autofocus /></div>
+        <div class="field">
+          <label>URL slug</label>
+          <div class="input-wrap"><input class="input input--mono" placeholder="acme-inc" value="acme-europe" style="padding-left:11px" /><span class="input-suffix"><i data-lucide="circle-check" style="color:var(--ok);width:15px;height:15px"></i></span></div>
+          <div class="hint">Lowercase letters, numbers, and dashes. Suggested from the name — edit it if you like.</div>
+          <div class="status-line t-ok" role="status"><i data-lucide="check" style="width:13px;height:13px"></i>“acme-europe” is available</div>
+        </div>
+        <div class="callout callout--accent t-xs">Other status lines: <span class="t-muted">Checking availability…</span> · <span class="t-danger">“acme-corp” is already taken</span> · <span class="t-warn">Could not verify availability — you can still continue</span></div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Starts on the Free plan · 3 of 5 tenants used</span><button class="btn" data-action="close"><i data-lucide="arrow-left"></i>Back</button><button class="btn btn--primary">Continue<i data-lucide="arrow-right"></i></button></div>
+  </div>
+</div>
+
+<!-- Manage drawer -->
+<div class="overlay overlay--drawer" id="manage-drawer" data-overlay>
+  <div class="drawer drawer--xl" role="dialog" aria-labelledby="manage-title">
+    <div class="drawer__header">
+      <span class="avatar avatar--lg avatar--hex avatar--brand">AC</span>
+      <div class="grow min-w-0"><div class="drawer__title" id="manage-title">Manage Acme Corp</div><div class="t-xs t-muted row gap-2 wrap"><span class="mono">acme-corp</span><span>·</span><span>Team plan</span><span>·</span><span>5 members</span><span class="badge badge--accent"><i data-lucide="check"></i>Current</span></div></div>
+      <button class="btn btn--sm" data-action="open" data-target="edit-tenant"><i data-lucide="pencil"></i>Edit tenant</button>
+      <button class="btn btn--ghost btn--icon" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer__body">
+      <div class="manage-grid">
+        <nav class="vtabs" data-tabs="manage-panels" aria-label="Administration sections">
+          <button class="tab is-active" data-action="tab" data-target="m-members"><i data-lucide="users"></i>Members<span class="count">5</span></button>
+          <button class="tab" data-action="tab" data-target="m-license"><i data-lucide="badge-check"></i>License &amp; plan</button>
+          <button class="tab" data-action="tab" data-target="m-mcp"><i data-lucide="network"></i>MCP settings<span class="dot dot--warn" style="margin-left:auto" title="Unsaved changes"></span></button>
+          <button class="tab" data-action="tab" data-target="m-keys"><i data-lucide="key-round"></i>Per-key capabilities</button>
+          <button class="tab" data-action="tab" data-target="m-history"><i data-lucide="history"></i>Policy history</button>
+        </nav>
+        <div id="manage-panels" class="min-w-0">
+
+          <!-- ---- Members ---- -->
+          <section data-tab-panel="m-members">
+            <div class="row-between wrap gap-3 mb-3">
+              <div><div class="t-h4">Members</div><div class="t-xs t-muted">Administrators can manage tenant members and settings.</div></div>
+              <button class="btn btn--primary btn--sm" data-action="open" data-target="add-member"><i data-lucide="user-plus"></i>Add member</button>
+            </div>
+            <div class="table-wrap card--flat" style="box-shadow:0 0 0 1px var(--border) inset">
+              <div class="table-toolbar"><div class="input-wrap" style="width:100%;max-width:320px"><i data-lucide="search"></i><input class="input input--sm" placeholder="Filter by name or email…" aria-label="Filter members" style="height:30px" /><span class="input-suffix"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Clear filter"><i data-lucide="x"></i></button></span></div><span class="spacer"></span><span class="t-xs t-subtle">Admins first, then name</span></div>
+              <table class="table table--dense">
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th><span class="sr-only">Actions</span></th></tr></thead>
+                <tbody>
+                  <tr><td><div class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span><span class="cell-primary">Ada Lovelace</span><span class="t-xs t-subtle">(you)</span></div></td><td class="mono t-xs">ada@example.com</td><td><span class="row gap-1"><span class="badge badge--violet"><i data-lucide="shield"></i>Admin</span><span class="badge badge--accent"><i data-lucide="users"></i>Member</span></span></td><td><div class="cell-actions" style="opacity:.35" data-tip="You cannot edit your own membership"><button class="btn btn--ghost btn--sm btn--icon" disabled aria-label="Edit roles"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" disabled aria-label="Remove member"><i data-lucide="trash-2"></i></button></div></td></tr>
+                  <tr><td><div class="row gap-2"><span class="avatar avatar--xs avatar--b">GH</span><span class="cell-primary">Grace Hopper</span></div></td><td class="mono t-xs">grace@example.com</td><td><span class="row gap-1"><span class="badge badge--violet"><i data-lucide="shield"></i>Admin</span></span></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-roles" aria-label="Edit roles" data-tip="Edit roles"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="remove-member-admin" aria-label="Remove member" data-tip="Remove member"><i data-lucide="trash-2"></i></button></div></td></tr>
+                  <tr><td><div class="row gap-2"><span class="avatar avatar--xs avatar--c">LT</span><span class="cell-primary">Linus Torvalds</span></div></td><td class="mono t-xs">linus@example.com</td><td><span class="badge badge--accent"><i data-lucide="users"></i>Member</span></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-roles" aria-label="Edit roles" data-tip="Edit roles"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="remove-member" aria-label="Remove member" data-tip="Remove member"><i data-lucide="trash-2"></i></button></div></td></tr>
+                  <tr><td><div class="row gap-2"><span class="avatar avatar--xs avatar--d">MH</span><span class="cell-primary">Margaret Hamilton</span></div></td><td class="mono t-xs">margaret@example.com</td><td><span class="badge badge--accent"><i data-lucide="users"></i>Member</span></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-roles" aria-label="Edit roles" data-tip="Edit roles"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="remove-member" aria-label="Remove member" data-tip="Remove member"><i data-lucide="trash-2"></i></button></div></td></tr>
+                  <tr><td><div class="row gap-2"><span class="avatar avatar--xs avatar--e">TB</span><span class="cell-primary">Tim Berners-Lee</span></div></td><td class="mono t-xs">tim@example.com</td><td><span class="badge badge--accent"><i data-lucide="users"></i>Member</span></td><td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="edit-roles" aria-label="Edit roles" data-tip="Edit roles"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="remove-member" aria-label="Remove member" data-tip="Remove member"><i data-lucide="trash-2"></i></button></div></td></tr>
+                  <tr hidden><td colspan="4" class="t-center t-muted t-sm">No members match the filter</td></tr>
+                </tbody>
+              </table>
+              <div class="table-foot"><span>5 members · 2 admins</span><a class="t-xs" href="members.html">Open members &amp; roles <i data-lucide="arrow-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i></a></div>
+            </div>
+          </section>
+
+          <!-- ---- License & plan ---- -->
+          <section data-tab-panel="m-license" hidden>
+            <div class="row-between wrap gap-3 mb-3">
+              <div><div class="t-h4">License &amp; plan</div><div class="t-xs t-muted">What this tenant is licensed for. Data is shown for the current tenant only.</div></div>
+            </div>
+            <div class="card card--flat card--pad">
+              <div class="row-between wrap gap-3">
+                <div class="row gap-3"><span class="icon-tile icon-tile--honey"><i data-lucide="badge-check"></i></span><div><div class="t-caps">Current plan</div><div class="row gap-2"><span class="t-h3">Team</span><span class="badge badge--ok">paid</span></div><div class="t-xs t-subtle">Renews 1 Sep 2026 · billed annually</div></div></div>
+                <div class="row gap-2"><button class="btn" data-action="toggle" data-target="toast-upgrade"><i data-lucide="arrow-up"></i>Upgrade plan</button><span class="badge badge--honey">Coming soon</span></div>
+              </div>
+            </div>
+            <div class="grid grid-2 mt-4" style="align-items:start">
+              <div class="card card--flat card--pad">
+                <div class="row-between"><div class="t-sm t-600 row gap-2"><i data-lucide="users" style="width:14px;height:14px;color:var(--fg-subtle)"></i>Member seats</div><span class="t-xs t-muted t-num">4 of 5 used</span></div>
+                <div class="meter mt-2" role="meter" aria-valuenow="4" aria-valuemin="0" aria-valuemax="5" aria-label="Member seats"><div class="progress progress--warn"><span style="width:80%"></span></div><span class="meter-val">80%</span></div>
+                <div class="t-xs t-subtle mt-2">Warning tint from 80% · at 100% inviting is blocked.</div>
+              </div>
+              <div class="card card--flat card--pad">
+                <div class="t-sm t-600">Plan limits</div>
+                <div class="t-xs t-muted">What your plan allows. Unlimited plans show no cap.</div>
+                <div class="mt-2">
+                  <div class="limit-row"><span>Projects</span><span class="t-num t-600">10</span></div>
+                  <div class="limit-row"><span>Published versions per project</span><span class="t-num t-600">25</span></div>
+                  <div class="limit-row"><span>AI assistant requests</span><span class="t-num t-600">Unlimited</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card card--flat mt-4">
+              <div class="card__header"><div class="card__title"><i data-lucide="sparkles"></i>Features</div><span class="t-xs t-muted">What your plan includes, with any per-tenant overrides applied.</span></div>
+              <div class="divide-y">
+                <div class="list-row"><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="lr-title">MCP servers</span><span class="tag">mcp_servers</span></div><div class="lr-sub">Publish versions as MCP endpoints and govern tool access.</div></div><span class="t-xs t-subtle">Included in plan</span><span class="badge badge--dot" data-status="active">Enabled</span></div>
+                <div class="list-row"><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="lr-title">AI design assistant</span><span class="tag">ai_assistant</span><span class="badge badge--accent">Preview</span></div><div class="lr-sub">Draft specifications in conversation and import them.</div></div><span class="t-xs t-subtle">Tenant override</span><span class="badge badge--dot" data-status="active">Enabled</span></div>
+                <div class="list-row"><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="lr-title">Verification evidence</span><span class="tag">verification</span></div><div class="lr-sub">Gate publish and deploy on contract-test evidence.</div></div><span class="t-xs t-subtle">Included in plan</span><span class="badge badge--dot" data-status="active">Enabled</span></div>
+                <div class="list-row"><div class="grow min-w-0"><div class="row gap-2 wrap"><span class="lr-title">SSO / SCIM</span><span class="tag">sso_scim</span></div><div class="lr-sub">Enterprise identity provisioning.</div></div><span class="t-xs t-subtle">Included in plan</span><span class="badge badge--dot" data-status="disabled">Disabled</span></div>
+              </div>
+            </div>
+            <div class="callout mt-4 t-xs"><i data-lucide="lock" style="display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:4px"></i>For a tenant that is not current this panel reads: “Select Globex Labs as your current tenant to view its license details.”</div>
+          </section>
+
+          <!-- ---- MCP settings ---- -->
+          <section data-tab-panel="m-mcp" hidden>
+            <div class="row-between wrap gap-3 mb-3">
+              <div><div class="t-h4">MCP settings</div><div class="t-xs t-muted"><span class="mono">tools/list</span> always returns the full catalog; ceiling, defaults and anonymous flags only gate <span class="mono">tools/call</span>.</div></div>
+              <span class="badge badge--outline"><i data-lucide="shield"></i>Admins can edit</span>
+            </div>
+            <div class="grid grid-2">
+              <div class="field"><label>Default mode</label><select class="select"><option>All registry tools</option><option selected>Inherit registry defaults</option><option>Explicit per-tool flags</option></select></div>
+              <div class="field"><label>Capability profile</label><select class="select"><option>Read-only agents</option><option selected>CI &amp; contract gates</option><option>Full catalog</option><option>Custom</option></select><div class="hint">Named packs set toolset ceilings in one click; Custom stays editable after apply.</div></div>
+            </div>
+            <div class="switch-row"><div><div class="sw-title">Allow anonymous MCP calls</div><div class="sw-desc">Unauthenticated agents may call tools flagged “Anonymous” below.</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div>
+            <div class="row-between mt-4 mb-2"><div class="t-h4">Toolsets</div><label class="check t-xs"><input type="checkbox" checked /> Advanced: individual tools</label></div>
+            <div class="col gap-3">
+              <!-- toolset: catalog -->
+              <div class="card card--flat card--pad">
+                <div class="row-between"><div class="row gap-3"><button class="switch is-on" role="switch" aria-checked="true" aria-label="Enable Catalog toolset" data-action="switch"></button><div><div class="t-sm t-600">Catalog</div><div class="t-xs t-subtle">4 of 4 tools in ceiling</div></div></div><span class="badge badge--ok">All in ceiling</span></div>
+                <div class="toolset-tools">
+                  <div class="tool-row tool-row--head"><span class="lbl">Tool</span><span class="lbl">In ceiling</span><span class="lbl">Default</span><span class="lbl">Anonymous</span></div>
+                  <div class="tool-row"><span class="mono t-xs">catalog.search</span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch" aria-label="catalog.search in ceiling"></button></span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch" aria-label="catalog.search default"></button></span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch" aria-label="catalog.search anonymous"></button></span></div>
+                  <div class="tool-row"><span class="mono t-xs">catalog.get_item</span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span></div>
+                  <div class="tool-row"><span class="mono t-xs">catalog.list_versions</span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span></div>
+                  <div class="tool-row"><span class="mono t-xs">catalog.export</span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span></div>
+                </div>
+              </div>
+              <!-- toolset: lint (mixed) -->
+              <div class="card card--flat card--pad">
+                <div class="row-between"><div class="row gap-3"><button class="switch is-mixed" role="switch" aria-checked="mixed" aria-label="Enable Lint toolset" data-action="switch"></button><div><div class="t-sm t-600">Lint</div><div class="t-xs t-subtle">2 of 3 tools in ceiling</div></div></div><span class="badge badge--warn">Mixed</span></div>
+                <div class="toolset-tools">
+                  <div class="tool-row tool-row--head"><span class="lbl">Tool</span><span class="lbl">In ceiling</span><span class="lbl">Default</span><span class="lbl">Anonymous</span></div>
+                  <div class="tool-row"><span class="mono t-xs">lint.run</span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span></div>
+                  <div class="tool-row"><span class="mono t-xs">lint.gate</span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span></div>
+                  <div class="tool-row"><span class="mono t-xs">lint.waive <span class="badge badge--warn" style="margin-left:4px">changed</span></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span><span class="row" data-tip="Disabled unless in ceiling"><button class="switch switch--sm" role="switch" aria-checked="false" disabled style="opacity:.45"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" disabled style="opacity:.45"></button></span></div>
+                </div>
+              </div>
+              <!-- toolset: diff -->
+              <div class="card card--flat card--pad">
+                <div class="row-between"><div class="row gap-3"><button class="switch is-on" role="switch" aria-checked="true" aria-label="Enable Diff toolset" data-action="switch"></button><div><div class="t-sm t-600">Diff</div><div class="t-xs t-subtle">2 of 2 tools in ceiling</div></div></div><button class="btn btn--sm btn--ghost" data-action="open" data-target="disable-toolset"><i data-lucide="power"></i>Disable toolset…</button></div>
+                <div class="toolset-tools">
+                  <div class="tool-row tool-row--head"><span class="lbl">Tool</span><span class="lbl">In ceiling</span><span class="lbl">Default</span><span class="lbl">Anonymous</span></div>
+                  <div class="tool-row"><span class="mono t-xs">diff.classified</span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span></div>
+                  <div class="tool-row"><span class="mono t-xs">diff.compare</span><span class="row"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span><span class="row"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></span></div>
+                </div>
+              </div>
+              <!-- toolset: publish (off) -->
+              <div class="card card--flat card--pad" style="opacity:.85">
+                <div class="row-between"><div class="row gap-3"><button class="switch" role="switch" aria-checked="false" aria-label="Enable Publish toolset" data-action="switch"></button><div><div class="t-sm t-600">Publish</div><div class="t-xs t-subtle">0 of 2 tools in ceiling</div></div></div><span class="badge badge--outline">Off</span></div>
+              </div>
+            </div>
+            <div class="callout mt-4 t-xs">Empty catalog reads “No MCP tools in the registry catalog.” · Non-admins see “Only tenant administrators can change MCP options.” with disabled controls · Non-current tenant: “Select Globex Labs as your current tenant to view or edit MCP settings.”</div>
+            <div class="dirty-bar"><i data-lucide="circle-alert" style="width:15px;height:15px"></i><span class="t-600">Unsaved MCP settings changes</span><span class="sub grow">lint.waive removed from ceiling</span><button class="btn btn--sm">Discard</button><button class="btn btn--sm btn--primary">Save changes</button></div>
+          </section>
+
+          <!-- ---- Per-key capabilities ---- -->
+          <section data-tab-panel="m-keys" hidden>
+            <div class="row-between gap-3 mb-3" style="align-items:flex-start">
+              <div class="grow"><div class="t-h4">Per-key capabilities</div><div class="t-xs t-muted">Effective call access is per MCP API key. Inherit follows tenant defaults; Custom sets an enable-set capped by the ceiling above.</div></div>
+              <button class="btn btn--sm shrink-0" data-action="open" data-target="create-mcp-key"><i data-lucide="plus"></i>Create MCP key</button>
+            </div>
+            <div class="grid grid-2">
+              <div class="field"><label>MCP API key</label><select class="select"><option selected>Prod agent · mcp_k_7c1e…</option><option>CI runner · mcp_k_a90f…</option><option disabled>Old bot · mcp_k_1b22… (revoked)</option></select></div>
+              <div class="field"><label>Capability mode</label><div class="col gap-2" style="padding-top:6px"><label class="radio"><input type="radio" name="capmode" /> Inherit tenant defaults</label><label class="radio"><input type="radio" name="capmode" checked /> Custom enable-set</label></div></div>
+            </div>
+            <div class="grid grid-2 mt-4" style="align-items:start">
+              <div class="card card--flat card--pad">
+                <div class="row-between mb-2"><div class="t-sm t-600">Toolsets</div><span class="t-xs t-subtle">Read-only while inheriting</span></div>
+                <div class="switch-row" style="padding:8px 0"><div><div class="sw-title">Catalog</div><div class="sw-desc">4 tools</div></div><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+                <div class="switch-row" style="padding:8px 0"><div><div class="sw-title">Lint</div><div class="sw-desc">2 tools in ceiling</div></div><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+                <div class="switch-row" style="padding:8px 0"><div><div class="sw-title">Diff</div><div class="sw-desc">2 tools</div></div><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button></div>
+                <div class="switch-row" style="padding:8px 0;opacity:.55" data-tip="Outside tenant ceiling — cannot enable for this key"><div><div class="sw-title row gap-1">Publish <i data-lucide="lock" style="width:12px;height:12px"></i></div><div class="sw-desc">Outside tenant ceiling</div></div><button class="switch switch--sm" role="switch" aria-checked="false" disabled></button></div>
+              </div>
+              <div class="card card--soft card--pad" aria-live="polite">
+                <div class="t-sm t-600 mb-2">Effective summary</div>
+                <div class="t-xs t-muted mb-2">Prod agent · Custom · 6 tools effective</div>
+                <div class="row gap-1 wrap"><span class="tag">catalog.search</span><span class="tag">catalog.get_item</span><span class="tag">catalog.list_versions</span><span class="tag">catalog.export</span><span class="tag">lint.run</span><span class="tag">lint.gate</span></div>
+                <div class="t-2xs t-subtle mt-3">When nothing is enabled: “No tools currently effective for this key.”</div>
+              </div>
+            </div>
+            <div class="row mt-4" style="justify-content:flex-end;gap:8px"><button class="btn">Discard</button><button class="btn btn--primary">Save capabilities</button></div>
+            <div class="empty empty--inline empty--dashed mt-4">
+              <div class="empty__art"><span class="hex"></span><i data-lucide="key-round"></i></div>
+              <div class="grow"><div class="empty__title t-sm">No MCP API keys yet</div><div class="empty__desc t-xs">Create an MCP API key to grant agents call access under this tenant’s policy.</div></div>
+              <button class="btn btn--sm" data-action="open" data-target="create-mcp-key"><i data-lucide="plus"></i>Create key</button>
+            </div>
+          </section>
+
+          <!-- ---- Policy history ---- -->
+          <section data-tab-panel="m-history" hidden>
+            <div class="row-between wrap gap-3 mb-3">
+              <div><div class="t-h4">Policy history</div><div class="t-xs t-muted">Every saved change to MCP settings and key capabilities, newest first.</div></div>
+              <button class="btn btn--sm"><i data-lucide="refresh-cw"></i>Refresh</button>
+            </div>
+            <div class="card card--flat" style="padding:0 var(--card-pad)">
+              <div class="hist-row t-caps" style="padding:8px 0"><span>When</span><span>Actor</span><span>Change</span><span></span></div>
+              <div class="hist-row"><span class="mono t-xs">Aug 15, 2026 09:41</span><span class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span>Ada Lovelace</span><span>Removed <span class="mono">lint.waive</span> from ceiling · profile → CI &amp; contract gates</span><button class="btn btn--ghost btn--sm btn--icon" data-action="toggle" data-target="hist-1" aria-label="Toggle details"><i data-lucide="chevron-down"></i></button></div>
+              <div class="hist-diff" id="hist-1">
+                <div class="t-caps mb-1">Settings changes</div>
+                <div class="diff-line"><span class="t-subtle" style="font-family:var(--font-sans)">capability_profile</span><span class="from">Full catalog</span><i data-lucide="arrow-right" style="width:11px;height:11px"></i><span class="to">CI &amp; contract gates</span></div>
+                <div class="t-caps mt-2 mb-1">Tool-flag changes</div>
+                <div class="diff-line"><span class="t-subtle" style="font-family:var(--font-sans)">lint.waive · in_ceiling</span><span class="from">true</span><i data-lucide="arrow-right" style="width:11px;height:11px"></i><span class="to">false</span></div>
+              </div>
+              <div class="hist-row"><span class="mono t-xs">Aug 12, 2026 16:02</span><span class="row gap-2"><span class="avatar avatar--xs avatar--b">GH</span>Grace Hopper</span><span>Prod agent capabilities → Custom (6 tools)</span><button class="btn btn--ghost btn--sm btn--icon" data-action="toggle" data-target="hist-2" aria-label="Toggle details"><i data-lucide="chevron-down"></i></button></div>
+              <div class="hist-diff" id="hist-2" hidden><div class="diff-line"><span class="t-subtle" style="font-family:var(--font-sans)">mode</span><span class="from">inherit</span><i data-lucide="arrow-right" style="width:11px;height:11px"></i><span class="to">custom</span></div></div>
+              <div class="hist-row"><span class="mono t-xs">Aug 3, 2026 10:15</span><span class="row gap-2"><span class="avatar avatar--xs avatar--a">AL</span>Ada Lovelace</span><span>Allow anonymous MCP calls → off</span><button class="btn btn--ghost btn--sm btn--icon" data-action="toggle" data-target="hist-3" aria-label="Toggle details"><i data-lucide="chevron-down"></i></button></div>
+              <div class="hist-diff" id="hist-3" hidden><div class="diff-line"><span class="t-subtle" style="font-family:var(--font-sans)">allow_anonymous</span><span class="from">true</span><i data-lucide="arrow-right" style="width:11px;height:11px"></i><span class="to">false</span></div></div>
+            </div>
+            <div class="t-xs t-subtle mt-3">Empty: “No policy changes recorded yet. Saving MCP settings will start this audit trail.” · Loading: “Loading policy history…”</div>
+          </section>
+        </div>
+      </div>
+    </div>
+    <div class="drawer__footer"><span class="t-xs t-subtle" style="margin-right:auto">Only administrators of Acme Corp see this panel.</span><a class="btn btn--ghost" href="members.html">Open full page <i data-lucide="arrow-up-right"></i></a><button class="btn" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<!-- Add member -->
+<div class="overlay" id="add-member" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="add-member-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="user-plus"></i></span><div><div class="dialog__title" id="add-member-title">Add member</div><div class="dialog__desc">Add a new member to Acme Corp.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Email address <span class="req">*</span></label><input class="input" type="email" placeholder="user@example.com" autofocus /><div class="hint">Press Enter to submit. Validation: “Please enter an email address”.</div></div>
+      <div><label class="check"><input type="checkbox" /> <span class="row gap-1"><i data-lucide="shield" style="width:13px;height:13px"></i>Administrator</span></label><div class="hint t-xs t-subtle" style="margin-left:24px">Administrators can manage tenant members and settings.</div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Add member</button></div>
+  </div>
+</div>
+
+<!-- Edit member roles -->
+<div class="overlay" id="edit-roles" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="edit-roles-title">
+    <div class="dialog__header"><div><div class="dialog__title" id="edit-roles-title">Edit member roles</div><div class="dialog__desc">Update roles for Linus Torvalds.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="card card--soft" style="padding:10px 12px"><div class="row gap-3"><span class="avatar avatar--sm avatar--c">LT</span><div><div class="t-sm t-600">Linus Torvalds</div><div class="t-xs t-muted mono">linus@example.com</div></div></div></div>
+      <label class="check"><input type="checkbox" /> Administrator</label>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save changes</button></div>
+  </div>
+</div>
+
+<!-- Remove member (plain) -->
+<div class="overlay" id="remove-member" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="remove-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="user-minus"></i></span><div><div class="dialog__title" id="remove-title">Remove Linus Torvalds?</div><div class="dialog__desc">They will lose access to Acme Corp immediately. Their projects and versions stay in the workspace.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove</button></div>
+  </div>
+</div>
+<!-- Remove member (admin warning variant) -->
+<div class="overlay" id="remove-member-admin" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="remove-admin-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title" id="remove-admin-title">Remove Grace Hopper?</div><div class="dialog__desc">Are you sure you want to remove Grace Hopper from the tenant?</div></div></div>
+    <div class="dialog__body"><div class="banner banner--danger"><i data-lucide="shield-alert"></i><div><div class="banner-title">This user is also an administrator</div><div class="banner-body">They will lose all administrative privileges in Acme Corp.</div></div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove</button></div>
+  </div>
+</div>
+
+<!-- Edit tenant -->
+<div class="overlay" id="edit-tenant" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="edit-tenant-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent icon-tile--hex"><i data-lucide="building-2"></i></span><div><div class="dialog__title" id="edit-tenant-title">Edit tenant</div><div class="dialog__desc">Update tenant details.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Tenant name <span class="req">*</span></label><input class="input" value="Acme Corp" autofocus /></div>
+      <div class="field"><label>Tenant slug <span class="req">*</span></label><input class="input input--mono" value="acme" /><div class="hint">Lowercase letters, numbers, and dashes only.</div><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>Changed from <span class="mono">acme-corp</span> — you will be asked to confirm.</div></div>
+      <div class="field"><label>Description</label><textarea class="textarea" style="min-height:76px">Merchant platform APIs — payments, orders and logistics.</textarea></div>
+      <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div><span class="banner-title">Note:</span> The slug is used in OpenAPI specification URLs. Changing it will affect any published specs.</div></div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Errors: “Tenant name is required” · “Tenant slug is required” · “Slug must contain only lowercase letters, numbers, and dashes”.</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="open" data-target="confirm-slug">Save changes</button></div>
+  </div>
+</div>
+
+<!-- Change slug confirm -->
+<div class="overlay" id="confirm-slug" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="slug-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="link-2"></i></span><div><div class="dialog__title" id="slug-title">Change tenant slug?</div><div class="dialog__desc">Are you sure you want to proceed?</div></div></div>
+    <div class="dialog__body col gap-3">
+      <dl class="kv"><dt>Name</dt><dd>Acme Corp</dd><dt>Slug</dt><dd class="mono"><span class="t-strike t-subtle">acme-corp</span> <i data-lucide="arrow-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i> <span class="t-600">acme</span></dd></dl>
+      <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div><div class="banner-title">Warning: Changing the slug will affect URLs</div><div class="banner-body">This change will affect any published OpenAPI specs that reference this tenant’s slug in their URLs.</div></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Change slug</button></div>
+  </div>
+</div>
+
+<!-- Disable toolset confirm -->
+<div class="overlay" id="disable-toolset" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="dt-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="power"></i></span><div><div class="dialog__title" id="dt-title">Disable Diff toolset?</div><div class="dialog__desc">2 active MCP keys (Prod agent, CI runner) currently rely on <span class="mono">diff.classified</span>. Their calls will start failing immediately.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Disable toolset</button></div>
+  </div>
+</div>
+
+<!-- Create MCP API key -->
+<div class="overlay" id="create-mcp-key" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="mk-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--honey"><i data-lucide="key-round"></i></span><div><div class="dialog__title" id="mk-title">Create MCP API key</div><div class="dialog__desc">Issue a new MCP API key for this tenant. Defaults to inherit tenant policy.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body"><div class="field"><label>Label <span class="req">*</span></label><input class="input" placeholder="Prod agent" autofocus /></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="open" data-target="mcp-key-created">Create key</button></div>
+  </div>
+</div>
+
+<!-- MCP key secret reveal -->
+<div class="overlay" id="mcp-key-created" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="mkc-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--ok"><i data-lucide="check"></i></span><div><div class="dialog__title" id="mkc-title">MCP API key created</div><div class="dialog__desc">Prod agent · inherits tenant policy</div></div></div>
+    <div class="dialog__body col gap-3">
+      <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div><span class="banner-title">Important:</span> This is the only time you’ll see this secret. Copy it now and store it securely.</div></div>
+      <div><div class="t-caps mb-1">Your secret</div><div class="code" style="padding-right:110px">mcp_k_7c1e9d4b2a6f8e01c3d5b7a9f2e4c6d8</div><div class="row mt-2" style="justify-content:flex-end"><button class="btn btn--sm"><i data-lucide="copy"></i>Copy secret</button></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn btn--primary" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<!-- Toasts (mock; the Upgrade button toggles the coming-soon toast) -->
+<div class="toast-stack" style="bottom:64px">
+  <div class="toast toast--warn" id="toast-upgrade" hidden role="status"><i data-lucide="info"></i><div><div class="toast-title">Plan upgrades are coming soon</div><div class="toast-desc">Plan upgrades and billing management are coming soon. Contact your operator to change plans today.</div></div><button class="btn btn--ghost btn--sm btn--icon" data-action="toggle" data-target="toast-upgrade" aria-label="Dismiss"><i data-lucide="x"></i></button></div>
+</div>
+
+<script>
+  // #create deep link (workspace switcher → “Create workspace”) opens the Create tenant dialog.
+  window.addEventListener('load', function () { if (location.hash === '#create' && window.Hive) { Hive.open('create-tenant'); } });
+</script>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/tenants (+ #create → Create tenant)</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/tenants/page.tsx</code> (table + hidden per-tenant “Administration Panel” DOM blocks), <code>CreateTenantDialog</code> (+ <code>OrganizationStep</code>), <code>TenantLicensePanel</code>, <code>TenantMcpSettingsPanel</code>, <code>TenantMcpKeyCapabilitiesEditor</code>, <code>TenantMcpPolicyHistory</code>, Add/Edit-roles/Edit-tenant/Remove-member dialogs.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Table: tenant name is a “Select tenant” button unless current; “Current” pill; slug mono; Description (“—” when empty); Status Enabled/Disabled; ⋮ menu Edit / Manage (admins) and Select (non-current). Current row tinted.</li>
+    <li>“Manage” now opens a right drawer instead of un-hiding a DOM block. Sections = vertical tabs: Members (filter with clear X, Name · Email · Role pills Admin/Member, admins first, edit-roles / remove hidden for self, “No members match the filter”, + Add member) · License &amp; plan (CURRENT PLAN + type badge, Upgrade plan + Coming soon toast copy, member-seats meter with 80 %/100 % tints, Plan limits rows, Features list with source + Enabled/Disabled pills, non-current lock note) · MCP settings (helper copy, Default mode, Allow anonymous, Capability profile + helper, Toolsets with master switch incl. mixed state, Advanced per-tool rows in-ceiling/Default/Anonymous, Disable-toolset confirm, sticky dirty bar Discard/Save) · Per-key capabilities (key select with revoked disabled, Inherit/Custom radios, toolset switches locked outside ceiling, live Effective summary, Discard/Save capabilities, empty state + Create key, Create MCP API key + secret reveal) · Policy history (Refresh, When/Actor/Change, expandable settings + tool-flag diffs, empty/loading copy).</li>
+    <li>Dialogs: Add member (email, Administrator + helper), Edit member roles (card + checkbox), Edit tenant (name, slug lowercase + hint, description, slug warning banner, validation copy) → Change tenant slug? confirm (before→after + warning), Remove member (admin-warning variant), Create tenant = OrganizationStep (name, slug with availability status line, Back/Continue), reachable from “New tenant” and <code>#create</code>.</li>
+    <li>States: “Loading tenants…” skeleton; empty “No tenants yet / You are not a member of any tenants yet” (Preview empty state toggle in the foot).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>“New tenant” primary in the header (was only in the top-bar switcher) with tenant-cap counter; “Your role” + “Plan” columns; filter chips; drawer footer link to the full Members page; unsaved dot on the MCP tab.</li></ul>
+  <h4>States</h4>
+  <ul><li>Non-admin rows: menu shows Select only (“Manage — admins only”); License/MCP panels for a non-current tenant show the lock note; MCP for non-admin renders disabled controls with “Only tenant administrators can change MCP options.”; “Creating your tenant…” spinner replaces the Create tenant body while provisioning; tenant cap reached disables New tenant with “Tenant limit reached (u of m used) — upgrade your plan to create more”.</li></ul>
+</template>
+</body>
+</html>

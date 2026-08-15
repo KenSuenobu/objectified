@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>App shell · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .legend li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: var(--fs-sm); }
+  .legend .n { width: 20px; height: 20px; border-radius: 50%; background: var(--honey); color: #2A1F00; font-size: 11px; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; }
+  .mini-topbar { border-radius: var(--r-md); overflow: hidden; box-shadow: inset 0 0 0 1px var(--border); }
+  .mini-topbar .topbar { position: static; }
+</style>
+</head>
+<body data-shell="app" data-nav="" data-page="foundations/shell" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../index.html">Mockups</a><i data-lucide="chevron-right"></i><span>Foundations</span><i data-lucide="chevron-right"></i><span>App shell</span></div>
+          <h1 class="page-title">App shell</h1>
+          <p class="page-desc">One rail, no second top bar. This page <em>is</em> the shell — toggle <strong>Callouts</strong> (bottom-right) to number its parts.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-action="toggle-rail"><i data-lucide="panel-left-close"></i>Collapse rail <span class="kbd">⌘\</span></button>
+          <button class="btn btn--primary" data-action="annot"><i data-lucide="message-square-dot"></i>Toggle callouts</button>
+        </div>
+      </div>
+      <div class="tabs" style="padding-bottom:0"><a class="tab is-active" href="#rail">Rail</a><a class="tab" href="#header">Page header</a><a class="tab" href="#overlays">Overlays</a><a class="tab" href="#studio">Studio shell</a><a class="tab" href="#admin">Admin shell</a><a class="tab" href="#responsive">Responsive</a></div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <section id="rail" class="grid grid-main-aside">
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="panel-left"></i>Rail anatomy</div><span class="t-xs t-subtle">264 px · 64 px collapsed</span></div>
+        <div class="card__body">
+          <ol class="legend">
+            <li><span class="n">1</span><div><b>Brand</b> — hex mark + “apiome / Platform”. Click → All apps launcher (<code>/ade</code>). Admin shell shows “Admin console” in rose.</div></li>
+            <li><span class="n">2</span><div><b>Workspace switcher</b> — hex avatar, tenant name, role · plan. Opens the tenant menu (search, role badges, license chips, suspended rows, “Create workspace” with cap “n/m used”). Replaces the header tenant pill.</div></li>
+            <li><span class="n">3</span><div><b>Search / ⌘K</b> — opens the command palette: jump, actions, recent, <code>&gt;</code> commands.</div></li>
+            <li><span class="n">4</span><div><b>Nav groups</b> — Home · Build · Bring in · Ship · Govern · Workspace · Tools (DESIGN.md §6). Labels collapse per group (persisted). Items: 32 px, hover tint, active = raised white pill with azure icon. Tenant-gated items render at 45 % with a tooltip. Commercial suite items are injected by the host.</div></li>
+            <li><span class="n">5</span><div><b>Footer</b> — Help &amp; docs · Preferences (⌘,) · user button → Profile, Linked accounts, Preferences, What’s new (honey dot), Shortcuts, Admin console, All apps, Sign out, build string.</div></li>
+            <li><span class="n">6</span><div><b>Collapse handle</b> — appears on hover at the rail edge; icon rail keeps hex avatar, search icon, group hairlines and hover tooltips.</div></li>
+          </ol>
+        </div>
+      </div>
+      <aside class="col gap-4">
+        <div class="card card--pad"><div class="t-h4">What moved where</div><table class="table table--dense mt-2"><tbody><tr><td class="t-muted">Home / Control Panel tabs</td><td>Brand → launcher · Home item</td></tr><tr><td class="t-muted">Designer / Developer menu</td><td>Build → Studio · launcher cards</td></tr><tr><td class="t-muted">Tenant pill</td><td>Workspace switcher</td></tr><tr><td class="t-muted">Version badge · What’s new</td><td>User menu</td></tr><tr><td class="t-muted">Theme selector</td><td>Preferences pane</td></tr><tr><td class="t-muted">Profile menu</td><td>User button</td></tr></tbody></table></div>
+        <div class="card card--pad"><div class="t-h4">Try it</div><div class="row gap-2 wrap mt-2"><button class="btn btn--sm" data-action="open" data-target="ws-menu">Workspace menu</button><button class="btn btn--sm" data-action="open" data-target="user-menu">User menu</button><button class="btn btn--sm" data-action="open" data-target="palette">Palette</button><button class="btn btn--sm" data-action="open" data-target="settings-pane">Preferences</button><button class="btn btn--sm" data-action="open" data-target="whats-new">What’s new</button><button class="btn btn--sm" data-action="open" data-target="shortcuts">Shortcuts</button></div></div>
+      </aside>
+    </section>
+
+    <section id="header" class="card">
+      <div class="card__header"><div class="card__title"><i data-lucide="panel-top"></i>Page header</div><span class="t-xs t-subtle">sticky · translucent · hairline</span></div>
+      <div class="card__body">
+        <div class="col gap-3 t-sm">
+          <div class="row-start gap-3"><span class="n legend" style="display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--honey);font-size:11px;font-weight:700;color:#2A1F00">7</span><div><b>Breadcrumb</b> 12 px muted → <b>Title</b> 24 px/600/-0.02em with optional status badge → <b>Description</b> ≤ 14 words → <b>Actions</b> right: one primary, secondaries, overflow. Optional underline tab row hangs off the bottom.</div></div>
+          <div class="callout">Header content max-width 1440 px; forms/reading pages use <code>.page-body--narrow</code> (920 px). Page body sections are separated by 24 px; cards never nest more than two levels.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="overlays" class="grid grid-2">
+      <div class="card card--pad"><div class="t-h4">Overlays</div>
+        <dl class="kv mt-3"><dt>Dialog</dt><dd>560 (sm 440 · lg 760 · xl 960 · full) · decisions, forms, wizards</dd><dt>Drawer</dt><dd>520 / 680 / 860 · detail &amp; quick-edit, “Open full page ↗”</dd><dt>Menu</dt><dd>200–300 · 32 px items, icons, shortcut chips, danger last</dd><dt>Palette</dt><dd>640 · groups Jump to / Actions / Recent</dd><dt>Toast</dt><dd>bottom-right, 360, optional Undo</dd><dt>Tooltip</dt><dd>11 px ink pill, 6 px offset</dd></dl>
+        <div class="row gap-2 wrap mt-3"><button class="btn btn--sm" data-action="open" data-target="demo-dialog">Dialog</button><button class="btn btn--sm" data-action="open" data-target="demo-drawer">Drawer</button><button class="btn btn--sm" data-action="toggle" data-target="demo-toasts">Toasts</button></div>
+      </div>
+      <div class="card card--pad"><div class="t-h4">Motion &amp; focus</div><ul class="t-sm t-muted mt-2" style="padding-left:16px;list-style:disc"><li>Dialog rises 8 px + fades (260 ms); drawer slides 24 px; palette rises from 12 vh.</li><li>Backdrop 42 % ink + 2 px blur; click outside closes non-destructive overlays; <span class="kbd">Esc</span> closes everything.</li><li>Focus trapped and restored to the trigger; first field autofocused.</li><li>Rail collapse animates the grid column (260 ms); reduced motion disables all.</li></ul></div>
+    </section>
+
+    <section id="studio" class="card">
+      <div class="card__header"><div class="card__title"><i data-lucide="pen-tool"></i>Studio shell</div><a class="btn btn--sm btn--ghost" href="../studio/editor.html">Open Studio mockup <i data-lucide="arrow-right"></i></a></div>
+      <div class="card__body">
+        <div class="mini-topbar">
+          <div class="topbar">
+            <button class="btn btn--sm btn--soft"><span class="avatar avatar--xs avatar--hex avatar--a">PA</span>Payments API<i data-lucide="chevron-right" style="opacity:.5"></i><span class="mono">v2.4.0</span><span class="badge badge--dot" data-status="draft">Draft</span><i data-lucide="chevrons-up-down"></i></button>
+            <span class="row gap-1 t-xs t-subtle"><span class="dot dot--ok"></span>Saved · 2m ago</span>
+            <div class="topbar__center"><div class="segmented segmented--sm"><a class="is-active" href="#"><i data-lucide="pen-tool"></i>Editor</a><a href="#"><i data-lucide="route"></i>Paths</a><a href="#"><i data-lucide="code-2"></i>Code</a></div></div>
+            <div class="topbar__right"><button class="btn btn--sm btn--ghost btn--icon" data-tip="Search (⌘F)"><i data-lucide="search"></i></button><button class="btn btn--sm btn--ghost btn--icon" data-tip="History"><i data-lucide="history"></i></button><button class="btn btn--sm"><i data-lucide="share-2"></i>Share</button><button class="btn btn--sm btn--primary"><i data-lucide="package-open"></i>Generate</button><span class="avatar avatar--sm avatar--a">AL</span></div>
+          </div>
+        </div>
+        <p class="t-sm t-muted mt-3">Icon rail (64 px) + 52 px topbar: project ▸ version pill, save state, centre segmented Editor · Paths · Code, right tools. Body = tree panel (280) · canvas · inspector (340); panels have 40 px caps headers and collapse to strips. The two stacked header bars of today’s editor become this single bar.</p>
+      </div>
+    </section>
+
+    <section id="admin" class="grid grid-2">
+      <div class="card card--pad"><div class="row-between"><div class="t-h4">Admin shell</div><a class="btn btn--sm btn--ghost" href="../admin/overview.html">Open <i data-lucide="arrow-right"></i></a></div><p class="t-sm t-muted mt-2">Same rail, rose-tinted (<code>.rail--admin</code>) with “Admin console” under the brand, its own groups (Overview · Directory · Commercial · Platform) and a “Back to app” item. No workspace switcher, no ⌘K search (admin has no tenant scope). Dead links (Payments, Database, Monitoring) are removed.</p></div>
+      <div class="card card--pad" id="responsive"><div class="t-h4">Responsive</div><p class="t-sm t-muted mt-2">≥ 1280: expanded rail. 900–1280: rail expanded, 4-col grids fold to 2. &lt; 900: rail forced to icon mode, page padding 24, tables scroll inside their card, page actions wrap under the title. Auth/launcher pages are single column below 960.</p></div>
+    </section>
+  </div>
+</main>
+
+<div class="overlay" id="demo-dialog" data-overlay><div class="dialog" role="dialog"><div class="dialog__header"><div><div class="dialog__title">Rename version</div><div class="dialog__desc">Labels are free text; the semantic version stays.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close"><i data-lucide="x"></i></button></div><div class="dialog__body"><div class="field"><label>Label</label><input class="input" value="v2.4.0 — refunds" autofocus /></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Rename</button></div></div></div>
+<div class="overlay overlay--drawer" id="demo-drawer" data-overlay><div class="drawer" role="dialog"><div class="drawer__header"><div><div class="drawer__title">Grace Hopper</div><div class="t-xs t-muted">grace@example.com · Admin</div></div><button class="btn btn--ghost btn--icon" style="margin-left:auto" data-action="close"><i data-lucide="x"></i></button></div><div class="drawer__body col gap-4"><dl class="kv"><dt>Roles</dt><dd><span class="badge badge--violet">Admin</span> <span class="badge badge--outline">Member</span></dd><dt>Joined</dt><dd>Jun 4, 2026</dd><dt>Last active</dt><dd>2 hours ago</dd></dl><div class="banner banner--neutral"><i data-lucide="info"></i>Detail drawers keep the list behind them; “Open full page” exists only when a route does.</div></div><div class="drawer__footer"><button class="btn btn--danger-soft">Remove from tenant</button><button class="btn" data-action="close">Close</button><button class="btn btn--primary">Edit roles</button></div></div></div>
+<div class="toast-stack" id="demo-toasts" hidden><div class="toast toast--ok"><i data-lucide="circle-check"></i><div><div class="toast-title">Version published</div><div class="toast-desc">v2.4.0 of Payments API is now browsable.</div></div><button class="btn btn--sm btn--ghost">View</button></div><div class="toast"><i data-lucide="undo-2"></i><div><div class="toast-title">3 findings waived</div><div class="toast-desc">Applies to Payments v2.4.0.</div></div><button class="btn btn--sm">Undo</button></div></div>
+
+<script>
+  // Number the live rail parts when Callouts are on.
+  document.addEventListener('hive:mounted', () => {
+    const put = (sel, n, dx, dy) => { const el = document.querySelector(sel); if (!el) return; const dot = document.createElement('span'); dot.className = 'mock-annot'; dot.textContent = n; dot.title = 'See legend #' + n; el.style.position = el.style.position || 'relative'; dot.style.left = (dx || -6) + 'px'; dot.style.top = (dy || -6) + 'px'; el.appendChild(dot); };
+    put('.rail__brand', 1); put('.ws-switch', 2); put('.search-trigger', 3); put('.rail__nav .nav-group:nth-child(2)', 4, 210, 4); put('.rail__bottom', 5, 210, 8); put('.rail', 6, 244, 60); put('.page-header__inner', 7, 6, 8);
+    if (window.Hive) Hive.icons();
+  });
+</script>
+<template id="notes">
+  <p class="route">Shell — replaces components/ade/TopHeader.tsx, ConditionalHeader.tsx, dashboard/DashboardSideNav.tsx, admin AdminSidebar, and the /ade/database & /ade/migration SidebarShell usage</p>
+  <h4>Keeps (1:1)</h4><ul><li>Every TopHeader affordance (nav, tenant switcher with search/roles/licenses/suspended/create-cap, version badge, What’s new, theme, profile menu, sign out) and every DashboardSideNav item + gating.</li><li>Studio: project/version pickers, sync/draft-lock chips, read-only banner, tabs, git menu (flag-gated).</li></ul>
+  <h4>Adds</h4><ul><li>Collapsible rail + groups, ⌘K palette, keyboard shortcuts, Preferences pane, admin variant of the same shell.</li></ul>
+  <h4>Implementation</h4><ul><li>DESIGN.md §5, §11 step 4: <code>AppShell</code>, <code>WorkspaceShell</code>, nav model in <code>lib/platform-nav.ts</code>.</li></ul>
+</template>
+</body>
+</html>

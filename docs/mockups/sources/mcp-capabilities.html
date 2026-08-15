@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MCP capability directory · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .grade { display: inline-flex; align-items: center; gap: 6px; }
+  .grade__letter { width: 22px; height: 22px; border-radius: var(--r-xs); display: grid; place-items: center; font-weight: 700; font-size: var(--fs-xs); color: #fff; background: var(--neutral); flex-shrink: 0; }
+  .grade[data-grade="A"] .grade__letter { background: var(--ok); }
+  .grade[data-grade="B"] .grade__letter { background: color-mix(in srgb, var(--ok) 70%, var(--honey)); }
+  .grade[data-grade="C"] .grade__letter { background: var(--warn); }
+  .grade[data-grade="D"] .grade__letter { background: var(--orange); }
+  .grade[data-grade="-"] .grade__letter { background: var(--bg-inset); color: var(--fg-subtle); }
+  .preset { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; text-align: left; width: 100%; }
+  .preset:hover { background: var(--bg-subtle); }
+  .preset .t-h4 { font-size: var(--fs-sm); }
+</style>
+</head>
+<body data-shell="app" data-nav="mcp" data-page="sources/mcp-capabilities" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Bring in</span><i data-lucide="chevron-right"></i><a href="mcp-servers.html">MCP servers</a><i data-lucide="chevron-right"></i><span>Capabilities</span></div>
+          <h1 class="page-title">Capability directory</h1>
+          <p class="page-desc">Every tool, resource, and prompt across your catalog — a “what can be done” index.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-tip="Reload capability directory"><i data-lucide="refresh-cw"></i>Refresh</button>
+          <a class="btn btn--primary" href="mcp-servers.html#add"><i data-lucide="plus"></i>Add MCP server</a>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="MCP Servers sections">
+        <a class="tab" href="mcp-servers.html"><i data-lucide="server"></i>Servers<span class="count">6</span></a>
+        <a class="tab" href="mcp-analytics.html"><i data-lucide="bar-chart-3"></i>Analytics<span class="badge badge--honey" title="Feature in preview">Preview</span></a>
+        <a class="tab is-active" href="mcp-capabilities.html" aria-current="page"><i data-lucide="layers"></i>Capabilities<span class="count">65</span></a>
+        <a class="tab" href="mcp-compare.html"><i data-lucide="git-compare-arrows"></i>Compare</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Presets (quick views) -->
+    <section>
+      <div class="section-title"><h2>Presets</h2><span class="t-muted">One-click filters over the directory</span></div>
+      <div class="grid grid-4">
+        <button class="preset"><span class="icon-tile icon-tile--sm icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="t-h4">Destructive tools</div><div class="t-xs t-muted">Tools asserting destructiveHint · 4</div></div></button>
+        <button class="preset"><span class="icon-tile icon-tile--sm icon-tile--ok"><i data-lucide="eye"></i></span><div><div class="t-h4">Read-only tools</div><div class="t-xs t-muted">Safe to expose to assistants · 22</div></div></button>
+        <button class="preset"><span class="icon-tile icon-tile--sm icon-tile--violet"><i data-lucide="message-square-text"></i></span><div><div class="t-h4">Prompts</div><div class="t-xs t-muted">Across public servers · 5</div></div></button>
+        <button class="preset"><span class="icon-tile icon-tile--sm icon-tile--warn"><i data-lucide="copy"></i></span><div><div class="t-h4">Shadowed names</div><div class="t-xs t-muted">Exposed by more than one server · 2</div></div></button>
+      </div>
+    </section>
+
+    <!-- Directory table -->
+    <section class="table-wrap">
+      <div class="table-toolbar" style="align-items:flex-end;padding:12px 14px">
+        <div class="field" style="width:280px"><label class="t-xs">Name</label><div class="input-wrap" style="width:100%"><i data-lucide="search"></i><input class="input input--sm" placeholder="Filter by name or title…" value="search" /></div></div>
+        <div class="field" style="width:170px"><label class="t-xs">Type</label><select class="select select--sm"><option>All types</option><option>Tool</option><option>Resource</option><option>Resource template</option><option>Prompt</option></select></div>
+        <div class="field" style="width:200px"><label class="t-xs">Host</label><input class="input input--sm" placeholder="e.g. mcp.example.com" /></div>
+        <div class="field" style="width:130px"><label class="t-xs">Visibility</label><select class="select select--sm"><option>All</option><option>Private</option><option>Public</option></select></div>
+        <div class="field" style="width:130px"><label class="t-xs">Sort</label><select class="select select--sm"><option>Server</option><option>Name</option><option>Type</option></select></div>
+        <button class="btn btn--sm">Apply</button>
+        <span class="spacer"></span>
+        <div class="row gap-3"><span class="t-xs t-muted t-num">1–8 of 8</span><span class="pager"><button class="btn btn--sm btn--ghost" disabled><i data-lucide="chevron-left"></i>Previous</button><span class="t-xs t-muted" style="padding:0 6px">Page 1 of 1</span><button class="btn btn--sm btn--ghost" disabled>Next<i data-lucide="chevron-right"></i></button></span></div>
+      </div>
+      <table class="table">
+        <thead><tr>
+          <th class="sortable" aria-sort="none" title="Sort by capability (ascending)">Capability <span class="sort"><i data-lucide="chevrons-up-down"></i></span></th>
+          <th class="sortable" aria-sort="none" title="Sort by type (ascending)">Type <span class="sort"><i data-lucide="chevrons-up-down"></i></span></th>
+          <th class="sortable is-sorted" aria-sort="ascending" title="Sort by server (descending)">Server <span class="sort"><i data-lucide="chevron-up"></i></span></th>
+          <th>Host</th>
+        </tr></thead>
+        <tbody>
+          <tr class="is-clickable"><td><div class="cell-primary">Search geo features</div><div class="cell-sub">Find places, addresses and POIs near a point.</div><div class="cell-sub mono">geo.search</div></td><td><span class="badge badge--ink">Tool</span></td><td><a href="mcp-endpoint.html" class="row gap-2"><span class="grade" data-grade="B"><span class="grade__letter">B</span></span>Globex geo tools <span class="t-xs t-subtle">Grade B</span></a></td><td class="mono t-xs t-muted">tools.globex.io</td></tr>
+          <tr class="is-clickable"><td><div class="cell-primary">Reverse geocode</div><div class="cell-sub">Coordinates → structured address.</div><div class="cell-sub mono">geo.reverse</div></td><td><span class="badge badge--ink">Tool</span></td><td><a href="mcp-endpoint.html" class="row gap-2"><span class="grade" data-grade="B"><span class="grade__letter">B</span></span>Globex geo tools <span class="t-xs t-subtle">Grade B</span></a></td><td class="mono t-xs t-muted">tools.globex.io</td></tr>
+          <tr class="is-clickable"><td><div class="cell-primary">Search inventory</div><div class="cell-sub">Look up stock levels by SKU or location.</div><div class="cell-sub mono">inventory.search</div></td><td><span class="badge badge--ink">Tool</span></td><td><a href="mcp-endpoint.html" class="row gap-2"><span class="grade" data-grade="C"><span class="grade__letter">C</span></span>Inventory events bridge <span class="t-xs t-subtle">Grade C</span></a></td><td class="mono t-xs t-muted">mcp.acme.dev</td></tr>
+          <tr class="is-clickable"><td><div class="cell-primary">Reservation feed</div><div class="cell-sub">Live reservation events for a warehouse.</div><div class="cell-sub mono">acme://inventory/{warehouse}/reservations</div></td><td><span class="badge">Resource template</span></td><td><a href="mcp-endpoint.html" class="row gap-2"><span class="grade" data-grade="C"><span class="grade__letter">C</span></span>Inventory events bridge <span class="t-xs t-subtle">Grade C</span></a></td><td class="mono t-xs t-muted">mcp.acme.dev</td></tr>
+          <tr class="is-clickable"><td><div class="cell-primary">Search files</div><div class="cell-sub">Glob search under the allowed roots.</div><div class="cell-sub mono">search_files</div></td><td><span class="badge badge--ink">Tool</span></td><td><a href="mcp-endpoint.html" class="row gap-2"><span class="grade" data-grade="D"><span class="grade__letter">D</span></span>Local dev filesystem <span class="t-xs t-subtle">Grade D</span></a></td><td class="mono t-xs t-muted">(local)</td></tr>
+          <tr class="is-clickable"><td><div class="cell-primary">Search orders</div><div class="cell-sub">Filter orders by customer, status or date.</div><div class="cell-sub mono">search</div></td><td><span class="badge badge--ink">Tool</span></td><td><a href="mcp-endpoint.html" class="row gap-2"><span class="grade" data-grade="B"><span class="grade__letter">B</span></span>Orders assistant <span class="t-xs t-subtle">Grade B</span></a></td><td class="mono t-xs t-muted">mcp.acme.dev</td></tr>
+          <tr class="is-clickable"><td><div class="cell-primary">Search payments</div><div class="cell-sub">Find payments by customer, status, or date range.</div><div class="cell-sub mono">payments.search</div></td><td><span class="badge badge--ink">Tool</span></td><td><a href="mcp-endpoint.html" class="row gap-2"><span class="grade" data-grade="A"><span class="grade__letter">A</span></span>Payments tools <span class="t-xs t-subtle">Grade A</span></a></td><td class="mono t-xs t-muted">mcp.acme.dev</td></tr>
+          <tr class="is-clickable"><td><div class="cell-primary">Search summary</div><div class="cell-sub">Summarize a search result set for a customer.</div><div class="cell-sub mono">summarize</div></td><td><span class="badge">Prompt</span></td><td><a href="mcp-endpoint.html" class="row gap-2"><span class="grade" data-grade="A"><span class="grade__letter">A</span></span>Payments tools <span class="t-xs t-subtle">Grade A</span></a></td><td class="mono t-xs t-muted">mcp.acme.dev</td></tr>
+          <tr aria-busy="true"><td><div class="skeleton" style="height:12px;width:50%"></div><div class="skeleton mt-1" style="height:10px;width:70%"></div></td><td><div class="skeleton" style="height:18px;width:48px"></div></td><td><div class="skeleton" style="height:12px;width:60%"></div></td><td><div class="skeleton" style="height:12px;width:80%"></div></td></tr>
+        </tbody>
+      </table>
+      <div class="table-foot"><span>8 capabilities match “search” · page size 50 · sorted by server ↑</span><span class="pager"><button class="btn btn--sm btn--ghost" disabled><i data-lucide="chevron-left"></i>Previous</button><span class="t-xs t-muted" style="padding:0 6px">Page 1 of 1</span><button class="btn btn--sm btn--ghost" disabled>Next<i data-lucide="chevron-right"></i></button></span></div>
+    </section>
+
+    <!-- States -->
+    <section class="grid grid-2">
+      <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="layers"></i></div><div><div class="empty__title">No capabilities found</div><div class="empty__desc">Try clearing a filter or discover MCP servers so their tools, resources, and prompts appear here.</div></div><span class="badge badge--outline ml-auto">state</span></div></div>
+      <div class="banner banner--danger" style="align-items:center"><i data-lucide="circle-alert"></i><div class="grow"><div class="banner-title">Could not load the capability directory</div><div class="banner-body t-xs">GET /api/mcp/capabilities → 502. (Loading: “Loading capabilities…”)</div></div><div class="banner-actions"><button class="btn btn--sm">Retry</button></div></div>
+    </section>
+  </div>
+</main>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/mcp/capabilities</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/mcp/capabilities/page.tsx</code>, <code>mcpCapabilityDirectoryUi.ts</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header “Capability Directory” + Refresh (“Reload capability directory”); section tabs (self-probing).</li>
+    <li>Filter row: Name (Enter or Apply), Type (All types · Tool · Resource · Resource template · Prompt), Host (applies on change), Visibility (All · Private · Public), Sort (Server · Name · Type; resets to asc); summary “start–end of total” / “No capabilities”; pager Previous · Page i of n · Next.</li>
+    <li>Table columns Capability (sortable; title||name, description, mono itemName) · Type (sortable; filled badge for Tool, secondary otherwise) · Server (sortable, default asc; link + “Grade G”) · Host; sort headers with chevrons + <code>aria-sort</code>; any change resets offset; page size 50; state component-local.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Preset tiles (Destructive tools · Read-only tools · Prompts · Shadowed names) as one-click filters; grade glyph beside the server; Add MCP server shortcut in the header.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading “Loading capabilities…” (skeleton row shown); error “Could not load the capability directory” + Retry; empty “No capabilities found”.</li></ul>
+</template>
+</body>
+</html>

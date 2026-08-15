@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claims 837P · Catalog · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (no new tokens) */
+  .fmt { white-space: nowrap; }
+  .orb-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .orb-btn .lbl { font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .tile { padding: 12px 14px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; }
+  .tile .tv { font-size: var(--fs-2xl); font-weight: 600; letter-spacing: var(--track-tight); font-variant-numeric: tabular-nums; }
+  .compbar { display: flex; height: 8px; border-radius: var(--r-full); overflow: hidden; background: var(--bg-inset); }
+  .compbar > span { display: block; height: 100%; }
+  .entity { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--r-sm); font-size: var(--fs-xs); }
+  .entity:hover { background: var(--bg-subtle); }
+  .entity .tag { min-width: 72px; justify-content: center; }
+  .field-row { display: grid; grid-template-columns: 200px 140px 1fr; gap: 10px; padding: 4px 8px 4px 40px; font-size: var(--fs-xs); border-top: 1px dashed var(--border); }
+  .tree-row { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px; border-radius: var(--r-sm); font-size: var(--fs-xs); }
+  .tree-row:hover { background: var(--bg-subtle); }
+  .tree-row.is-active { background: var(--accent-soft); }
+  .tree-row > .mono { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tree-row .badge { flex-shrink: 0; }
+  .tree-row .loc { margin-left: auto; color: var(--fg-subtle); font-family: var(--font-mono); font-size: var(--fs-2xs); white-space: nowrap; flex-shrink: 0; }
+  .finding { display: flex; gap: 10px; padding: 8px 10px; border-radius: var(--r-sm); font-size: var(--fs-xs); border-top: 1px solid var(--border); }
+  .finding:first-child { border-top: 0; }
+  .finding:hover { background: var(--bg-subtle); }
+  .finding.is-active { background: var(--accent-soft); }
+  .proj-lane { fill: none; stroke: var(--border-strong); stroke-dasharray: 3 3; }
+  .proj-node { fill: var(--bg-surface); stroke: var(--border-strong); }
+  .proj-node.is-ok { stroke: var(--ok); } .proj-node.is-warn { stroke: var(--warn); } .proj-node.is-danger { stroke: var(--danger); } .proj-node.is-accent { stroke: var(--accent); } .proj-node.is-muted { stroke: var(--fg-faint); }
+  .proj-node.is-selected { stroke-width: 2.5; }
+  .proj-edge { fill: none; stroke: var(--fg-faint); stroke-width: 1.25; }
+  .proj-text { font-size: 10px; fill: var(--fg); font-family: var(--font-mono); }
+  .proj-lbl { font-size: 10px; fill: var(--fg-subtle); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .diff-grid .code { border-radius: 0; }
+  .rail-step { display: grid; grid-template-columns: 36px 1fr; gap: 14px; }
+  .rail-step + .rail-step { margin-top: 18px; }
+  .rail-step .icon-tile { position: relative; }
+  .rail-step .icon-tile::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 34px; background: var(--border); }
+  .rail-step:last-child .icon-tile::after { display: none; }
+  .table td.t-num { white-space: nowrap; }
+</style>
+</head>
+<body data-shell="app" data-nav="catalog" data-page="sources/catalog-item" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div class="row-start gap-4 min-w-0">
+          <span class="avatar avatar--xl avatar--hex avatar--c" style="margin-top:22px">CL</span>
+          <div class="min-w-0">
+            <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Bring in</span><i data-lucide="chevron-right"></i><a href="catalog.html">Catalog</a><i data-lucide="chevron-right"></i><span>Claims 837P</span></div>
+            <h1 class="page-title"><span class="t-truncate" title="Claims 837P">Claims 837P</span><span class="badge badge--dot" data-status="active">Active</span></h1>
+            <p class="page-desc"><span class="mono t-xs">cat_c3a5e1 · claims-837p</span> — Professional healthcare claim interchange from the Contoso Health clearinghouse (005010X222A1).</p>
+            <div class="row wrap gap-2 mt-2">
+              <span class="fmt fmt--x12" data-tip="Format: EDI X12">EDI X12</span>
+              <span class="badge badge--outline" data-tip="Protocol: Data Schema">Data Schema</span>
+              <span class="badge" data-tip="Source: Uploaded file"><i data-lucide="file-up"></i>Uploaded file</span>
+              <a class="badge badge--rose" href="#" data-action="tab" data-target="bench" title="1 test suite whose latest run has a previously-passing payload now failing. Open the Test bench tab for the verdict diff."><i data-lucide="flask-conical"></i>Suite regression ×1</a>
+            </div>
+          </div>
+        </div>
+        <div class="page-actions" style="align-items:flex-start">
+          <div class="row gap-4" style="margin-right:12px">
+            <button class="orb-btn" data-action="open" data-target="lint-dialog" data-tip="Open quality score history"><span class="ring ring--lg" style="--p:84;--c:var(--accent)"><span>84</span></span><span class="lbl">Quality</span></button>
+            <button class="orb-btn" data-action="open" data-target="lint-dialog" data-tip="Open lint report"><span class="ring ring--lg" style="--p:84;--c:var(--accent)"><span>B</span></span><span class="lbl">Lint</span></button>
+          </div>
+          <div class="col gap-2" style="align-items:stretch">
+            <button class="btn btn--primary" data-action="open" data-target="convert-dialog"><i data-lucide="git-merge"></i>Re-convert to OpenAPI project</button>
+            <div class="row gap-2">
+              <a class="btn grow" href="../ship/export-studio.html" title="Produce a document in another API format. Unlike Convert, this never turns the item into a project."><i data-lucide="file-output"></i>Export</a>
+              <button class="btn grow" data-action="tab" data-target="source"><i data-lucide="code-2"></i>View code</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tabs" data-tabs="tabs" role="tablist" aria-label="Catalog item detail sections">
+        <button class="tab is-active" role="tab" data-action="tab" data-target="overview"><i data-lucide="layout-dashboard"></i>Overview</button>
+        <button class="tab" role="tab" data-action="tab" data-target="format"><i data-lucide="binary"></i>Format details</button>
+        <button class="tab" role="tab" data-action="tab" data-target="source"><i data-lucide="code-2"></i>Source &amp; code</button>
+        <button class="tab" role="tab" data-action="tab" data-target="provenance"><i data-lucide="route"></i>Provenance</button>
+        <button class="tab" role="tab" data-action="tab" data-target="conversions"><i data-lucide="git-merge"></i>Conversions <span class="count">2</span></button>
+        <button class="tab" role="tab" data-action="tab" data-target="lint"><i data-lucide="shield-check"></i>Lint &amp; score <span class="count">6</span></button>
+        <button class="tab" role="tab" data-action="tab" data-target="bench"><i data-lucide="flask-conical"></i>Test bench</button>
+        <button class="tab" role="tab" data-action="tab" data-target="versions"><i data-lucide="git-branch"></i>Versions <span class="count">3</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Converted strip + Related artifacts (always visible, above the panes) -->
+    <div class="grid" style="grid-template-columns:minmax(0,1fr) 380px;gap:16px">
+      <div class="col gap-3">
+        <div class="banner banner--ok"><i data-lucide="git-merge"></i><div><span class="banner-title">Re-converted to OpenAPI project</span> <span class="banner-body">· <span class="mono">ver_5c0d21</span>: <a href="../build/versions.html">Claims 837P (OpenAPI) ↗</a> — 2 conversions on record.</span></div><div class="banner-actions"><button class="btn btn--sm" data-action="tab" data-target="conversions">View conversion history</button></div></div>
+        <div class="callout t-xs">Struck-through variant when the target project is deleted: <span class="t-strike">Claims 837P (OpenAPI)</span> <span class="t-subtle">— “The converted project was deleted”.</span> Deleted catalog items hide Convert/Export and make Related artifacts read-only.</div>
+      </div>
+      <section class="card">
+        <div class="card__header" style="padding:10px 14px"><div class="card__title"><i data-lucide="link-2"></i>Related artifacts</div><a class="t-xs" href="catalog.html">Show all representations</a></div>
+        <div class="divide-y">
+          <div class="list-row" style="padding:8px 14px"><div class="grow min-w-0"><a class="t-sm t-500" href="../build/versions.html">Claims 837P (OpenAPI)</a><div class="row gap-1 mt-1"><span class="fmt fmt--openapi">OpenAPI 3.1</span><span class="badge badge--outline">REST</span><span class="t-2xs t-subtle">Converted</span></div></div><button class="btn btn--ghost btn--sm">Unlink</button></div>
+          <div class="list-row" style="padding:8px 14px"><div class="grow min-w-0"><a class="t-sm t-500" href="catalog-item.html">Claims 837P — types</a><div class="row gap-1 mt-1"><span class="fmt fmt--jsonschema">JSON Schema</span><span class="badge badge--outline">Data Schema</span><span class="t-2xs t-subtle">Linked</span></div></div><button class="btn btn--ghost btn--sm">Unlink</button></div>
+        </div>
+        <div class="card__footer" style="flex-direction:column;align-items:stretch;gap:8px">
+          <div class="row-between"><button class="btn btn--sm"><i data-lucide="sparkles"></i>Suggest links</button><span class="t-2xs t-subtle">1 suggestion</span></div>
+          <div class="row gap-2 t-xs"><div class="grow min-w-0"><div class="t-500">Claims Acknowledgment 999</div><div class="t-subtle">Same trading partner and transaction family</div></div><span class="fmt fmt--x12">EDI X12</span><button class="btn btn--sm btn--soft">Link</button></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="tabs">
+    <!-- ================= Overview ================= -->
+    <section data-tab-panel="overview" role="tabpanel">
+      <div class="grid grid-main-aside">
+        <div class="col gap-6">
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="layout-grid"></i>API surface</div><span class="t-xs t-subtle">29 normalized entities</span></div>
+            <div class="card__body">
+              <div class="grid grid-4">
+                <div class="tile"><div class="row gap-2 t-xs t-muted"><i data-lucide="server" style="color:var(--ok)"></i>Services</div><div class="tv">1</div><div class="t-2xs t-subtle">3% of surface</div></div>
+                <div class="tile"><div class="row gap-2 t-xs t-muted"><i data-lucide="zap" style="color:var(--accent)"></i>Operations</div><div class="tv">1</div><div class="t-2xs t-subtle">3% of surface</div></div>
+                <div class="tile"><div class="row gap-2 t-xs t-muted"><i data-lucide="braces" style="color:var(--violet)"></i>Types</div><div class="tv">27</div><div class="t-2xs t-subtle">94% of surface</div></div>
+                <div class="tile"><div class="row gap-2 t-xs t-muted"><i data-lucide="radio" style="color:var(--rose)"></i>Channels</div><div class="tv t-faint">—</div><div class="t-2xs t-subtle">Not captured</div></div>
+              </div>
+              <div class="compbar mt-3"><span style="width:3%;background:var(--ok)" title="Services: 1 (3%)"></span><span style="width:3%;background:var(--accent)" title="Operations: 1 (3%)"></span><span style="width:94%;background:var(--violet)" title="Types: 27 (94%)"></span></div>
+              <div class="row gap-2 t-xs t-muted mt-2"><i data-lucide="info" style="width:12px;height:12px"></i>1 transaction set · 27 loops and segments captured as types · envelope kept as provenance</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="box"></i>Types<span class="badge">27</span><span class="t-xs t-subtle t-500">Loops and segments of the 837P transaction set</span></div><div class="row gap-2"><div class="input-wrap" style="width:220px"><i data-lucide="filter"></i><input class="input input--sm" placeholder="Filter by name or tag…" /></div><span class="t-xs t-subtle">27 of 27</span><button class="btn btn--sm btn--ghost"><i data-lucide="braces"></i>Raw model</button></div></div>
+            <div style="padding:8px">
+              <div class="entity"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">OBJECT</span><span class="mono">ISA_Interchange</span><span class="t-subtle">envelope</span><span class="t-subtle ml-auto">16 fields</span></div>
+              <div class="entity"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">OBJECT</span><span class="mono">Loop2000A_BillingProvider</span><span class="t-subtle">HL*1</span><span class="t-subtle ml-auto">6 fields</span></div>
+              <div class="entity"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">OBJECT</span><span class="mono">Loop2010AA_BillingProviderName</span><span class="t-subtle">NM1*85</span><span class="t-subtle ml-auto">9 fields</span></div>
+              <div class="entity"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">OBJECT</span><span class="mono">Loop2000B_Subscriber</span><span class="t-subtle">HL*2 · SBR</span><span class="t-subtle ml-auto">10 fields</span></div>
+              <div class="entity" style="background:var(--accent-soft)" id="entity-loop2300"><i data-lucide="chevron-down" class="t-faint"></i><span class="tag">OBJECT</span><span class="mono">Loop2300_Claim</span><span class="t-subtle">CLM · HI · DTP</span><span class="t-subtle ml-auto">18 fields</span></div>
+              <div class="field-row"><span class="mono">patientControlNumber</span><span class="mono t-muted">string <span style="color:var(--rose)" title="required">*</span></span><span class="t-muted">CLM01 — provider’s claim id</span></div>
+              <div class="field-row"><span class="mono">totalChargeAmount</span><span class="mono t-muted">decimal <span style="color:var(--rose)" title="required">*</span></span><span class="t-muted">CLM02 — sum of service-line charges</span></div>
+              <div class="field-row"><span class="mono">placeOfService</span><span class="mono t-muted">CLM05 composite</span><span class="t-muted">facility code · frequency code</span></div>
+              <div class="field-row"><span class="mono">providerSignatureOnFile</span><span class="mono t-muted">boolean</span><span class="t-muted">CLM06</span></div>
+              <div class="field-row"><span class="mono">diagnosisCodes</span><span class="mono t-muted">array&lt;HI&gt;</span><span class="t-muted">ABK/ABF qualifiers</span></div>
+              <div class="field-row"><span class="mono">serviceLines</span><span class="mono t-muted">array&lt;Loop2400_ServiceLine&gt; <span style="color:var(--rose)">*</span></span><span class="t-muted">LX loops</span></div>
+              <div class="t-2xs t-subtle" style="padding:4px 8px 4px 40px">… 12 more fields</div>
+              <div class="entity"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">OBJECT</span><span class="mono">Loop2400_ServiceLine</span><span class="t-subtle">LX · SV1 · DTP</span><span class="t-subtle ml-auto">11 fields</span></div>
+              <div class="entity"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">ENUM</span><span class="mono">ClaimFrequencyCode</span><span class="t-subtle">CLM05-3</span><span class="t-subtle ml-auto">3 values</span></div>
+              <div class="t-xs t-subtle t-center" style="padding:8px">… 20 more types</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="server"></i>Services<span class="badge">1</span></div><span class="t-xs t-subtle">1 of 1</span></div>
+            <div style="padding:8px">
+              <div class="entity"><i data-lucide="chevron-down" class="t-faint"></i><span class="tag">SERVICE</span><span class="mono">HealthCareClaim837P</span><span class="t-subtle">ST*837 · 005010X222A1</span><span class="t-subtle ml-auto">1 operation</span></div>
+              <div class="field-row" style="grid-template-columns:200px 1fr"><span class="row gap-2"><span class="tag">OPERATION</span><span class="mono">submitClaim</span></span><span class="t-muted">Loop2300_Claim → 999/277CA acknowledgment (out of band)</span></div>
+            </div>
+          </div>
+        </div>
+        <aside class="col gap-6">
+          <section class="card card--pad">
+            <div class="row-between"><div class="t-h4">Quality snapshot</div><a class="t-xs" href="#" data-action="tab" data-target="lint">Open Lint &amp; score →</a></div>
+            <div class="row gap-3 mt-3"><span class="badge badge--lg badge--sq badge--mono badge--ok">B</span><div><div class="t-h2">84 <span class="t-sm t-subtle t-500">/100</span></div><div class="t-xs t-muted">Good · 70–89</div></div></div>
+            <div class="progress mt-3"><span style="width:84%"></span></div>
+            <div class="t-xs t-muted mt-2">Minor improvements needed.</div>
+          </section>
+          <section class="card card--pad">
+            <div class="row-between"><div class="t-h4">Source snapshot</div><a class="t-xs" href="#" data-action="tab" data-target="source">View source →</a></div>
+            <div class="row gap-3 mt-3"><span class="icon-tile icon-tile--accent"><i data-lucide="file-up"></i></span><div class="min-w-0"><div class="t-sm t-500 t-truncate">claims-837p-sample.edi</div><div class="t-xs t-subtle">File upload</div></div></div>
+            <div class="row wrap gap-1 mt-3"><span class="badge badge--ok">Content captured</span><span class="badge badge--info">Downloadable</span><span class="badge badge--outline t-truncate" style="max-width:100%" title="upload://claims-837p-sample.edi">upload://claims-837p-sample.edi</span></div>
+          </section>
+          <section class="card card--pad">
+            <div class="row-between"><div class="t-h4">Model observability</div><span class="t-xs t-subtle">28 entities · 143 fields</span></div>
+            <div class="mt-3"><div class="row-between t-xs"><span>Documented fields</span><span class="t-num">61 / 143</span></div><div class="meter mt-1"><div class="progress progress--warn"><span style="width:43%"></span></div><span class="meter-val">43%</span></div><div class="t-2xs t-subtle">carry a description</div></div>
+            <div class="mt-3"><div class="row-between t-xs"><span>Required fields</span><span class="t-num">88 / 143</span></div><div class="meter mt-1"><div class="progress"><span style="width:62%"></span></div><span class="meter-val">62%</span></div><div class="t-2xs t-subtle">are required</div></div>
+            <div class="t-caps mt-4 mb-2">Entity kinds</div>
+            <div class="row wrap gap-1"><span class="tag">SERVICE 1 · 3%</span><span class="tag">OPERATION 1 · 3%</span><span class="tag">OBJECT 24 · 86%</span><span class="tag">ENUM 3 · 8%</span></div>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= Format details ================= -->
+    <section data-tab-panel="format" role="tabpanel" hidden>
+      <div class="col gap-6">
+        <div class="card">
+          <div class="card__header"><div><div class="card__title"><i data-lucide="binary"></i>Format details</div><div class="t-xs t-muted mt-1">The imported payload in its own vocabulary</div></div><div class="row wrap gap-1"><span class="badge badge--ok">Available</span><span class="badge badge--outline">Bounded — 0 nodes dropped</span><span class="badge badge--warn">2 analyzer warnings</span><span class="badge badge--violet">271 values withheld</span><span class="badge badge--mono badge--outline">x12@1.4.0</span></div></div>
+          <div class="card__body">
+            <p class="t-sm t-muted">The analyzer described the whole captured source within its budget.</p>
+            <div class="stat-grid stat-grid--4 mt-3">
+              <div class="stat" style="padding:12px 14px"><div class="stat__label">Nodes</div><div class="stat__value" style="font-size:var(--fs-2xl)">412</div></div>
+              <div class="stat" style="padding:12px 14px"><div class="stat__label">Depth</div><div class="stat__value" style="font-size:var(--fs-2xl)">6</div></div>
+              <div class="stat" style="padding:12px 14px"><div class="stat__label">Warnings</div><div class="stat__value" style="font-size:var(--fs-2xl)">2</div></div>
+              <div class="stat" style="padding:12px 14px"><div class="stat__label">Values</div><div class="stat__value" style="font-size:var(--fs-2xl)">structural</div><div class="stat__foot"><span>Whether a value was present and how long it was; never what it said.</span></div></div>
+            </div>
+            <div class="t-caps mt-4 mb-2">Native constructs</div>
+            <div class="row wrap gap-1"><span class="badge badge--outline">Interchange 1</span><span class="badge badge--outline">Functional group 1</span><span class="badge badge--outline">Transaction set 2</span><span class="badge badge--outline">Segment 38</span><span class="badge badge--outline">Element 271</span><span class="badge badge--outline">Composite 9</span><span class="badge badge--outline">Component 11</span><span class="badge badge--outline">Repetition 4</span></div>
+            <div class="t-caps mt-4 mb-2">Analyzer warnings</div>
+            <div class="col gap-1 t-xs">
+              <div class="row gap-2"><span class="badge badge--warn">! Warning</span><span class="mono">X12-SE01-MISMATCH</span><span>SE01 declares 19 segments but 18 were observed in transaction set 0002.</span><span class="mono t-subtle ml-auto">line 42</span></div>
+              <div class="row gap-2"><span class="badge badge--info">i Info</span><span class="mono">X12-ISA14-NO-ACK</span><span>No acknowledgment was requested (ISA14 = 0).</span><span class="mono t-subtle ml-auto">line 1</span></div>
+            </div>
+            <div class="callout mt-3 t-xs">States kept: “Loading the native payload analysis…” · 403: “You do not have permission to read this item’s native payload structure, which is gated on <span class="mono">imports:view</span>. This is a permission boundary — the analysis itself may well exist.” · missing node: “The linked node … is not in this analysis. A re-import or an analyzer upgrade mints a new analysis, and node ids are only stable within one.”</div>
+          </div>
+        </div>
+
+        <!-- X12 interchange inspector -->
+        <div class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="mail-open"></i>Interchange 000012847<span class="badge badge--outline badge--mono">ISA12 00501</span><span class="badge badge--ok">Production (P)</span></div><span class="t-xs t-subtle">X12 interchange inspector</span></div>
+          <div class="card__body col gap-4">
+            <div class="grid grid-5">
+              <div><div class="t-caps">Sender (ISA06)</div><div class="mono t-sm">CONTOSOHLTH</div></div>
+              <div><div class="t-caps">Receiver (ISA08)</div><div class="mono t-sm">ACMEPAYER</div></div>
+              <div><div class="t-caps">Date (ISA09)</div><div class="mono t-sm">260812</div></div>
+              <div><div class="t-caps">Time (ISA10)</div><div class="mono t-sm">1432</div></div>
+              <div><div class="t-caps">Ack requested (ISA14)</div><div class="mono t-sm">0 — no</div></div>
+            </div>
+            <div>
+              <div class="t-caps mb-2">Declared delimiters</div>
+              <div class="grid grid-4">
+                <div class="tile"><div class="t-xs t-muted">Element</div><div class="row gap-2"><code class="t-lg">*</code><span class="t-xs t-subtle mono">U+002A</span></div></div>
+                <div class="tile"><div class="t-xs t-muted">Component</div><div class="row gap-2"><code class="t-lg">:</code><span class="t-xs t-subtle mono">U+003A</span></div></div>
+                <div class="tile"><div class="t-xs t-muted">Repetition</div><div class="row gap-2"><code class="t-lg">^</code><span class="t-xs t-subtle mono">U+005E</span></div></div>
+                <div class="tile"><div class="t-xs t-muted">Segment terminator</div><div class="row gap-2"><code class="t-lg">~</code><span class="t-xs t-subtle mono">U+007E</span></div></div>
+              </div>
+            </div>
+            <div class="row gap-2 t-xs"><span class="t-caps">Interchange control total</span><span>Functional groups observed: <span class="t-600">1</span></span><span class="badge badge--ok">matches IEA01</span></div>
+            <div>
+              <div class="t-caps mb-2">Functional groups and transaction sets</div>
+              <div class="card card--flat">
+                <div class="card__header" style="padding:10px 14px"><div class="row wrap gap-2 t-sm"><span class="t-600">Functional group 1 · HC</span><span class="badge badge--outline badge--mono">version 005010X222A1</span><span class="badge badge--outline badge--mono">GS06 12847</span><span class="badge badge--outline">agency X</span></div><span class="t-xs t-muted mono">CONTOSOHLTH → ACMEPAYER · 20260812 · 1432</span></div>
+                <table class="table table--dense"><thead><tr><th>Set</th><th>Control number</th><th>Convention (ST03)</th><th class="t-right">Segments</th><th>Repeated segments</th></tr></thead><tbody>
+                  <tr><td><a href="#" class="mono" title="show this transaction set in the structure tree">837</a> <span class="badge badge--ok">converted</span></td><td class="mono">0001</td><td class="mono">005010X222A1</td><td class="t-right t-num">20 <span class="badge badge--outline">matches SE01</span></td><td><span class="tag">NM1 ×4</span> <span class="tag">HL ×2</span> <span class="tag">DTP ×2</span></td></tr>
+                  <tr><td><a href="#" class="mono">837</a></td><td class="mono">0002</td><td class="mono">005010X222A1</td><td class="t-right t-num">18 <span class="badge badge--warn">SE01 says 19</span></td><td><span class="tag">NM1 ×3</span> <span class="tag">HL ×2</span></td></tr>
+                </tbody></table>
+                <div class="table-foot"><span>Transaction sets observed: 2</span><span class="badge badge--ok">matches GE01</span></div>
+              </div>
+            </div>
+            <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><span>The canonical model was derived from transaction set <span class="mono">0001</span> alone. This interchange carries 2 transaction sets; the other 1 is described here and nowhere else.</span></div>
+            <div class="callout t-xs">Everything here is what the interchange itself declared. No 4010 or 5010 implementation guide was consulted, so nothing above is a conformance verdict.</div>
+          </div>
+        </div>
+
+        <!-- COBOL copybook inspector (variant shown for copybook items) -->
+        <div class="card" style="box-shadow:0 0 0 1px var(--border-strong) inset, var(--shadow-sm)">
+          <div class="card__header"><div class="card__title"><i data-lucide="rows-3"></i>Record layout POLICY-MASTER-RECORD<span class="badge badge--outline">1,024 bytes</span><span class="badge badge--warn">38 of 41 items sized</span></div><span class="badge badge--honey">Variant · COBOL copybook items only (e.g. Policy Master copybook)</span></div>
+          <div class="card__body col gap-4">
+            <p class="t-xs t-muted">Positional layout the normalized model cannot hold — byte offsets, PICTURE/USAGE, REDEFINES overlays, OCCURS tables and the assumptions behind the byte counts. The record is 1,024 bytes when RIDER-TABLE has its maximum 10 occurrences.</p>
+            <div class="table-wrap" style="box-shadow:0 0 0 1px var(--border) inset">
+              <table class="table table--dense"><thead><tr><th>Item</th><th>Picture</th><th>Bytes</th><th class="t-right">Length</th><th>Notes</th></tr></thead><tbody>
+                <tr><td class="mono"><span class="t-subtle">01</span> <a href="#">POLICY-MASTER-RECORD</a></td><td class="t-subtle" style="font-style:italic">group</td><td class="mono">0–1023</td><td class="t-right t-num">1,024</td><td></td></tr>
+                <tr><td class="mono" style="padding-left:28px"><span class="t-subtle">05</span> <a href="#">POLICY-NUMBER</a></td><td class="mono">X(12)</td><td class="mono">0–11</td><td class="t-right t-num">12</td><td><span class="tag" title="Basis: DISPLAY, 1 byte per character">DISPLAY</span> <span class="tag">field on Policy</span></td></tr>
+                <tr><td class="mono" style="padding-left:28px"><span class="t-subtle">05</span> <a href="#">HOLDER-NAME</a></td><td class="mono">X(40)</td><td class="mono">12–51</td><td class="t-right t-num">40</td><td><span class="tag">field on Policy</span></td></tr>
+                <tr><td class="mono" style="padding-left:28px"><span class="t-subtle">05</span> <a href="#">PREMIUM-AMT</a></td><td class="mono">S9(7)V99 COMP-3</td><td class="mono">52–56</td><td class="t-right t-num">5</td><td><span class="tag" title="Basis: packed decimal, ⌈(digits+1)/2⌉ bytes">COMP-3</span> <span class="tag">signed</span> <span class="tag">2 dp</span></td></tr>
+                <tr><td class="mono" style="padding-left:28px"><span class="t-subtle">05</span> <a href="#">POLICY-STATUS</a></td><td class="mono">X(2)</td><td class="mono">96–97</td><td class="t-right t-num">2</td><td><span class="tag" title="88-levels: ACTIVE, LAPSED, CANCELLED">3 conditions</span></td></tr>
+                <tr><td class="mono" style="padding-left:28px"><span class="t-subtle">05</span> <a href="#">POLICY-STATUS-X</a></td><td class="mono">X(2)</td><td class="mono">96–97</td><td class="t-right t-num">2</td><td><span class="badge badge--violet">redefines POLICY-STATUS</span></td></tr>
+                <tr><td class="mono" style="padding-left:28px"><span class="t-subtle">05</span> <a href="#">RIDER-TABLE</a></td><td class="t-subtle" style="font-style:italic">group</td><td class="mono t-subtle" style="font-style:italic">varies</td><td class="t-right t-num">240–2,400</td><td><span class="badge badge--info">OCCURS 1–10</span></td></tr>
+              </tbody></table>
+            </div>
+            <div class="grid grid-2">
+              <div class="card card--soft" style="padding:12px 14px"><div class="t-caps mb-1">Shared storage (REDEFINES)</div><div class="t-xs"><span class="mono">POLICY-STATUS</span> occupies bytes 96–97, and the same bytes are described again by: <span class="badge badge--violet">POLICY-STATUS-X — 2 bytes</span></div></div>
+              <div class="card card--soft" style="padding:12px 14px"><div class="t-caps mb-1">Tables</div><div class="t-xs"><span class="mono">RIDER-TABLE</span> · 1–10 occurrences · controlled by <span class="mono">RIDER-COUNT</span></div></div>
+            </div>
+            <div class="t-xs t-muted"><span class="t-600">What these byte counts assume:</span> DISPLAY items are 1 byte per character (EBCDIC single-byte) · COMP-3 packs two digits per byte plus a sign nibble · SYNC alignment is not applied · OCCURS DEPENDING ON tables are sized at their maximum.</div>
+          </div>
+        </div>
+
+        <!-- Native structure tree + evidence -->
+        <div class="grid" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px">
+          <div class="card">
+            <div class="card__header" style="padding:10px 14px"><div class="row gap-2"><div class="input-wrap" style="width:260px"><i data-lucide="filter"></i><input class="input input--sm" placeholder="Filter the native structure…" aria-label="Filter the native structure by name, construct, or source location" /></div><span class="t-xs t-subtle">412 of 412 nodes shown</span></div><div class="row gap-2"><button class="btn btn--sm btn--ghost">Collapse all</button><span class="badge badge--outline">windowed</span></div></div>
+            <div style="padding:6px;max-height:380px;overflow:auto" role="tree" aria-label="Native structure">
+              <div class="tree-row"><i data-lucide="chevron-down" class="t-faint"></i><span class="tag">Interchange</span><span class="mono">ISA 000012847</span><span class="loc">line 1</span></div>
+              <div class="tree-row" style="padding-left:24px"><i data-lucide="chevron-down" class="t-faint"></i><span class="tag">Functional group</span><span class="mono">GS HC 12847</span><span class="loc">line 2</span></div>
+              <div class="tree-row" style="padding-left:44px"><i data-lucide="chevron-down" class="t-faint"></i><span class="tag">Transaction set</span><span class="mono">ST 837 0001</span><span class="loc">line 3</span></div>
+              <div class="tree-row" style="padding-left:64px"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">Segment</span><span class="mono">BHT</span><span class="loc">line 4</span></div>
+              <div class="tree-row" style="padding-left:64px"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">Segment</span><span class="mono">NM1 (41 submitter)</span><span class="loc">line 5</span></div>
+              <div class="tree-row" style="padding-left:64px"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">Segment</span><span class="mono">HL (billing provider)</span><span class="loc">line 8</span></div>
+              <div class="tree-row" style="padding-left:64px"><i data-lucide="chevron-down" class="t-faint"></i><span class="tag">Segment</span><span class="mono">CLM</span><span class="badge badge--warn">Info ×1</span><span class="loc">line 16</span></div>
+              <div class="tree-row" style="padding-left:84px"><span class="tag">Element</span><span class="mono">CLM01</span><span class="badge badge--violet">redacted</span><span class="loc">line 16 · 1201</span></div>
+              <div class="tree-row is-active" style="padding-left:84px" aria-selected="true"><span class="tag">Element</span><span class="mono">CLM02</span><span class="badge badge--violet">redacted</span><span class="loc">line 16 · 1211</span></div>
+              <div class="tree-row" style="padding-left:84px"><span class="tag">Element</span><span class="mono">CLM03</span><span class="badge badge--info">Present, empty</span><span class="loc">line 16 · 1218</span></div>
+              <div class="tree-row" style="padding-left:84px"><span class="tag">Element</span><span class="mono">CLM04</span><span class="badge badge--info">Not present</span><span class="loc">—</span></div>
+              <div class="tree-row" style="padding-left:84px"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">Composite</span><span class="mono">CLM05</span><span class="loc">line 16 · 1220</span></div>
+              <div class="tree-row" style="padding-left:64px"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">Segment</span><span class="mono">HI</span><span class="loc">line 17</span></div>
+              <div class="tree-row" style="padding-left:64px"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">Segment</span><span class="mono">LX · SV1 · DTP</span><span class="loc">line 18</span></div>
+              <div class="tree-row" style="padding-left:44px"><i data-lucide="chevron-right" class="t-faint"></i><span class="tag">Transaction set</span><span class="mono">ST 837 0002</span><span class="badge badge--warn">Warning ×1</span><span class="loc">line 24</span></div>
+              <div class="t-2xs t-subtle" style="padding:6px 8px">↑↓ move · → expand · ← collapse · Home/End · type to jump · Enter/Space select</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card__header" style="padding:10px 14px"><div class="card__title">Element CLM02<span class="badge badge--violet">Value withheld</span><span class="badge badge--info">Has a value</span><span class="badge badge--outline badge--mono">CLM02</span></div></div>
+            <div class="card__body col gap-3 t-xs">
+              <p>A value of 6 characters was observed and withheld by the value-visibility policy.</p>
+              <dl class="kv"><dt>Source location</dt><dd class="mono">line 16 · offset 1211–1216</dd><dt>Position</dt><dd>2 of 11 in <span class="mono">CLM</span></dd><dt>Data type</dt><dd class="mono">R (decimal)</dd><dt>Reference designator</dt><dd class="mono">CLM02</dd><dt>Node id</dt><dd class="mono t-subtle">n_1f2a…c8</dd></dl>
+              <div class="row gap-2"><button class="btn btn--sm" data-action="tab" data-target="source"><i data-lucide="code-2"></i>Highlight 6 characters in the source</button><a class="btn btn--sm btn--ghost" href="?tab=format&amp;node=n_1f2a" title="A shareable address for this construct in this analysis"><i data-lucide="link"></i>Link to this construct</a></div>
+              <div class="t-2xs t-subtle">Position vocabulary: Has a value · Present, empty · Withheld · Not present · Not recorded. Value statements: “Value: …”, “A value was present in the source and it was empty.”, “No value was present in the source here.”</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Format capability panel -->
+        <div class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="book-check"></i>EDI X12 — what apiome records</div><div class="row gap-1"><span class="badge badge--ok">Reviewed</span><span class="badge badge--ok">Available</span></div></div>
+          <div class="card__body col gap-4">
+            <div class="grid grid-3">
+              <div class="tile"><div class="t-caps">Structure</div><div class="t-sm t-500 mt-1">Format-native structure</div></div>
+              <div class="tile"><div class="t-caps">Source locations</div><div class="t-sm t-500 mt-1">Byte offsets</div></div>
+              <div class="tile"><div class="t-caps">Values</div><div class="t-sm t-500 mt-1">Presence and length only</div></div>
+            </div>
+            <div class="grid grid-2">
+              <div><div class="t-caps mb-2">Modelled</div><div class="row wrap gap-1"><span class="badge badge--outline">Interchange</span><span class="badge badge--outline">Functional group</span><span class="badge badge--outline">Transaction set</span><span class="badge badge--outline">Segment</span><span class="badge badge--outline">Element</span><span class="badge badge--outline">Composite</span><span class="badge badge--outline">Component</span><span class="badge badge--outline">Repetition</span></div><div class="t-2xs t-subtle mt-1">Constructs the analyzer records with position and presence.</div></div>
+              <div><div class="t-caps mb-2">Not modelled (parsing limits)</div><div class="row wrap gap-1"><span class="badge">Implementation-guide loops</span><span class="badge">Code-list semantics</span><span class="badge">BIN segment payloads</span></div><div class="t-2xs t-subtle mt-1">Loops such as 2000A/2300 are identified heuristically for the canonical model, never from a guide.</div></div>
+            </div>
+            <div class="grid grid-2">
+              <div class="tile"><div class="t-caps">Canonical projection</div><div class="t-sm mt-1"><span class="badge badge--warn">Partially projected</span> <span class="t-xs t-muted">dropped: envelope control numbers, delimiters</span></div></div>
+              <div class="tile"><div class="t-caps">Conversion</div><div class="t-sm mt-1"><span class="badge badge--ok">Converts to every export target</span></div></div>
+            </div>
+            <dl class="kv t-xs"><dt>Nodes kept</dt><dd>5,000</dd><dt>Depth kept</dt><dd>12</dd><dt>Nodes visited</dt><dd>412</dd><dt>Value preview characters</dt><dd>0</dd></dl>
+            <ul class="t-xs t-muted" style="padding-left:16px;list-style:disc"><li>Boundaries: no 4010/5010 implementation guide is consulted; HIPAA conformance is out of scope.</li><li>Values are never stored beyond presence and length for this format.</li></ul>
+            <div class="t-2xs t-subtle">Analyzer x12@1.4.0 · pyx12 3.1 · Capability registry v7 · reviewed 2026-07-30</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Source & code ================= -->
+    <section data-tab-panel="source" role="tabpanel" hidden>
+      <div class="card">
+        <div class="card__header" style="flex-wrap:wrap"><div class="row wrap gap-2"><div class="card__title"><i data-lucide="code-2"></i>Source &amp; code</div><span class="fmt fmt--x12">EDI X12</span><span class="badge"><i data-lucide="file-up"></i>Uploaded file</span><span class="tag">language: x12</span></div><div class="row gap-2"><a class="btn btn--sm" href="#" download><i data-lucide="download"></i>Download raw source</a><button class="btn btn--sm is-active" aria-pressed="true" style="background:var(--bg-subtle)"><i data-lucide="wrap-text"></i>Wrap</button><a class="btn btn--sm btn--ghost" href="#" target="_blank" rel="noopener"><i data-lucide="external-link"></i>Open source URL</a></div></div>
+        <div class="banner banner--neutral" style="border-radius:0"><i data-lucide="lock"></i><span>Read-only view of the raw imported source.</span></div>
+        <div class="banner" style="border-radius:0"><i data-lucide="crosshair"></i><span>Format details construct <span class="mono">Element CLM02</span> for <span class="mono">claims-837p-sample.edi</span>: selecting 6 characters from offset 1211 on line 16.</span></div>
+        <div class="code code--dark code--lines" style="border-radius:0 0 var(--r-lg) var(--r-lg);height:520px">
+<span>ISA*00*          *00*          *ZZ*CONTOSOHLTH    *ZZ*ACMEPAYER      *260812*1432*^*00501*000012847*0*P*:~</span>
+<span>GS*HC*CONTOSOHLTH*ACMEPAYER*20260812*1432*12847*X*005010X222A1~</span>
+<span>ST*837*0001*005010X222A1~</span>
+<span>BHT*0019*00*CLM20260812-001*20260812*1432*CH~</span>
+<span>NM1*41*2*CONTOSO HEALTH CLEARINGHOUSE*****46*CH12345~</span>
+<span>PER*IC*EDI SUPPORT*TE*5551234567~</span>
+<span>NM1*40*2*ACME PAYER*****46*ACME01~</span>
+<span>HL*1**20*1~</span>
+<span>NM1*85*2*RIVERSIDE FAMILY PRACTICE*****XX*1234567893~</span>
+<span>N3*100 MAIN ST~</span>
+<span>N4*SPRINGFIELD*IL*62701~</span>
+<span>REF*EI*123456789~</span>
+<span>HL*2*1*22*0~</span>
+<span>SBR*P*18*******MC~</span>
+<span>NM1*IL*1*DOE*JANE****MI*ABC123456~</span>
+<span style="background:rgba(90,166,242,.18)">CLM*PCN-0001*<mark style="background:var(--honey);color:#2A1F00;border-radius:2px">250.00</mark>***11:B:1*Y*A*Y*Y~</span>
+<span>HI*ABK:J209~</span>
+<span>LX*1~</span>
+<span>SV1*HC:99213*250.00*UN*1***1~</span>
+<span>DTP*472*D8*20260805~</span>
+<span>SE*20*0001~</span>
+<span>ST*837*0002*005010X222A1~</span>
+<span>BHT*0019*00*CLM20260812-002*20260812*1432*CH~</span>
+<span><span class="c-c">… 16 more segments</span></span>
+<span>SE*19*0002~</span>
+<span>GE*2*12847~</span>
+<span>IEA*1*000012847~</span></div>
+      </div>
+      <div class="callout t-xs mt-3">Not captured variant: “Original source provenance was not recorded for this item.” + “The raw source was not captured at import, so it cannot be viewed or downloaded here.” · Loading: “Loading source…” · Error: “The raw source could not be loaded.” · Editor offline: <span class="mono">&lt;pre&gt;</span> fallback “The code editor could not be loaded (offline?). Raw source:”. Compatibility deep link (<span class="mono">?tab=source&amp;sourcePath=&amp;line=</span>): “Compatibility deep link for {path}: highlighting line N.”</div>
+    </section>
+
+    <!-- ================= Provenance ================= -->
+    <section data-tab-panel="provenance" role="tabpanel" hidden>
+      <div class="card">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="route"></i>Provenance</div><div class="t-xs t-muted mt-1">How this item reached the catalog</div></div></div>
+        <div class="card__body" style="max-width:820px">
+          <div class="rail-step"><span class="icon-tile icon-tile--accent"><i data-lucide="file-up"></i></span><div><div class="t-caps">Step 1 · Source intake</div><div class="t-sm t-600">Where the imported document came from.</div><div class="row wrap gap-1 mt-2"><span class="mono t-sm">claims-837p-sample.edi</span><span class="badge badge--outline">File upload</span><span class="badge badge--ok">Content captured</span><span class="badge badge--info">Downloadable</span><span class="badge"><i data-lucide="file-up"></i>Uploaded file</span></div><div class="t-xs t-subtle mono mt-1">upload://claims-837p-sample.edi · 9.4 KB</div></div></div>
+          <div class="rail-step"><span class="icon-tile icon-tile--violet"><i data-lucide="scan-search"></i></span><div><div class="t-caps">Step 2 · Format detection</div><div class="t-sm t-600">The format and protocol the importer recognized this source as.</div><div class="row gap-2 mt-2"><span class="fmt fmt--x12">EDI X12</span><span class="badge badge--outline">Data Schema</span><span class="t-xs t-subtle">98% confidence · ISA envelope + GS/ST structure</span></div></div></div>
+          <div class="rail-step"><span class="icon-tile icon-tile--ok"><i data-lucide="wrench"></i></span><div><div class="t-caps">Step 3 · Normalization</div><div class="t-sm t-600">The toolchain that parsed the source into the canonical model.</div><div class="row wrap gap-1 mt-2"><span class="tag"><i data-lucide="wrench" style="width:11px;height:11px;margin-right:4px"></i>x12-adapter 1.4.0</span><span class="tag">pyx12 3.1.0</span><span class="tag">canonical-model 2.11</span><span class="tag">apiome-rest 0.241.0</span></div></div></div>
+          <div class="rail-step"><span class="icon-tile icon-tile--honey"><i data-lucide="library"></i></span><div><div class="t-caps">Step 4 · Catalog record</div><div class="t-sm t-600">The import job that minted this item, and who ran it when.</div><dl class="kv mt-2 t-xs"><dt>Import job</dt><dd><span class="tag">job_2c9f4a71</span></dd><dt>Created by</dt><dd>Ada Lovelace · ada@example.com</dd><dt>Created</dt><dd>Aug 12, 2026 14:40 · 3 days ago</dd><dt>Last updated</dt><dd>Aug 15, 2026 09:41 · 3 hours ago</dd></dl></div></div>
+        </div>
+      </div>
+      <div class="callout t-xs mt-3">Absent variants: “Not recorded” · “No detected format or protocol was recorded.” · “Tool versions were not recorded for this import.”</div>
+    </section>
+
+    <!-- ================= Conversions ================= -->
+    <section data-tab-panel="conversions" role="tabpanel" hidden>
+      <div class="col gap-6">
+        <div class="card">
+          <div class="card__header"><div><div class="card__title"><i data-lucide="history"></i>Conversion history</div><div class="t-xs t-muted mt-1">Every conversion of this item, newest first, with the exact evidence each one was approved with.</div></div><button class="btn btn--sm btn--ghost"><i data-lucide="rotate-ccw"></i>Retry</button></div>
+          <div class="divide-y">
+            <button class="list-row w-full" style="text-align:left;background:var(--accent-soft)" aria-pressed="true"><span class="dot dot--info"></span><div class="grow min-w-0"><div class="row wrap gap-2 t-sm"><span class="t-num">Aug 15, 2026 09:41</span><span>→ <a href="../build/versions.html">Claims 837P (OpenAPI)</a> <span class="mono">v1.1.0</span></span><span class="badge badge--sq badge--mono badge--ok">B · 81</span><span class="badge badge--info">Re-converted</span><span class="badge badge--outline badge--mono">snapshot 4b7e0c92aa13</span><span class="tag">mode: replace</span></div></div></button>
+            <button class="list-row w-full" style="text-align:left"><span class="dot"></span><div class="grow min-w-0"><div class="row wrap gap-2 t-sm"><span class="t-num">Aug 12, 2026 15:02</span><span>→ <a href="../build/versions.html">Claims 837P (OpenAPI)</a> <span class="mono">v1.0.0</span></span><span class="badge badge--sq badge--mono badge--warn">C · 69</span><span class="badge badge--warn">Source changed since</span><span class="badge badge--outline">No stored snapshot</span><span class="tag">mode: create</span></div></div></button>
+          </div>
+          <div class="card__footer" style="flex-direction:column;align-items:stretch;gap:8px">
+            <div class="banner banner--neutral t-xs"><i data-lucide="info"></i><span>Historic evidence captured Aug 15, 2026 09:41 · snapshot <span class="mono">4b7e0c92aa13</span>. This is the evidence this conversion was approved with.</span></div>
+            <div class="banner banner--warn t-xs"><i data-lucide="triangle-alert"></i><span>The source has changed since this conversion was approved. Open the Convert preview to compute fresh evidence.</span><div class="banner-actions"><button class="btn btn--sm" data-action="open" data-target="convert-dialog">Open the Convert preview</button></div></div>
+          </div>
+        </div>
+
+        <!-- Projection graph panel -->
+        <div class="card">
+          <div class="card__header" style="flex-wrap:wrap"><div><div class="card__title"><i data-lucide="waypoints"></i>Projection graph<span class="badge badge--outline badge--mono">snapshot 4b7e0c92aa13</span></div><div class="t-xs t-muted mt-1">Which source construct became which OpenAPI construct — and why not.</div></div><div class="row gap-1"><button class="btn btn--sm btn--icon" aria-label="Zoom out"><i data-lucide="zoom-out"></i></button><span class="t-xs mono t-muted">1.00×</span><button class="btn btn--sm btn--icon" aria-label="Zoom in"><i data-lucide="zoom-in"></i></button><button class="btn btn--sm btn--ghost">Reset</button><button class="btn btn--sm"><i data-lucide="copy"></i>Copy Mermaid</button><button class="btn btn--sm btn--icon" aria-label="Download .mmd"><i data-lucide="download"></i></button></div></div>
+          <div class="card__body col gap-3">
+            <div class="row wrap gap-1"><span class="badge badge--ok">✓ Retained 19</span><span class="badge badge--info">⇄ Transformed 5</span><span class="badge badge--violet">∴ Inferred 4</span><span class="badge badge--danger">× Dropped 3</span><span class="badge badge--outline">⊘ Unavailable 1</span><span class="badge">— Not applicable 2</span><span class="t-2xs t-subtle ml-auto">Drawing 12 of 34 constructs (worst first) — the table lists every one.</span></div>
+            <div class="card card--flat" style="padding:10px;overflow:auto">
+              <svg viewBox="0 0 900 250" width="100%" height="250" role="img" aria-label="Projection graph: X12 constructs to OpenAPI outcome">
+                <text x="16" y="16" class="proj-lbl">Source / native</text><text x="340" y="16" class="proj-lbl">Construct</text><text x="640" y="16" class="proj-lbl">OpenAPI outcome</text>
+                <rect x="0" y="26" width="900" height="70" rx="6" class="proj-lane"/><text x="8" y="40" class="proj-lbl">In the OpenAPI document (28)</text>
+                <rect x="0" y="104" width="900" height="66" rx="6" class="proj-lane"/><text x="8" y="118" class="proj-lbl">Omitted from OpenAPI (3)</text>
+                <rect x="0" y="178" width="900" height="66" rx="6" class="proj-lane"/><text x="8" y="192" class="proj-lbl">Unavailable or not applicable (3)</text>
+                <g><rect x="16" y="52" width="150" height="26" rx="6" class="proj-node"/><text x="26" y="69" class="proj-text">Loop 2300 CLM</text><path d="M166 65 C250 65, 260 65, 340 65" class="proj-edge"/><rect x="340" y="52" width="170" height="26" rx="6" class="proj-node is-ok"/><text x="350" y="69" class="proj-text">✓ schema Claim</text><path d="M510 65 C580 65, 590 65, 640 65" class="proj-edge"/><rect x="640" y="52" width="240" height="26" rx="6" class="proj-node is-ok"/><text x="650" y="69" class="proj-text">#/components/schemas/Loop2300_Claim</text></g>
+                <g><rect x="16" y="130" width="150" height="26" rx="6" class="proj-node"/><text x="26" y="147" class="proj-text">ISA/IEA envelope</text><path d="M166 143 C250 143, 260 143, 340 143" class="proj-edge"/><rect x="340" y="130" width="170" height="26" rx="6" class="proj-node is-danger is-selected"/><text x="350" y="147" class="proj-text">× control numbers</text><path d="M510 143 C580 143, 590 143, 640 143" class="proj-edge"/><rect x="640" y="130" width="240" height="26" rx="6" class="proj-node is-muted"/><text x="650" y="147" class="proj-text">— provenance only</text></g>
+                <g><rect x="16" y="204" width="150" height="26" rx="6" class="proj-node"/><text x="26" y="221" class="proj-text">999 acknowledgment</text><path d="M166 217 C250 217, 260 217, 340 217" class="proj-edge"/><rect x="340" y="204" width="170" height="26" rx="6" class="proj-node is-muted"/><text x="350" y="221" class="proj-text">⊘ response schema</text><path d="M510 217 C580 217, 590 217, 640 217" class="proj-edge"/><rect x="640" y="204" width="240" height="26" rx="6" class="proj-node is-violet is-accent"/><text x="650" y="221" class="proj-text">∴ 202 Accepted (synthesized)</text></g>
+              </svg>
+            </div>
+            <!-- Evidence drawer -->
+            <div class="card" style="box-shadow:0 0 0 1px var(--accent) inset, var(--shadow-sm)" aria-live="polite">
+              <div class="card__header" style="padding:10px 14px"><div class="row wrap gap-2"><span class="t-caps">Selected construct evidence</span><span class="mono t-sm t-600">ISA/IEA envelope</span><span class="badge badge--danger">Dropped</span><span class="badge badge--warn">warning</span><span class="t-xs t-subtle">Loss evidence · stands for 3 instances</span></div><button class="btn btn--ghost btn--sm btn--icon" aria-label="Close evidence"><i data-lucide="x"></i></button></div>
+              <div class="card__body t-xs" style="padding:12px 14px">
+                <div class="grid" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px">
+                  <div class="col gap-2">
+                    <div class="row wrap gap-2"><span class="badge badge--outline">capability limit</span><span class="mono t-subtle">CONV-X12-ENV-002</span><span class="t-muted">A capability limit (what the converter can express) — not a source defect. Interchange control numbers, delimiters and acknowledgment flags have no OpenAPI construct; they are kept as provenance on the catalog item.</span></div>
+                    <div><span class="t-subtle">Fidelity finding (loss):</span> Envelope metadata — <span class="badge badge--outline">no OpenAPI form</span>. The 837P envelope is transport framing, not API shape.</div>
+                    <dl class="kv"><dt>Canonical object</dt><dd class="mono">provenance:x12.envelope.ISA13</dd><dt>From the source</dt><dd class="mono">claims-837p-sample.edi:1 (ISA*…*000012847)</dd><dt>In the OpenAPI document</dt><dd class="t-faint">— (omitted)</dd></dl>
+                    <div><span class="t-subtle">Evidence refs:</span> <span class="mono">ISA13</span>, <span class="mono">GS06</span>, <span class="mono">ST02</span> <span class="t-subtle">… 2 more references</span></div>
+                    <div class="t-2xs t-subtle">Evidence produced by x12-adapter 1.4.0 · openapi-emitter 3.2 · snapshot 4b7e0c92aa13.</div>
+                  </div>
+                  <div class="card card--soft" style="padding:12px 14px">
+                    <div class="t-sm t-600">What you can do</div>
+                    <div class="t-xs t-muted mt-1">Supply the missing API-level fact and recompute. Applying recomputes the fidelity report and this graph together and re-asks for acknowledgement; cancelling changes nothing.</div>
+                    <div class="field mt-3"><label>Server URLs (comma-separated)</label><input class="input input--mono input--sm" placeholder="https://api.example.com" value="https://claims.acme.dev/x12" /></div>
+                    <div class="row gap-2 mt-3"><button class="btn btn--sm btn--primary">Apply &amp; recompute</button><button class="btn btn--sm btn--ghost">Cancel</button></div>
+                    <div class="t-2xs t-subtle mt-2">Safe-default form is only offered inside the live Convert preview — the history replay is read-only.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="table-wrap" style="box-shadow:0 0 0 1px var(--border) inset;max-height:288px;overflow:auto">
+              <table class="table table--dense"><thead><tr><th>Status</th><th>Construct</th><th>Lands at</th><th>Scope</th><th>Reason</th></tr></thead><tbody>
+                <tr><td><span class="badge badge--ok">✓ Retained</span></td><td class="mono">Loop 2300 CLM</td><td class="mono">#/components/schemas/Loop2300_Claim</td><td>Checklist</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="badge badge--info">⇄ Transformed</span></td><td class="mono">CLM05 composite</td><td class="mono">…/Loop2300_Claim/properties/placeOfService</td><td>Construct</td><td class="t-muted"><span class="mono">CONV-COMP-001</span> — composite flattened to object</td></tr>
+                <tr><td><span class="badge badge--violet">∴ Inferred</span></td><td class="mono">999 acknowledgment</td><td class="mono">responses.202</td><td>Analysis</td><td class="t-muted"><span class="mono">CONV-ACK-003</span> — acknowledgment is out-of-band</td></tr>
+                <tr class="is-selected"><td><span class="badge badge--danger">× Dropped</span></td><td class="mono">ISA/IEA envelope</td><td class="t-faint">—</td><td>Loss</td><td class="t-muted"><span class="mono">CONV-X12-ENV-002</span> — provenance only</td></tr>
+                <tr><td><span class="badge badge--outline">⊘ Unavailable</span></td><td class="mono">HIPAA code lists</td><td class="t-faint">—</td><td>Analysis</td><td class="t-muted"><span class="mono">CONV-CODES-004</span> — no code-list source registered</td></tr>
+                <tr><td colspan="5"><button class="btn btn--link btn--sm"><i data-lucide="chevron-right"></i>19 constructs retained in “In the OpenAPI document” (aggregated) — expand</button></td></tr>
+              </tbody></table>
+            </div>
+            <div class="t-2xs t-subtle">The table is windowed — every one of its 34 rows is reachable by scrolling. Load more · Escape resets selection, zoom and scroll.</div>
+          </div>
+        </div>
+        <div class="callout t-xs">Empty: “No conversions have been recorded for this item yet. Approve a conversion from the Convert preview to start its history.” · No snapshot: “This conversion predates stored evidence snapshots, so its graph cannot be replayed. The recorded fidelity grade and tool versions above remain authoritative.” · Graph banners kept: integrity check, snapshot mismatch, reconciliation mismatch, server truncation, partial load.</div>
+      </div>
+    </section>
+
+    <!-- ================= Lint & score ================= -->
+    <section data-tab-panel="lint" role="tabpanel" hidden>
+      <div class="col gap-6">
+        <div class="row-between wrap gap-2">
+          <div><div class="t-h3">Lint &amp; score</div><div class="row wrap gap-2 t-xs t-muted mt-1"><span>Version <span class="mono">v1.1.0</span></span><span>·</span><span>Scored Aug 15, 2026 09:41</span><span>·</span><span class="badge badge--ok" title="Whether the score shown is the one persisted at import or a live recompute">Stored report</span><span>·</span><span>Fingerprint <span class="mono">9a41…c2e0</span></span></div></div>
+          <div class="row gap-2"><button class="btn btn--sm" data-action="open" data-target="quality-dialog"><i data-lucide="history"></i>Quality history</button><button class="btn btn--sm" data-action="open" data-target="lint-dialog"><i data-lucide="maximize-2"></i>Open full report</button></div>
+        </div>
+        <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px">
+          <div class="card">
+            <div class="card__header" style="padding:10px 14px"><div class="card__title">Score axes &amp; coverage</div><span class="t-xs t-subtle">4 of 5 axes assessed</span></div>
+            <table class="table table--dense"><thead><tr><th>Axis</th><th class="t-right">Score</th><th>Coverage</th><th>Notes</th></tr></thead><tbody>
+              <tr><td>Documentation</td><td class="t-right t-num t-warn t-600">61</td><td><div class="meter" style="width:90px"><div class="progress progress--thin"><span style="width:100%"></span></div></div></td><td class="t-xs t-muted">43% of fields described</td></tr>
+              <tr><td>Structure</td><td class="t-right t-num t-ok t-600">92</td><td><div class="meter" style="width:90px"><div class="progress progress--thin"><span style="width:100%"></span></div></div></td><td class="t-xs t-muted">loops well-formed</td></tr>
+              <tr><td>Consistency</td><td class="t-right t-num t-600" style="color:var(--accent-fg)">80</td><td><div class="meter" style="width:90px"><div class="progress progress--thin"><span style="width:100%"></span></div></div></td><td class="t-xs t-muted">naming from reference designators</td></tr>
+              <tr><td>Compatibility</td><td class="t-right t-num t-600" style="color:var(--accent-fg)">88</td><td><div class="meter" style="width:90px"><div class="progress progress--thin"><span style="width:100%"></span></div></div></td><td class="t-xs t-muted">vs v1.0.1 — no breaking</td></tr>
+              <tr><td class="t-muted">Security</td><td class="t-right t-faint">—</td><td><span class="badge badge--outline">Not assessed</span></td><td class="t-xs t-muted">no security surface in X12</td></tr>
+            </tbody></table>
+          </div>
+          <div class="card card--pad">
+            <div class="row-between"><div class="card__title" style="padding:0">Source-format checks</div><span class="t-xs t-subtle">EDI X12 scanners</span></div>
+            <div class="row wrap gap-2 mt-3"><span class="badge badge--ok"><i data-lucide="check"></i>x12-envelope · pass</span><span class="badge badge--warn"><i data-lucide="triangle-alert"></i>x12-control-totals · 1 warning</span><span class="badge badge--outline"><i data-lucide="circle-off"></i>x12-hipaa-5010 · not registered</span></div>
+            <div class="callout mt-3 t-xs">No format-specific lint pack is registered for HIPAA implementation guides (005010X222A1) — the checks above cover the interchange only. <a href="#">Planned pack issue ↗</a></div>
+          </div>
+        </div>
+        <div class="stat-grid stat-grid--5">
+          <div class="stat"><div class="stat__label" style="color:var(--danger-fg)">MUST</div><div class="stat__value">1</div><div class="stat__foot"><span>Hard requirements (errors)</span></div></div>
+          <div class="stat"><div class="stat__label" style="color:var(--warn-fg)">SHOULD</div><div class="stat__value">3</div><div class="stat__foot"><span>Recommendations (warnings)</span></div></div>
+          <div class="stat"><div class="stat__label">Advisory</div><div class="stat__value">2</div><div class="stat__foot"><span>Informational notes</span></div></div>
+          <div class="stat"><div class="stat__label">Rules triggered</div><div class="stat__value">5</div><div class="stat__foot"><span>Distinct lint rules with findings</span></div></div>
+          <div class="stat"><div class="stat__label">Lint score</div><div class="row gap-3"><span class="badge badge--lg badge--sq badge--mono badge--ok">B</span><div class="stat__value">84<small>/100</small></div></div><div class="progress mt-1"><span style="width:84%"></span></div><div class="stat__foot"><span>Good · deterministic lint</span><span>Converted OpenAPI lint: B · 81/100</span></div></div>
+        </div>
+        <div class="grid" style="grid-template-columns:minmax(0,3fr) minmax(0,7fr);gap:16px">
+          <div class="col gap-4">
+            <div class="card card--pad">
+              <div class="t-h4">Categories</div>
+              <div class="col gap-2 mt-3 t-xs">
+                <div><div class="row-between"><span>Documentation</span><span class="t-num">61</span></div><div class="progress progress--warn progress--thin mt-1"><span style="width:61%"></span></div></div>
+                <div><div class="row-between"><span>Structure</span><span class="t-num">92</span></div><div class="progress progress--ok progress--thin mt-1"><span style="width:92%"></span></div></div>
+                <div><div class="row-between"><span>Consistency</span><span class="t-num">80</span></div><div class="progress progress--thin mt-1"><span style="width:80%"></span></div></div>
+                <div><div class="row-between"><span>Compatibility</span><span class="t-num">88</span></div><div class="progress progress--thin mt-1"><span style="width:88%"></span></div></div>
+              </div>
+              <div class="t-2xs t-subtle mt-3">Severity-breakdown fallback: “n error / n warning / n info” bars with note “per-category 0–100 scores arrive with the lint rollup enrichment (MFI-25.6).”</div>
+            </div>
+            <div class="card">
+              <div class="card__header" style="padding:10px 14px"><div class="card__title">Findings<span class="badge">6</span></div><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button>Group by rule</label></div>
+              <div>
+                <div style="padding:8px 14px 2px" class="t-caps" title="Hard requirements — fix these to raise the grade.">MUST · 1</div>
+                <div class="finding is-active"><div class="grow min-w-0"><div class="row wrap gap-1"><span class="badge" data-status="error">error</span><span class="tag">x12-se01-mismatch</span><span class="t-subtle">Acme X12 baseline</span><a href="#">View rule</a><a href="#" class="mono">line 24</a><span class="badge badge--outline">Open</span><button class="btn btn--sm btn--link ml-auto" data-action="open" data-target="waive-dialog">Waive</button></div><div class="mt-1">SE01 declares 19 segments but 18 were observed in transaction set 0002.</div><a class="mono t-2xs" href="#" data-action="tab" data-target="overview" title="Jump to HealthCareClaim837P in Overview">ST/0002 ↗</a></div></div>
+                <div style="padding:8px 14px 2px" class="t-caps" title="Recommendations — address these to polish the surface.">SHOULD · 3</div>
+                <div class="finding"><div class="grow min-w-0"><div class="row wrap gap-1"><span class="badge" data-status="warning">warning</span><span class="tag">x12-loop-descriptions</span><span class="t-subtle">Acme X12 baseline</span><a href="#">View rule</a><a href="#" class="mono">line 16</a><span class="badge badge--info">Acknowledged</span></div><div class="mt-1">Loop 2300 fields carry no descriptions (12 of 18).</div><a class="mono t-2xs" href="#" title="Jump to Loop2300_Claim in Overview">Loop2300_Claim ↗</a></div></div>
+                <div class="finding"><div class="grow min-w-0"><div class="row wrap gap-1"><span class="badge" data-status="warning">warning</span><span class="tag">x12-isa14-ack</span><span class="t-subtle">Acme X12 baseline</span><a href="#">View rule</a><a href="#" class="mono">line 1</a><span class="badge badge--outline">Open</span></div><div class="mt-1">No acknowledgment requested (ISA14 = 0); 999 tracking will be blind.</div></div></div>
+                <div class="finding"><div class="grow min-w-0"><div class="row wrap gap-1"><span class="badge" data-status="warning">warning</span><span class="tag">x12-hl-parent-chain</span><span class="t-subtle">Acme X12 baseline</span><a href="#">View rule</a><a href="#" class="mono">line 13</a><span class="badge badge--ok">Waived</span></div><div class="mt-1">HL*2 references parent 1 but no child indicator set.</div></div></div>
+                <div style="padding:8px 14px 2px" class="t-caps" title="Informational notes about the surface.">Advisory · 2</div>
+                <div class="finding"><div class="grow min-w-0"><div class="row wrap gap-1"><span class="badge" data-status="info">info</span><span class="tag">x12-repeated-nm1</span><span class="t-subtle">Acme X12 baseline</span><a href="#">View rule</a><a href="#" class="mono">line 5</a></div><div class="mt-1">NM1 repeats 4× in set 0001 — expected for 837P.</div></div></div>
+                <div class="finding"><div class="grow min-w-0"><div class="row wrap gap-1"><span class="badge" data-status="info">info</span><span class="tag">x12-version-current</span><span class="t-subtle">Acme X12 baseline</span><a href="#">View rule</a><span class="t-subtle mono">source</span></div><div class="mt-1">005010 is the current HIPAA version.</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="display:flex;flex-direction:column">
+            <div class="card__header" style="padding:10px 14px"><div class="card__title">Source · line 24<span class="tag">x12-se01-mismatch</span></div><span class="t-xs t-subtle mono">claims-837p-sample.edi</span></div>
+            <div class="code code--lines" style="flex:1;border-radius:0 0 var(--r-lg) var(--r-lg);font-size:var(--fs-2xs)"><span class="t-faint">… 20 earlier lines</span><span>SE*20*0001~</span><span>ST*837*0002*005010X222A1~</span><span>BHT*0019*00*CLM20260812-002*20260812*1432*CH~</span><span style="background:var(--accent-soft)">SE*19*0002~</span><span>GE*2*12847~</span><span>IEA*1*000012847~</span></div>
+            <div class="t-2xs t-subtle" style="padding:8px 14px">Source pane states: “The raw source was not captured at import, so findings cannot be linked to source lines here.” · “Loading source…” · “The captured source is empty.” · amber “Could not locate {path} in the source — showing the document head.”</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Test bench ================= -->
+    <section data-tab-panel="bench" role="tabpanel" hidden>
+      <div class="col gap-6">
+        <div class="row-between wrap gap-2"><div><div class="t-h3 row gap-2"><i data-lucide="flask-conical"></i>Schema test bench</div><div class="t-xs t-muted mt-1">Validate or generate payloads against this item’s schemas at its latest revision. Saved payloads are tenant-scoped; suites are server-persisted with regression tracking.</div></div><div class="row gap-2 t-sm"><span class="t-muted">Version</span><select class="select select--sm" style="width:200px"><option>Latest revision (v1.1.0)</option><option>v1.0.1</option><option>v1.0.0</option></select></div></div>
+        <div class="banner banner--danger" role="alert"><i data-lucide="flask-conical"></i><div><div class="banner-title">Suite regression — “837P golden claims”</div><div class="banner-body t-xs">Payload <span class="mono">claim-multi-line.json</span> passed on v1.0.1 and fails on v1.1.0: <span class="mono">serviceLines[1].procedureCode</span> now requires the HC qualifier. Open the verdict diff below.</div></div><div class="banner-actions"><button class="btn btn--sm">Verdict diff</button></div></div>
+        <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:16px">
+          <div class="col gap-4">
+            <div class="card">
+              <div class="card__header" style="padding:10px 14px"><div class="card__title">Target</div><div class="segmented segmented--sm"><button class="is-active">Component schemas</button><button>Operation bodies</button><button>Registry types</button><button>XML document</button></div></div>
+              <div style="padding:8px">
+                <div class="tree-row"><span class="tag">OBJECT</span><span class="mono">Loop2000A_BillingProvider</span></div>
+                <div class="tree-row is-active"><span class="tag">OBJECT</span><span class="mono">Loop2300_Claim</span><span class="badge badge--ok">selected</span></div>
+                <div class="tree-row"><span class="tag">OBJECT</span><span class="mono">Loop2400_ServiceLine</span></div>
+                <div class="tree-row"><span class="tag">ENUM</span><span class="mono">ClaimFrequencyCode</span></div>
+              </div>
+              <div class="card__footer t-xs"><span class="mono">#/components/schemas/Loop2300_Claim</span></div>
+            </div>
+            <div class="card">
+              <div class="card__header" style="padding:10px 14px"><div class="card__title">Saved payloads<span class="badge">2</span></div><span class="t-2xs t-subtle">browser-local</span></div>
+              <div class="divide-y"><div class="list-row" style="padding:8px 14px"><span class="mono t-xs">claim-single-line.json</span><span class="badge" data-status="passed">passed</span><span class="lr-actions"><button class="btn btn--ghost btn--sm">Load</button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Delete"><i data-lucide="trash-2"></i></button></span></div><div class="list-row" style="padding:8px 14px"><span class="mono t-xs">claim-multi-line.json</span><span class="badge" data-status="failed">failed</span><span class="lr-actions"><button class="btn btn--ghost btn--sm">Load</button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Delete"><i data-lucide="trash-2"></i></button></span></div></div>
+            </div>
+            <div class="card">
+              <div class="card__header" style="padding:10px 14px"><div class="card__title">Suites<span class="badge">1</span></div><button class="btn btn--sm"><i data-lucide="plus"></i>New suite</button></div>
+              <table class="table table--dense"><thead><tr><th>Suite</th><th>Last run</th><th>Verdict</th><th>Regression</th></tr></thead><tbody><tr><td class="cell-primary">837P golden claims</td><td class="t-num t-muted">Aug 15, 09:42</td><td><span class="badge" data-status="failed">3 / 4 pass</span></td><td><span class="badge badge--rose">1 previously passing</span></td></tr></tbody></table>
+            </div>
+          </div>
+          <div class="col gap-4">
+            <div class="card">
+              <div class="card__header" style="padding:10px 14px"><div class="card__title">Payload<span class="tag">json</span><span class="badge badge--honey">synthetic</span></div><div class="row gap-1"><button class="btn btn--sm btn--ghost"><i data-lucide="wand-sparkles"></i>Generate</button><button class="btn btn--sm btn--ghost"><i data-lucide="save"></i>Save payload</button></div></div>
+              <div class="code code--lines" style="border-radius:0;height:220px"><span>{</span><span>  <span class="c-n">"patientControlNumber"</span>: <span class="c-s">"PCN-0001"</span>,</span><span>  <span class="c-n">"totalChargeAmount"</span>: <span class="c-p">250.00</span>,</span><span>  <span class="c-n">"placeOfService"</span>: { <span class="c-n">"facilityCode"</span>: <span class="c-s">"11"</span>, <span class="c-n">"frequencyCode"</span>: <span class="c-s">"1"</span> },</span><span>  <span class="c-n">"diagnosisCodes"</span>: [{ <span class="c-n">"qualifier"</span>: <span class="c-s">"ABK"</span>, <span class="c-n">"code"</span>: <span class="c-s">"J209"</span> }],</span><span>  <span class="c-n">"serviceLines"</span>: [</span><span>    { <span class="c-n">"procedureCode"</span>: <span class="c-s">"99213"</span>, <span class="c-n">"charge"</span>: <span class="c-p">250.00</span>, <span class="c-n">"units"</span>: <span class="c-p">1</span> },</span><span style="background:var(--danger-soft)">    { <span class="c-n">"procedureCode"</span>: <span class="c-s">"HC"</span>, <span class="c-n">"charge"</span>: <span class="c-p">75.00</span> }</span><span>  ]</span><span>}</span></div>
+              <div class="card__footer"><div class="row gap-2"><button class="btn btn--primary btn--sm"><i data-lucide="play"></i>Validate</button><button class="btn btn--sm" title="Uses $APIOME_API_KEY for the Authorization header"><i data-lucide="terminal"></i>Copy as curl</button><button class="btn btn--sm" disabled title="Enabled after a passing validation"><i data-lucide="clipboard-copy"></i>Copy as fixture</button></div><span class="t-xs t-subtle" aria-live="polite">Validated 09:42 · 2 findings</span></div>
+            </div>
+            <div class="card">
+              <div class="card__header" style="padding:10px 14px"><div class="card__title">Findings<span class="badge badge--danger">2</span></div></div>
+              <div class="divide-y t-xs">
+                <div class="list-row" style="padding:8px 14px"><span class="badge" data-status="error">error</span><div class="grow"><div><span class="mono">serviceLines[1]</span> — required property <span class="mono">units</span> is missing</div></div></div>
+                <div class="list-row" style="padding:8px 14px"><span class="badge" data-status="error">error</span><div class="grow"><div><span class="mono">serviceLines[1].procedureCode</span> — must match pattern <span class="mono">^HC:\d{5}$</span></div></div></div>
+              </div>
+            </div>
+            <div class="empty empty--inline empty--dashed" style="padding:12px 16px"><div class="t-xs t-subtle">Generated panel (JSON only): “Generate” produces an example from the schema; results replace the editor with a synthetic marker.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Versions ================= -->
+    <section data-tab-panel="versions" role="tabpanel" hidden>
+      <div class="col gap-6">
+        <div class="row-between wrap gap-2"><div><div class="t-h3">Versions</div><div class="t-xs t-muted mt-1">Tick any two revisions to compare them inline. Catalog items share the versions table with Projects.</div></div><a class="btn btn--sm" href="../build/versions.html"><i data-lucide="git-branch"></i>Open version history</a></div>
+        <div class="grid" style="grid-template-columns:360px minmax(0,1fr);gap:16px">
+          <div class="card">
+            <div class="card__header" style="padding:10px 14px"><span class="t-xs t-muted">2 of 2 selected — showing the diff below (old → new).</span></div>
+            <div style="padding:14px 18px">
+              <div class="timeline">
+                <div class="tl-item is-accent"><label class="check row-start gap-3"><input type="checkbox" checked aria-label="Select v1.1.0 to diff" style="margin-top:2px"/><div><div class="row gap-2"><span class="tl-title mono">v1.1.0</span><span class="badge badge--outline">rev 3</span></div><div class="t-xs t-muted">Re-import from clearinghouse; ST 0002 added.</div><div class="tl-meta">Aug 15, 2026 09:41 · Ada Lovelace</div></div></label></div>
+                <div class="tl-item is-accent"><label class="check row-start gap-3"><input type="checkbox" checked aria-label="Select v1.0.1 to diff" style="margin-top:2px"/><div><div class="row gap-2"><span class="tl-title mono">v1.0.1</span><span class="badge badge--outline">rev 2</span></div><div class="t-xs t-muted">Corrected NM1*85 provider NPI.</div><div class="tl-meta">Aug 3, 2026 11:20 · Grace Hopper</div></div></label></div>
+                <div class="tl-item"><label class="check row-start gap-3" style="opacity:.6"><input type="checkbox" disabled aria-label="Select v1.0.0 to diff" style="margin-top:2px"/><div><div class="row gap-2"><span class="tl-title mono">v1.0.0</span><span class="badge badge--outline">rev 1</span><span class="badge badge--ok"><i data-lucide="lock"></i>Published</span></div><div class="t-xs t-muted">Initial import.</div><div class="tl-meta">Jul 20, 2026 14:12 · Ada Lovelace</div></div></label></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card__header" style="padding:10px 14px"><div class="card__title"><span class="mono">v1.0.1</span> → <span class="mono">v1.1.0</span></div><div class="row gap-2"><button class="btn btn--sm btn--ghost">Expand all</button><div class="segmented segmented--sm" role="radiogroup" aria-label="Diff layout"><button class="is-active">Side-by-side</button><button>Unified</button></div></div></div>
+            <div class="diff-grid" style="border-radius:0">
+              <div class="code" style="font-size:var(--fs-2xs)"><span class="t-faint">… 20 unchanged lines folded</span>
+SE*20*0001~
+<span class="diff-del">GE*1*12847~</span>
+IEA*1*000012847~</div>
+              <div class="code" style="font-size:var(--fs-2xs)"><span class="t-faint">… 20 unchanged lines folded</span>
+SE*20*0001~
+<span class="diff-add">ST*837*0002*005010X222A1~</span>
+<span class="diff-add">BHT*0019*00*CLM20260812-002*…~</span>
+<span class="diff-add">… 16 more segments</span>
+<span class="diff-add">SE*19*0002~</span>
+<span class="diff-add">GE*2*12847~</span>
+IEA*1*000012847~</div>
+            </div>
+            <div class="card__footer t-xs"><span>+21 −1 · unchanged regions folded by default · layout persisted in <span class="mono">catalog-versions-diff-mode</span></span><span class="t-subtle">Building: “Building the diff…” · Error: “Failed to build the diff.”</span></div>
+          </div>
+        </div>
+        <div class="callout t-xs">Empty: “No revisions yet — this catalog item has a single, unversioned import.” · Third checkbox disabled once two are ticked.</div>
+      </div>
+    </section>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- Waive finding -->
+<div class="overlay" id="waive-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-labelledby="waive-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="shield-off"></i></span><div><div class="dialog__title" id="waive-title">Waive finding</div><div class="dialog__desc">Raw severity stays visible; this records an audited policy decision with rationale and expiry.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="card card--soft" style="padding:10px 12px"><div class="row gap-2 t-xs"><span class="badge" data-status="error">error</span><span class="tag">x12-se01-mismatch</span><span class="mono t-subtle">fp_7c9e…41aa</span></div><div class="t-sm mt-1">SE01 declares 19 segments but 18 were observed in transaction set 0002.</div></div>
+      <div class="field"><label>Rationale <span class="req">*</span></label><textarea class="textarea" placeholder="Why is this acceptable for now?">Clearinghouse test file; SE01 will be corrected in the September drop.</textarea></div>
+      <div class="field"><label>Expires <span class="req">*</span></label><input class="input" type="date" value="2026-09-30" style="width:200px" /><div class="hint">Save is disabled until both rationale and expiry are filled. Recorded via POST /api/lint/decisions (state = waived).</div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save waiver</button></div>
+  </div>
+</div>
+
+<!-- Quality & lint report (server) -->
+<div class="overlay" id="lint-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="lint-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="shield-check"></i></span><div><div class="dialog__title" id="lint-title">Quality &amp; lint report — Claims 837P</div><div class="dialog__desc">Server-computed quality score and itemized findings for this catalog item’s latest revision.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="row wrap gap-2 mb-3"><span class="badge badge--lg badge--sq badge--mono badge--ok">B</span><span class="t-sm t-600">Score 84/100</span><span class="badge badge--danger">1 error</span><span class="badge badge--warn">3 warnings</span><span class="badge badge--info">2 info</span><span class="badge badge--outline">Guide: Acme X12 baseline</span><span class="badge badge--outline">Compatibility vs base: no breaking changes</span></div>
+      <div class="banner banner--neutral mb-3"><i data-lucide="info"></i><span>Converted OpenAPI lint of this item scores <strong>B · 81/100</strong>. The score above is the one captured when the source was imported.</span></div>
+      <div class="row-between mb-2"><span class="t-caps">Findings · 6</span><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button>Group by rule</label></div>
+      <div class="col gap-2">
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="tag">x12-se01-mismatch</span><span class="badge" data-status="error">1 error</span><span class="t-sm t-600">SE01 declares 19 segments but 18 were observed</span></div><div class="mono t-2xs t-subtle mt-1">ST/0002 · line 24</div></div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="tag">x12-loop-descriptions</span><span class="badge" data-status="warning">1 warning</span><span class="t-sm t-600">Loop 2300 fields carry no descriptions (12 of 18)</span></div><div class="mono t-2xs t-subtle mt-1">Loop2300_Claim · line 16</div></div>
+        <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="tag">x12-isa14-ack</span><span class="badge" data-status="warning">1 warning</span><span class="t-sm t-600">No acknowledgment requested (ISA14 = 0)</span></div><div class="mono t-2xs t-subtle mt-1">ISA · line 1</div></div>
+        <div class="t-xs t-subtle t-center" style="padding:6px">2 more rules…</div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn btn--ghost left" data-action="close">Retry</button><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Project scores (browser-local) -->
+<div class="overlay" id="quality-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="q-title">
+    <div class="dialog__header"><div><div class="dialog__title" id="q-title">Project scores — Claims 837P</div><div class="dialog__desc">Quality scores (0–100) recorded in this browser when an import finishes. History is stored locally and is not synced across devices.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-4" style="border-bottom:1px solid var(--border)" data-tabs="q-tabs"><button class="tab is-active" data-action="tab" data-target="q-trend">Trend</button><button class="tab" data-action="tab" data-target="q-quality">Quality</button><button class="tab" data-action="tab" data-target="q-lint">Lint <span class="count">6</span></button></div>
+      <div id="q-tabs">
+        <div data-tab-panel="q-trend">
+          <div class="chart-area" style="height:150px"><svg viewBox="0 0 700 150" preserveAspectRatio="none"><g stroke="var(--border)"><line x1="0" y1="10" x2="700" y2="10"/><line x1="0" y1="45" x2="700" y2="45"/><line x1="0" y1="80" x2="700" y2="80"/><line x1="0" y1="115" x2="700" y2="115"/></g><path d="M0 92 L350 60 L700 33 L700 150 L0 150Z" fill="color-mix(in srgb, var(--accent) 12%, transparent)"/><path d="M0 92 L350 60 L700 33" fill="none" stroke="var(--accent)" stroke-width="2"/><g fill="var(--accent)"><circle cx="0" cy="92" r="3"/><circle cx="350" cy="60" r="3"/><circle cx="700" cy="33" r="4"/></g></svg></div>
+          <div class="row-between t-xs t-subtle mt-1"><span>Jul 20, 14:12</span><span>Aug 15, 09:41</span></div>
+          <table class="table table--dense mt-3"><thead><tr><th>Recorded</th><th>Overall</th><th>Grade</th></tr></thead><tbody><tr><td class="t-num">Aug 15, 09:41</td><td class="t-600" style="color:var(--accent-fg)">84</td><td>B</td></tr><tr><td class="t-num">Aug 3, 11:20</td><td class="t-600" style="color:var(--accent-fg)">76</td><td>B</td></tr><tr><td class="t-num">Jul 20, 14:12</td><td class="t-600" style="color:var(--warn-fg)">62</td><td>C</td></tr></tbody></table>
+        </div>
+        <div data-tab-panel="q-quality" hidden><div class="row gap-4"><div class="ring ring--lg" style="--p:84;--c:var(--accent)"><span>84</span></div><div><div class="t-h3">Grade B</div><div class="t-xs t-muted">From import on Aug 15, 09:41</div></div></div><div class="grid grid-2 mt-4"><div class="card card--flat card--pad"><div class="t-xs t-muted">Documentation</div><div class="t-h4">15 / 25</div><div class="meter mt-1"><div class="progress progress--warn"><span style="width:60%"></span></div><span class="meter-val">60%</span></div></div><div class="card card--flat card--pad"><div class="t-xs t-muted">Structure</div><div class="t-h4">23 / 25</div><div class="meter mt-1"><div class="progress progress--ok"><span style="width:92%"></span></div><span class="meter-val">92%</span></div></div></div></div>
+        <div data-tab-panel="q-lint" hidden><div class="banner banner--neutral"><i data-lucide="info"></i><span>1 error, 3 warnings recorded from the import on Aug 15, 09:41.</span></div></div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Conversion preview (compact; full dialog is mocked on catalog.html) -->
+<div class="overlay" id="convert-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-labelledby="cv-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="git-merge"></i></span>
+      <div class="grow"><div class="dialog__title" id="cv-title">Convert to OpenAPI project — Claims 837P</div><div class="dialog__desc">Review what the EDI X12 source can and cannot carry onto OpenAPI before creating a project. Nothing is created until you convert.</div>
+        <div class="row wrap gap-2 mt-2"><span class="badge badge--lg badge--sq badge--mono badge--ok">B</span><span class="t-sm t-600">Fidelity 81/100</span><span class="badge badge--warn">medium fidelity</span><span class="badge badge--outline">−19 penalty</span><span class="badge badge--info">Re-conversion · replaces v1.1.0 evidence</span></div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="banner banner--warn mb-3" role="alert"><i data-lucide="triangle-alert"></i><div><div class="banner-title">Partial fidelity — some constructs had to be inferred</div><div class="banner-body t-xs">The fidelity of the original API may not be complete enough to create a fully defined OpenAPI specification — review the gaps below before converting.</div></div></div>
+      <div class="tabs mb-3" style="border-bottom:1px solid var(--border)" data-tabs="cv-tabs"><button class="tab is-active" data-action="tab" data-target="cv-summary">Summary</button><button class="tab" data-action="tab" data-target="cv-graph">Projection graph</button><button class="tab" data-action="tab" data-target="cv-doc">Conversion</button></div>
+      <div id="cv-tabs">
+        <div data-tab-panel="cv-summary">
+          <div class="grid grid-2 gap-4">
+            <div><div class="t-caps mb-2">What the source provides (4)</div><div class="col gap-2">
+              <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Schemas</span><span class="badge badge--ok">from source · 27</span></div><div class="t-xs t-muted mt-1">Loops and segments become component schemas.</div></div>
+              <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Operations</span><span class="badge badge--info">inferred · 1</span></div><div class="t-xs t-muted mt-1"><span class="mono">POST /claims/837p</span> synthesized from the transaction set.</div></div>
+              <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Enums</span><span class="badge badge--ok">from source · 3</span></div><div class="t-xs t-muted mt-1">Qualifier code sets observed in the interchange.</div></div>
+              <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Required fields</span><span class="badge badge--warn">partial · 88</span></div><div class="t-xs t-muted mt-1">Presence in the sample stands in for a usage guide.</div></div>
+            </div></div>
+            <div><div class="t-caps mb-2">What OpenAPI favors but is missing (3)</div><div class="col gap-2">
+              <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Servers</span><span class="badge badge--outline">inferred</span></div><div class="t-xs t-muted mt-1">X12 declares trading partners, not endpoints.</div></div>
+              <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Responses</span><span class="badge badge--outline">no OpenAPI form</span></div><div class="t-xs t-muted mt-1">999/277CA acknowledgments arrive out of band.</div></div>
+              <div class="card card--flat" style="padding:10px 12px"><div class="row-between"><span class="t-sm t-600">Security schemes</span><span class="badge badge--outline">no OpenAPI form</span></div><div class="t-xs t-muted mt-1">Trading-partner auth lives in the VAN.</div></div>
+            </div>
+            <div class="card card--soft mt-3" style="padding:12px 14px"><div class="t-sm t-600">Fill cheap gaps (optional)</div><div class="t-xs t-muted mb-3">Values you supply here flow into the converted spec, closing gaps the source did not carry.</div><div class="grid grid-3"><div class="field"><label>Title</label><input class="input input--sm" placeholder="Claims 837P" value="Claims 837P (OpenAPI)" /></div><div class="field"><label>Version</label><input class="input input--sm input--mono" placeholder="1.0.0" value="1.2.0" /></div><div class="field"><label>Servers</label><input class="input input--sm input--mono" placeholder="https://api.example.com" value="https://claims.acme.dev/x12" /></div></div><button class="btn btn--sm mt-3"><i data-lucide="refresh-cw"></i>Apply &amp; recompute preview</button></div></div>
+          </div>
+        </div>
+        <div data-tab-panel="cv-graph" hidden><div class="callout t-xs">Same ConversionProjectionGraphPanel as the Conversions tab (legend · zoom · Copy Mermaid · lanes · evidence drawer with SafeDefaultForm · Status/Construct/Lands at/Scope/Reason table). Lazily mounted on first open and kept mounted. See the full rendering under Conversions.</div></div>
+        <div data-tab-panel="cv-doc" hidden><div class="code code--dark code--lines" style="max-height:300px"><span>{</span><span>  <span class="c-n">"openapi"</span>: <span class="c-s">"3.1.0"</span>,</span><span>  <span class="c-n">"info"</span>: { <span class="c-n">"title"</span>: <span class="c-s">"Claims 837P (OpenAPI)"</span>, <span class="c-n">"version"</span>: <span class="c-s">"1.2.0"</span> },</span><span>  <span class="c-n">"paths"</span>: { <span class="c-n">"/claims/837p"</span>: { <span class="c-n">"post"</span>: { <span class="c-n">"requestBody"</span>: { <span class="c-n">"$ref"</span>: <span class="c-s">"#/components/requestBodies/HealthCareClaim837P"</span> }, <span class="c-n">"responses"</span>: { <span class="c-n">"202"</span>: { <span class="c-n">"description"</span>: <span class="c-s">"Accepted — acknowledgment (999) out of band"</span> } } } } },</span><span>  <span class="c-n">"components"</span>: { <span class="c-n">"schemas"</span>: { <span class="c-n">"Loop2300_Claim"</span>: { … }, <span class="c-c">… 26 more</span> } }</span><span>}</span></div></div>
+      </div>
+    </div>
+    <div class="dialog__footer"><label class="check left t-xs" style="opacity:.55"><input type="checkbox" disabled/> I understand the converted spec will be incomplete and want to convert anyway.</label><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close"><i data-lucide="git-merge"></i>Convert</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/catalog/[id]</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/catalog/[id]/page.tsx</code>, <code>CatalogItemDetailClient</code>, <code>CatalogDetailTabs</code>, <code>CatalogRelatedArtifactsPanel</code>, <code>CatalogParsedModel</code>, <code>CatalogFormatDetailPanel</code>, <code>CatalogX12InspectorPanel</code>, <code>CatalogCopybookInspectorPanel</code>, <code>FormatCapabilityPanel</code>, <code>CatalogSourceViewer</code>, <code>CatalogConversionHistoryPanel</code> + <code>ConversionProjectionGraphPanel</code> + <code>ConversionEvidenceDrawer</code> (+ SafeDefaultForm), <code>CatalogLintPanel</code> (+ LintAxisCoveragePanel, SourceFormatChecksPanel), <code>SchemaTestBench</code> (surface=catalog), <code>CatalogVersionsPanel</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: hex avatar · name (truncated, title tooltip) · status pill Active/Disabled/Deleted · <code>cat_id · slug</code> · description or “No description.” · FormatPill / ProtocolPill / SourceBadge / SuiteRegressionBadge (rose “Suite regression ×N”, tooltip verbatim, links to Test bench) · Quality + Lint orbs (server score wins, else local snapshot, else “—”; tier tint) · CTAs: Convert / Re-convert (“…to Project” for openapi/arazzo; hidden when deleted) · Export (tooltip verbatim, Export Studio deep link, hidden when deleted) · View code (→ Source tab).</li>
+    <li>Converted strip “Converted/Re-converted to OpenAPI project · {versionId}: link” (struck-through when the target project is deleted) + “View conversion history”. Related artifacts: linked list (name link, FormatPill, ProtocolPill, Converted/Linked), Unlink, “Show all representations” (identity group), Suggest links + Link; read-only when deleted; empty copy “No linked artifacts yet…”.</li>
+    <li>Tabs (all mounted, <code>?tab=</code> deep links, <code>?tab=source&amp;sourcePath&amp;line</code>, <code>?tab=format&amp;node</code>, WAI tablist keyboard model): Overview (API surface tiles + composition bar + note; Quality snapshot with GradeChip/score/tier; Source snapshot chips; Model observability meters + entity-kind chips; parsed group cards with filter, Raw model toggle, disclosure rows, field rows with rose <code>*</code>) · Format details (status/overlay badges, statement, Nodes/Depth/Warnings/Values, native constructs, analyzer warnings, X12 inspector, copybook inspector variant, tree toolbar + windowed <code>role=tree</code> + evidence card + Link to this construct / Highlight in source, capability panel) · Source &amp; code (FormatPill, SourceBadge, language tag, Download / View source, Wrap, Open source URL, lock notice, highlight note, read-only viewer) · Provenance (4-step rail with verbatim step titles/captions) · Conversions (history rows with grade chip / Re-converted / Source changed since / snapshot chip / mode; historic + stale notes; projection graph with legend, zoom, Copy Mermaid, download, lanes, evidence drawer + SafeDefaultForm, windowed table with aggregate rows) · Lint &amp; score (provenance strip, axes table, source-format checks + planned-pack link, MUST/SHOULD/Advisory/Rules/Lint score tiles, categories bars, findings with rule chip / guide / View rule / line link / decision badge / Waive / entity deep link, source pane, Waive dialog) · Test bench (version select, target picker, payload editor, Validate / Copy as curl / Copy as fixture, findings, generated, saved payloads, suites) · Versions (tick-any-two timeline, Published lock, diff header, Expand all, Side-by-side | Unified, folded unchanged regions).</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Tabs move into the sticky page header; converted strip + related artifacts sit above the panes; Suite regression badge doubles as a link; evidence drawer shows the safe-default form beside the cause.</li></ul>
+  <h4>States</h4>
+  <ul>
+    <li>Loading “Loading catalog item…” · not found: back link + “Catalog item not found.” · deleted: Convert/Export hidden, Related artifacts read-only. Format details 403 / error / missing node / bounding copy kept verbatim; Source not captured / offline fallback; Conversions empty / no snapshot; Lint clean “No findings — clean bill of health.”; Versions empty “No revisions yet — this catalog item has a single, unversioned import.”</li>
+  </ul>
+</template>
+<script>
+(function () {
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-action="tab"]'); if (!t) return;
+    var group = t.closest('[data-tabs]');
+    var scopeId, id = t.getAttribute('data-target');
+    if (!group) { /* out-of-group triggers (e.g. "View code", "Open Lint & score →") drive the main tabs */ group = document.querySelector('[data-tabs="tabs"]'); if (!group) return; }
+    e.preventDefault(); e.stopPropagation();
+    group.querySelectorAll('.tab, .segmented > button, .segmented > a, .step').forEach(function (x) { x.classList.remove('is-active'); });
+    var own = group.querySelector('[data-action="tab"][data-target="' + id + '"]'); if (own) own.classList.add('is-active');
+    var scope = document.getElementById(group.getAttribute('data-tabs')); if (!id || !scope) return;
+    scope.querySelectorAll('[data-tab-panel]').forEach(function (p) { var anc = p.parentElement.closest('[data-tab-panel]'); if (anc && scope.contains(anc)) return; p.hidden = p.getAttribute('data-tab-panel') !== id; });
+    if (group.getAttribute('data-tabs') === 'tabs') window.scrollTo({ top: 0 });
+    if (window.Hive) Hive.icons();
+  }, true);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Migrations · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .cls-row { display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 2px 10px; border-radius: var(--r-sm); font-size: var(--fs-sm); cursor: pointer; }
+  .cls-row:hover { background: var(--bg-subtle); }
+  .cls-row.is-active { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+  .cls-row [data-lucide] { width: 14px; height: 14px; }
+  .cls-row .cnt { margin-left: auto; }
+  .mig-canvas { position: relative; height: 330px; background-color: var(--bg-canvas); background-image: radial-gradient(color-mix(in srgb, var(--fg) 14%, transparent) 1px, transparent 1px); background-size: 12px 12px; border-radius: var(--r-lg) var(--r-lg) 0 0; overflow: hidden; }
+  .mnode { position: absolute; width: 230px; background: var(--bg-surface); border-radius: 8px; box-shadow: var(--shadow-sm); font-size: var(--fs-xs); z-index: 2; }
+  .mnode__head { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-top: 3px solid var(--_ac, var(--accent)); border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; }
+  .mnode__head .lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-subtle); }
+  .mnode__head [data-lucide] { width: 13px; height: 13px; color: var(--_ac); }
+  .mnode__prop { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; position: relative; }
+  .mnode__prop + .mnode__prop { border-top: 1px solid var(--border); }
+  .mnode__prop .tag { margin-left: auto; height: 17px; font-size: 10px; }
+  .mnode__prop .hd { position: absolute; top: 50%; margin-top: -4.5px; width: 9px; height: 9px; border-radius: 50%; background: var(--_ac, var(--accent)); box-shadow: 0 0 0 2px var(--bg-surface); }
+  .rule-node { position: absolute; display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: var(--r-sm); background: var(--bg-surface); box-shadow: var(--shadow-sm); border-left: 3px solid var(--violet); font-size: var(--fs-2xs); font-weight: 600; cursor: pointer; z-index: 3; }
+  .pass-pill { position: absolute; z-index: 3; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-surface); box-shadow: 0 0 0 1.5px var(--border-strong) inset, var(--shadow-sm); color: var(--fg-subtle); font-size: 13px; font-weight: 600; cursor: pointer; }
+  .pass-pill:hover { color: var(--accent-fg); box-shadow: 0 0 0 1.5px var(--accent) inset, var(--shadow-sm); }
+  .mig-edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .mig-edges path { fill: none; stroke: var(--fg-faint); stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .mig-edges path.is-ruled { stroke: var(--violet); stroke-dasharray: none; }
+  .rec-item { padding: 6px 10px; border-radius: var(--r-sm); cursor: pointer; border: 1px solid transparent; }
+  .rec-item:hover { background: var(--bg-subtle); }
+  .rec-item.is-active { background: var(--accent-soft); }
+  .rec-item .oid { font-family: var(--font-mono); font-size: var(--fs-2xs); font-weight: 600; }
+  .rec-item .prev { font-family: var(--font-mono); font-size: 10px; color: var(--fg-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+</head>
+<body data-shell="app" data-nav="migration" data-page="tools/migration" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Tools</span><i data-lucide="chevron-right"></i><span>Migrations</span></div>
+          <h1 class="page-title">Migrations</h1>
+          <p class="page-desc">Transform snapshot data from one schema version to another with rules.</p>
+        </div>
+        <div class="page-actions">
+          <div class="input-wrap" style="width:190px"><i data-lucide="folder-kanban"></i><select class="select" style="padding-left:32px" aria-label="Project"><option>Payments API</option><option>Orders Service</option></select></div>
+          <div class="input-wrap" style="width:190px"><i data-lucide="tag"></i><select class="select" style="padding-left:32px" aria-label="From version"><option>🔒 v2.3.0 — Q2 release</option></select></div>
+          <i data-lucide="arrow-right" style="color:var(--fg-subtle)"></i>
+          <div class="input-wrap" style="width:190px"><i data-lucide="tag"></i><select class="select" style="padding-left:32px" aria-label="To version"><option>🔒 v2.3.1 — Hotfix currency enum</option></select></div>
+        </div>
+      </div>
+      <div class="tabs" data-tabs="mig-tabs">
+        <button class="tab is-active" data-action="tab" data-target="tab-designer"><i data-lucide="palette"></i>Designer</button>
+        <button class="tab" data-action="tab" data-target="tab-explorer"><i data-lucide="clipboard-list"></i>Explorer</button>
+        <button class="tab" data-action="tab" data-target="tab-scheduler"><i data-lucide="calendar-clock"></i>Scheduler<span class="badge badge--outline">Placeholder</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Deprecated revision banner -->
+    <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><div><div class="banner-title">Deprecated revision (From): v2.3.0</div><div class="banner-body t-xs">Replaced by the hotfix line. Successor revision: v2.3.1 · Sunset: 2026-12-01 (UTC). · Migration guide: <a href="#">acme.dev/migrate-231</a></div></div><span class="banner-actions"><button class="btn btn--sm btn--ghost" aria-label="Dismiss"><i data-lucide="x"></i></button></span></div>
+
+    <div id="mig-tabs" class="col gap-6">
+      <!-- ===== Designer tab ===== -->
+      <div data-tab-panel="tab-designer" class="grid grid-aside-main" style="grid-template-columns:280px minmax(0,1fr);align-items:start">
+        <!-- Classes sidebar -->
+        <aside class="card">
+          <div class="card__header" style="padding:12px 14px"><div class="card__title"><i data-lucide="git-compare-arrows"></i>Classes</div><span class="t-2xs t-subtle">4 class(es) · 2 differ</span></div>
+          <div style="padding:10px 12px;border-bottom:1px solid var(--border)"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Filter classes…" style="padding-left:30px" /></div></div>
+          <div style="padding:8px 6px">
+            <div class="t-caps" style="padding:2px 10px 6px">Schema diff</div>
+            <div class="cls-row is-active"><i data-lucide="circle-alert" style="color:var(--warn)" data-tip="Schema differs between versions"></i><span class="mono t-xs">Payment</span><span class="cnt badge badge--violet" data-tip="2 rule(s) for this class">2</span></div>
+            <div class="cls-row"><i data-lucide="circle-alert" style="color:var(--warn)" data-tip="Schema differs between versions"></i><span class="mono t-xs">Refund</span><span class="cnt badge badge--violet" data-tip="1 rule(s) for this class">1</span></div>
+            <div class="cls-row"><i data-lucide="circle-check" style="color:var(--ok)" data-tip="Schemas match"></i><span class="mono t-xs">Customer</span><span class="cnt t-2xs t-faint">0</span></div>
+            <div class="cls-row"><i data-lucide="circle-check" style="color:var(--ok)" data-tip="Schemas match"></i><span class="mono t-xs">PaymentMethod</span><span class="cnt t-2xs t-faint">0</span></div>
+          </div>
+          <div class="card__footer" style="padding:8px 12px"><div class="segmented segmented--sm" aria-label="Density"><button><i data-lucide="rows-4"></i></button><button class="is-active"><i data-lucide="rows-3"></i></button><button><i data-lucide="rows-2"></i></button></div><span class="t-2xs t-subtle">Missing on one side = differs</span></div>
+        </aside>
+
+        <!-- Canvas + data inspection -->
+        <section class="col gap-4 min-w-0">
+          <div class="card" style="overflow:hidden">
+            <div class="mig-canvas" aria-label="Migration canvas">
+              <svg class="mig-edges" aria-hidden="true">
+                <defs><marker id="marr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--violet)"/></marker></defs>
+                <!-- passthrough id -->
+                <path d="M262 76 C 420 76, 470 76, 548 76"/>
+                <!-- amount → rule → amountMinor + currency -->
+                <path class="is-ruled" d="M262 102 C 300 102, 310 108, 348 108"/>
+                <path class="is-ruled" d="M476 108 C 510 108, 520 102, 548 102" marker-end="url(#marr)"/>
+                <path class="is-ruled" d="M476 108 C 510 108, 520 128, 548 128" marker-end="url(#marr)"/>
+                <!-- passthrough status -->
+                <path d="M262 128 C 420 128, 470 154, 548 154"/>
+                <!-- zipcode → rule → postalCode -->
+                <path class="is-ruled" d="M262 154 C 300 154, 310 168, 348 168"/>
+                <path class="is-ruled" d="M476 168 C 510 168, 520 180, 548 180" marker-end="url(#marr)"/>
+              </svg>
+              <!-- From node -->
+              <article class="mnode" style="left:30px;top:30px;--_ac:var(--orange)" aria-label="From class Payment">
+                <div class="mnode__head"><i data-lucide="arrow-right"></i><span class="lbl">From · v2.3.0</span><span class="mono t-xs t-600" style="margin-left:auto">Payment</span></div>
+                <div class="mnode__prop"><span>id</span><span class="tag">uuid</span><span class="hd" style="right:-5px"></span></div>
+                <div class="mnode__prop"><span>amount</span><span class="tag">number</span><span class="hd" style="right:-5px"></span></div>
+                <div class="mnode__prop"><span>status</span><span class="tag">string</span><span class="hd" style="right:-5px"></span></div>
+                <div class="mnode__prop"><span>zipcode</span><span class="tag">string</span><span class="hd" style="right:-5px"></span></div>
+              </article>
+              <!-- Rule nodes -->
+              <button class="rule-node" style="left:348px;top:96px" data-action="open" data-target="rule-dialog" data-tip="Edit rule">Minor units + ccy</button>
+              <button class="rule-node" style="left:348px;top:156px" data-action="open" data-target="rule-dialog" data-tip="Edit rule">Split zipcode</button>
+              <!-- Passthrough pills -->
+              <button class="pass-pill" style="left:435px;top:66px" data-action="open" data-target="rule-dialog" aria-label="Add migration rule (passthrough)" data-tip="Passthrough: no rule applied. Click to add a rule.">+</button>
+              <button class="pass-pill" style="left:435px;top:131px" data-action="open" data-target="rule-dialog" aria-label="Add migration rule (passthrough)" data-tip="Passthrough: no rule applied. Click to add a rule.">+</button>
+              <!-- To node -->
+              <article class="mnode" style="left:548px;top:30px;--_ac:var(--ok)" aria-label="To class Payment">
+                <div class="mnode__head"><i data-lucide="arrow-left"></i><span class="lbl">To · v2.3.1</span><span class="mono t-xs t-600" style="margin-left:auto">Payment</span></div>
+                <div class="mnode__prop"><span class="hd" style="left:-5px"></span><span>id</span><span class="tag">uuid</span></div>
+                <div class="mnode__prop"><span class="hd" style="left:-5px"></span><span>amountMinor</span><span class="tag">int64</span></div>
+                <div class="mnode__prop"><span class="hd" style="left:-5px"></span><span>currency</span><span class="tag">string</span></div>
+                <div class="mnode__prop"><span class="hd" style="left:-5px"></span><span>status</span><span class="tag">enum</span></div>
+                <div class="mnode__prop"><span class="hd" style="left:-5px"></span><span>postalCode</span><span class="tag">string</span></div>
+              </article>
+              <div class="row gap-2" style="position:absolute;left:12px;bottom:10px;z-index:3"><span class="badge badge--outline"><span class="dot" style="width:6px;height:6px;background:var(--fg-faint)"></span>Passthrough</span><span class="badge badge--violet"><span class="dot" style="width:6px;height:6px;background:var(--violet)"></span>Rule applied</span><span class="t-2xs t-subtle">Layout is fixed — nodes are not draggable</span></div>
+            </div>
+            <!-- Data inspection -->
+            <div style="border-top:1px solid var(--border)">
+              <div class="row-between" style="padding:10px 14px;border-bottom:1px solid var(--border)"><span class="t-sm t-600">Data inspection — Payment</span><span class="t-2xs t-subtle">POST /api/migration-plans/evaluate</span></div>
+              <div class="grid" style="grid-template-columns:210px minmax(0,1fr) minmax(0,1fr);gap:0">
+                <div style="border-right:1px solid var(--border);padding:10px">
+                  <div class="row gap-1 mb-2"><div class="input-wrap grow"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search records..." style="padding-left:28px" /></div><button class="btn btn--sm btn--icon" data-tip="Search" aria-label="Search"><i data-lucide="search"></i></button></div>
+                  <button class="btn btn--sm w-full mb-2"><i data-lucide="list"></i>View all records</button>
+                  <div class="col gap-1">
+                    <div class="rec-item is-active"><div class="oid">rec_01J8FN2K</div><div class="prev">{"id":"5f0c…","amount":25.99,"zipcode":"94103-1210"}</div><div class="t-2xs t-faint">Updated 08/15/26</div></div>
+                    <div class="rec-item"><div class="oid">rec_01J8FLQ9</div><div class="prev">{"id":"a3b1…","amount":104.00,"zipcode":"10115"}</div><div class="t-2xs t-faint">Updated 08/15/26</div></div>
+                    <div class="rec-item"><div class="oid">rec_01J8F2MP</div><div class="prev">{"id":"c2d4…","amount":459.00,"zipcode":"EC1A 1BB"}</div><div class="t-2xs t-faint">Updated 08/14/26</div></div>
+                  </div>
+                  <div class="row-between mt-2 t-xs t-subtle"><button class="btn btn--sm btn--ghost">Prev</button><span>1 / 107</span><button class="btn btn--sm btn--ghost">Next</button></div>
+                </div>
+                <div style="border-right:1px solid var(--border)">
+                  <div class="panel__head" style="height:34px">Before</div>
+<pre class="code code--dark" style="border-radius:0;margin:0;height:200px">{
+  "id": "5f0c2d8e-…",
+  "amount": 25.99,
+  "status": "captured",
+  "zipcode": "94103-1210"
+}</pre>
+                </div>
+                <div>
+                  <div class="panel__head" style="height:34px">After rules applied<button class="btn btn--sm btn--accent ml-auto"><i data-lucide="play"></i>Evaluate</button></div>
+<pre class="code code--dark" style="border-radius:0;margin:0;height:200px">{
+  "id": "5f0c2d8e-…",
+  "amountMinor": 2599,
+  "currency": "EUR",
+  "status": "captured",
+  "postalCode": "94103"
+}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="banner banner--neutral"><i data-lucide="info"></i>No class selected → “Select a class in the sidebar to inspect migration data.” Errors: “No migration rules defined. Add rules in the migration plan.” · “Evaluate failed” · “Request failed”.</div>
+        </section>
+      </div>
+
+      <!-- ===== Explorer tab ===== -->
+      <div data-tab-panel="tab-explorer" hidden class="col gap-4">
+        <div class="grid grid-3">
+          <div class="card card--pad"><div class="stat__label"><i data-lucide="list-checks"></i>Rules applied</div><div class="stat__value">3</div><div class="stat__foot"><span>Payment · v2.3.0 → v2.3.1</span></div></div>
+          <div class="card card--pad"><div class="stat__label"><i data-lucide="shield-check"></i>Data quality (Before)</div><div class="stat__value">78<small>%</small></div><div class="meter mt-2"><div class="progress progress--ok"><span style="width:78%"></span></div></div><div class="t-2xs t-subtle mt-1">Filled fields ÷ expected schema keys</div></div>
+          <div class="card card--pad"><div class="stat__label"><i data-lucide="shield-check"></i>Data quality (After)</div><div class="stat__value">92<small>%</small></div><div class="meter mt-2"><div class="progress progress--ok"><span style="width:92%"></span></div></div><div class="t-2xs t-subtle mt-1">Null until rules applied</div></div>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div class="row wrap gap-2" style="padding:10px 14px;border-bottom:1px solid var(--border)">
+            <div class="input-wrap" style="width:200px"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search records..." style="padding-left:30px" /></div>
+            <button class="btn btn--sm"><i data-lucide="list"></i>View all records</button>
+            <span class="row gap-1 t-xs t-subtle"><button class="btn btn--sm btn--ghost">Prev</button>1 of 107<button class="btn btn--sm btn--ghost">Next</button></span>
+            <span class="ml-auto row gap-1"><button class="btn btn--sm btn--ghost btn--icon" data-tip="Previous record" aria-label="Previous record"><i data-lucide="chevron-left"></i></button><span class="t-xs t-num">2 / 20</span><button class="btn btn--sm btn--ghost btn--icon" data-tip="Next record" aria-label="Next record"><i data-lucide="chevron-right"></i></button></span>
+            <label class="row gap-2 t-sm t-muted"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button>Auto-apply</label>
+            <button class="btn btn--sm btn--accent"><i data-lucide="play"></i>Apply rules</button>
+          </div>
+          <div class="grid" style="grid-template-columns:208px 220px minmax(0,1fr) minmax(0,1fr);gap:0">
+            <div style="border-right:1px solid var(--border);padding:10px">
+              <div class="col gap-1">
+                <div class="rec-item"><div class="oid">rec_01J8FN2K</div><div class="prev">{"amount":25.99…}</div></div>
+                <div class="rec-item is-active"><div class="oid">rec_01J8FLQ9</div><div class="prev">{"amount":104.00…}</div></div>
+                <div class="rec-item"><div class="oid">rec_01J8F2MP</div><div class="prev">{"amount":459.00…}</div></div>
+              </div>
+            </div>
+            <div style="border-right:1px solid var(--border);padding:12px">
+              <div class="t-caps mb-2">Record (original)</div>
+              <dl class="kv kv--stack t-xs"><dt>Updated</dt><dd>08/15/26, 8:41 AM</dd><dt>Created</dt><dd>08/15/26, 8:41 AM</dd><dt>Sequence</dt><dd>1</dd><dt>Last action</dt><dd>created</dd></dl>
+              <div class="t-caps mt-3 mb-2">Record (after transform)</div>
+              <dl class="kv kv--stack t-xs"><dt>Transformed at</dt><dd>08/15/26, 9:14 AM</dd><dt>Fields</dt><dd>6</dd></dl>
+            </div>
+            <div style="border-right:1px solid var(--border)">
+              <div class="panel__head" style="height:34px">Original record</div>
+<pre class="code code--dark" style="border-radius:0;margin:0;height:190px">{
+  "id": "a3b1c9d0-…",
+  "amount": 104.00,
+  "status": "authorized",
+  "zipcode": "10115"
+}</pre>
+            </div>
+            <div>
+              <div class="panel__head" style="height:34px">After transform</div>
+<pre class="code code--dark" style="border-radius:0;margin:0;height:190px">{
+  "id": "a3b1c9d0-…",
+  "amountMinor": 10400,
+  "currency": "EUR",
+  "status": "authorized",
+  "postalCode": "10115"
+}</pre>
+            </div>
+          </div>
+        </div>
+        <div class="banner banner--neutral"><i data-lucide="info"></i>Without a class: “Explore datasets and preview before/after transformation for the selected schema.” Without a record: “Select a record to evaluate the currently defined ruleset.” Confidence tiles stay grey until computed; emerald ≥ 70, amber otherwise.</div>
+      </div>
+
+      <!-- ===== Scheduler tab ===== -->
+      <div data-tab-panel="tab-scheduler" hidden>
+        <div class="card"><div class="empty">
+          <div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="calendar-clock"></i></div>
+          <div class="empty__title">Scheduler</div>
+          <div class="empty__desc">Schedule migration runs and manage execution. Scheduling tools and workflows will be available here.</div>
+          <span class="badge badge--outline mt-2">Placeholder — matches the current app</span>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Migration rule dialog -->
+<div class="overlay" id="rule-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-label="Edit migration rule">
+    <div class="dialog__header"><span class="icon-tile icon-tile--violet"><i data-lucide="function-square"></i></span><div><div class="dialog__title">Edit migration rule</div><div class="dialog__desc">Choose a template or write a custom rule. Define inputs and outputs, then edit the rule code. Test with sample values below.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="row gap-3 wrap">
+        <div class="field" style="width:300px"><label class="row gap-1"><i data-lucide="book-open" style="width:13px;height:13px"></i>Rule template</label><select class="select"><option>Custom (no template)</option><option selected>Split by delimiter (1 in → 2 out)</option><option>Concatenate (2 in → 1 out)</option><option>Unit conversion (1 in → 1 out)</option><option>Constant default (0 in → 1 out)</option></select><div class="hint">Applying a template sets rule type and fills inputs/outputs to the minimum counts.</div></div>
+        <div class="field grow"><label>Rule name</label><input class="input" value="Split zipcode" placeholder="e.g. Split zipcode" /><div class="hint">This name appears on the migration canvas. Leave empty for passthrough (no rule).</div></div>
+      </div>
+      <div class="grid grid-2 gap-4">
+        <div class="col gap-3">
+          <div class="card card--flat card--pad"><div class="t-sm t-600 mb-2">Inputs (source properties)</div>
+            <div class="row gap-1 wrap"><span class="chip" style="height:24px">zipcode <i data-lucide="x" class="x" aria-label="Remove zipcode"></i></span></div>
+            <div class="row gap-2 mt-2"><select class="select select--sm grow"><option>Add input…</option><option>amount</option><option>status</option></select></div>
+          </div>
+          <div class="card card--flat card--pad"><div class="t-sm t-600 mb-2">Outputs (destination properties)</div>
+            <div class="row gap-1 wrap"><span class="chip" style="height:24px">postalCode <i data-lucide="x" class="x" aria-label="Remove postalCode"></i></span><span class="chip" style="height:24px">postalSuffix <i data-lucide="x" class="x" aria-label="Remove postalSuffix"></i></span></div>
+            <div class="row gap-2 mt-2"><select class="select select--sm grow"><option>Add output…</option><option>currency</option></select></div>
+            <div class="banner banner--warn mt-2" style="padding:6px 10px;font-size:var(--fs-2xs)" hidden><i data-lucide="triangle-alert"></i>At least 2 outputs required.</div>
+          </div>
+        </div>
+        <div class="card" style="background:#1B1A18;overflow:hidden">
+          <div class="row" style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.1)"><span class="t-xs t-600" style="color:#EDEBE6">Rule type</span><select class="select select--sm ml-auto" style="width:160px"><option>Simple expression</option><option selected>Script</option><option>SparkSQL</option></select></div>
+<pre class="code code--dark code--lines" style="border-radius:0;margin:0;min-height:150px"><span><span class="c-c">// inputs: zipcode → outputs: postalCode, postalSuffix</span></span><span><span class="c-k">const</span> [code, suffix] = zipcode.split(<span class="c-s">"-"</span>);</span><span><span class="c-k">return</span> { postalCode: code, postalSuffix: suffix ?? <span class="c-k">null</span> };</span></pre>
+        </div>
+      </div>
+      <div class="form-section" style="margin:0"><div class="form-section__title row gap-2">Test rule<button class="btn btn--sm ml-auto"><i data-lucide="play"></i>Run</button></div>
+        <div class="grid grid-2 gap-3 mt-2">
+          <div class="field"><label class="t-xs">Test inputs — zipcode</label><input class="input input--sm mono" value="94103-1210" placeholder="Sample value" /></div>
+          <div class="field"><label class="t-xs">Output</label><div class="card card--soft mono t-xs" style="padding:8px 10px">{ "postalCode": "94103", "postalSuffix": "1210" }</div><div class="hint">SparkSQL rules cannot be tested in the browser. Run in Spark to validate.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-warn" hidden>Enter script body with a return statement.</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save rule</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/migration</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/migration/*</code>: <code>MigrationHeader</code>, <code>MigrationSidebar</code>, <code>MigrationCanvas</code> + class/rule nodes and edges, <code>MigrationRuleDialog</code>, <code>DataInspectionView</code>, <code>MigrationPlanView</code>, <code>MigrationSchedulerView</code>, <code>RevisionDeprecationBanner</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: Project · From version → To version selects (🔒 published labels); RevisionDeprecationBanner with successor / sunset / migration-guide lines; tabs Designer | Explorer | Scheduler with the same icons.</li>
+    <li>Classes sidebar: “Classes” + “{n} class(es) · {d} differ”, filter, Schema diff rows (amber “Schema differs between versions” / emerald “Schemas match”; missing-on-one-side counts as differing; key-order-insensitive), rule-count badge (“{n} rule(s) for this class”), density toggle.</li>
+    <li>Designer canvas (fixed layout, not draggable): From node (x≈30) and To node (x≈650) with per-property handles; passthrough edges with “+” pill (“Passthrough: no rule applied. Click to add a rule.”); rule nodes (violet accent, name or “Rule”, click → dialog) with one output per destination property; outputs not in the To schema are dropped.</li>
+    <li>Data inspection (bottom split): search + View all records, record list (mono OID, JSON preview, updated date), pager (20/page), Before pane and “After rules applied” pane with Evaluate (disabled without record); error copy retained in the note banner.</li>
+    <li>Rule dialog: template select (“{name} ({min_inputs} in → {min_outputs} out)”, placeholder substitution), rule name + canvas hint, Inputs/Outputs chip cards with Add selects + minimum warning, Rule type Simple expression | Script | SparkSQL over a dark code editor, Test rule (Run, per-input sample values, output list, SparkSQL browser note), Save rule (disabled until minimums met).</li>
+    <li>Explorer: Rules-applied tile + Before/After confidence tiles (filled ÷ expected keys; grey → emerald ≥70 / amber), toolbar (search, view all, pager, record stepper i / n), record list, metadata (original + after transform), Original/After panes, Auto-apply switch + Apply rules.</li>
+    <li>Scheduler: placeholder copy “Scheduling tools and workflows will be available here.” — explicitly marked placeholder.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Rail nav entry (route is direct-URL only today); passthrough/rule legend on the canvas.</li></ul>
+  <h4>States</h4>
+  <ul><li>Hero states kept as copy: “No Project Selected …both versions must have frozen schemas”, from = to → “Choose Different Versions”, fallback “Data Migration”; per-pane empty/error copy in the note banners.</li></ul>
+</template>
+</body>
+</html>

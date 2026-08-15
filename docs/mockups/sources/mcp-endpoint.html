@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Payments tools · MCP endpoint · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: MCP grade glyph (shared with the other MCP mockups) */
+  .grade { display: inline-flex; align-items: center; gap: 6px; }
+  .grade__letter { width: 28px; height: 28px; border-radius: var(--r-sm); display: grid; place-items: center; font-weight: 700; font-size: var(--fs-sm); color: #fff; background: var(--neutral); flex-shrink: 0; }
+  .grade--sm .grade__letter { width: 22px; height: 22px; font-size: var(--fs-xs); border-radius: var(--r-xs); }
+  .grade--lg .grade__letter { width: 40px; height: 40px; font-size: var(--fs-xl); border-radius: var(--r-md); }
+  .grade[data-grade="A"] .grade__letter { background: var(--ok); }
+  .grade[data-grade="B"] .grade__letter { background: color-mix(in srgb, var(--ok) 70%, var(--honey)); }
+  .grade[data-grade="C"] .grade__letter { background: var(--warn); }
+  .grade[data-grade="D"] .grade__letter { background: var(--orange); }
+  .grade[data-grade="F"] .grade__letter { background: var(--danger); }
+  .grade[data-grade="-"] .grade__letter { background: var(--bg-inset); color: var(--fg-subtle); }
+  .grade__score { font-size: var(--fs-xs); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--fg-muted); }
+  /* capability item cards + disclosures */
+  .cap-card { padding: 14px 16px; }
+  .cap-card + .cap-card { border-top: 1px solid var(--border); }
+  .cap-card.is-hi { box-shadow: 0 0 0 2px var(--accent) inset; border-radius: var(--r-md); }
+  .disclosure { border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; }
+  .disclosure > summary { list-style: none; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; font-size: var(--fs-sm); font-weight: 500; cursor: pointer; color: var(--fg-muted); }
+  .disclosure > summary::-webkit-details-marker { display: none; }
+  .disclosure > summary [data-lucide] { width: 14px; height: 14px; }
+  .disclosure[open] > summary { border-bottom: 1px solid var(--border); color: var(--fg); }
+  .disclosure .meta { margin-left: auto; font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  /* insight rail + matrices */
+  .insight-rail { position: sticky; top: 140px; align-self: start; }
+  .insight-rail .t-caps { padding: 12px 10px 4px; }
+  .matrix td, .matrix th { text-align: center; }
+  .matrix td:first-child, .matrix th:first-child { text-align: left; }
+  .cell-mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; font-size: var(--fs-2xs); font-weight: 700; }
+  .cell-mark--added { background: var(--ok-soft); color: var(--ok-fg); }
+  .cell-mark--present { background: color-mix(in srgb, var(--ok) 10%, transparent); color: var(--ok); }
+  .cell-mark--modified { background: var(--accent-soft); color: var(--accent-fg); }
+  .cell-mark--absent { color: var(--fg-faint); }
+  .cell-mark--asserted { background: var(--ok-soft); color: var(--ok-fg); }
+  .cell-mark--false { box-shadow: 0 0 0 1px var(--border-strong) inset; color: var(--fg-muted); font-weight: 500; }
+  .stack-col { display: flex; flex-direction: column-reverse; width: 100%; height: 100%; justify-content: flex-start; }
+  .stack-col > span { display: block; width: 100%; }
+  .stack-cols { display: flex; align-items: flex-end; gap: 10px; height: 120px; }
+  .stack-cols > button { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 4px 4px 0 0; overflow: hidden; }
+  .stack-cols > button:hover { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .kv-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); font-size: var(--fs-sm); }
+  .kv-row:first-child { border-top: 0; }
+  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .diff-grid .code { border-radius: 0; }
+  .diff-grid .code:first-child { border-radius: var(--r-md) 0 0 var(--r-md); border-right: 1px solid var(--border); }
+  .diff-grid .code:last-child { border-radius: 0 var(--r-md) var(--r-md) 0; }
+  .settings-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,2fr); gap: var(--space-6); }
+  @media (max-width: 1100px) { .settings-grid { grid-template-columns: 1fr; } .insight-rail { position: static; } }
+</style>
+</head>
+<body data-shell="app" data-nav="mcp" data-page="sources/mcp-endpoint" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div class="min-w-0">
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Bring in</span><i data-lucide="chevron-right"></i><a href="mcp-servers.html">MCP servers</a><i data-lucide="chevron-right"></i><span>Payments tools</span></div>
+          <h1 class="page-title"><span class="avatar avatar--sm avatar--a" title="Server logo">PT</span>Payments tools <span class="grade" data-grade="A" title="Grade A, score 94 of 100"><span class="grade__letter">A</span></span></h1>
+          <div class="row wrap gap-2 mt-2 t-sm t-muted"><span class="mono t-xs">https://mcp.acme.dev/payments/mcp</span><span class="badge">streamable_http</span><span class="badge" data-status="public">Public</span><span class="row gap-1 t-xs"><i data-lucide="clock" style="width:12px;height:12px"></i>Last discovered 5m ago</span><span class="badge badge--dot" data-status="active">Enabled</span><span class="badge" data-status="published">Published</span></div>
+        </div>
+        <div class="page-actions">
+          <button class="btn" data-tip="Remove this endpoint from the public catalog (make it private)"><i data-lucide="globe-lock"></i>Unpublish</button>
+          <button class="btn" data-tip="Stop scheduled discovery for this endpoint"><i data-lucide="pause"></i>Disable</button>
+          <button class="btn btn--primary" data-tip="Re-run discovery against this endpoint"><i data-lucide="radar"></i>Re-discover</button>
+        </div>
+      </div>
+      <div class="tabs" data-tabs="detail-panels" role="tablist">
+        <button class="tab is-active" data-action="tab" data-target="capabilities" role="tab"><i data-lucide="wrench"></i>Capabilities<span class="count">21</span></button>
+        <button class="tab" data-action="tab" data-target="insight" role="tab"><i data-lucide="chart-spline"></i>Insight</button>
+        <button class="tab" data-action="tab" data-target="versions" role="tab"><i data-lucide="history"></i>Versions<span class="count">5</span></button>
+        <button class="tab" data-action="tab" data-target="lint" role="tab"><i data-lucide="shield-check"></i>Lint &amp; Score</button>
+        <button class="tab" data-action="tab" data-target="settings" role="tab"><i data-lucide="settings-2"></i>Settings</button>
+        <button class="tab" data-action="tab" data-target="trust" role="tab" title="McpTrustPosturePanel exists but is not mounted today — proposed tab"><i data-lucide="shield-half"></i>Trust posture<span class="badge badge--honey">Proposed</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Summary strip -->
+    <section class="stat-grid stat-grid--4">
+      <div class="stat"><div class="stat__label"><i data-lucide="award"></i>Quality grade</div><div class="row gap-3"><span class="grade grade--lg" data-grade="A"><span class="grade__letter">A</span></span><div><div class="stat__value">94<small>/100</small></div></div></div><div class="stat__foot"><span class="row gap-1"><span class="badge badge--ok">0 MUST</span><span class="badge badge--warn">3 SHOULD</span></span><a href="#" data-action="tab" data-target="lint" class="t-xs">Report</a></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="git-commit-horizontal"></i>Current version</div><div class="stat__value">v5</div><div class="stat__foot"><span class="mono">2026.08.15-a</span><span>Aug 15, 09:07</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="server"></i>Server</div><div class="stat__value" style="font-size:var(--fs-xl)">Acme Payments MCP <small>(2.3.0)</small></div><div class="stat__foot"><span>MCP protocol 2025-06-18</span></div></div>
+      <div class="stat"><div class="stat__label"><i data-lucide="clock"></i>Last discovered</div><div class="stat__value" style="font-size:var(--fs-xl)">5m ago</div><div class="stat__foot"><span class="row gap-1"><span class="dot dot--ok"></span>Healthy · scheduled sweep</span><span title="2026-08-15T09:07:12Z">09:07</span></div></div>
+    </section>
+
+    <!-- Cataloger commentary (human notes) -->
+    <section class="card card--honey">
+      <div class="card__header" style="border-bottom-color:color-mix(in srgb, var(--honey) 30%, transparent)">
+        <div class="card__title"><i data-lucide="sticky-note" style="color:var(--honey-fg)"></i>Cataloger commentary<span class="t-xs t-subtle t-500">Human notes from your team — not reported by the MCP server.</span></div>
+        <button class="btn btn--sm" hidden><i data-lucide="plus"></i>Add note</button>
+      </div>
+      <div class="card__body col gap-3">
+        <div class="card card--flat" style="padding:12px 14px"><div class="t-sm" style="white-space:pre-wrap">Prefer the staging endpoint for QA — production is read-only for the assistant role. Refund tools require the finance scope.</div><div class="row-between mt-2"><span class="t-xs t-subtle">Grace Hopper (grace@example.com) · Aug 12, 2026 16:40 · <em>(edited)</em></span><span class="row gap-1"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Edit note" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Delete note" data-tip="Delete" style="color:var(--danger)"><i data-lucide="trash-2"></i></button></span></div></div>
+        <div class="card card--flat" style="padding:12px 14px"><div class="t-sm" style="white-space:pre-wrap">Rate limit is 60 req/min per token; batch the payout lookups.</div><div class="row-between mt-2"><span class="t-xs t-subtle">Ada Lovelace (ada@example.com) · Aug 14, 2026 11:03</span><span class="row gap-1"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Edit note" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Delete note" data-tip="Delete" style="color:var(--danger)"><i data-lucide="trash-2"></i></button></span></div></div>
+        <div class="card card--flat" style="padding:12px 14px">
+          <textarea class="textarea" rows="3" style="min-height:72px" placeholder="e.g. Prefer the staging endpoint for QA — production is read-only." autofocus></textarea>
+          <div class="row gap-2 mt-2" style="justify-content:flex-end"><button class="btn btn--sm btn--ghost">Cancel</button><button class="btn btn--sm btn--primary" disabled>Save note</button></div>
+        </div>
+      </div>
+    </section>
+
+    <div id="detail-panels">
+    <!-- ================= Capabilities ================= -->
+    <section data-tab-panel="capabilities" class="col gap-6">
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="file-text"></i>Instructions</div><span class="t-xs t-subtle">Server-provided, current snapshot</span></div>
+        <div class="card__body"><div class="code" style="white-space:pre-wrap">Use `payments.search` before `payments.refund`. Amounts are minor units (cents). Never call `payouts.create` without an idempotency key.</div></div>
+      </div>
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="wrench"></i>Tools<span class="badge">12</span></div><span class="t-xs t-subtle">Showing 3 of 12 in this mockup</span></div>
+        <div>
+          <article class="cap-card is-hi" id="mcp-cap-tool-payments.search">
+            <div class="row wrap gap-2"><span class="t-h4">Search payments</span><span class="badge badge--ok" title="Read-only: true">readOnly</span><span class="badge badge--info" title="Idempotent: true">idempotent</span><span class="badge badge--ok" title="stable · source: matched">stable (declared)</span><span class="badge badge--outline ml-auto">highlighted from lint</span></div>
+            <div class="mono t-xs t-subtle mt-1">payments.search</div>
+            <p class="t-sm t-muted mt-2">Find payments by customer, status, or date range. Returns at most 50 rows per page.</p>
+            <div class="col gap-2 mt-3">
+              <details class="disclosure" open><summary><i data-lucide="chevron-right"></i>Input schema<span class="meta">14 lines</span></summary>
+                <div class="relative"><button class="btn btn--sm btn--ghost" style="position:absolute;top:6px;right:8px;z-index:1"><i data-lucide="copy"></i>Copy</button>
+                <div class="code code--lines" style="border-radius:0 0 var(--r-md) var(--r-md)"><span>{</span><span>  <span class="c-n">"type"</span>: <span class="c-s">"object"</span>,</span><span>  <span class="c-n">"properties"</span>: {</span><span>    <span class="c-n">"customer_id"</span>: { <span class="c-n">"type"</span>: <span class="c-s">"string"</span> },</span><span>    <span class="c-n">"status"</span>: { <span class="c-n">"enum"</span>: [<span class="c-s">"pending"</span>, <span class="c-s">"settled"</span>, <span class="c-s">"failed"</span>] },</span><span>    <span class="c-n">"from"</span>: { <span class="c-n">"type"</span>: <span class="c-s">"string"</span>, <span class="c-n">"format"</span>: <span class="c-s">"date"</span> },</span><span>    <span class="c-n">"to"</span>: { <span class="c-n">"type"</span>: <span class="c-s">"string"</span>, <span class="c-n">"format"</span>: <span class="c-s">"date"</span> }</span><span>  },</span><span>  <span class="c-n">"required"</span>: [<span class="c-s">"customer_id"</span>]</span><span>}</span></div></div>
+              </details>
+              <details class="disclosure"><summary><i data-lucide="chevron-right"></i>Output schema<span class="meta">22 lines</span></summary><div class="code">…</div></details>
+              <details class="disclosure"><summary><i data-lucide="chevron-right"></i>Annotations<span class="meta">5 lines</span></summary><div class="code">…</div></details>
+            </div>
+          </article>
+          <article class="cap-card" id="mcp-cap-tool-payments.refund">
+            <div class="row wrap gap-2"><span class="t-h4">Refund a payment</span><span class="badge badge--danger" title="Destructive: true">destructive</span><span class="badge badge--warn" title="Open world: true">openWorld</span></div>
+            <div class="mono t-xs t-subtle mt-1">payments.refund</div>
+            <p class="t-sm t-muted mt-2">Issue a full or partial refund. Requires the <span class="mono">finance</span> scope on the bearer token.</p>
+            <div class="col gap-2 mt-3">
+              <details class="disclosure"><summary><i data-lucide="chevron-right"></i>Input schema<span class="meta">11 lines</span></summary><div class="code">…</div></details>
+              <details class="disclosure"><summary><i data-lucide="chevron-right"></i>Annotations<span class="meta">4 lines</span></summary><div class="code">…</div></details>
+            </div>
+          </article>
+          <article class="cap-card" id="mcp-cap-tool-payouts.create">
+            <div class="row wrap gap-2"><span class="t-h4">Create payout</span><span class="badge badge--warn" title="experimental · source: matched">experimental</span><span class="badge badge--outline">unannotated</span></div>
+            <div class="mono t-xs t-subtle mt-1">payouts.create</div>
+            <p class="t-sm t-muted mt-2">Schedule a payout to a connected account. No annotations declared — treated as potentially destructive.</p>
+            <div class="col gap-2 mt-3"><details class="disclosure"><summary><i data-lucide="chevron-right"></i>Input schema<span class="meta">19 lines</span></summary><div class="code">…</div></details></div>
+          </article>
+        </div>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="file"></i>Resources<span class="badge">4</span></div></div>
+          <div>
+            <article class="cap-card"><div class="row wrap gap-2"><span class="t-h4">Merchant profile</span><span class="badge badge--ok">stable (declared)</span></div><div class="mono t-xs t-subtle mt-1">acme://payments/merchant</div><p class="t-sm t-muted mt-2">Current merchant configuration and payout schedule.</p></article>
+            <article class="cap-card"><div class="row wrap gap-2"><span class="t-h4">Settlement report</span><span class="badge badge--danger">deprecated</span></div><div class="mono t-xs t-subtle mt-1">acme://payments/settlements/latest</div><p class="t-sm t-muted mt-2">Yesterday’s settlement summary (CSV). Superseded by the templated resource.</p></article>
+          </div>
+        </div>
+        <div class="col gap-6">
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="file-code-2"></i>Resource templates<span class="badge">2</span></div></div>
+            <article class="cap-card"><div class="row wrap gap-2"><span class="t-h4">Settlement by date</span><span class="badge badge--violet">beta</span></div><div class="mono t-xs t-subtle mt-1">acme://payments/settlements/{date}</div><p class="t-sm t-muted mt-2">Settlement report for a given ISO date.</p></article>
+          </div>
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="message-square-text"></i>Prompts<span class="badge">3</span></div></div>
+            <article class="cap-card"><div class="row wrap gap-2"><span class="t-h4">Summarize disputes</span></div><div class="mono t-xs t-subtle mt-1">summarize</div><p class="t-sm t-muted mt-2">Draft a dispute summary for a customer from the last 30 days of activity.</p><div class="col gap-2 mt-3"><details class="disclosure"><summary><i data-lucide="chevron-right"></i>Input schema<span class="meta">7 lines</span></summary><div class="code">…</div></details></div></article>
+          </div>
+        </div>
+      </div>
+      <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="radar"></i></div><div><div class="empty__title">Not yet discovered</div><div class="empty__desc">This endpoint has no current version snapshot. Run discovery to populate its tools, resources, and prompts. (Zero items: “No capabilities — The current version snapshot declares no tools, resources, or prompts.”)</div></div><span class="badge badge--outline ml-auto">state</span></div></div>
+    </section>
+
+    <!-- ================= Insight ================= -->
+    <section data-tab-panel="insight" hidden class="col gap-4">
+      <div class="row-between wrap gap-3">
+        <div class="row gap-2"><span class="t-h3">Insight for v5</span><span class="badge badge--ok">current</span></div>
+        <div class="row gap-2">
+          <label class="row gap-2 t-sm t-muted">Snapshot<select class="select select--sm" style="width:220px" aria-label="Snapshot"><option>v5 · Aug 15, 2026 · 2026.08.15-a (current)</option><option>v4 · Aug 9, 2026</option><option>v3 · Aug 2, 2026</option><option>v2 · Jul 26, 2026</option><option>v1 · Jul 19, 2026</option></select></label>
+          <button class="btn btn--sm" data-action="open" data-target="export-report-menu"><i data-lucide="download"></i>Export report<i data-lucide="chevron-down"></i></button>
+        </div>
+      </div>
+      <div class="grid grid-aside-main" style="grid-template-columns:240px minmax(0,1fr)">
+        <nav class="vtabs insight-rail" data-tabs="insight-panels" id="insight-rail" aria-label="Insight views">
+          <button class="tab is-active" data-action="tab" data-target="ins-overview"><i data-lucide="layout-dashboard"></i>Overview</button>
+          <div class="t-caps">Capability surface</div>
+          <button class="tab" data-action="tab" data-target="ins-counts"><i data-lucide="hash"></i>Capability counts</button>
+          <button class="tab" data-action="tab" data-target="ins-graph"><i data-lucide="waypoints"></i>Relationship graph</button>
+          <button class="tab" data-action="tab" data-target="ins-complexity"><i data-lucide="braces"></i>Schema complexity</button>
+          <button class="tab" data-action="tab" data-target="ins-safety"><i data-lucide="shield-alert"></i>Safety posture</button>
+          <button class="tab" data-action="tab" data-target="ins-docs"><i data-lucide="book-open"></i>Documentation</button>
+          <div class="t-caps">Surface evolution</div>
+          <button class="tab" data-action="tab" data-target="ins-churn"><i data-lucide="bar-chart-3"></i>Churn timeline</button>
+          <button class="tab" data-action="tab" data-target="ins-presence"><i data-lucide="grid-3x3"></i>Lifespan &amp; presence</button>
+          <button class="tab" data-action="tab" data-target="ins-trend"><i data-lucide="trending-up"></i>Grade &amp; size trend</button>
+          <div class="t-caps">Reliability &amp; trust</div>
+          <button class="tab" data-action="tab" data-target="ins-health"><i data-lucide="heart-pulse"></i>Discovery health</button>
+          <button class="tab" data-action="tab" data-target="ins-latency"><i data-lucide="timer"></i>Tool latency</button>
+          <button class="tab" data-action="tab" data-target="ins-score"><i data-lucide="calculator"></i>Score breakdown</button>
+          <button class="tab" data-action="tab" data-target="ins-trust"><i data-lucide="radar"></i>Trust profile</button>
+          <button class="tab" data-action="tab" data-target="ins-peer"><i data-lucide="users"></i>Peer ranking</button>
+        </nav>
+        <div id="insight-panels" class="min-w-0">
+          <!-- Overview -->
+          <div data-tab-panel="ins-overview" class="col gap-4">
+            <div class="card card--pad">
+              <div class="row-start gap-4 wrap">
+                <span class="ring ring--lg" style="--p:94;--c:var(--ok)"><span>A</span></span>
+                <div class="grow min-w-0">
+                  <div class="row gap-2 wrap"><span class="avatar avatar--sm avatar--a">PT</span><span class="t-h2">Acme Payments MCP</span><span class="t-sm t-subtle">v2.3.0</span></div>
+                  <div class="t-sm t-muted">Endpoint: Payments tools</div>
+                  <div class="mono t-xs t-subtle mt-1">https://mcp.acme.dev/payments/mcp · <a href="#" rel="noopener nofollow">acme.dev/developers ↗</a></div>
+                  <div class="row wrap gap-1 mt-2"><span class="badge">streamable_http</span><span class="badge badge--info">MCP 2025-06-18</span><span class="badge badge--ok">v5 · current</span></div>
+                </div>
+                <div class="col" style="align-items:flex-end;gap:6px"><span class="badge badge--dot" data-status="healthy">Healthy</span><span class="t-xs t-subtle row gap-1"><i data-lucide="clock" style="width:12px;height:12px"></i>Surface changed 2h ago</span></div>
+              </div>
+              <div class="row wrap gap-1 mt-4"><span class="chip">21 capabilities</span><span class="chip">12 tools</span><span class="chip">4 resources</span><span class="chip">2 resource templates</span><span class="chip">3 prompts</span></div>
+              <div class="row wrap gap-2 mt-4 t-xs t-muted"><span class="t-caps">Provenance</span><span class="badge badge--info">added manually</span><span>· this snapshot via</span><span class="badge badge--violet">scheduled sweep</span></div>
+              <div class="row-between wrap gap-2 mt-3 t-sm"><span class="row gap-2"><span class="t-caps">Trust</span>Quality grade A (94/100)</span><button class="btn btn--sm btn--link" data-action="tab" data-target="ins-trust">Composite trust radar →</button></div>
+              <div class="mt-4"><div class="t-caps mb-1">Instructions</div><div class="code" style="white-space:pre-wrap">Use `payments.search` before `payments.refund`. Amounts are minor units (cents). Never call `payouts.create` without an idempotency key.</div></div>
+            </div>
+            <div class="card">
+              <div class="card__header"><div class="card__title"><i data-lucide="sparkles"></i>Changed since your last view</div><span class="t-xs t-subtle">Since v3 (Aug 2, 2026) → v5</span></div>
+              <div class="card__body col gap-3">
+                <div class="banner banner--danger" role="alert"><i data-lucide="triangle-alert"></i><span><span class="banner-title">1 breaking change since you last looked</span> — a client aligned to the older surface may break.</span></div>
+                <div class="row wrap gap-2"><span class="badge badge--danger">1 breaking</span><span class="badge badge--warn">2 review</span><span class="badge badge--ok">3 additive</span><span class="t-xs t-subtle mono">+3 −1 ~2</span></div>
+                <ul class="divide-y">
+                  <li class="kv-row"><span class="t-danger t-600" style="width:14px">−</span><span class="mono">payments.void</span><span class="t-xs t-subtle">Tool</span><span class="badge badge--danger ml-auto">breaking</span></li>
+                  <li class="kv-row"><i data-lucide="pencil" style="width:14px;height:14px;color:var(--accent)"></i><span class="mono">payments.refund</span><span class="t-xs t-subtle">Tool · input schema</span><span class="badge badge--warn ml-auto">review</span></li>
+                  <li class="kv-row"><i data-lucide="pencil" style="width:14px;height:14px;color:var(--accent)"></i><span class="mono">acme://payments/settlements/latest</span><span class="t-xs t-subtle">Resource · deprecated</span><span class="badge badge--warn ml-auto">review</span></li>
+                  <li class="kv-row"><span class="t-ok t-600" style="width:14px">+</span><span class="mono">payouts.create</span><span class="t-xs t-subtle">Tool</span><span class="badge badge--ok ml-auto">additive</span></li>
+                  <li class="kv-row"><span class="t-ok t-600" style="width:14px">+</span><span class="mono">acme://payments/settlements/{date}</span><span class="t-xs t-subtle">Resource template</span><span class="badge badge--ok ml-auto">additive</span></li>
+                  <li class="kv-row"><span class="t-ok t-600" style="width:14px">+</span><span class="mono">summarize</span><span class="t-xs t-subtle">Prompt</span><span class="badge badge--ok ml-auto">additive</span></li>
+                </ul>
+                <div class="row-between"><span class="t-xs t-subtle">Other digest states: “New to you — You haven’t viewed this endpoint before…” · “You’re up to date — nothing has changed since you last viewed v5.”</span><button class="btn btn--sm" data-action="tab" data-target="versions">Review changes<i data-lucide="arrow-right"></i></button></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card__header"><div class="card__title"><i data-lucide="shield-half"></i>Trust drift from your approved baseline</div><span class="row gap-1"><span class="badge badge--warn">Gate: warn (advisory)</span><span class="t-xs t-subtle">baseline v3 · approved by Grace Hopper</span></span></div>
+              <div class="card__body col gap-3">
+                <div class="row wrap gap-2"><span class="badge badge--rose">Security regression 1</span><span class="badge badge--orange">Coverage loss 0</span><span class="badge badge--warn">Quality regression 1</span><span class="badge badge--info">Normal change 3</span></div>
+                <ul class="divide-y">
+                  <li class="kv-row"><span class="badge badge--rose">Security regression</span><span class="mono t-xs">tool:payouts.create</span><span class="t-muted">New tool without safety annotations reachable with the same credential.</span></li>
+                  <li class="kv-row"><span class="badge badge--warn">Quality regression</span><span class="mono t-xs">tool:payments.refund/inputSchema</span><span class="t-muted">Parameter descriptions dropped for 2 of 5 arguments.</span></li>
+                  <li class="kv-row"><span class="badge badge--info">Normal change</span><span class="mono t-xs">prompt:summarize</span><span class="t-muted">Prompt added.</span></li>
+                </ul>
+                <div class="t-xs t-subtle">Other states: “Diffing against the approved baseline…” · “No approved baseline yet — Approve a trust baseline for this endpoint to start catching drift, shadowing, and trust regressions against what you blessed.” · “No drift from the approved baseline”.</div>
+              </div>
+            </div>
+          </div>
+          <!-- Capability counts -->
+          <div data-tab-panel="ins-counts" hidden class="card card--pad">
+            <div class="row-between"><div><div class="t-h3">21 capabilities in this snapshot</div><div class="t-xs t-muted">Tools, resources, resource templates and prompts declared by v5.</div></div><span class="badge badge--ok">Current</span></div>
+            <div class="stat-grid stat-grid--4 mt-4"><div class="stat"><div class="stat__label"><i data-lucide="wrench"></i>Tools</div><div class="stat__value">12</div></div><div class="stat"><div class="stat__label"><i data-lucide="file"></i>Resources</div><div class="stat__value">4</div></div><div class="stat"><div class="stat__label"><i data-lucide="file-code-2"></i>Resource templates</div><div class="stat__value">2</div></div><div class="stat"><div class="stat__label"><i data-lucide="message-square-text"></i>Prompts</div><div class="stat__value">3</div></div></div>
+          </div>
+          <!-- Relationship graph -->
+          <div data-tab-panel="ins-graph" hidden class="card card--pad">
+            <div class="row-between wrap gap-2"><div><div class="t-h3">Relationship graph</div><div class="t-xs t-muted">How this snapshot’s capabilities reference each other (prompt → tool, tool → resource, shared types).</div></div><span class="t-xs t-subtle">21 nodes · 9 edges</span></div>
+            <div class="chart-legend mt-3" aria-label="Node types"><span><span class="sw" style="background:var(--accent)"></span>Tool 12</span><span><span class="sw" style="background:var(--ok)"></span>Resource 4</span><span><span class="sw" style="background:var(--violet)"></span>Resource template 2</span><span><span class="sw" style="background:var(--honey)"></span>Prompt 3</span></div>
+            <div class="chart-area mt-3" style="height:260px">
+              <svg viewBox="0 0 760 260" role="img" aria-label="Relationship graph: summarize prompt references payments.search and payments.refund; payments.search references merchant profile and settlement report; payouts.create shares the Money type with payments.refund">
+                <g stroke="var(--fg-faint)" stroke-width="1.5" fill="none">
+                  <line x1="110" y1="60" x2="330" y2="60"/><line x1="110" y1="60" x2="330" y2="130"/><line x1="330" y1="60" x2="600" y2="60"/><line x1="330" y1="60" x2="600" y2="130"/><line x1="330" y1="130" x2="600" y2="200"/><line x1="330" y1="200" x2="330" y2="130" stroke-dasharray="4 3"/><line x1="110" y1="200" x2="330" y2="200"/>
+                </g>
+                <g font-size="11" font-family="JetBrains Mono, monospace" fill="var(--fg)">
+                  <rect x="30" y="46" width="160" height="28" rx="6" fill="var(--honey-soft)" stroke="var(--honey)"/><text x="110" y="64" text-anchor="middle">summarize</text>
+                  <rect x="30" y="186" width="160" height="28" rx="6" fill="var(--honey-soft)" stroke="var(--honey)"/><text x="110" y="204" text-anchor="middle">dispute_reply</text>
+                  <rect x="250" y="46" width="160" height="28" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="330" y="64" text-anchor="middle">payments.search</text>
+                  <rect x="250" y="116" width="160" height="28" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="330" y="134" text-anchor="middle">payments.refund</text>
+                  <rect x="250" y="186" width="160" height="28" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="330" y="204" text-anchor="middle">payouts.create</text>
+                  <rect x="520" y="46" width="180" height="28" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="610" y="64" text-anchor="middle">merchant profile</text>
+                  <rect x="520" y="116" width="180" height="28" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="610" y="134" text-anchor="middle">settlements/latest</text>
+                  <rect x="520" y="186" width="180" height="28" rx="6" fill="var(--violet-soft)" stroke="var(--violet)"/><text x="610" y="204" text-anchor="middle">settlements/{date}</text>
+                  <text x="330" y="245" text-anchor="middle" font-family="Inter, sans-serif" fill="var(--fg-subtle)">edges: prompt_reference · resource_reference · shared_type (dashed)</text>
+                </g>
+              </svg>
+            </div>
+            <div class="t-xs t-subtle mt-2">13 capabilities are isolated — they neither reference nor are referenced by another capability. Static rendering (Mermaid flowchart in production, <code>securityLevel: strict</code>); no click interaction.</div>
+          </div>
+          <!-- Schema complexity -->
+          <div data-tab-panel="ins-complexity" hidden class="card card--pad">
+            <div class="row-between wrap gap-2"><div><div class="t-h3">Schema complexity</div><div class="t-xs t-muted">Input-schema size and shape per tool, tiered so the heavy ones stand out.</div></div><div class="row gap-2"><select class="select select--sm" style="width:170px" aria-label="Filter"><option>All tools</option><option>Has parameters</option><option>No parameters</option><option>Nested schema</option><option>Uses enum</option><option>Uses oneOf</option><option>Has output schema</option><option>Missing output schema</option></select><select class="select select--sm" style="width:170px" aria-label="Sort"><option>Most complex first</option><option>Least complex first</option><option>Name (A–Z)</option><option>Most parameters</option><option>Deepest nesting</option></select></div></div>
+            <div class="grid grid-2 mt-4" style="grid-template-columns: 320px 1fr">
+              <div><div class="t-caps mb-2">Complexity distribution · 12 tools</div><div class="bars" style="height:80px"><span style="height:25%;background:var(--neutral)" title="None (0): 3"></span><span style="height:42%;background:var(--ok)" title="Low (1–4): 5"></span><span style="height:25%;background:var(--accent)" title="Moderate (5–9): 3"></span><span style="height:8%;background:var(--warn)" title="High (10–17): 1"></span><span style="height:0%;background:var(--danger)" title="Very high (18+): 0"></span></div><div class="row-between t-2xs t-subtle mt-1"><span>None (0)</span><span>Low (1–4)</span><span>Moderate (5–9)</span><span>High (10–17)</span><span>Very high</span></div></div>
+              <div class="grid grid-2">
+                <div class="card card--flat" style="padding:12px 14px"><div class="row-between"><span class="mono t-sm">payouts.create</span><span class="badge badge--warn">High</span></div><div class="t-xs t-muted">Complexity score 14</div><div class="mt-2"><div class="t-2xs t-subtle">Parameters · 4 required / 5 optional</div><div class="progress mt-1" style="display:flex;gap:2px;background:none"><span style="width:44%;background:var(--accent)"></span><span style="width:56%;background:var(--bg-inset)"></span></div></div><div class="row wrap gap-1 mt-2"><span class="badge badge--outline">Depth 3</span><span class="badge badge--outline">enum</span><span class="badge badge--outline">oneOf</span><span class="badge badge--outline">Output schema</span></div></div>
+                <div class="card card--flat" style="padding:12px 14px"><div class="row-between"><span class="mono t-sm">payments.search</span><span class="badge badge--info">Moderate</span></div><div class="t-xs t-muted">Complexity score 7</div><div class="mt-2"><div class="t-2xs t-subtle">Parameters · 1 required / 3 optional</div><div class="progress mt-1" style="display:flex;gap:2px;background:none"><span style="width:25%;background:var(--accent)"></span><span style="width:75%;background:var(--bg-inset)"></span></div></div><div class="row wrap gap-1 mt-2"><span class="badge badge--outline">Depth 1</span><span class="badge badge--outline">enum</span><span class="badge badge--outline">Output schema</span></div></div>
+                <div class="card card--flat" style="padding:12px 14px"><div class="row-between"><span class="mono t-sm">payments.refund</span><span class="badge badge--ok">Low</span></div><div class="t-xs t-muted">Complexity score 4</div><div class="mt-2"><div class="t-2xs t-subtle">Parameters · 2 required / 1 optional</div><div class="progress mt-1" style="display:flex;gap:2px;background:none"><span style="width:66%;background:var(--accent)"></span><span style="width:34%;background:var(--bg-inset)"></span></div></div><div class="row wrap gap-1 mt-2"><span class="badge badge--outline">Flat</span><span class="badge badge--outline">No output schema</span></div></div>
+                <div class="card card--flat" style="padding:12px 14px"><div class="row-between"><span class="mono t-sm">merchant.ping</span><span class="badge">None</span></div><div class="t-xs t-muted">Complexity score 0</div><div class="t-xs t-subtle mt-2">No parameters — this tool takes no input.</div><div class="row wrap gap-1 mt-2"><span class="badge badge--outline">Flat</span><span class="badge badge--outline">Output schema</span></div></div>
+              </div>
+            </div>
+          </div>
+          <!-- Safety posture -->
+          <div data-tab-panel="ins-safety" hidden class="card card--pad">
+            <div class="row-between wrap gap-2"><div><div class="t-h3">9 of 12 tools annotated</div><div class="row wrap gap-1 mt-2"><span class="badge badge--ok">6 read-only</span><span class="badge badge--danger">2 destructive</span><span class="badge badge--info">5 idempotent</span><span class="badge badge--warn">1 open-world</span></div></div><span class="badge badge--ok badge--lg"><i data-lucide="shield"></i>bearer</span></div>
+            <div class="banner banner--warn mt-3"><i data-lucide="triangle-alert"></i><span>3 tools are unannotated — <span class="mono">payouts.create</span>, <span class="mono">merchant.ping</span>, <span class="mono">disputes.list</span>. Treat with caution. (Anonymous variant: red alert “N destructive tools reachable with no auth”.)</span></div>
+            <div class="table-wrap mt-3"><table class="table table--dense matrix"><thead><tr><th>Tool</th><th>Read-only</th><th>Destructive</th><th>Idempotent</th><th>Open-world</th></tr></thead><tbody>
+              <tr><td class="mono">payments.search</td><td><span class="cell-mark cell-mark--asserted"><i data-lucide="check" style="width:12px;height:12px"></i></span></td><td><span class="cell-mark cell-mark--false">false</span></td><td><span class="cell-mark cell-mark--asserted"><i data-lucide="check" style="width:12px;height:12px"></i></span></td><td><span class="cell-mark cell-mark--false">false</span></td></tr>
+              <tr><td class="mono">payments.refund</td><td><span class="cell-mark cell-mark--false">false</span></td><td><span class="cell-mark cell-mark--asserted"><i data-lucide="check" style="width:12px;height:12px"></i></span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--asserted"><i data-lucide="check" style="width:12px;height:12px"></i></span></td></tr>
+              <tr><td class="mono">payments.void</td><td><span class="cell-mark cell-mark--false">false</span></td><td><span class="cell-mark cell-mark--asserted"><i data-lucide="check" style="width:12px;height:12px"></i></span></td><td><span class="cell-mark cell-mark--asserted"><i data-lucide="check" style="width:12px;height:12px"></i></span></td><td><span class="cell-mark cell-mark--absent">·</span></td></tr>
+              <tr><td class="mono">payouts.create <span class="badge badge--outline">unannotated</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--absent">·</span></td></tr>
+              <tr><td class="mono">merchant.get</td><td><span class="cell-mark cell-mark--asserted"><i data-lucide="check" style="width:12px;height:12px"></i></span></td><td><span class="cell-mark cell-mark--false">false</span></td><td><span class="cell-mark cell-mark--asserted"><i data-lucide="check" style="width:12px;height:12px"></i></span></td><td><span class="cell-mark cell-mark--false">false</span></td></tr>
+            </tbody></table></div>
+            <div class="chart-legend mt-2"><span><span class="cell-mark cell-mark--asserted" style="width:16px;height:16px;margin-right:6px"><i data-lucide="check" style="width:10px;height:10px"></i></span>Asserted</span><span><span class="cell-mark cell-mark--false" style="width:16px;height:16px;margin-right:6px;font-size:8px">f</span>Declared false</span><span><span class="cell-mark cell-mark--absent" style="width:16px;height:16px;margin-right:6px">·</span>Not declared</span></div>
+          </div>
+          <!-- Documentation -->
+          <div data-tab-panel="ins-docs" hidden class="card card--pad">
+            <div class="t-h3">Documentation coverage</div><div class="t-xs t-muted">How much of the surface explains itself to a client model.</div>
+            <div class="grid grid-4 mt-4">
+              <div class="card card--flat card--pad"><div class="row gap-3"><span class="ring ring--lg" style="--p:90;--c:var(--ok)"><span>90%</span></span><div><div class="t-sm t-600">Items described</div><div class="t-xs t-muted">19 / 21 capabilities</div></div></div><details class="mt-3 t-xs"><summary class="t-accent" style="cursor:pointer">2 under-documented →</summary><ul class="mt-1 t-muted"><li class="mono">merchant.ping <span class="badge badge--outline">tool</span></li><li class="mono">dispute_reply <span class="badge badge--outline">prompt</span></li></ul></details></div>
+              <div class="card card--flat card--pad"><div class="row gap-3"><span class="ring ring--lg" style="--p:100;--c:var(--ok)"><span>100%</span></span><div><div class="t-sm t-600">Items titled</div><div class="t-xs t-muted">21 / 21 capabilities</div></div></div><div class="t-xs t-ok mt-3">✓ All documented</div></div>
+              <div class="card card--flat card--pad"><div class="row gap-3"><span class="ring ring--lg" style="--p:71;--c:var(--warn)"><span>71%</span></span><div><div class="t-sm t-600">Tool params documented</div><div class="t-xs t-muted">27 / 38 parameters</div></div></div><details class="mt-3 t-xs"><summary class="t-accent" style="cursor:pointer">4 under-documented →</summary><ul class="mt-1 t-muted"><li class="mono">payments.refund <span class="t-subtle">2 of 5 undocumented</span></li><li class="mono">payouts.create <span class="t-subtle">5 of 9 undocumented</span></li></ul></details></div>
+              <div class="card card--flat card--pad"><div class="row gap-3"><span class="ring ring--lg" style="--p:58;--c:var(--warn)"><span>58%</span></span><div><div class="t-sm t-600">Tools with output schema</div><div class="t-xs t-muted">7 / 12 tools</div></div></div><details class="mt-3 t-xs"><summary class="t-accent" style="cursor:pointer">5 under-documented →</summary><ul class="mt-1 t-muted"><li class="mono">payments.refund</li><li class="mono">payments.void</li><li class="mono">disputes.list</li></ul></details></div>
+            </div>
+            <div class="t-xs t-subtle mt-3">Gauge shows a dashed “N/A” circle when a unit has no members.</div>
+          </div>
+          <!-- Churn timeline -->
+          <div data-tab-panel="ins-churn" hidden class="card card--pad">
+            <div class="row-between wrap gap-2"><div><div class="t-h3">Churn timeline</div><div class="t-xs t-muted">Capabilities added, removed and modified per snapshot, oldest → newest.</div></div><span class="t-xs t-subtle">14 changes across 5 snapshots</span></div>
+            <div class="chart-legend mt-3"><span><span class="sw" style="background:var(--ok)"></span>Added</span><span><span class="sw" style="background:var(--danger)"></span>Removed</span><span><span class="sw" style="background:var(--accent)"></span>Modified</span></div>
+            <div class="stack-cols mt-3" role="group" aria-label="Snapshots">
+              <button title="v1 · Jul 19 — +14 −0 ~0 (14 changes). Click to view the diff." data-action="tab" data-target="versions"><span style="height:0"></span><span style="height:100%;background:var(--ok)"></span></button>
+              <button title="v2 · Jul 26 — +1 −0 ~1 (2 changes). Click to view the diff." data-action="tab" data-target="versions"><span style="height:7%;background:var(--accent)"></span><span style="height:7%;background:var(--ok)"></span></button>
+              <button title="v3 · Aug 2 — +2 −1 ~0 (3 changes). Click to view the diff." data-action="tab" data-target="versions"><span style="height:7%;background:var(--danger)"></span><span style="height:14%;background:var(--ok)"></span></button>
+              <button title="v4 · Aug 9 — +3 −1 ~2 (6 changes). Click to view the diff." data-action="tab" data-target="versions"><span style="height:14%;background:var(--accent)"></span><span style="height:7%;background:var(--danger)"></span><span style="height:21%;background:var(--ok)"></span></button>
+              <button title="v5 · Aug 15 — +0 −0 ~2 (2 changes). Click to view the diff." data-action="tab" data-target="versions" style="background:var(--accent-soft)"><span style="height:14%;background:var(--accent)"></span></button>
+            </div>
+            <div class="row-between t-2xs t-subtle mt-1" style="padding:0 2%"><span>v1</span><span>v2</span><span>v3</span><span>v4</span><span>v5 · current</span></div>
+            <button class="banner banner--warn mt-3 w-full" style="text-align:left" data-action="tab" data-target="versions"><i data-lucide="flame"></i><span><span class="banner-title">Busiest release: v4 · Aug 9, 2026 — 6 changes</span> <span class="t-xs">(v1 is the initial import)</span></span></button>
+            <div class="t-xs t-subtle mt-2">Select a version to open its diff in the version history.</div>
+          </div>
+          <!-- Lifespan & presence -->
+          <div data-tab-panel="ins-presence" hidden class="card card--pad">
+            <div class="row-between wrap gap-2"><div><div class="t-h3">7 distinct capabilities across 5 snapshots</div><div class="row wrap gap-1 mt-2"><span class="badge badge--ok">6 current</span><span class="badge badge--info">3 new</span><span class="badge badge--warn">1 volatile</span><span class="badge">1 removed</span></div></div><span class="t-xs t-subtle">Showing 7 of 22 rows in this mockup</span></div>
+            <div class="table-wrap mt-3" style="max-height:28rem;overflow:auto"><table class="table table--dense matrix"><thead><tr><th>Capability</th><th><button class="btn btn--ghost btn--sm" data-action="tab" data-target="versions">v1</button></th><th><button class="btn btn--ghost btn--sm" data-action="tab" data-target="versions">v2</button></th><th><button class="btn btn--ghost btn--sm" data-action="tab" data-target="versions">v3</button></th><th><button class="btn btn--ghost btn--sm" data-action="tab" data-target="versions">v4</button></th><th><button class="btn btn--ghost btn--sm" data-action="tab" data-target="versions">v5 <span class="badge badge--ok">current</span></button></th></tr></thead><tbody>
+              <tr><td><span class="mono">payments.search</span> <span class="t-xs t-subtle">Tool</span> <span class="badge badge--ok">Stable</span></td><td><span class="cell-mark cell-mark--added">+</span></td><td><span class="cell-mark cell-mark--present">●</span></td><td><span class="cell-mark cell-mark--present">●</span></td><td><span class="cell-mark cell-mark--modified"><i data-lucide="pencil" style="width:11px;height:11px"></i></span></td><td><span class="cell-mark cell-mark--present">●</span></td></tr>
+              <tr><td><span class="mono">payments.refund</span> <span class="t-xs t-subtle">Tool</span> <span class="badge badge--warn">Volatile</span></td><td><span class="cell-mark cell-mark--added">+</span></td><td><span class="cell-mark cell-mark--modified"><i data-lucide="pencil" style="width:11px;height:11px"></i></span></td><td><span class="cell-mark cell-mark--present">●</span></td><td><span class="cell-mark cell-mark--modified"><i data-lucide="pencil" style="width:11px;height:11px"></i></span></td><td><span class="cell-mark cell-mark--modified"><i data-lucide="pencil" style="width:11px;height:11px"></i></span></td></tr>
+              <tr><td><span class="mono">payments.void</span> <span class="t-xs t-subtle">Tool</span> <span class="badge">Removed</span></td><td><span class="cell-mark cell-mark--added">+</span></td><td><span class="cell-mark cell-mark--present">●</span></td><td><span class="cell-mark cell-mark--present">●</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--absent">·</span></td></tr>
+              <tr><td><span class="mono">payouts.create</span> <span class="t-xs t-subtle">Tool</span> <span class="badge badge--info">New</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--added">+</span></td><td><span class="cell-mark cell-mark--present">●</span></td></tr>
+              <tr><td><span class="mono">acme://payments/merchant</span> <span class="t-xs t-subtle">Resource</span> <span class="badge badge--ok">Stable</span></td><td><span class="cell-mark cell-mark--added">+</span></td><td><span class="cell-mark cell-mark--present">●</span></td><td><span class="cell-mark cell-mark--present">●</span></td><td><span class="cell-mark cell-mark--present">●</span></td><td><span class="cell-mark cell-mark--present">●</span></td></tr>
+              <tr><td><span class="mono">acme://payments/settlements/{date}</span> <span class="t-xs t-subtle">Resource template</span> <span class="badge badge--info">New</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--added">+</span></td><td><span class="cell-mark cell-mark--present">●</span></td></tr>
+              <tr><td><span class="mono">summarize</span> <span class="t-xs t-subtle">Prompt</span> <span class="badge badge--info">New</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--absent">·</span></td><td><span class="cell-mark cell-mark--added">+</span></td><td><span class="cell-mark cell-mark--present">●</span></td><td><span class="cell-mark cell-mark--present">●</span></td></tr>
+            </tbody></table></div>
+            <div class="chart-legend mt-2"><span><span class="cell-mark cell-mark--added" style="width:16px;height:16px;margin-right:6px">+</span>Added</span><span><span class="cell-mark cell-mark--present" style="width:16px;height:16px;margin-right:6px">●</span>Present</span><span><span class="cell-mark cell-mark--modified" style="width:16px;height:16px;margin-right:6px"><i data-lucide="pencil" style="width:9px;height:9px"></i></span>Modified</span><span><span class="cell-mark cell-mark--absent" style="width:16px;height:16px;margin-right:6px">·</span>Absent</span></div>
+            <div class="t-xs t-subtle mt-2">Select a version column to open its diff in the version history.</div>
+          </div>
+          <!-- Grade & size trend -->
+          <div data-tab-panel="ins-trend" hidden class="card card--pad">
+            <div class="row-between wrap gap-2"><div class="row gap-3"><span class="grade" data-grade="A"><span class="grade__letter">A</span></span><div><div class="t-h4">Latest grade</div><div class="t-xs t-muted">across 5 snapshots</div></div></div><span class="t-sm t-muted">21 capabilities now</span></div>
+            <div class="grid grid-2 mt-4">
+              <div><div class="row-between"><span class="t-caps">Quality score</span><span class="stat__delta stat__delta--up"><i data-lucide="trending-up"></i>+12 pts</span></div>
+                <div class="chart-area mt-2" style="height:140px"><svg viewBox="0 0 400 140" preserveAspectRatio="none"><g stroke="var(--border)" stroke-dasharray="3 3"><line x1="0" y1="14" x2="400" y2="14"/><line x1="0" y1="70" x2="400" y2="70"/><line x1="0" y1="126" x2="400" y2="126"/></g><line x1="300" y1="0" x2="300" y2="140" stroke="var(--danger)" stroke-dasharray="4 3"/><path d="M0 48 L100 44 L200 34 L300 30 L400 21 L400 140 L0 140Z" fill="color-mix(in srgb, var(--ok) 12%, transparent)"/><path d="M0 48 L100 44 L200 34 L300 30 L400 21" fill="none" stroke="var(--ok)" stroke-width="2"/><g fill="var(--ok)"><circle cx="0" cy="48" r="3"/><circle cx="100" cy="44" r="3"/><circle cx="200" cy="34" r="3"/><circle cx="300" cy="30" r="3"/><circle cx="400" cy="21" r="4"/></g></svg><div class="t-2xs t-faint" style="position:absolute;left:0;top:6px">100</div><div class="t-2xs t-faint" style="position:absolute;left:0;top:62px">50</div><div class="t-2xs t-faint" style="position:absolute;left:0;top:118px">0</div></div>
+                <div class="row-between t-2xs t-subtle mt-1"><span>v1 · 82</span><span>v2 · 84</span><span>v3 · 88</span><span>v4 · 90</span><span>v5 · 94</span></div></div>
+              <div><div class="row-between"><span class="t-caps">Surface size</span><span class="stat__delta stat__delta--up"><i data-lucide="trending-up"></i>+7 capabilities</span></div>
+                <div class="chart-area mt-2" style="height:140px"><svg viewBox="0 0 400 140" preserveAspectRatio="none"><g stroke="var(--border)" stroke-dasharray="3 3"><line x1="0" y1="14" x2="400" y2="14"/><line x1="0" y1="70" x2="400" y2="70"/><line x1="0" y1="126" x2="400" y2="126"/></g><line x1="300" y1="0" x2="300" y2="140" stroke="var(--danger)" stroke-dasharray="4 3"/><path d="M0 70 L100 65 L200 60 L300 42 L400 42 L400 140 L0 140Z" fill="color-mix(in srgb, var(--violet) 12%, transparent)"/><path d="M0 70 L100 65 L200 60 L300 42 L400 42" fill="none" stroke="var(--violet)" stroke-width="2"/><g fill="var(--violet)"><circle cx="0" cy="70" r="3"/><circle cx="100" cy="65" r="3"/><circle cx="200" cy="60" r="3"/><circle cx="300" cy="42" r="3"/><circle cx="400" cy="42" r="4"/></g></svg></div>
+                <div class="row-between t-2xs t-subtle mt-1"><span>v1 · 14</span><span>v2 · 15</span><span>v3 · 16</span><span>v4 · 21</span><span>v5 · 21</span></div></div>
+            </div>
+            <div class="row wrap gap-2 mt-3"><span class="t-xs t-muted">Breaking-change releases:</span><button class="badge badge--danger" data-action="tab" data-target="versions">v4 · 1 breaking</button><span class="t-xs t-subtle">(“No breaking changes recorded across N snapshots.” when none)</span></div>
+          </div>
+          <!-- Discovery health -->
+          <div data-tab-panel="ins-health" hidden class="card card--pad">
+            <div class="row-start gap-6 wrap">
+              <div><div class="t-caps">Availability</div><div class="stat__value t-ok mt-1">98.6%</div><div class="t-xs t-muted mt-1">over 72 completed attempts (most recent)</div><div class="t-xs t-subtle">71 ok / 1 failed / 1 pending</div></div>
+              <div class="grow min-w-0"><div class="t-caps mb-2">Outcome strip · last 30 jobs</div><div class="bars" style="height:44px;gap:2px"><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--danger)" title="Aug 3 · Connect timeout"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--ok)"></span><span style="height:100%;background:var(--bg-inset)" title="Pending"></span></div><div class="chart-legend mt-2"><span><span class="sw" style="background:var(--ok)"></span>OK</span><span><span class="sw" style="background:var(--danger)"></span>Failed</span><span><span class="sw" style="background:var(--bg-inset)"></span>Pending</span></div></div>
+            </div>
+            <div class="mt-4"><div class="t-caps mb-2">Failure breakdown</div><div class="row wrap gap-1"><span class="badge badge--danger">Connect timeout ×1</span><span class="badge badge--outline">Timeout ×0</span><span class="badge badge--outline">Unreachable ×0</span><span class="badge badge--outline">TLS error ×0</span><span class="badge badge--outline">Auth error ×0</span><span class="badge badge--outline">Rate limited ×0</span><span class="badge badge--outline">Session expired ×0</span><span class="badge badge--outline">HTTP error ×0</span><span class="badge badge--outline">JSON-RPC error ×0</span><span class="badge badge--outline">Version mismatch ×0</span><span class="badge badge--outline">Protocol error ×0</span><span class="badge badge--outline">Partial surface ×0</span><span class="badge badge--outline">Blocked (SSRF) ×0</span><span class="badge badge--outline">Budget exceeded ×0</span><span class="badge badge--outline">Unknown error ×0</span></div></div>
+            <div class="banner banner--danger mt-4"><i data-lucide="octagon-x"></i><div><div class="banner-title">Quarantined — auto-excluded from discovery</div><div class="banner-body t-xs">This server tripped the consecutive-failure threshold and is paused until it recovers. Since Aug 9 · 5 consecutive failures. <em>(state shown for reference — not active on this endpoint)</em></div></div></div>
+            <div class="t-xs t-subtle mt-3">Last discovery OK · Aug 15, 2026 09:07</div>
+          </div>
+          <!-- Tool latency -->
+          <div data-tab-panel="ins-latency" hidden class="card card--pad">
+            <div class="row-start gap-6 wrap">
+              <div><div class="t-caps">Error rate</div><div class="stat__value t-ok mt-1">1.2%</div><div class="t-xs t-muted mt-1">over 1,240 tool calls across 9 tools · last 30 days</div><div class="t-xs t-subtle">1,225 ok / 15 errored</div></div>
+              <div class="grow min-w-0"><div class="t-caps mb-2">Latency distribution</div><div class="bars" style="height:64px"><span style="height:35%"></span><span style="height:70%"></span><span style="height:100%"></span><span style="height:60%"></span><span style="height:30%"></span><span style="height:14%"></span><span style="height:6%"></span></div><div class="row-between t-2xs t-subtle mt-1"><span>&lt;50ms</span><span>50–100</span><span>100–250</span><span>250–500</span><span>0.5–1s</span><span>1–2s</span><span>&gt;2s</span></div></div>
+            </div>
+            <div class="grid grid-2 mt-4">
+              <div class="table-wrap"><table class="table table--dense"><thead><tr><th>Slowest tools by p95</th><th class="t-right">Calls</th><th class="t-right">p50</th><th class="t-right">p95</th><th class="t-right">p99</th></tr></thead><tbody><tr><td class="mono">payouts.create</td><td class="t-right t-num">84</td><td class="t-right t-num">410 ms</td><td class="t-right t-num t-600">1.8 s</td><td class="t-right t-num">2.4 s</td></tr><tr><td class="mono">payments.search</td><td class="t-right t-num">612</td><td class="t-right t-num">120 ms</td><td class="t-right t-num t-600">640 ms</td><td class="t-right t-num">910 ms</td></tr><tr><td class="mono">payments.refund</td><td class="t-right t-num">201</td><td class="t-right t-num">180 ms</td><td class="t-right t-num t-600">520 ms</td><td class="t-right t-num">700 ms</td></tr></tbody></table></div>
+              <div class="table-wrap"><table class="table table--dense"><thead><tr><th>Flakiest tools by error rate</th><th class="t-right">Errored</th><th class="t-right">Rate</th></tr></thead><tbody><tr><td class="mono">payouts.create</td><td class="t-right t-num">9 of 84</td><td class="t-right t-num t-danger t-600">10.7%</td></tr><tr><td class="mono">disputes.list</td><td class="t-right t-num">4 of 130</td><td class="t-right t-num t-warn t-600">3.1%</td></tr><tr><td class="mono">payments.refund</td><td class="t-right t-num">2 of 201</td><td class="t-right t-num">1.0%</td></tr></tbody></table></div>
+            </div>
+            <div class="t-xs t-subtle mt-3">Empty variants: “No completed tool calls recorded a latency yet.” · “No tool has errored in this window.” · “No tool calls yet”.</div>
+          </div>
+          <!-- Score breakdown -->
+          <div data-tab-panel="ins-score" hidden class="card card--pad">
+            <div class="row-start gap-4 wrap"><span class="ring ring--lg" style="--p:94;--c:var(--ok)"><span>94</span></span><div><div class="t-h3">Excellent — Production ready</div><div class="t-sm t-muted">−6 points deducted across 2 rule groups</div><div class="row gap-1 mt-2"><span class="badge badge--danger">MUST 0</span><span class="badge badge--warn">SHOULD 3</span><span class="badge">Advisory 2</span></div></div></div>
+            <div class="grid grid-2 mt-4">
+              <div><div class="t-caps mb-2">Points lost by rule group</div>
+                <div class="col gap-2 t-sm">
+                  <div class="meter"><span style="width:110px">Annotations</span><div class="progress progress--warn"><span style="width:40%"></span></div><span class="meter-val">−4</span></div>
+                  <div class="meter"><span style="width:110px">Hygiene</span><div class="progress"><span style="width:20%"></span></div><span class="meter-val">−2*</span></div>
+                  <div class="meter"><span style="width:110px">Naming</span><div class="progress progress--ok"><span style="width:0%"></span></div><span class="meter-val">0</span></div>
+                  <div class="meter"><span style="width:110px">Structure</span><div class="progress progress--ok"><span style="width:0%"></span></div><span class="meter-val">0</span></div>
+                  <div class="meter"><span style="width:110px">Security</span><div class="progress progress--ok"><span style="width:0%"></span></div><span class="meter-val">0</span></div>
+                </div><div class="t-2xs t-subtle mt-2">* capped per rule (−2 pts, capped from −3)</div></div>
+              <div><div class="t-caps mb-2">Findings by severity</div><div class="bars" style="height:64px"><span style="height:0%;background:var(--danger)" title="MUST 0"></span><span style="height:100%;background:var(--warn)" title="SHOULD 3"></span><span style="height:66%;background:var(--neutral)" title="Advisory 2"></span></div><div class="row-between t-2xs t-subtle mt-1"><span>MUST</span><span>SHOULD</span><span>Advisory</span></div></div>
+            </div>
+            <div class="mt-4" style="max-height:18rem;overflow:auto"><div class="t-caps mb-1">SHOULD · 3</div>
+              <ul class="divide-y">
+                <li class="kv-row"><span class="mono t-xs">mcp-tool-annotations</span><button class="btn btn--sm btn--ghost mono" data-tip="Jump to tools.payouts.create in Capabilities" data-action="tab" data-target="capabilities">tools.payouts.create ↗</button><span class="t-muted">Tool declares no safety annotations.</span></li>
+                <li class="kv-row"><span class="mono t-xs">mcp-tool-annotations</span><button class="btn btn--sm btn--ghost mono" data-action="tab" data-target="capabilities">tools.merchant.ping ↗</button><span class="t-muted">Tool declares no safety annotations.</span></li>
+                <li class="kv-row"><span class="mono t-xs">mcp-output-schema</span><button class="btn btn--sm btn--ghost mono" data-action="tab" data-target="capabilities">tools.payments.refund ↗</button><span class="t-muted">Tool has no output schema.</span></li>
+              </ul>
+              <div class="t-caps mb-1 mt-3">Advisory · 2</div>
+              <ul class="divide-y">
+                <li class="kv-row"><span class="mono t-xs">mcp-description-length</span><button class="btn btn--sm btn--ghost mono" data-action="tab" data-target="capabilities">prompts.dispute_reply ↗</button><span class="t-muted">Description shorter than 20 characters.</span></li>
+                <li class="kv-row"><span class="mono t-xs">mcp-deprecated-resource</span><button class="btn btn--sm btn--ghost mono" data-action="tab" data-target="capabilities">resources.settlements/latest ↗</button><span class="t-muted">Deprecated resource still exposed.</span></li>
+              </ul>
+            </div>
+          </div>
+          <!-- Trust profile -->
+          <div data-tab-panel="ins-trust" hidden class="card card--pad">
+            <div class="banner mb-4"><i data-lucide="info"></i><span>A heuristic composite synthesized from quality, safety, documentation, stability and responsiveness — a trust glance, not an official rating.</span></div>
+            <div class="grid grid-2" style="grid-template-columns:260px 1fr">
+              <div>
+                <svg viewBox="-34 0 268 200" role="img" aria-label="Trust radar: quality 94, safety 78, documentation 86, stability 91, responsiveness 72" style="width:100%;max-width:240px">
+                  <g fill="none" stroke="var(--border-strong)"><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3"/><polygon points="100,40 157.1,81.5 135.3,148.5 64.7,148.5 42.9,81.5"/><polygon points="100,60 138,87.6 123.5,132.4 76.5,132.4 62,87.6"/><polygon points="100,80 119,93.8 111.8,116.2 88.2,116.2 81,93.8"/><line x1="100" y1="100" x2="100" y2="20"/><line x1="100" y1="100" x2="176.1" y2="75.3"/><line x1="100" y1="100" x2="147" y2="164.7"/><line x1="100" y1="100" x2="53" y2="164.7"/><line x1="100" y1="100" x2="23.9" y2="75.3"/></g>
+                  <polygon points="100,24.8 159.3,80.7 140.5,155.7 57.2,158.9 45.2,82.2" fill="color-mix(in srgb, var(--ok) 25%, transparent)" stroke="var(--ok)" stroke-width="2"/>
+                  <g fill="var(--ok)"><circle cx="100" cy="24.8" r="3"/><circle cx="159.3" cy="80.7" r="3"/><circle cx="140.5" cy="155.7" r="3"/><circle cx="57.2" cy="158.9" r="3"/><circle cx="45.2" cy="82.2" r="3"/></g>
+                  <g font-size="9" font-family="Inter, sans-serif" fill="var(--fg-muted)" text-anchor="middle"><text x="100" y="12">Quality</text><text x="184" y="72">Safety</text><text x="152" y="180">Documentation</text><text x="48" y="180">Stability</text><text x="20" y="72">Responsiveness</text></g>
+                </svg>
+                <div class="t-center mt-2"><div class="stat__value">84<small>/100</small></div><div class="t-xs t-muted">overall · 5 of 5 signals measured</div></div>
+              </div>
+              <ul class="divide-y">
+                <li class="kv-row"><span class="dot dot--ok"></span><span style="width:130px">Quality <i data-lucide="info" style="width:12px;height:12px;display:inline-block;vertical-align:-2px" title="Lint score of the current snapshot"></i></span><span class="badge badge--ok">94/100</span><span class="t-xs t-muted">Lint grade A on v5.</span></li>
+                <li class="kv-row"><span class="dot dot--warn"></span><span style="width:130px">Safety</span><span class="badge badge--warn">78/100</span><span class="t-xs t-muted">2 destructive tools, all behind bearer auth; 3 unannotated.</span></li>
+                <li class="kv-row"><span class="dot dot--ok"></span><span style="width:130px">Documentation</span><span class="badge badge--ok">86/100</span><span class="t-xs t-muted">90% described, 71% params documented.</span></li>
+                <li class="kv-row"><span class="dot dot--ok"></span><span style="width:130px">Stability</span><span class="badge badge--ok">91/100</span><span class="t-xs t-muted">98.6% availability; 1 breaking change in 5 snapshots.</span></li>
+                <li class="kv-row"><span class="dot dot--warn"></span><span style="width:130px">Responsiveness</span><span class="badge badge--warn">72/100</span><span class="t-xs t-muted">p95 1.8 s on the slowest tool; 1.2% error rate.</span></li>
+                <li class="kv-row"><span class="dot"></span><span style="width:130px" class="t-subtle">(gap example)</span><span class="badge badge--outline">Not measured</span><span class="t-xs t-subtle">Unmeasured axes are shown as gaps at the centre.</span></li>
+              </ul>
+            </div>
+          </div>
+          <!-- Peer ranking -->
+          <div data-tab-panel="ins-peer" hidden class="card card--pad">
+            <div class="banner mb-4"><i data-lucide="users"></i><span>Ranked against 6 finance servers — a peer baseline within its category, not an absolute grade.</span></div>
+            <ul class="divide-y">
+              <li class="kv-row"><span style="width:140px" class="t-600">Grade</span><span class="t-xs t-muted grow">Lint score vs. peers</span><span class="t-num">94/100</span><span class="badge badge--ok">Top 10%</span></li>
+              <li class="kv-row"><span style="width:140px" class="t-600">Safety</span><span class="t-xs t-muted grow">Annotated share, auth posture</span><span class="t-num">78/100</span><span class="badge badge--info">Top 25%</span></li>
+              <li class="kv-row"><span style="width:140px" class="t-600">Documentation</span><span class="t-xs t-muted grow">Coverage composite</span><span class="t-num">86/100</span><span class="badge badge--info">Top 25%</span></li>
+              <li class="kv-row"><span style="width:140px" class="t-600">Latency</span><span class="t-xs t-muted grow">p95 across tools</span><span class="t-num">72/100</span><span class="badge">Top 50%</span></li>
+              <li class="kv-row"><span style="width:140px" class="t-600 t-subtle">(gap example)</span><span class="t-xs t-subtle grow">No measurement</span><span class="t-num t-subtle">—</span><span class="badge badge--outline">Not ranked</span></li>
+            </ul>
+            <div class="t-xs t-subtle mt-3">Unranked axes have no measurement for this server. Sole-member variant: “The only server in the finance category — it leads its cohort by default…” with “Only in category” pills.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card"><div class="empty empty--inline"><div class="empty__art"><span class="hex"></span><i data-lucide="chart-spline"></i></div><div><div class="empty__title">No insight yet</div><div class="empty__desc">This endpoint has never been discovered, so there is no capability surface to visualize. Run discovery to populate its insight.</div></div><span class="badge badge--outline ml-auto">state</span></div></div>
+    </section>
+
+    <!-- ================= Versions ================= -->
+    <section data-tab-panel="versions" hidden class="col gap-4">
+      <div class="card card--pad">
+        <div class="row-between wrap gap-3">
+          <div class="row gap-2 wrap"><span class="t-h4">Compare versions</span><label class="row gap-2 t-sm t-muted">Base<select class="select select--sm" style="width:200px" aria-label="Base version"><option>Select base…</option><option>v3 · Aug 2, 2026</option><option selected>v4 · Aug 9, 2026</option></select></label><i data-lucide="arrow-left-right" class="t-subtle"></i><label class="row gap-2 t-sm t-muted">Target<select class="select select--sm" style="width:220px" aria-label="Target version"><option>Select target…</option><option selected>v5 · Aug 15, 2026 · 2026.08.15-a</option></select></label></div>
+          <span class="t-xs t-subtle">Selection auto-orders older → newer · tick two versions in the timeline</span>
+        </div>
+      </div>
+      <div class="grid" style="grid-template-columns: 360px minmax(0,1fr)">
+        <div class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="history"></i>Timeline<span class="badge">5</span></div></div>
+          <div class="divide-y">
+            <label class="list-row" style="cursor:pointer"><span class="check"><input type="checkbox" checked data-action="select-row" /></span><div class="grow min-w-0"><div class="row gap-2"><span class="t-sm t-600">v5</span><span class="badge badge--ok">Current</span><span class="badge badge--ok">94 · A</span></div><div class="lr-sub">Aug 15, 2026 09:07 · 2026.08.15-a</div></div><span class="mono t-xs t-subtle">+0 −0 ~2</span></label>
+            <label class="list-row" style="cursor:pointer"><span class="check"><input type="checkbox" checked /></span><div class="grow min-w-0"><div class="row gap-2"><span class="t-sm t-600">v4</span><span class="badge badge--ok">90 · A</span></div><div class="lr-sub">Aug 9, 2026 08:12</div></div><span class="mono t-xs t-subtle">+3 −1 ~2</span></label>
+            <label class="list-row" style="cursor:pointer"><span class="check"><input type="checkbox" /></span><div class="grow min-w-0"><div class="row gap-2"><span class="t-sm t-600">v3</span><span class="badge">88 · B</span></div><div class="lr-sub">Aug 2, 2026 08:10</div></div><span class="mono t-xs t-subtle">+2 −1 ~0</span></label>
+            <label class="list-row" style="cursor:pointer"><span class="check"><input type="checkbox" /></span><div class="grow min-w-0"><div class="row gap-2"><span class="t-sm t-600">v2</span><span class="badge">84 · B</span></div><div class="lr-sub">Jul 26, 2026 08:09</div></div><span class="mono t-xs t-subtle">+1 −0 ~1</span></label>
+            <label class="list-row" style="cursor:pointer"><span class="check"><input type="checkbox" /></span><div class="grow min-w-0"><div class="row gap-2"><span class="t-sm t-600">v1</span><span class="badge">82 · B</span></div><div class="lr-sub">Jul 19, 2026 14:31 · initial discovery</div></div><span class="mono t-xs t-subtle">+14 −0 ~0</span></label>
+          </div>
+        </div>
+        <div class="card min-w-0">
+          <div class="card__header" style="align-items:flex-start"><div><div class="card__title"><i data-lucide="git-compare"></i>Diff <span class="mono t-sm t-muted" style="white-space:nowrap">v4 → v5</span></div><div class="t-xs t-subtle mt-1">+0 added · −0 removed · ~2 modified · fingerprint changed</div></div><div class="row gap-2 shrink-0"><button class="btn btn--sm btn--ghost">Expand all</button><div class="segmented segmented--sm" role="radiogroup" aria-label="Diff layout" data-tabs="diff-layout" style="white-space:nowrap"><button class="is-active" data-action="tab" data-target="split">Side-by-side</button><button data-action="tab" data-target="unified">Unified</button></div></div></div>
+          <div class="card__body col gap-3">
+            <div class="card card--flat">
+              <div class="row gap-2 wrap" style="padding:10px 12px"><span class="badge badge--info">~ Modified</span><span class="t-sm">Tool · <span class="mono">payments.refund</span></span><span class="t-xs t-subtle">inputSchema, description changed</span></div>
+              <details class="disclosure" open style="box-shadow:none;border-top:1px solid var(--border);border-radius:0"><summary><i data-lucide="chevron-right"></i>Diff<span class="meta">18 lines</span></summary>
+                <div id="diff-layout">
+                  <div data-tab-panel="split" class="diff-grid">
+                    <div class="code"><span class="c-c">// v4</span>
+"reason": {
+  "type": "string",
+<span class="diff-del">  "description": "Free text"</span>
+},
+<span class="diff-del">"amount_cents": { "type": "integer" }</span></div>
+                    <div class="code"><span class="c-c">// v5</span>
+"reason": {
+  "type": "string",
+<span class="diff-add">  "enum": ["duplicate", "fraud", "requested"]</span>
+},
+<span class="diff-add">"amount_cents": { "type": "integer", "minimum": 1 }</span></div>
+                  </div>
+                  <div data-tab-panel="unified" hidden class="code" style="border-radius:0 0 var(--r-md) var(--r-md)"><span class="c-c">@@ inputSchema.properties.reason @@</span>
+  "reason": {
+    "type": "string",
+<span class="diff-del">-   "description": "Free text"</span>
+<span class="diff-add">+   "enum": ["duplicate", "fraud", "requested"]</span>
+  },
+<span class="diff-del">- "amount_cents": { "type": "integer" }</span>
+<span class="diff-add">+ "amount_cents": { "type": "integer", "minimum": 1 }</span></div>
+                </div>
+              </details>
+            </div>
+            <div class="card card--flat">
+              <div class="row gap-2 wrap" style="padding:10px 12px"><span class="badge badge--info">~ Modified</span><span class="t-sm">Server · <span class="mono">instructions</span></span><span class="t-xs t-subtle">instructions changed</span></div>
+              <details class="disclosure" style="box-shadow:none;border-top:1px solid var(--border);border-radius:0"><summary><i data-lucide="chevron-right"></i>Diff<span class="meta">4 lines</span></summary><div class="code">…</div></details>
+            </div>
+            <div class="row wrap gap-2 t-xs t-subtle"><span>Change kinds:</span><span class="badge badge--ok">+ Added</span><span class="badge badge--danger">− Removed</span><span class="badge badge--info">~ Modified</span><span class="badge">~ Changed</span><span>· Added/Removed rows open “Added definition” / “Removed definition” JSON viewers.</span></div>
+            <div class="empty empty--inline card--soft" style="border-radius:var(--r-md)"><div class="empty__art"><span class="hex"></span><i data-lucide="git-compare"></i></div><div><div class="empty__title">Pick two versions</div><div class="empty__desc">Choose a base and a target — from the selectors or by ticking two versions in the timeline — to see exactly what changed. (Identical: “Identical surface — These two versions expose the same capabilities and metadata — nothing changed between them.”)</div></div><span class="badge badge--outline ml-auto">state</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Lint & Score ================= -->
+    <section data-tab-panel="lint" hidden class="col gap-4">
+      <div class="card card--pad">
+        <div class="row-between wrap gap-4">
+          <div class="row gap-4"><span class="ring ring--lg" style="--p:94;--c:var(--ok)"><span>94</span></span><div><div class="t-h2">Excellent — Production ready</div><div class="t-sm t-muted">Deterministic quality score for this version’s capability surface. 90–100 band.</div></div></div>
+          <dl class="kv" style="min-width:300px"><dt>Version</dt><dd>v5 · <span class="mono">2026.08.15-a</span></dd><dt>Scored</dt><dd>Aug 15, 2026 09:07</dd><dt>Source</dt><dd><span class="badge badge--ok">Stored report</span> <span class="t-xs t-subtle">(or “Computed live”)</span></dd><dt>Fingerprint</dt><dd class="row gap-1"><i data-lucide="fingerprint" style="width:13px;height:13px"></i><span class="mono t-xs" title="sha256:9f2c1a7e4b0d3c5f8a6e2b1d0c9f7a4e3b2d1c0f9e8a7b6c5d4e3f2a1b0c9d8e">9f2c1a7e4b0d…</span></dd></dl>
+        </div>
+      </div>
+      <div class="stat-grid stat-grid--4">
+        <div class="stat"><div class="stat__label"><span class="badge badge--danger">MUST</span></div><div class="stat__value">0</div><div class="stat__foot"><span>Hard requirements — fix these to raise the grade.</span></div></div>
+        <div class="stat"><div class="stat__label"><span class="badge badge--warn">SHOULD</span></div><div class="stat__value">3</div><div class="stat__foot"><span>Recommendations — address these to polish the surface.</span></div></div>
+        <div class="stat"><div class="stat__label"><span class="badge">Advisory</span></div><div class="stat__value">2</div><div class="stat__foot"><span>Informational notes about the surface.</span></div></div>
+        <div class="stat"><div class="stat__label"><i data-lucide="list-checks"></i>Rules triggered</div><div class="stat__value">4</div><div class="stat__foot"><span>Distinct lint rules with at least one finding.</span></div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar"><span class="t-sm t-600">Score axes &amp; coverage</span><span class="t-xs t-muted">5 of 6 axes assessed · composite 94</span><span class="spacer"></span><a href="#" class="t-xs">Scoring algorithm ↗</a></div>
+        <table class="table table--dense"><thead><tr><th>Axis</th><th class="t-right">Score</th><th>Coverage</th><th>Notes</th></tr></thead><tbody>
+          <tr><td>Naming</td><td class="t-right t-num">100</td><td><span class="badge badge--ok">Full</span></td><td class="t-muted">Consistent dotted names.</td></tr>
+          <tr><td>Structure</td><td class="t-right t-num">100</td><td><span class="badge badge--ok">Full</span></td><td class="t-muted">All schemas valid JSON Schema 2020-12.</td></tr>
+          <tr><td>Annotations</td><td class="t-right t-num">84</td><td><span class="badge badge--ok">Full</span></td><td class="t-muted">3 unannotated tools.</td></tr>
+          <tr><td>Security</td><td class="t-right t-num">100</td><td><span class="badge badge--ok">Full</span></td><td class="t-muted">Bearer auth; no destructive tool anonymous.</td></tr>
+          <tr><td>Hygiene</td><td class="t-right t-num">92</td><td><span class="badge badge--ok">Full</span></td><td class="t-muted">1 deprecated resource still exposed.</td></tr>
+          <tr><td>Runtime probes</td><td class="t-right t-num t-subtle">—</td><td><span class="badge badge--outline">Not assessed</span></td><td class="t-muted">Dynamic probing is not enabled for this tenant.</td></tr>
+        </tbody></table>
+      </div>
+      <div class="grid" style="grid-template-columns: 300px minmax(0,1fr)">
+        <div class="card card--pad" style="align-self:start;position:sticky;top:150px"><div class="t-h4 mb-3">Findings by category</div>
+          <div class="col gap-3 t-sm">
+            <div><div class="row-between t-xs"><span>Naming</span><span class="t-subtle">0</span></div><div class="progress progress--ok mt-1"><span style="width:0%"></span></div></div>
+            <div><div class="row-between t-xs"><span>Structure</span><span class="t-subtle">0</span></div><div class="progress progress--ok mt-1"><span style="width:0%"></span></div></div>
+            <div><div class="row-between t-xs"><span>Annotations</span><span class="t-subtle">3</span></div><div class="progress progress--warn mt-1"><span style="width:60%"></span></div></div>
+            <div><div class="row-between t-xs"><span>Security</span><span class="t-subtle">0</span></div><div class="progress progress--ok mt-1"><span style="width:0%"></span></div></div>
+            <div><div class="row-between t-xs"><span>Hygiene</span><span class="t-subtle">2</span></div><div class="progress mt-1"><span style="width:40%;background:var(--neutral)"></span></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="list"></i>Findings<span class="badge">5</span></div><span class="t-xs t-subtle">Grouped MUST → SHOULD → Advisory · no filters</span></div>
+          <div class="card__body col gap-4">
+            <div><div class="row gap-2 mb-2"><span class="badge badge--danger">MUST</span><span class="t-sm t-600">0</span><span class="t-xs t-muted">Hard requirements — fix these to raise the grade.</span></div><div class="t-xs t-subtle" style="padding-left:4px">No MUST findings.</div></div>
+            <div><div class="row gap-2 mb-2"><span class="badge badge--warn">SHOULD</span><span class="t-sm t-600">3</span><span class="t-xs t-muted">Recommendations — address these to polish the surface.</span></div>
+              <ul class="divide-y card card--flat">
+                <li class="kv-row" style="padding:8px 12px"><span class="mono t-xs">mcp-tool-annotations</span><button class="btn btn--sm btn--ghost mono" data-action="tab" data-target="capabilities">tools.payouts.create ↗</button><span class="t-muted">Tool declares no safety annotations.</span></li>
+                <li class="kv-row" style="padding:8px 12px"><span class="mono t-xs">mcp-tool-annotations</span><button class="btn btn--sm btn--ghost mono" data-action="tab" data-target="capabilities">tools.merchant.ping ↗</button><span class="t-muted">Tool declares no safety annotations.</span></li>
+                <li class="kv-row" style="padding:8px 12px"><span class="mono t-xs">mcp-output-schema</span><button class="btn btn--sm btn--ghost mono" data-action="tab" data-target="capabilities">tools.payments.refund ↗</button><span class="t-muted">Tool has no output schema.</span></li>
+              </ul></div>
+            <div><div class="row gap-2 mb-2"><span class="badge">Advisory</span><span class="t-sm t-600">2</span><span class="t-xs t-muted">Informational notes about the surface.</span></div>
+              <ul class="divide-y card card--flat">
+                <li class="kv-row" style="padding:8px 12px"><span class="mono t-xs">mcp-description-length</span><button class="btn btn--sm btn--ghost mono" data-action="tab" data-target="capabilities">prompts.dispute_reply ↗</button><span class="t-muted">Description shorter than 20 characters.</span></li>
+                <li class="kv-row" style="padding:8px 12px"><span class="mono t-xs">mcp-deprecated-resource</span><button class="btn btn--sm btn--ghost mono" data-action="tab" data-target="capabilities">resources.settlements/latest ↗</button><span class="t-muted">Deprecated resource still exposed.</span></li>
+              </ul></div>
+            <div class="t-xs t-subtle">States: “Loading lint report…” · “Lint report unavailable — This endpoint has no scored version yet. Run discovery to capture a quality report.” · “No findings — This version’s surface passes every lint rule — a clean bill of health.”</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Settings ================= -->
+    <section data-tab-panel="settings" hidden class="col gap-6">
+      <div class="settings-grid">
+        <div><div class="t-h3">Identity &amp; connection</div><p class="t-sm t-muted mt-1">How this endpoint appears in your catalog and how discovery connects to it. Changing the URL or transport takes effect on the next discovery run.</p></div>
+        <div class="card card--pad col gap-4">
+          <div class="form-grid">
+            <div class="field"><label>Name <span class="req">*</span></label><input class="input" value="Payments tools" /></div>
+            <div class="field"><label>Endpoint URL <span class="req">*</span></label><input class="input input--mono" inputmode="url" value="https://mcp.acme.dev/payments/mcp" placeholder="https://mcp.example.com/sse" /><div class="hint">The MCP server’s connection URL.</div></div>
+            <div class="field"><label>Transport</label><select class="select"><option selected>Streamable HTTP</option><option>Server-Sent Events (SSE)</option><option>Standard I/O (stdio)</option></select></div>
+            <div class="field"><label>Visibility</label><select class="select"><option>Private (only your tenant)</option><option selected>Public (listed in the public catalog)</option></select></div>
+            <div class="field span-2"><label>Discovery cadence</label><select class="select" style="max-width:320px"><option>Default cadence</option><option>Every hour</option><option selected>Every 6 hours</option><option>Every 12 hours</option><option>Daily</option><option>Weekly</option><option>Every 30 days</option><option>Every 90 minutes (custom)</option></select><div class="hint">How often this endpoint is re-discovered automatically. Sub-daily cadences ask for confirmation.</div></div>
+          </div>
+          <div class="field is-invalid" style="max-width:420px"><div class="error" role="alert"><i data-lucide="circle-alert" style="width:13px;height:13px"></i>Validation copy: “Enter a name for this endpoint.” · “Enter the MCP endpoint URL.” · “Enter a valid URL (including http:// or https://).” · “HTTP transports require an http:// or https:// URL.”</div></div>
+          <div class="form-actions" style="border-top:1px solid var(--border)"><span class="row gap-2 t-xs t-warn" style="margin-right:auto"><span class="dot dot--warn"></span>Unsaved changes</span><button class="btn btn--primary" data-action="open" data-target="cadence-confirm" data-tip="Save changes">Save changes</button></div>
+        </div>
+      </div>
+      <div class="settings-grid">
+        <div><div class="t-h3">Lifecycle</div><p class="t-sm t-muted mt-1">A disabled endpoint stays in the catalog with its versions intact but is skipped by scheduled discovery.</p></div>
+        <div class="card card--pad row-between wrap gap-3"><div class="row gap-3"><span class="dot dot--ok dot--pulse"></span><div><div class="t-sm t-600">Endpoint is enabled</div><div class="t-xs t-muted">It is included in the scheduled discovery sweep.</div></div></div><button class="btn"><i data-lucide="pause"></i>Disable</button></div>
+      </div>
+      <div class="settings-grid">
+        <div><div class="t-h3 t-danger">Danger zone</div><p class="t-sm t-muted mt-1">Destructive actions that cannot be undone.</p></div>
+        <div class="card card--pad row-between wrap gap-3" style="box-shadow:0 0 0 1px var(--danger) inset, var(--shadow-sm)"><div><div class="t-sm t-600">Delete endpoint</div><div class="t-xs t-muted">Removes the endpoint, its 5 versions, discovery jobs and stored credentials.</div></div><button class="btn btn--danger" data-action="open" data-target="delete-endpoint-dialog"><i data-lucide="trash-2"></i>Delete endpoint</button></div>
+      </div>
+    </section>
+
+    <!-- ================= Trust posture (proposed) ================= -->
+    <section data-tab-panel="trust" hidden class="col gap-4">
+      <div class="banner banner--honey"><i data-lucide="lightbulb"></i><div><div class="banner-title">Proposed tab</div><div class="banner-body t-xs"><code>McpTrustPosturePanel</code> (CLX-3.2) exists as a component but is not mounted anywhere today. Mounting it here gives the OWASP-MCP report a home next to Lint &amp; Score.</div></div></div>
+      <div class="banner" role="note"><i data-lucide="info"></i><span>Every finding below is a signal to review, not a demonstrated exploit. Findings marked “Proven by dynamic probe” were confirmed at runtime.</span></div>
+      <div class="card">
+        <div class="card__header"><div class="card__title"><i data-lucide="shield-half"></i>Trust posture<span class="t-xs t-subtle t-500">Profile strict · OWASP MCP rev 2026-05 · score 81/100 (grade B)</span></div><span class="row gap-2"><span class="badge badge--ok">Gate passed</span><select class="select select--sm" style="width:130px" aria-label="Profile"><option>strict</option><option>balanced</option><option>permissive</option></select></span></div>
+        <div class="card__body col gap-4">
+          <div class="t-xs t-muted">Reasons: score ≥ 75 · no error-severity finding · 2 risks not evaluated.</div>
+          <div><div class="row gap-2 mb-2"><span class="t-sm t-600">MCP09 · Tool shadowing &amp; naming collisions</span><span class="badge">2 findings</span></div>
+            <ul class="divide-y card card--flat">
+              <li style="padding:10px 12px"><div class="row wrap gap-2"><span class="badge badge--warn">warning</span><span class="badge badge--violet">source</span><span class="t-xs t-subtle">Signal — not proven exploitable</span><span class="mono t-xs">tools.search</span></div><div class="t-sm mt-1">Tool name <span class="mono">search</span> is also exposed by Orders assistant on the same host.</div><div class="code mt-2" style="font-size:var(--fs-2xs)">{"name":"search","title":"Search payments"}</div><div class="t-xs t-muted mt-2"><span class="t-600">Remediation:</span> Namespace the tool (<span class="mono">payments.search</span>) or retire the duplicate.</div></li>
+              <li style="padding:10px 12px"><div class="row wrap gap-2"><span class="badge badge--info">info</span><span class="badge">metadata</span><span class="t-xs t-subtle">Signal — not proven exploitable</span><span class="mono t-xs">prompts.summarize</span></div><div class="t-sm mt-1">Prompt name collides across hosts (Globex geo tools).</div></li>
+            </ul></div>
+          <div><div class="row gap-2 mb-2"><span class="t-sm t-600">MCP03 · Excessive permissions</span><span class="badge">1 finding</span></div>
+            <ul class="divide-y card card--flat"><li style="padding:10px 12px"><div class="row wrap gap-2"><span class="badge badge--warn">warning</span><span class="badge badge--info">protocol</span><span class="t-xs t-ok">Proven by dynamic probe</span><span class="mono t-xs">tools.payouts.create</span></div><div class="t-sm mt-1">Unannotated tool performed a write when probed with a read-only credential.</div><div class="t-xs t-muted mt-2"><span class="t-600">Remediation:</span> Declare <span class="mono">destructiveHint</span> and scope the credential.</div></li></ul></div>
+          <div class="grid grid-2"><div class="card card--soft" style="padding:10px 12px"><div class="t-xs t-600">Not evaluated (2)</div><div class="t-xs t-muted mt-1">mcp-dep-supply-chain (no dependency manifest) · mcp-transport-tls (stdio transports skipped)</div></div><div class="card card--soft" style="padding:10px 12px"><div class="t-xs t-600">OWASP coverage</div><div class="t-xs t-muted mt-1">Uncovered risks: MCP06, MCP10</div></div></div>
+        </div>
+      </div>
+    </section>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<div class="overlay" id="export-report-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:300px 40px 0 0">
+  <div class="menu" role="menu" style="width:300px">
+    <label class="menu__item check" style="height:auto;padding:8px 10px"><input type="checkbox" checked />Include cataloger commentary <span class="t-xs t-subtle">(human notes, not from the server)</span></label>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#"><i data-lucide="file-text"></i>Download Markdown</a>
+    <a class="menu__item" href="#"><i data-lucide="file-code-2"></i>Download HTML</a>
+    <a class="menu__item" href="#"><i data-lucide="printer"></i>Print / Save as PDF</a>
+    <div class="t-2xs t-subtle" style="padding:6px 10px">Errors: “Report export failed” · “Allow pop-ups to print or save the report as PDF.”</div>
+  </div>
+</div>
+
+<div class="overlay" id="delete-endpoint-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="del-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title" id="del-title">Delete “Payments tools”?</div><div class="dialog__desc">This permanently deletes the endpoint and cascades to its versions, discovery jobs, and stored credentials. This action cannot be undone.</div></div></div>
+    <div class="dialog__body"><div class="field"><label>Type <span class="mono">DELETE</span> to confirm</label><input class="input input--mono" placeholder="DELETE" /><div class="hint">Case-sensitive. On success: “Endpoint deleted. Removed 5 versions, 72 jobs and purged stored credentials.”</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" disabled>Delete endpoint</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="cadence-confirm" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Are you sure?</div><div class="dialog__desc">Additional traffic could cause the MCP server to rate limit your requests, causing an unnecessary load on the server.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save changes</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/mcp/[endpointId]</p>
+  <h4>Replaces</h4>
+  <ul><li><code>McpEndpointDetailClient</code>, <code>McpEndpointNotesPanel</code>, <code>McpEndpointInsight</code> (+ 14 <code>ui/mcp</code> panels), <code>McpVersionHistory</code>, <code>McpLintReport</code>/<code>McpGradeSummary</code>, <code>McpEndpointSettings</code>, <code>DetailTabs</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: back crumb, name, meta row (URL · transport · visibility · RecencyPill · Enabled/Disabled · Published/Unpublished); actions Re-discover / Disable-Enable / Publish-Unpublish (all disabled while one is busy; toasts unchanged).</li>
+    <li>Summary tiles Quality grade · Current version · Server (+protocol) · Last discovered. Cataloger commentary: notes list (author, time, edited), Edit/Delete, inline composer + Save note.</li>
+    <li>Tabs Capabilities · Insight · Versions · Lint &amp; Score · Settings in that order (state, no <code>?tab=</code>). Capabilities: Instructions, sections Tools/Resources/Resource templates/Prompts, item cards with lifecycle + annotation badges, mono uri/name, disclosures Input/Output schema/Annotations (Copy), deep-link anchor ids <code>mcp-cap-{type}-{name}</code> + highlight ring.</li>
+    <li>Insight: “Insight for vN”, Snapshot select, Export report menu (commentary checkbox, Markdown, HTML, Print/PDF); left rail of 14 views in 4 groups; every panel’s headline, chips, chart type, drill-downs and empty copy; deep-links to Versions (churn/matrix/trend/digest) and Capabilities (score breakdown/lint).</li>
+    <li>Versions: Base/Target selects, timeline rows (v, Current, score badge, date/tag, +/−/~), Diff header with Expand all + Side-by-side/Unified (persisted), change rows with kind badges and Monaco split/unified diff.</li>
+    <li>Lint &amp; Score: report header (gauge, tier, Version/Scored/Source/fingerprint), 4 summary tiles, Score axes &amp; coverage table, Findings by category bars + grouped findings with path deep-links.</li>
+    <li>Settings: Identity &amp; connection (Name, URL, Transport, Visibility, Discovery cadence presets + custom), validation, Save changes with Unsaved dot, sub-daily cadence confirm, Lifecycle Enable/Disable, Danger zone → typed-DELETE dialog.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>“Trust posture” tab (Proposed) mounts the currently unmounted <code>McpTrustPosturePanel</code>. Grade glyph in the title. Compact server chip in the summary. Nested-tab restore script for the mockup only.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading “Loading endpoint…”; missing “Endpoint unavailable — This MCP endpoint could not be found in your catalog.”; per-tab empties are shown inline as <code>.empty--inline</code> cards tagged “state”.</li></ul>
+</template>
+<script>
+  // Mockup-only: hive.js hides every [data-tab-panel] under a scope, including nested groups; restore nested groups after each tab click.
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-action="tab"]'); if (!t) return;
+    if (!t.closest('[data-tabs]')) { // deep-link button outside any tab strip: activate the matching strip button
+      var target = t.getAttribute('data-target');
+      var btn = document.querySelector('[data-tabs] [data-action="tab"][data-target="' + target + '"]');
+      if (btn) { var g0 = btn.closest('[data-tabs]'); g0.querySelectorAll('.tab, .segmented > button').forEach(function (x) { x.classList.remove('is-active'); }); btn.classList.add('is-active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    }
+    setTimeout(function () {
+      document.querySelectorAll('[data-tabs]').forEach(function (g) {
+        var scope = document.getElementById(g.getAttribute('data-tabs')); if (!scope) return;
+        var act = g.querySelector('.tab.is-active, .segmented > .is-active'); if (!act) return;
+        var id = act.getAttribute('data-target'); if (!id) return;
+        scope.querySelectorAll('[data-tab-panel]').forEach(function (p) {
+          var up = p.parentElement.closest('[data-tab-panel]');
+          if (up && scope.contains(up)) return; // belongs to a nested group
+          p.hidden = p.getAttribute('data-tab-panel') !== id;
+        });
+      });
+      if (window.Hive) Hive.icons();
+    }, 0);
+  });
+</script>
+</body>
+</html>

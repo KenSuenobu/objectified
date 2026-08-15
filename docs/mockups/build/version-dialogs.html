@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Version dialogs · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .gallery-card { scroll-margin-top: 140px; }
+  .gallery-card .card__header { align-items: flex-start; }
+  .maps-to { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .maps-to code { font-size: var(--fs-2xs); background: var(--bg-inset); padding: 1px 5px; border-radius: 3px; color: var(--fg-muted); }
+  .flag { display: inline-flex; align-items: center; gap: 4px; height: 16px; padding: 0 5px; border-radius: var(--r-xs); background: var(--honey-soft); color: var(--honey-fg); font-size: 10px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; }
+  .flag [data-lucide] { width: 10px; height: 10px; }
+  .dlg-frame { border-radius: var(--r-lg); box-shadow: 0 0 0 1px var(--border) inset; overflow: hidden; background: var(--bg-surface); }
+  .dlg-frame .dialog__header { padding: 16px 18px 10px; }
+  .dlg-frame .dialog__body { padding: 6px 18px 16px; }
+  .dlg-frame .dialog__footer { padding: 12px 18px; }
+  .diff-pane { font-family: var(--font-mono); font-size: var(--fs-2xs); line-height: 1.6; background: var(--bg-inset); border-radius: var(--r-md); overflow: auto; max-height: 220px; counter-reset: ln; }
+  .diff-pane > div { display: flex; }
+  .diff-pane > div::before { counter-increment: ln; content: counter(ln); width: 30px; flex-shrink: 0; text-align: right; padding-right: 8px; color: var(--fg-faint); }
+  .diff-pane > div > span { flex: 1; padding: 0 8px; white-space: pre; }
+  .legend-sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .dag { width: 100%; height: 300px; background: radial-gradient(var(--border-strong) 1px, transparent 1px) 0 0/16px 16px, var(--bg-canvas); border-radius: var(--r-md); }
+  .dag text { font-family: var(--font-mono); font-size: 11px; fill: var(--fg); }
+  .dag .meta { font-family: var(--font-sans); font-size: 10px; fill: var(--fg-subtle); }
+  .dag .node { fill: var(--bg-surface); stroke: var(--border-strong); rx: 8; }
+  .dag .node.merge { stroke: var(--violet); stroke-width: 2; fill: color-mix(in srgb, var(--violet) 8%, var(--bg-surface)); }
+  .dag .edge { stroke: var(--fg-subtle); stroke-width: 1.5; fill: none; }
+  .dag .edge.merge { stroke: var(--violet); stroke-dasharray: 5 4; }
+  .canvas { height: 220px; border-radius: var(--r-md); background: radial-gradient(var(--border-strong) 1px, transparent 1px) 0 0/16px 16px, var(--bg-canvas); position: relative; overflow: hidden; }
+  .cnode { position: absolute; width: 130px; padding: 6px 8px; border-radius: 8px; background: var(--bg-surface); border: 2px solid var(--fg-faint); font-size: var(--fs-2xs); }
+  .cnode .cn { font-weight: 600; font-family: var(--font-mono); font-size: 11px; }
+  .cnode.add { border-color: var(--ok); } .cnode.del { border-color: var(--danger); } .cnode.mod { border-color: var(--warn); }
+  .lane-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+  .conflict-row.unresolved td { background: var(--warn-soft); }
+  .bench-editor { font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.6; background: var(--bg-inset); border-radius: var(--r-md); padding: 10px 12px; min-height: 180px; white-space: pre; overflow: auto; position: relative; }
+  .bench-editor .mark { background: color-mix(in srgb, var(--danger) 18%, transparent); border-bottom: 2px wavy var(--danger); }
+  .kv-mini { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: var(--fs-xs); }
+  .kv-mini dt { color: var(--fg-subtle); } .kv-mini dd { margin: 0; }
+  .toc { position: sticky; top: 108px; align-self: start; }
+  .toc .tab { height: 30px; }
+  .fid-card { padding: 10px 12px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; display: flex; flex-direction: column; gap: 6px; }
+  .fid-card.is-selected { box-shadow: 0 0 0 2px var(--accent) inset; }
+</style>
+</head>
+<body data-shell="app" data-nav="projects" data-page="build/version-dialogs" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Build</span><i data-lucide="chevron-right"></i><a href="projects.html">Projects</a><i data-lucide="chevron-right"></i><a href="versions.html">Payments API</a><i data-lucide="chevron-right"></i><span>Version dialogs</span></div>
+          <h1 class="page-title">Version dialogs <span class="badge badge--outline">gallery</span></h1>
+          <p class="page-desc">Supporting panels and dialogs of the Versions page, laid out as open cards.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn" href="versions.html"><i data-lucide="arrow-left"></i>Back to versions</a>
+          <a class="btn btn--primary" href="versions.html#" data-action="open" data-target="templates-dialog"><i data-lucide="layout-template"></i>Change report templates</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="grid grid-aside-main" style="grid-template-columns:220px minmax(0,1fr)">
+      <!-- TOC -->
+      <nav class="toc vtabs" aria-label="Sections">
+        <a class="tab" href="#compare"><i data-lucide="git-compare"></i>Compare &amp; diff</a>
+        <a class="tab" href="#change-report"><i data-lucide="file-text"></i>Change report</a>
+        <a class="tab" href="#history"><i data-lucide="git-graph"></i>History graph</a>
+        <a class="tab" href="#branch"><i data-lucide="git-branch-plus"></i>Branch · tag · commit</a>
+        <a class="tab" href="#fork"><i data-lucide="git-fork"></i>Fork</a>
+        <a class="tab" href="#merge"><i data-lucide="git-merge"></i>Merge branches</a>
+        <a class="tab" href="#rollback"><i data-lucide="undo-2"></i>Rollback</a>
+        <a class="tab" href="#lint"><i data-lucide="shield-check"></i>Lint report &amp; scoring</a>
+        <a class="tab" href="#mocks"><i data-lucide="flask-conical"></i>Mocks &amp; scenarios</a>
+        <a class="tab" href="#test-bench"><i data-lucide="beaker"></i>Test bench</a>
+        <a class="tab" href="#export"><i data-lucide="package-open"></i>Export</a>
+      </nav>
+
+      <div class="col gap-8">
+
+      <!-- ============ 1. COMPARE / DIFF ============ -->
+      <section class="card gallery-card" id="compare">
+        <div class="card__header">
+          <div><div class="card__title"><i data-lucide="git-compare"></i>Compare version schemas</div><div class="maps-to"><code>page.tsx “Compare Version Schemas” dialog</code><code>VersionCanvasCompare</code><code>CompatibilityReportPanel</code></div></div>
+          <span class="t-xs t-subtle">Dialog max-w-6xl · 90vh</span>
+        </div>
+        <div class="card__body col gap-4">
+          <div class="dlg-frame">
+            <div class="dialog__header"><div><div class="dialog__title">Compare version schemas</div><div class="dialog__desc">View differences between two version specifications</div></div></div>
+            <div class="dialog__body col gap-4">
+              <div class="grid" style="grid-template-columns:1fr auto 1fr;gap:16px;align-items:end">
+                <div class="col gap-2"><div class="field"><label>Version 1 (Base)</label><select class="select"><option>🔒 v2.3.0</option><option>🔒 v2.3.1</option><option>v2.4.0</option></select></div><div class="field"><label class="t-xs t-muted">Set base from tag</label><select class="select select--sm"><option>— none —</option><option>lts-2.2 → v2.2.0</option><option>stable → v2.3.1</option></select></div></div>
+                <button class="btn btn--primary" style="align-self:center"><i data-lucide="git-compare-arrows"></i>Compare versions</button>
+                <div class="col gap-2"><div class="field"><label>Version 2 (Compare to)</label><select class="select"><option>🔒 v2.3.1</option><option>v2.4.0</option></select></div><div class="field"><label class="t-xs t-muted">Set compare target from tag</label><select class="select select--sm"><option>— none —</option><option>stable → v2.3.1</option></select></div></div>
+              </div>
+              <div class="grid grid-2">
+                <div class="card card--flat" style="padding:12px 14px"><div class="row-between"><span class="t-sm t-600 mono">v2.3.0 (base)</span><span class="badge badge--outline">Published</span></div><div class="t-xs t-muted mt-1">Revision note: Payouts resource + settlement reports</div><pre class="code mt-2" style="font-size:11px;padding:8px 10px">- added: /payouts, /payouts/{id}/report
+- breaking: none</pre><div class="t-xs mt-2">Breaking hints: <span class="t-muted">none</span></div></div>
+                <div class="card card--flat" style="padding:12px 14px"><div class="row-between"><span class="t-sm t-600 mono">v2.3.1 (compare to)</span><span class="badge badge--outline">Published</span></div><div class="t-xs t-muted mt-1">Revision note: Patch: fix Refund.amount minimum</div><pre class="code mt-2" style="font-size:11px;padding:8px 10px">- fixed: Refund.amount minimum 0.01
+- docs: currency examples</pre><div class="t-xs mt-2 row gap-2">Published classification: <span class="badge badge--warn">Non-breaking</span><span class="t-subtle">0 breaking · 2 non-breaking · 1 docs-only</span></div></div>
+              </div>
+              <div class="tabs" style="border-bottom:1px solid var(--border)" data-tabs="cmp-tabs">
+                <button class="tab is-active" data-action="tab" data-target="diff">Diff view</button>
+                <button class="tab" data-action="tab" data-target="schema">Schema changes<span class="count">3</span></button>
+                <button class="tab" data-action="tab" data-target="breaking">Breaking doc</button>
+                <button class="tab" data-action="tab" data-target="migration">Migration guide</button>
+                <button class="tab" data-action="tab" data-target="canvas">Canvas</button>
+              </div>
+              <div id="cmp-tabs">
+                <div data-tab-panel="diff">
+                  <div class="row-between wrap gap-2 mb-2">
+                    <div class="row gap-2"><div class="segmented segmented--sm"><button>Overlay</button><button class="is-active">Side-by-side</button></div><div class="segmented segmented--sm"><button class="is-active">JSON</button><button>YAML</button></div></div>
+                    <div class="t-xs t-muted"><span class="legend-sw" style="background:var(--danger-soft)"></span>Removed <span class="legend-sw" style="background:var(--ok-soft);margin-left:10px"></span>Added <span class="legend-sw" style="background:var(--bg-inset);margin-left:10px"></span>Unchanged</div>
+                  </div>
+                  <div class="grid grid-2" style="gap:8px">
+                    <div class="diff-pane"><div><span>"Refund": {</span></div><div><span>  "type": "object",</span></div><div><span>  "properties": {</span></div><div><span>    "amount": {</span></div><div><span>      "type": "number",</span></div><div class="diff-del"><span>      "minimum": 0</span></div><div><span>    },</span></div><div><span>    "currency": {</span></div><div><span>      "type": "string"</span></div><div><span>    }</span></div><div><span>  }</span></div><div><span>}</span></div></div>
+                    <div class="diff-pane"><div><span>"Refund": {</span></div><div><span>  "type": "object",</span></div><div><span>  "properties": {</span></div><div><span>    "amount": {</span></div><div><span>      "type": "number",</span></div><div class="diff-add"><span>      "minimum": 0.01</span></div><div><span>    },</span></div><div><span>    "currency": {</span></div><div><span>      "type": "string",</span></div><div class="diff-add"><span>      "example": "EUR"</span></div><div><span>    }</span></div><div><span>  }</span></div><div><span>}</span></div></div>
+                  </div>
+                  <div class="t-xs t-subtle mt-2">Synced-scroll split panes with line numbers; Overlay = unified +/− lines.</div>
+                </div>
+                <div data-tab-panel="schema" hidden class="col gap-3">
+                  <div class="row-between wrap gap-2">
+                    <div class="row gap-2 t-sm"><span class="t-600">Classes</span><span class="mono t-xs"><span class="t-ok">+1</span> · <span class="t-danger">−0</span> · <span class="t-warn">~1</span> · 40 unchanged</span><button class="btn btn--sm btn--ghost"><i data-lucide="copy"></i>Copy class stat</button></div>
+                    <div class="row gap-2"><div class="input-wrap" style="width:200px"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search classes…" /></div><label class="check t-xs"><input type="checkbox" />Show unchanged</label></div>
+                  </div>
+                  <div class="t-xs t-subtle">Showing 2 of 42 classes · Virtualized list</div>
+                  <div class="card card--flat">
+                    <details open><summary class="list-row" style="cursor:pointer;padding:10px 14px"><span class="mono t-sm t-warn">~</span><span class="mono t-sm t-600">Refund</span><span class="badge badge--outline">modified</span><span class="t-xs t-subtle" style="margin-left:auto">2 property-level changes</span></summary>
+                      <div style="padding:0 14px 12px 34px" class="col gap-1 t-xs"><div><span class="mono">amount.minimum</span> 0 → 0.01</div><div><span class="mono">currency.example</span> added “EUR”</div><button class="btn btn--link btn--sm" style="align-self:flex-start">Show all 2 changes</button></div></details>
+                    <div class="list-row" style="padding:10px 14px"><span class="mono t-sm t-ok">+</span><span class="mono t-sm t-600">RefundReason</span><span class="badge badge--outline">added</span><span class="badge badge--danger" title="Breaking">Breaking</span><span class="t-xs t-subtle" style="margin-left:auto">enum · 5 values</span></div>
+                  </div>
+                  <div class="t-sm t-600 mt-2">Schema changes summary</div>
+                  <div class="row gap-2 wrap"><span class="chip is-active">+ Added (1)</span><span class="chip">− Removed (0)</span><span class="chip">~ Modified (2)</span><button class="btn btn--link btn--sm">Clear</button></div>
+                  <div class="stat-grid stat-grid--3"><div class="stat"><div class="stat__label">Added</div><div class="stat__value t-ok">1</div></div><div class="stat"><div class="stat__label">Removed</div><div class="stat__value">0</div></div><div class="stat"><div class="stat__label">Modified</div><div class="stat__value t-warn">2</div></div></div>
+                  <div class="t-xs t-muted">Empties: “All change types are filtered out” / “No changes match the current filter”.</div>
+                </div>
+                <div data-tab-panel="breaking" hidden class="col gap-2">
+                  <textarea class="textarea input--mono" style="min-height:140px" readonly>## Breaking changes v2.3.0 → v2.3.1
+
+- Refund.amount: minimum raised 0 → 0.01 (requests with amount 0 now rejected)</textarea>
+                  <div class="row gap-2"><button class="btn btn--sm"><i data-lucide="copy"></i>Copy</button><button class="btn btn--sm"><i data-lucide="list-plus"></i>Append to compare-to changelog</button></div>
+                </div>
+                <div data-tab-panel="migration" hidden class="col gap-2">
+                  <textarea class="textarea input--mono" style="min-height:140px" readonly>## Migration guide v2.3.0 → v2.3.1
+
+1. Ensure refund amounts are ≥ 0.01 before calling POST /refunds.
+2. Optionally send `currency` — defaults to the payment currency.</textarea>
+                  <div class="row gap-2 wrap"><button class="btn btn--sm"><i data-lucide="copy"></i>Copy</button><button class="btn btn--sm"><i data-lucide="list-plus"></i>Append to compare-to changelog</button><button class="btn btn--sm"><i data-lucide="download"></i>Download Markdown</button><button class="btn btn--sm"><i data-lucide="file-down"></i>Download PDF</button></div>
+                </div>
+                <div data-tab-panel="canvas" hidden class="col gap-3">
+                  <div class="row-between wrap gap-2">
+                    <div class="segmented segmented--sm"><button class="is-active">Split</button><button>Overlay</button></div>
+                    <div class="t-xs t-muted"><span class="t-600">Legend</span>: <span class="legend-sw" style="background:var(--ok)"></span>Added (compare side) <span class="legend-sw" style="background:var(--danger);margin-left:8px"></span>Removed (base side) <span class="legend-sw" style="background:var(--warn);margin-left:8px"></span>Moved / modified <span class="legend-sw" style="background:var(--fg-faint);margin-left:8px"></span>Unchanged</div>
+                  </div>
+                  <div class="t-xs t-subtle">Renders the resolved Studio layout (default snapshot, or the effective named layout when no default exists). Logical schema diff stays on the other tabs.</div>
+                  <div class="grid grid-2" style="gap:8px">
+                    <div><div class="t-xs t-600 mb-1 mono">v2.3.0 (base)</div><div class="canvas"><div class="cnode" style="left:16px;top:20px"><div class="cn">Payment</div>6 props</div><div class="cnode" style="left:180px;top:20px"><div class="cn">Refund</div>4 props</div><div class="cnode" style="left:16px;top:120px"><div class="cn">Payout</div>7 props</div><svg style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true"><path d="M146 40 L180 40" stroke="var(--fg-faint)" stroke-width="1.5" fill="none"/><path d="M80 66 L80 120" stroke="var(--fg-faint)" stroke-width="1.5" fill="none"/></svg></div></div>
+                    <div><div class="t-xs t-600 mb-1 mono">v2.3.1 (compare)</div><div class="canvas"><div class="cnode" style="left:16px;top:20px"><div class="cn">Payment</div>6 props</div><div class="cnode mod" style="left:180px;top:20px"><div class="cn">Refund</div>4 props · modified</div><div class="cnode" style="left:16px;top:120px"><div class="cn">Payout</div>7 props</div><div class="cnode add" style="left:180px;top:120px"><div class="cn">RefundReason</div>enum · added</div><svg style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true"><path d="M146 40 L180 40" stroke="var(--fg-faint)" stroke-width="1.5" fill="none"/><path d="M80 66 L80 120" stroke="var(--fg-faint)" stroke-width="1.5" fill="none"/><path d="M245 66 L245 120" stroke="var(--ok)" stroke-width="1.5" fill="none"/></svg></div></div>
+                  </div>
+                  <div class="t-xs t-subtle">Pane empty → “No saved canvas layout for this revision. Save a default or named layout in Studio to compare visually.” Loading → “Loading canvas layouts…”.</div>
+                </div>
+              </div>
+            </div>
+            <div class="dialog__footer"><button class="btn btn--ghost left"><i data-lucide="rotate-ccw"></i>Compare different versions</button><button class="btn">Close</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 2. CHANGE REPORT ============ -->
+      <section class="card gallery-card" id="change-report">
+        <div class="card__header">
+          <div><div class="card__title"><i data-lucide="file-text"></i>Publication change report <span class="flag"><i data-lucide="flag"></i>gitlike + NEXT_PUBLIC_CHANGE_REPORT_UI</span></div><div class="maps-to"><code>VersionChangeReportPanel</code><code>“Change report” main tab</code><code>Change report templates dialog</code></div></div>
+          <button class="btn btn--sm" data-action="open" data-target="templates-dialog"><i data-lucide="settings-2"></i>Templates</button>
+        </div>
+        <div class="card__body col gap-4">
+          <div class="card card--flat" style="padding:10px 14px"><div class="row wrap gap-3"><div class="field" style="min-width:320px"><label class="t-xs">Published revision</label><select class="select select--sm"><option>v2.3.1 — Patch: fix Refund.amount minimum</option><option>v2.3.0 — Payouts resource + settlement reports</option><option>v2.2.0 — Card tokenisation + 3DS challenge flow</option></select></div><button class="btn btn--sm" style="align-self:flex-end"><i data-lucide="refresh-cw"></i>Refresh</button><button class="btn btn--sm" style="align-self:flex-end" data-action="open" data-target="templates-dialog"><i data-lucide="settings-2"></i>Templates</button></div></div>
+          <div class="card card--flat">
+            <div class="card__header"><div class="card__title">Publication change report</div><div class="row gap-2"><button class="btn btn--sm"><i data-lucide="sparkles"></i>Regenerate</button></div></div>
+            <div class="card__body col gap-3">
+              <div class="card card--soft" style="padding:10px 12px"><div class="t-xs t-600 mb-2">Regenerate options</div><div class="row wrap gap-3"><div class="field" style="width:320px"><label class="t-xs">Template (optional)</label><select class="select select--sm"><option>Effective default (project → tenant → system)</option><option>Effective default</option><option>1.0.1 (tpl_9a2c…)</option></select></div><label class="check t-xs" style="align-self:flex-end;padding-bottom:6px"><input type="checkbox" checked />Discard user edits when regenerating</label></div></div>
+              <div class="tabs" style="border-bottom:1px solid var(--border)" data-tabs="cr-tabs"><button class="tab is-active" data-action="tab" data-target="cr-view">View</button><button class="tab" data-action="tab" data-target="cr-edit">Edit</button></div>
+              <div id="cr-tabs">
+                <div data-tab-panel="cr-view" class="col gap-3">
+                  <div><div class="t-caps mb-1">Header</div><div class="t-sm">Payments API <span class="mono">v2.3.1</span> — published 3 Aug 2026 by Grace Hopper</div></div>
+                  <div><div class="t-caps mb-1">Body</div><div class="t-sm col gap-1"><div><span class="t-600">Non-breaking</span> — <span class="mono">Refund.amount</span> minimum 0 → 0.01; example <span class="mono">currency: "EUR"</span>.</div><div><span class="t-600">Docs-only</span> — <span class="mono">POST /refunds</span> description reworded (idempotency guidance).</div></div></div>
+                  <div><div class="t-caps mb-1">Footnote</div><div class="t-xs t-muted">Rendered from template <span class="mono">1.0.1</span> (project default) · em-dash fallback for empty sections.</div></div>
+                </div>
+                <div data-tab-panel="cr-edit" hidden class="col gap-3">
+                  <div class="banner banner--neutral"><i data-lucide="info"></i><div>Edits replace the rendered snapshot for this publication. Use <span class="t-600">Clear overrides</span> to restore server-rendered text.</div></div>
+                  <div class="field"><label>Header (HTML / Markdown from template pipeline)</label><textarea class="textarea input--mono" style="min-height:70px">Payments API v2.3.1 — published 3 Aug 2026 by Grace Hopper</textarea></div>
+                  <div class="field"><label>Body</label><textarea class="textarea input--mono" style="min-height:120px">**Non-breaking** — Refund.amount minimum 0 → 0.01; example currency "EUR".
+**Docs-only** — POST /refunds description reworded.</textarea></div>
+                  <div class="field"><label>Footnote</label><textarea class="textarea input--mono" style="min-height:56px">Rendered from template 1.0.1</textarea></div>
+                  <div class="row gap-2"><button class="btn btn--primary btn--sm">Save</button><button class="btn btn--sm">Clear overrides</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-3">
+            <div class="banner banner--neutral"><i data-lucide="info"></i><div class="t-xs">No change report is stored for this publication yet. It is created when the revision is published (if generation succeeded).</div></div>
+            <div class="empty empty--inline card card--flat" style="padding:12px 14px"><div class="empty__art"><span class="hex"></span><i data-lucide="folder-search"></i></div><div><div class="empty__title t-sm">Select a project</div><div class="empty__desc t-xs">Choose a project to work with publication change reports.</div></div></div>
+            <div class="empty empty--inline card card--flat" style="padding:12px 14px"><div class="empty__art"><span class="hex"></span><i data-lucide="globe"></i></div><div><div class="empty__title t-sm">No published revisions</div><div class="empty__desc t-xs">Publish a schema revision first. Change reports are generated when a version is published (CR-04).</div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 3. HISTORY GRAPH + RELATIONSHIP GRAPH ============ -->
+      <section class="card gallery-card" id="history">
+        <div class="card__header">
+          <div><div class="card__title"><i data-lucide="git-graph"></i>Revision history graph <span class="flag"><i data-lucide="flag"></i>gitlike</span></div><div class="maps-to"><code>VersionHistoryGraphPanel</code><code>RevisionHistoryNode</code><code>version-history-dag.ts</code><code>RelationshipGraphDialog</code></div></div>
+          <div class="row gap-2"><button class="btn btn--sm btn--ghost">Load older (60 → 100)</button><span class="t-xs t-subtle">Showing 6 revision(s) (of 6 in branch filter) — 6 total in table filter</span></div>
+        </div>
+        <div class="card__body col gap-3">
+          <p class="t-xs t-muted">Left-to-right lanes (older → newer). Solid slate edge = primary parent; dashed violet = merge parent. Click a node to compare with its primary parent; Ctrl/Cmd-click to view spec. Merge commits use violet styling; branch tips show names and an emerald marker.</p>
+          <div class="row wrap gap-2"><span class="t-caps">Lanes</span><span class="chip is-active" aria-pressed="true" title="Hide history for main"><span class="lane-dot" style="background:#2E86DE"></span>main</span><span class="chip is-active" aria-pressed="true" title="Hide history for feature/payouts"><span class="lane-dot" style="background:#8B5CF6"></span>feature/payouts</span><button class="btn btn--link btn--sm">Select all</button></div>
+          <div class="relative">
+            <svg class="dag" viewBox="0 0 1000 300" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Revision history graph">
+              <!-- edges -->
+              <path class="edge" d="M150 90 L200 90"/><path class="edge" d="M330 90 L380 90"/><path class="edge" d="M510 90 L560 90"/><path class="edge" d="M690 90 L740 90"/>
+              <path class="edge" d="M420 118 C420 160, 500 200, 560 200"/>
+              <path class="edge merge" d="M690 200 C720 200, 740 150, 780 118"/>
+              <!-- nodes lane main -->
+              <rect class="node" x="20" y="60" width="130" height="58"/><circle cx="34" cy="76" r="4" fill="#2E86DE"/><text x="44" y="80">v2.1.0</text><text class="meta" x="30" y="97">Initial public release</text><text class="meta" x="30" y="110">Ada · Mar 2</text>
+              <rect class="node" x="200" y="60" width="130" height="58"/><circle cx="214" cy="76" r="4" fill="#2E86DE"/><text x="224" y="80">v2.2.0</text><rect x="284" y="68" width="40" height="14" rx="3" fill="var(--honey-soft)"/><text class="meta" x="289" y="78" style="fill:var(--honey-fg)">lts-2.2</text><text class="meta" x="210" y="97">3DS challenge flow</text><text class="meta" x="210" y="110">Ada · Jun 10</text>
+              <rect class="node" x="380" y="60" width="130" height="58"/><circle cx="394" cy="76" r="4" fill="#2E86DE"/><text x="404" y="80">v2.3.0</text><text class="meta" x="390" y="97">Payouts resource</text><text class="meta" x="390" y="110">Linus · Jul 21</text>
+              <rect class="node" x="560" y="60" width="130" height="58"/><circle cx="574" cy="76" r="4" fill="#2E86DE"/><text x="584" y="80">v2.3.1</text><rect x="644" y="68" width="40" height="14" rx="3" fill="var(--honey-soft)"/><text class="meta" x="651" y="78" style="fill:var(--honey-fg)">stable</text><text class="meta" x="570" y="97">Fix Refund.amount</text><text class="meta" x="570" y="110">Grace · Aug 2</text>
+              <rect class="node merge" x="740" y="60" width="150" height="58"/><rect x="740" y="60" width="4" height="58" fill="var(--ok)"/><circle cx="756" cy="76" r="4" fill="#2E86DE"/><text x="766" y="80">v2.4.0</text><text class="meta" x="826" y="80" style="fill:var(--violet)">MERGE COMMIT</text><text class="meta" x="752" y="97">Tip: main · HEAD</text><text class="meta" x="752" y="110">Ada · Aug 15 · refund reasons</text>
+              <!-- lane feature -->
+              <rect class="node" x="560" y="170" width="130" height="58"/><rect x="560" y="170" width="4" height="58" fill="var(--ok)"/><circle cx="574" cy="186" r="4" fill="#8B5CF6"/><text x="584" y="190">v2.0.0-beta.1</text><text class="meta" x="570" y="207">Tip: feature/payouts</text><text class="meta" x="570" y="220">Linus · instant payouts</text>
+              <!-- controls -->
+              <g transform="translate(20 240)"><rect width="52" height="22" rx="6" fill="var(--bg-surface)" stroke="var(--border-strong)"/><text class="meta" x="8" y="15" style="fill:var(--fg)">Fit all</text><rect x="60" width="46" height="22" rx="6" fill="var(--bg-surface)" stroke="var(--border-strong)"/><text class="meta" x="70" y="15" style="fill:var(--fg)">HEAD</text><rect x="114" width="60" height="22" rx="6" fill="var(--bg-surface)" stroke="var(--border-strong)"/><text class="meta" x="122" y="15" style="fill:var(--fg)">Selected</text></g>
+              <g transform="translate(880 240)"><rect width="100" height="46" rx="6" fill="var(--bg-surface)" stroke="var(--border-strong)" opacity=".8"/><rect x="8" y="10" width="14" height="6" rx="1" fill="var(--fg-faint)"/><rect x="26" y="10" width="14" height="6" rx="1" fill="var(--fg-faint)"/><rect x="44" y="10" width="14" height="6" rx="1" fill="var(--fg-faint)"/><rect x="62" y="10" width="14" height="6" rx="1" fill="var(--violet)"/><rect x="44" y="24" width="14" height="6" rx="1" fill="var(--fg-faint)"/></g>
+            </svg>
+            <div class="menu popover" style="right:130px;bottom:60px;min-width:220px"><div class="menu__label">Revision actions · v2.4.0</div><a class="menu__item" href="#"><i data-lucide="mouse-pointer-click"></i>Switch to this revision</a><a class="menu__item" href="#compare"><i data-lucide="git-compare"></i>Compare with primary parent</a><a class="menu__item" href="#"><i data-lucide="eye"></i>View spec</a><a class="menu__item" href="#branch"><i data-lucide="git-branch-plus"></i>Branch from here…</a></div>
+          </div>
+          <div class="row wrap gap-3 t-xs t-subtle"><span class="badge badge--warn">Max render limit reached (400 nodes)</span><span>“Select at least one branch to show the graph, or use ‘Select all’.”</span><span>“No revisions to graph.”</span></div>
+          <hr />
+          <div class="row-between"><div><div class="t-sm t-600 row gap-2"><i data-lucide="waypoints" class="t-subtle"></i>Relationship graph <span class="flag"><i data-lucide="flag"></i>gitlike</span></div><div class="t-xs t-muted">Payments API — v2.4.0 · class <span class="mono">$ref</span> graph for one revision (Dialog max-w-4xl, TB auto-layout)</div></div></div>
+          <div class="canvas" style="height:200px">
+            <div class="cnode" style="left:200px;top:14px;border-color:var(--accent)"><div class="cn">Payment</div></div>
+            <div class="cnode" style="left:60px;top:110px;border-color:var(--accent)"><div class="cn">Refund</div></div>
+            <div class="cnode" style="left:200px;top:110px;border-color:var(--accent)"><div class="cn">Payout</div></div>
+            <div class="cnode" style="left:340px;top:110px;border-color:var(--accent)"><div class="cn">Customer</div></div>
+            <div class="cnode" style="left:520px;top:110px;border-color:var(--fg-faint)"><div class="cn">RefundReason</div></div>
+            <svg style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true"><g stroke="var(--fg-subtle)" stroke-width="1.5" fill="none"><path d="M250 50 L125 110"/><path d="M265 50 L265 110"/><path d="M280 50 L405 110"/></g><text x="150" y="80" font-size="10" fill="var(--fg-subtle)" font-family="var(--font-mono)">refunds[]</text><text x="330" y="80" font-size="10" fill="var(--fg-subtle)" font-family="var(--font-mono)">customer</text></svg>
+            <div class="banner banner--warn" style="position:absolute;right:12px;bottom:12px;padding:6px 10px;font-size:var(--fs-2xs)"><i data-lucide="info"></i>This version has 5 class(es) but 1 without references ($ref) — add reference properties in the Studio to see relationships.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 4. BRANCH / TAG / COMMIT ============ -->
+      <section class="card gallery-card" id="branch">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="git-branch-plus"></i>Create named branch · Create version tag · Commit revision <span class="flag"><i data-lucide="flag"></i>gitlike</span></div><div class="maps-to"><code>version-dialogs/BranchFromRevisionDialog</code><code>VersionTagDialog</code><code>CommitRevisionDialog</code></div></div></div>
+        <div class="card__body">
+          <div class="grid grid-3">
+            <div class="dlg-frame">
+              <div class="dialog__header"><div><div class="dialog__title">Create named branch</div><div class="dialog__desc">Point a new branch name at revision <span class="mono">v2.3.1</span> in this project. Further work can advance the tip via merge workflows.</div></div></div>
+              <div class="dialog__body"><div class="field"><label>Branch name</label><input class="input input--mono" value="fix/refund-amount" placeholder="e.g. feature/payments" /><div class="hint">Suggested from the revision message.</div></div></div>
+              <div class="dialog__footer"><button class="btn">Cancel</button><button class="btn btn--primary">Create branch</button></div>
+            </div>
+            <div class="dlg-frame">
+              <div class="dialog__header"><div><div class="dialog__title">Create version tag</div><div class="dialog__desc">Attach a stable name to revision <span class="mono">v2.3.1</span>. Immutable tags cannot be moved or deleted afterward.</div></div></div>
+              <div class="dialog__body col gap-3">
+                <div class="field"><label>Tag name</label><input class="input input--mono" placeholder="e.g. v1.0.0 or stable" value="stable" /></div>
+                <div class="field"><label>Message <span class="t-subtle t-500">(optional)</span></label><input class="input" placeholder="Release notes or annotation" /></div>
+                <div class="field"><label>Channel <span class="t-subtle t-500">(optional)</span></label><input class="input" placeholder="e.g. stable, beta" /></div>
+                <label class="check"><input type="checkbox" checked />Lock tag (immutable — cannot move or delete)</label>
+                <label class="check"><input type="checkbox" />Protected (only tenant admins can move or delete)</label>
+              </div>
+              <div class="dialog__footer"><button class="btn">Cancel</button><button class="btn btn--primary">Create tag</button></div>
+            </div>
+            <div class="dlg-frame">
+              <div class="dialog__header"><div><div class="dialog__title">Commit revision</div><div class="dialog__desc">Record a new schema revision on top of a branch tip (like <span class="mono">git commit</span>). Message is required; add an external reference when linking to a ticket.</div></div></div>
+              <div class="dialog__body col gap-3">
+                <div class="card card--soft" style="padding:8px 10px"><div class="t-xs t-600">Commit on current branch · main (tip v2.4.0)</div><div class="t-2xs t-muted">This revision will stack on that branch’s tip — the same as <span class="mono">git commit</span> while you’re on this branch.</div></div>
+                <div class="field"><label>Message <span class="req">*</span></label><input class="input" placeholder="Short summary (commit message)" /><div class="error"><i data-lucide="circle-alert" style="width:12px;height:12px"></i>Commit message is required</div></div>
+                <div class="field"><label>Changelog <span class="t-subtle t-500">(optional)</span></label><textarea class="textarea" style="min-height:56px" placeholder="Longer notes / migration details"></textarea></div>
+                <div class="grid grid-2"><div class="field"><label>External reference</label><input class="input" placeholder="e.g. JIRA-123 or PR URL" /></div><div class="field"><label>Auto-bump</label><select class="select"><option>Patch (x.y.Z)</option><option>Minor (x.Y.0)</option><option>Major (X.0.0)</option></select></div></div>
+              </div>
+              <div class="dialog__footer"><button class="btn">Cancel</button><button class="btn btn--primary">Commit</button></div>
+            </div>
+          </div>
+          <div class="row wrap gap-2 t-xs t-subtle mt-3"><span>Confirms: “Delete branch — Remove this named branch? The version records are not deleted.” · “Delete tag — Remove this named tag? Version rows are not deleted.”</span></div>
+        </div>
+      </section>
+
+      <!-- ============ 5. FORK ============ -->
+      <section class="card gallery-card" id="fork">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="git-fork"></i>Fork to another project <span class="flag"><i data-lucide="flag"></i>gitlike</span></div><div class="maps-to"><code>page.tsx “Fork to another project” dialog</code></div></div></div>
+        <div class="card__body">
+          <div class="dlg-frame" style="max-width:640px">
+            <div class="dialog__header"><div><div class="dialog__title">Fork v2.3.1 to another project</div><div class="dialog__desc">Create an isolated copy of this revision in a different project. Forks are isolated copies — later changes are not synced.</div></div></div>
+            <div class="dialog__body col gap-3">
+              <div class="field"><label>Target project</label><select class="select"><option>Orders Service</option><option>Inventory Events</option></select><div class="hint">Other publishable projects in this tenant. Toast when none: “Create another project in this tenant to fork into — forks are isolated copies in a different project.”</div></div>
+              <div class="grid grid-2"><div class="field"><label>Version ID</label><select class="select"><option>Auto-generate in target project</option><option>Manual entry</option></select></div><div class="field"><label>Bump strategy</label><select class="select"><option>Minor — next minor in target</option><option>Patch — next x.y.z</option></select></div></div>
+              <div class="field"><label>Revision note</label><input class="input" value="Fork from v2.3.1" /></div>
+              <div class="field"><label>Changelog <span class="t-subtle t-500">(optional)</span></label><textarea class="textarea" style="min-height:56px"></textarea></div>
+            </div>
+            <div class="dialog__footer"><span class="left t-xs t-subtle">Toast: “Fork created in Orders Service”</span><button class="btn">Cancel</button><button class="btn btn--primary">Create fork</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 6. MERGE ============ -->
+      <section class="card gallery-card" id="merge">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="git-merge"></i>Merge branches <span class="flag"><i data-lucide="flag"></i>gitlike</span></div><div class="maps-to"><code>MergeBranchesDialog</code><code>VersionMergeConflictList</code><code>CompatibilityReportPanel</code><code>ExternalCompatEvidencePanel</code></div></div><span class="t-xs t-subtle">Toolbar “Merge branches” · <span class="mono">?merge=1</span> deep link</span></div>
+        <div class="card__body">
+          <div class="dlg-frame">
+            <div class="dialog__header"><div><div class="dialog__title">Merge branches</div><div class="dialog__desc">Preview uses a three-way merge of OpenAPI components against the merge-base (LCA) revision. Run Preview before Apply — when conflicts exist, choose a resolution for every path before applying.</div></div></div>
+            <div class="dialog__body col gap-4">
+              <div class="grid grid-2"><div class="field"><label>Source branch</label><select class="select"><option>feature/payouts — tip v2.0.0-beta.1</option></select></div><div class="field"><label>Target branch</label><select class="select"><option>main — tip v2.4.0 (protected)</option></select></div></div>
+              <div class="banner banner--danger"><i data-lucide="circle-x"></i><div>Conflicts: 2 path(s). Apply stays disabled until every conflict row has a resolution (mine / theirs / manual).</div></div>
+              <!-- VersionMergeConflictList -->
+              <div class="card card--flat" style="box-shadow:0 0 0 1px var(--warn) inset">
+                <div class="card__header" style="background:var(--warn-soft)"><div><div class="card__title"><i data-lucide="triangle-alert"></i>Merge conflicts</div><div class="t-xs t-muted mt-1">2 path(s) need a resolution before apply can succeed on the server. Choices are stored in this session for the upcoming merge-resolution API.</div><div class="t-xs mt-1">Mine = target branch <span class="mono">main</span> · Theirs = source branch <span class="mono">feature/payouts</span></div></div></div>
+                <div class="table-toolbar"><div class="input-wrap" style="width:220px"><i data-lucide="search"></i><input class="input input--sm" placeholder="Substring match on path…" aria-label="Filter paths" /></div><select class="select select--sm" style="width:170px"><option>All types</option><option>Three-way</option><option>Blend / materialize</option><option>Two-way (divergent)</option></select><span class="t-xs t-subtle">Filter matches 2 of 2 paths. Bulk actions for <b>shown</b> use this filter.</span><span class="spacer"></span><span class="t-xs t-subtle">Bulk (shown)</span><button class="btn btn--sm" title="Set Target (mine) for 2 path(s) matching the filter">Mine</button><button class="btn btn--sm">Theirs</button><span class="t-xs t-subtle">Bulk (all)</span><button class="btn btn--sm btn--soft">Mine</button><button class="btn btn--sm btn--soft">Theirs</button></div>
+                <table class="table table--dense">
+                  <thead><tr><th>Path</th><th>Type</th><th>Resolution</th><th class="t-right">Actions</th></tr></thead>
+                  <tbody>
+                    <tr class="conflict-row unresolved"><td class="mono t-xs">components.schemas.Payout.properties.status</td><td>Three-way</td><td><span class="badge badge--warn">Unresolved</span></td><td><div class="row gap-1" style="justify-content:flex-end"><button class="btn btn--sm" title="Keep target (main) at this path">Mine</button><button class="btn btn--sm" title="Take source (feature/payouts) at this path">Theirs</button><button class="btn btn--sm" data-action="open" data-target="manual-dialog">Manual</button></div></td></tr>
+                    <tr class="conflict-row"><td class="mono t-xs">paths./payouts.post.requestBody</td><td>Two-way (divergent)</td><td><span class="badge badge--ok">Source (theirs)</span></td><td><div class="row gap-1" style="justify-content:flex-end"><button class="btn btn--sm">Mine</button><button class="btn btn--sm btn--primary">Theirs</button><button class="btn btn--sm" data-action="open" data-target="manual-dialog">Manual</button></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="t-xs t-muted">Merge-base revision: <span class="mono">ver_77ab0c5e</span> · <span class="spinner" style="display:inline-block;width:10px;height:10px;vertical-align:-1px"></span> Checking backward compatibility (target tip → source tip)…</div>
+              <!-- Compat alert + panels -->
+              <div class="banner banner--danger" style="align-items:stretch;flex-direction:column"><div class="row gap-2 t-600"><i data-lucide="shield-alert"></i>Backward compatibility (target tip → source tip): breaking</div>
+                <div class="card" style="padding:12px 14px;color:var(--fg)">
+                  <div class="t-xs t-muted">Compares generated OpenAPI for <b>target tip</b> (base) vs <b>source tip</b> (head). Merge execution uses the three-way engine plus an optional project compatibility gate on the merged result.</div>
+                  <div class="t-sm mt-2">Overall: <span class="badge" data-status="breaking">breaking</span></div>
+                  <div class="card card--soft mt-2" style="padding:8px 10px"><div class="t-caps">Rule hits</div><div class="row wrap gap-2 mt-1"><span class="tag">response-property-removed × 1</span><span class="tag">enum-value-removed × 2</span></div></div>
+                  <div class="mt-2 t-xs"><div class="t-600 t-danger">Breaking</div><div class="mono t-subtle mt-1">paths./payouts.get.responses.200</div><div>response-property-removed — property <span class="mono">settledAt</span> removed from Payout</div><div class="mono t-subtle mt-1">components.schemas.Payout.properties.status</div><div>enum-value-removed — <span class="mono">pending</span>, <span class="mono">reversed</span></div></div>
+                  <div class="mt-2 t-xs"><div class="t-600 t-ok">Safe</div><div class="t-muted">3 additive changes</div></div>
+                  <a href="#" class="t-xs mt-2" style="display:inline-block">Breaking changes documentation (#746)</a>
+                  <hr class="mt-3 mb-2" />
+                  <div class="t-sm t-600">External compatibility evidence (oasdiff) — breaking</div>
+                  <div class="t-xs mt-1"><a href="#" class="mono">openapi.json:412</a> [breaking] response-property-removed — removed the property ‘settledAt’</div>
+                  <details class="mt-1"><summary class="t-xs" style="cursor:pointer">Changelog (markdown)</summary><pre class="code mt-1" style="font-size:11px">### Breaking
+- removed property `settledAt` (GET /payouts 200)</pre></details>
+                </div>
+              </div>
+              <div class="callout t-xs">Project metadata enables compat gating — merge is blocked until compatibility is safe, unless a tenant administrator overrides with a written justification (recorded in the workflow audit log).</div>
+              <label class="check"><input type="checkbox" checked />Override compatibility gate (tenant admin) — required when the gate blocks merge due to unsafe target/source pair analysis</label>
+              <div class="field"><label>Justification <span class="req">*</span></label><textarea class="textarea" style="min-height:56px" placeholder="Explain why merge should proceed despite the compatibility gate (audit record)"></textarea></div>
+            </div>
+            <div class="dialog__footer"><span class="left t-xs t-subtle">Toasts: “Merge preview: conflicts detected — apply is blocked until resolved.” · “Merged into main — new version 2.5.0”</span><button class="btn">Close</button><button class="btn">Preview merge</button><button class="btn btn--primary" disabled title="Resolve conflicts before applying.">Apply merge</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 7. ROLLBACK ============ -->
+      <section class="card gallery-card" id="rollback">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="undo-2"></i>Rollback branch (revert-style) <span class="flag"><i data-lucide="flag"></i>gitlike</span></div><div class="maps-to"><code>RollbackBranchDialog</code><code>AlertDialog “Roll back?”</code><code>CompatibilityReportPanel</code></div></div></div>
+        <div class="card__body">
+          <div class="grid" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
+            <div class="dlg-frame">
+              <div class="dialog__header"><div><div class="dialog__title">Rollback branch (revert-style)</div><div class="dialog__desc">Creates a <b>new</b> revision whose schema matches revision <span class="mono">v2.3.1</span>; the branch tip moves forward with <span class="mono">parent</span> pointing at the prior head. History is not rewritten.</div></div></div>
+              <div class="dialog__body col gap-3">
+                <div class="t-sm t-600">Restore snapshot from v2.3.1</div>
+                <div class="grid grid-2"><div class="field"><label>Branch to update</label><select class="select"><option>main — tip v2.4.0</option><option>feature/payouts</option></select></div><div class="field"><label>Revision note <span class="t-subtle t-500">(optional)</span></label><input class="input" placeholder="Defaults to a rollback summary" /></div></div>
+                <div class="banner banner--warn" style="flex-direction:column;align-items:stretch"><div class="row gap-2 t-600"><i data-lucide="triangle-alert"></i>Schema impact (current tip → restored content): breaking</div><div class="t-xs">Rolling back can remove paths or fields consumers rely on.</div><div class="card mt-2" style="padding:10px 12px;color:var(--fg)"><div class="t-xs">Overall: <span class="badge" data-status="breaking">breaking</span> · Rule hits <span class="tag">schema-removed × 1</span></div><div class="t-xs mt-1"><span class="t-600 t-danger">Breaking</span> · <span class="mono t-subtle">components.schemas.RefundReason</span> schema-removed — RefundReason removed</div><div class="t-xs t-subtle mt-1">Empty: “No structural findings in this report.”</div></div></div>
+                <div class="callout t-xs">Project metadata sets <span class="mono">compatGateOnRollback</span> — apply is blocked until the rollback pair is safe or policy is updated.</div>
+                <div class="t-xs t-muted">Deprecation warnings: 1 (see compatibility API / sunset timeline)</div>
+                <label class="check"><input type="checkbox" />I understand this rollback may break existing consumers; proceed anyway</label>
+              </div>
+              <div class="dialog__footer"><button class="btn">Close</button><button class="btn">Preview impact</button><button class="btn btn--danger" data-action="open" data-target="rollback-confirm">Apply rollback</button></div>
+            </div>
+            <div class="col gap-3">
+              <div class="dlg-frame">
+                <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="undo-2"></i></span><div><div class="dialog__title">Roll back?</div><div class="dialog__desc">A new revision will be created on <span class="mono">main</span> restoring the snapshot below.</div></div></div>
+                <div class="dialog__body"><dl class="kv-mini"><dt>Target revision id</dt><dd class="mono">ver_4c8e1b09</dd><dt>Committed UTC</dt><dd class="mono">2026-08-02T16:40:12Z</dd><dt>Impact</dt><dd>~3 entities differ vs branch tip (+0 added, −1 removed, 2 modified)</dd></dl><div class="t-xs t-subtle mt-2">Without a preview: “Run preview impact first to load entity counts.”</div></div>
+                <div class="dialog__footer"><button class="btn">Cancel</button><button class="btn btn--danger">Roll back</button></div>
+              </div>
+              <div class="banner banner--warn"><i data-lucide="info"></i><div class="t-xs">No named branches exist in this project. Create one first before rolling back.</div></div>
+              <div class="t-xs t-subtle">Toasts: “Choose a branch” · “Run preview first” · “Project policy blocks rollback when compatibility is not safe” · “Acknowledge compatibility risk using the checkbox below” · “Rollback complete — new revision v2.5.0”.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 8. LINT REPORT + SCORING ============ -->
+      <section class="card gallery-card" id="lint">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="shield-check"></i>Quality &amp; lint report · Lint &amp; score panel</div><div class="maps-to"><code>VersionLintBadge</code><code>LintReportDialog</code><code>lint/LintViolationFindingsList</code><code>SchemaVersionScoringPanel</code></div></div><div class="row gap-2"><span class="badge badge--ok" title="Quality score 88/100 — open lint report"><i data-lucide="shield-check"></i>B · 88</span><span class="badge badge--outline" title="Not scored yet — click to lint this version">Lint —</span></div></div>
+        <div class="card__body">
+          <div class="grid" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
+            <div class="dlg-frame">
+              <div class="dialog__header"><div><div class="dialog__title">Quality &amp; lint report — v2.4.0</div><div class="dialog__desc">Server-computed quality score and itemized findings for this version.</div></div><button class="btn btn--ghost btn--sm btn--icon dialog__close" title="Expand (max-w-6xl / 90vh)" aria-label="Expand"><i data-lucide="maximize-2"></i></button></div>
+              <div class="dialog__body col gap-3">
+                <div class="row gap-4"><span class="ring ring--lg" style="--p:88;--c:var(--ok)"><span>B</span></span><div><div class="t-h3">Score 88/100</div><div class="row gap-1 wrap mt-1"><span class="badge badge--rose">1 error</span><span class="badge badge--warn">3 warning</span><span class="badge badge--info">2 info</span><span class="badge badge--outline">Guide: Acme REST</span></div><div class="t-xs t-subtle mt-1">Compatibility vs base: safe</div></div></div>
+                <div class="banner banner--warn"><i data-lucide="clock"></i><div class="t-xs">The stored quality score (B · 88) is out of date — this report was recomputed from the current revision.</div></div>
+                <div class="row-between"><span class="t-caps">Findings</span><label class="row gap-2 t-xs t-muted"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button>Group by rule</label></div>
+                <div class="card card--flat">
+                  <div style="padding:8px 12px;border-bottom:1px solid var(--border)" class="row gap-2 wrap"><span class="tag" title="Every operation should declare at least one 4xx response">operation-4xx-response</span><span class="t-xs t-muted">1 violation</span><span class="badge badge--outline" title="Style guide that produced this violation">Acme REST</span><a href="#" class="t-xs">View rule ↗</a></div>
+                  <div class="row-start gap-3" style="padding:8px 12px"><span class="badge" data-status="error">error</span><div class="min-w-0"><div class="mono t-2xs t-subtle">paths./payouts.post</div><div class="t-sm">Missing 4xx response</div></div></div>
+                </div>
+                <div class="card card--flat">
+                  <div style="padding:8px 12px;border-bottom:1px solid var(--border)" class="row gap-2 wrap"><span class="tag" title="Schemas should carry a description">schema-description</span><span class="t-xs t-muted">3 violations</span><span class="badge badge--outline">Acme REST</span><a href="#" class="t-xs">View rule ↗</a></div>
+                  <div class="row-start gap-3" style="padding:8px 12px;border-bottom:1px solid var(--border)"><span class="badge" data-status="warning">warning</span><div class="min-w-0"><div class="mono t-2xs t-subtle">components.schemas.RefundReason</div><div class="t-sm">Schema has no description</div></div></div>
+                  <div class="row-start gap-3" style="padding:8px 12px;border-bottom:1px solid var(--border)"><span class="badge" data-status="warning">warning</span><div class="min-w-0"><div class="mono t-2xs t-subtle">components.schemas.PayoutReport</div><div class="t-sm">Schema has no description</div></div></div>
+                  <div class="row-start gap-3" style="padding:8px 12px"><span class="badge" data-status="warning">warning</span><div class="min-w-0"><div class="mono t-2xs t-subtle">components.schemas.WebhookEvent</div><div class="t-sm">Schema has no description</div></div></div>
+                </div>
+                <div class="card card--flat">
+                  <div style="padding:8px 12px;border-bottom:1px solid var(--border)" class="row gap-2 wrap"><span class="tag">info-contact</span><span class="t-xs t-muted">2 violations</span><span class="badge badge--outline">Acme REST</span><a href="#" class="t-xs">View rule ↗</a></div>
+                  <div class="row-start gap-3" style="padding:8px 12px"><span class="badge" data-status="info">info</span><div class="min-w-0"><div class="mono t-2xs t-subtle">info.contact</div><div class="t-sm">Add a contact URL for consumers</div></div></div>
+                </div>
+                <div class="t-xs t-subtle">Empty: “No findings — clean bill of health.” · “Loading rule metadata…” · Catalog-only note: “Converted OpenAPI lint of this item scores…”.</div>
+              </div>
+              <div class="dialog__footer"><span class="left t-xs t-subtle">Errors: “Lint report unavailable.” + Retry</span><button class="btn">Close</button></div>
+            </div>
+            <div class="col gap-3">
+              <div class="card card--flat card--pad">
+                <div class="row-between"><span class="t-caps">Lint &amp; score v2.4.0</span><span class="badge badge--outline">Guide: Acme REST</span></div>
+                <div class="row gap-3 mt-3"><span class="ring" style="--p:88;--c:var(--ok)"><span>B</span></span><div><div class="t-h4">Score 88/100</div><div class="t-xs t-subtle">SchemaVersionScoringPanel — mounted in ImportCompletePanel / Studio, not on Versions</div></div></div>
+                <div class="divide-y mt-3" style="font-size:var(--fs-xs)">
+                  <div class="row-start gap-2" style="padding:6px 0"><span class="badge" data-status="error">error</span><div><span class="tag">operation-4xx-response</span> <span class="mono t-subtle">paths./payouts.post</span></div></div>
+                  <div class="row-start gap-2" style="padding:6px 0"><span class="badge" data-status="warning">warning</span><div><span class="tag">schema-description</span> <span class="mono t-subtle">components.schemas.RefundReason</span></div></div>
+                </div>
+                <div class="row gap-2 mt-3"><span class="t-xs t-danger">Lint report unavailable.</span><button class="btn btn--sm btn--ghost"><i data-lucide="rotate-ccw"></i>Retry</button></div>
+              </div>
+              <div class="card card--flat card--pad">
+                <div class="t-caps mb-2">Version lint badge states</div>
+                <div class="row wrap gap-2"><span class="badge badge--ok"><i data-lucide="shield-check"></i>A · 94</span><span class="badge badge--ok"><i data-lucide="shield-check"></i>B · 88</span><span class="badge badge--warn"><i data-lucide="shield-check"></i>C · 71</span><span class="badge badge--orange"><i data-lucide="shield-check"></i>D · 58</span><span class="badge badge--danger"><i data-lucide="shield-check"></i>F · 32</span><span class="badge badge--outline">Lint —</span></div>
+                <div class="t-xs t-muted mt-2">Chip <span class="mono">{grade} · {score}</span> from the stored record (#5259); click lazily fetches + opens the dialog (never on mount). Unscored: “Not scored yet — click to lint this version”.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 9. MOCKS ============ -->
+      <section class="card gallery-card" id="mocks">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="flask-conical"></i>Mock cell · Mock scenarios</div><div class="maps-to"><code>VersionMockCell</code><code>MockScenarioEditor</code><code>useMockUsage</code></div></div></div>
+        <div class="card__body col gap-4">
+          <div class="grid grid-4">
+            <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Mock for version 2.3.1" data-action="switch" title="Disable the hosted mock for this version"></button><span class="t-xs">Mock on</span></div><div class="row gap-1 mt-1 mono t-2xs t-muted"><code class="t-truncate" title="https://mock.apiome.dev/acme/payments-api/2.3.1">mock.apiome.dev/acme/payments-api/2.3.1</code><button class="btn btn--ghost btn--sm btn--icon" title="Copy mock URL" aria-label="Copy mock URL" style="width:22px;height:22px"><i data-lucide="copy"></i></button></div><div class="row gap-2 mt-1"><a class="t-xs row gap-1" href="#mocks"><i data-lucide="flask-conical" style="width:12px;height:12px"></i>Scenarios</a><svg class="sparkline sparkline--ok" style="width:70px;height:18px" viewBox="0 0 70 18" preserveAspectRatio="none" role="img" aria-label="Mock requests for v2.3.1, last 30 days"><path class="fill" d="M0 14 L10 12 L20 13 L30 8 L40 9 L50 5 L60 6 L70 3 L70 18 L0 18Z"/><path d="M0 14 L10 12 L20 13 L30 8 L40 9 L50 5 L60 6 L70 3"/></svg></div></div>
+            <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch" aria-label="Mock for version 2.0.0-beta.1" title="Disable the private draft mock (requires API key at runtime)"></button><span class="t-xs">Private mock on</span><span class="badge badge--violet">PRIVATE</span></div><div class="row gap-1 mt-1 mono t-2xs t-muted"><code class="t-truncate">mock.apiome.dev/acme/payments-api/2.0.0-beta.1</code></div><div class="row gap-2 mt-1"><a class="t-xs" href="#mocks">Scenarios</a><span class="t-2xs t-faint">No requests yet</span></div></div>
+            <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch" title="Serve spec-accurate mock responses for this version"></button><span class="t-xs">Mock off</span></div><div class="t-2xs t-subtle mt-1">Published — toggling on: “Mock enabled for v2.3.0 — the mock URL is ready to share.”</div></div>
+            <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch" title="Enable a private draft mock for parallel development (requires API key)"></button><span class="t-xs">Draft mock off</span></div><div class="t-2xs t-subtle mt-1">Draft — “Failed to enable mock for v2.4.0.” on error.</div></div>
+          </div>
+          <div class="dlg-frame">
+            <div class="dialog__header"><div><div class="dialog__title">Mock scenarios for v2.3.1</div><div class="dialog__desc">Curated situations consumers select per request with the <span class="mono">X-Mock-Scenario</span> header. Add several responses to one operation to build a per-call sequence; requests without the header keep the default mock behavior.</div></div></div>
+            <div class="dialog__body col gap-4">
+              <fieldset class="card card--flat" style="padding:12px 14px;border:0">
+                <div class="row gap-2"><input class="input input--mono" value="quota-exceeded" placeholder="scenario-name (e.g. quota-exceeded)" style="width:220px" /><input class="input grow" value="Merchant hit the daily refund quota" placeholder="Description (optional)" /><button class="btn btn--ghost btn--icon" aria-label="Remove scenario"><i data-lucide="trash-2"></i></button></div>
+                <div class="card card--soft mt-3" style="padding:10px 12px">
+                  <div class="row gap-2"><input class="input input--mono input--sm grow" value="POST /refunds" placeholder="Operation (e.g. GET /pets/{petId})" /><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove operation override"><i data-lucide="trash-2"></i></button></div>
+                  <div class="t-caps mt-3">Call 1</div>
+                  <div class="row gap-2 mt-1"><input class="input input--sm" value="429" placeholder="Status" style="width:80px" /><input class="input input--sm" placeholder="Media type (default application/json)" style="width:240px" /><label class="check t-xs"><input type="checkbox" />Off-spec</label><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove response"><i data-lucide="trash-2"></i></button></div>
+                  <div class="grid grid-2 mt-2"><textarea class="textarea input--mono" style="min-height:56px" placeholder='Headers as JSON, e.g. {"Retry-After": "60"} (optional)'>{"Retry-After": "60"}</textarea><textarea class="textarea input--mono" style="min-height:56px" placeholder='Body as JSON; leave blank for an empty response body. Supports {{templates}}, e.g. {"id": "{{request.path.petId}}"}'>{"error": "quota_exceeded", "retryAfter": 60}</textarea></div>
+                  <div class="t-caps mt-3">Call 2</div>
+                  <div class="row gap-2 mt-1"><input class="input input--sm" value="201" style="width:80px" /><input class="input input--sm" placeholder="Media type (default application/json)" style="width:240px" /><label class="check t-xs"><input type="checkbox" />Off-spec</label><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove response"><i data-lucide="trash-2"></i></button></div>
+                  <button class="btn btn--link btn--sm mt-2">+ Add sequence step</button>
+                  <div class="t-xs t-600 mt-3">Match rules (advanced) — evaluated before the responses above; first match wins, responses above are the fallback</div>
+                  <textarea class="textarea input--mono mt-1" style="min-height:48px" placeholder='Rules as JSON, e.g. [{"when": {"query": {"limit": {"gt": 10}}}, "responses": [{"status": 429}]}] (optional)'></textarea>
+                </div>
+                <div class="row gap-3 mt-2"><button class="btn btn--link btn--sm">+ Add operation override</button><button class="btn btn--link btn--sm">+ Add scenario chaos</button><span class="t-2xs t-subtle">Scenario chaos — replaces the version-level knobs while this scenario is selected</span></div>
+              </fieldset>
+              <button class="btn btn--sm" style="align-self:flex-start"><i data-lucide="plus"></i>Add scenario</button>
+              <fieldset class="card card--flat" style="padding:12px 14px;border:0">
+                <div class="t-sm t-600">Latency &amp; chaos</div>
+                <div class="t-xs t-muted mt-1">Simulate a slow or flaky API: every response waits the configured delay (± jitter, capped at 30s) and the error rate answers that percentage of calls with an injected 5xx. Route overrides win over the defaults; leave everything blank for an instant, reliable mock.</div>
+                <table class="table table--dense mt-2"><thead><tr><th>Scope</th><th>Delay ms</th><th>± Jitter ms</th><th>Error rate %</th><th></th></tr></thead><tbody>
+                  <tr><td class="t-600">Default</td><td><input class="input input--sm" value="120" style="width:90px" /></td><td><input class="input input--sm" value="40" style="width:90px" /></td><td><input class="input input--sm" value="0" style="width:90px" /></td><td></td></tr>
+                  <tr><td><input class="input input--sm input--mono" value="GET /payouts" style="width:180px" /></td><td><input class="input input--sm" value="900" style="width:90px" /></td><td><input class="input input--sm" value="300" style="width:90px" /></td><td><input class="input input--sm" value="5" style="width:90px" /></td><td><button class="btn btn--ghost btn--sm btn--icon" aria-label="Remove route override"><i data-lucide="trash-2"></i></button></td></tr>
+                </tbody></table>
+                <button class="btn btn--link btn--sm mt-2">+ Add route override</button>
+              </fieldset>
+              <div class="banner banner--danger" style="flex-direction:column;align-items:stretch"><div class="row gap-2 t-600"><i data-lucide="circle-x"></i>Please fix the following before saving:</div><ul class="t-xs mt-1" style="padding-left:24px;list-style:disc"><li>Scenario 1: operation 1 status must be a number between 100 and 599.</li><li>delay + jitter must not exceed 30000 ms (the 30s cap).</li></ul></div>
+              <div class="t-xs t-subtle">Empty: “No scenarios defined yet. Add one to get started — for example <span class="mono">quota-exceeded</span> returning HTTP 429 from a list operation.” · Loading “Loading scenarios…” · Toasts “Scenarios saved for v2.3.1.” / “Failed to load|save scenarios for v2.3.1.”</div>
+            </div>
+            <div class="dialog__footer"><button class="btn">Cancel</button><button class="btn btn--primary">Save scenarios</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 10. TEST BENCH ============ -->
+      <section class="card gallery-card" id="test-bench">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="beaker"></i>Schema test bench</div><div class="maps-to"><code>test-bench/SchemaTestBench</code><code>SchemaTargetPicker</code><code>BenchPayloadEditor</code><code>BenchFindingsList</code><code>BenchGeneratedPanel</code><code>BenchSavedPayloads</code><code>BenchSuitesPanel</code><code>BenchSuiteRunHistory</code><code>SuiteRegressionBadge</code></div></div><span class="badge badge--rose" title="1 test suite(s) whose latest run has a previously-passing payload now failing. Open the Test Bench tab for the verdict diff."><i data-lucide="trending-down"></i>Suite regression</span></div>
+        <div class="card__body col gap-4">
+          <div class="row wrap gap-3"><span class="t-caps">Schema test bench</span><label class="row gap-2 t-sm">Version <select class="select select--sm" style="width:200px"><option>Latest revision</option><option>v2.4.0 · 9d3f7a21</option><option>v2.3.1 · 4c8e1b09</option></select></label><label class="row gap-2 t-sm">Schema <select class="select select--sm" style="width:320px"><optgroup label="Operation bodies"><option selected>POST /refunds — request body (application/json)</option><option>POST /refunds — 201 response body</option></optgroup><optgroup label="Component schemas"><option>Refund (object)</option><option>RefundReason (enum)</option></optgroup><optgroup label="Registry types"><option>std/v0/types/money</option></optgroup><optgroup label="Documents"><option>Whole XML document (application/xml)</option></optgroup></select></label><span class="mono t-xs t-subtle">#/paths/~1refunds/post/requestBody/content/application~1json/schema</span></div>
+          <div class="banner banner--warn" style="padding:6px 10px"><i data-lucide="triangle-alert"></i><span class="t-xs">Could not list this revision’s schemas.</span> <span class="t-2xs t-subtle" style="margin-left:6px">(targets error state)</span></div>
+          <div class="grid" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
+            <div class="col gap-3">
+              <div class="relative"><span class="badge badge--violet" style="position:absolute;right:10px;top:8px;z-index:1" title="This payload was generated from the schema (IXH-5.2); it is not real data.">SYNTHETIC</span>
+                <div class="bench-editor" role="textbox" aria-label="Payload editor">{
+  "paymentId": "pay_7f3a9c",
+  "amount": <span class="mark">0</span>,
+  "currency": "EUR",
+  "reason": <span class="mark">"customer_request"</span>
+}</div></div>
+              <div class="row wrap gap-2"><button class="btn btn--primary btn--sm"><i data-lucide="play"></i>Validate</button><button class="btn btn--sm" title="Copy a curl command that validates this payload against the REST endpoint (auth via $APIOME_API_KEY)."><i data-lucide="terminal"></i>Copy as curl</button><button class="btn btn--sm" disabled title="Validate the payload first — only a payload that just passed can become a corpus fixture."><i data-lucide="file-check"></i>Copy as fixture</button><span class="sr-only" aria-live="polite">Payload is invalid — 2 findings.</span></div>
+              <div class="card card--flat">
+                <div class="card__header" style="padding:10px 14px"><div class="row gap-2 t-sm t-600" style="color:var(--danger-fg)"><i data-lucide="circle-x"></i>Payload is invalid — 2 finding(s).</div></div>
+                <div class="divide-y">
+                  <button class="list-row w-full" style="text-align:left" title="Reveal in payload editor"><span class="badge badge--rose">minimum</span><span class="mono t-xs">/amount</span><span class="t-sm t-muted">must be ≥ 0.01</span></button>
+                  <button class="list-row w-full" style="text-align:left" title="Reveal in payload editor"><span class="badge badge--rose">enum</span><span class="mono t-xs">/reason</span><span class="t-sm t-muted">must be one of: duplicate, fraudulent, requested_by_customer</span></button>
+                </div>
+                <div class="card__footer t-xs" style="flex-direction:column;align-items:flex-start;gap:4px"><span>Showing 2 of 2 findings. Truncated reports: “Copy as curl and raise <span class="mono">max_findings</span> for the complete report.”</span><span class="t-subtle">Diagnostics (limits on the check, not payload failures): <span class="mono">unresolved-ref</span> std/v0/types/money resolved from registry</span></div>
+              </div>
+              <div class="card card--flat card--pad">
+                <div class="row-between"><button class="btn btn--sm"><i data-lucide="sparkles"></i>Generate payloads</button><span class="t-xs t-subtle">JSON schemas only</span></div>
+                <div class="t-caps mt-3">Valid instances</div><div class="row wrap gap-1 mt-1"><span class="chip" style="height:24px;color:var(--ok-fg)" title="Minimal valid instance. Loads into the payload editor; labelled synthetic.">minimal · synthetic</span><span class="chip" style="height:24px;color:var(--ok-fg)">all-optional-fields · synthetic</span></div>
+                <div class="t-caps mt-3">Mutants (each violates exactly one constraint)</div><div class="row wrap gap-1 mt-1"><span class="chip" style="height:24px;color:var(--rose-fg)">amount-below-minimum · synthetic</span><span class="chip" style="height:24px;color:var(--rose-fg)">reason-not-in-enum · synthetic</span><span class="chip" style="height:24px;color:var(--rose-fg)">missing-paymentId · synthetic</span></div>
+                <div class="t-xs t-subtle mt-2">1 mutant candidate(s) were rejected because they did not provoke exactly the targeted violation.</div>
+              </div>
+            </div>
+            <div class="col gap-3">
+              <div class="card card--flat">
+                <div class="card__header" style="padding:10px 14px"><div class="t-caps">Saved payloads</div><span class="t-xs t-subtle">browser-local · per tenant + schema</span></div>
+                <div style="padding:10px 14px" class="row gap-2"><input class="input input--sm grow" placeholder="e.g. golden order payload" /><button class="btn btn--sm">Save</button></div>
+                <div class="divide-y">
+                  <div class="list-row" style="padding:8px 14px"><a href="#" class="t-sm" title="Load into the payload editor">golden refund</a><span class="t-xs t-subtle" style="margin-left:auto">Aug 12</span><button class="btn btn--ghost btn--sm btn--icon" aria-label="Delete"><i data-lucide="trash-2"></i></button></div>
+                  <div class="list-row" style="padding:8px 14px"><a href="#" class="t-sm">minimal</a><span class="tag">synthetic</span><span class="t-xs t-subtle" style="margin-left:auto">Aug 15</span><button class="btn btn--ghost btn--sm btn--icon" aria-label="Delete"><i data-lucide="trash-2"></i></button></div>
+                </div>
+              </div>
+              <div class="card card--flat">
+                <div class="card__header" style="padding:10px 14px"><div class="t-caps">Test suites</div><button class="btn btn--sm btn--ghost" title="Import a suite from an exported corpus envelope (manifest + files JSON)."><i data-lucide="upload"></i>Import</button></div>
+                <div style="padding:10px 14px" class="row gap-2"><input class="input input--sm grow" placeholder="e.g. order payload regression suite" /><button class="btn btn--sm" title="Create a suite for this artifact, seeded with the current payload when one is present.">New suite</button></div>
+                <div class="divide-y">
+                  <div style="padding:10px 14px">
+                    <div class="row wrap gap-2"><span class="t-sm t-600">refund regression</span><span class="t-xs t-subtle">4 payloads · v3</span><span class="badge badge--danger">3/4 passed @ v2.4.0</span><span class="badge badge--rose">REGRESSION</span></div>
+                    <div class="row wrap gap-1 mt-2"><button class="btn btn--sm" title="Run every payload against the selected version (v2.4.0)."><i data-lucide="play"></i>Run</button><button class="btn btn--sm btn--ghost" title="Add the current editor payload to this suite (expected verdict: valid).">Add payload</button><button class="btn btn--sm btn--ghost" data-action="toggle" data-target="run-history">History</button><button class="btn btn--sm btn--ghost" title="Download the suite as an IXH-1.1 corpus envelope (manifest + files)."><i data-lucide="download"></i>Export</button><button class="btn btn--ghost btn--sm btn--icon" aria-label="Delete suite"><i data-lucide="trash-2"></i></button></div>
+                    <div id="run-history" class="card card--soft mt-2" style="padding:8px 10px">
+                      <div class="row gap-2 t-xs"><i data-lucide="chevron-down" style="width:12px;height:12px"></i><span class="mono">v2.4.0</span><span class="t-600">3/4 passed</span><span class="badge badge--rose">REGRESSION</span><span class="t-subtle" style="margin-left:auto">Aug 15 09:20</span></div>
+                      <div class="divide-y mt-1" style="font-size:var(--fs-xs)">
+                        <div class="row gap-2" style="padding:4px 0 4px 18px;background:var(--rose-soft);border-radius:4px"><span>golden refund</span><span class="badge badge--rose">passed → failed</span><span class="t-muted">/amount must be ≥ 0.01</span></div>
+                        <div class="row gap-2" style="padding:4px 0 4px 18px"><span>minimal</span><span class="badge badge--ok">passed</span></div>
+                        <div class="row gap-2" style="padding:4px 0 4px 18px"><span>with-metadata</span><span class="badge badge--ok">passed</span></div>
+                        <div class="row gap-2" style="padding:4px 0 4px 18px"><span>xml-doc</span><span class="badge badge--danger">error</span><span class="t-muted">validator not available</span></div>
+                      </div>
+                      <div class="row gap-2 t-xs mt-1"><i data-lucide="chevron-right" style="width:12px;height:12px"></i><span class="mono">v2.3.1</span><span class="t-600">4/4 passed</span><span class="t-subtle" style="margin-left:auto">Aug 3 10:10</span></div>
+                    </div>
+                  </div>
+                  <div style="padding:10px 14px"><div class="row wrap gap-2"><span class="t-sm t-600">payout smoke</span><span class="t-xs t-subtle">0 payloads · v1</span><span class="t-xs t-subtle">never run</span></div><div class="row gap-1 mt-2"><button class="btn btn--sm" disabled title="Add a payload first — an empty suite has nothing to run."><i data-lucide="play"></i>Run</button><button class="btn btn--sm btn--ghost">Add payload</button><button class="btn btn--sm btn--ghost">History</button><button class="btn btn--sm btn--ghost"><i data-lucide="download"></i>Export</button></div><div class="t-xs t-subtle mt-1">No runs recorded yet — run the suite against a revision to start its history.</div></div>
+                </div>
+                <div class="card__footer t-xs" style="padding:8px 14px">Empty: “No test suites for this artifact yet — save the payloads that prove this schema works, and every future revision can be checked against them.”</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 11. EXPORT ============ -->
+      <section class="card gallery-card" id="export">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="package-open"></i>Export this version</div><div class="maps-to"><code>export/VersionExportPanel</code><code>export/ExportDialog</code><code>ExportTargetGrid</code><code>FidelityWarningPanel</code><code>ProjectionGraphPanel</code><code>ArtifactPreviewCard</code></div></div><a class="btn btn--sm" href="../ship/export-studio.html"><i data-lucide="arrow-up-right"></i>Open in Export Studio</a></div>
+        <div class="card__body col gap-4">
+          <div class="grid grid-2">
+            <div class="card card--flat card--pad"><div class="t-sm t-600">Convert to any format</div><div class="t-xs t-muted mt-1">This version is held in the normalized model, so it can be transcoded to any target format. Fidelity varies — less-expressive targets drop or approximate detail. Pick a target to open it in the Export Studio.</div><div class="t-caps mt-3">Best-fidelity targets</div><div class="row wrap gap-1 mt-1"><a class="badge badge--ok" href="#" title="Export to AsyncAPI — 98% preserved">AsyncAPI 98%</a><a class="badge badge--ok" href="#" title="Export to JSON Schema — 96% preserved">JSON Schema 96%</a><a class="badge badge--ok" href="#">Postman 92%</a><a class="badge badge--ok" href="#">RAML 90%</a></div><div class="t-caps mt-3">Lossy targets</div><div class="row wrap gap-1 mt-1"><a class="badge badge--warn" href="#" title="Export to GraphQL — 74% preserved">GraphQL 74%</a><a class="badge badge--warn" href="#">WSDL 66%</a><a class="badge badge--danger" href="#" title="Types-only">Protobuf 41%</a></div><button class="btn btn--sm mt-3"><i data-lucide="package-open"></i>Export this version</button><div class="t-2xs t-subtle mt-2">Loading: “Measuring export fidelity for this version…” · “None” when a bucket is empty.</div></div>
+            <div class="card card--flat card--pad"><div class="t-sm t-600">Recent exports</div><div class="t-2xs t-subtle">browser-local</div><div class="divide-y mt-2"><div class="list-row" style="padding:8px 0"><div class="grow"><div class="t-sm">GraphQL SDL</div><div class="t-xs t-subtle">2 days ago</div></div><span class="badge badge--warn">lossy</span><button class="btn btn--sm btn--ghost" title="Re-run this GraphQL export in the Studio with its options pre-filled">Re-run in Studio</button></div><div class="list-row" style="padding:8px 0"><div class="grow"><div class="t-sm">JSON Schema bundle</div><div class="t-xs t-subtle">last week</div></div><span class="badge badge--ok">lossless</span><button class="btn btn--sm btn--ghost">Re-run in Studio</button></div></div><div class="t-xs t-subtle mt-2">Empty: “No exports of this version yet.”</div></div>
+          </div>
+          <div class="dlg-frame">
+            <div class="dialog__header"><div><div class="dialog__title">Export “Payments API” v2.3.1</div><div class="dialog__desc">Pick a target format and options. Each target shows how faithfully this source survives the conversion before you commit to it.</div></div></div>
+            <div class="dialog__body col gap-4">
+              <div class="stepper"><div class="step is-done"><span class="step__num"><i data-lucide="check" style="width:12px;height:12px"></i></span>Source</div><span class="step__line is-done"></span><div class="step is-active"><span class="step__num">2</span>Target</div><span class="step__line"></span><div class="step"><span class="step__num">3</span>Fidelity</div><span class="step__line"></span><div class="step"><span class="step__num">4</span>Export</div></div>
+              <div class="card card--soft" style="padding:10px 12px"><div class="row-between"><div><div class="t-sm t-600">Source · Payments API</div><div class="t-xs t-muted">Version 2.3.1 · 7 export targets available</div></div><span class="fmt fmt--openapi">OpenAPI 3.1</span></div><div class="t-2xs t-subtle mt-1">Export is scoped to this version: the fidelity badge on every target card is computed for this source, not a generic estimate.</div></div>
+              <div class="row-between"><div><div class="t-sm t-600">Choose a target format</div><div class="t-xs t-muted">Fidelity badges are computed for <b>this</b> source (version 2.3.1).</div></div><div class="segmented segmented--sm"><button class="is-active">By readiness</button><button>Registry order</button></div></div>
+              <div class="grid grid-4">
+                <label class="fid-card"><span class="row-between"><span class="fmt fmt--openapi">Original</span><span class="badge badge--ok">100%</span></span><span class="t-xs t-muted">Original source document</span></label>
+                <label class="fid-card is-selected"><span class="row-between"><span class="fmt fmt--graphql">GraphQL</span><span class="badge badge--warn">lossy · 74%</span></span><span class="t-xs t-muted">SDL with input types</span></label>
+                <label class="fid-card"><span class="row-between"><span class="fmt fmt--asyncapi">AsyncAPI</span><span class="badge badge--ok">lossless · 98%</span></span><span class="t-xs t-muted">2.6 / 3.0</span></label>
+                <label class="fid-card"><span class="row-between"><span class="fmt fmt--jsonschema">JSON Schema</span><span class="badge badge--ok">96%</span></span><span class="t-xs t-muted">2020-12 bundle</span></label>
+                <label class="fid-card" style="opacity:.6"><span class="row-between"><span class="fmt fmt--proto">Protobuf</span><span class="badge badge--danger">types-only · 41%</span></span><span class="t-xs t-muted">Preflight: policy blocks types-only exports for published versions</span></label>
+                <label class="fid-card"><span class="row-between"><span class="fmt fmt--postman">Postman</span><span class="badge badge--ok">92%</span></span><span class="t-xs t-muted">Collection v2.1</span></label>
+                <label class="fid-card"><span class="row-between"><span class="fmt fmt--raml">RAML</span><span class="badge badge--ok">90%</span></span><span class="t-xs t-muted">1.0</span></label>
+                <label class="fid-card"><span class="row-between"><span class="fmt fmt--wsdl">WSDL</span><span class="badge badge--warn">66%</span></span><span class="t-xs t-muted">1.1 · SOAP bindings</span></label>
+              </div>
+              <div class="card card--flat card--pad"><div class="t-sm t-600">Target options <span class="t-xs t-subtle t-500">(from the target’s options schema)</span></div><div class="grid grid-3 mt-2"><label class="check"><input type="checkbox" checked />Emit input types</label><label class="check"><input type="checkbox" />Federation directives</label><div class="field"><label class="t-xs">Naming</label><select class="select select--sm"><option>PascalCase types</option></select></div></div></div>
+              <div class="grid" style="grid-template-columns:minmax(0,1fr) 300px">
+                <div class="card card--flat card--pad"><div class="row gap-3"><span class="ring" style="--p:74;--c:var(--warn)"><span>74</span></span><div><div class="t-sm t-600">Fidelity — GraphQL</div><div class="t-xs t-muted">Server advisory: “Response status codes and media types have no GraphQL equivalent; they are recorded as descriptions.”</div></div></div><div class="row wrap gap-1 mt-2"><span class="badge badge--danger">3 dropped</span><span class="badge badge--warn">5 approximated</span><span class="badge badge--info">2 synthesized</span><span class="badge badge--ok">38 clean</span></div><details class="mt-2"><summary class="t-xs" style="cursor:pointer">Per-construct report</summary><div class="t-xs mt-1 mono">DROP  responses.4xx (POST /refunds)<br/>APPROX  Idempotency-Key header → description<br/>SYNTH  Query.listPayouts<br/>OK  Refund, Payout, Customer…</div></details><label class="check mt-3"><input type="checkbox" />Export anyway <span class="t-xs t-subtle">(acknowledge the fidelity loss)</span></label><div class="t-2xs t-subtle mt-1">Severe: type the phrase “export produces a types-only artifact”.</div></div>
+                <div class="card card--flat card--pad"><div class="t-sm t-600">Projection graph</div><div class="t-xs t-muted">Evidence drawer for each DROP/APPROX/SYNTH decision.</div><div class="canvas mt-2" style="height:110px"><div class="cnode" style="left:10px;top:12px;width:110px"><div class="cn">POST /refunds</div></div><div class="cnode mod" style="left:150px;top:12px;width:120px"><div class="cn">Mutation.createRefund</div></div><div class="cnode del" style="left:10px;top:64px;width:110px"><div class="cn">responses.429</div>dropped</div></div><button class="btn btn--link btn--sm mt-2">Change target/options</button></div>
+              </div>
+              <div class="card card--flat card--pad"><div class="row gap-2 t-sm"><span class="spinner"></span>Emitting GraphQL SDL… → “Review <b>payments-api.graphql</b> below, then download the file or a .zip bundle.”</div><div class="code mt-2" style="max-height:90px"><span class="c-k">type</span> Refund { id: ID! amount: Float! currency: String! reason: RefundReason }
+<span class="c-k">enum</span> RefundReason { DUPLICATE FRAUDULENT REQUESTED_BY_CUSTOMER }</div><div class="row gap-2 mt-2"><span class="badge badge--ok">valid · round-trip OK</span><label class="check t-xs"><input type="checkbox" checked />Word wrap</label></div></div>
+            </div>
+            <div class="dialog__footer"><a class="btn btn--ghost left" href="../ship/export-studio.html" title="Open this export in the full-page Export Studio, carrying your selection."><i data-lucide="arrow-up-right"></i>Open in Export Studio</a><button class="btn">Cancel</button><button class="btn">Back</button><button class="btn btn--primary" title="Acknowledge the fidelity loss to enable the export.">Export anyway</button></div>
+          </div>
+          <div class="t-xs t-subtle">Footer buttons by step: Cancel/Close · Open in Export Studio · Back · Choose target · Continue · Export / Export anyway · Download .zip · Download {filename} · Done. Errors: “The export failed. Try again.” / “The zip download failed. Try again.”</div>
+        </div>
+      </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<div class="overlay" id="templates-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="tpl-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="layout-template"></i></span><div><div class="dialog__title" id="tpl-title">Change report templates</div><div class="dialog__desc">Create a Mustache template triple (validated on save). Defaults can be scoped to this project or the whole tenant (tenant admins only).</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-4" style="border-bottom:1px solid var(--border)" data-tabs="tpl-tabs"><button class="tab is-active" data-action="tab" data-target="tpl-create">Create</button><button class="tab" data-action="tab" data-target="tpl-defaults">Defaults</button><button class="tab" data-action="tab" data-target="tpl-preview">Preview (sample fixture)</button></div>
+      <div id="tpl-tabs">
+        <div data-tab-panel="tpl-create" class="col gap-3">
+          <div class="field"><label>Semver (unique per tenant)</label><input class="input input--mono" placeholder="e.g. 1.0.1" value="1.0.2" style="width:200px" /></div>
+          <div class="field"><label>Header template</label><textarea class="textarea input--mono" style="min-height:56px">{{project.name}} {{version}} — published {{publishedAt}} by {{publisher}}</textarea></div>
+          <div class="field"><label>Body template</label><textarea class="textarea input--mono" style="min-height:96px">{{#groups}}**{{severity}}** — {{#entries}}{{summary}}; {{/entries}}
+{{/groups}}</textarea></div>
+          <div class="field"><label>Footnote template</label><textarea class="textarea input--mono" style="min-height:48px">Rendered from template {{template.semver}}</textarea></div>
+          <button class="btn btn--primary" style="align-self:flex-start">Create template version</button>
+        </div>
+        <div data-tab-panel="tpl-defaults" hidden class="col gap-3">
+          <div class="field"><label>Template version</label><select class="select" style="width:280px"><option>1.0.1 · tpl_9a2c…</option><option>1.0.0 · tpl_31de…</option></select></div>
+          <div class="row wrap gap-2"><button class="btn">Set as project default</button><button class="btn" disabled title="Tenant administrators only">Set as tenant default</button><button class="btn btn--ghost">Clear project override</button></div>
+        </div>
+        <div data-tab-panel="tpl-preview" hidden class="col gap-3">
+          <div><div class="t-caps mb-1">Header preview</div><div class="card card--soft" style="padding:8px 10px" class="t-sm">Payments API v2.3.1 — published 2026-08-03 by Grace Hopper</div></div>
+          <div><div class="t-caps mb-1">Body preview</div><div class="card card--soft" style="padding:8px 10px"><b>non-breaking</b> — Refund.amount minimum 0 → 0.01; example currency EUR;</div></div>
+          <div><div class="t-caps mb-1">Footnote preview</div><div class="card card--soft" style="padding:8px 10px">Rendered from template 1.0.2</div></div>
+          <div class="banner banner--danger"><i data-lucide="circle-x"></i><div class="t-xs">Template failure example: Unclosed section “groups” at 2:1</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Toasts: Template version created · Project default template updated · Tenant default template updated · Project template override cleared</span><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="manual-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog"><div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="hand"></i></span><div><div class="dialog__title">Manual resolution</div><div class="dialog__desc">Path <span class="mono">components.schemas.Payout.properties.status</span> is marked for manual merge. A future release will open a side-by-side diff and let you submit the merged fragment to the merge session API.</div></div></div><div class="dialog__footer"><button class="btn btn--primary" data-action="close">OK</button></div></div>
+</div>
+
+<div class="overlay" id="rollback-confirm" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="undo-2"></i></span><div><div class="dialog__title">Roll back?</div><div class="dialog__desc">Target revision id <span class="mono">ver_4c8e1b09</span> · Committed UTC <span class="mono">2026-08-02T16:40:12Z</span> · Impact ~3 entities differ vs branch tip (+0 added, −1 removed, 2 modified).</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Roll back</button></div></div>
+</div>
+
+<template id="notes">
+  <p class="route">Versions page overlays (no route of their own)</p>
+  <h4>Replaces</h4>
+  <ul><li>Compare dialog + <code>VersionCanvasCompare</code>; <code>VersionChangeReportPanel</code> + templates dialog; <code>VersionHistoryGraphPanel</code> / <code>RevisionHistoryNode</code>; <code>RelationshipGraphDialog</code>; <code>version-dialogs/*</code> (Branch, Tag, Commit, Merge, Rollback) + <code>VersionMergeConflictList</code>, <code>CompatibilityReportPanel</code>, <code>ExternalCompatEvidencePanel</code>; Fork dialog; <code>LintReportDialog</code> + <code>LintViolationFindingsList</code>; <code>SchemaVersionScoringPanel</code>; <code>VersionMockCell</code> + <code>MockScenarioEditor</code>; <code>test-bench/*</code>; <code>export/VersionExportPanel</code> + <code>ExportDialog</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Compare: base/compare selects (🔒 published) + tag setters, summary cards (note, changelog, breaking hints, published classification), tabs Diff view (Overlay/Side-by-side, JSON/YAML, legend) · Schema changes (class stat, search, show unchanged, virtualized, Breaking badge, summary chips + 3 tiles) · Breaking doc · Migration guide (Copy/Append/Download MD/PDF) · Canvas (Split/Overlay, legend, empties). Footer Compare different versions / Close.</li>
+    <li>Change report: revision select, Refresh, Templates; Regenerate + options (template select, discard edits); View/Edit tabs with the exact help copy; templates dialog Create / Defaults / Preview; empties.</li>
+    <li>History graph: help copy, Load older (60 → 100), max-limit note, lane chips + Select all, canvas with Fit all / HEAD / Selected, node anatomy (lane dot, merge styling, tip marker, tags, author · time), ⋯ Revision actions menu. Relationship graph dialog with its empty/no-edge notes.</li>
+    <li>Git-like dialogs with their descriptions, fields, validation strings, toasts; Merge with conflict list (filters, bulk shown/all, Mine/Theirs/Manual, unresolved tint, Manual dialog), compat alert + oasdiff evidence, admin override + justification; Rollback with impact preview, gate note, acknowledgement checkbox, “Roll back?” confirm.</li>
+    <li>Lint report dialog (grade ring, score, severity pills, guide, compat vs base, stale note, Group by rule, rule chip tooltips, View rule ↗, expanded mode) and scoring panel; badge states A–F / Lint —.</li>
+    <li>Mock cell states (Mock on / Private mock on / Mock off / Draft mock off, PRIVATE, URL + copy, Scenarios, sparkline) and the full scenario editor (scenario · operation override · sequence steps · match rules · scenario chaos · Latency &amp; chaos defaults + route overrides · validation box · footer).</li>
+    <li>Test bench: version + schema target picker (optgroups), payload editor with SYNTHETIC badge and inline markers, Validate / Copy as curl / Copy as fixture, findings list + diagnostics, generated valid/mutant chips, saved payloads, suites (Import, New suite, Run/Add payload/History/Export/delete, REGRESSION, run history with verdict diffs).</li>
+    <li>Export: VersionExportPanel cards (best-fidelity / lossy targets, Export this version, recent exports + Re-run in Studio) and ExportDialog stepper Source · Target · Fidelity · Export with target grid, options form, fidelity ring + chips + report, projection graph, artifact preview, footer verbs.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Gallery TOC; flag-gated features shown with a honey “gitlike” flag rather than hidden.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading/empty/error copy quoted inline under each card (e.g. “Loading canvas layouts…”, “No published revisions”, “No test suites for this artifact yet…”, “Lint report unavailable.” + Retry).</li></ul>
+</template>
+</body>
+</html>

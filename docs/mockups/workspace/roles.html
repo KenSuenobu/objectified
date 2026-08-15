@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Roles · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: role list + permission matrix cells only */
+  .role-list { display: flex; flex-direction: column; gap: 4px; }
+  .role-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border-radius: var(--r-md); text-align: left; color: var(--fg); transition: background var(--dur-fast), box-shadow var(--dur-fast); }
+  .role-item:hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+  .role-item.is-active { background: var(--bg-surface); box-shadow: var(--shadow-raised); }
+  .role-item.is-active .icon-tile { background: var(--accent-soft); color: var(--accent-fg); }
+  .role-item .ri-name { font-size: var(--fs-sm); font-weight: 500; }
+  .role-item .ri-sub { font-size: var(--fs-2xs); color: var(--fg-subtle); }
+  .role-item .ri-count { margin-left: auto; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-subtle); font-variant-numeric: tabular-nums; }
+  .name-edit { font-size: var(--fs-xl); font-weight: 600; letter-spacing: -0.01em; background: transparent; border: 0; border-bottom: 1.5px dashed transparent; padding: 0 2px; border-radius: 0; min-width: 0; width: 100%; }
+  .name-edit:hover { border-bottom-color: var(--border-strong); }
+  .name-edit:focus { outline: none; box-shadow: none; border-bottom-color: var(--accent); }
+  .desc-edit { min-height: 56px; }
+  .matrix th:not(:first-child), .matrix td:not(:first-child) { text-align: center; width: 92px; }
+  .matrix td { height: 42px; }
+  .perm { width: 24px; height: 24px; border-radius: var(--r-sm); display: inline-grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--border-strong); background: var(--bg-surface); color: transparent; transition: background var(--dur-fast), box-shadow var(--dur-fast), transform var(--dur-fast); vertical-align: middle; }
+  .perm:hover { box-shadow: inset 0 0 0 1.5px var(--fg-subtle); }
+  .perm[aria-pressed="true"] { background: var(--ok); box-shadow: none; color: #fff; }
+  .perm[aria-pressed="true"]:hover { background: color-mix(in srgb, var(--ok) 88%, black); }
+  .perm[aria-pressed="mixed"] { background: var(--ok-soft); box-shadow: inset 0 0 0 1.5px var(--ok); color: var(--ok-fg); }
+  .perm [data-lucide] { width: 14px; height: 14px; stroke-width: 2.5; }
+  .perm:disabled { cursor: not-allowed; opacity: .55; }
+  .perm.is-na { box-shadow: none; background: transparent; color: var(--fg-faint); cursor: default; }
+  .matrix tbody tr:hover td { background: color-mix(in srgb, var(--fg) 2.5%, transparent); }
+  .matrix .res-name { font-weight: 500; }
+  .matrix .res-key { font-size: var(--fs-2xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+  .save-bar { position: sticky; bottom: 16px; z-index: 15; margin-left: 0; }
+  .is-readonly .perm { cursor: not-allowed; opacity: .7; }
+</style>
+</head>
+<body data-shell="app" data-nav="roles" data-page="workspace/roles" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div>
+          <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Workspace</span><i data-lucide="chevron-right"></i><span>Roles</span></div>
+          <h1 class="page-title">Roles</h1>
+          <p class="page-desc">Who can view, create, edit, delete and publish — per resource, per role.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn--primary" data-action="open" data-target="new-role-dialog"><i data-lucide="plus"></i>New role<span class="kbd">N</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- Error banner (retry) — shown when GET /api/access/roles fails -->
+    <div class="banner banner--danger" hidden id="roles-error"><i data-lucide="circle-alert"></i><div><div class="banner-title">Failed to load roles</div><div class="banner-body">The access service didn’t answer. Your last saved changes are safe.</div></div><div class="banner-actions"><button class="btn btn--sm">Retry</button></div></div>
+
+    <div class="grid grid-aside-main" style="align-items:start">
+      <!-- ===== Role list ===== -->
+      <aside class="col gap-3">
+        <div class="input-wrap"><i data-lucide="search"></i><input class="input" placeholder="Filter roles…" aria-label="Filter roles" /></div>
+        <div>
+          <div class="t-caps" style="padding:0 12px 6px">Built-in</div>
+          <div class="role-list" role="listbox" aria-label="Roles">
+            <button class="role-item" role="option" aria-selected="false" data-role="owner"><span class="icon-tile icon-tile--sm"><i data-lucide="crown"></i></span><span class="min-w-0"><div class="ri-name">Owner</div><div class="ri-sub">Built-in</div></span><span class="ri-count" data-tip="1 member">1</span></button>
+            <button class="role-item" role="option" aria-selected="false" data-role="admin"><span class="icon-tile icon-tile--sm"><i data-lucide="shield"></i></span><span class="min-w-0"><div class="ri-name">Admin</div><div class="ri-sub">Built-in</div></span><span class="ri-count">1</span></button>
+            <button class="role-item" role="option" aria-selected="false" data-role="editor"><span class="icon-tile icon-tile--sm"><i data-lucide="pencil-ruler"></i></span><span class="min-w-0"><div class="ri-name">Editor</div><div class="ri-sub">Built-in</div></span><span class="ri-count">1</span></button>
+            <button class="role-item" role="option" aria-selected="false" data-role="viewer"><span class="icon-tile icon-tile--sm"><i data-lucide="eye"></i></span><span class="min-w-0"><div class="ri-name">Viewer</div><div class="ri-sub">Built-in</div></span><span class="ri-count">1</span></button>
+          </div>
+        </div>
+        <div>
+          <div class="t-caps" style="padding:0 12px 6px">Custom</div>
+          <div class="role-list" role="listbox" aria-label="Custom roles">
+            <button class="role-item is-active" role="option" aria-selected="true" data-role="release-manager"><span class="icon-tile icon-tile--sm"><i data-lucide="rocket"></i></span><span class="min-w-0"><div class="ri-name row gap-2">Release manager <span class="dot dot--honey" data-tip="Unsaved changes" aria-label="Unsaved changes"></span></div><div class="ri-sub t-accent">Custom</div></span><span class="ri-count">2</span></button>
+            <button class="role-item" role="option" aria-selected="false" data-role="auditor" data-action="open" data-target="unsaved-dialog"><span class="icon-tile icon-tile--sm"><i data-lucide="scroll-text"></i></span><span class="min-w-0"><div class="ri-name">Auditor</div><div class="ri-sub t-accent">Custom</div></span><span class="ri-count">0</span></button>
+          </div>
+        </div>
+        <button class="btn btn--ghost btn--sm" style="justify-content:flex-start" data-action="open" data-target="new-role-dialog"><i data-lucide="plus"></i>New custom role</button>
+        <div class="callout t-xs">Built-in roles can’t be renamed or deleted, but their description and matrix are editable. Duplicate one to start a custom role.</div>
+      </aside>
+
+      <!-- ===== Editor ===== -->
+      <section class="col gap-4 min-w-0" id="editor">
+        <div class="card">
+          <div class="card__header" style="align-items:flex-start;padding-top:16px;padding-bottom:14px">
+            <div class="grow min-w-0">
+              <div class="row gap-3">
+                <span class="icon-tile icon-tile--accent"><i data-lucide="rocket"></i></span>
+                <div class="grow min-w-0">
+                  <div class="row gap-2"><input class="name-edit" value="Release manager" aria-label="Role name" /><span class="badge badge--accent shrink-0">Custom</span><span class="badge badge--honey shrink-0" id="dirty-badge"><i data-lucide="pencil-line"></i>Unsaved</span></div>
+                  <div class="t-xs t-subtle mono">role_7d21ac · 2 members · updated Aug 12, 2026 by Grace Hopper</div>
+                </div>
+              </div>
+            </div>
+            <div class="row gap-2 shrink-0">
+              <button class="btn" data-action="open" data-target="dup-role-dialog"><i data-lucide="copy"></i>Duplicate</button>
+              <button class="btn btn--danger-soft" data-action="open" data-target="delete-role-dialog"><i data-lucide="trash-2"></i>Delete</button>
+              <button class="btn btn--primary" data-action="open" data-target="saved-toast" data-tip="Save name, description and matrix"><i data-lucide="save"></i>Save changes</button>
+            </div>
+          </div>
+          <div class="card__body col gap-4">
+            <div class="field"><label>Description</label><textarea class="textarea desc-edit" aria-label="Role description" placeholder="Describe what this role can do…">Cuts and publishes versions, manages sunset timelines. Cannot change members or billing.</textarea></div>
+
+            <div class="row-between wrap gap-2">
+              <div class="row gap-2 t-sm t-muted"><i data-lucide="grid-3x3"></i>Permission matrix <span class="t-subtle">·</span> <span class="t-num">23</span> of 65 cells on</div>
+              <div class="row gap-2">
+                <button class="btn btn--sm btn--ghost" data-tip="Turn on every View cell"><i data-lucide="eye"></i>Grant view on all</button>
+                <button class="btn btn--sm btn--ghost" data-tip="Turn off every cell"><i data-lucide="eraser"></i>Clear all</button>
+              </div>
+            </div>
+
+            <div class="table-wrap card--flat" style="box-shadow:0 0 0 1px var(--border) inset">
+              <table class="table table--dense matrix">
+                <thead><tr>
+                  <th>Resource</th>
+                  <th><span class="row gap-1" style="justify-content:center"><i data-lucide="eye"></i>View</span></th>
+                  <th><span class="row gap-1" style="justify-content:center"><i data-lucide="plus"></i>Create</span></th>
+                  <th><span class="row gap-1" style="justify-content:center"><i data-lucide="pencil"></i>Edit</span></th>
+                  <th><span class="row gap-1" style="justify-content:center"><i data-lucide="trash-2"></i>Delete</span></th>
+                  <th><span class="row gap-1" style="justify-content:center"><i data-lucide="globe"></i>Publish</span></th>
+                </tr></thead>
+                <tbody>
+                  <tr><td><div class="res-name">Projects</div><div class="res-key">projects</div></td><td><button class="perm" aria-pressed="true" aria-label="Projects View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Projects Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Projects Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Projects Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Projects Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Versions</div><div class="res-key">versions</div></td><td><button class="perm" aria-pressed="true" aria-label="Versions View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Versions Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Versions Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Versions Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Versions Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Classes</div><div class="res-key">classes</div></td><td><button class="perm" aria-pressed="true" aria-label="Classes View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Classes Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Classes Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Classes Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Classes Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Properties</div><div class="res-key">properties</div></td><td><button class="perm" aria-pressed="true" aria-label="Properties View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Properties Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Properties Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Properties Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Properties Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Paths</div><div class="res-key">paths</div></td><td><button class="perm" aria-pressed="true" aria-label="Paths View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Paths Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Paths Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Paths Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Paths Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Primitives / Types</div><div class="res-key">types</div></td><td><button class="perm" aria-pressed="true" aria-label="Primitives / Types View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Primitives / Types Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Primitives / Types Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Primitives / Types Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Primitives / Types Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Imports</div><div class="res-key">imports</div></td><td><button class="perm" aria-pressed="true" aria-label="Imports View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Imports Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Imports Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Imports Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Imports Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Members</div><div class="res-key">members</div></td><td><button class="perm" aria-pressed="true" aria-label="Members View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Members Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Members Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Members Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Members Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">API keys</div><div class="res-key">api_keys</div></td><td><button class="perm" aria-pressed="true" aria-label="API Keys View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="API Keys Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="API Keys Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="API Keys Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="API Keys Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Billing</div><div class="res-key">billing</div></td><td><button class="perm" aria-pressed="false" aria-label="Billing View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Billing Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Billing Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Billing Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Billing Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Lint findings</div><div class="res-key">lint_findings</div></td><td><button class="perm" aria-pressed="true" aria-label="Lint Findings View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Lint Findings Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Lint Findings Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Lint Findings Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Lint Findings Publish" data-tip="Publish = approve waivers"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Verification targets</div><div class="res-key">verification_targets</div></td><td><button class="perm" aria-pressed="true" aria-label="Verification Targets View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Verification Targets Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Verification Targets Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Verification Targets Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Verification Targets Publish"><i data-lucide="check"></i></button></td></tr>
+                  <tr><td><div class="res-name">Verification evidence</div><div class="res-key">verification_evidence</div></td><td><button class="perm" aria-pressed="true" aria-label="Verification Evidence View"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="true" aria-label="Verification Evidence Create"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Verification Evidence Edit"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Verification Evidence Delete"><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" aria-label="Verification Evidence Publish"><i data-lucide="check"></i></button></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="row-start gap-2 t-xs t-subtle"><i data-lucide="info" style="width:13px;height:13px;margin-top:2px"></i><span>Cells map to a central permission guard (e.g. <code>version:publish</code>) checked on every REST route, replacing scattered <code>is_user_tenant_admin</code> checks.</span></div>
+          </div>
+        </div>
+
+        <!-- Sticky save bar (visible while the draft is dirty) -->
+        <div class="bulk-bar save-bar" role="status"><i data-lucide="pencil-line" style="width:15px;height:15px"></i><span>3 unsaved changes</span><button class="btn btn--sm">Discard</button><button class="btn btn--sm" style="--_bg:var(--bg-surface);--_fg:var(--fg)" data-action="open" data-target="saved-toast"><i data-lucide="save"></i>Save changes</button></div>
+
+        <!-- ===== Other editor states (toggle to preview) ===== -->
+        <div class="row gap-2 t-xs t-subtle" style="justify-content:flex-end"><span>Preview state:</span><div class="segmented segmented--sm" data-tabs="state-panels"><button class="is-active" data-action="tab" data-target="none">Hidden</button><button data-action="tab" data-target="ro">Read-only</button><button data-action="tab" data-target="builtin">Built-in</button><button data-action="tab" data-target="unselected">No selection</button><button data-action="tab" data-target="empty">Empty</button></div></div>
+        <div id="state-panels">
+          <div data-tab-panel="none" hidden></div>
+          <!-- Read-only (viewer / no members:* permission) -->
+          <div data-tab-panel="ro" hidden class="card is-readonly">
+            <div class="banner banner--neutral" style="border-radius:var(--r-lg) var(--r-lg) 0 0"><i data-lucide="lock"></i><div><div class="banner-title">Read-only</div><div class="banner-body">You need <code>members:edit</code>, <code>members:create</code> or <code>members:delete</code> to change roles. You can still browse the matrix.</div></div></div>
+            <div class="card__body">
+              <div class="row gap-3"><span class="icon-tile"><i data-lucide="eye"></i></span><div><div class="t-h2 row gap-2">Viewer <span class="badge">Built-in</span></div><div class="t-xs t-subtle">Read-only access to every project.</div></div></div>
+              <table class="table table--dense matrix mt-4"><thead><tr><th>Resource</th><th>View</th><th>Create</th><th>Edit</th><th>Delete</th><th>Publish</th></tr></thead><tbody>
+                <tr><td><div class="res-name">Projects</div></td><td><button class="perm" aria-pressed="true" disabled><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" disabled><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" disabled><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" disabled><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" disabled><i data-lucide="check"></i></button></td></tr>
+                <tr><td><div class="res-name">Versions</div></td><td><button class="perm" aria-pressed="true" disabled><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" disabled><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" disabled><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" disabled><i data-lucide="check"></i></button></td><td><button class="perm" aria-pressed="false" disabled><i data-lucide="check"></i></button></td></tr>
+                <tr><td class="t-subtle t-xs" colspan="6">… 11 more resources, all disabled</td></tr>
+              </tbody></table>
+            </div>
+          </div>
+          <!-- Built-in role editor: static name, no Delete -->
+          <div data-tab-panel="builtin" hidden class="card">
+            <div class="card__header"><div class="row gap-3"><span class="icon-tile icon-tile--accent"><i data-lucide="shield"></i></span><div><h3 class="t-h2 row gap-2">Admin <span class="badge">Built-in</span></h3><div class="t-xs t-subtle mono">role_admin · 1 member</div></div></div><div class="row gap-2"><button class="btn" data-action="open" data-target="dup-role-dialog"><i data-lucide="copy"></i>Duplicate</button><button class="btn btn--primary" disabled><i data-lucide="save"></i>Save changes</button></div></div>
+            <div class="card__body col gap-3">
+              <div class="field"><label>Description</label><textarea class="textarea desc-edit" aria-label="Role description">Manages members, roles, keys and every project. Name is fixed; description and matrix are editable.</textarea></div>
+              <div class="callout callout--accent t-xs">Built-in roles keep their name (it is referenced by seat licensing and SSO group mapping). Delete is hidden; the matrix stays editable when you can mutate members.</div>
+            </div>
+          </div>
+          <!-- Nothing selected -->
+          <div data-tab-panel="unselected" hidden class="card"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="mouse-pointer-click"></i></div><div class="empty__title">Select a role to edit its permissions.</div><div class="empty__desc">Pick a role on the left, or create a new one to start from an empty matrix.</div><div class="empty__actions"><button class="btn btn--primary" data-action="open" data-target="new-role-dialog"><i data-lucide="plus"></i>New role</button></div></div></div>
+          <!-- Empty tenant -->
+          <div data-tab-panel="empty" hidden class="card"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="grid-3x3"></i></div><div class="empty__title">No roles defined yet.</div><div class="empty__desc">Built-in roles are seeded when the first member joins. Create a custom role to hand out narrower access.</div><div class="empty__actions"><button class="btn btn--primary" data-action="open" data-target="new-role-dialog"><i data-lucide="plus"></i>New role</button></div></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- New role (replaces window.prompt) -->
+<div class="overlay" id="new-role-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="new-role-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="shield-plus"></i></span><div><div class="dialog__title" id="new-role-title">New role</div><div class="dialog__desc">Starts with an empty matrix unless you copy from an existing role.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Name <span class="req">*</span></label><input class="input" placeholder="e.g. Release manager" autofocus /><div class="hint">Shown in member role selects and the audit ledger.</div></div>
+      <div class="field"><label>Copy permissions from</label><select class="select"><option>Empty matrix (no permissions)</option><option>Owner</option><option>Admin</option><option>Editor</option><option>Viewer</option><option>Release manager</option><option>Auditor</option></select></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create role</button></div>
+  </div>
+</div>
+
+<!-- Duplicate role (replaces window.prompt) -->
+<div class="overlay" id="dup-role-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-labelledby="dup-role-title">
+    <div class="dialog__header"><span class="icon-tile"><i data-lucide="copy"></i></span><div><div class="dialog__title" id="dup-role-title">Duplicate “Release manager”</div><div class="dialog__desc">Copies the description and all 65 matrix cells into a new custom role.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body"><div class="field"><label>Name for the duplicated role <span class="req">*</span></label><input class="input" value="Release manager (copy)" autofocus /></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Duplicate</button></div>
+  </div>
+</div>
+
+<!-- Delete role (replaces window.confirm) -->
+<div class="overlay" id="delete-role-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="del-role-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title" id="del-role-title">Delete the role “Release manager”?</div><div class="dialog__desc">This cannot be undone. Members assigned to it fall back to the tenant default role.</div></div></div>
+    <div class="dialog__body col gap-3">
+      <div class="callout t-xs"><div class="row gap-2"><span class="avatar avatar--xs avatar--c">LT</span><span>Linus Torvalds</span><span class="t-subtle">·</span><span class="avatar avatar--xs avatar--e">MH</span><span>Margaret Hamilton</span></div><div class="mt-1 t-subtle">2 members will be moved to <strong>Viewer</strong> (default role).</div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close"><i data-lucide="trash-2"></i>Delete role</button></div>
+  </div>
+</div>
+
+<!-- Unsaved changes when switching role -->
+<div class="overlay" id="unsaved-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="unsaved-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--warn"><i data-lucide="pencil-line"></i></span><div><div class="dialog__title" id="unsaved-title">Discard unsaved changes?</div><div class="dialog__desc">You changed 3 cells on <strong>Release manager</strong>. Switching to <strong>Auditor</strong> resets the draft.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Keep editing</button><button class="btn btn--danger-soft" data-action="close">Discard</button><button class="btn btn--primary" data-action="close"><i data-lucide="save"></i>Save and switch</button></div>
+  </div>
+</div>
+
+<!-- Saved toast (illustrative) -->
+<div class="overlay" id="saved-toast" data-overlay style="background:transparent;align-items:flex-end;justify-content:flex-end;padding:0 20px 20px 0;pointer-events:none">
+  <div class="toast toast--ok" style="pointer-events:auto"><i data-lucide="circle-check"></i><div><div class="toast-title">Role saved</div><div class="toast-desc">Release manager · 65 cells · takes effect on the next request.</div></div><button class="btn btn--ghost btn--sm" data-action="close">Dismiss</button></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/roles</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/roles/page.tsx</code> (role list aside + matrix editor), the native <code>window.prompt</code>/<code>window.confirm</code> flows.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Role list: built-in first then custom, <code>member_count</code> mono on the right, Built-in / Custom sub-label, selected state; “New role” only when <code>canCreate</code>.</li>
+    <li>Editor: name static for built-in, inline-editable (dashed underline on hover, aria “Role name”) for custom; Built-in/Custom pill; description textarea (aria “Role description”, placeholder “Describe what this role can do…”).</li>
+    <li>Matrix: Resource × View/Create/Edit/Delete/Publish; the same 13 resources and keys (<code>projects … verification_evidence</code>); 24 px square toggle cells with <code>aria-pressed</code> and aria-label “{Resource} {Action}”; on = green filled with white check, off = outlined. Draft is local until Save.</li>
+    <li>Footnote: “Cells map to a central permission guard (e.g. <code>version:publish</code>) …”.</li>
+    <li>Actions: Duplicate (canMutate), Save changes (canMutate), Delete (canDelete &amp;&amp; !is_builtin). Delete hidden for built-in roles.</li>
+    <li>Gates: canMutate = admin or <code>members:edit|create|delete</code>; canCreate = admin or <code>members:create</code>; canDelete = admin or <code>members:delete</code>. Read-only → cells disabled/70 %, inputs disabled, action buttons hidden.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul>
+    <li>Dialogs replace <code>prompt</code>/<code>confirm</code>: New role (name + “Copy permissions from”), Duplicate (prefilled “{name} (copy)”), Delete confirm naming the role and the members that fall back to the default role.</li>
+    <li>Dirty state: honey “Unsaved” badge + honey dot in the list + sticky save bar (Discard / Save); “Discard unsaved changes?” confirm when switching roles (today the draft silently resets).</li>
+    <li>Role filter, role icons, “Grant view on all” / “Clear all” helpers, cells-on counter, keyboard <code>N</code>.</li>
+  </ul>
+  <h4>States</h4>
+  <ul>
+    <li>Loading: skeleton list + skeleton matrix (spinner today). Error: <code>.banner--danger</code> “Failed to load roles” with Retry.</li>
+    <li>Empty: “No roles defined yet.” · No selection: “Select a role to edit its permissions.” · Read-only banner (viewer / no <code>members:*</code>). Preview each via the “Preview state” segmented under the editor (mock-only control).</li>
+  </ul>
+</template>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Two-factor · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: centred auth card on the hex canvas (shared by the auth mockups) */
+  .auth { min-height: 100vh; }
+  .auth-center { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 32px; position: relative; }
+  .auth-center::before { content: ""; position: absolute; width: 520px; height: 520px; left: 50%; top: -220px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--honey) 22%, transparent), transparent); pointer-events: none; }
+  .brand-word { font-size: var(--fs-2xl); font-weight: 700; letter-spacing: -0.03em; }
+  .auth-card { position: relative; width: 100%; max-width: 440px; padding: 32px; border-radius: var(--r-xl); box-shadow: var(--shadow-md); }
+  .auth-title { font-size: var(--fs-2xl); font-weight: 600; letter-spacing: var(--track-tight); line-height: 1.2; }
+  .code-input { font-family: var(--font-mono); font-size: var(--fs-2xl); letter-spacing: .42em; text-align: center; height: 56px; padding-left: 0 !important; }
+  .code-input::placeholder { letter-spacing: .42em; }
+  .auth-states { padding: var(--space-10) var(--page-pad) var(--space-12); max-width: var(--page-max); margin: 0 auto; width: 100%; border-top: 1px solid var(--border); }
+  .auth-states .auth-card { max-width: none; }
+</style>
+</head>
+<body data-shell="auth" data-page="auth/two-factor">
+<main class="page auth hex-bg">
+  <section class="auth-center">
+    <a class="row gap-3 mb-6" href="login.html" style="color:inherit"><span class="brand-mark brand-mark--lg"></span><span class="brand-word">apiome</span></a>
+
+    <div class="card auth-card" data-testid="two-factor-card" id="mfa-card">
+      <!-- Header (per method) -->
+      <div data-tab-panel="totp">
+        <span class="icon-tile icon-tile--lg icon-tile--accent icon-tile--hex"><i data-lucide="shield-check"></i></span>
+        <h1 class="auth-title mt-4">Two-factor authentication</h1>
+        <p class="t-sm t-muted mt-1">Enter the 6-digit code from Authy, Google Authenticator, or another TOTP app.</p>
+      </div>
+      <div data-tab-panel="otp" hidden>
+        <span class="icon-tile icon-tile--lg icon-tile--accent icon-tile--hex"><i data-lucide="mail"></i></span>
+        <h1 class="auth-title mt-4">Check your email</h1>
+        <p class="t-sm t-muted mt-1">We will email a 6-digit code to the address on your account.</p>
+      </div>
+
+      <!-- Method switcher (only when both totp + otp are offered) -->
+      <div class="segmented w-full mt-5" role="tablist" aria-label="Verification method" data-tabs="mfa-card" style="display:flex">
+        <button class="is-active" role="tab" aria-selected="true" data-action="tab" data-target="totp" style="flex:1;justify-content:center"><i data-lucide="shield-check"></i>Authenticator</button>
+        <button role="tab" aria-selected="false" data-action="tab" data-target="otp" style="flex:1;justify-content:center"><i data-lucide="mail"></i>Email code</button>
+      </div>
+
+      <!-- Forms (per method) -->
+      <div data-tab-panel="totp" role="tabpanel">
+        <form class="col gap-4 mt-5" onsubmit="return false">
+          <div class="field">
+            <label for="totp-code">Authentication code</label>
+            <div class="input-wrap"><i data-lucide="key-round" style="left:14px"></i><input id="totp-code" class="input code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" placeholder="000000" autofocus /></div>
+            <div class="hint">Digits only · the button enables once six digits are entered</div>
+          </div>
+          <button class="btn btn--primary btn--lg w-full" type="submit" disabled>Verify and continue</button>
+        </form>
+      </div>
+      <div data-tab-panel="otp" role="tabpanel" hidden>
+        <form class="col gap-4 mt-5" onsubmit="return false">
+          <button class="btn btn--lg w-full" type="button"><i data-lucide="send"></i>Send email code</button>
+          <div class="field">
+            <label for="otp-code">Email code</label>
+            <div class="input-wrap"><i data-lucide="mail" style="left:14px"></i><input id="otp-code" class="input code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" /></div>
+          </div>
+          <button class="btn btn--primary btn--lg w-full" type="submit" disabled>Verify and continue</button>
+        </form>
+      </div>
+
+      <a class="row gap-1 t-sm mt-6" href="login.html" style="justify-content:center"><i data-lucide="arrow-left" style="width:14px;height:14px"></i>Back to sign in</a>
+    </div>
+    <p class="t-xs t-subtle t-center mt-4" style="max-width:40ch">Signed in as <span class="t-600">ada@example.com</span> — this browser can be remembered for ~30 days after a successful code.</p>
+  </section>
+
+  <!-- ===== States ===== -->
+  <section class="auth-states">
+    <div class="section-title"><h2>States</h2><span class="t-muted">Rejected code · email code sent · verifying</span></div>
+    <div class="grid grid-3" style="align-items:start">
+
+      <!-- Error: TOTP rejected -->
+      <div class="card auth-card" aria-label="Rejected code">
+        <div class="t-caps mb-3">Error · code rejected</div>
+        <span class="icon-tile icon-tile--lg icon-tile--accent icon-tile--hex"><i data-lucide="shield-check"></i></span>
+        <h2 class="auth-title mt-4">Two-factor authentication</h2>
+        <p class="t-sm t-muted mt-1">Enter the 6-digit code from Authy, Google Authenticator, or another TOTP app.</p>
+        <div class="banner banner--danger mt-4" role="alert"><i data-lucide="circle-alert"></i><div>That code was not accepted. Check your authenticator app and try again.</div></div>
+        <form class="col gap-4 mt-4" onsubmit="return false">
+          <div class="field is-invalid"><label for="e-code">Authentication code</label><div class="input-wrap"><i data-lucide="key-round" style="left:14px"></i><input id="e-code" class="input code-input" value="418223" /></div></div>
+          <button class="btn btn--primary btn--lg w-full" type="submit">Verify and continue</button>
+        </form>
+        <a class="row gap-1 t-sm mt-6" href="login.html" style="justify-content:center"><i data-lucide="arrow-left" style="width:14px;height:14px"></i>Back to sign in</a>
+        <div class="callout mt-5 t-xs">Local validation before submit: <em>“Enter the 6-digit code from your authenticator app.”</em> · <span class="mono">?error=</span> codes reuse <code>getAuthErrorCopy</code>.</div>
+      </div>
+
+      <!-- Email code sent -->
+      <div class="card auth-card" aria-label="Email code sent">
+        <div class="t-caps mb-3">Email code · sent</div>
+        <span class="icon-tile icon-tile--lg icon-tile--accent icon-tile--hex"><i data-lucide="mail"></i></span>
+        <h2 class="auth-title mt-4">Check your email</h2>
+        <p class="t-sm t-muted mt-1">Enter the 6-digit code we emailed you.</p>
+        <div class="banner banner--ok mt-4" role="status"><i data-lucide="mail-check"></i><div>Code sent to a••@example.com. It expires in 10 minutes.</div></div>
+        <form class="col gap-4 mt-4" onsubmit="return false">
+          <button class="btn btn--lg w-full" type="button"><i data-lucide="refresh-cw"></i>Resend email code</button>
+          <div class="field"><label for="s-code">Email code</label><div class="input-wrap"><i data-lucide="mail" style="left:14px"></i><input id="s-code" class="input code-input" value="7301" placeholder="000000" /></div></div>
+          <button class="btn btn--primary btn--lg w-full" type="submit" disabled>Verify and continue</button>
+        </form>
+        <a class="row gap-1 t-sm mt-6" href="login.html" style="justify-content:center"><i data-lucide="arrow-left" style="width:14px;height:14px"></i>Back to sign in</a>
+        <div class="callout mt-5 t-xs">Send button: “Send email code” → “Sending…” → “Resend email code”. Errors: <em>“Could not send the email code. Try again.”</em>, <em>“That code was not accepted. Request a new email code and try again.”</em></div>
+      </div>
+
+      <!-- Verifying -->
+      <div class="card auth-card" aria-label="Verifying" aria-busy="true">
+        <div class="t-caps mb-3">Verifying</div>
+        <span class="icon-tile icon-tile--lg icon-tile--accent icon-tile--hex"><i data-lucide="shield-check"></i></span>
+        <h2 class="auth-title mt-4">Two-factor authentication</h2>
+        <p class="t-sm t-muted mt-1">Enter the 6-digit code from Authy, Google Authenticator, or another TOTP app.</p>
+        <form class="col gap-4 mt-5" onsubmit="return false">
+          <div class="field"><label for="v-code">Authentication code</label><div class="input-wrap"><i data-lucide="key-round" style="left:14px"></i><input id="v-code" class="input code-input" value="529841" disabled /></div></div>
+          <button class="btn btn--primary btn--lg w-full" type="submit" disabled><span class="spinner" style="border-top-color:var(--ink-fg);border-color:color-mix(in srgb,var(--ink-fg) 30%,transparent);border-top-color:var(--ink-fg)"></span>Verifying…</button>
+        </form>
+        <a class="row gap-1 t-sm mt-6" href="login.html" style="justify-content:center;pointer-events:none;opacity:.6"><i data-lucide="arrow-left" style="width:14px;height:14px"></i>Back to sign in</a>
+        <div class="callout mt-5 t-xs">On success: clears <span class="mono">apiome:2fa-methods</span>, navigates to <span class="mono">apiome:2fa-callbackUrl</span> (default <span class="mono">/ade</span>).</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<template id="notes">
+  <p class="route">/login/2fa</p>
+  <h4>Replaces</h4>
+  <ul><li><code>login/2fa/page.tsx</code>, <code>login/2fa/TwoFactorClient.tsx</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Reached after password sign-in returns <code>twoFactorRedirect</code> (short-lived 2FA cookie, no full session yet).</li>
+    <li>Single centred card: logo → icon tile (ShieldCheck / Mail) → H1 + description → method switcher (<code>role=tablist</code> “Verification method”: Authenticator / Email code, only when both <code>totp</code> and <code>otp</code> are offered via <code>sessionStorage apiome:2fa-methods</code>) → error alert → form → “← Back to sign in” (<code>/login?callbackUrl=…</code>).</li>
+    <li>TOTP: “Authentication code” (mono, tracking, numeric, autofocus, one-time-code, digits-only max 6, placeholder 000000); “Verify and continue” disabled until 6 digits; “Verifying…” while pending.</li>
+    <li>Email OTP: “Check your email” copy before/after send; “Send email code” → “Sending…” → “Resend email code”; “Email code” field; same submit.</li>
+    <li>Switching method clears code + error. Success navigates to the stored callback (default <code>/ade</code>).</li>
+    <li>BETA watermark → honey badge next to the wordmark when <code>NEXT_PUBLIC_BETA_MODE</code>.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>Segmented control instead of underline tabs (fits the card); a success banner after the email code is sent (currently only the description changes).</li><li>Footnote naming the account + trusted-device hint.</li></ul>
+  <h4>States</h4>
+  <ul><li>Rejected code (danger banner + invalid field), email code sent, verifying (disabled + spinner). Local validation copy: “Enter the 6-digit code from your authenticator app.” / “Enter the 6-digit code from your email.”</li></ul>
+</template>
+</body>
+</html>

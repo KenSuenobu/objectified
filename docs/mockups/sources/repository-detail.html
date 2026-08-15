@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>payments-specs · Repositories · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  .fmt { white-space: nowrap; }
+  .table td.t-num { white-space: nowrap; }
+  .refresh-chip { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 8px; border-radius: var(--r-full); font-size: var(--fs-2xs); font-weight: 600; box-shadow: inset 0 0 0 1px var(--border-strong); white-space: nowrap; }
+  .flow-node { fill: var(--bg-surface); stroke: var(--border-strong); }
+  .flow-edge { fill: none; stroke: var(--fg-faint); stroke-width: 1.25; marker-end: url(#arrow); }
+  .flow-text { font-size: 10.5px; fill: var(--fg); font-family: var(--font-mono); }
+  .flow-sub { font-size: 9px; fill: var(--fg-subtle); }
+</style>
+</head>
+<body data-shell="app" data-nav="repositories" data-page="sources/repository-detail" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div class="row-start gap-4 min-w-0">
+          <span class="avatar avatar--xl avatar--hex avatar--a" style="margin-top:22px">PS</span>
+          <div class="min-w-0">
+            <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><a href="repositories.html">Repositories</a><i data-lucide="chevron-right"></i><span>payments-specs</span></div>
+            <h1 class="page-title">payments-specs<span class="badge badge--warn"><i data-lucide="triangle-alert"></i>Warnings</span><span class="badge" data-status="active">Active</span></h1>
+            <p class="page-desc">OpenAPI and AsyncAPI sources for the payments platform; scanned on push.</p>
+            <div class="row wrap gap-2 mt-2"><span class="tag"><i data-lucide="github" style="width:11px;height:11px;margin-right:4px"></i>github.com/acme/payments-specs</span><span class="tag"><i data-lucide="git-branch" style="width:11px;height:11px;margin-right:4px"></i>main</span></div>
+          </div>
+        </div>
+        <div class="page-actions">
+          <select class="select" style="width:130px" aria-label="Branch"><option>main</option><option>develop</option><option>release/2.4</option></select>
+          <button class="btn" data-tip="Rescan runs when scan jobs are wired to the API"><i data-lucide="refresh-cw"></i>Rescan</button>
+        </div>
+      </div>
+      <div class="tabs" data-tabs="tabs" role="tablist" aria-label="Repository sections">
+        <button class="tab" role="tab" data-action="tab" data-target="preview"><i data-lucide="eye"></i>Preview</button>
+        <button class="tab is-active" role="tab" data-action="tab" data-target="files"><i data-lucide="files"></i>Files <span class="count">1,204</span></button>
+        <button class="tab" role="tab" data-action="tab" data-target="filedetail"><i data-lucide="file-code-2"></i>File detail</button>
+        <button class="tab" role="tab" data-action="tab" data-target="specs"><i data-lucide="refresh-cw"></i>Specs</button>
+        <button class="tab" role="tab" data-action="tab" data-target="imports"><i data-lucide="history"></i>Imports</button>
+        <button class="tab" role="tab" data-action="tab" data-target="settings"><i data-lucide="settings-2"></i>Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- KPI row -->
+    <section class="stat-grid stat-grid--5">
+      <div class="stat"><div class="stat__label">Files indexed</div><div class="stat__value">1,204</div></div>
+      <div class="stat" data-tip="Placeholder split: OpenAPI 22 · Arazzo 3 · JSON Schema 16"><div class="stat__label">Importable estimate</div><div class="stat__value">41</div><div class="stat__foot"><span>3.4% of files</span></div></div>
+      <div class="stat"><div class="stat__label">Branches</div><div class="stat__value">3</div><div class="stat__foot"><span>GitHub only</span></div></div>
+      <div class="stat"><div class="stat__label">Imports (30d)</div><div class="stat__value">9</div><div class="stat__foot"><span>4 distinct projects in the last 30 days</span></div></div>
+      <div class="stat"><div class="stat__label">Last scan</div><div class="stat__value">2h<small>ago</small></div><div class="stat__foot"><span class="row gap-1"><span class="dot dot--ok"></span>succeeded</span></div></div>
+    </section>
+
+    <div id="tabs">
+    <!-- ================= Preview ================= -->
+    <section data-tab-panel="preview" role="tabpanel" hidden>
+      <div class="col gap-6">
+        <p class="t-sm t-muted">Snapshot of this repository’s registration, scan posture, and import activity. More detail appears here as scan jobs and import history are exposed through the API.</p>
+        <div class="grid" style="grid-template-columns:2fr 1fr;gap:16px">
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="radar"></i>Recent scans</div><button class="btn btn--sm btn--link">View scan history →</button></div>
+            <div class="divide-y">
+              <div class="list-row"><span class="dot dot--ok"></span><span class="mono t-xs">main</span><span class="t-xs t-subtle ml-auto">2h ago</span></div>
+              <div class="list-row"><span class="dot dot--ok"></span><span class="mono t-xs">main</span><span class="t-xs t-subtle ml-auto">yesterday</span></div>
+              <div class="list-row"><span class="dot dot--danger"></span><span class="mono t-xs">release/2.4</span><span class="t-xs t-subtle ml-auto">2d ago</span></div>
+              <div class="list-row"><span class="dot dot--ok"></span><span class="mono t-xs">main</span><span class="t-xs t-subtle ml-auto">3d ago</span></div>
+            </div>
+            <div class="card__footer"><span class="t-xs t-subtle">Empty: “No recent scans”</span></div>
+          </div>
+          <div class="card">
+            <div class="card__header"><div class="card__title"><i data-lucide="pie-chart"></i>Importable mix</div></div>
+            <div class="card__body col gap-2 t-sm">
+              <div class="row-between"><span class="row gap-2"><span class="fmt fmt--openapi">OpenAPI</span></span><span class="t-num t-600">22</span></div>
+              <div class="row-between"><span class="row gap-2"><span class="fmt fmt--proto" style="background:var(--accent-soft);color:var(--accent-fg)">Arazzo</span></span><span class="t-num t-600">3</span></div>
+              <div class="row-between"><span class="row gap-2"><span class="fmt fmt--jsonschema">JSON Schema</span></span><span class="t-num t-600">16</span></div>
+            </div>
+            <div class="card__footer"><span>Total importable</span><span class="t-600 t-num">41</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__header"><div class="card__title"><i data-lucide="upload"></i>Recent imports from this repo</div><button class="btn btn--sm btn--link" data-action="tab" data-target="imports">See all →</button></div>
+          <table class="table table--dense">
+            <thead><tr><th>File</th><th>Project</th><th>Version</th><th>Imported by</th><th>When</th></tr></thead>
+            <tbody>
+              <tr><td><a class="mono t-xs" href="#" data-action="tab" data-target="filedetail">specs/payments/openapi.yaml</a><div class="cell-sub mono">blob 9f31ac2 · main</div></td><td><a href="../build/versions.html">Payments API</a></td><td class="mono t-xs">v2.4.0</td><td>Ada Lovelace</td><td class="t-muted">2h ago</td></tr>
+              <tr><td><a class="mono t-xs" href="#" data-action="tab" data-target="filedetail">specs/refunds/openapi.yaml</a><div class="cell-sub mono">blob 4be09d1 · main</div></td><td><a href="../build/versions.html">Payments API</a></td><td class="mono t-xs">v2.3.1</td><td>Grace Hopper</td><td class="t-muted">3d ago</td></tr>
+              <tr><td><a class="mono t-xs" href="#" data-action="tab" data-target="filedetail">events/settlement.asyncapi.yaml</a><div class="cell-sub mono">blob 77d0e4a · main</div></td><td><a href="../build/versions.html">Inventory Events</a></td><td class="mono t-xs">v0.7.0</td><td>Linus Torvalds</td><td class="t-muted">6d ago</td></tr>
+            </tbody>
+          </table>
+          <div class="table-foot"><span>3 of 9 imports</span><span class="t-subtle">Empty: “No imports yet. Open the Files tab, select a spec, and complete a catalog import to record activity here.”</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Files ================= -->
+    <section data-tab-panel="files" role="tabpanel">
+      <div class="col gap-4">
+        <!-- Branch bar -->
+        <div class="card" style="padding:10px 14px">
+          <div class="row wrap gap-3">
+            <button class="btn" data-action="open" data-target="branch-menu"><i data-lucide="git-branch"></i>BRANCH main<i data-lucide="chevron-down"></i></button>
+            <span class="t-xs t-muted">Tip commit / age from git is not stored yet; indexed tree uses blob SHAs in the table. · <span class="t-600">1,204 files on main</span></span>
+            <div class="row gap-3 ml-auto">
+              <label class="check t-xs" data-tip="Needs a second branch index"><input type="checkbox"/> Diff vs main</label>
+              <button class="btn btn--sm"><i data-lucide="refresh-cw"></i>Rescan branch</button>
+            </div>
+          </div>
+        </div>
+        <!-- Filter toolbar -->
+        <div class="card" style="padding:12px 14px">
+          <div class="row wrap gap-3">
+            <div class="field" style="width:250px"><label class="t-xs">Importable preset</label><select class="select select--sm"><option>All importable types</option><option>OpenAPI (openapi.*, swagger.*)</option><option>Arazzo</option><option>AsyncAPI</option><option>JSON Schema (*.schema.json, schemas/**)</option><option>GraphQL SDL</option><option>Protobuf (*.proto)</option><option>Avro (*.avsc)</option><option>Postman collection</option><option>SQL DDL (*.sql, *.ddl)</option><option>Custom — specify glob below</option></select></div>
+            <div class="field grow" style="min-width:220px"><label class="t-xs">Glob filter (comma-separated)</label><input class="input input--sm input--mono" placeholder="**/openapi*.yaml, **/arazzo/*.yml" /></div>
+            <div class="field" style="width:180px"><label class="t-xs">Regex (optional)</label><input class="input input--sm input--mono" placeholder="e.g. v\d+\.yaml$" /></div>
+            <div class="row gap-3" style="padding-top:18px">
+              <label class="check t-xs"><input type="checkbox" checked/> Hide non-importable</label>
+              <label class="check t-xs"><input type="checkbox"/> Recurse hidden dirs</label>
+              <label class="check t-xs"><input type="checkbox" checked/> Skip vendored / node_modules</label>
+              <button class="btn btn--sm btn--ghost">Reset</button><button class="btn btn--sm">Apply filter</button>
+            </div>
+          </div>
+        </div>
+        <!-- Table -->
+        <div class="table-wrap">
+          <div class="table-toolbar"><span class="t-sm t-600">41 files match · 41 importable · 2 selected</span><span class="spacer"></span><button class="btn btn--sm btn--primary" data-tip="The import wizard maps one spec at a time — opening specs/payments/openapi.yaml. Re-select the rest afterward."><i data-lucide="upload"></i>Import selected</button><button class="btn btn--sm btn--ghost">Clear</button></div>
+          <table class="table table--dense">
+            <thead><tr><th class="cell-check"><label class="check"><input type="checkbox" aria-label="Select all"/></label></th><th>Path</th><th>Detected kind</th><th title="Rough 0–100 quality score for classified specs. Informational only — it does not gate import or sync.">Quality</th><th>Confidence</th><th class="t-right">Size</th><th>Blob</th><th><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody>
+              <tr class="is-selected">
+                <td class="cell-check"><label class="check"><input type="checkbox" checked data-action="select-row"/></label></td>
+                <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">specs/payments/openapi.yaml</button></td>
+                <td><span class="fmt fmt--openapi">openapi</span></td>
+                <td><span class="badge badge--ok">86</span></td>
+                <td><span class="badge badge--ok">content</span></td>
+                <td class="t-right t-num">64 KB</td><td class="mono t-xs">9f31ac2</td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Row actions" data-action="open" data-target="file-menu"><i data-lucide="ellipsis"></i></button></div></td>
+              </tr>
+              <tr class="is-selected">
+                <td class="cell-check"><label class="check"><input type="checkbox" checked data-action="select-row"/></label></td>
+                <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">specs/refunds/openapi.yaml</button></td>
+                <td><span class="fmt fmt--openapi">openapi</span></td>
+                <td><span class="badge badge--ok">78</span></td>
+                <td><span class="badge badge--outline">filename</span></td>
+                <td class="t-right t-num">38 KB</td><td class="mono t-xs">4be09d1</td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Row actions" data-action="open" data-target="file-menu"><i data-lucide="ellipsis"></i></button></div></td>
+              </tr>
+              <tr>
+                <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+                <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">events/settlement.asyncapi.yaml</button></td>
+                <td><span class="fmt fmt--asyncapi">asyncapi</span></td>
+                <td><span class="badge badge--warn">61</span></td>
+                <td><span class="badge badge--ok">content</span></td>
+                <td class="t-right t-num">21 KB</td><td class="mono t-xs">77d0e4a</td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Row actions" data-action="open" data-target="file-menu"><i data-lucide="ellipsis"></i></button></div></td>
+              </tr>
+              <tr>
+                <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+                <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">schemas/money.schema.json</button></td>
+                <td><span class="fmt fmt--jsonschema">json_schema</span></td>
+                <td><span class="t-faint" title="Not scored — schema fragment">—</span></td>
+                <td><span class="badge badge--outline">filename</span></td>
+                <td class="t-right t-num">4 KB</td><td class="mono t-xs">c2a91e0</td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Row actions" data-action="open" data-target="file-menu"><i data-lucide="ellipsis"></i></button></div></td>
+              </tr>
+              <tr>
+                <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+                <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">workflows/refund-flow.arazzo.yaml</button></td>
+                <td><span class="fmt fmt--proto" style="background:var(--accent-soft);color:var(--accent-fg)">arazzo</span></td>
+                <td><span class="badge badge--ok">74</span></td>
+                <td><span class="badge badge--ok">content</span></td>
+                <td class="t-right t-num">9 KB</td><td class="mono t-xs">0d17f4b</td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Row actions" data-action="open" data-target="file-menu"><i data-lucide="ellipsis"></i></button></div></td>
+              </tr>
+              <tr>
+                <td class="cell-check"><label class="check"><input type="checkbox" data-action="select-row"/></label></td>
+                <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">legacy/billing-v2.swagger.json</button></td>
+                <td><span class="fmt fmt--openapi">swagger</span></td>
+                <td><span class="badge badge--danger">39</span></td>
+                <td><span class="badge badge--ok">content</span></td>
+                <td class="t-right t-num">112 KB</td><td class="mono t-xs">b8e3d99</td>
+                <td><div class="cell-actions"><button class="btn btn--ghost btn--sm btn--icon" aria-label="Row actions" data-action="open" data-target="file-menu"><i data-lucide="ellipsis"></i></button></div></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-foot"><span>Showing 1–6 of 41</span><span class="pager"><button class="btn btn--ghost btn--sm" disabled>Prev</button><button class="btn btn--ghost btn--sm">Next</button></span></div>
+        </div>
+        <div class="callout t-xs">Empty: “No indexed files for this branch yet. Run a successful repository scan, or widen filters (turn off ‘Hide non-importable’, clear regex).” · Deep-link miss toast: “That file is not in the repository index for this branch anymore.” · Loading dims the table + spinner. Text filters debounce 200 ms and reset to page 1.</div>
+      </div>
+    </section>
+
+    <!-- ================= File detail (replaces the browser in place) ================= -->
+    <section data-tab-panel="filedetail" role="tabpanel" hidden>
+      <div class="col gap-4">
+        <div class="row gap-2 t-xs"><button class="btn btn--link btn--sm" data-action="tab" data-target="files">← Back to payments-specs</button><span class="t-subtle mono">specs/payments/openapi.yaml</span></div>
+        <div class="banner banner--ok"><i data-lucide="circle-check"></i><div><div class="banner-title">Ready to import</div><div class="banner-body t-xs">Mapped to Payments API (payments-api). Open Map &amp; import to run the catalog import.</div></div><div class="banner-actions"><button class="btn btn--sm" data-action="open" data-target="map-wizard">Map &amp; import</button></div></div>
+        <div class="card" style="padding:14px 18px">
+          <div class="row wrap gap-3">
+            <span class="icon-tile icon-tile--accent icon-tile--lg"><i data-lucide="file-code-2"></i></span>
+            <div class="grow min-w-0">
+              <div class="t-h4 mono t-truncate">specs/payments/openapi.yaml</div>
+              <div class="row wrap gap-2 mt-1"><span class="fmt fmt--openapi">openapi</span><span class="badge badge--outline">confidence: content</span><span class="t-xs t-subtle mono">64 KB · 9f31ac2 · branch main</span></div>
+            </div>
+            <button class="btn btn--primary" data-action="open" data-target="map-wizard"><i data-lucide="git-pull-request-arrow"></i>Map &amp; import</button>
+          </div>
+          <div class="banner banner--warn mt-3" hidden><i data-lucide="triangle-alert"></i><span>Map &amp; import unavailable — “This file declares OpenAPI 2.x. Only OpenAPI 3.0 and 3.1 are supported for repository map and import.” (also: parse error, or not a supported catalog format.)</span></div>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 2fr;gap:16px">
+          <div class="col gap-4">
+            <div class="card card--pad">
+              <div class="t-h4 mb-3">Detected metadata</div>
+              <dl class="kv t-xs"><dt>Spec</dt><dd>OpenAPI 3.1.0</dd><dt>Title</dt><dd>Payments API</dd><dt>Version</dt><dd class="mono">2.4.0</dd><dt>Endpoints</dt><dd>18 paths · 31 operations</dd><dt>Components</dt><dd>42 schemas · 6 responses</dd><dt>Servers</dt><dd class="mono">https://api.acme.dev/payments</dd><dt>Path</dt><dd class="mono">specs/payments/openapi.yaml</dd><dt>Blob</dt><dd class="mono">9f31ac2</dd></dl>
+              <div class="t-2xs t-subtle mt-2">Truncated note: “File body is truncated; counts below reflect only the loaded portion.” · Amber advisory “No component definitions detected”.</div>
+            </div>
+            <div class="card card--pad">
+              <div class="t-h4 mb-2">Importable verdict</div>
+              <div class="row gap-2 t-sm" style="color:var(--ok-fg)"><i data-lucide="circle-check"></i>Importable — client parse recognised OpenAPI 3.1.</div>
+              <div class="t-xs t-subtle mt-2">Index hint (filename / indexer): openapi · loaded kind: openapi</div>
+              <ul class="t-xs t-muted mt-2" style="padding-left:16px;list-style:disc"><li>Indexed path on branch main</li><li>Structural validation runs on import</li></ul>
+              <div class="t-2xs t-subtle mt-2">Other verdicts: content_unavailable · parse_failed (“Not evaluable as YAML/JSON — fix syntax…”) · not_importable.</div>
+            </div>
+            <div class="card card--pad"><div class="t-h4 mb-2">Suggested target</div><div class="t-xs t-muted">Default project mapping from globs will surface here once repository importer mappings exist.</div></div>
+          </div>
+          <div class="card" style="display:flex;flex-direction:column">
+            <div class="card__header" style="padding:10px 14px">
+              <div class="segmented segmented--sm" data-tabs="fd-tabs">
+                <button class="is-active" data-action="tab" data-target="fd-source"><i data-lucide="code-2"></i>Source</button>
+                <button data-action="tab" data-target="fd-diff"><i data-lucide="diff"></i>Diff vs latest import</button>
+                <button data-action="tab" data-target="fd-viz"><i data-lucide="workflow"></i>Visualize</button>
+                <button data-action="tab" data-target="fd-details"><i data-lucide="layout-list"></i>Details</button>
+              </div>
+              <a class="t-xs" href="#" target="_blank" rel="noopener">View on GitHub <i data-lucide="arrow-up-right" style="display:inline-block;width:11px;height:11px"></i></a>
+            </div>
+            <div id="fd-tabs" style="display:flex;flex-direction:column;flex:1;min-height:0">
+              <div data-tab-panel="fd-source" style="display:flex;flex-direction:column;flex:1;min-height:0">
+                <div class="row gap-2 t-2xs t-subtle" style="padding:6px 14px;border-bottom:1px solid var(--border)"><span>Syntax: yaml · read-only · 1,872 lines · 64 KB</span></div>
+                <div class="code code--dark code--lines" style="flex:1;border-radius:0 0 var(--r-lg) var(--r-lg);min-height:320px"><span><span class="c-k">openapi</span>: <span class="c-s">3.1.0</span></span><span><span class="c-k">info</span>:</span><span>  <span class="c-k">title</span>: <span class="c-s">Payments API</span></span><span>  <span class="c-k">version</span>: <span class="c-s">2.4.0</span></span><span><span class="c-k">servers</span>:</span><span>  - <span class="c-k">url</span>: <span class="c-s">https://api.acme.dev/payments</span></span><span><span class="c-k">paths</span>:</span><span>  <span class="c-s">/payments</span>:</span><span>    <span class="c-k">post</span>:</span><span>      <span class="c-k">operationId</span>: <span class="c-s">createPayment</span></span><span>      <span class="c-k">requestBody</span>:</span><span>        <span class="c-k">$ref</span>: <span class="c-s">'#/components/requestBodies/CreatePayment'</span></span><span>  <span class="c-s">/refunds</span>:</span><span>    <span class="c-k">post</span>:</span><span>      <span class="c-k">operationId</span>: <span class="c-s">create_refund</span></span><span><span class="c-c"># … 1,850 more lines</span></span></div>
+              </div>
+              <div data-tab-panel="fd-diff" hidden><div class="empty" style="padding:48px 24px"><div class="empty__art" style="width:56px;height:56px"><span class="hex"></span><i data-lucide="diff"></i></div><div class="empty__title t-sm">Diff not wired yet</div><div class="empty__desc t-xs">Unified diff vs the last version imported from this path requires import history joined to blob SHAs. Not wired yet.</div></div></div>
+              <div data-tab-panel="fd-viz" hidden>
+                <div class="card__body">
+                  <svg viewBox="0 0 640 260" width="100%" height="260" role="img" aria-label="Schema relationship diagram">
+                    <defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="var(--fg-faint)"/></marker></defs>
+                    <path d="M198 60 C260 60, 280 48, 330 44" class="flow-edge"/>
+                    <path d="M198 70 C270 84, 300 120, 330 128" class="flow-edge"/>
+                    <path d="M470 140 C510 140, 520 100, 540 74" class="flow-edge"/>
+                    <path d="M198 190 C260 190, 290 150, 330 140" class="flow-edge"/>
+                    <g><rect x="60" y="40" width="138" height="44" rx="8" class="flow-node"/><text x="74" y="59" class="flow-text">Payment</text><text x="74" y="74" class="flow-sub">9 properties</text></g>
+                    <g><rect x="60" y="168" width="138" height="44" rx="8" class="flow-node"/><text x="74" y="187" class="flow-text">Refund</text><text x="74" y="202" class="flow-sub">7 properties</text></g>
+                    <g><rect x="330" y="24" width="140" height="44" rx="8" class="flow-node"/><text x="344" y="43" class="flow-text">Money</text><text x="344" y="58" class="flow-sub">3 properties</text></g>
+                    <g><rect x="330" y="112" width="140" height="52" rx="8" class="flow-node" style="stroke:var(--violet)"/><text x="344" y="131" class="flow-text">PaymentMethod</text><text x="344" y="146" class="flow-sub">oneOf · 3 variants</text></g>
+                    <g><rect x="540" y="48" width="90" height="44" rx="8" class="flow-node"/><text x="554" y="67" class="flow-text">Card</text><text x="554" y="82" class="flow-sub">6 properties</text></g>
+                  </svg>
+                  <div class="t-2xs t-subtle">React Flow diagram: nodes = component schemas (“N properties”, allOf/oneOf/anyOf badge), arrows = $ref edges, minimap + controls. States: “Building relationship diagram from this file…” · “No components.schemas or definitions map found in this document, so there is nothing to plot…” · “Spec has validation issues; diagram may be incomplete.”</div>
+                </div>
+              </div>
+              <div data-tab-panel="fd-details" hidden>
+                <div class="card__body col gap-4">
+                  <div class="row gap-2"><span class="t-h4">Specification structure</span><span class="fmt fmt--openapi">OpenAPI</span></div>
+                  <div>
+                    <div class="t-caps mb-1">Classes · 42 rows</div>
+                    <table class="table table--dense"><thead><tr><th class="sortable is-sorted">Name <span class="sort"><i data-lucide="arrow-up"></i></span></th><th class="sortable">Kind</th><th class="sortable">Schema type</th><th class="sortable t-right">Properties</th><th>Description</th></tr></thead><tbody>
+                      <tr><td class="mono t-xs">Payment</td><td>schema</td><td class="mono t-xs">object</td><td class="t-right t-num">9</td><td class="t-muted t-xs">A card payment and its lifecycle state</td></tr>
+                      <tr><td class="mono t-xs">PaymentMethod</td><td>schema</td><td class="mono t-xs">oneOf</td><td class="t-right t-num">3</td><td class="t-muted t-xs">Card, bank or wallet</td></tr>
+                      <tr><td class="mono t-xs">Refund</td><td>schema</td><td class="mono t-xs">object</td><td class="t-right t-num">7</td><td class="t-faint t-xs">—</td></tr>
+                    </tbody></table>
+                  </div>
+                  <div>
+                    <div class="t-caps mb-1">Paths &amp; operations · 31 rows</div>
+                    <table class="table table--dense"><thead><tr><th class="sortable">Location</th><th class="sortable">Verb</th><th class="sortable">Identifier</th><th>Summary</th><th>Tags</th></tr></thead><tbody>
+                      <tr><td class="mono t-xs">/payments</td><td><span class="method method--post">POST</span></td><td class="mono t-xs">createPayment</td><td class="t-muted t-xs">Create a payment</td><td><span class="tag">payments</span></td></tr>
+                      <tr><td class="mono t-xs">/payments/{id}</td><td><span class="method method--get">GET</span></td><td class="mono t-xs">getPayment</td><td class="t-muted t-xs">Fetch one payment</td><td><span class="tag">payments</span></td></tr>
+                      <tr><td class="mono t-xs">/refunds</td><td><span class="method method--post">POST</span></td><td class="mono t-xs">create_refund</td><td class="t-muted t-xs">Create a refund</td><td><span class="tag">refunds</span></td></tr>
+                    </tbody></table>
+                  </div>
+                  <div class="t-2xs t-subtle">Properties table (Name/Context/Type/Required/Format/Default/Description) omitted here for space — same pattern. Headers cycle asc/desc; “N rows · truncated” cap; “Details tables need valid YAML or JSON. {error}”.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout t-xs">Unrecognized files render source-only with the amber note “This file format is not recognized, you are viewing the raw file data.” · Oversized: centred “The contents of this file is too large”.</div>
+      </div>
+    </section>
+
+    <!-- ================= Specs ================= -->
+    <section data-tab-panel="specs" role="tabpanel" hidden>
+      <div class="card">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="refresh-cw"></i>Imported specs</div><div class="t-xs t-muted mt-1">Per-file auto-refresh status, last refresh, and next due.</div></div><button class="btn btn--sm"><i data-lucide="refresh-cw"></i>Refresh now</button></div>
+        <div class="banner banner--ok" style="border-radius:0"><i data-lucide="circle-check"></i><span>Refresh queued for 2 file(s).</span></div>
+        <table class="table table--dense">
+          <thead><tr><th>File</th><th>Status</th><th>Last refreshed</th><th>Next due</th><th><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody>
+            <tr>
+              <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">specs/payments/openapi.yaml</button><div class="cell-sub">Payments API · main</div></td>
+              <td><span class="refresh-chip" style="color:var(--ok-fg)"><span class="dot dot--ok"></span>Up to date</span></td>
+              <td class="t-muted">2h ago</td><td class="t-muted">in 4h</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm">Refresh</button></div></td>
+            </tr>
+            <tr>
+              <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">specs/refunds/openapi.yaml</button><div class="cell-sub">Payments API · main</div></td>
+              <td><span class="refresh-chip" style="color:var(--warn-fg)" title="A newer source commit with changed content is available to import."><span class="dot dot--warn"></span>Stale</span></td>
+              <td class="t-muted">3d ago</td><td class="t-600">Due now</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm">Refresh</button></div></td>
+            </tr>
+            <tr style="background:color-mix(in srgb, var(--violet) 6%, transparent)">
+              <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">events/settlement.asyncapi.yaml</button><div class="cell-sub">Inventory Events · main · <span class="badge badge--warn" title="Imported before spec capture — refresh comparisons start from the next import">Imported before spec capture</span></div></td>
+              <td><span class="refresh-chip" style="color:var(--violet-fg)" title="The imported version was edited after import; auto-refresh is held until resolved."><span class="dot dot--violet"></span>Diverged</span> <a class="t-xs" href="#" data-action="tab" data-target="settings">Review divergence</a></td>
+              <td class="t-muted">6d ago</td><td class="t-muted">Paused</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm">Refresh</button></div></td>
+            </tr>
+            <tr>
+              <td><button class="mono t-xs t-accent" data-action="tab" data-target="filedetail">workflows/refund-flow.arazzo.yaml</button><div class="cell-sub">Payments API · main</div></td>
+              <td><span class="refresh-chip" style="color:var(--danger-fg)"><span class="dot dot--danger"></span>Failed</span></td>
+              <td class="t-muted">1d ago</td><td class="t-muted">in 2h</td>
+              <td><div class="cell-actions"><button class="btn btn--ghost btn--sm">Refresh</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-foot"><span>4 imported specs</span><span class="t-subtle">All refresh buttons disable while one is in flight. Also: “Already up to date — nothing to refresh.” · Empty: “No imported specs yet. Open the Files tab, import a specification, and its refresh status will appear here.”</span></div>
+      </div>
+    </section>
+
+    <!-- ================= Imports ================= -->
+    <section data-tab-panel="imports" role="tabpanel" hidden>
+      <div class="card">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="history"></i>Import history</div><div class="t-xs t-muted mt-1">Successful catalog imports from this repository’s files.</div></div></div>
+        <table class="table table--dense">
+          <thead><tr><th>When</th><th>File</th><th>Blob</th><th>Project · version</th><th>Outcome</th><th>By</th></tr></thead>
+          <tbody>
+            <tr><td class="t-num t-muted">08/15/26 09:12 AM</td><td class="mono t-xs">specs/payments/openapi.yaml</td><td class="mono t-xs">9f31ac2</td><td><a href="../build/versions.html">Payments API</a> <span class="mono t-xs">v2.4.0</span></td><td><span class="badge" data-status="completed">Completed</span></td><td>Ada Lovelace</td></tr>
+            <tr><td class="t-num t-muted">08/12/26 04:40 PM</td><td class="mono t-xs">specs/refunds/openapi.yaml</td><td class="mono t-xs">4be09d1</td><td><a href="../build/versions.html">Payments API</a> <span class="mono t-xs">v2.3.1</span></td><td><span class="badge" data-status="completed">Completed</span></td><td>Grace Hopper</td></tr>
+            <tr><td class="t-num t-muted">08/09/26 11:03 AM</td><td class="mono t-xs">events/settlement.asyncapi.yaml</td><td class="mono t-xs">77d0e4a</td><td><a href="../build/versions.html">Inventory Events</a> <span class="mono t-xs">v0.7.0</span></td><td><span class="badge" data-status="completed">Completed</span></td><td>Linus Torvalds</td></tr>
+          </tbody>
+        </table>
+        <div class="table-foot"><span>3 of 9 imports</span><span class="t-subtle">Empty: “No imports recorded yet. Use the Files tab to open a specification and run an import.”</span></div>
+      </div>
+    </section>
+
+    <!-- ================= Settings ================= -->
+    <section data-tab-panel="settings" role="tabpanel" hidden>
+      <div class="col gap-6" style="max-width:920px">
+        <div class="card card--pad">
+          <div class="t-h4 mb-3">Source</div>
+          <dl class="kv t-sm">
+            <dt>Provider</dt><dd class="row gap-2"><i data-lucide="github"></i>GitHub <span class="t-subtle">(linked account)</span></dd>
+            <dt>Clone URL</dt><dd class="row gap-2"><span class="mono t-xs">https://github.com/acme/payments-specs.git</span><a class="t-xs" href="#" target="_blank" rel="noopener">Open in browser →</a></dd>
+            <dt>Default branch</dt><dd><input class="input input--sm input--mono" value="main" readonly style="width:160px"/></dd>
+            <dt>Subpath glob (optional)</dt><dd><input class="input input--sm input--mono" placeholder="e.g. specs/**" disabled style="width:240px"/><div class="hint mt-1">Not stored on tenant_repositories yet — coming with scan-settings.</div></dd>
+          </dl>
+        </div>
+        <div class="card card--pad">
+          <div class="t-h4 mb-3">Scan cadence</div>
+          <div class="switch-row" style="padding-top:0"><div><div class="sw-title">Auto-refresh <span class="badge badge--ok" style="margin-left:6px">Enabled</span></div><div class="sw-desc">When on, this repository is rescanned on its cadence and changed files are re-imported automatically. Turn it off to pause auto-refresh for this repo. Manual “Refresh now” is unaffected.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+          <fieldset disabled style="border:0;padding:0;margin:0;opacity:.6">
+            <div class="grid grid-2 mt-3"><div class="field"><label>Schedule</label><input class="input input--sm" value="Not configured" /></div><div class="field"><label>Webhook</label><input class="input input--sm" value="Inactive — delivery logs will mirror webhook worker tables when added." /></div></div>
+          </fieldset>
+        </div>
+        <div class="card card--pad">
+          <div class="t-h4 mb-1">Refresh conflicts</div>
+          <div class="t-xs t-muted mb-3">When auto-refresh re-imports a file whose version was edited in Apiome after the original import, this decides what happens. <span class="t-600">Hold for review</span> applies to every file in this repository, except 1 file has its own policy.</div>
+          <div class="col gap-2" role="radiogroup" aria-label="Repository policy">
+            <label class="radio row-start gap-3 card card--flat" style="padding:10px 12px;box-shadow:0 0 0 2px var(--accent) inset"><input type="radio" name="policy" checked/><div><div class="t-sm t-600 row gap-2">Hold for review <span class="badge badge--ok">recommended</span></div><div class="t-xs t-muted">The refresh is skipped and the file is flagged as diverged. Nothing is overwritten until someone resolves it.</div></div></label>
+            <label class="radio row-start gap-3 card card--flat" style="padding:10px 12px"><input type="radio" name="policy"/><div><div class="t-sm t-600 row gap-2">Overwrite <span class="badge badge--warn">destructive</span></div><div class="t-xs t-muted">The refresh wins: the repository version replaces the edits made in Apiome. The divergence is still recorded.</div></div></label>
+            <label class="radio row-start gap-3 card card--flat" style="padding:10px 12px"><input type="radio" name="policy"/><div><div class="t-sm t-600">New branch</div><div class="t-xs t-muted">The current version is left untouched and the refresh lands on a new branch of the version history.</div></div></label>
+          </div>
+          <div class="t-caps mt-4 mb-2">Per-file overrides</div>
+          <div class="list-row card card--flat" style="border-radius:var(--r-md)"><span class="mono t-xs">events/settlement.asyncapi.yaml</span><span class="t-xs t-subtle">main · Overwrite</span><button class="btn btn--ghost btn--sm ml-auto">Clear</button></div>
+          <div class="row wrap gap-2 mt-3">
+            <div class="field" style="width:140px"><label class="t-xs">Branch</label><input class="input input--sm input--mono" value="main" /></div>
+            <div class="field grow" style="min-width:200px"><label class="t-xs">File path</label><input class="input input--sm input--mono" placeholder="specs/petstore.yaml" /></div>
+            <div class="field" style="width:160px"><label class="t-xs">Policy</label><select class="select select--sm"><option>Hold for review</option><option>Overwrite</option><option>New branch</option></select></div>
+            <button class="btn btn--sm" style="margin-top:18px">Save file override</button>
+          </div>
+          <div class="t-2xs t-subtle mt-2">Errors/toasts kept: “A branch and a file path are required.” · “Override saved for {path}.” · “{path} now follows the repository.” · ‘Conflict policy set to “X”.’ · Loading “Loading conflict policy…” · error + Retry.</div>
+        </div>
+        <div class="card card--pad">
+          <div class="t-h4 mb-3">Default importer mappings</div>
+          <table class="table table--dense"><thead><tr><th>Path glob</th><th>Detected kind</th><th>Default project</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody><tr><td class="t-faint" colspan="4" style="text-align:center">No mappings saved for this repository yet.</td></tr></tbody></table>
+          <button class="btn btn--sm mt-3" disabled>Add mapping</button>
+        </div>
+        <div class="card card--pad" style="box-shadow:0 0 0 1px var(--danger) inset, var(--shadow-sm)">
+          <div class="t-h4 mb-1" style="color:var(--danger-fg)">Danger zone</div>
+          <div class="row-between wrap gap-3"><div class="t-xs t-muted" style="max-width:56ch">Removes this repository from the tenant list (soft-delete). You can register the same clone URL again later if needed.</div><button class="btn btn--danger" data-action="open" data-target="remove-dialog"><i data-lucide="trash-2"></i>Remove repository</button></div>
+        </div>
+      </div>
+    </section>
+    </div>
+  </div>
+</main>
+
+<!-- ===== Overlays ===== -->
+<!-- Branch popover -->
+<div class="overlay" id="branch-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-start;padding:330px 0 0 320px">
+  <div class="menu" style="width:300px">
+    <div style="padding:4px 6px 6px"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Switch branch or tag…" /></div></div>
+    <div style="padding:0 6px 6px"><div class="segmented segmented--sm w-full"><button class="is-active grow">Branches 3</button><button class="grow" disabled title="Tag-scoped indexes are not available yet.">Tags</button></div></div>
+    <a class="menu__item" href="#"><i data-lucide="check" style="color:var(--accent)"></i><span class="mono">main</span><span class="badge badge--outline" style="margin-left:auto">default</span></a>
+    <a class="menu__item" href="#"><span style="width:15px"></span><span class="mono">develop</span></a>
+    <a class="menu__item" href="#"><span style="width:15px"></span><span class="mono">release/2.4</span></a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#"><i data-lucide="git-compare"></i>Compare branches</a>
+    <a class="menu__item" href="#"><i data-lucide="refresh-cw"></i>Refresh from remote</a>
+  </div>
+</div>
+<!-- File row menu -->
+<div class="overlay" id="file-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:420px 70px 0 0">
+  <div class="menu" role="menu" style="width:220px">
+    <a class="menu__item" href="#" data-action="tab" data-target="filedetail"><i data-lucide="file-search"></i>View details</a>
+    <a class="menu__item" href="#" data-action="open" data-target="map-wizard"><i data-lucide="upload"></i>Import…</a>
+    <a class="menu__item" href="#" target="_blank" rel="noopener"><i data-lucide="github"></i>Open on provider</a>
+    <a class="menu__item" href="#"><i data-lucide="copy"></i>Copy path</a>
+  </div>
+</div>
+<!-- Remove confirm -->
+<div class="overlay" id="remove-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="rm-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="trash-2"></i></span><div><div class="dialog__title" id="rm-title">Remove repository?</div><div class="dialog__desc">Remove “payments-specs” from this workspace? You can add it again later from Repositories → Add repository.</div></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove repository</button></div>
+  </div>
+</div>
+
+<!-- ===== Map & import wizard (overlay) ===== -->
+<div class="overlay" id="map-wizard" data-overlay>
+  <div class="dialog dialog--full" role="dialog" aria-labelledby="mw-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="git-pull-request-arrow"></i></span>
+      <div class="grow"><div class="dialog__title" id="mw-title">Map &amp; import<span class="badge badge--ok" style="margin-left:8px">Ready to import</span></div><div class="dialog__desc">Choose how <span class="mono">specs/payments/openapi.yaml</span> from <span class="mono">acme/payments-specs@9f31ac2</span> should land in the catalog.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="grid" style="grid-template-columns:2fr 1fr;gap:20px">
+        <div class="col gap-4">
+          <div class="card card--flat card--pad">
+            <div class="t-h4 mb-2">Target project</div>
+            <div class="row-start gap-3 card card--flat" style="padding:12px;box-shadow:0 0 0 2px var(--accent) inset"><label class="radio" style="margin-top:2px"><input type="radio" name="target" checked/><span class="sr-only">Existing project</span></label><div class="grow"><div class="t-sm t-600 row gap-2"><i data-lucide="folder-open"></i>Existing project</div><div class="t-xs t-muted mt-1">Suggested mapping rule: <span class="mono">specs/payments/** → Payments API</span>. Pick a catalog project before importing; nothing is saved until you click Import.</div>
+              <div class="grid grid-2 mt-3"><div class="field"><label>Map to existing project</label><select class="select"><option>Payments API — payments-api</option><option>Orders Service — orders-service</option><option>Inventory Events — inventory-events</option></select></div><div class="field"><label>Project slug</label><input class="input input--mono" value="payments-api" readonly /></div></div>
+              <button class="btn btn--link btn--sm mt-2">Clear selection</button></div></div>
+            <div class="row-start gap-3 card card--flat mt-2" style="padding:12px"><label class="radio" style="margin-top:2px"><input type="radio" name="target"/><span class="sr-only">Create a new project</span></label><div class="grow"><div class="t-sm t-600 row gap-2"><i data-lucide="folder-plus"></i>Create a new project</div><div class="t-xs t-muted mt-1">Set up the project this file should create, then import into it.</div><button class="btn btn--sm mt-2" data-action="open" data-target="new-project-dialog">Set up new project…</button><div class="row gap-2 mt-2 t-xs" style="color:var(--ok-fg)"><i data-lucide="circle-check" style="width:13px;height:13px"></i>Mapped: Payments Sandbox (payments-sandbox) <button class="btn btn--link btn--sm">Edit mapping</button><button class="btn btn--link btn--sm">Clear mapping</button></div></div></div>
+            <div class="t-2xs t-subtle mt-2">Empty projects list: “No projects in this workspace yet. Create one under Projects, or choose ‘Create a new project’ above.”</div>
+          </div>
+          <div class="card card--flat card--pad">
+            <div class="t-h4 mb-2">Version to create</div>
+            <div class="grid grid-3 t-sm"><div><div class="t-caps">From spec</div><div class="mono mt-1">2.4.0</div></div><div><div class="t-caps">Latest existing</div><div class="mono mt-1">v2.3.1</div></div><div><div class="t-caps">Will create</div><div class="mono mt-1">v2.4.0 (from spec)</div></div></div>
+            <div class="row gap-4 mt-3"><label class="check t-xs"><input type="checkbox" checked/> Mark as draft (don’t promote)</label><label class="check t-xs"><input type="checkbox"/> Auto-link to next branch import on this file path</label></div>
+            <div class="t-2xs t-subtle mt-1">No spec version variant: “v… (set info.version in the spec)”.</div>
+          </div>
+          <div class="card card--flat card--pad">
+            <div class="t-h4 mb-1">Import options</div>
+            <div class="t-xs t-muted mb-3">Saved with the import and replayed when the file is auto-refreshed.</div>
+            <label class="check t-sm mb-2"><input type="checkbox" checked/> Apply naming convention</label>
+            <div class="grid grid-2"><div class="field"><label>Classes convention</label><select class="select select--sm"><option>PascalCase</option><option>camelCase</option><option>snake_case</option><option>kebab-case</option><option>None (keep original)</option></select></div><div class="field"><label>Properties convention</label><select class="select select--sm"><option>camelCase</option><option>PascalCase</option><option>snake_case</option><option>kebab-case</option><option>None (keep original)</option></select></div></div>
+            <div class="grid grid-2 mt-3"><div class="field"><label>Class name prefix</label><input class="input input--sm" placeholder="e.g. Pay" /></div><div class="field"><label>Class name suffix</label><input class="input input--sm" placeholder="e.g. Dto" /></div></div>
+            <div class="row wrap gap-4 mt-3"><label class="check t-xs"><input type="checkbox"/> Generate examples</label><label class="check t-xs"><input type="checkbox"/> Dry run (preview only)</label><label class="check t-xs"><input type="checkbox" checked/> Incremental mode (skip failures)</label></div>
+            <div class="t-2xs t-subtle mt-2">Fallback: “Load an importable spec (OpenAPI, Swagger, JSON Schema, Arazzo, GraphQL SDL) to adjust import options.”</div>
+          </div>
+          <div class="card card--flat card--pad">
+            <div class="t-h4 mb-2">Diff vs current Payments API</div>
+            <div class="grid grid-3"><div class="tile t-center"><div class="tv t-faint">—</div><div class="t-xs t-subtle">added</div></div><div class="tile t-center"><div class="tv t-faint">—</div><div class="t-xs t-subtle">modified</div></div><div class="tile t-center"><div class="tv t-faint">—</div><div class="t-xs t-subtle">removed</div></div></div>
+          </div>
+        </div>
+        <div class="col gap-4">
+          <div class="card card--soft card--pad">
+            <div class="t-caps mb-2">Source</div>
+            <dl class="kv kv--stack t-xs"><dt>Repository</dt><dd class="mono">acme/payments-specs</dd><dt>Branch</dt><dd class="mono">main</dd><dt>Path</dt><dd class="mono">specs/payments/openapi.yaml</dd><dt>Commit</dt><dd class="mono">9f31ac2</dd></dl>
+          </div>
+          <div class="banner"><i data-lucide="info"></i><span class="t-xs">On import, Apiome will record a row in <span class="mono">repository_imports</span> and link the new project version’s <span class="mono">source_ref</span> back to <span class="mono">acme/payments-specs@9f31ac2:specs/payments/openapi.yaml</span>.</span></div>
+          <button class="btn btn--primary btn--lg w-full" data-action="tab" data-target="mw-exec"><i data-lucide="upload"></i>Import as v2.4.0</button>
+          <button class="btn w-full" data-action="close">Cancel</button>
+          <div class="t-xs t-subtle">Ready to import into Payments API (payments-api). Other helper lines: “Select an existing project in the dropdown to enable import.” · “Import will create {name} ({slug}).”</div>
+          <!-- Import phases -->
+          <div class="card card--flat" data-tabs="mw-phases" id="mw-phases">
+            <div class="card__header" style="padding:10px 14px"><div class="card__title">Catalog import</div><span class="t-2xs t-subtle">Same import job engine as Projects → Import</span></div>
+            <div class="card__body col gap-2 t-xs" data-tab-panel="mw-exec">
+              <div class="row gap-2"><span class="spinner"></span><span class="t-600">Importing…</span><span class="t-subtle">step 3 of 5 — classes</span></div>
+              <div class="progress progress--striped"><span style="width:62%"></span></div>
+              <div class="mono t-2xs t-subtle">Created class Payment · Created class Refund · Generating properties…</div>
+              <div class="row gap-2 mt-1"><span class="badge" data-status="completed">summary</span><span>Import summary + “Back to mapping” / “Back to file” follow on completion.</span></div>
+              <div class="t-2xs t-subtle">Toasts: ‘Created project “X”. Starting import…’ · “Import failed to start” · “This format is not available for catalog import: …”.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create New Project dialog (from wizard) -->
+<div class="overlay" id="new-project-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-labelledby="np-title">
+    <div class="dialog__header"><span class="icon-tile icon-tile--honey"><i data-lucide="folder-plus"></i></span><div><div class="dialog__title" id="np-title">Create new project</div><div class="dialog__desc">Same manual form as Projects → New project. Fill from scratch, copy fields from this specification, or clear and start over.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-3" style="border-bottom:1px solid var(--border)" data-tabs="np-tabs"><button class="tab is-active" data-action="tab" data-target="np-form">Form</button><button class="tab" data-action="tab" data-target="np-meta">Metadata</button></div>
+      <div id="np-tabs">
+        <div data-tab-panel="np-form">
+          <div class="row gap-2 mb-3"><button class="btn btn--sm"><i data-lucide="clipboard-copy"></i>Copy from specification</button><button class="btn btn--sm btn--ghost">Clear form</button></div>
+          <div class="grid grid-2 gap-4">
+            <div class="field"><label>Project name <span class="req">*</span></label><input class="input" value="Payments Sandbox" /></div>
+            <div class="field"><label>Slug <span class="req">*</span></label><input class="input input--mono" value="payments-sandbox" /></div>
+            <div class="field span-2"><label>Description</label><textarea class="textarea" style="min-height:60px">Sandbox copy of the payments spec for partner testing.</textarea></div>
+            <div class="field"><label>Summary</label><input class="input" placeholder="One line shown in Browse" /></div>
+            <div class="field"><label>Terms of service URL</label><input class="input" placeholder="https://example.com/terms" /></div>
+            <div class="field"><label>Contact name</label><input class="input" /></div>
+            <div class="field"><label>Contact email</label><input class="input" placeholder="api@acme.dev" /></div>
+            <div class="field"><label>License (SPDX)</label><select class="select"><option>Apache License 2.0 (Apache-2.0)</option><option>MIT License (MIT)</option></select></div>
+            <div class="field"><label>Domain category</label><select class="select"><option>Finance</option><option>E-commerce</option><option>None</option></select></div>
+          </div>
+        </div>
+        <div data-tab-panel="np-meta" hidden>
+          <div class="banner mb-3"><i data-lucide="info"></i><span class="t-xs">This is a read-only view used only for reference while filling the form.</span></div>
+          <div class="t-caps mb-1">Detected summary</div>
+          <p class="t-sm t-muted mb-3">Payments API 2.4.0 — 18 paths, 42 schemas, 1 server.</p>
+          <div class="t-caps mb-1">Original metadata (info)</div>
+          <div class="code" style="max-height:160px">{
+  "title": "Payments API",
+  "version": "2.4.0",
+  "contact": { "email": "payments@acme.dev" },
+  "license": { "name": "Apache 2.0" }
+}</div>
+          <div class="t-2xs t-subtle mt-2">Also shown: “Spec context” JSON · “Original externalDocs” · GraphQL note when SDL.</div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Errors: “Project name is required.” / “Project slug is required.”</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Map to this project</button></div>
+  </div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/repositories/[id] → /[id]/preview (+ ?tab=, ?path=&amp;branch= deep links)</p>
+  <h4>Replaces</h4>
+  <ul><li><code>RepositoryDetailClient</code>, <code>RepositoryFilesBrowser</code>, <code>RepositoryFileDetail</code>, <code>RepositoryFileImportMapping</code> (+ Create New Project dialog, <code>RepositoryImportSpecMetadataPanel</code>, shared <code>ImportOptionsForm</code>/<code>ImportExecutionPanel</code>/<code>ImportCompletePanel</code>), <code>RepositorySpecsTab</code>, <code>RepositoryConflictPolicy</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: back link, gradient tile, health badge + status pill (Active/Scanning/Pending/Error/Archived) + provider slug chip + branch chip, description or fallback; Rescan (disabled while scanning, stub toast) + branch select. KPI row: Files indexed · Importable estimate (placeholder-split tooltip) · Branches (GitHub only) · Imports (30d) + distinct projects · Last scan; spinners while scanning; 2 s polling; imports refetch on focus.</li>
+    <li>Preview: intro copy, Recent scans (dot/branch/relative, “View scan history →” stub), Importable mix (placeholder split + total), Recent imports table (path deep link, blob·branch, project link, ≤8 rows, “See all →”).</li>
+    <li>Files: branch popover (search, Branches N / Tags disabled with title, default tag, Compare branches / Refresh from remote stubs), tip-commit note, “N files on branch”, Diff vs default checkbox (disabled &lt;2 branches), Rescan branch; filter toolbar (importable presets verbatim, glob ↔ regex exclusivity, three checkboxes, Reset/Apply, 200 ms debounce → page 1); table (select-all indeterminate, path button, kind pill, quality badge with header tooltip verbatim, confidence filename/other, size, 7-char blob, row menu View details / Import… / Open on provider / Copy path); “Import selected” one-at-a-time toast; 50/page pager.</li>
+    <li>File detail: breadcrumb, Ready-to-import banner when a staged mapping matches the blob, header (kind + confidence pills, size·sha·branch, Map &amp; import + unavailable reasons verbatim); left column Detected metadata / Importable verdict / Suggested target (placeholder copy); right Source (syntax bar, read-only viewer, truncation notice) / Diff (placeholder verbatim) / Visualize (schema relationship diagram + empty/incomplete copy) / Details (Classes · Properties · Paths &amp; operations sortable tables); “View on GitHub” or unavailable note; source-only rendering for unrecognized/oversized files.</li>
+    <li>Map &amp; import: Existing project radio (suggested mapping rule, project select + read-only slug, Clear selection, empty copy) / Create new project (Set up new project… dialog with Form/Metadata tabs, Copy from specification / Clear form, full manual form, staged “Mapped: …” + Edit/Clear); Version to create (From spec / Latest existing / Will create + draft + auto-link checkboxes); Import options (naming conventions, prefix/suffix, Generate examples, Dry run, Incremental); Diff placeholder tiles; Source facts + repository_imports note; Import as vX / Cancel + helper lines; executing (ImportExecutionPanel) and summary phases; all toasts.</li>
+    <li>Specs: “Refresh now”, refresh chips (Up to date / Stale / Refreshing / Failed / Diverged with title text; diverged rows purple + “Review divergence”), “Imported before spec capture” pill, Next due (Paused / Due now / in Nm|h|d), per-row Refresh, notice bar variants, empty/loading/error.</li>
+    <li>Imports: When · File · blob · Project · version · Outcome (“Completed”) · By + empty copy. Settings: Source card (provider, clone URL + open, read-only default branch, disabled subpath glob + note), Scan cadence (auto-refresh switch + optimistic toasts, disabled Schedule/Webhook fieldset), Refresh conflicts (three policies with verbatim descriptions, per-file overrides list + add form + all toasts), Default importer mappings (empty + disabled Add mapping), Danger zone + Remove dialog verbatim.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>File detail is a peer tab (in the app it replaces the browser in place — same content); Map &amp; import is an overlay wizard with the import phases inline.</li></ul>
+  <h4>States</h4>
+  <ul><li>“Loading repository…” · error card “Repository unavailable” + Back to list · files empty/deep-link-miss · no-tenant lock card.</li></ul>
+</template>
+<script>
+(function () {
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-action="tab"]'); if (!t) return;
+    var group = t.closest('[data-tabs]');
+    var id = t.getAttribute('data-target');
+    if (!group || (group.getAttribute('data-tabs') === 'tabs' && !t.closest('.tabs'))) group = document.querySelector('[data-tabs="tabs"]');
+    if (!group) return;
+    e.preventDefault(); e.stopPropagation();
+    var scope = document.getElementById(group.getAttribute('data-tabs')); if (!id || !scope) return;
+    // if the target panel is not in this group's scope, fall back to the main tabs group
+    if (!scope.querySelector('[data-tab-panel="' + id + '"]')) { group = document.querySelector('[data-tabs="tabs"]'); scope = document.getElementById('tabs'); }
+    if (!scope || !scope.querySelector('[data-tab-panel="' + id + '"]')) return;
+    group.querySelectorAll(':scope .tab, :scope > .segmented > button, .segmented > button').forEach(function (x) { if (x.closest('[data-tabs]') === group) x.classList.remove('is-active'); });
+    var own = group.querySelector('[data-action="tab"][data-target="' + id + '"]'); if (own) own.classList.add('is-active');
+    scope.querySelectorAll('[data-tab-panel]').forEach(function (p) { var anc = p.parentElement.closest('[data-tab-panel]'); if (anc && scope.contains(anc)) return; p.hidden = p.getAttribute('data-tab-panel') !== id; });
+    if (group.getAttribute('data-tabs') === 'tabs') window.scrollTo({ top: 0 });
+    var ov = t.closest('.overlay'); if (ov && !ov.querySelector('[data-tab-panel="' + id + '"]')) ov.classList.remove('is-open');
+    if (window.Hive) Hive.icons();
+  }, true);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Studio editor · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local: studio workspace + schema canvas (token-based) */
+  .topbar--grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; }
+  .topbar--grid .topbar__center { position: static; transform: none; }
+  .topbar__left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .pv-pill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px 0 6px; border-radius: var(--r-full); background: var(--bg-subtle); box-shadow: 0 0 0 1px var(--border) inset; font-size: var(--fs-sm); white-space: nowrap; }
+  .pv-pill:hover { background: var(--bg-inset); }
+  .pv-pill [data-lucide] { width: 14px; height: 14px; color: var(--fg-subtle); }
+  .sync-chips { display: flex; align-items: center; gap: 4px; }
+  .sync-chips .badge { height: 22px; cursor: default; }
+  .save-state { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-xs); color: var(--fg-subtle); white-space: nowrap; }
+  .save-state [data-lucide] { width: 13px; height: 13px; color: var(--ok); }
+  .workspace__body { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .workspace__body > .banner--bar { grid-row: 1; }
+  .workspace__body > .split { grid-row: 2; }
+  .workspace__body > .status-bar { grid-row: 3; }
+  .status-bar { height: 22px; display: flex; align-items: center; gap: 14px; padding: 0 12px; font-size: var(--fs-2xs); color: var(--fg-subtle); background: var(--bg-surface); border-top: 1px solid var(--border); white-space: nowrap; }
+  .status-bar [data-lucide] { width: 11px; height: 11px; }
+  .status-bar .sb-item { display: inline-flex; align-items: center; gap: 4px; }
+  /* side panel */
+  .side-tabs { display: flex; gap: 2px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .side-tabs .tab { height: 30px; padding: 0 9px; border-radius: var(--r-sm); }
+  .side-tabs .tab.is-active { background: var(--bg-subtle); }
+  .side-tabs .tab.is-active::after { display: none; }
+  .side-tabs .tab [data-lucide] { width: 15px; height: 15px; }
+  .side-search { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .side-foot { display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-top: 1px solid var(--border); }
+  .tree__item .swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .tree__item .acts { margin-left: auto; display: none; gap: 2px; }
+  .tree__item:hover .acts { display: inline-flex; }
+  .tree__item:hover .count { display: none; }
+  .tree__item .btn--sm.btn--icon { width: 22px; height: 22px; }
+  .drag-tile { margin: 8px 10px; padding: 8px 10px; border: 1.5px dashed var(--border-strong); border-radius: var(--r-md); font-size: var(--fs-xs); color: var(--fg-muted); display: flex; align-items: center; gap: 8px; cursor: grab; }
+  /* canvas */
+  .canvas { position: relative; overflow: hidden; background-color: var(--bg-canvas); background-image: radial-gradient(color-mix(in srgb, var(--fg) 16%, transparent) 1px, transparent 1px); background-size: 20px 20px; }
+  .canvas .edges { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .canvas .edges path { fill: none; stroke: var(--accent); stroke-width: 1.75; }
+  .canvas .edges path.e-opt { stroke-dasharray: 5 4; }
+  .canvas .edges path.e-dep { stroke: var(--fg-faint); stroke-dasharray: 3 4; }
+  .canvas .edges path.e-comp { stroke: var(--violet); }
+  .canvas .edges .card-lbl rect { fill: var(--bg-surface); stroke: var(--border-strong); stroke-width: 1; rx: 8; }
+  .canvas .edges .card-lbl text { font: 600 10px var(--font-mono); fill: var(--fg-muted); }
+  .node { position: absolute; width: 210px; background: var(--bg-surface); border-radius: 8px; box-shadow: var(--shadow-sm); font-size: var(--fs-xs); z-index: 2; }
+  .node.is-selected { box-shadow: 0 0 0 2px var(--accent), var(--shadow-md); }
+  .node.is-deprecated { opacity: .7; }
+  .node.is-deprecated .node__title { text-decoration: line-through; }
+  .node.is-warn { box-shadow: 0 0 0 2px var(--warn), var(--shadow-sm); }
+  .node__head { display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 9px; border-top: 3px solid var(--_ac, var(--accent)); border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; }
+  .node__icon { width: 20px; height: 20px; border-radius: 5px; display: grid; place-items: center; background: color-mix(in srgb, var(--_ac, var(--accent)) 14%, transparent); color: var(--_ac, var(--accent)); font-size: 9px; font-weight: 700; }
+  .node__icon [data-lucide] { width: 12px; height: 12px; }
+  .node__title { font-weight: 600; font-size: var(--fs-sm); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .node__badges { display: flex; gap: 3px; }
+  .node__badges .badge { height: 16px; padding: 0 5px; font-size: 9px; }
+  .node__desc { height: 26px; display: flex; align-items: center; padding: 0 9px; color: var(--fg-muted); border-bottom: 1px solid var(--border); font-size: 11px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .node__desc.is-empty { font-style: italic; color: var(--fg-faint); }
+  .node__prop { display: flex; align-items: center; gap: 5px; height: 27px; padding: 0 9px; position: relative; }
+  .node__prop + .node__prop { border-top: 1px solid var(--border); }
+  .node__prop .pn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .node__prop .tag { margin-left: auto; height: 18px; font-size: 10px; }
+  .node__prop .tag--ref { background: var(--accent-soft); color: var(--accent-fg); }
+  .node__prop .tag--enum { background: var(--violet-soft); color: var(--violet-fg); }
+  .node__prop .tag--comp { background: var(--orange-soft); color: var(--orange-fg); }
+  .node__prop .hd { position: absolute; right: -5px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg-surface); }
+  .node .hd-top { position: absolute; left: 50%; top: -5px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--fg-subtle); box-shadow: 0 0 0 2px var(--bg-surface); }
+  .node .hd-bottom { position: absolute; left: 50%; bottom: -5px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--violet); box-shadow: 0 0 0 2px var(--bg-surface); }
+  .node__hover { position: absolute; right: 0; top: -30px; display: flex; gap: 2px; padding: 2px; background: var(--bg-surface); border-radius: var(--r-sm); box-shadow: var(--shadow-sm); }
+  .node__hover .btn { width: 24px; height: 24px; }
+  .group-frame { position: absolute; border: 1.5px dashed var(--violet); border-radius: 12px; background: color-mix(in srgb, var(--violet) 5%, transparent); z-index: 1; }
+  .group-frame__title { position: absolute; top: -13px; left: 12px; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: var(--r-full); background: var(--bg-surface); box-shadow: 0 0 0 1px var(--violet) inset; font-size: 11px; font-weight: 600; color: var(--violet-fg); }
+  .group-frame__title [data-lucide] { width: 12px; height: 12px; }
+  .group-frame__foot { position: absolute; left: 12px; bottom: 6px; font-size: 10px; color: var(--violet-fg); opacity: .8; }
+  .group-frame__tools { position: absolute; right: 8px; top: -14px; display: flex; gap: 2px; padding: 2px; background: var(--bg-surface); border-radius: var(--r-sm); box-shadow: var(--shadow-sm); }
+  .group-frame__tools .btn { width: 24px; height: 24px; }
+  .note { position: absolute; width: 190px; padding: 10px 12px; border-radius: 8px; background: var(--honey-soft); color: var(--honey-fg); font-size: 11px; line-height: 1.45; box-shadow: var(--shadow-sm); transform: rotate(-1.2deg); z-index: 2; }
+  .note__head { display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; opacity: .75; margin-bottom: 4px; }
+  .note__head [data-lucide] { width: 11px; height: 11px; }
+  .float { position: absolute; z-index: 5; display: flex; align-items: center; gap: 4px; padding: 4px; background: color-mix(in srgb, var(--bg-surface) 90%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: var(--r-md); box-shadow: var(--shadow-sm); }
+  .float .btn--icon.btn--sm { width: 28px; height: 28px; }
+  .float .sep { width: 1px; height: 18px; background: var(--border-strong); margin: 0 2px; }
+  .float--col { flex-direction: column; }
+  .float--chips { gap: 6px; padding: 0; background: none; box-shadow: none; backdrop-filter: none; }
+  .float--chips .chip { height: 26px; background: color-mix(in srgb, var(--bg-surface) 92%, transparent); backdrop-filter: blur(6px); }
+  .minimap { position: absolute; right: 12px; bottom: 12px; width: 150px; height: 96px; border-radius: 8px; background: color-mix(in srgb, var(--bg-surface) 92%, transparent); box-shadow: var(--shadow-sm); z-index: 5; overflow: hidden; }
+  .minimap i { position: absolute; background: var(--accent); opacity: .55; border-radius: 1px; }
+  .minimap .vp { position: absolute; border: 1.5px solid var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); border-radius: 2px; }
+  .search-rail { width: 360px; }
+  .search-rail .input { height: 30px; }
+  .ro-chip { position: absolute; left: 12px; top: 12px; z-index: 6; }
+  /* inspector */
+  .insp-section { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .insp-section h4 { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: var(--track-caps); color: var(--fg-subtle); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .insp-section h4 .ml-auto { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .prop-row { display: flex; align-items: center; gap: 6px; height: 30px; font-size: var(--fs-xs); }
+  .prop-row + .prop-row { border-top: 1px solid var(--border); }
+  .prop-row .tag { margin-left: auto; }
+  .prop-row .acts { display: none; gap: 2px; }
+  .prop-row:hover .acts { display: inline-flex; }
+  .prop-row:hover .tag { display: none; }
+  /* dialogs */
+  .dlg-split { display: grid; grid-template-columns: 224px minmax(0, 1fr); gap: 20px; min-height: 0; }
+  .dlg-split .vtabs { border-right: 1px solid var(--border); padding-right: 12px; }
+  .dlg-split .vtabs .tab { height: 30px; font-size: var(--fs-xs); }
+  .vtabs .tab .dot { width: 6px; height: 6px; margin-left: auto; }
+  .radio-list { display: flex; flex-direction: column; gap: 8px; }
+  .fab { width: 32px; height: 32px; }
+  .ai-fab { position: fixed; right: 20px; bottom: 64px; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--violet), var(--accent)); color: #fff; box-shadow: var(--shadow-lg); z-index: 40; }
+  .ai-fab [data-lucide] { width: 20px; height: 20px; }
+  .chat-msg { display: flex; gap: 8px; align-items: flex-start; }
+  .chat-msg--user { flex-direction: row-reverse; }
+  .chat-msg .bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; background: var(--bg-subtle); font-size: var(--fs-sm); }
+  .chat-msg--user .bubble { background: var(--accent); color: #fff; }
+  .hist-graph { position: relative; height: 150px; }
+  .rev-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: var(--fs-sm); }
+  .rev-row + .rev-row { border-top: 1px solid var(--border); }
+  .presentation-bar { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; border-radius: var(--r-full); background: var(--fg); color: var(--bg-surface); box-shadow: var(--shadow-lg); font-size: var(--fs-sm); }
+  .presentation-bar .btn { --_bg: rgba(255,255,255,.12); --_fg: inherit; --_bd: transparent; box-shadow: none; }
+  .gallery-card { border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; overflow: hidden; }
+  .gallery-card .thumb { height: 76px; background: var(--bg-inset); display: grid; place-items: center; color: var(--fg-faint); }
+  .swatches { display: grid; grid-template-columns: repeat(8, 20px); gap: 6px; }
+  .swatches span { width: 20px; height: 20px; border-radius: 5px; box-shadow: 0 0 0 1px var(--border-strong) inset; cursor: pointer; }
+</style>
+</head>
+<body data-shell="studio" data-nav="studio" data-page="studio/editor" data-tenant="Acme Corp">
+<main class="page">
+<div class="workspace">
+  <!-- ===== Topbar ===== -->
+  <div class="topbar topbar--grid" role="banner">
+    <div class="topbar__left">
+      <button class="pv-pill" data-action="open" data-target="pv-menu" aria-haspopup="menu" aria-label="Project and version picker">
+        <span class="avatar avatar--xs avatar--hex avatar--a">PA</span><span class="t-600">Payments API</span><i data-lucide="chevron-right"></i><span class="mono">v2.4.0</span><span class="badge badge--dot" data-status="draft">Draft</span><i data-lucide="chevron-down"></i>
+      </button>
+      <div class="sync-chips" aria-label="Sync status">
+        <span class="badge badge--warn" data-tip="Unsaved canvas changes (layout auto-save pending or in progress)."><span class="dot dot--warn" style="width:6px;height:6px"></span>Dirty</span>
+        <span class="badge" data-tip="Revisions you authored between this selection and the latest revision (main lineage)."><i data-lucide="arrow-up"></i>2</span>
+        <span class="badge badge--outline" data-tip="Locked by you · expires 10:31 · 14m 20s left"><i data-lucide="lock"></i>You · 14m</span>
+        <button class="badge badge--outline" data-tip="Show deprecated revision details" aria-label="Show deprecated revision details"><i data-lucide="triangle-alert"></i></button>
+        <button class="badge badge--ok" data-action="open" data-target="quality-dialog" data-tip="Overall schema quality (0–100). Click for weighted breakdown and letter grade."><i data-lucide="gauge"></i>Q 88 · B</button>
+      </div>
+      <span class="save-state" role="status" aria-live="polite"><i data-lucide="check"></i>Saved · 2m ago</span>
+    </div>
+    <div class="topbar__center"><div class="segmented" aria-label="Studio views"><a class="is-active" href="editor.html"><i data-lucide="pen-tool"></i>Editor</a><a href="paths.html"><i data-lucide="route"></i>Paths</a><a href="code.html"><i data-lucide="code-2"></i>Code</a></div></div>
+    <div class="topbar__right">
+      <button class="btn btn--ghost btn--icon" data-action="toggle" data-target="search-rail" data-tip="Search classes (⌘F)" aria-label="Search classes"><i data-lucide="search"></i></button>
+      <button class="btn btn--ghost btn--icon" data-action="open" data-target="git-menu" data-tip="Revision and sync — commit, branch, tag, merge, history (⌘G palette)" aria-label="Git menu"><i data-lucide="git-branch"></i></button>
+      <button class="btn btn--ghost btn--icon" data-action="open" data-target="share-dialog" data-tip="Share canvas link" aria-label="Share"><i data-lucide="share-2"></i></button>
+      <button class="btn btn--sm" data-action="open" data-target="export-wizard"><i data-lucide="image-down"></i>Export canvas</button>
+      <a class="btn btn--sm btn--primary" href="code.html"><i data-lucide="sparkles"></i>Generate</a>
+      <button class="btn btn--ghost btn--icon" data-action="open" data-target="canvas-settings" data-tip="Canvas settings" aria-label="Canvas settings"><i data-lucide="settings-2"></i></button>
+      <button class="avatar avatar--sm avatar--a" data-action="open" data-target="user-menu" aria-label="Account menu for Ada Lovelace">AL</button>
+    </div>
+  </div>
+
+  <div class="workspace__body">
+    <!-- Read-only banner (shown when a published version is selected; toggle it from the picker → v2.3.1) -->
+    <div class="banner banner--warn banner--bar" id="ro-banner" role="status" hidden>
+      <i data-lucide="lock"></i>
+      <span><span class="banner-title">Published version v2.3.1 · read-only</span> — Create a draft to make changes, or switch to an editable version.</span>
+      <span class="banner-actions"><button class="btn btn--sm btn--primary">Create draft</button><button class="btn btn--sm" data-action="open" data-target="pv-menu">Switch version</button><button class="btn btn--sm btn--ghost btn--icon" data-action="toggle" data-target="ro-banner" aria-label="Dismiss"><i data-lucide="x"></i></button></span>
+    </div>
+
+    <div class="split" style="grid-template-columns:280px minmax(0,1fr) 340px">
+      <!-- ===== Left: tree panel ===== -->
+      <aside class="panel" aria-label="Studio sidebar sections">
+        <div class="side-tabs tabs" data-tabs="side-panels" role="tablist">
+          <button class="tab is-active" data-action="tab" data-target="sp-classes" data-tip="Classes"><i data-lucide="boxes"></i></button>
+          <button class="tab" data-action="tab" data-target="sp-props" data-tip="Properties"><i data-lucide="list-tree"></i></button>
+          <button class="tab" data-action="tab" data-target="sp-groups" data-tip="Groups"><i data-lucide="layers"></i></button>
+          <button class="tab" data-action="tab" data-target="sp-refs" data-tip="References"><i data-lucide="link"></i></button>
+          <button class="tab" data-action="tab" data-target="sp-prims" data-tip="Primitives &amp; types"><i data-lucide="shapes"></i></button>
+          <button class="tab" data-action="tab" data-target="sp-flows" data-tip="Workflows (flag: REPO_WORKFLOWS)"><i data-lucide="workflow"></i></button>
+        </div>
+        <div id="side-panels" class="panel__body" style="display:flex;flex-direction:column">
+          <!-- Classes -->
+          <div data-tab-panel="sp-classes" style="display:flex;flex-direction:column;flex:1;min-height:0">
+            <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search classes…" style="padding-left:30px" /></div></div>
+            <div class="row-between" style="padding:8px 12px 2px"><span class="t-caps">Classes · 7</span><span class="t-2xs t-subtle">1 hidden · 1 deprecated</span></div>
+            <div class="tree" style="padding:4px 6px">
+              <div class="tree__item is-active"><i data-lucide="box"></i><span class="grow t-truncate">Payment</span><span class="count">7</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Hide class on canvas"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="class-edit" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-class" data-tip="Delete"><i data-lucide="trash-2"></i></button></span></div>
+              <div class="tree__item"><i data-lucide="box"></i><span class="grow t-truncate">Refund</span><span class="count">5</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Hide class on canvas"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="class-edit" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-class" data-tip="Delete"><i data-lucide="trash-2"></i></button></span></div>
+              <div class="tree__item"><i data-lucide="box"></i><span class="grow t-truncate">LineItem</span><span class="count">4</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Hide class on canvas"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="class-edit" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-class" data-tip="Delete"><i data-lucide="trash-2"></i></button></span></div>
+              <div class="tree__item"><i data-lucide="box"></i><span class="grow t-truncate">Money</span><span class="count">2</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Hide class on canvas"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="class-edit" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-class" data-tip="Delete"><i data-lucide="trash-2"></i></button></span></div>
+              <div class="tree__item"><i data-lucide="box"></i><span class="grow t-truncate">Customer</span><span class="count">4</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Hide class on canvas"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="class-edit" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-class" data-tip="Delete"><i data-lucide="trash-2"></i></button></span></div>
+              <div class="tree__item"><i data-lucide="box"></i><span class="grow t-truncate">PaymentMethod</span><span class="count">4</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Hide class on canvas"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="class-edit" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-class" data-tip="Delete"><i data-lucide="trash-2"></i></button></span></div>
+              <div class="tree__item"><i data-lucide="box"></i><span class="grow t-truncate t-strike" data-tip="Deprecated: use PayoutV2 (sunset 2026-12-01)">Payout</span><i data-lucide="triangle-alert" style="color:var(--warn)" data-tip="This class has properties referencing missing classes"></i><span class="count">4</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Hide class on canvas"><i data-lucide="eye"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="class-edit" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-class" data-tip="Delete"><i data-lucide="trash-2"></i></button></span></div>
+              <div class="tree__item" style="opacity:.6"><i data-lucide="eye-off"></i><span class="grow"><span class="t-truncate">Address</span><div class="t-2xs t-subtle" style="line-height:1">Hidden on canvas</div></span><span class="count">5</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Show class on canvas"><i data-lucide="eye-off"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="class-edit" data-tip="Edit"><i data-lucide="pencil"></i></button></span></div>
+            </div>
+            <div class="empty empty--inline" style="margin:8px 10px;padding:12px;border:1px dashed var(--border-strong);border-radius:var(--r-md)" hidden id="cls-empty"><div class="empty__art"><span class="hex"></span><i data-lucide="box"></i></div><div><div class="empty__title t-sm">No classes yet</div><div class="empty__desc t-xs">Click the + button to add one</div></div></div>
+            <div class="side-foot" style="margin-top:auto">
+              <div class="segmented segmented--sm" aria-label="Density"><button data-tip="Compact"><i data-lucide="rows-4"></i></button><button class="is-active" data-tip="Standard"><i data-lucide="rows-3"></i></button><button data-tip="Comfortable"><i data-lucide="rows-2"></i></button></div>
+              <span class="ml-auto"></span>
+              <button class="btn btn--sm btn--icon fab" data-action="open" data-target="class-import" data-tip="Import classes from file" aria-label="Import classes"><i data-lucide="upload"></i></button>
+              <button class="btn btn--sm btn--icon fab" data-action="open" data-target="tpl-browser" data-tip="Browse class templates" aria-label="Browse class templates"><i data-lucide="layout-template"></i></button>
+              <button class="btn btn--sm btn--icon btn--primary fab" data-action="open" data-target="class-edit" data-tip="Add class" aria-label="Add class"><i data-lucide="plus"></i></button>
+            </div>
+          </div>
+          <!-- Properties -->
+          <div data-tab-panel="sp-props" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+            <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search properties…" style="padding-left:30px" /></div></div>
+            <div class="drag-tile" draggable="true" data-tip="Drag to create a new reference on a class or inside an object"><i data-lucide="link"></i><span><span class="t-600">+ New reference</span> · drag to class</span></div>
+            <div class="row-between" style="padding:4px 12px 2px"><span class="t-caps">Library · 18</span></div>
+            <div class="tree" style="padding:4px 6px">
+              <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span>id</span><div class="t-2xs t-subtle" style="line-height:1">string (uuid)</div></span><span class="tag">string</span></div>
+              <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span>status</span><div class="t-2xs t-subtle" style="line-height:1">string · <span title="Enumeration: pending, authorized, captured, failed">enum</span></div></span><span class="badge badge--violet" style="height:16px;font-size:9px">ENUM</span></div>
+              <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span>createdAt</span><div class="t-2xs t-subtle" style="line-height:1">string (date-time) [nullable]</div></span><span class="tag">string</span></div>
+              <div class="tree__item" draggable="true"><i data-lucide="chevron-right" class="tw"></i><span class="grow"><span>billingAddress</span><div class="t-2xs t-subtle" style="line-height:1">object · 5 nested</div></span><span class="badge" style="height:16px;font-size:9px">5</span></div>
+              <div class="tree__children">
+                <div class="tree__item"><span class="grow t-xs">street <span class="req">*</span> <span class="t-subtle">— string</span></span></div>
+                <div class="tree__item"><span class="grow t-xs">postalCode <span class="t-subtle">— string</span></span></div>
+              </div>
+              <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span class="t-strike" data-tip="Deprecated: replaced by amountMinor">amount</span><div class="t-2xs t-subtle" style="line-height:1">number (double)</div></span><span class="tag">number</span></div>
+              <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span>email</span><div class="t-2xs t-subtle" style="line-height:1">string (email) · maxLength 254</div></span><span class="tag">string</span></div>
+              <div class="tree__item" draggable="true"><i data-lucide="grip-vertical" class="tw"></i><span class="grow"><span>tags</span><div class="t-2xs t-subtle" style="line-height:1">string[] · uniqueItems</div></span><span class="tag">array</span></div>
+            </div>
+            <div class="side-foot" style="margin-top:auto">
+              <div class="segmented segmented--sm" aria-label="Density"><button data-tip="Compact"><i data-lucide="rows-4"></i></button><button class="is-active" data-tip="Standard"><i data-lucide="rows-3"></i></button><button data-tip="Comfortable"><i data-lucide="rows-2"></i></button></div>
+              <span class="ml-auto"></span>
+              <button class="btn btn--sm btn--icon fab" data-action="open" data-target="tpl-browser" data-tip="Browse property templates" aria-label="Browse property templates"><i data-lucide="layout-template"></i></button>
+              <button class="btn btn--sm btn--icon fab" data-action="open" data-target="ai-suggest" data-tip="Suggest reusable properties with AI" aria-label="Suggest reusable properties with AI"><i data-lucide="sparkles"></i></button>
+              <button class="btn btn--sm btn--icon btn--primary fab" data-action="open" data-target="prop-dialog" data-tip="Add property" aria-label="Add property"><i data-lucide="plus"></i></button>
+            </div>
+          </div>
+          <!-- Groups -->
+          <div data-tab-panel="sp-groups" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+            <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search groups…" style="padding-left:30px" /></div></div>
+            <div class="drag-tile" draggable="true" data-tip="Drop on the canvas to create a group at the pointer"><i data-lucide="layers"></i><span><span class="t-600">+ New group</span> · drag to canvas</span></div>
+            <div class="tree" style="padding:4px 6px">
+              <div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><span class="swatch" style="background:#8b5cf6"></span><span class="grow">Core payments</span><span class="count">(3)</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-group" data-tip="Delete all classes in group"><i data-lucide="eraser"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-group" data-tip="Delete group"><i data-lucide="trash-2"></i></button></span></div>
+              <div class="tree__children"><div class="tree__item t-xs" data-tip="Focus Payment"><i data-lucide="box"></i>Payment</div><div class="tree__item t-xs"><i data-lucide="box"></i>Refund</div><div class="tree__item t-xs"><i data-lucide="box"></i>LineItem</div></div>
+              <div class="tree__item"><i data-lucide="chevron-right" class="tw"></i><span class="swatch" style="background:#0E8A5F"></span><span class="grow">Parties</span><span class="count">(2)</span></div>
+              <div class="tree__item"><i data-lucide="chevron-right" class="tw"></i><span class="swatch" style="background:#DE6B1F"></span><span class="grow">Legacy</span><span class="count">(0)</span></div>
+              <div class="tree__children"><div class="tree__item t-xs t-faint">No classes in this group</div></div>
+            </div>
+            <div class="side-foot" style="margin-top:auto"><div class="segmented segmented--sm"><button><i data-lucide="rows-4"></i></button><button class="is-active"><i data-lucide="rows-3"></i></button><button><i data-lucide="rows-2"></i></button></div></div>
+          </div>
+          <!-- References -->
+          <div data-tab-panel="sp-refs" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+            <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search references…" style="padding-left:30px" /></div></div>
+            <div class="row-between" style="padding:8px 12px 2px"><span class="t-caps">$ref edges · 8</span><button class="btn btn--link btn--sm" data-action="open" data-target="reflint-dialog">Lint refs</button></div>
+            <div class="tree" style="padding:4px 6px">
+              <div class="tree__item"><i data-lucide="link"></i><span class="grow t-xs">Payment.customer → Customer</span><span class="tag">1</span></div>
+              <div class="tree__item"><i data-lucide="link"></i><span class="grow t-xs">Payment.method → PaymentMethod</span><span class="tag">0..1</span></div>
+              <div class="tree__item"><i data-lucide="link"></i><span class="grow t-xs">Payment.lineItems → LineItem[]</span><span class="tag">1..*</span></div>
+              <div class="tree__item"><i data-lucide="link"></i><span class="grow t-xs">Refund.payment → Payment</span><span class="tag">1</span></div>
+              <div class="tree__item"><i data-lucide="link"></i><span class="grow t-xs">Refund.amount → Money</span><span class="tag">1</span></div>
+              <div class="tree__item"><i data-lucide="link"></i><span class="grow t-xs">LineItem.unitPrice → Money</span><span class="tag">1</span></div>
+              <div class="tree__item"><i data-lucide="link"></i><span class="grow t-xs">Payout.amount → Money</span><span class="tag">1</span></div>
+              <div class="tree__item" style="color:var(--danger-fg)"><i data-lucide="unlink"></i><span class="grow t-xs">Payout.account → <em>MerchantAccount</em></span><span class="badge badge--danger" style="height:16px;font-size:9px">dangling</span></div>
+            </div>
+            <div class="callout callout--accent t-xs" style="margin:8px 10px">Drag “+ New reference” from Properties onto a class, or connect a property handle to a class on the canvas.</div>
+          </div>
+          <!-- Primitives -->
+          <div data-tab-panel="sp-prims" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+            <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search primitives…" style="padding-left:30px" /></div></div>
+            <div class="row-between" style="padding:8px 12px 2px"><span class="t-caps">Tenant types · 4</span><a class="t-xs" href="../build/primitives.html">Manage ↗</a></div>
+            <div class="tree" style="padding:4px 6px">
+              <div class="tree__item" draggable="true"><i data-lucide="shapes"></i><span class="grow"><span>Money</span><div class="t-2xs t-subtle" style="line-height:1">int64 · minimum 0</div></span><span class="badge badge--outline" style="height:16px;font-size:9px">Used 4×</span></div>
+              <div class="tree__item" draggable="true"><i data-lucide="shapes"></i><span class="grow"><span>CurrencyCode</span><div class="t-2xs t-subtle" style="line-height:1">string · ^[A-Z]{3}$</div></span><span class="badge badge--outline" style="height:16px;font-size:9px">Used 3×</span></div>
+              <div class="tree__item" draggable="true"><i data-lucide="shapes"></i><span class="grow"><span>EmailAddress</span><div class="t-2xs t-subtle" style="line-height:1">string · email · maxLength 254</div></span><span class="badge badge--outline" style="height:16px;font-size:9px">Used 1×</span></div>
+              <div class="tree__item" draggable="true"><i data-lucide="shapes"></i><span class="grow"><span class="t-strike">LegacyId</span><div class="t-2xs t-subtle" style="line-height:1">integer · deprecated</div></span><span class="badge badge--outline" style="height:16px;font-size:9px">Used 0×</span></div>
+            </div>
+            <div class="row-between" style="padding:8px 12px 2px"><span class="t-caps">Core system types · 12</span></div>
+            <div class="tree" style="padding:4px 6px"><div class="tree__item"><i data-lucide="shapes"></i><span class="grow">UUID</span><span class="tag">string</span></div><div class="tree__item"><i data-lucide="shapes"></i><span class="grow">Timestamp</span><span class="tag">string</span></div><div class="tree__item"><i data-lucide="shapes"></i><span class="grow">URL</span><span class="tag">string</span></div></div>
+            <div class="callout t-xs" style="margin:8px 10px">Drop a primitive on a property to bind it (copies format, pattern and bounds; records <span class="mono">$ref</span> + <span class="mono">primitive_id</span>).</div>
+          </div>
+          <!-- Workflows -->
+          <div data-tab-panel="sp-flows" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+            <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search workflows…" style="padding-left:30px" /></div></div>
+            <div class="tree" style="padding:4px 6px">
+              <div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><span class="grow"><span class="mono">refundFlow</span> <span class="t-subtle">(3)</span><div class="t-2xs t-subtle" style="line-height:1">Capture, then refund a payment</div></span></div>
+              <div class="tree__children">
+                <div class="tree__item t-xs"><span class="grow">1. <span class="mono">createPayment</span></span><span class="badge badge--ok" style="height:16px;font-size:9px">Linked</span></div>
+                <div class="tree__item t-xs"><span class="grow">2. <span class="mono">capture</span></span><span class="badge badge--violet" style="height:16px;font-size:9px">Workflow</span></div>
+                <div class="tree__item t-xs"><span class="grow">3. <span class="mono">refund</span></span><span class="badge badge--danger" style="height:16px;font-size:9px">Error</span></div>
+              </div>
+              <div class="tree__item"><i data-lucide="chevron-right" class="tw"></i><span class="grow"><span class="mono">payoutFlow</span> <span class="t-subtle">(2)</span></span><span class="badge badge--outline" style="height:16px;font-size:9px">Unlinked</span></div>
+            </div>
+            <div class="empty empty--inline" style="margin:8px 10px;padding:12px;border:1px dashed var(--border-strong);border-radius:var(--r-md)"><div class="empty__art"><span class="hex"></span><i data-lucide="workflow"></i></div><div><div class="empty__title t-sm">No workflows yet</div><div class="empty__desc t-xs">Import an Arazzo document to see its workflows here</div></div></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ===== Centre: canvas ===== -->
+      <section class="panel panel--muted canvas" aria-label="Schema canvas" tabindex="0">
+        <!-- top-left tools rail -->
+        <div class="float" style="left:12px;top:12px">
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Expand all properties" aria-label="Expand all properties"><i data-lucide="chevrons-up-down"></i></button>
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Collapse all properties" aria-label="Collapse all properties"><i data-lucide="chevrons-down-up"></i></button>
+          <button class="btn btn--ghost btn--sm btn--icon" data-action="toggle" data-target="search-rail" data-tip="Search classes (⌘F)" aria-label="Search classes"><i data-lucide="search"></i></button>
+          <span class="sep"></span>
+          <button class="btn btn--ghost btn--sm" data-action="open" data-target="view-menu"><i data-lucide="eye"></i>View mode<i data-lucide="chevron-down"></i></button>
+          <button class="btn btn--ghost btn--sm" data-action="open" data-target="tag-manager"><i data-lucide="tags"></i>Tags</button>
+        </div>
+        <!-- top-center: search / dependency rail (toggle with ⌘F) -->
+        <div class="float search-rail" id="search-rail" style="left:50%;top:12px;transform:translateX(-50%)" hidden>
+          <div class="input-wrap grow"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search classes…" style="padding-left:30px" value="pay" /></div>
+          <div class="segmented segmented--sm"><button class="is-active">Basic</button><button>Regex</button></div>
+          <span class="t-2xs t-subtle" style="white-space:nowrap">3 found</span>
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Search history (4 items)" aria-label="Search history"><i data-lucide="history"></i></button>
+          <button class="btn btn--ghost btn--sm btn--icon" data-action="toggle" data-target="search-filters" data-tip="Search filters" aria-label="Search filters"><i data-lucide="sliders-horizontal"></i></button>
+          <button class="btn btn--ghost btn--sm btn--icon" data-action="toggle" data-target="search-rail" data-tip="Close search (Esc)" aria-label="Close search"><i data-lucide="x"></i></button>
+        </div>
+        <div class="float" id="search-filters" style="left:50%;top:52px;transform:translateX(-50%);width:360px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px" hidden>
+          <label class="field"><span class="t-2xs t-subtle">Class type</span><select class="select select--sm"><option>All</option><option>Class</option><option>allOf</option><option>oneOf</option><option>anyOf</option></select></label>
+          <label class="field"><span class="t-2xs t-subtle">Group</span><select class="select select--sm"><option>All groups</option><option>Ungrouped only</option><option>Core payments</option><option>Parties</option></select></label>
+          <label class="field"><span class="t-2xs t-subtle">Properties</span><select class="select select--sm"><option>Any</option><option>Has properties</option><option>No properties</option></select></label>
+          <label class="field"><span class="t-2xs t-subtle">Property name</span><input class="input input--sm" placeholder="e.g., id, email, createdAt…" /></label>
+          <div class="row gap-1" style="grid-column:span 2"><span class="chip is-active" style="height:22px">Group: Core payments <i data-lucide="x" class="x"></i></span><button class="btn btn--link btn--sm ml-auto">Clear filters</button></div>
+        </div>
+        <!-- top-right layout toolbar -->
+        <div class="float" style="right:12px;top:12px">
+          <button class="btn btn--ghost btn--sm" data-action="open" data-target="git-menu" data-tip="Revision and sync — commit, branch, tag, merge, history"><i data-lucide="git-branch"></i>main</button>
+          <span class="sep"></span>
+          <button class="btn btn--ghost btn--sm" data-action="open" data-target="layout-menu" data-tip="Layout options"><i data-lucide="layout-dashboard"></i>Layout</button>
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Add sticky note" aria-label="Add sticky note"><i data-lucide="sticky-note"></i></button>
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Add callout" aria-label="Add callout"><i data-lucide="message-square-quote"></i></button>
+          <span class="sep"></span>
+          <button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="export-wizard" data-tip="Export canvas" aria-label="Export canvas"><i data-lucide="image-down"></i></button>
+        </div>
+        <!-- LOD / presentation toggles -->
+        <div class="float" style="right:12px;top:52px">
+          <label class="row gap-1 t-2xs t-muted" style="padding:0 4px" data-tip="Level of detail: fade properties ≤50% zoom, descriptions ≤75%"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button>LOD</label>
+          <label class="row gap-1 t-2xs t-muted" style="padding:0 4px" data-tip="Show notes"><button class="switch switch--sm is-on" role="switch" aria-checked="true" data-action="switch"></button>Notes</label>
+          <label class="row gap-1 t-2xs t-muted" style="padding:0 4px" data-tip="Dependency graph overlay"><button class="switch switch--sm" role="switch" aria-checked="false" data-action="switch"></button>Deps</label>
+          <button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="presentation" data-tip="Start presentation" aria-label="Start presentation"><i data-lucide="presentation"></i></button>
+        </div>
+        <!-- recent commits ticker (flag) -->
+        <div class="float" style="left:50%;bottom:52px;transform:translateX(-50%);padding:5px 10px;gap:6px" data-tip="Recent commits on this lineage — click to compare">
+          <i data-lucide="git-commit-horizontal" style="width:12px;height:12px;color:var(--fg-subtle)"></i>
+          <span class="t-2xs"><span class="t-caps" style="font-size:9px">Recent on main</span> · <span class="t-600">Add refund reasons</span> <span class="t-subtle">Ada · 2h</span> · <span class="t-600">Money value object</span> <span class="t-subtle">Linus · 1d</span></span>
+        </div>
+
+        <!-- Group frame -->
+        <div class="group-frame" style="left:16px;top:64px;width:490px;height:456px">
+          <span class="group-frame__title"><i data-lucide="folder"></i>Core payments<span class="t-subtle" style="font-weight:500">(3)</span><span class="tag" style="height:14px;font-size:9px">finance</span></span>
+          <span class="group-frame__tools">
+            <button class="btn btn--ghost btn--sm btn--icon" data-tip="Group styling" aria-label="Group styling"><i data-lucide="paintbrush"></i></button>
+            <button class="btn btn--ghost btn--sm btn--icon" data-tip="Change color" aria-label="Change color"><i data-lucide="palette"></i></button>
+            <button class="btn btn--ghost btn--sm btn--icon" data-tip="Rename group" aria-label="Rename group"><i data-lucide="pencil"></i></button>
+            <button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="group-bulk" data-tip="Bulk edit all classes in group" aria-label="Bulk edit"><i data-lucide="list-checks"></i></button>
+            <button class="btn btn--ghost btn--sm btn--icon" data-tip="Collapse group (hide classes)" aria-label="Collapse group"><i data-lucide="chevrons-down-up"></i></button>
+            <button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-group" data-tip="Delete group" aria-label="Delete group"><i data-lucide="trash-2"></i></button>
+          </span>
+          <span class="group-frame__foot">Money movements between customer and merchant</span>
+        </div>
+
+        <!-- Edges (SVG) -->
+        <svg class="edges" aria-hidden="true">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker>
+            <marker id="arr-faint" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--fg-faint)"/></marker>
+            <marker id="dia" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M1 6 L6 1 L11 6 L6 11 z" fill="var(--bg-surface)" stroke="var(--accent)" stroke-width="1.5"/></marker>
+            <marker id="circ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8"><circle cx="5" cy="5" r="3.5" fill="var(--bg-surface)" stroke="var(--accent)" stroke-width="1.5"/></marker>
+          </defs>
+          <!-- Payment.customer → Customer (1) -->
+          <path d="M246 279 C 262 279, 262 420, 141 420 C 100 420, 141 500, 141 556" marker-end="url(#arr)"/>
+          <g class="card-lbl" transform="translate(150 486)"><rect width="18" height="16"/><text x="9" y="11.5" text-anchor="middle">1</text></g>
+          <!-- Payment.method → PaymentMethod (0..1, optional/dashed) -->
+          <path class="e-opt" d="M246 306 C 300 306, 381 420, 381 556" marker-end="url(#circ)"/>
+          <g class="card-lbl" transform="translate(372 486)"><rect width="34" height="16"/><text x="17" y="11.5" text-anchor="middle">0..1</text></g>
+          <!-- Payment.lineItems → LineItem[] (1..*) -->
+          <path d="M246 333 C 262 333, 262 312, 300 312 L 366 312 C 378 312, 381 318, 381 326" marker-end="url(#dia)"/>
+          <g class="card-lbl" transform="translate(300 300)"><rect width="34" height="16"/><text x="17" y="11.5" text-anchor="middle">1..*</text></g>
+          <!-- Refund.payment → Payment (1) -->
+          <path d="M486 198 C 516 198, 516 46, 320 46 C 200 46, 141 50, 141 92" marker-end="url(#arr)"/>
+          <g class="card-lbl" transform="translate(300 38)"><rect width="18" height="16"/><text x="9" y="11.5" text-anchor="middle">1</text></g>
+          <!-- Refund.amount → Money (1) -->
+          <path d="M486 225 C 560 225, 625 262, 625 326" marker-end="url(#arr)"/>
+          <g class="card-lbl" transform="translate(586 262)"><rect width="18" height="16"/><text x="9" y="11.5" text-anchor="middle">1</text></g>
+          <!-- LineItem.unitPrice → Money (1) -->
+          <path d="M486 459 C 560 459, 625 420, 625 452" marker-end="url(#arr)"/>
+          <g class="card-lbl" transform="translate(560 440)"><rect width="18" height="16"/><text x="9" y="11.5" text-anchor="middle">1</text></g>
+          <!-- Payout.amount → Money (deprecated, dashed) -->
+          <path class="e-dep" d="M730 225 C 752 225, 700 300, 625 326" marker-end="url(#arr-faint)"/>
+        </svg>
+
+        <!-- Nodes -->
+        <article class="node is-selected" style="left:36px;top:96px;--_ac:var(--accent)" aria-label="Class Payment (selected)">
+          <span class="hd-top"></span>
+          <div class="node__hover"><button class="btn btn--ghost btn--icon" data-tip="Change colors" aria-label="Change colors"><i data-lucide="palette"></i></button><button class="btn btn--ghost btn--icon" data-tip="Icon" aria-label="Icon"><i data-lucide="smile"></i></button><button class="btn btn--ghost btn--icon" data-tip="Hide class" aria-label="Hide class"><i data-lucide="eye-off"></i></button><button class="btn btn--ghost btn--icon" data-action="open" data-target="del-class" data-tip="Delete class" aria-label="Delete class"><i data-lucide="trash-2"></i></button></div>
+          <div class="node__head"><span class="node__icon"><i data-lucide="credit-card"></i></span><span class="node__title">Payment</span><span class="node__badges"><span class="badge badge--ok" data-tip="Dependency depth: 1st degree">1st</span><span class="badge" data-tip="7 properties · 3 relationships">7 · 3</span></span></div>
+          <div class="node__desc">A charge against a customer’s payment method</div>
+          <div class="node__prop"><span class="pn">id <span class="req">*</span></span><span class="tag">uuid</span></div>
+          <div class="node__prop"><span class="pn">amountMinor <span class="req">*</span></span><span class="tag">int64</span></div>
+          <div class="node__prop"><span class="pn">currency <span class="req">*</span></span><span class="tag">string</span></div>
+          <div class="node__prop"><span class="pn">status <span class="req">*</span></span><span class="tag tag--enum">enum(4)</span></div>
+          <div class="node__prop"><span class="pn">customer</span><span class="tag tag--ref">Customer</span><span class="hd"></span></div>
+          <div class="node__prop"><span class="pn">method</span><span class="tag tag--ref">PaymentMethod ?</span><span class="hd"></span></div>
+          <div class="node__prop"><span class="pn">lineItems</span><span class="tag tag--ref">LineItem[]</span><span class="hd"></span></div>
+          <span class="hd-bottom" data-tip="Composition (allOf/anyOf/oneOf) source"></span>
+        </article>
+        <article class="node" style="left:276px;top:96px;--_ac:var(--ok)" aria-label="Class Refund">
+          <span class="hd-top"></span>
+          <div class="node__head"><span class="node__icon"><i data-lucide="undo-2"></i></span><span class="node__title">Refund</span><span class="node__badges"><span class="badge badge--warn" data-tip="Breaking 1: property-required (reason) vs published v2.3.1">Breaking 1</span></span></div>
+          <div class="node__desc">Returns funds for a captured payment</div>
+          <div class="node__prop"><span class="pn">id <span class="req">*</span></span><span class="tag">uuid</span></div>
+          <div class="node__prop"><span class="pn">payment <span class="req">*</span></span><span class="tag tag--ref">Payment</span><span class="hd"></span></div>
+          <div class="node__prop"><span class="pn">amount <span class="req">*</span></span><span class="tag tag--ref">Money</span><span class="hd"></span></div>
+          <div class="node__prop"><span class="pn">reason <span class="req">*</span></span><span class="tag tag--enum">enum(5)</span></div>
+          <div class="node__prop"><span class="pn">createdAt</span><span class="tag">date-time</span></div>
+        </article>
+        <article class="node" style="left:276px;top:330px;--_ac:var(--violet)" aria-label="Class LineItem">
+          <span class="hd-top"></span>
+          <div class="node__head"><span class="node__icon">LI</span><span class="node__title">LineItem</span><span class="node__badges"><span class="badge badge--outline">4</span></span></div>
+          <div class="node__desc is-empty">No description</div>
+          <div class="node__prop"><span class="pn">sku <span class="req">*</span></span><span class="tag">string</span></div>
+          <div class="node__prop"><span class="pn">quantity <span class="req">*</span></span><span class="tag">integer</span></div>
+          <div class="node__prop"><span class="pn">unitPrice <span class="req">*</span></span><span class="tag tag--ref">Money</span><span class="hd"></span></div>
+          <div class="node__prop"><span class="pn">description</span><span class="tag">string</span></div>
+        </article>
+        <article class="node" style="left:36px;top:560px;--_ac:var(--rose)" aria-label="Class Customer">
+          <span class="hd-top"></span>
+          <div class="node__head"><span class="node__icon"><i data-lucide="user"></i></span><span class="node__title">Customer</span><span class="node__badges"><span class="badge badge--outline">4</span></span></div>
+          <div class="node__desc">Person or business paying</div>
+          <div class="node__prop"><span class="pn">id <span class="req">*</span></span><span class="tag">uuid</span></div>
+          <div class="node__prop"><span class="pn">email <span class="req">*</span></span><span class="tag">email</span></div>
+          <div class="node__prop"><span class="pn">name</span><span class="tag">string</span></div>
+          <div class="node__prop"><span class="pn"><i data-lucide="chevron-right" style="width:11px;height:11px"></i>address</span><span class="tag">object · 5</span></div>
+        </article>
+        <article class="node" style="left:276px;top:560px;--_ac:var(--orange)" aria-label="Class PaymentMethod">
+          <span class="hd-top"></span>
+          <div class="node__head"><span class="node__icon"><i data-lucide="wallet"></i></span><span class="node__title">PaymentMethod</span><span class="node__badges"><span class="badge badge--outline">4</span></span></div>
+          <div class="node__desc">Card, bank account or wallet</div>
+          <div class="node__prop"><span class="pn">id <span class="req">*</span></span><span class="tag">uuid</span></div>
+          <div class="node__prop"><span class="pn">type <span class="req">*</span></span><span class="tag tag--enum">enum(3)</span></div>
+          <div class="node__prop"><span class="pn">last4</span><span class="tag">string</span></div>
+          <div class="node__prop"><span class="pn">expires</span><span class="tag">date</span></div>
+        </article>
+        <article class="node is-deprecated is-warn" style="left:520px;top:96px;--_ac:var(--fg-subtle)" aria-label="Class Payout (deprecated)">
+          <span class="hd-top"></span>
+          <div class="node__head"><span class="node__icon"><i data-lucide="banknote"></i></span><span class="node__title" data-tip="Deprecated: use PayoutV2">Payout</span><span class="node__badges"><span class="badge badge--warn" data-tip="Missing class references detected"><i data-lucide="triangle-alert"></i></span></span></div>
+          <div class="node__desc">Legacy merchant settlement</div>
+          <div class="node__prop"><span class="pn">id <span class="req">*</span></span><span class="tag">uuid</span></div>
+          <div class="node__prop"><span class="pn">amount</span><span class="tag tag--ref">Money</span><span class="hd"></span></div>
+          <div class="node__prop"><span class="pn t-strike">account</span><span class="tag" style="background:var(--danger-soft);color:var(--danger-fg)">MerchantAccount ✕</span><span class="hd" style="background:var(--danger)"></span></div>
+          <div class="node__prop"><span class="pn">scheduledFor</span><span class="tag">date</span></div>
+        </article>
+        <article class="node" style="left:520px;top:330px;--_ac:var(--honey-fg)" aria-label="Class Money">
+          <span class="hd-top"></span>
+          <div class="node__head"><span class="node__icon">$</span><span class="node__title">Money</span><span class="node__badges"><span class="badge badge--honey" data-tip="Dependency depth: Leaf">Leaf</span></span></div>
+          <div class="node__desc">Value object · minor units</div>
+          <div class="node__prop"><span class="pn">amountMinor <span class="req">*</span></span><span class="tag">int64</span></div>
+          <div class="node__prop"><span class="pn">currency <span class="req">*</span></span><span class="tag tag--ref">CurrencyCode</span></div>
+        </article>
+        <!-- Sticky note attached to Money -->
+        <div class="note" style="left:530px;top:478px" role="note"><div class="note__head"><i data-lucide="sticky-note"></i>Note · attached to Money</div>Money is shared by Refund, LineItem and Payout — keep it a value object; never add an id.</div>
+
+        <!-- Dependency / focus / layout-preview bars (top-center, shown when active) -->
+        <div class="float" style="left:50%;top:52px;transform:translateX(-50%)" hidden id="dep-bar"><span class="t-xs t-600" style="padding:0 6px">Dependency graph</span><div class="segmented segmented--sm"><button class="is-active">All</button><button>Upstream</button><button>Downstream</button><button>Path</button></div><span class="t-2xs t-subtle">Select a class</span><button class="btn btn--ghost btn--sm btn--icon" data-action="toggle" data-target="dep-bar" aria-label="Turn off dependency overlay"><i data-lucide="x"></i></button></div>
+
+        <!-- bottom-left: zoom controls + metrics chips -->
+        <div class="float float--col" style="left:12px;bottom:12px">
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Zoom in" aria-label="Zoom in"><i data-lucide="plus"></i></button>
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Zoom out" aria-label="Zoom out"><i data-lucide="minus"></i></button>
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Fit view" aria-label="Fit view"><i data-lucide="maximize"></i></button>
+          <button class="btn btn--ghost btn--sm btn--icon" data-tip="Lock interaction" aria-label="Lock interaction"><i data-lucide="lock-open"></i></button>
+        </div>
+        <div class="float float--chips" style="left:52px;bottom:12px">
+          <button class="chip" data-action="open" data-target="metrics-dialog"><i data-lucide="bar-chart-3"></i>Schema metrics</button>
+          <button class="chip" data-action="open" data-target="timeline-dialog" data-tip="Schema timeline — evolution across versions"><i data-lucide="chart-line"></i>Timeline</button>
+          <button class="chip" data-action="open" data-target="scoring-dialog" data-tip="Version scoring — per-schema breakdown with gauges"><i data-lucide="gauge"></i>Scoring</button>
+          <button class="chip" data-action="open" data-target="reflint-dialog" data-tip="Reference lint — dangling refs, cycles, orphaned classes"><i data-lucide="shield-alert"></i>Ref lint <span class="badge badge--danger" style="height:14px;font-size:9px;padding:0 4px">1</span></button>
+        </div>
+        <!-- bottom-center: spacing tools (≥2 selected) -->
+        <div class="float" style="left:50%;bottom:12px;transform:translateX(-50%)" hidden id="spacing-bar"><span class="t-xs" style="padding:0 6px">2 selected</span><button class="btn btn--ghost btn--sm"><i data-lucide="ruler"></i>Spacing</button><button class="btn btn--ghost btn--sm"><i data-lucide="align-horizontal-space-around"></i>Distribute H</button><button class="btn btn--ghost btn--sm"><i data-lucide="align-vertical-space-around"></i>Distribute V</button></div>
+        <!-- minimap -->
+        <div class="minimap" aria-label="Minimap">
+          <i style="left:12px;top:22px;width:34px;height:36px"></i><i style="left:52px;top:22px;width:34px;height:28px"></i><i style="left:52px;top:56px;width:34px;height:24px"></i><i style="left:12px;top:86px;width:34px;height:8px"></i><i style="left:52px;top:86px;width:34px;height:8px"></i><i style="left:92px;top:22px;width:34px;height:24px;opacity:.25"></i><i style="left:92px;top:56px;width:34px;height:18px"></i>
+          <span class="vp" style="left:6px;top:8px;width:120px;height:80px"></span>
+        </div>
+      </section>
+
+      <!-- ===== Right: inspector ===== -->
+      <aside class="panel" aria-label="Inspector">
+        <div class="panel__head"><div class="segmented segmented--sm" data-tabs="insp-panels" style="margin-left:-6px"><button class="is-active" data-action="tab" data-target="insp-class">Class</button><button data-action="tab" data-target="insp-contract">Contract</button><button data-action="tab" data-target="insp-preview">Preview</button></div><button class="btn btn--ghost btn--sm btn--icon ml-auto" data-tip="Collapse inspector" aria-label="Collapse inspector"><i data-lucide="panel-right-close"></i></button></div>
+        <div class="panel__body" id="insp-panels">
+          <!-- Selection: class -->
+          <div data-tab-panel="insp-class">
+            <div class="insp-section">
+              <div class="row-between"><div class="row gap-2"><span class="icon-tile icon-tile--sm icon-tile--accent"><i data-lucide="credit-card"></i></span><div><div class="t-h4">Payment</div><div class="t-2xs t-subtle mono">#/components/schemas/Payment</div></div></div><button class="btn btn--sm" data-action="open" data-target="class-edit"><i data-lucide="pencil"></i>Edit class</button></div>
+              <p class="t-xs t-muted mt-3">A charge against a customer’s payment method. Idempotent create; transitions pending → authorized → captured.</p>
+              <div class="row gap-1 wrap mt-2"><span class="tag">finance</span><span class="tag">core</span><span class="badge badge--ok">1st degree</span><span class="badge badge--outline">object</span></div>
+            </div>
+            <div class="insp-section">
+              <h4>Properties <span class="badge">7</span><button class="btn btn--link btn--sm ml-auto" data-action="open" data-target="prop-dialog"><i data-lucide="plus"></i>Add</button></h4>
+              <div class="prop-row"><span class="mono">id</span><span class="req">*</span><span class="tag">string · uuid</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="prop-dialog" data-tip="Edit property"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-prop" data-tip="Remove property from class"><i data-lucide="x"></i></button></span></div>
+              <div class="prop-row"><span class="mono">amountMinor</span><span class="req">*</span><span class="tag">integer · int64</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="prop-dialog"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-prop"><i data-lucide="x"></i></button></span></div>
+              <div class="prop-row"><span class="mono">currency</span><span class="req">*</span><span class="tag">CurrencyCode</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="prop-dialog"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-prop"><i data-lucide="x"></i></button></span></div>
+              <div class="prop-row"><span class="mono">status</span><span class="req">*</span><span class="tag tag--enum" style="background:var(--violet-soft);color:var(--violet-fg)">enum(4)</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="prop-dialog"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-prop"><i data-lucide="x"></i></button></span></div>
+              <div class="prop-row"><span class="mono">customer</span><span class="tag" style="background:var(--accent-soft);color:var(--accent-fg)">$ref Customer</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="ref-dialog"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-prop"><i data-lucide="x"></i></button></span></div>
+              <div class="prop-row"><span class="mono">method</span><span class="tag" style="background:var(--accent-soft);color:var(--accent-fg)">$ref PaymentMethod · nullable</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="ref-dialog"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-prop"><i data-lucide="x"></i></button></span></div>
+              <div class="prop-row"><span class="mono">lineItems</span><span class="tag" style="background:var(--accent-soft);color:var(--accent-fg)">LineItem[] · minItems 1</span><span class="acts"><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="ref-dialog"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-prop"><i data-lucide="x"></i></button></span></div>
+            </div>
+            <div class="insp-section">
+              <h4>Constraints</h4>
+              <dl class="kv t-xs"><dt>minProperties</dt><dd class="mono">4</dd><dt>maxProperties</dt><dd class="t-faint">—</dd><dt>additionalProperties</dt><dd>Disallow (false)</dd><dt>unevaluatedProperties</dt><dd class="t-faint">Not specified</dd><dt>Discriminator</dt><dd class="t-faint">—</dd></dl>
+            </div>
+            <div class="insp-section">
+              <h4>Composition</h4>
+              <div class="t-xs t-muted">No allOf / anyOf / oneOf / not. <button class="btn btn--link btn--sm" data-action="open" data-target="class-edit">Add composition</button></div>
+            </div>
+            <div class="insp-section">
+              <h4>Relationships <span class="badge">3 out · 1 in</span></h4>
+              <div class="prop-row"><i data-lucide="arrow-right" style="width:12px;height:12px;color:var(--fg-subtle)"></i><span class="t-xs">customer → <span class="mono">Customer</span></span><span class="tag">1</span></div>
+              <div class="prop-row"><i data-lucide="arrow-right" style="width:12px;height:12px;color:var(--fg-subtle)"></i><span class="t-xs">method → <span class="mono">PaymentMethod</span></span><span class="tag">0..1</span></div>
+              <div class="prop-row"><i data-lucide="arrow-right" style="width:12px;height:12px;color:var(--fg-subtle)"></i><span class="t-xs">lineItems → <span class="mono">LineItem</span></span><span class="tag">1..*</span></div>
+              <div class="prop-row"><i data-lucide="arrow-left" style="width:12px;height:12px;color:var(--fg-subtle)"></i><span class="t-xs"><span class="mono">Refund</span>.payment</span><span class="tag">1</span></div>
+            </div>
+            <div class="insp-section">
+              <h4>Breaking vs v2.3.1 <span class="badge badge--ok">none</span></h4>
+              <div class="t-xs t-muted">No property removed, required, type-changed or enum-narrowed against the published baseline.</div>
+            </div>
+            <div class="insp-section" style="border-bottom:0">
+              <div class="row gap-2 wrap"><button class="btn btn--sm" data-action="open" data-target="ai-improve"><i data-lucide="sparkles"></i>AI suggestions</button><button class="btn btn--sm" data-action="open" data-target="extract-dialog"><i data-lucide="scissors"></i>Extract to class</button><button class="btn btn--sm btn--danger-soft" data-action="open" data-target="del-class"><i data-lucide="trash-2"></i>Delete</button></div>
+            </div>
+          </div>
+          <!-- Contract inspector rail -->
+          <div data-tab-panel="insp-contract" hidden>
+            <div class="side-search"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search name, get /path, tag:, #/pointer" style="padding-left:30px" /></div></div>
+            <div class="tree" style="padding:6px">
+              <div class="tree__item" role="treeitem" aria-level="1"><i data-lucide="chevron-down" class="tw"></i><i data-lucide="file-json-2"></i><span class="grow">Document</span></div>
+              <div class="tree__children"><div class="tree__item t-xs" data-action="open" data-target="doc-meta"><i data-lucide="pencil"></i>Edit document metadata…</div><div class="tree__item t-xs"><span class="mono">/info</span> · Payments API 2.4.0</div><div class="tree__item t-xs"><span class="mono">/servers</span><span class="count">2</span></div></div>
+              <div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><i data-lucide="route"></i><span class="grow">Paths</span><span class="count">18</span></div>
+              <div class="tree__children"><div class="tree__item t-xs"><span class="mono">/payments</span><span class="count">GET POST</span></div><div class="tree__item t-xs is-active"><span class="mono">/payments/{paymentId}</span><span class="count">GET PATCH DELETE</span></div><div class="tree__item t-xs"><span class="mono">/refunds</span><span class="count">GET POST</span></div><div class="tree__item t-xs t-subtle">Show all 18</div></div>
+              <div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><i data-lucide="boxes"></i><span class="grow">Components</span><span class="count">42</span></div>
+              <div class="tree__children"><div class="tree__item t-xs"><i data-lucide="chevron-down" class="tw"></i>schemas<span class="count">31</span></div><div class="tree__children"><div class="tree__item t-xs is-active">Payment</div><div class="tree__item t-xs">Refund</div><div class="tree__item t-xs">Money</div></div><div class="tree__item t-xs"><i data-lucide="chevron-right" class="tw"></i>parameters<span class="count">6</span></div><div class="tree__item t-xs"><i data-lucide="chevron-right" class="tw"></i>responses<span class="count">3</span></div><div class="tree__item t-xs"><i data-lucide="chevron-right" class="tw"></i>securitySchemes<span class="count">2</span></div></div>
+              <div class="tree__item"><i data-lucide="chevron-down" class="tw"></i><i data-lucide="shield-alert"></i><span class="grow">Problems</span><span class="badge badge--warn" style="height:16px;font-size:9px">3</span></div>
+              <div class="tree__children"><div class="tree__item t-xs"><span class="dot dot--danger" style="width:6px;height:6px"></span>Dangling $ref MerchantAccount</div><div class="tree__item t-xs"><span class="dot dot--warn" style="width:6px;height:6px"></span>Refund.reason now required</div><div class="tree__item t-xs"><span class="dot dot--warn" style="width:6px;height:6px"></span>LineItem has no description</div></div>
+            </div>
+            <div class="insp-section" style="border-top:1px solid var(--border)">
+              <h4>Reusable component <span class="badge badge--ok" style="text-transform:none">visual-edit</span></h4>
+              <div class="t-sm t-600">schemas / Payment</div>
+              <div class="t-xs t-muted mt-1">Used in 5 places · 3 operations, 2 schemas</div>
+              <div class="row gap-2 mt-2"><button class="btn btn--sm" data-action="open" data-target="class-edit">Edit component…</button><button class="btn btn--sm btn--ghost" data-action="open" data-target="comp-lib"><i data-lucide="library"></i>Library</button></div>
+            </div>
+          </div>
+          <!-- Reference preview -->
+          <div data-tab-panel="insp-preview" hidden style="display:flex;flex-direction:column;height:100%">
+            <div class="row gap-2" style="padding:8px 10px;border-bottom:1px solid var(--border)"><span class="badge badge--ok">Applied draft</span><div class="segmented segmented--sm ml-auto"><button class="is-active" data-tip="Desktop"><i data-lucide="monitor"></i></button><button data-tip="Tablet (768)"><i data-lucide="tablet"></i></button><button data-tip="Mobile (390)"><i data-lucide="smartphone"></i></button></div><button class="btn btn--ghost btn--sm btn--icon" data-tip="Dock to bottom" aria-label="Dock to bottom"><i data-lucide="panel-bottom"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-tip="Refresh" aria-label="Refresh"><i data-lucide="refresh-cw"></i></button></div>
+            <div style="flex:1;padding:12px;background:var(--bg-canvas)"><div class="card card--flat" style="height:100%;padding:14px;font-size:var(--fs-xs)"><div class="t-caps mb-2">Reference preview · sandbox</div><div class="t-h4">Payment</div><div class="t-xs t-muted">A charge against a customer’s payment method</div><table class="table table--dense mt-2" style="font-size:11px"><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody><tr><td class="mono">id *</td><td>string (uuid)</td></tr><tr><td class="mono">amountMinor *</td><td>integer</td></tr><tr><td class="mono">status *</td><td>enum</td></tr><tr><td class="mono">customer</td><td>Customer</td></tr></tbody></table><div class="t-2xs t-faint mt-3">Editing is unaffected. Nothing is published.</div></div></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Footer status bar -->
+    <div class="status-bar" role="status" aria-label="Studio canvas status">
+      <span class="sb-item"><i data-lucide="folder-git-2"></i>Payments API</span>
+      <span class="sb-item"><i data-lucide="tag"></i>v2.4.0</span>
+      <span class="sb-item"><i data-lucide="git-branch"></i>main</span>
+      <span class="sb-item" style="color:var(--warn-fg)"><span class="dot dot--warn" style="width:6px;height:6px"></span>Unsaved</span>
+      <span class="ml-auto"></span>
+      <span class="sb-item" data-tip="Canvas zoom level (updated when pan/zoom interaction ends)">100%</span>
+      <span class="sb-item">Grid: dots 20</span>
+      <span class="sb-item">Snap: on</span>
+      <span class="sb-item"><span class="kbd" style="height:14px;min-width:14px;font-size:9px">?</span> shortcuts</span>
+      <span class="sb-item t-faint">mock states:</span>
+      <button class="sb-item t-subtle" data-action="open" data-target="no-tenant">no tenant</button><button class="sb-item t-subtle" data-action="open" data-target="canvas-loading">loading</button><button class="sb-item t-subtle" data-action="open" data-target="canvas-empty">empty</button>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- AI assistant launcher -->
+<button class="ai-fab" data-action="open" data-target="ai-chat" aria-label="Open AI chatbot" data-tip="AI assistant (⌘⇧A)"><i data-lucide="sparkles"></i></button>
+
+<!-- ===== Overlays ===== -->
+<!-- Project ▸ Version picker -->
+<div class="overlay" id="pv-menu" data-overlay style="align-items:flex-start;justify-content:flex-start;padding:56px 0 0 76px;background:transparent">
+  <div class="menu" style="width:560px;display:grid;grid-template-columns:1fr 1fr;gap:0" role="menu" aria-label="Project and version picker">
+    <div style="border-right:1px solid var(--border);padding-right:6px">
+      <div class="menu__label">Project</div>
+      <div style="padding:0 8px 6px"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search projects…" style="padding-left:30px" /></div></div>
+      <a class="menu__item" href="#"><span class="avatar avatar--xs avatar--hex avatar--a">PA</span><span class="grow">Payments API</span><i data-lucide="check" style="color:var(--accent)"></i></a>
+      <a class="menu__item" href="#"><span class="avatar avatar--xs avatar--hex avatar--c">OS</span><span class="grow">Orders Service</span></a>
+      <a class="menu__item" href="#"><span class="avatar avatar--xs avatar--hex avatar--d">IE</span><span class="grow">Inventory Events</span></a>
+      <div class="menu__sep"></div>
+      <a class="menu__item" href="home.html"><i data-lucide="layout-grid"></i>Studio home</a>
+    </div>
+    <div style="padding-left:6px">
+      <div class="menu__label">Version</div>
+      <div style="padding:0 8px 6px"><div class="input-wrap"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search versions…" style="padding-left:30px" /></div></div>
+      <a class="menu__item" href="#"><span class="mono grow">v2.4.0 — Add refund reasons</span><span class="badge badge--dot" data-status="draft">Draft</span><i data-lucide="check" style="color:var(--accent)"></i></a>
+      <a class="menu__item" href="#" data-action="toggle" data-target="ro-banner"><i data-lucide="lock" style="width:13px;height:13px"></i><span class="mono grow">v2.3.1 — Hotfix currency enum</span><span class="badge badge--dot" data-status="published">Published</span></a>
+      <a class="menu__item" href="#"><i data-lucide="lock" style="width:13px;height:13px"></i><span class="mono grow">v2.3.0 — Q2 release</span><span class="badge badge--dot" data-status="published">Published</span></a>
+      <div class="menu__sep"></div>
+      <a class="menu__item" href="#"><i data-lucide="plus"></i>Create draft from v2.3.1</a>
+    </div>
+  </div>
+</div>
+
+<!-- Git menu (FEATURE_GITLIKE) -->
+<div class="overlay" id="git-menu" data-overlay style="align-items:flex-start;justify-content:flex-end;padding:56px 220px 0 0;background:transparent">
+  <div class="menu" style="width:320px" role="menu" aria-label="Revision and sync">
+    <div style="padding:8px 10px 4px"><div class="t-caps">Branch</div><div class="row gap-2 mt-1"><i data-lucide="git-branch" style="width:14px;height:14px"></i><span class="t-sm t-600">main</span><span class="t-2xs t-subtle ml-auto">in sync with main</span></div>
+    <div class="t-caps mt-2">Revision</div><div class="row gap-1 mt-1 wrap"><span class="badge" data-status="draft">Draft</span><span class="badge badge--outline">2 yours → head</span><span class="badge badge--warn">Unsaved layout</span></div></div>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#"><i data-lucide="git-branch-plus"></i>Switch branch<i data-lucide="chevron-right" style="margin-left:auto"></i></a>
+    <a class="menu__item" href="#" data-action="open" data-target="commit-dialog"><i data-lucide="git-commit-horizontal"></i>Commit new revision…<span class="kbd">⌘↵</span></a>
+    <a class="menu__item" href="#"><i data-lucide="tag"></i>Tag this revision…</a>
+    <a class="menu__item" href="#"><i data-lucide="git-compare"></i>Compare with parent…</a>
+    <a class="menu__item" href="#"><i data-lucide="git-merge"></i>Merge branches…</a>
+    <a class="menu__item" href="#"><i data-lucide="undo-2"></i>Rollback to this revision…</a>
+    <a class="menu__item" href="#" data-action="open" data-target="history-dialog"><i data-lucide="git-graph"></i>Show history graph…</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#"><i data-lucide="download-cloud"></i>Sync from main — up to date</a>
+    <a class="menu__item" href="#"><i data-lucide="arrow-down-to-line"></i>Switch to latest revision (pull)</a>
+    <a class="menu__item" href="#"><i data-lucide="refresh-cw"></i>Refresh revision list</a>
+    <a class="menu__item" href="../build/projects.html"><i data-lucide="external-link"></i>Open Versions dashboard</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#" data-action="open" data-target="git-palette"><i data-lucide="command"></i>Git command palette<span class="kbd">⌘G</span></a>
+  </div>
+</div>
+
+<!-- Git command palette (⌘G) -->
+<div class="overlay" id="git-palette" data-overlay>
+  <div class="palette" role="dialog" aria-label="Git command palette">
+    <div class="palette__input"><i data-lucide="git-branch"></i><input type="text" placeholder="Search git actions… (type ? for shortcuts)" /><span class="kbd">esc</span></div>
+    <div class="palette__list">
+      <div class="palette__group">Git</div>
+      <div class="palette__item is-active"><i data-lucide="git-commit-horizontal"></i><span>Commit new revision</span><span class="pi-right"><span class="kbd">⌘</span><span class="kbd">↵</span></span></div>
+      <div class="palette__item"><i data-lucide="git-branch-plus"></i><span>Create branch from here</span></div>
+      <div class="palette__item"><i data-lucide="git-graph"></i><span>Browse history / switch revision</span></div>
+      <div class="palette__item"><i data-lucide="arrow-down-to-line"></i><span>Switch to latest revision (pull)</span></div>
+      <div class="palette__item"><i data-lucide="download-cloud"></i><span>Sync from default branch</span></div>
+      <div class="palette__item"><i data-lucide="git-merge"></i><span>Merge branches</span></div>
+      <div class="palette__item"><i data-lucide="undo-2"></i><span>Rollback to this revision</span></div>
+      <div class="palette__group">Library</div>
+      <div class="palette__item"><i data-lucide="library"></i><span>Browse component library</span></div>
+      <div class="palette__group">Help</div>
+      <div class="palette__item"><i data-lucide="keyboard"></i><span>Keyboard shortcuts</span><span class="pi-right"><span class="kbd">?</span></span></div>
+    </div>
+    <div class="palette__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> navigate</span><span><span class="kbd">↵</span> run</span><span style="margin-left:auto">⌘⇧A AI · ⌘K workspace palette</span></div>
+  </div>
+</div>
+
+<!-- Revision history graph -->
+<div class="overlay" id="history-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Revision history">
+    <div class="dialog__header"><div><div class="dialog__title">Revision history</div><div class="dialog__desc">Click a node to compare with its primary parent. Ctrl/Cmd-click to switch the canvas to that revision. Use the node menu to switch, branch, or view its spec.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <svg class="hist-graph" viewBox="0 0 700 150" style="width:100%">
+        <path d="M40 110 L200 110 L360 110 L520 110 L660 110" stroke="var(--border-strong)" stroke-width="2" fill="none"/>
+        <path d="M200 110 C 260 110, 260 50, 320 50 L 480 50 C 540 50, 540 110, 520 110" stroke="var(--violet)" stroke-width="2" fill="none"/>
+        <g><circle cx="40" cy="110" r="7" fill="var(--fg-subtle)"/><text x="40" y="136" text-anchor="middle" font-size="10" fill="var(--fg-subtle)">v2.2.0</text></g>
+        <g><circle cx="200" cy="110" r="7" fill="var(--ok)"/><text x="200" y="136" text-anchor="middle" font-size="10" fill="var(--fg-subtle)">v2.3.0 · published</text></g>
+        <g><circle cx="320" cy="50" r="7" fill="var(--violet)"/><text x="320" y="32" text-anchor="middle" font-size="10" fill="var(--fg-subtle)">feat/wallet</text></g>
+        <g><circle cx="480" cy="50" r="7" fill="var(--violet)"/></g>
+        <g><circle cx="520" cy="110" r="7" fill="var(--ok)"/><text x="520" y="136" text-anchor="middle" font-size="10" fill="var(--fg-subtle)">v2.3.1 · published</text></g>
+        <g><circle cx="660" cy="110" r="9" fill="var(--accent)"/><text x="660" y="136" text-anchor="middle" font-size="10" fill="var(--accent-fg)" font-weight="600">v2.4.0 · you</text></g>
+      </svg>
+      <div class="rev-row"><span class="mono t-xs">rev 41</span><span class="t-sm grow">Add refund reasons</span><span class="t-xs t-subtle">Ada · 2h ago</span><button class="btn btn--sm">Compare</button><button class="btn btn--sm btn--ghost">Switch</button></div>
+      <div class="rev-row"><span class="mono t-xs">rev 40</span><span class="t-sm grow">Money value object</span><span class="t-xs t-subtle">Linus · 1d ago</span><button class="btn btn--sm">Compare</button><button class="btn btn--sm btn--ghost">Switch</button></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Commit dialog -->
+<div class="overlay" id="commit-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Commit new revision">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="git-commit-horizontal"></i></span><div><div class="dialog__title">Commit new revision</div><div class="dialog__desc">Snapshot the current model as a new revision on <span class="mono">main</span>.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="field"><label>Commit message <span class="req">*</span></label><input class="input" value="Require reason on Refund" /></div>
+      <div class="field"><label>Description</label><textarea class="textarea" placeholder="Optional context for reviewers"></textarea></div>
+      <label class="check"><input type="checkbox" checked /> Include canvas layout in this revision</label>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">⌘/Ctrl+Enter commits</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Commit revision</button></div>
+  </div>
+</div>
+
+<!-- View mode menu -->
+<div class="overlay" id="view-menu" data-overlay style="align-items:flex-start;justify-content:flex-start;padding:150px 0 0 400px;background:transparent">
+  <div class="menu" style="width:290px" role="menu" aria-label="View mode">
+    <a class="menu__item" href="#"><i data-lucide="focus"></i>Focus<span class="kbd" style="margin-left:auto">Esc exits</span></a>
+    <a class="menu__item" href="#"><i data-lucide="layers"></i>Focus on group<i data-lucide="chevron-right" style="margin-left:auto"></i></a>
+    <div class="menu__label">Hide on canvas</div>
+    <a class="menu__item" href="#"><label class="check t-sm" style="pointer-events:none"><input type="checkbox"/></label>Empty classes</a>
+    <a class="menu__item" href="#"><label class="check t-sm" style="pointer-events:none"><input type="checkbox"/></label>Unconnected classes</a>
+    <a class="menu__item" href="#"><label class="check t-sm" style="pointer-events:none"><input type="checkbox" checked/></label>Deprecated classes</a>
+    <a class="menu__item" href="#"><i data-lucide="layers"></i>Hide group members<i data-lucide="chevron-right" style="margin-left:auto"></i></a>
+    <a class="menu__item" href="#" data-tip="Show nodes hidden by filters as semi-transparent instead of removing them"><label class="check t-sm" style="pointer-events:none"><input type="checkbox"/></label>Node ghosts</a>
+    <a class="menu__item" href="#" data-tip="Show only selected classes (Esc to clear)"><label class="check t-sm" style="pointer-events:none"><input type="checkbox"/></label>Selected only</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#"><i data-lucide="eye"></i>Show all nodes</a>
+  </div>
+</div>
+
+<!-- Layout popover -->
+<div class="overlay" id="layout-menu" data-overlay style="align-items:flex-start;justify-content:flex-end;padding:96px 180px 0 0;background:transparent">
+  <div class="menu" style="width:360px;max-height:78vh;overflow:auto" role="menu" aria-label="Layout options">
+    <div class="menu__label">Canvas layout</div>
+    <div style="padding:2px 10px 8px" class="col gap-2">
+      <div class="field"><label class="t-xs">Layout name</label><select class="select select--sm"><option>Development Layout · Built-in</option><option>Presentation Layout · Built-in</option><option>Logical Layout · Built-in</option><option>Dependency Layout · Built-in</option><option selected>Refund review (Shared)</option></select><div class="hint">Type a custom name or pick a suggestion. Save and load multiple layouts per version.</div></div>
+      <div class="field"><label class="t-xs">Comment</label><input class="input input--sm" placeholder="Short context for this layout" maxlength="240" /></div>
+      <label class="check t-xs"><input type="checkbox" checked/>Capture canvas preview</label>
+      <div class="row gap-2"><button class="btn btn--sm btn--primary" data-action="close">Save</button><button class="btn btn--sm">Load</button><button class="btn btn--sm btn--danger-soft" data-action="open" data-target="del-layout">Delete</button></div>
+    </div>
+    <div class="menu__sep"></div>
+    <div class="menu__label">Quick snapshots · browser-local, max 20</div>
+    <a class="menu__item" href="#" data-action="open" data-target="snap-capture"><i data-lucide="camera"></i>Capture snapshot…</a>
+    <a class="menu__item" href="#" data-action="open" data-target="snap-gallery"><i data-lucide="images"></i>Gallery (6)</a>
+    <a class="menu__item" href="#" data-action="open" data-target="snap-compare"><i data-lucide="columns-2"></i>Compare snapshots…</a>
+    <div class="menu__sep"></div>
+    <div style="padding:2px 10px" class="row-between"><span class="t-sm">Auto-save default layout</span><button class="switch switch--sm is-on" data-action="switch" role="switch" aria-checked="true"></button></div>
+    <div style="padding:2px 10px 8px" class="row gap-2"><input type="range" class="slider" min="10" max="300" value="30" aria-label="Auto-save interval"/><span class="t-xs t-num t-subtle">30s</span></div>
+    <a class="menu__item" href="#"><i data-lucide="download"></i>Export JSON</a>
+    <a class="menu__item" href="#"><i data-lucide="upload"></i>Import JSON</a>
+    <div class="menu__sep"></div>
+    <div class="menu__label">Default on open</div>
+    <a class="menu__item" href="#"><i data-lucide="user-check"></i>Set as my default</a>
+    <a class="menu__item" href="#"><i data-lucide="users"></i>Set as team default</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#" data-action="open" data-target="layout-history"><i data-lucide="history"></i>Layout history (12)</a>
+    <a class="menu__item" href="#" data-action="open" data-target="presentation"><i data-lucide="presentation"></i>Presentation slides (3)…</a>
+    <div class="menu__sep"></div>
+    <div class="menu__label">Auto layout</div>
+    <div class="row gap-2" style="padding:2px 10px 8px"><button class="btn btn--sm" data-tip="Arrange classes top to bottom"><i data-lucide="arrow-down"></i>TB</button><button class="btn btn--sm" data-tip="Arrange classes left to right"><i data-lucide="arrow-right"></i>LR</button><button class="btn btn--sm"><i data-lucide="tags"></i>Group by tag</button></div>
+    <div class="menu__label">Visualization</div>
+    <a class="menu__item" href="#" data-action="toggle" data-target="dep-bar"><label class="check t-sm" style="pointer-events:none"><input type="checkbox"/></label>Dependency graph</a>
+    <a class="menu__item" href="#"><label class="check t-sm" style="pointer-events:none"><input type="checkbox"/></label>Impact analysis</a>
+    <a class="menu__item" href="#"><label class="check t-sm" style="pointer-events:none"><input type="checkbox" checked/></label>Show notes</a>
+  </div>
+</div>
+
+<!-- ClassEdit dialog — all tabs -->
+<div class="overlay" id="class-edit" data-overlay>
+  <div class="dialog dialog--full" role="dialog" aria-label="Edit class Payment" style="max-width:1100px">
+    <div class="dialog__header" style="padding-bottom:0">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="box"></i></span>
+      <div class="grow"><div class="dialog__title">Edit class: Payment</div><div class="dialog__desc">Basics, constraints, composition and documentation for this schema.</div></div>
+      <div class="segmented segmented--sm"><button class="is-active">Guided</button><button>Advanced</button></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body" style="flex:1;display:flex;flex-direction:column;min-height:0;padding-top:12px">
+      <div class="tabs mb-3" style="border-bottom:1px solid var(--border)" data-tabs="ce-view">
+        <button class="tab is-active" data-action="tab" data-target="cev-edit"><i data-lucide="pencil"></i>Edit</button>
+        <button class="tab" data-action="tab" data-target="cev-json">JSON</button>
+        <button class="tab" data-action="tab" data-target="cev-yaml">YAML</button>
+        <button class="tab" data-action="tab" data-target="cev-example">Example</button>
+        <span class="ml-auto row gap-2"><button class="btn btn--sm"><i data-lucide="bot"></i>Use AI assistant</button></span>
+      </div>
+      <div id="ce-view" style="flex:1;min-height:0;display:flex;flex-direction:column">
+      <div data-tab-panel="cev-edit" style="flex:1;min-height:0">
+        <div class="dlg-split" style="height:100%">
+          <nav class="vtabs" data-tabs="ce-sections" aria-label="Class sections">
+            <button class="tab is-active" data-action="tab" data-target="ces-basic">Basic information<span class="dot dot--warn" data-tip="Contains non-default values"></span></button>
+            <button class="tab" data-action="tab" data-target="ces-constraints">Object constraints</button>
+            <button class="tab" data-action="tab" data-target="ces-additional">Additional properties<span class="dot dot--warn"></span></button>
+            <button class="tab" data-action="tab" data-target="ces-comp">Composition</button>
+            <button class="tab" data-action="tab" data-target="ces-disc">Discriminator</button>
+            <button class="tab" data-action="tab" data-target="ces-pattern">Pattern properties</button>
+            <button class="tab" data-action="tab" data-target="ces-dep">Dependent schemas</button>
+            <button class="tab" data-action="tab" data-target="ces-cond">Conditional schema</button>
+            <button class="tab" data-action="tab" data-target="ces-examples">Examples</button>
+            <button class="tab" data-action="tab" data-target="ces-xml">XML representation</button>
+            <button class="tab" data-action="tab" data-target="ces-meta">Schema metadata</button>
+            <button class="tab" data-action="tab" data-target="ces-ext">External docs &amp; extensions</button>
+          </nav>
+          <div id="ce-sections" style="overflow:auto;padding-right:4px">
+            <div data-tab-panel="ces-basic" class="col gap-4">
+              <div class="grid grid-2"><div class="field"><label>Class name <span class="req">*</span></label><input class="input" value="Payment" /><div class="hint">PascalCase recommended</div></div><div class="field"><label>Tags</label><div class="row gap-1 wrap" style="min-height:36px;align-items:center"><span class="chip" style="height:24px">finance <i data-lucide="x" class="x"></i></span><span class="chip" style="height:24px">core <i data-lucide="x" class="x"></i></span><button class="btn btn--sm btn--ghost" data-action="open" data-target="tag-manager"><i data-lucide="plus"></i>Tag</button></div></div></div>
+              <div class="field"><label class="row-between">Description <button class="btn btn--link btn--sm"><i data-lucide="sparkles"></i>Generate with AI</button></label><textarea class="textarea">A charge against a customer’s payment method. Idempotent create; transitions pending → authorized → captured.</textarea></div>
+              <div class="switch-row" style="padding:8px 0 0"><div><div class="sw-title">Deprecated</div><div class="sw-desc">Marks the schema deprecated in exports and strikes it through on the canvas.</div></div><button class="switch" role="switch" aria-checked="false" data-action="switch"></button></div>
+              <div class="field"><label>Deprecation message</label><input class="input" placeholder="e.g. Use PaymentV2 — sunset 2026-12-01" disabled /></div>
+            </div>
+            <div data-tab-panel="ces-constraints" hidden class="col gap-4">
+              <div class="form-section__desc" style="margin:0">Bounds on the number of properties an instance may carry.</div>
+              <div class="grid grid-2"><div class="field"><label>Min properties</label><input class="input" type="number" value="4" /></div><div class="field"><label>Max properties</label><input class="input" type="number" placeholder="—" /></div></div>
+            </div>
+            <div data-tab-panel="ces-additional" hidden class="col gap-4">
+              <div class="field"><label>Additional properties</label>
+                <div class="radio-list">
+                  <label class="radio"><input type="radio" name="ap" /> Not specified (default)</label>
+                  <label class="radio"><input type="radio" name="ap" /> Allow any (true)</label>
+                  <label class="radio"><input type="radio" name="ap" checked /> Disallow (false)</label>
+                  <label class="radio"><input type="radio" name="ap" /> Must be type <select class="select select--sm" style="width:120px;margin-left:6px"><option>string</option><option>number</option><option>integer</option><option>boolean</option><option>object</option><option>array</option></select></label>
+                  <label class="radio"><input type="radio" name="ap" /> Must match schema <select class="select select--sm" style="width:150px;margin-left:6px"><option>Money</option><option>Customer</option></select></label>
+                </div></div>
+              <div class="field"><label>Unevaluated properties</label><div class="radio-list"><label class="radio"><input type="radio" name="up" checked /> Not specified (default)</label><label class="radio"><input type="radio" name="up" /> Allow any (true)</label><label class="radio"><input type="radio" name="up" /> Disallow (false)</label></div></div>
+            </div>
+            <div data-tab-panel="ces-comp" hidden class="col gap-4">
+              <div class="field"><label>allOf</label><div class="hint">Must match ALL listed schemas.</div><div class="row gap-1 wrap"><span class="chip" style="height:24px">Auditable <i data-lucide="x" class="x"></i></span><button class="btn btn--sm btn--ghost"><i data-lucide="plus"></i>Add schema</button></div></div>
+              <div class="field"><label>anyOf</label><div class="hint">Must match AT LEAST one schema.</div><button class="btn btn--sm btn--ghost" style="align-self:start"><i data-lucide="plus"></i>Add schema</button></div>
+              <div class="field"><label>oneOf</label><div class="hint">Must match EXACTLY one schema.</div><button class="btn btn--sm btn--ghost" style="align-self:start"><i data-lucide="plus"></i>Add schema</button></div>
+              <div class="field"><label>not</label><div class="hint">Must NOT match this schema (raw JSON).</div><textarea class="textarea mono" style="min-height:64px" placeholder='{ "required": ["legacyId"] }'></textarea></div>
+            </div>
+            <div data-tab-panel="ces-disc" hidden class="col gap-4">
+              <div class="field"><label>Discriminator property</label><select class="select"><option>—</option><option selected>status</option><option>type</option></select></div>
+              <label class="check"><input type="checkbox" checked /> Use automatic mapping (based on schema names)</label>
+              <div class="field"><label>Custom mapping</label><div class="row gap-2"><input class="input input--sm mono" value="card" style="width:130px"/><i data-lucide="arrow-right" style="width:13px;height:13px"></i><input class="input input--sm mono grow" value="#/components/schemas/CardPayment" disabled /></div><button class="btn btn--sm btn--ghost mt-2" style="align-self:start" disabled><i data-lucide="plus"></i>Add mapping</button></div>
+            </div>
+            <div data-tab-panel="ces-pattern" hidden class="col gap-4">
+              <div class="form-section__desc" style="margin:0">Match property names by regex and constrain their values.</div>
+              <div class="row gap-2"><input class="input input--sm mono grow" value="^x-meta-" placeholder="Regex" /><select class="select select--sm" style="width:150px"><option>String</option><option>Number</option><option>Integer</option><option>Boolean</option><option>Object</option><option>Array</option><option>Schema reference</option></select><button class="btn btn--sm btn--ghost btn--icon" aria-label="Remove"><i data-lucide="x"></i></button></div>
+              <button class="btn btn--sm btn--ghost" style="align-self:start"><i data-lucide="plus"></i>Add pattern property</button>
+            </div>
+            <div data-tab-panel="ces-dep" hidden class="col gap-4">
+              <div class="field"><label>Dependent schemas</label><div class="hint">IF a property is present / equals / is one of → THEN require properties.</div>
+                <div class="card card--soft" style="padding:10px 12px"><div class="row gap-2 wrap t-xs"><span>IF</span><select class="select select--sm" style="width:130px"><option>method</option></select><select class="select select--sm" style="width:120px"><option>is present</option><option>equals</option><option>is one of</option></select><span>THEN require</span><span class="chip" style="height:22px">last4</span></div></div></div>
+              <div class="field"><label>Dependent required</label><div class="row gap-2"><select class="select select--sm" style="width:150px"><option>Trigger property…</option></select><input class="input input--sm grow" placeholder="comma-separated required properties" /></div></div>
+            </div>
+            <div data-tab-panel="ces-cond" hidden class="col gap-4">
+              <div class="form-section__desc" style="margin:0">Conditional schema builder — IF a property matches, apply THEN/ELSE requirements.</div>
+              <div class="card card--soft col gap-2" style="padding:10px 12px">
+                <div class="row gap-2 t-xs wrap"><span class="t-600">IF</span><select class="select select--sm" style="width:120px"><option>status</option></select><select class="select select--sm" style="width:130px"><option>equals</option><option>is one of</option><option>has type</option><option>is present</option><option>matches pattern</option><option>is at least</option><option>is at most</option></select><input class="input input--sm mono" style="width:110px" value="failed" /></div>
+                <div class="row gap-2 t-xs wrap"><span class="t-600">THEN</span><span>require</span><span class="chip" style="height:22px">failureReason <i data-lucide="x" class="x"></i></span><span>+ constraint</span><select class="select select--sm" style="width:120px"><option>Min length</option><option>Max length</option><option>Minimum</option><option>Maximum</option><option>Pattern</option><option>Const</option><option>Enum</option><option>Type</option></select></div>
+                <div class="row gap-2 t-xs wrap"><span class="t-600">ELSE</span><span class="t-subtle">no extra requirements</span></div>
+              </div>
+            </div>
+            <div data-tab-panel="ces-examples" hidden class="col gap-3">
+              <div class="row-between"><span class="t-sm t-600">Examples</span><button class="btn btn--sm btn--ghost"><i data-lucide="plus"></i>Add example</button></div>
+              <pre class="code" style="max-height:180px">{
+  "id": "b7e6…",
+  "amountMinor": 2599,
+  "currency": "EUR",
+  "status": "captured"
+}</pre>
+            </div>
+            <div data-tab-panel="ces-xml" hidden class="grid grid-2 gap-4">
+              <div class="field"><label>Name</label><input class="input" placeholder="payment" /></div>
+              <div class="field"><label>Namespace</label><input class="input" placeholder="https://acme.dev/ns" /></div>
+              <div class="field"><label>Prefix</label><input class="input" placeholder="ac" /></div>
+            </div>
+            <div data-tab-panel="ces-meta" hidden class="col gap-4">
+              <div class="field"><label>$id</label><input class="input mono" placeholder="https://acme.dev/schemas/payment" /></div>
+              <div class="field"><label>$anchor</label><input class="input mono" /></div>
+              <div class="field"><label>$comment</label><input class="input" /></div>
+            </div>
+            <div data-tab-panel="ces-ext" hidden class="col gap-4">
+              <div class="form-section" style="margin:0;padding:0;border:0"><div class="form-section__title">External docs</div><div class="grid grid-2 mt-2"><div class="field"><label>URL</label><input class="input" placeholder="https://docs.acme.dev/payments" /></div><div class="field"><label>Description</label><input class="input" /></div></div></div>
+              <div class="form-section" style="margin:0;padding-top:12px"><div class="form-section__title">Extensions (x-…)</div><div class="row gap-2 mt-2"><input class="input input--sm mono" value="x-owner" style="width:160px"/><input class="input input--sm mono grow" value="payments-team" /><button class="btn btn--sm btn--ghost btn--icon" aria-label="Remove"><i data-lucide="x"></i></button></div><button class="btn btn--sm btn--ghost mt-2" style="align-self:start"><i data-lucide="plus"></i>Add extension</button></div>
+              <div class="callout t-xs">Not here: property list, canvas colour/icon — those live on the node; <span class="mono">not</span>/<span class="mono">prefixItems</span> are per-property.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-tab-panel="cev-json" hidden><pre class="code code--lines" style="max-height:52vh"><span><span class="c-p">{</span></span><span>  <span class="c-n">"type"</span>: <span class="c-s">"object"</span>,</span><span>  <span class="c-n">"description"</span>: <span class="c-s">"A charge against a customer's payment method"</span>,</span><span>  <span class="c-n">"required"</span>: [<span class="c-s">"id"</span>, <span class="c-s">"amountMinor"</span>, <span class="c-s">"currency"</span>, <span class="c-s">"status"</span>],</span><span>  <span class="c-n">"additionalProperties"</span>: <span class="c-k">false</span>,</span><span>  <span class="c-n">"properties"</span>: <span class="c-p">{</span> … <span class="c-p">}</span></span><span><span class="c-p">}</span></span></pre><div class="row gap-2 mt-2"><button class="btn btn--sm"><i data-lucide="copy"></i>Copy</button><button class="btn btn--sm"><i data-lucide="download"></i>Export</button></div></div>
+      <div data-tab-panel="cev-yaml" hidden><pre class="code code--lines" style="max-height:52vh"><span><span class="c-n">type</span>: <span class="c-s">object</span></span><span><span class="c-n">description</span>: <span class="c-s">A charge against a customer's payment method</span></span><span><span class="c-n">required</span>: [<span class="c-s">id</span>, <span class="c-s">amountMinor</span>, <span class="c-s">currency</span>, <span class="c-s">status</span>]</span><span><span class="c-n">additionalProperties</span>: <span class="c-k">false</span></span></pre><div class="row gap-2 mt-2"><button class="btn btn--sm"><i data-lucide="copy"></i>Copy</button><button class="btn btn--sm"><i data-lucide="download"></i>Export</button></div></div>
+      <div data-tab-panel="cev-example" hidden><pre class="code" style="max-height:52vh">{
+  "id": "5f0c2d8e-9b1a-4c3f-8f6e-2d7a91c04b11",
+  "amountMinor": 2599,
+  "currency": "EUR",
+  "status": "captured",
+  "customer": { "id": "…", "email": "jo@example.com" }
+}</pre><button class="btn btn--sm mt-2"><i data-lucide="refresh-cw"></i>Refresh (json-schema-faker)</button></div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Read-only on published versions</span><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save changes</button></div>
+  </div>
+</div>
+
+<!-- Property dialog (PropertyFormFields) -->
+<div class="overlay" id="prop-dialog" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-label="Edit property">
+    <div class="dialog__header" style="padding-bottom:0">
+      <span class="icon-tile icon-tile--violet"><i data-lucide="list-tree"></i></span>
+      <div class="grow"><div class="dialog__title">Edit property</div><div class="dialog__desc">Guided: Basics → Flags → Defaults → Constraints → Docs. Type is locked on edit.</div></div>
+      <div class="segmented segmented--sm"><button class="is-active">Form</button><button>JSON</button></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dialog__body">
+      <div class="stepper mb-4" style="margin-top:8px"><span class="step is-done"><span class="step__num">✓</span>Basics</span><span class="step__line is-done"></span><span class="step is-done"><span class="step__num">✓</span>Flags</span><span class="step__line is-done"></span><span class="step is-active"><span class="step__num">3</span>Defaults</span><span class="step__line"></span><span class="step"><span class="step__num">4</span>Constraints</span><span class="step__line"></span><span class="step"><span class="step__num">5</span>Docs</span></div>
+      <div class="grid grid-2 gap-4">
+        <div class="field"><label>Property name <span class="req">*</span></label><input class="input mono" value="amountMinor" /><div class="hint">camelCase recommended</div></div>
+        <div class="field"><label>Type <span class="req">*</span></label><div class="row gap-2"><select class="select" disabled><option>integer</option></select><label class="check t-xs"><input type="checkbox"/>Array</label></div><div class="hint">Locked on edit</div></div>
+        <div class="field"><label>Title</label><input class="input" value="Amount (minor units)" /></div>
+        <div class="field"><label>Format</label><select class="select"><option>—</option><option>int32</option><option selected>int64</option></select></div>
+        <div class="field span-2"><label class="row-between">Description <span class="row gap-2"><button class="btn btn--link btn--sm"><i data-lucide="sparkles"></i>Generate with AI</button><button class="btn btn--link btn--sm" data-action="open" data-target="ai-suggest">Suggest types with AI</button></span></label><textarea class="textarea" style="min-height:64px">Amount in the currency’s minor unit (cents).</textarea></div>
+        <div class="field span-2"><label class="row-between">Bind to a type <button class="btn btn--sm" data-action="open" data-target="primitive-selector"><i data-lucide="shapes"></i>Primitive selector</button></label><div class="callout callout--accent t-xs">Bound to <span class="mono">Money.amount</span> primitive — format, minimum and multipleOf are copied on apply.</div></div>
+      </div>
+      <div class="form-section"><div class="form-section__title">Flags</div>
+        <div class="row gap-4 wrap mt-2"><label class="check"><input type="checkbox" checked/>Required</label><label class="check"><input type="checkbox"/>Nullable</label><label class="check"><input type="checkbox"/>Read only</label><label class="check"><input type="checkbox"/>Write only</label><label class="check"><input type="checkbox"/>Deprecated</label></div>
+        <div class="grid grid-2 mt-3"><div class="field"><label>Deprecation message</label><input class="input" disabled /></div><div class="field"><label>Owner (x-owner)</label><input class="input" value="payments-team" /></div></div>
+      </div>
+      <div class="form-section"><div class="form-section__title">Defaults &amp; allowed values</div>
+        <div class="grid grid-2 mt-2"><div class="field"><label>Default value</label><input class="input mono" value="0" /></div><div class="field"><label>Constant value</label><input class="input mono" placeholder="—" /><div class="hint">Mutually exclusive with enum</div></div></div>
+        <div class="field mt-3"><label class="row-between">Enum <span class="row gap-1"><button class="btn btn--sm btn--ghost">Sort A-Z</button><button class="btn btn--sm btn--ghost">Sort Z-A</button></span></label><div class="t-xs t-subtle">No enum values. Add values or set a constant.</div></div>
+      </div>
+      <div class="form-section"><div class="form-section__title">Constraints (numeric)</div>
+        <div class="grid grid-4 mt-2">
+          <div class="field"><label>Minimum</label><input class="input" type="number" value="0" /></div>
+          <div class="field"><label>Maximum</label><input class="input" type="number" placeholder="—" /></div>
+          <div class="field"><label>Multiple of</label><input class="input" type="number" value="1" /></div>
+          <div class="field"><label>Bounds</label><div class="col gap-1 t-xs"><label class="radio"><input type="radio" name="minb" checked/>Inclusive</label><label class="radio"><input type="radio" name="minb"/>Exclusive</label></div></div>
+        </div>
+        <div class="callout t-xs mt-3">String types add Min/Max length + Pattern with a regex tester; arrays add Min/Max items, Unique, Contains, Tuple mode (prefixItems); objects add nested property constraints and property-name rules.</div>
+      </div>
+      <div class="form-section"><div class="form-section__title">Advanced</div>
+        <div class="grid grid-2 mt-2"><div class="field"><label>NOT schema</label><textarea class="textarea mono" style="min-height:56px" placeholder='{ "const": -1 }'></textarea></div><div class="field"><label>External documentation</label><input class="input" placeholder="https://docs.acme.dev/amounts" /><label class="mt-2">$comment</label><input class="input" /></div></div>
+        <div class="field mt-3"><label class="row-between">Examples <button class="btn btn--sm btn--ghost"><i data-lucide="sparkles"></i>Generate</button></label><input class="input mono" value="2599" /></div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn left" data-action="close">Cancel</button><button class="btn btn--ghost">Back</button><button class="btn">Next</button><button class="btn btn--primary" data-action="close">Save</button></div>
+  </div>
+</div>
+
+<!-- Primitive selector -->
+<div class="overlay" id="primitive-selector" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Primitive selector">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="shapes"></i></span><div><div class="dialog__title">Bind to a type</div><div class="dialog__desc">Applying copies format, pattern, lengths, min/max, multipleOf, items, enum, default and const; records $ref + primitive_id.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-3" style="border-bottom:1px solid var(--border)"><button class="tab">Standard</button><button class="tab">Core system types</button><button class="tab is-active">Tenant types</button><button class="tab">Custom · Imported</button></div>
+      <div class="input-wrap mb-3"><i data-lucide="search"></i><input class="input" placeholder="Search primitives by name, description, or tags…" /></div>
+      <div class="grid grid-2 gap-3">
+        <button class="card card--flat card--selected" style="padding:12px 14px;text-align:left"><div class="row gap-2"><span class="t-sm t-600 mono">Money</span><span class="badge badge--violet">tenant</span><span class="badge badge--outline ml-auto">Used 4×</span></div><div class="t-xs t-muted mt-1">int64 · minimum 0 · multipleOf 1</div><div class="row gap-1 mt-1"><span class="tag">finance</span></div></button>
+        <button class="card card--flat" style="padding:12px 14px;text-align:left"><div class="row gap-2"><span class="t-sm t-600 mono">CurrencyCode</span><span class="badge badge--violet">tenant</span><span class="badge badge--outline ml-auto">Used 3×</span></div><div class="t-xs t-muted mt-1">string · pattern ^[A-Z]{3}$</div></button>
+        <button class="card card--flat" style="padding:12px 14px;text-align:left"><div class="row gap-2"><span class="t-sm t-600 mono">EmailAddress</span><span class="badge badge--violet">tenant</span><span class="badge badge--outline ml-auto">Used 1×</span></div><div class="t-xs t-muted mt-1">string · format email · maxLength 254</div></button>
+        <button class="card card--flat" style="padding:12px 14px;text-align:left"><div class="row gap-2"><span class="t-sm t-600 mono">LegacyId</span><span class="badge badge--outline ml-auto">Used 0×</span></div><div class="t-xs t-muted mt-1">integer · deprecated</div></button>
+      </div>
+      <div class="form-section" style="margin-top:16px"><div class="form-section__title">Schema preview</div><pre class="code mt-2">{ "type": "integer", "format": "int64", "minimum": 0, "multipleOf": 1 }</pre></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Apply type</button></div>
+  </div>
+</div>
+
+<!-- Reference dialog -->
+<div class="overlay" id="ref-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Create reference">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="link"></i></span><div><div class="dialog__title">Create reference</div><div class="dialog__desc">Link this class to another schema by $ref.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="grid grid-2"><div class="field"><label>Reference name <span class="req">*</span></label><input class="input mono" value="lineItems" /></div><div class="field"><label>Target class(es)</label><select class="select"><option selected>LineItem</option><option>Money</option><option>Customer</option></select></div></div>
+      <div class="field"><label>Description</label><input class="input" placeholder="What this relationship means" /></div>
+      <div class="row gap-4 wrap"><label class="check"><input type="checkbox" checked/>Array of references</label><div class="row gap-2 t-xs"><span>Min</span><input class="input input--sm" type="number" value="1" style="width:64px"/><span>Max</span><input class="input input--sm" type="number" placeholder="—" style="width:64px"/><label class="check t-xs"><input type="checkbox"/>Unique</label></div><label class="check"><input type="checkbox"/>Nullable</label></div>
+      <div class="field"><label>Reference type</label>
+        <div class="radio-list">
+          <label class="radio"><input type="radio" name="rt" checked/> Single <span class="t-xs t-subtle">— plain $ref</span></label>
+          <label class="radio"><input type="radio" name="rt"/> allOf (Composition) <span class="t-xs t-subtle">— solid line, blue</span></label>
+          <label class="radio"><input type="radio" name="rt"/> anyOf (Union) <span class="t-xs t-subtle">— dashed, orange</span></label>
+          <label class="radio"><input type="radio" name="rt"/> oneOf (Exclusive) <span class="t-xs t-subtle">— dotted, purple</span></label>
+        </div></div>
+      <div class="grid grid-2"><div class="field"><label>On delete</label><select class="select"><option>Restrict</option><option>Cascade</option><option>Set null</option></select></div><div class="field"><label>Projected fields</label><input class="input mono" placeholder="id, name" /></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Create reference</button></div>
+  </div>
+</div>
+
+<!-- Tag manager -->
+<div class="overlay" id="tag-manager" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Manage tags">
+    <div class="dialog__header"><span class="icon-tile icon-tile--honey"><i data-lucide="tags"></i></span><div><div class="dialog__title">Manage tags</div><div class="dialog__desc">Project-wide tags used to organize classes.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="card card--soft" style="padding:12px 14px"><div class="t-sm t-600 mb-2">Create new tag</div><div class="grid grid-3 gap-2"><input class="input input--sm" placeholder="Tag name" /><select class="select select--sm"><option>Default</option><option>Primary</option><option>Secondary</option><option>Red</option><option>Orange</option><option>Blue</option><option>Green</option></select><button class="btn btn--sm btn--primary">Create tag</button></div><input class="input input--sm mt-2" placeholder="Description (optional)" /></div>
+      <div class="col">
+        <div class="list-row" style="padding:10px 4px"><span class="tag" style="background:var(--accent-soft);color:var(--accent-fg)">finance</span><span class="t-xs t-muted grow">Money movement schemas</span><span class="lr-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Edit"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-tag" data-tip="Delete"><i data-lucide="trash-2"></i></button></span></div>
+        <div class="list-row" style="padding:10px 4px"><span class="tag">core</span><span class="t-xs t-muted grow">Core domain</span><span class="lr-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-tag"><i data-lucide="trash-2"></i></button></span></div>
+        <div class="list-row" style="padding:10px 4px"><span class="tag" style="background:var(--ok-soft);color:var(--ok-fg)">parties</span><span class="t-xs t-faint grow">No description</span><span class="lr-actions" style="opacity:1"><button class="btn btn--ghost btn--sm btn--icon"><i data-lucide="pencil"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="open" data-target="del-tag"><i data-lucide="trash-2"></i></button></span></div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<!-- Canvas settings -->
+<div class="overlay" id="canvas-settings" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-label="Canvas settings">
+    <div class="dialog__header"><span class="icon-tile"><i data-lucide="settings-2"></i></span><div><div class="dialog__title">Canvas settings</div><div class="dialog__desc">Behavior, grid, background and edge styles — with a live preview.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="grid" style="grid-template-columns:minmax(0,1fr) 300px;gap:20px">
+        <div class="col gap-4">
+          <div class="form-section" style="margin:0;padding:0;border:0"><div class="form-section__title">Behavior &amp; data</div>
+            <div class="switch-row"><div><div class="sw-title">Click-to-focus</div><div class="sw-desc">Clicking a class zooms to it.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+            <div class="switch-row"><div><div class="sw-title">Search history</div><div class="sw-desc">4 saved searches on this device.</div></div><button class="btn btn--sm">Clear history</button></div>
+          </div>
+          <div class="form-section" style="margin:0"><div class="form-section__title">Grid</div>
+            <div class="row gap-4 wrap mt-2"><label class="check"><input type="checkbox" checked/>Show grid</label><label class="check"><input type="checkbox" checked/>Snap to grid</label><label class="check"><input type="checkbox" checked/>Smart guides</label></div>
+            <div class="grid grid-2 mt-3"><div class="field"><label>Grid size</label><div class="row gap-2"><input type="range" class="slider" min="10" max="50" value="20"/><span class="t-xs t-num">20px</span></div></div><div class="field"><label>Grid style</label><div class="segmented segmented--sm"><button class="is-active">Dots</button><button>Lines</button><button>Cross</button></div></div></div>
+          </div>
+          <div class="form-section" style="margin:0"><div class="form-section__title">Background</div>
+            <div class="field mt-2"><label>Type</label><select class="select"><option>Solid color</option><option selected>Grid pattern</option><option>Custom image</option><option>Gradient</option><option>Textures (Noise / Paper / Fabric / Carbon / Concrete / Wood)</option></select></div>
+            <div class="row gap-2 mt-3"><span class="t-xs t-muted">Swatches</span><div class="swatches"><span style="background:#F6F5F2"></span><span style="background:#FFF"></span><span style="background:#E7F1FC"></span><span style="background:#FFF3C4"></span><span style="background:#E1F5EC"></span><span style="background:#EEE9FB"></span><span style="background:#1B1A18"></span><span style="background:#0C1E3A"></span></div></div>
+            <div class="grid grid-2 mt-3"><div class="field"><label>Opacity</label><div class="row gap-2"><input type="range" class="slider" min="10" max="100" value="100"/><span class="t-xs t-num">100%</span></div></div><div class="field"><label>Blur</label><div class="row gap-2"><input type="range" class="slider" min="0" max="20" value="0"/><span class="t-xs t-num">0px</span></div></div></div>
+          </div>
+          <div class="form-section" style="margin:0"><div class="form-section__title">Edge styles</div>
+            <div class="col gap-2 mt-2 t-xs">
+              <div class="row gap-2"><span style="width:64px">Direct</span><select class="select select--sm" style="width:110px"><option>Solid</option><option>Dashed</option><option>Dotted</option><option>Double</option></select><select class="select select--sm" style="width:110px"><option>Arrow</option><option>Diamond</option><option>Circle</option><option>Open</option></select><span class="swatches" style="grid-template-columns:repeat(4,20px)"><span style="background:var(--accent)"></span><span style="background:var(--ok)"></span><span style="background:var(--violet)"></span><span style="background:var(--orange)"></span></span></div>
+              <div class="row gap-2"><span style="width:64px">Optional</span><select class="select select--sm" style="width:110px"><option selected>Dashed</option><option>Solid</option></select><select class="select select--sm" style="width:110px"><option selected>Circle</option><option>Arrow</option></select></div>
+              <div class="row gap-2"><span style="width:64px">Bidir.</span><select class="select select--sm" style="width:110px"><option>Solid</option></select><select class="select select--sm" style="width:110px"><option>Diamond</option></select></div>
+            </div>
+            <div class="grid grid-2 mt-3"><div class="field"><label>Edge routing</label><div class="segmented segmented--sm"><button>Straight</button><button class="is-active">Curved</button><button>Orthogonal</button><button>Smart</button></div></div><div class="field"><label>Edge animation</label><div class="segmented segmented--sm"><button class="is-active">None</button><button>Flow</button><button>Pulse</button><button>Dash</button></div></div></div>
+          </div>
+        </div>
+        <div class="card card--flat" style="padding:12px;align-self:start">
+          <div class="t-caps mb-2">Live preview</div>
+          <svg viewBox="0 0 260 220" style="width:100%;background:var(--bg-canvas);border-radius:8px">
+            <defs><pattern id="pd" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="var(--fg-faint)"/></pattern></defs>
+            <rect width="260" height="220" fill="url(#pd)"/>
+            <path d="M76 58 L130 100" stroke="var(--accent)" stroke-width="1.5"/><path d="M184 58 L130 100" stroke="var(--violet)" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <g><rect x="26" y="24" width="100" height="34" rx="6" fill="var(--bg-surface)" stroke="var(--border-strong)"/><text x="76" y="45" text-anchor="middle" font-size="11" fill="var(--fg)">User</text></g>
+            <g><rect x="134" y="24" width="100" height="34" rx="6" fill="var(--bg-surface)" stroke="var(--border-strong)"/><text x="184" y="45" text-anchor="middle" font-size="11" fill="var(--fg)">Group</text></g>
+            <g><rect x="80" y="100" width="100" height="34" rx="6" fill="var(--bg-surface)" stroke="var(--border-strong)"/><text x="130" y="121" text-anchor="middle" font-size="11" fill="var(--fg)">Permission</text></g>
+            <g><rect x="80" y="164" width="100" height="34" rx="6" fill="var(--bg-surface)" stroke="var(--border-strong)"/><text x="130" y="185" text-anchor="middle" font-size="11" fill="var(--fg)">AdminUser</text></g>
+            <path d="M130 134 L130 164" stroke="var(--accent)" stroke-width="1.5"/>
+          </svg>
+          <div class="t-2xs t-subtle mt-2"><span style="color:var(--accent)">—</span> Direct (has/contains) · <span style="color:var(--violet)">- -</span> Weak (allOf)</div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save</button></div>
+  </div>
+</div>
+
+<!-- Quick snapshot capture -->
+<div class="overlay" id="snap-capture" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-label="Capture quick snapshot">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="camera"></i></span><div><div class="dialog__title">Capture quick snapshot</div><div class="dialog__desc">Browser-local, up to 20 per version.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3"><div class="field"><label>Summary <span class="req">*</span></label><input class="input" placeholder="e.g. Before refactoring auth flow" maxlength="120" /></div><div class="field"><label>Description</label><textarea class="textarea" maxlength="2000"></textarea></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Save snapshot</button></div>
+  </div>
+</div>
+
+<!-- Snapshot gallery -->
+<div class="overlay" id="snap-gallery" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Snapshot gallery">
+    <div class="dialog__header"><div><div class="dialog__title">Quick snapshots</div><div class="dialog__desc">Restore, share as JSON, import shared JSON, or pin one as the team default.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="row gap-2 mb-3"><div class="input-wrap grow"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search snapshots…" style="padding-left:30px" /></div><select class="select select--sm" style="width:120px"><option>All</option><option>With image</option><option>No image</option></select><select class="select select--sm" style="width:110px"><option>Newest</option><option>Oldest</option></select><button class="btn btn--sm"><i data-lucide="upload"></i>Import shared</button></div>
+      <div class="grid grid-3 gap-3">
+        <div class="gallery-card"><div class="thumb"><i data-lucide="image"></i></div><div style="padding:10px 12px"><div class="t-sm t-600">Before refund rework</div><div class="t-2xs t-subtle">Aug 14 · 6 nodes</div><div class="row gap-1 mt-2"><button class="btn btn--sm">Restore</button><button class="btn btn--sm btn--ghost" data-tip="Copy or download JSON for teammates"><i data-lucide="share-2"></i></button><button class="btn btn--sm btn--ghost" data-tip="Team default (quick snapshot)"><i data-lucide="pin"></i></button></div></div></div>
+        <div class="gallery-card"><div class="thumb"><i data-lucide="image"></i></div><div style="padding:10px 12px"><div class="t-sm t-600">Demo layout</div><div class="t-2xs t-subtle">Aug 12 · 7 nodes · <span class="badge badge--honey" style="height:14px;font-size:9px">Team default</span></div><div class="row gap-1 mt-2"><button class="btn btn--sm">Restore</button><button class="btn btn--sm btn--ghost"><i data-lucide="share-2"></i></button><button class="btn btn--sm btn--ghost"><i data-lucide="pin-off"></i></button></div></div></div>
+        <div class="gallery-card"><div class="thumb" style="color:var(--fg-faint)">No image</div><div style="padding:10px 12px"><div class="t-sm t-600">Pre-import state</div><div class="t-2xs t-subtle">Aug 9</div><div class="row gap-1 mt-2"><button class="btn btn--sm" disabled data-tip="Read-only: cannot restore">Restore</button><button class="btn btn--sm btn--ghost"><i data-lucide="share-2"></i></button></div></div></div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">6 of 20 used</span><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Snapshot compare -->
+<div class="overlay" id="snap-compare" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Compare snapshots">
+    <div class="dialog__header"><div><div class="dialog__title">Compare snapshots</div><div class="dialog__desc">Side-by-side layout comparison.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body"><div class="grid grid-2 gap-3">
+      <div><select class="select select--sm mb-2"><option>Before refund rework · Aug 14</option></select><div class="gallery-card"><div class="thumb" style="height:150px"><i data-lucide="image"></i></div></div></div>
+      <div><select class="select select--sm mb-2"><option>Demo layout · Aug 12</option></select><div class="gallery-card"><div class="thumb" style="height:150px"><i data-lucide="image"></i></div></div></div>
+    </div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Layout history + revision diff -->
+<div class="overlay" id="layout-history" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Layout history">
+    <div class="dialog__header"><div><div class="dialog__title">Layout history — Refund review</div><div class="dialog__desc">Each named save stores the previous state (up to 50).</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="rev-row"><span class="mono t-xs">Rev 12</span><span class="grow t-sm">Aug 15, 09:12</span><button class="btn btn--sm">Restore</button></div>
+      <div class="rev-row"><span class="mono t-xs">Rev 11</span><span class="grow t-sm">Aug 14, 17:40</span><button class="btn btn--sm">Restore</button></div>
+      <div class="rev-row"><span class="mono t-xs">Rev 10</span><span class="grow t-sm">Aug 14, 11:05</span><button class="btn btn--sm">Restore</button></div>
+      <div class="card card--soft mt-3" style="padding:12px 14px"><div class="t-sm t-600 mb-2">Compare revisions</div><div class="row gap-2"><select class="select select--sm"><option>Current layout</option></select><i data-lucide="arrow-right" style="width:13px;height:13px"></i><select class="select select--sm"><option>Rev 11</option></select><button class="btn btn--sm">Compare</button></div><div class="row gap-2 mt-3 t-xs"><span class="badge badge--ok">2 added</span><span class="badge badge--danger">1 removed</span><span class="badge badge--warn">3 modified</span><span class="t-subtle">· Nodes / Edges / Settings</span></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Presentation mode (fullscreen mock) -->
+<div class="overlay" id="presentation" data-overlay style="background:var(--bg-canvas);padding:0">
+  <div style="position:absolute;inset:0" class="hex-bg"></div>
+  <div class="presentation-bar" role="toolbar" aria-label="Presentation controls">
+    <span class="t-600">1. Core payments</span><span class="t-xs" style="opacity:.7">1 / 3</span><span class="mono t-xs" style="opacity:.7">02:41</span>
+    <button class="btn btn--sm" data-tip="Reset timer (T)"><i data-lucide="timer-reset"></i></button>
+    <button class="btn btn--sm" data-tip="Toggle speaker notes (N)"><i data-lucide="sticky-note"></i></button>
+    <button class="btn btn--sm" data-tip="Previous (←)"><i data-lucide="chevron-left"></i></button>
+    <button class="btn btn--sm" data-tip="Next (→ or Space)"><i data-lucide="chevron-right"></i></button>
+    <button class="btn btn--sm" data-action="close" data-tip="Exit (Esc)"><i data-lucide="x"></i></button>
+  </div>
+  <div class="toast" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:auto"><i data-lucide="info"></i><span class="t-xs">Presentation mode — Arrow keys or Space: change slide · N: speaker notes · T: reset timer · Esc: exit</span><button class="btn btn--ghost btn--sm btn--icon" data-action="close" aria-label="Dismiss"><i data-lucide="x"></i></button></div>
+  <div class="card" style="position:absolute;right:24px;top:70px;width:260px;padding:12px 14px"><div class="t-caps mb-1">Speaker notes</div><textarea class="textarea" placeholder="Notes for this slide…" style="min-height:120px">Explain why Money is a value object.</textarea></div>
+</div>
+
+<!-- Export wizard -->
+<div class="overlay" id="export-wizard" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-label="Export canvas">
+    <div class="dialog__header"><span class="icon-tile icon-tile--honey"><i data-lucide="image-down"></i></span><div><div class="dialog__title">Export canvas</div><div class="dialog__desc">Images, documents or diagram code, with a live preview.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="grid" style="grid-template-columns:200px minmax(0,1fr);gap:20px">
+        <nav class="vtabs">
+          <div class="menu__label" style="padding-left:8px">Images</div>
+          <button class="tab is-active">PNG <span class="t-2xs t-subtle" style="margin-left:auto">raster</span></button>
+          <button class="tab">JPEG</button>
+          <button class="tab">SVG</button>
+          <div class="menu__label" style="padding-left:8px">Documents</div>
+          <button class="tab">PDF</button>
+          <button class="tab">JSON</button>
+          <div class="menu__label" style="padding-left:8px">Diagram code</div>
+          <button class="tab">Mermaid</button>
+          <button class="tab">PlantUML</button>
+          <button class="tab">GraphML</button>
+          <button class="tab">DOT (GraphViz)</button>
+        </nav>
+        <div class="col gap-4">
+          <div class="card card--flat" style="height:170px;display:grid;place-items:center;color:var(--fg-subtle)"><div class="t-center"><i data-lucide="image" style="width:26px;height:26px;margin:0 auto 6px"></i><div class="t-xs">Click “Generate preview” to create a preview.</div></div></div>
+          <div><div class="t-sm t-600 mb-2">PNG options</div>
+            <div class="grid grid-2 gap-3">
+              <div class="field"><label>Export range</label><select class="select select--sm"><option>Full canvas</option><option>Viewport</option><option>Selected groups</option></select></div>
+              <div class="field"><label>Resolution</label><select class="select select--sm"><option>1x (Standard)</option><option selected>2x (High DPI)</option><option>4x (Ultra HD)</option></select></div>
+              <div class="field"><label>Quality</label><select class="select select--sm"><option>Good 70%</option><option selected>High 85%</option><option>Maximum 100%</option></select></div>
+              <div class="field"><label>Watermark text</label><input class="input input--sm" placeholder="© Acme Corp" /></div>
+            </div>
+            <div class="row gap-4 wrap mt-3 t-sm"><label class="check"><input type="checkbox" checked/>Include background</label><label class="check"><input type="checkbox"/>Include grid</label><label class="check"><input type="checkbox" checked/>Include notes</label><label class="check"><input type="checkbox"/>Include UI elements</label><label class="check"><input type="checkbox" checked/>Include timestamp and metadata</label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__footer"><span class="left t-xs t-subtle">Raster image with transparency support</span><button class="btn" data-action="close">Close</button><button class="btn">Generate preview</button><button class="btn btn--primary" data-action="close">Export</button></div>
+  </div>
+</div>
+
+<!-- Schema metrics -->
+<div class="overlay" id="metrics-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Schema metrics">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="bar-chart-3"></i></span><div><div class="dialog__title">Schema metrics</div><div class="dialog__desc">Totals, quality blend, complexity and layout intelligence.</div></div><span class="row gap-2 ml-auto"><button class="btn btn--sm" data-action="open" data-target="ai-improve"><i data-lucide="sparkles"></i>AI improvement suggestions</button><button class="btn btn--sm"><i data-lucide="file-down"></i>Score report PDF</button><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></span></div>
+    <div class="dialog__body col gap-4">
+      <div class="stat-grid stat-grid--4"><div class="stat"><div class="stat__label">Classes</div><div class="stat__value">8</div></div><div class="stat"><div class="stat__label">Properties</div><div class="stat__value">34</div></div><div class="stat"><div class="stat__label">Relationships</div><div class="stat__value">8</div></div><div class="stat"><div class="stat__label">Overall quality</div><div class="stat__value">88<small>B</small></div></div></div>
+      <div class="grid grid-3 gap-3">
+        <div class="card card--flat card--pad"><div class="t-xs t-muted">Docs score</div><div class="meter mt-2"><div class="progress progress--ok"><span style="width:86%"></span></div><span class="meter-val">86</span></div><div class="t-2xs t-subtle mt-1">Classes missing description (1)</div></div>
+        <div class="card card--flat card--pad"><div class="t-xs t-muted">Naming score</div><div class="meter mt-2"><div class="progress progress--ok"><span style="width:92%"></span></div><span class="meter-val">92</span></div><div class="t-2xs t-subtle mt-1">Classes not PascalCase (0)</div></div>
+        <div class="card card--flat card--pad"><div class="t-xs t-muted">Structural complexity (inv.)</div><div class="meter mt-2"><div class="progress progress--warn"><span style="width:74%"></span></div><span class="meter-val">74</span></div><div class="t-2xs t-subtle mt-1">Deepest chain 3 · 1 hub · 0 cycles</div></div>
+      </div>
+      <div class="card card--flat card--pad"><div class="row-between"><div class="t-sm t-600">Layout intelligence</div><button class="btn btn--sm">Preview auto-layout</button></div><dl class="kv t-xs mt-2"><dt>Suggested direction</dt><dd>Top → Bottom</dd><dt>Edge crossings</dt><dd>1</dd><dt>Weak components</dt><dd>1</dd><dt>Maintainability index</dt><dd>81</dd><dt>Technical debt</dt><dd>Low</dd></dl></div>
+      <div class="card card--flat card--pad"><div class="t-sm t-600 mb-2">Suggestions</div><ul class="col gap-1 t-xs t-muted" style="list-style:disc;padding-left:16px"><li>Add a description to <span class="mono">LineItem</span>.</li><li>Resolve the dangling <span class="mono">MerchantAccount</span> reference on <span class="mono">Payout</span>.</li><li>Try Auto-organize to reduce the crossing near Money.</li></ul></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="overlay" id="timeline-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Schema timeline">
+    <div class="dialog__header"><div><div class="dialog__title">Schema timeline</div><div class="dialog__desc">Classes, relationships and complexity across versions. Click a row to switch.</div></div><span class="row gap-2 ml-auto"><button class="btn btn--sm"><i data-lucide="file-down"></i>Version history PDF</button><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></span></div>
+    <div class="dialog__body">
+      <div class="chart-area" style="height:130px"><svg viewBox="0 0 640 130" preserveAspectRatio="none"><g stroke="var(--border)" stroke-dasharray="3 3"><line x1="0" y1="20" x2="640" y2="20"/><line x1="0" y1="70" x2="640" y2="70"/><line x1="0" y1="120" x2="640" y2="120"/></g><polyline points="0,100 160,88 320,72 480,58 640,40" fill="none" stroke="var(--accent)" stroke-width="2"/><polyline points="0,116 160,110 320,100 480,92 640,86" fill="none" stroke="var(--violet)" stroke-width="2"/><polyline points="0,110 160,104 320,108 480,96 640,90" fill="none" stroke="var(--warn)" stroke-width="2"/></svg></div>
+      <div class="chart-legend mt-2"><span><span class="sw" style="background:var(--accent)"></span>Classes</span><span><span class="sw" style="background:var(--violet)"></span>Relationships</span><span><span class="sw" style="background:var(--warn)"></span>Complexity</span></div>
+      <table class="table table--dense mt-3"><thead><tr><th>Version</th><th class="t-right">Classes</th><th class="t-right">Rels</th><th class="t-right">Δ score</th></tr></thead><tbody><tr class="is-clickable"><td class="mono">v2.4.0</td><td class="t-right t-num">8</td><td class="t-right t-num">8</td><td class="t-right t-ok">+3</td></tr><tr class="is-clickable"><td class="mono">v2.3.1</td><td class="t-right t-num">8</td><td class="t-right t-num">7</td><td class="t-right t-num">0</td></tr><tr class="is-clickable"><td class="mono">v2.3.0</td><td class="t-right t-num">7</td><td class="t-right t-num">6</td><td class="t-right t-ok">+5</td></tr></tbody></table>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Version scoring -->
+<div class="overlay" id="scoring-dialog" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Version scoring">
+    <div class="dialog__header"><div><div class="dialog__title">Version scoring</div><div class="dialog__desc">Live — scores follow the current canvas for this version as you edit.</div></div><span class="row gap-2 ml-auto"><select class="select select--sm" style="width:130px"><option>v2.4.0</option><option>v2.3.1</option></select><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></span></div>
+    <div class="dialog__body">
+      <table class="table table--dense"><thead><tr><th>Class</th><th>Docs</th><th>Naming</th><th>Complexity</th></tr></thead><tbody>
+        <tr><td class="mono">Payment</td><td><span class="ring ring--sm" style="--p:92;--c:var(--ok)"><span>92</span></span></td><td><span class="ring ring--sm" style="--p:100;--c:var(--ok)"><span>100</span></span></td><td><span class="ring ring--sm" style="--p:70;--c:var(--warn)"><span>70</span></span></td></tr>
+        <tr><td class="mono">Refund</td><td><span class="ring ring--sm" style="--p:88;--c:var(--ok)"><span>88</span></span></td><td><span class="ring ring--sm" style="--p:100;--c:var(--ok)"><span>100</span></span></td><td><span class="ring ring--sm" style="--p:82;--c:var(--ok)"><span>82</span></span></td></tr>
+        <tr><td class="mono">LineItem</td><td><span class="ring ring--sm" style="--p:40;--c:var(--danger)"><span>40</span></span></td><td><span class="ring ring--sm" style="--p:100;--c:var(--ok)"><span>100</span></span></td><td><span class="ring ring--sm" style="--p:90;--c:var(--ok)"><span>90</span></span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Reference lint -->
+<div class="overlay" id="reflint-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Reference lint">
+    <div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="shield-alert"></i></span><div><div class="dialog__title">Reference lint</div><div class="dialog__desc">Dangling refs, cycles and orphaned classes.</div></div><span class="row gap-2 ml-auto"><button class="btn btn--sm"><i data-lucide="refresh-cw"></i>Re-run lint</button><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></span></div>
+    <div class="dialog__body col gap-2">
+      <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="badge badge--danger">error</span><span class="t-sm t-600">Dangling reference</span></div><div class="t-xs t-muted mt-1"><span class="mono">Payout.account</span> points at missing class <span class="mono">MerchantAccount</span>.</div><button class="btn btn--sm mt-2">Focus on canvas</button></div>
+      <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="badge badge--warn">warning</span><span class="t-sm t-600">Orphaned class</span></div><div class="t-xs t-muted mt-1"><span class="mono">Address</span> is not referenced by any class.</div><button class="btn btn--sm mt-2">Focus on canvas</button></div>
+      <div class="t-xs t-subtle">No cycles detected.</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Class import (3-step) -->
+<div class="overlay" id="class-import" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-label="Import classes">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="upload"></i></span><div><div class="dialog__title">Import classes</div><div class="dialog__desc">Import classes from an OpenAPI specification or Mermaid diagram into your current version.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="stepper mb-4"><span class="step is-done"><span class="step__num">✓</span>Source</span><span class="step__line is-done"></span><span class="step is-active"><span class="step__num">2</span>Select classes</span><span class="step__line"></span><span class="step"><span class="step__num">3</span>Import</span></div>
+      <div class="row gap-2 mb-3"><button class="btn btn--sm">Select all new</button><button class="btn btn--sm btn--ghost">Select none</button><span class="t-xs t-subtle">5 selected · 4 new · 1 existing</span><div class="input-wrap ml-auto" style="width:200px"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search by name…" style="padding-left:30px" /></div><select class="select select--sm" style="width:110px"><option>All types</option><option>object</option><option>allOf</option><option>enum</option></select></div>
+      <div class="banner banner--warn mb-3"><i data-lucide="shield-alert"></i><div><div class="banner-title">Conflict report — 1 duplicate</div><div class="banner-body t-xs">A class named “Money” already exists with a different definition. Importing will overwrite or you can rename. <a href="#">view diff</a></div></div></div>
+      <div class="table-wrap"><table class="table table--dense"><thead><tr><th class="cell-check"></th><th>Class</th><th>Type</th><th class="t-right">Props</th><th>Status</th></tr></thead><tbody>
+        <tr><td class="cell-check"><label class="check"><input type="checkbox" checked data-action="select-row"/></label></td><td class="mono">Dispute</td><td>object</td><td class="t-right t-num">6</td><td><span class="badge badge--ok">new</span></td></tr>
+        <tr><td class="cell-check"><label class="check"><input type="checkbox" checked data-action="select-row"/></label></td><td class="mono">Evidence</td><td>object</td><td class="t-right t-num">4</td><td><span class="badge badge--ok">new</span></td></tr>
+        <tr><td class="cell-check"><label class="check"><input type="checkbox" checked data-action="select-row"/></label></td><td class="mono">Money</td><td>object</td><td class="t-right t-num">2</td><td><span class="badge badge--warn">conflict</span></td></tr>
+      </tbody></table></div>
+      <div class="form-section"><div class="form-section__title">Import options</div>
+        <div class="radio-list mt-2 t-sm"><label class="radio"><input type="radio" name="io"/>Keep existing (skip)</label><label class="radio"><input type="radio" name="io"/>Replace with imported</label><label class="radio"><input type="radio" name="io" checked/>Merge <span class="t-xs t-subtle">— Additive: add new properties, keep existing</span></label><label class="radio"><input type="radio" name="io"/>Import with new name (rename)</label><label class="radio"><input type="radio" name="io"/>Import as new version (e.g. 1.0.0b)</label></div>
+        <div class="row gap-3 mt-3"><label class="check t-xs"><input type="checkbox"/>Apply naming convention</label><select class="select select--sm" style="width:130px" disabled><option>PascalCase</option></select></div>
+      </div>
+      <div class="banner mt-3"><i data-lucide="shield-check"></i><div><div class="banner-title">Compatibility preflight — Non-breaking</div><div class="banner-body t-xs">1 class-added · 2 property-added-optional · classified against the current draft · base a41f9c02be77</div></div></div>
+      <label class="check t-xs mt-3"><input type="checkbox"/>Import despite unclassified changes</label>
+    </div>
+    <div class="dialog__footer"><button class="btn left btn--ghost" data-action="close">← Back</button><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Import 5 classes →</button></div>
+  </div>
+</div>
+
+<!-- Template browser -->
+<div class="overlay" id="tpl-browser" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Template browser">
+    <div class="dialog__header"><span class="icon-tile icon-tile--honey"><i data-lucide="layout-template"></i></span><div><div class="dialog__title">Class templates</div><div class="dialog__desc">Add a ready-made class (with dependencies) to this project.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="row gap-1 wrap mb-3"><span class="chip is-active">User &amp; Auth</span><span class="chip">Products</span><span class="chip">Orders</span><span class="chip">Payments</span><span class="chip">Addresses</span><span class="chip">Common</span><span class="chip">Content</span><span class="chip">Security</span><span class="chip">Integrations</span><span class="chip">Notifications</span></div>
+      <div class="grid grid-2 gap-3">
+        <button class="card card--flat card--selected" style="padding:12px 14px;text-align:left"><div class="t-sm t-600">UserAccount</div><div class="t-xs t-muted mt-1">id, email, passwordHash, roles[], createdAt</div><div class="t-2xs t-subtle mt-1">Depends on: Role</div></button>
+        <button class="card card--flat" style="padding:12px 14px;text-align:left"><div class="t-sm t-600">Session</div><div class="t-xs t-muted mt-1">token, userId, expiresAt</div></button>
+      </div>
+      <div class="field mt-4"><label>Class name override</label><input class="input mono" value="UserAccount" /></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Add to project + 1 dependency</button></div>
+  </div>
+</div>
+
+<!-- Component library -->
+<div class="overlay" id="comp-lib" data-overlay>
+  <div class="dialog dialog--xl" role="dialog" aria-label="Component library">
+    <div class="dialog__header"><span class="icon-tile icon-tile--violet"><i data-lucide="library"></i></span><div><div class="dialog__title">Component library</div><div class="dialog__desc">Insert a reference to a shared component, or copy it locally.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="row gap-2 mb-3 wrap"><div class="input-wrap grow" style="min-width:180px"><i data-lucide="search"></i><input class="input input--sm" placeholder="Search components…" style="padding-left:30px" /></div><select class="select select--sm" style="width:130px"><option>All kinds</option><option>Parameter</option><option>Header</option><option>Request body</option><option>Response</option><option>Security bundle</option><option>Schema</option></select><select class="select select--sm" style="width:140px"><option>Any status</option><option>Published</option><option>Draft only</option></select></div>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
+        <div class="col gap-2">
+          <button class="card card--flat card--selected" style="padding:10px 12px;text-align:left"><div class="row gap-2"><span class="t-sm t-600 mono">PaginationParams</span><span class="badge" data-status="published">Published</span></div><div class="t-xs t-muted">Parameter · Request shaping · platform team</div></button>
+          <button class="card card--flat" style="padding:10px 12px;text-align:left"><div class="row gap-2"><span class="t-sm t-600 mono">ProblemResponse</span><span class="badge" data-status="published">Published</span></div><div class="t-xs t-muted">Response · Payloads</div></button>
+          <button class="card card--flat" style="padding:10px 12px;text-align:left"><div class="row gap-2"><span class="t-sm t-600 mono">BearerAuthBundle</span><span class="badge" data-status="draft">Draft</span></div><div class="t-xs t-muted">Security bundle · Security</div></button>
+        </div>
+        <div class="card card--soft" style="padding:12px 14px"><div class="t-sm t-600">PaginationParams · rev 4</div><pre class="code mt-2" style="max-height:130px">{ "name": "limit", "in": "query",
+  "schema": { "type": "integer", "maximum": 100 } }</pre><div class="t-xs t-muted mt-2"><span class="t-600">Usage &amp; impact</span> — used by 12 operations in 3 projects.</div></div>
+      </div>
+      <label class="check t-xs mt-3"><input type="checkbox" checked/>Keep x-apiome-origin provenance on local copies</label>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn">Copy locally</button><button class="btn btn--primary" data-action="close">Insert reference</button></div>
+  </div>
+</div>
+
+<!-- Document metadata -->
+<div class="overlay" id="doc-meta" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Document metadata">
+    <div class="dialog__header"><div><div class="dialog__title">Document metadata</div><div class="dialog__desc">Dialect, info, servers, security, tags, external docs and x-* extensions.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <div class="tabs mb-3" style="border-bottom:1px solid var(--border)"><button class="tab is-active">/openapi</button><button class="tab">/info</button><button class="tab">/servers</button><button class="tab">/security</button><button class="tab">/tags</button><button class="tab">/externalDocs</button><button class="tab">/x-*</button></div>
+      <dl class="kv"><dt>Current dialect</dt><dd class="mono">OpenAPI 3.2.0</dd><dt>Convert to</dt><dd><select class="select select--sm" style="width:160px"><option>OpenAPI 3.1.0</option><option>OpenAPI 3.0.3</option></select> <button class="btn btn--sm">Preview conversion</button></dd></dl>
+      <div class="callout t-xs mt-3">Identifier and URL are mutually exclusive on the license object. This version is a draft — metadata is editable.</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button><button class="btn btn--primary" data-action="close">Save metadata</button></div>
+  </div>
+</div>
+
+<!-- Group bulk edit -->
+<div class="overlay" id="group-bulk" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Bulk edit classes in group">
+    <div class="dialog__header"><span class="icon-tile icon-tile--violet"><i data-lucide="list-checks"></i></span><div><div class="dialog__title">Bulk edit — Core payments (3 classes)</div><div class="dialog__desc">Apply the same change to every class in the group.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-4">
+      <div class="grid grid-2"><div class="field"><label>Description prefix</label><input class="input" placeholder="[Payments] " /></div><div class="field"><label>Description suffix</label><input class="input" /></div></div>
+      <div class="field"><label>Assign tag</label><select class="select"><option>—</option><option>finance</option><option>core</option></select></div>
+      <div class="field"><label>Top-level properties read-only</label><div class="segmented segmented--sm"><button class="is-active">Do not change</button><button>Set read-only</button><button>Clear read-only</button></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Apply to all</button></div>
+  </div>
+</div>
+
+<!-- Extract to class -->
+<div class="overlay" id="extract-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-label="Extract to class">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="scissors"></i></span><div><div class="dialog__title">Extract to class</div><div class="dialog__desc">Turn the inline object <span class="mono">billingAddress</span> into a reusable class.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3"><div class="field"><label>New class name <span class="req">*</span></label><input class="input" value="BillingAddress" /></div><div class="field"><label>Description</label><input class="input" value="Extracted from billingAddress" /></div></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary" data-action="close">Extract</button></div>
+  </div>
+</div>
+
+<!-- AI chatbot panel -->
+<div class="overlay" id="ai-chat" data-overlay style="align-items:stretch;justify-content:flex-end;padding:110px 20px 60px 0;background:transparent">
+  <div class="card" style="width:400px;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)" role="dialog" aria-label="AI chatbot">
+    <div class="card__header" style="padding:12px 14px"><div class="row gap-2"><span class="icon-tile icon-tile--sm icon-tile--violet"><i data-lucide="bot"></i></span><div><div class="t-sm t-600">AI Chatbot</div><div class="t-2xs t-subtle">Studio side panel · model llama3.1:8b</div></div></div><span class="row gap-1 ml-auto"><button class="btn btn--ghost btn--sm btn--icon" data-tip="Expand chat to full screen" aria-label="Expand chat to full screen"><i data-lucide="maximize-2"></i></button><button class="btn btn--ghost btn--sm btn--icon" data-action="close" aria-label="Close AI chatbot"><i data-lucide="x"></i></button></span></div>
+    <div class="row gap-2" style="padding:8px 14px;border-bottom:1px solid var(--border)"><button class="btn btn--sm btn--ghost">New</button><button class="btn btn--sm btn--ghost">History (3)</button><button class="btn btn--sm btn--ghost">Export</button><button class="btn btn--sm btn--ghost" style="color:var(--danger-fg)">Clear</button></div>
+    <div class="card__body col gap-3" style="flex:1;overflow:auto;min-height:220px">
+      <div class="chat-msg chat-msg--user"><span class="avatar avatar--xs avatar--a">AL</span><div class="bubble">Draft a Dispute class with evidence attachments</div></div>
+      <div class="chat-msg"><span class="avatar avatar--xs avatar--brand"><i data-lucide="bot" style="width:12px;height:12px"></i></span><div class="bubble">Here’s a draft <span class="mono">Dispute</span> schema with an <span class="mono">Evidence[]</span> reference.<div class="row gap-1 mt-2 wrap"><button class="btn btn--sm btn--ok" style="background:var(--ok-soft);color:var(--ok-fg)" data-action="open" data-target="class-edit">Create this class</button><button class="btn btn--sm" data-action="open" data-target="class-import">Import this diagram</button><button class="btn btn--sm btn--ghost">Copy JSON</button></div></div></div>
+    </div>
+    <div class="row gap-2" style="padding:8px 14px;border-top:1px solid var(--border)"><span class="chip" style="height:22px" data-tip="Each message includes this snapshot: project, version, 8 classes, 18 paths">Sharing context · Payments API</span><span class="t-2xs t-subtle ml-auto t-num">1,214 tokens · 890 in · 324 out</span></div>
+    <div class="row gap-2" style="padding:10px 14px;border-top:1px solid var(--border)"><input class="input grow" placeholder="Ask the Studio AI…" /><button class="btn btn--primary btn--icon" aria-label="Send"><i data-lucide="send-horizontal"></i></button></div>
+    <div class="t-2xs t-subtle t-center" style="padding:0 0 8px">Toggle this panel any time with ⌘⇧A / Ctrl+Shift+A.</div>
+  </div>
+</div>
+
+<!-- AI property suggestions -->
+<div class="overlay" id="ai-suggest" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="Suggest properties with AI">
+    <div class="dialog__header"><span class="icon-tile icon-tile--violet"><i data-lucide="sparkles"></i></span><div><div class="dialog__title">Suggest properties with AI</div><div class="dialog__desc">Generate reusable property definitions for this project.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3">
+      <div class="row gap-2"><select class="select select--sm" style="width:170px"><option>llama3.1:8b</option><option>qwen2.5-coder:14b</option></select><input class="input grow" placeholder="e.g. Standard fields for a subscription billing entity" value="Dispute lifecycle fields" /><button class="btn btn--primary btn--sm">Generate suggestions</button></div>
+      <div class="row-between"><span class="t-sm t-600">Suggested properties (3)</span><span class="row gap-1"><button class="btn btn--sm">Add all suggested</button><button class="btn btn--sm btn--ghost">Reject all</button></span></div>
+      <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="t-sm t-600 mono">openedAt</span><span class="t-xs t-subtle">string · date-time</span><button class="btn btn--ghost btn--sm btn--icon ml-auto" data-tip="Reject" aria-label="Reject"><i data-lucide="trash-2"></i></button></div><div class="t-xs t-muted mt-1">Why this property: disputes are time-boxed; deadlines derive from this.</div><button class="btn btn--sm mt-2" data-action="open" data-target="prop-dialog">Open in Add Property</button></div>
+      <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="t-sm t-600 mono">status</span><span class="t-xs t-subtle">enum(4)</span><button class="btn btn--ghost btn--sm btn--icon ml-auto" aria-label="Reject"><i data-lucide="trash-2"></i></button></div></div>
+      <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2"><span class="t-sm t-600 mono">evidenceDueBy</span><span class="t-xs t-subtle">string · date-time · nullable</span><button class="btn btn--ghost btn--sm btn--icon ml-auto" aria-label="Reject"><i data-lucide="trash-2"></i></button></div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- AI improvement suggestions -->
+<div class="overlay" id="ai-improve" data-overlay>
+  <div class="dialog dialog--lg" role="dialog" aria-label="AI improvement suggestions">
+    <div class="dialog__header"><span class="icon-tile icon-tile--violet"><i data-lucide="sparkles"></i></span><div><div class="dialog__title">AI improvement suggestions</div><div class="dialog__desc">Uses live Schema Metrics and class names from the canvas. Quick wins first; each row shows effort, estimated score impact and category.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-2">
+      <div class="row gap-2 mb-1"><select class="select select--sm" style="width:170px"><option>llama3.1:8b</option></select><input class="input input--sm grow" placeholder="Optional focus (paths, product area, constraints)" /><button class="btn btn--sm btn--primary">Generate</button></div>
+      <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2 wrap"><label class="check"><input type="checkbox" checked/></label><span class="t-sm t-600">Describe LineItem</span><span class="badge badge--accent">Docs</span><span class="badge badge--ok">Quick win</span><span class="badge badge--outline" data-tip="Estimated change to the overall schema quality score (0–100)">+3</span><button class="btn btn--ghost btn--sm ml-auto">Copy</button></div><div class="t-xs t-muted mt-1">Studio apply: class LineItem — set_class_description.</div></div>
+      <div class="card card--flat" style="padding:10px 12px"><div class="row gap-2 wrap"><label class="check"><input type="checkbox"/></label><span class="t-sm t-600">Split Payment into intent + result</span><span class="badge badge--violet">Structure</span><span class="badge badge--warn">Larger effort</span><span class="badge badge--outline">+6</span><button class="btn btn--ghost btn--sm ml-auto">Copy</button></div></div>
+      <div class="row gap-2 mt-1"><button class="btn btn--sm">Select all with Studio actions</button><button class="btn btn--sm btn--ghost">Clear selection</button><button class="btn btn--sm btn--primary ml-auto">Apply selected (1)</button></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- Share -->
+<div class="overlay" id="share-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-label="Share canvas">
+    <div class="dialog__header"><span class="icon-tile icon-tile--accent"><i data-lucide="share-2"></i></span><div><div class="dialog__title">Share canvas</div><div class="dialog__desc">Teammates with access to Payments API can open this exact view.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body col gap-3"><div class="row gap-2"><input class="input mono t-xs" value="https://suite.apiome.dev/editor?projectId=prj_8f2a1c&versionId=ver_2c9" readonly /><button class="btn"><i data-lucide="copy"></i>Copy</button></div><label class="check t-xs"><input type="checkbox" checked/>Include current selection (<span class="mono">sel=/components/schemas/Payment</span>)</label></div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Done</button></div>
+  </div>
+</div>
+
+<!-- Confirms -->
+<div class="overlay" id="del-class" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete “Payment”?</div><div class="dialog__desc">Are you sure you want to delete this class? This action cannot be undone.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete class</button></div></div></div>
+<div class="overlay" id="del-prop" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Remove “status” from this class?</div><div class="dialog__desc">The library property is kept; only the membership is removed.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Remove property</button></div></div></div>
+<div class="overlay" id="del-group" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete group “Core payments”?</div><div class="dialog__desc">Classes stay on the canvas; only the frame is removed. “Delete all classes in group” removes the classes too.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete group</button></div></div></div>
+<div class="overlay" id="del-tag" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete tag “parties”?</div><div class="dialog__desc">This will remove it from all classes.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete tag</button></div></div></div>
+<div class="overlay" id="del-layout" data-overlay><div class="dialog dialog--sm" role="alertdialog"><div class="dialog__header"><span class="icon-tile icon-tile--danger"><i data-lucide="triangle-alert"></i></span><div><div class="dialog__title">Delete saved layout “Refund review”?</div><div class="dialog__desc">This cannot be undone.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Cancel</button><button class="btn btn--danger" data-action="close">Delete layout</button></div></div></div>
+
+<!-- Quality dialog -->
+<div class="overlay" id="quality-dialog" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Schema quality">
+    <div class="dialog__header"><span class="ring" style="--p:88;--c:var(--ok)"><span>88</span></span><div><div class="dialog__title">Schema quality · Grade B</div><div class="dialog__desc">Weighted blend of documentation, naming, inverted structural complexity, and canvas layout. Updates live on the Canvas.</div></div><button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="dialog__body">
+      <table class="table table--dense"><thead><tr><th>Factor</th><th class="t-right">Value</th><th class="t-right">Weight</th><th class="t-right">Pts</th></tr></thead><tbody>
+        <tr><td>Documentation</td><td class="t-right t-num">86</td><td class="t-right t-num">30%</td><td class="t-right t-num">25.8</td></tr>
+        <tr><td>Naming</td><td class="t-right t-num">92</td><td class="t-right t-num">25%</td><td class="t-right t-num">23.0</td></tr>
+        <tr><td>Structural complexity (inv.)</td><td class="t-right t-num">74</td><td class="t-right t-num">25%</td><td class="t-right t-num">18.5</td></tr>
+        <tr><td>Canvas layout</td><td class="t-right t-num">103</td><td class="t-right t-num">20%</td><td class="t-right t-num">20.6</td></tr>
+      </tbody></table>
+      <div class="t-xs t-subtle mt-3">Final score is the sum of contributions, rounded to a whole number 0–100 (same rule as the OpenAPI import quality score bands). 90–100 Excellent · 70–89 Good · 50–69 Fair · 0–49 Poor.</div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Close</button></div>
+  </div>
+</div>
+
+<!-- State demos: no tenant / loading / empty -->
+<div class="overlay" id="no-tenant" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-label="No tenant selected">
+    <div class="dialog__body"><div class="empty" style="padding:32px 20px 20px"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="building-2"></i></div><div class="empty__title">No workspace selected</div><div class="empty__desc">Choose a workspace from the switcher in the rail to get started with the Studio — you’ll stay right here.</div><div class="empty__actions"><button class="btn btn--primary" data-action="close">Choose a workspace</button></div><div class="t-2xs t-subtle mt-3">No access to any workspace? Ask an administrator to invite you, then reload.</div></div></div>
+  </div>
+</div>
+<div class="overlay" id="canvas-loading" data-overlay>
+  <div class="dialog dialog--sm" role="dialog" aria-label="Canvas loading state"><div class="dialog__body col gap-3" style="padding:24px 22px"><div class="progress progress--thin"><span style="width:60%"></span></div><div class="row gap-2 t-sm t-muted"><span class="spinner"></span>Loading classes, properties, and tags…</div><div class="t-xs t-subtle">Then: Updating nodes and edges… → Loading groups… → Checking for saved layout… → Applying saved layout…</div><div class="skeleton" style="height:60px"></div><div class="skeleton" style="height:60px;width:70%"></div></div><div class="dialog__footer"><button class="btn" data-action="close">Close</button></div></div>
+</div>
+<div class="overlay" id="canvas-empty" data-overlay>
+  <div class="dialog" role="dialog" aria-label="Canvas empty state"><div class="dialog__body"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="pen-tool"></i></div><div class="empty__title">No project selected</div><div class="empty__desc">Select a project and version from the picker above to view and edit your class diagram.</div><div class="empty__actions"><button class="btn btn--primary" data-action="close">Pick a project</button></div><div class="t-2xs t-subtle mt-2">Tip: drag properties from the sidebar onto classes to add them.</div></div></div><div class="dialog__footer"><button class="btn" data-action="close">Close</button></div></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/studio/editor → private-suite designer /editor</p>
+  <h4>Replaces</h4>
+  <ul><li><code>StudioEditorCanvas.tsx</code> (+ rails/panels), <code>StudioHeader</code> + <code>EditorHeaderBar</code> (merged into one topbar), <code>StudioSideNav</code>, <code>ClassNode/GroupNode/NoteNode</code>, <code>ClassEditDialog</code>, <code>PropertyDialog</code>/<code>PropertyFormFields</code>, <code>PrimitiveSelector</code>, <code>ReferenceDialog</code>, <code>TagManager</code>, <code>CanvasSettingsDialog</code>, <code>CanvasLayoutMenuPanel</code> + snapshot dialogs, <code>ExportWizard</code>, <code>DesignerCanvasGitMenu</code>/<code>GitCommandPalette</code>/<code>CanvasHistoryGraphDialog</code>, metrics/timeline/scoring/ref-lint floating panels, <code>ContractInspectorRail</code>, <code>ConsumerReferencePreview</code>, <code>ComponentLibraryBrowserDialog</code>, <code>StudioAiChatbot</code> + AI dialogs, <code>ClassImportDialog</code>, <code>StudioFooterBar</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Topbar: Project ▸ Version picker (searchable, published rows locked), sync chips (Dirty · ↑N · draft-lock · deprecated-revision toggle · quality chip with breakdown dialog), save state, Editor|Paths|Code segmented, git menu (flag), share, export, settings, avatar.</li>
+    <li>Left rails: Classes / Properties / Groups / Workflows tabs + new References &amp; Primitives tabs; search per tab; deprecated strikethrough + missing-ref warning; hidden-class row; density toggle; FABs Import / Templates / AI-suggest / Add.</li>
+    <li>Canvas: dots grid, 6 class nodes + group frame + attached note, edges with cardinality pills (1, 0..1, 1..*), dangling-ref styling, minimap, zoom/fit/lock, tools rail (expand/collapse/search/view-mode/tags), search rail with Basic|Regex + filters + history, layout menu (built-in + saved layouts, comments, auto-save slider, JSON export/import, defaults, history + revision diff, presentation slides, auto layout TB/LR, group-by-tag, visualization toggles), metrics chips, spacing bar, LOD + notes toggles, read-only banner variant, footer status bar (project · version · branch · unsaved · zoom · grid · snap).</li>
+    <li>ClassEdit: Edit|JSON|YAML|Example views; sections Basic / Object constraints / Additional+Unevaluated / Composition (allOf/anyOf/oneOf/not) / Discriminator (+auto or custom mapping) / Pattern properties / Dependent schemas+required / Conditional schema builder / Examples / XML / $id-$anchor-$comment / External docs / x-extensions; Guided|Advanced toggle.</li>
+    <li>Property form: name/type(locked)/format/title/desc + AI buttons, bind-to-type (PrimitiveSelector w/ Standard·Core·Tenant·Custom tabs + usage + preview + Apply type), flags, default/const, enum sort, numeric constraints incl./excl., NOT schema, external docs, $comment, examples; wizard stepper Basics→Flags→Defaults→Constraints→Docs.</li>
+    <li>Reference dialog (array + min/max/unique, Single/allOf/anyOf/oneOf, on-delete behavior, projected fields); TagManager (create + color + edit/delete confirm).</li>
+    <li>Git surface (flag-gated): menu with branch divergence, commit/tag/compare/merge/rollback/history/sync/pull; ⌘G palette; history graph; commit dialog ⌘↵; recent-commits ticker.</li>
+    <li>Canvas settings: click-to-focus, search history clear, grid size/style/snap/smart-guides, background types + swatches + opacity/blur, per-category edge style/arrow/colour, routing, animation, live preview with legend.</li>
+    <li>Quick snapshots (capture ≤120/≤2000, gallery w/ restore·share·pin team default·import shared, compare); layout history ≤50 + revision diff badges; presentation mode with timer/notes/hints.</li>
+    <li>Export wizard: PNG/JPEG/SVG · PDF/JSON · Mermaid/PlantUML/GraphML/DOT, range/resolution/quality/background/grid/notes/UI/timestamp/watermark options, generate preview.</li>
+    <li>Metrics / Timeline / Scoring / Reference-lint panels as dialogs; AI: chatbot (⌘⇧A, context chip, token strip, quick actions), property suggestions, improvement suggestions with bulk apply; Class import 3-step with conflict report, import options and compatibility preflight; component library; document metadata; NoTenantPrompt; loading + empty states.</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>References and Primitives sidebar tabs (surface existing data), merged single topbar (removes the stacked duplicate selectors), state-demo links in the status bar.</li></ul>
+  <h4>States</h4>
+  <ul><li>Read-only banner (published v2.3.1 via picker), “No project selected” empty, staged loading copy, NoTenantPrompt phases, dangling-$ref warning, breaking-change badge vs published baseline.</li></ul>
+</template>
+</body>
+</html>

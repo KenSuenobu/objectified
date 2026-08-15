@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Acme REST · Style guide · Apiome mockup</title>
+<link rel="stylesheet" href="../assets/hive.css" />
+<script src="../assets/hive.js" defer></script>
+<style>
+  /* page-local helpers only (token-based) */
+  .rule-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) 132px; align-items: center; gap: 12px; padding: 10px var(--card-pad); }
+  .rule-row + .rule-row { border-top: 1px solid var(--border); }
+  .rule-row:hover { background: color-mix(in srgb, var(--fg) 2.5%, transparent); }
+  .rule-row.is-off .rule-meta, .rule-row.is-off .rule-id { opacity: .55; }
+  .rule-row .rule-id { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; }
+  .rule-row .rule-meta { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+  .rule-group__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px var(--card-pad); background: var(--bg-subtle); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .rule-group:first-child .rule-group__head { border-top: 0; }
+  .save-bar { position: sticky; bottom: 16px; z-index: 15; margin: 0 auto; width: max-content; max-width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 14px; border-radius: var(--r-lg); background: var(--warn-soft); color: var(--warn-fg); box-shadow: var(--shadow-lg), 0 0 0 1px color-mix(in srgb, var(--warn) 30%, transparent) inset; font-size: var(--fs-sm); font-weight: 500; }
+  .editor { display: flex; flex-direction: column; min-height: 420px; }
+  .editor .code { flex: 1; border-radius: 0; margin: 0; }
+  .editor .code--lines > span:empty { min-height: 1.6em; }
+  .editor .code--lines > span.has-marker { background: color-mix(in srgb, var(--warn) 14%, transparent); box-shadow: inset 3px 0 0 var(--warn); }
+  .editor .code--lines > span.has-marker .sq { text-decoration: underline wavy var(--warn); text-underline-offset: 3px; }
+  .editor__status { display: flex; align-items: center; gap: 12px; padding: 6px 12px; border-top: 1px solid var(--border); font-size: var(--fs-2xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+  .finding { display: flex; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--border) inset; }
+  .finding + .finding { margin-top: 8px; }
+  .finding [data-lucide] { width: 15px; height: 15px; margin-top: 2px; }
+</style>
+</head>
+<body data-shell="app" data-nav="style-guides" data-page="govern/style-guide-detail" data-tenant="Acme Corp">
+<main class="page">
+  <header class="page-header page-header--with-tabs">
+    <div class="page-header__inner">
+      <div class="page-header__row">
+        <div class="row-start gap-3">
+          <a class="btn btn--ghost btn--icon" href="style-guides.html" aria-label="Back to style guides" data-tip="Back to style guides" style="margin-top:14px"><i data-lucide="arrow-left"></i></a>
+          <div>
+            <div class="crumbs"><a href="../home/overview.html">Acme Corp</a><i data-lucide="chevron-right"></i><span>Govern</span><i data-lucide="chevron-right"></i><a href="style-guides.html">Style guides</a><i data-lucide="chevron-right"></i><span>Acme REST</span></div>
+            <h1 class="page-title">Acme REST <span class="badge badge--ok badge--lg"><i data-lucide="badge-check"></i>Tenant default</span></h1>
+            <p class="page-desc">Tailor which built-in rules apply and how severely they score.</p>
+          </div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn--ghost btn--sm" data-action="open" data-target="not-found" data-tip="Preview the not-found state"><i data-lucide="eye"></i>State</button>
+          <span class="badge badge--outline badge--lg t-num" id="enabled-count">34 of 41 rules enabled</span>
+          <button class="btn btn--ghost btn--icon" aria-label="More actions" data-action="open" data-target="guide-menu"><i data-lucide="ellipsis"></i></button>
+          <button class="btn btn--primary" data-action="open" data-target="saved-toast-note"><i data-lucide="save"></i>Save changes</button>
+        </div>
+      </div>
+      <div class="tabs" role="tablist" data-tabs="guide-panels">
+        <button class="tab is-active" role="tab" data-action="tab" data-target="catalog"><i data-lucide="list-checks"></i>Rule catalog <span class="count">41</span></button>
+        <button class="tab" role="tab" data-action="tab" data-target="custom"><i data-lucide="file-code-2"></i>Custom rules <span class="count">3</span></button>
+        <button class="tab" role="tab" data-action="tab" data-target="policy"><i data-lucide="shield-check"></i>Policy</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body" id="guide-panels">
+
+    <!-- ===================== Rule catalog ===================== -->
+    <section data-tab-panel="catalog" class="col gap-4">
+      <div class="callout callout--honey row-start gap-2" style="display:none"><i data-lucide="lock"></i><span>The built-in “Apiome Recommended” guide is read-only. Duplicate it from the Style Guides list to customize its rules.</span></div>
+
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="input-wrap" style="width:340px"><i data-lucide="search"></i><input class="input" aria-label="Search rules" placeholder="Search rules by id, rationale, or category…" /></div>
+          <select class="select" style="width:200px" aria-label="Filter by category"><option>All categories</option><option>Documentation</option><option>Naming</option><option>Responses</option><option>Schemas</option><option>Security</option></select>
+          <span class="chip" data-action="chip"><i data-lucide="pencil-line"></i>Modified only <span class="t-faint">5</span></span>
+          <span class="spacer"></span>
+          <span class="t-xs t-subtle">Severity is per guide; the default column shows the catalog baseline.</span>
+        </div>
+
+        <!-- Category: Naming -->
+        <div class="rule-group">
+          <div class="rule-group__head"><span class="t-caps">Naming</span><span class="t-xs t-muted t-num">7 of 8 on</span></div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable operation-operationId-camel-case" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">operation-operationId-camel-case</span><span class="badge badge--warn">default: warning</span><span class="badge badge--accent">modified</span></div><div class="rule-meta t-truncate">Operation ids are used as SDK method names; a single casing keeps generated clients predictable.</div></div>
+            <select class="select select--sm" aria-label="Severity for operation-operationId-camel-case"><option selected>Error</option><option>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable path-kebab-case" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">path-kebab-case</span><span class="badge badge--warn">default: warning</span></div><div class="rule-meta t-truncate">Path segments should be lowercase kebab-case so URLs read consistently across services.</div></div>
+            <select class="select select--sm" aria-label="Severity for path-kebab-case"><option>Error</option><option selected>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable path-params-camel-case" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">path-params-camel-case</span><span class="badge badge--warn">default: warning</span></div><div class="rule-meta t-truncate">Path parameters map to code identifiers; camelCase avoids per-language renames.</div></div>
+            <select class="select select--sm" aria-label="Severity for path-params-camel-case"><option>Error</option><option selected>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row is-off">
+            <button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Enable schema-names-pascal-case" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">schema-names-pascal-case</span><span class="badge badge--accent">default: info</span><span class="badge badge--accent">modified</span></div><div class="rule-meta t-truncate">Component schema names become type names in most generators.</div></div>
+            <select class="select select--sm" aria-label="Severity for schema-names-pascal-case" disabled><option>Error</option><option>Warning</option><option selected>Info</option></select>
+          </div>
+        </div>
+
+        <!-- Category: Documentation -->
+        <div class="rule-group">
+          <div class="rule-group__head"><span class="t-caps">Documentation</span><span class="t-xs t-muted t-num">9 of 11 on</span></div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable info-contact" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">info-contact</span><span class="badge badge--warn">default: warning</span><span class="badge badge--accent">modified</span></div><div class="rule-meta t-truncate">Consumers need someone to reach when a contract breaks — require info.contact.</div></div>
+            <select class="select select--sm" aria-label="Severity for info-contact"><option selected>Error</option><option>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable info-description" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">info-description</span><span class="badge badge--warn">default: warning</span></div><div class="rule-meta t-truncate">A top-level description is the first thing Browse renders; empty ones look abandoned.</div></div>
+            <select class="select select--sm" aria-label="Severity for info-description"><option>Error</option><option selected>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable operation-description" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">operation-description</span><span class="badge badge--warn">default: warning</span></div><div class="rule-meta t-truncate">Every operation should say what it does and when to call it.</div></div>
+            <select class="select select--sm" aria-label="Severity for operation-description"><option>Error</option><option selected>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable schema-description" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">schema-description</span><span class="badge badge--accent">default: info</span></div><div class="rule-meta t-truncate">Schemas without descriptions score poorly on the documentation axis and confuse SDK users.</div></div>
+            <select class="select select--sm" aria-label="Severity for schema-description"><option>Error</option><option>Warning</option><option selected>Info</option></select>
+          </div>
+          <div class="rule-row is-off">
+            <button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Enable info-license" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">info-license</span><span class="badge badge--accent">default: info</span><span class="badge badge--accent">modified</span></div><div class="rule-meta t-truncate">Public specs should state a license; internal ones may skip it.</div></div>
+            <select class="select select--sm" aria-label="Severity for info-license" disabled><option>Error</option><option>Warning</option><option selected>Info</option></select>
+          </div>
+        </div>
+
+        <!-- Category: Security -->
+        <div class="rule-group">
+          <div class="rule-group__head"><span class="t-caps">Security</span><span class="t-xs t-muted t-num">6 of 6 on</span></div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable no-http-basic" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">no-http-basic</span><span class="badge badge--danger">default: error</span></div><div class="rule-meta t-truncate">HTTP Basic sends credentials on every request; prefer bearer tokens or OAuth 2.</div></div>
+            <select class="select select--sm" aria-label="Severity for no-http-basic"><option selected>Error</option><option>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable operation-security-defined" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">operation-security-defined</span><span class="badge badge--danger">default: error</span></div><div class="rule-meta t-truncate">Every operation must reference a declared security scheme or be explicitly public.</div></div>
+            <select class="select select--sm" aria-label="Severity for operation-security-defined"><option selected>Error</option><option>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable servers-https-only" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">servers-https-only</span><span class="badge badge--danger">default: error</span></div><div class="rule-meta t-truncate">Server URLs must use https; plain http leaks tokens in transit.</div></div>
+            <select class="select select--sm" aria-label="Severity for servers-https-only"><option selected>Error</option><option>Warning</option><option>Info</option></select>
+          </div>
+        </div>
+
+        <!-- Category: Responses -->
+        <div class="rule-group">
+          <div class="rule-group__head"><span class="t-caps">Responses</span><span class="t-xs t-muted t-num">7 of 9 on</span></div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable response-4xx-defined" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">response-4xx-defined</span><span class="badge badge--warn">default: warning</span><span class="badge badge--accent">modified</span></div><div class="rule-meta t-truncate">Operations should document at least one client-error response so SDKs can type failures.</div></div>
+            <select class="select select--sm" aria-label="Severity for response-4xx-defined"><option selected>Error</option><option>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable response-success-defined" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">response-success-defined</span><span class="badge badge--danger">default: error</span></div><div class="rule-meta t-truncate">Every operation needs a 2xx or 3xx response.</div></div>
+            <select class="select select--sm" aria-label="Severity for response-success-defined"><option selected>Error</option><option>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row is-off">
+            <button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Enable response-content-type-json" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">response-content-type-json</span><span class="badge badge--accent">default: info</span></div><div class="rule-meta t-truncate">Prefer application/json media types; flag vendor or text responses for review.</div></div>
+            <select class="select select--sm" aria-label="Severity for response-content-type-json" disabled><option>Error</option><option>Warning</option><option selected>Info</option></select>
+          </div>
+        </div>
+
+        <!-- Category: Schemas -->
+        <div class="rule-group">
+          <div class="rule-group__head"><span class="t-caps">Schemas</span><span class="t-xs t-muted t-num">5 of 7 on</span></div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable oas3-schema" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">oas3-schema</span><span class="badge badge--danger">default: error</span></div><div class="rule-meta t-truncate">The document must validate against the OpenAPI 3.x meta-schema.</div></div>
+            <select class="select select--sm" aria-label="Severity for oas3-schema"><option selected>Error</option><option>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row">
+            <button class="switch switch--sm is-on" role="switch" aria-checked="true" aria-label="Enable oas3-unused-component" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">oas3-unused-component</span><span class="badge badge--warn">default: warning</span></div><div class="rule-meta t-truncate">Unreferenced components bloat exports and confuse readers.</div></div>
+            <select class="select select--sm" aria-label="Severity for oas3-unused-component"><option>Error</option><option selected>Warning</option><option>Info</option></select>
+          </div>
+          <div class="rule-row is-off">
+            <button class="switch switch--sm" role="switch" aria-checked="false" aria-label="Enable schema-examples-present" data-action="switch"></button>
+            <div class="min-w-0"><div class="row gap-2 wrap"><span class="rule-id">schema-examples-present</span><span class="badge badge--accent">default: info</span></div><div class="rule-meta t-truncate">Examples make Browse and Try-it useful; Partner API strict turns this to error.</div></div>
+            <select class="select select--sm" aria-label="Severity for schema-examples-present" disabled><option>Error</option><option>Warning</option><option selected>Info</option></select>
+          </div>
+        </div>
+
+        <div class="table-foot"><span>Showing 16 of 41 rules · 5 categories</span><span class="t-faint">Empty search: “No rules match your search.”</span></div>
+      </div>
+
+      <!-- Sticky save bar (catalog dirty) -->
+      <div class="save-bar" role="status" aria-live="polite">
+        <i data-lucide="pencil-line" style="width:15px;height:15px"></i>
+        <span>2 unsaved rule changes</span>
+        <button class="btn btn--sm" data-action="open" data-target="discard-dialog">Discard</button>
+        <button class="btn btn--sm btn--primary" data-action="open" data-target="saved-toast-note"><i data-lucide="save"></i>Save changes</button>
+      </div>
+    </section>
+
+    <!-- ===================== Custom rules ===================== -->
+    <section data-tab-panel="custom" hidden class="col gap-4">
+      <div class="grid grid-2" style="grid-template-columns:minmax(32rem,1.2fr) minmax(0,1fr)">
+        <!-- Left: YAML editor -->
+        <div class="card" style="overflow:hidden">
+          <div class="card__header">
+            <div><div class="card__title"><i data-lucide="file-code-2"></i>Custom rules (YAML)</div><div class="t-xs t-muted mt-1">3 rules saved · Spectral-compatible subset · schema completion from <span class="mono">custom-rule-dsl.schema.json</span></div></div>
+            <div class="row gap-1"><button class="btn btn--sm btn--ghost" data-tip="Format document"><i data-lucide="wand-sparkles"></i>Format</button><button class="btn btn--sm btn--ghost btn--icon" data-tip="Insert rule snippet" aria-label="Insert rule snippet"><i data-lucide="plus"></i></button></div>
+          </div>
+          <div class="banner banner--warn" style="border-radius:0"><i data-lucide="triangle-alert"></i><div><div class="banner-title">Server validation failed</div><div class="banner-body">rules.refund-idempotency-key.then.function — <span class="mono">"require"</span> is not one of pattern, casing, enumeration, truthy, defined, undefined, length. Line 15.</div></div></div>
+          <div class="editor">
+            <div class="code code--lines" role="textbox" aria-multiline="true" aria-label="Custom rules YAML"><span><span class="c-k">rules</span>:</span><span>  <span class="c-n">operation-summary-max-length</span>:</span><span>    <span class="c-k">description</span>: <span class="c-s">Summaries stay under 60 characters so Browse lists them on one line.</span></span><span>    <span class="c-k">severity</span>: <span class="c-s">warning</span></span><span>    <span class="c-k">given</span>: <span class="c-s">$.paths[*][*].summary</span></span><span>    <span class="c-k">then</span>:</span><span>      <span class="c-k">function</span>: <span class="c-s">length</span></span><span>      <span class="c-k">functionOptions</span>: { <span class="c-k">max</span>: <span class="c-p">60</span> }</span><span></span><span>  <span class="c-n">refund-idempotency-key</span>:</span><span>    <span class="c-k">description</span>: <span class="c-s">POST /refunds must declare an Idempotency-Key header parameter.</span></span><span>    <span class="c-k">severity</span>: <span class="c-s">error</span></span><span>    <span class="c-k">given</span>: <span class="c-s">$.paths['/refunds'].post.parameters[?(@.in == 'header')].name</span></span><span>    <span class="c-k">then</span>:</span><span class="has-marker">      <span class="c-k">function</span>: <span class="c-s sq">require</span>   <span class="c-c"># ⚠ not one of pattern|casing|enumeration|truthy|defined|undefined|length</span></span><span>      <span class="c-k">functionOptions</span>: { <span class="c-k">match</span>: <span class="c-s">Idempotency-Key</span> }</span><span></span><span>  <span class="c-n">error-schema-shape</span>:</span><span>    <span class="c-k">description</span>: <span class="c-s">4xx/5xx responses use the shared Error schema.</span></span><span>    <span class="c-k">severity</span>: <span class="c-s">warning</span></span><span>    <span class="c-k">given</span>:</span><span>      - <span class="c-s">$.paths[*][*].responses[?(@property &gt;= 400)].content['application/json'].schema.$ref</span></span><span>    <span class="c-k">then</span>:</span><span>      <span class="c-k">function</span>: <span class="c-s">pattern</span></span><span>      <span class="c-k">functionOptions</span>: { <span class="c-k">match</span>: <span class="c-s">'#/components/schemas/Error$'</span> }</span><span></span><span>  <span class="c-n">header-casing</span>:</span><span>    <span class="c-k">description</span>: <span class="c-s">Header parameters are Kebab-Case.</span></span><span>    <span class="c-k">severity</span>: <span class="c-s">info</span></span><span>    <span class="c-k">given</span>: <span class="c-s">$..parameters[?(@.in == 'header')].name</span></span><span>    <span class="c-k">then</span>: { <span class="c-k">function</span>: <span class="c-s">casing</span>, <span class="c-k">functionOptions</span>: { <span class="c-k">type</span>: <span class="c-s">pascal</span>, <span class="c-k">separator</span>: { <span class="c-k">char</span>: <span class="c-s">'-'</span> } } }</span></div>
+            <div class="editor__status"><span>YAML</span><span>·</span><span>Ln 15, Col 17</span><span>·</span><span style="color:var(--warn-fg)">⚠ 1 problem</span><span class="ml-auto">4 rules in draft · 3 saved</span></div>
+          </div>
+        </div>
+
+        <!-- Right: Test against… -->
+        <div class="card" style="display:flex;flex-direction:column">
+          <div class="card__header"><div class="card__title"><i data-lucide="flask-conical"></i>Test against…</div><span class="t-xs t-subtle">dry run · nothing is saved</span></div>
+          <div class="card__body col gap-4" style="flex:1">
+            <div class="grid grid-2">
+              <div class="field"><label>Project</label><select class="select"><option selected>Payments API</option><option>Orders Service</option><option>Inventory Events</option></select></div>
+              <div class="field"><label>Version</label><select class="select"><option selected>v2.4.0 (draft)</option><option>v2.3.1 (published)</option><option>v2.3.0</option></select></div>
+            </div>
+            <div class="row gap-2"><button class="btn btn--primary" style="align-self:flex-start"><i data-lucide="play"></i>Run</button><span class="t-xs t-subtle">Last run 09:41 · 1.2 s · Payments API v2.4.0</span></div>
+
+            <div class="callout" style="display:none">Pick a project and version, then <strong>Run</strong> to see violations from the draft rules above — nothing is saved until you click Save.</div>
+
+            <div>
+              <div class="row-between mb-2"><span class="t-caps">Findings</span><span class="row gap-1"><span class="badge" data-status="error">1 error</span><span class="badge" data-status="warning">2 warnings</span></span></div>
+              <div class="finding"><i data-lucide="circle-x" style="color:var(--danger)"></i><div class="min-w-0"><div class="row gap-2 wrap"><code class="tag">refund-idempotency-key</code><span class="mono t-xs t-subtle t-truncate">paths./refunds.post.parameters</span></div><div class="t-sm mt-1"><span class="t-600 t-danger">error</span> — POST /refunds must declare an Idempotency-Key header parameter.</div></div></div>
+              <div class="finding"><i data-lucide="triangle-alert" style="color:var(--warn)"></i><div class="min-w-0"><div class="row gap-2 wrap"><code class="tag">operation-summary-max-length</code><span class="mono t-xs t-subtle t-truncate">paths./payouts/{payoutId}/reverse.post.summary</span></div><div class="t-sm mt-1"><span class="t-600 t-warn">warning</span> — Summaries stay under 60 characters so Browse lists them on one line. (74 chars)</div></div></div>
+              <div class="finding"><i data-lucide="triangle-alert" style="color:var(--warn)"></i><div class="min-w-0"><div class="row gap-2 wrap"><code class="tag">error-schema-shape</code><span class="mono t-xs t-subtle t-truncate">paths./cards.post.responses.422.content.application/json.schema.$ref</span></div><div class="t-sm mt-1"><span class="t-600 t-warn">warning</span> — 4xx/5xx responses use the shared Error schema.</div></div></div>
+            </div>
+
+            <div class="banner banner--warn"><i data-lucide="octagon-alert"></i><div><div class="banner-title">Rules aborted during evaluation</div><div class="banner-body mono t-xs">header-casing: functionOptions.type must be one of camel|kebab|snake|pascal|macro|cobol|flat</div></div></div>
+
+            <div class="t-xs t-faint" style="margin-top:auto">Success copy: “No violations — draft rules pass against v2.4.0.”</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="save-bar" role="status" aria-live="polite">
+        <i data-lucide="pencil-line" style="width:15px;height:15px"></i>
+        <span>Unsaved custom rules</span>
+        <button class="btn btn--sm" data-action="open" data-target="discard-dialog">Discard</button>
+        <button class="btn btn--sm btn--primary" data-action="open" data-target="saved-toast-note"><i data-lucide="save"></i>Save</button>
+      </div>
+    </section>
+
+    <!-- ===================== Policy ===================== -->
+    <section data-tab-panel="policy" hidden class="col gap-6 page-body--narrow" style="padding:0;margin:0;max-width:920px">
+      <div class="card">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="shield-check"></i>Policy</div><div class="t-xs t-muted mt-1">Gate settings applied when evaluating lint evidence against this guide.</div></div><span class="badge badge--outline badge--mono">v3</span></div>
+        <div class="card__body col gap-5">
+          <div class="grid grid-2">
+            <div class="field"><label>Quality minimum grade</label><select class="select"><option>No floor</option><option>A</option><option selected>B</option><option>C</option><option>D</option><option>F</option></select><div class="hint">Evidence graded below this floor fails the quality gate.</div></div>
+            <div class="field"><label>Required coverage</label><div class="row gap-4" style="height:var(--control-h)"><label class="check"><input type="checkbox" checked /> quality</label><span class="t-xs t-subtle">More axes arrive with the axis-coverage roadmap.</span></div></div>
+          </div>
+          <div class="field">
+            <label>Breaking-change publishes</label>
+            <select class="select" style="max-width:320px"><option>Off</option><option selected>Warn (default)</option><option>Block</option></select>
+            <div class="hint">Warn when a publish is breaking without a major-version bump; publishing proceeds.</div>
+            <details class="t-xs t-subtle mt-1"><summary style="cursor:pointer">All options</summary><ul style="padding-left:14px;list-style:disc;margin-top:4px"><li><strong>Off</strong> — Never check for breaking changes at publish time.</li><li><strong>Warn (default)</strong> — Warn when a publish is breaking without a major-version bump; publishing proceeds.</li><li><strong>Block</strong> — Refuse the publish until the major version is bumped, or it is force-published with a reason.</li></ul></details>
+          </div>
+          <div>
+            <div class="t-sm t-600">CI outcomes</div>
+            <div class="t-xs t-muted">What <span class="mono">GET …/lint/gate</span> reports as failed for pipelines using this guide.</div>
+            <div class="switch-row"><div><div class="sw-title">Fail on unwaived errors</div><div class="sw-desc">Any open error-severity finding without an active waiver fails the gate.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+            <div class="switch-row"><div><div class="sw-title">Fail on required coverage</div><div class="sw-desc">Missing evidence for a required axis fails the gate.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+            <div class="switch-row"><div><div class="sw-title">Fail on axis gates</div><div class="sw-desc">An axis scoring below its floor fails the gate.</div></div><button class="switch is-on" role="switch" aria-checked="true" data-action="switch"></button></div>
+          </div>
+        </div>
+        <div class="card__footer"><span class="t-xs t-subtle">Saving creates an immutable policy version.</span><button class="btn btn--primary" disabled>Save</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card__header"><div><div class="card__title"><i data-lucide="history"></i>Policy versions</div><div class="t-xs t-muted mt-1">Immutable snapshots created when policy is saved. <a href="#">Policy documentation <i data-lucide="arrow-up-right" style="display:inline-block;width:11px;height:11px;vertical-align:-1px"></i></a></div></div></div>
+        <div class="divide-y">
+          <div class="list-row"><span class="badge badge--outline badge--mono">v3</span><span class="mono t-xs t-muted" title="sha256:e2b7c9d4a1f6e8b3c5d0a2f7e9b1c4d6">e2b7c9d4a1f6…</span><span class="t-xs t-subtle ml-auto t-num">Aug 12, 2026, 02:10 PM</span><span class="row gap-2 t-xs"><span class="avatar avatar--xs avatar--a">AL</span>Ada Lovelace</span></div>
+          <div class="list-row"><span class="badge badge--outline badge--mono">v2</span><span class="mono t-xs t-muted" title="sha256:5a9d1c3e7b2f4a8c6e0d9b1f3a5c7e2d">5a9d1c3e7b2f…</span><span class="t-xs t-subtle ml-auto t-num">Jul 30, 2026, 11:02 AM</span><span class="row gap-2 t-xs"><span class="avatar avatar--xs avatar--b">GH</span>Grace Hopper</span></div>
+          <div class="list-row"><span class="badge badge--outline badge--mono">v1</span><span class="mono t-xs t-muted" title="sha256:0f4b8d2a6c1e9f3b7d5a2c8e4f6b0d1a">0f4b8d2a6c1e…</span><span class="t-xs t-subtle ml-auto t-num">Jul 2, 2026, 09:15 AM</span><span class="row gap-2 t-xs"><span class="avatar avatar--xs avatar--a">AL</span>Ada Lovelace</span></div>
+        </div>
+        <div class="card__footer"><span class="t-xs t-faint">Empty copy: “No policy versions yet.” · Not found: “Policy settings not found.”</span></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ===================== Overlays ===================== -->
+
+<!-- Discard unsaved changes -->
+<div class="overlay" id="discard-dialog" data-overlay>
+  <div class="dialog dialog--sm" role="alertdialog" aria-labelledby="discard-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--warn"><i data-lucide="triangle-alert"></i></span>
+      <div><div class="dialog__title" id="discard-title">Discard unsaved changes?</div><div class="dialog__desc">You have unsaved changes to 2 rule(s). Leaving this page discards them.</div></div>
+    </div>
+    <div class="dialog__footer"><button class="btn" data-action="close">Keep editing</button><button class="btn btn--danger" data-action="close">Discard and leave</button></div>
+  </div>
+</div>
+
+<!-- Header overflow menu -->
+<div class="overlay" id="guide-menu" data-overlay style="background:transparent;align-items:flex-start;justify-content:flex-end;padding:96px 88px 0 0">
+  <div class="menu" role="menu">
+    <a class="menu__item" href="style-guides.html"><i data-lucide="badge-check"></i>Assign…</a>
+    <a class="menu__item" href="style-guides.html"><i data-lucide="copy"></i>Duplicate guide</a>
+    <a class="menu__item" href="style-guides.html"><i data-lucide="pencil"></i>Rename / description</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item" href="#"><i data-lucide="download"></i>Export rules as YAML</a>
+    <div class="menu__sep"></div>
+    <a class="menu__item is-danger" href="style-guides.html"><i data-lucide="trash-2"></i>Delete guide</a>
+  </div>
+</div>
+
+<!-- Save feedback (illustrative toast) -->
+<div class="overlay" id="saved-toast-note" data-overlay style="background:transparent;align-items:flex-end;justify-content:flex-end;padding:0 20px 64px 0">
+  <div class="toast toast--ok" role="status"><i data-lucide="circle-check"></i><div><div class="toast-title">Rule changes saved</div><div class="toast-desc">34 of 41 rules enabled · next lint run uses the new set.</div></div><button class="btn btn--ghost btn--sm btn--icon" data-action="close" aria-label="Dismiss"><i data-lucide="x"></i></button></div>
+</div>
+
+<!-- Not-found state (reference) -->
+<div class="overlay" id="not-found" data-overlay>
+  <div class="dialog dialog--sm"><div class="empty"><div class="empty__art"><span class="hex"></span><span class="hex hex--2"></span><i data-lucide="book-x"></i></div><div class="empty__title">Style guide not found.</div><div class="empty__desc">It may have been deleted, or the link belongs to another workspace.</div><div class="empty__actions"><a class="btn btn--primary" href="style-guides.html"><i data-lucide="arrow-left"></i>Back to style guides</a></div></div></div>
+</div>
+
+<template id="notes">
+  <p class="route">/ade/dashboard/style-guides/[guideId]</p>
+  <h4>Replaces</h4>
+  <ul><li><code>ade/dashboard/style-guides/[guideId]/page.tsx</code>, rule-catalog editor, <code>CustomRulesTab</code> (Monaco), <code>PolicyTab</code>.</li></ul>
+  <h4>Keeps (1:1)</h4>
+  <ul>
+    <li>Header: back arrow (aria “Back to style guides”), guide name + Built-in pill, subtitle, live “{enabled} of {count} rules enabled” pill; tabs Rule catalog · Custom rules · Policy.</li>
+    <li>Rule catalog: search (id / rationale / category) + category select; per-category sections with “{on} of {total} on”; rows = enable switch (aria “Enable {ruleId}”), <code>ruleId</code>, “default: {severity}” pill, “modified” pill vs baseline, rationale, severity select (disabled when off / read-only). Sticky amber save bar “{n} unsaved rule change(s)” Discard / Save changes; <code>beforeunload</code> guard; in-app Back → “Discard unsaved changes?” confirm with the same copy. Read-only notices for built-in guide / non-admin (callout, hidden here).</li>
+    <li>Custom rules: left “Custom rules (YAML)” editor (schema completion + validation; server error → amber banner + inline marker at the JSON-pointer range; other errors → red banner) with “{n} rule(s) saved”; right “Test against…” Project / Version / Run with initial copy, success copy, findings list (severity icon, rule, path, “{severity} — {message}”) and “Rules aborted during evaluation” box; sticky “Unsaved custom rules” bar.</li>
+    <li>Policy: Quality minimum grade, Required coverage (quality), Breaking-change publishes Off / Warn (default) / Block with descriptions, CI outcome switches (3, default on), Save disabled unless dirty; Policy versions card with docs link and empty copy; “Policy settings not found.”</li>
+  </ul>
+  <h4>Adds</h4>
+  <ul><li>“Modified only” chip, header overflow menu (assign / duplicate / rename / export YAML / delete), Format + snippet buttons and a status line in the editor, last-run meta next to Run, save toast, and a “Tenant default” badge in the title.</li></ul>
+  <h4>States</h4>
+  <ul><li>Loading: skeleton rule rows per tab. Not found: <code>.empty</code> “Style guide not found.” + “Back to style guides” (see #not-found). Empty search: “No rules match your search.” Read-only (built-in / non-admin): lock callout, switches and selects disabled, save bars hidden. Custom rules readOnly notice: “Duplicate it from the Style Guides list to author custom rules.” / “Only tenant administrators can edit custom rules. You can preview violations.”</li></ul>
+</template>
+</body>
+</html>
