@@ -767,6 +767,7 @@ class DbLintScorer:
             from .compatibility_engine import openapi_for_revision
             from .database import db
             from .style_guide_engine import guided_lint_openapi_spec
+            from .version_quality_capture import persistable_lint_report
 
             version = db.get_version_by_id(version_record_id, tenant_id)
             if not version:
@@ -774,16 +775,18 @@ class DbLintScorer:
             spec = openapi_for_revision(version, tenant_slug, tenant_id)
             # GOV-1.4: score under the revision's resolved style guide (project → tenant →
             # default), matching the import path's guided capture.
-            result, _guide = guided_lint_openapi_spec(
+            result, guide = guided_lint_openapi_spec(
                 spec, tenant_id, project_id=str(version.get("project_id") or "") or None
             )
+            # #5259: store the content fingerprint + guide context alongside the report so
+            # the converted (editable) revision is only re-linted once its content changes.
             db.set_version_quality_score(
                 version_record_id,
                 tenant_id,
                 result.score,
                 result.grade,
                 result.report_fingerprint,
-                quality_report=result.report_dict(),
+                quality_report=persistable_lint_report(result, spec, guide=guide),
             )
             return LintScore(
                 score=result.score, grade=result.grade, report_fingerprint=result.report_fingerprint

@@ -44,7 +44,10 @@ SECTION_FIELD_KEYS: dict[str, frozenset[str]] = {
             "sourceCommittedAt",
         }
     ),
-    "governance": frozenset({"revisionLocked", "metadata", "lifecycle"}),
+    # Stored lint headline (#5259) rides with governance: it is the style-guide-scored signal.
+    "governance": frozenset(
+        {"revisionLocked", "metadata", "lifecycle", "qualityScore", "qualityGrade"}
+    ),
     "creator": frozenset({"creator_id", "creator_name", "creator_email"}),
     "project": frozenset({"project_name", "project_slug"}),
     "timestamps": frozenset({"created_at", "updated_at"}),

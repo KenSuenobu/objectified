@@ -5,6 +5,36 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.262.0] - 2026-08-15
+
+### Fixed
+- **Project versions were re-linted when listed (#5259)** — the Versions screen rendered a
+  lint badge per row that called `GET .../{version}/lint` for every revision, and for any
+  revision without a stored report (hand-authored, forked, pushed, pre-V160) that endpoint
+  rebuilt the OpenAPI document, ran the linter **and** the external validation pack — on
+  every list render, N times over. Fifty revisions meant fifty concurrent lints.
+
+  **The report now lives on the version record and is served from there.**
+  `GET /v1/versions/{tenant_slug}/{project_id}` carries each row's stored `qualityScore` /
+  `qualityGrade` (`VersionSchema`; `get_versions_for_project` / `get_version_by_id` select the
+  V124 columns), so the list renders from the record and issues no lint requests.
+  `GET .../lint` serves the stored `quality_report` whenever it is current; the persisted
+  report now carries a `source_fingerprint` (sha256 of the reconstructed OpenAPI document,
+  `app.version_quality_capture.openapi_source_fingerprint`), and freshness is decided by
+  rebuilding the document and comparing — never by re-linting. A revision with no stored
+  report, or whose content changed since capture, is linted once and the result **persisted**
+  (`persist_version_lint_report`), so the next read is a plain read; a `baseRevisionId`
+  comparison is computed live and never stored. Reports without a fingerprint (pre-#5259,
+  canonical-model imports) are served as-is; a legacy native import re-linted from its
+  canonical model is stored on first open too.
+
+  **Linting runs on version changes and imports only.** Push (`POST /v1/versions/{t}/{p}`)
+  and fork schedule the shared capture (`capture_version_quality_score`, moved out of
+  `spec_import_engine`) as a background task; the publish precheck stores the report it
+  already computed; import/conversion captures gained the fingerprint + guide context
+  (`persistable_lint_report`). Stored reports echo the guide they were scored under
+  (`guideId` / `guideName` / `guideSource`) so the read path has the same context as a live run.
+
 ## [1.261.0] - 2026-08-07
 
 ### Added

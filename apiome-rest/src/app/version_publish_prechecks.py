@@ -16,6 +16,7 @@ from .publication_change_report import resolve_baseline_revision_id_for_change_r
 from .schema_compatibility import CompatibilityRules
 from .verification_policy_routes import decision_payload_for_http
 from .verification_policy_store import evaluate_and_record
+from .version_quality_capture import persist_version_lint_report
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,12 @@ def enforce_publish_prechecks(
         from .style_guide_engine import guided_lint_openapi_spec
 
         result, guide = guided_lint_openapi_spec(head_spec, tenant_id, project_id=project_id)
+        # #5259: publishing is a version change — store the report just computed on the
+        # revision (with its content fingerprint) so the versions list and later report
+        # opens read it back instead of re-linting. Best-effort; never blocks publish.
+        persist_version_lint_report(
+            version_record_id, tenant_id, result, head_spec, guide=guide
+        )
         error_findings = tuple(
             {
                 "rule": str(f.rule),

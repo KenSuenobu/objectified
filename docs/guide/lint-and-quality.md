@@ -11,6 +11,9 @@ there is no client-side scoring to drift. Use it before cutting and publishing a
 Open the **Designer** at `/ade/studio`; the quality grade and findings are shown for the version you
 are editing. Fix the findings (most are missing descriptions) and the grade updates.
 
+On the **Versions** screen (`/ade/dashboard/versions`) every revision row carries a grade chip
+read from the stored score; click it to open the full report (fetched on demand).
+
 ## With the CLI
 
 ```bash
@@ -36,6 +39,26 @@ X-API-Key: <your-api-key>
 Returns the numeric score, the letter grade, and a list of findings (e.g. undocumented classes,
 breaking changes when `baseRevisionId` is supplied). Every finding carries a stable `rule` id
 attributable to the built-in rule catalog.
+
+### When linting runs (and when it does not)
+
+The report is **stored on the version record** and served from there — reading it does not
+re-lint. Linting runs only on *version changes* and *imports*:
+
+- **Import / conversion** — the score is captured onto the new revision when the job commits.
+- **Push, fork, publish** — a new revision (push/fork) is scored right after it is created; the
+  publish precheck stores the report it computes.
+- **Content edits** — the stored report carries a fingerprint of the OpenAPI document it was
+  scored from. When you next open the report after editing classes/properties, the server
+  rebuilds the document, sees the fingerprint no longer matches, re-lints **once**, and stores
+  the new report. Opening it again is a plain read.
+
+The versions list (`GET /v1/versions/{tenant_slug}/{project_id}`) carries each revision's
+stored `qualityScore` / `qualityGrade`, so the Versions screen renders every badge from the
+record — a project with 50 revisions issues **zero** lint requests to render its list. A
+revision that has never been scored shows *Lint —*; clicking it lints (and stores) the score on
+demand. A `baseRevisionId` comparison is always computed live and never stored, since its
+findings depend on the chosen base.
 
 ### List the built-in rule catalog
 

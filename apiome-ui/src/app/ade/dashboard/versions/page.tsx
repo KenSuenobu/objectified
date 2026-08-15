@@ -274,6 +274,10 @@ interface Version {
   mockPrivate?: boolean;
   /** Stable mock base URL, set by REST when the mock is enabled (#4422) */
   mockBaseUrl?: string | null;
+  /** Quality score stored on the version record (#5259); null when the revision is unscored. */
+  qualityScore?: number | null;
+  /** A-F grade stored on the version record (#5259); null when the revision is unscored. */
+  qualityGrade?: string | null;
 }
 
 /** Client-side history timeline filters (#2579) — matches REST list `q` / creator / date range semantics. */
@@ -3708,6 +3712,8 @@ const Versions = () => {
                           projectId={selectedProjectId}
                           versionId={version.id}
                           versionLabel={version.version_id}
+                          storedScore={version.qualityScore}
+                          storedGrade={version.qualityGrade}
                         />
                       )}
                     </div>

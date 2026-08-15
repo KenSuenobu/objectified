@@ -85,6 +85,7 @@ from .version_notes import (
 from .version_publish_prechecks import enforce_publish_prechecks
 from .version_pull_delta import SCHEMA_PULL_DELTA_GUARANTEE, build_schema_pull_delta
 from .version_pull_payload import filter_version_pull_dump, resolve_pull_sections
+from .version_quality_capture import capture_version_quality_score
 
 from .mock_settings_util import is_private_mock_mode
 
@@ -1292,6 +1293,7 @@ async def create_version(
     tenant_slug: str,
     project_id: str,
     request: VersionCreateRequest,
+    background_tasks: BackgroundTasks,
     auth_data: Dict[str, Any] = Depends(validate_authentication)
 ) -> VersionSchema:
     """
@@ -1309,10 +1311,15 @@ async def create_version(
 
     If source_version_id is provided, classes will be copied from that version.
 
+    A push is a *version change*, so the new revision's quality/lint score is captured onto its
+    record after the response is sent (#5259) — the versions list then renders the badge from
+    the stored score instead of linting on read.
+
     Args:
         tenant_slug: The tenant slug
         project_id: The project ID
         request: Version creation data
+        background_tasks: FastAPI background tasks (post-response lint capture)
         auth_data: Authentication data (injected by dependency)
 
     Returns:
@@ -1623,6 +1630,12 @@ async def create_version(
                     exc_info=True,
                 )
 
+        # #5259: lint on version change — capture the stored score for the new revision once
+        # the response is sent (best-effort; never delays or fails the push).
+        background_tasks.add_task(
+            capture_version_quality_score, tenant_slug, tenant_id, str(version["id"])
+        )
+
         response_data = {**version}
         if copy_warning:
             response_data["copy_warning"] = copy_warning
@@ -1668,12 +1681,14 @@ async def fork_version_from_revision(
     tenant_slug: str,
     project_id: str,
     request: VersionForkRequest,
+    background_tasks: BackgroundTasks,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> VersionSchema:
     """
     Fork a schema version line into this project from a source revision in another project (sandbox / provenance).
 
     Not the same as a named branch within one project (#500): fork is cross-project isolation with recorded lineage.
+    The forked revision's quality/lint score is captured after the response is sent (#5259).
     """
     enforce_permission(db, auth_data, Resource.VERSIONS, Action.CREATE)
     target_project = db.get_project_by_id(project_id, auth_data["tenant_id"])
@@ -1748,6 +1763,10 @@ async def fork_version_from_revision(
         raise HTTPException(status_code=400, detail=err)
 
     version = result["version"]
+    # #5259: a fork is a version change — capture the stored score once the response is sent.
+    background_tasks.add_task(
+        capture_version_quality_score, tenant_slug, auth_data["tenant_id"], str(version["id"])
+    )
     return VersionSchema(**version)
 
 

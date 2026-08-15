@@ -74,6 +74,11 @@ from .spectral_import import (
 )
 from .style_guide_engine import guided_lint_openapi_spec
 from .style_guide_revisions import pin_guide_revision_id
+from .version_quality_capture import (
+    SOURCE_FINGERPRINT_KEY,
+    persist_version_lint_report,
+    stored_report_is_current,
+)
 
 router = APIRouter(prefix="/v1/versions", tags=["lint"])
 decisions_router = APIRouter(prefix="/v1/lint/decisions", tags=["lint-decisions"])
@@ -396,9 +401,17 @@ def lint_report_response_from_persisted_dict(
             captured_fingerprint if captured_fingerprint is not None else fingerprint
         ),
         score_is_stale=False,
-        guide_id=getattr(guide, "guide_id", None) if guide is not None else None,
-        guide_name=getattr(guide, "name", None) if guide is not None else None,
-        guide_source=getattr(guide, "source", None) if guide is not None else None,
+        # Guide context: the caller's resolved guide when it has one, else whatever the
+        # capture site stored alongside the report (#5259), else null (legacy reports).
+        guide_id=(
+            getattr(guide, "guide_id", None) if guide is not None else report.get("guide_id")
+        ),
+        guide_name=(
+            getattr(guide, "name", None) if guide is not None else report.get("guide_name")
+        ),
+        guide_source=(
+            getattr(guide, "source", None) if guide is not None else report.get("guide_source")
+        ),
         **lint_axis_fields_from_evaluation(axis_eval),
     )
 
@@ -448,6 +461,39 @@ def _try_relint_canonical_source(
     return lint_report.to_persisted_dict()
 
 
+def _persist_canonical_report(
+    version: Dict[str, Any], tenant_id: str, report: Dict[str, Any]
+) -> bool:
+    """Best-effort: store a canonical-model re-lint (native import) on the revision (#5259).
+
+    ``_try_relint_canonical_source`` reconstructs the report for native imports that predate
+    full report persistence; storing it makes the next open a plain read. Carries no content
+    fingerprint (a catalog item's canonical model is not edited in place), so it is served
+    as-is until a re-import re-captures it. Never raises.
+
+    Args:
+        version: The linted ``versions`` row.
+        tenant_id: The tenant owning the revision.
+        report: The ``to_persisted_dict()`` shape returned by the adapter lint.
+
+    Returns:
+        True when the revision row was updated.
+    """
+    try:
+        return bool(
+            db.set_version_quality_score(
+                str(version["id"]),
+                tenant_id,
+                int(report.get("score") or 0),
+                str(report.get("grade") or "F"),
+                str(report.get("report_fingerprint") or "") or None,
+                quality_report=report,
+            )
+        )
+    except Exception:  # noqa: BLE001 - persistence is best-effort
+        return False
+
+
 async def build_lint_report(
     version: Dict[str, Any],
     project_id: str,
@@ -458,12 +504,20 @@ async def build_lint_report(
     catalog_item: Optional[Dict[str, Any]] = None,
 ) -> LintReportResponse:
     """
-    Compute the deterministic lint report for an already-resolved revision.
+    Return the lint report for an already-resolved revision, computing it only when needed.
 
     This is the post-validation core shared by the per-version lint route and the catalog
     lint-report analog (MFI-23.10): callers resolve and authorize ``version`` (and, optionally,
     ``base_version``) first, then delegate the OpenAPI reconstruction, scoring and captured-score
     surfacing here so both surfaces produce an identical :class:`LintReportResponse`.
+
+    Read path (#5259): the report stored on the version record is served whenever it is
+    current — a report carrying a ``source_fingerprint`` is current when the rebuilt OpenAPI
+    document still hashes to it; a report without one (pre-#5259 or canonical-model) is served
+    as-is. Only a revision with no stored report, or whose content changed since capture, is
+    linted (and the external validation pack run) — and that result is persisted back onto the
+    revision, so listing versions never re-lints. A ``base_version`` comparison is always
+    computed live and never persisted (its findings depend on the chosen base).
 
     Args:
         version: The resolved ``versions`` row (must carry ``id``/``project_id``/``version_id``).
@@ -485,21 +539,42 @@ async def build_lint_report(
     except Exception:  # pragma: no cover - defensive; surfacing must not break the live report
         captured = {}
 
+    # #5259: the report is stored on the version record and served from there. Linting runs
+    # only when the revision has no stored report yet, or when its schema content changed
+    # since the report was captured — detected by rebuilding the OpenAPI document (a few
+    # queries) and comparing its fingerprint, never by re-running the linter.
     stored_report = _coerce_quality_report(captured.get("quality_report"))
-    if (
-        resolved_base_id is None
-        and stored_report.get("report_fingerprint")
-    ):
-        return lint_report_response_from_persisted_dict(
-            version=version,
-            project_id=project_id,
-            report=stored_report,
-            captured=captured,
-        )
+    head_spec: Optional[Dict[str, Any]] = None
+    if resolved_base_id is None and stored_report.get("report_fingerprint"):
+        if not stored_report.get(SOURCE_FINGERPRINT_KEY):
+            # Legacy (pre-#5259) or canonical-model report: no content fingerprint to compare
+            # against, so it is authoritative until an import/push/publish re-captures it.
+            return lint_report_response_from_persisted_dict(
+                version=version,
+                project_id=project_id,
+                report=stored_report,
+                captured=captured,
+            )
+        try:
+            head_spec = openapi_for_revision(version, tenant_slug, tenant_id)
+        except Exception:  # noqa: BLE001 - a freshness probe must never break a stored read
+            head_spec = None
+        if head_spec is None or stored_report_is_current(stored_report, head_spec):
+            return lint_report_response_from_persisted_dict(
+                version=version,
+                project_id=project_id,
+                report=stored_report,
+                captured=captured,
+            )
+        # Content changed since capture: fall through and re-lint (reusing ``head_spec``),
+        # then re-persist so the next read is served from the record again.
 
     if resolved_base_id is None:
         canonical_report = _try_relint_canonical_source(version, catalog_item=catalog_item)
         if canonical_report and canonical_report.get("report_fingerprint"):
+            # Persist the reconstructed native report so this legacy import is not re-linted
+            # on every open (best-effort; the response is served either way).
+            _persist_canonical_report(version, tenant_id, canonical_report)
             return lint_report_response_from_persisted_dict(
                 version=version,
                 project_id=project_id,
@@ -507,7 +582,8 @@ async def build_lint_report(
                 captured=captured,
             )
 
-    head_spec = openapi_for_revision(version, tenant_slug, tenant_id)
+    if head_spec is None:
+        head_spec = openapi_for_revision(version, tenant_slug, tenant_id)
 
     extra_findings = []
     compatibility_overall: Optional[str] = None
@@ -565,6 +641,28 @@ async def build_lint_report(
         for f in result.findings
     ]
 
+    # GOV-1.6: pin the report to the immutable revision of the guide that scored it, so
+    # the result stays explainable after the guide is edited.
+    guide_revision_id = pin_guide_revision_id(guide, tenant_id)
+
+    # #5259: a base-less report is the revision's authoritative report — store it on the
+    # version record (with the content fingerprint) so later reads, and the versions list,
+    # come from the record instead of re-linting. Best-effort; a failed write leaves the
+    # previously captured values in place.
+    if resolved_base_id is None and persist_version_lint_report(
+        str(version["id"]),
+        tenant_id,
+        result,
+        head_spec,
+        guide=guide,
+        guide_revision_id=guide_revision_id,
+    ):
+        captured = {
+            "quality_score": result.score,
+            "quality_grade": result.grade,
+            "quality_report_fingerprint": result.report_fingerprint,
+        }
+
     # MFI-4.4: surface the score persisted on the version at import time (#3609 / MFI-4.2)
     # alongside the live recompute, so REST/ADE/CLI all show the authoritative captured score.
     # When the captured fingerprint differs from this live report's, the stored score is stale.
@@ -606,9 +704,7 @@ async def build_lint_report(
         guide_id=guide.guide_id,
         guide_name=guide.name,
         guide_source=guide.source,
-        # GOV-1.6: pin the report to the immutable revision of the guide that scored it, so
-        # the result stays explainable after the guide is edited.
-        guide_revision_id=pin_guide_revision_id(guide, tenant_id),
+        guide_revision_id=guide_revision_id,
         **lint_axis_fields_from_evaluation(catalog_axis_evaluation(axis_report).as_dict()),
     )
 

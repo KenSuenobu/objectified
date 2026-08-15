@@ -6,6 +6,11 @@ from unittest.mock import MagicMock, patch
 
 from app.models import ProjectSchema
 from app.spec_import_engine import _capture_version_quality_score
+from app.version_quality_capture import (
+    SOURCE_FINGERPRINT_KEY,
+    capture_version_quality_score,
+    openapi_source_fingerprint,
+)
 
 
 def test_capture_persists_lint_result_onto_the_revision():
@@ -26,11 +31,13 @@ def test_capture_persists_lint_result_onto_the_revision():
         "findings": [],
         "categories": [],
     }
-    guide = MagicMock(guide_id=None, name="Apiome Recommended", source="fallback")
+    guide = MagicMock(guide_id="guide-1", source="custom")
+    guide.name = "Apiome Recommended"
+    spec = {"openapi": "3.1.0"}
 
     # GOV-1.4: the capture lints through the style-guide-aware entry point.
     with patch("app.database.db", mock_db), patch(
-        "app.compatibility_engine.openapi_for_revision", return_value={"openapi": "3.1.0"}
+        "app.compatibility_engine.openapi_for_revision", return_value=spec
     ) as m_recon, patch(
         "app.style_guide_engine.guided_lint_openapi_spec", return_value=(lint_result, guide)
     ) as m_lint:
@@ -42,9 +49,22 @@ def test_capture_persists_lint_result_onto_the_revision():
     # project → tenant → default resolution chain applies to import-time scores too.
     assert m_lint.call_args.args[1] == "tenant-1"
     assert m_lint.call_args.kwargs.get("project_id") == "proj-1"
-    mock_db.set_version_quality_score.assert_called_once_with(
-        "ver-1", "tenant-1", 87, "B", "fp-abc", quality_report=lint_result.report_dict()
-    )
+    mock_db.set_version_quality_score.assert_called_once()
+    args, kwargs = mock_db.set_version_quality_score.call_args
+    assert args == ("ver-1", "tenant-1", 87, "B", "fp-abc")
+    stored = kwargs["quality_report"]
+    # #5259: the stored report is the engine report plus the content fingerprint of the
+    # linted document and the guide it was scored under.
+    assert {k: stored[k] for k in lint_result.report_dict()} == lint_result.report_dict()
+    assert stored[SOURCE_FINGERPRINT_KEY] == openapi_source_fingerprint(spec)
+    assert stored["guide_id"] == "guide-1"
+    assert stored["guide_name"] == "Apiome Recommended"
+    assert stored["guide_source"] == "custom"
+
+
+def test_capture_helper_is_shared_with_the_import_engine():
+    """The import engine's private seam is the shared capture helper (#5259), not a fork of it."""
+    assert _capture_version_quality_score is capture_version_quality_score
 
 
 def test_capture_is_best_effort_and_never_raises():

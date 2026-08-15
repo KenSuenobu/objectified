@@ -7300,6 +7300,8 @@ class Database:
 
         Optional lifecycle filter (#739). Optional history filters (#2579): substring match on
         revision note / changelog / commit message body, creator id, and created_at range.
+        Each row carries the stored ``quality_score`` / ``quality_grade`` (#5259) so list
+        surfaces render the lint badge from the record instead of re-linting per version.
         """
         lifecycle_clause = ""
         params: List[Any] = [project_id, tenant_id]
@@ -7346,6 +7348,7 @@ class Database:
                    v.revision_locked, v.metadata,
                    v.commit_author, v.commit_message, v.external_ref,
                    v.source_commit_sha, v.source_committed_at,
+                   v.quality_score, v.quality_grade,
                    vf.version_id AS fork_source_version_string,
                    pf.name AS fork_source_project_name,
                    up.name AS upstream_project_name,
@@ -7418,6 +7421,7 @@ class Database:
                    v.revision_locked, v.metadata,
                    v.commit_author, v.commit_message, v.external_ref,
                    v.source_commit_sha, v.source_committed_at,
+                   v.quality_score, v.quality_grade,
                    vf.version_id AS fork_source_version_string,
                    pf.name AS fork_source_project_name,
                    up.name AS upstream_project_name,
