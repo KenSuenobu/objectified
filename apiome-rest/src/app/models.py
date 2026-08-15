@@ -3231,6 +3231,23 @@ class VersionSchema(BaseModel):
         default="stable",
         description="Governance lifecycle tag: stable | beta | deprecated | archived (#739); aligns with metadata.lifecycle and #507 deprecation when unset.",
     )
+    # Stored quality/lint headline (#5259): captured at import, push/fork, publish, or the last
+    # explicit lint of this revision — read from the version record, never recomputed on list.
+    quality_score: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("qualityScore", "quality_score"),
+        serialization_alias="qualityScore",
+        description=(
+            "Stored 0-100 quality score for this revision (#5259); null when the revision has "
+            "not been linted yet. Open GET .../lint to compute and store it."
+        ),
+    )
+    quality_grade: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("qualityGrade", "quality_grade"),
+        serialization_alias="qualityGrade",
+        description="Stored A-F grade matching qualityScore; null when unscored.",
+    )
     creator_name: Optional[str] = None
     creator_email: Optional[str] = None
     project_name: Optional[str] = None

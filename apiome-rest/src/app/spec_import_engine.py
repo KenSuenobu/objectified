@@ -46,6 +46,7 @@ from .models import (
     SpecImportStartJsonRequest,
     SpecImportStartMetadata,
 )
+from .version_quality_capture import capture_version_quality_score
 
 logger = logging.getLogger(__name__)
 
@@ -141,61 +142,10 @@ def _record_phase_timing_metric(ev: SpecImportEvent) -> None:
         logger.debug("Failed to record import stage metric", exc_info=True)
 
 
-def _capture_version_quality_score(
-    tenant_slug: str, tenant_id: str, version_record_id: str
-) -> None:
-    """Best-effort: compute and persist the lint/quality score for a freshly imported revision.
-
-    Captured after a completed import so the projects list can surface a score for *every* import
-    source (not only browser-local snapshots, #3609 follow-up). Strictly best-effort: the revision is
-    already committed, so any failure here just leaves the score for an on-demand lint to fill and
-    never affects the import outcome. Imported lazily to avoid a heavy import-time dependency cycle.
-    """
-    try:
-        from .compatibility_engine import openapi_for_revision
-        from .database import db
-        from .style_guide_engine import guided_lint_openapi_spec
-
-        version = db.get_version_by_id(version_record_id, tenant_id)
-        if not version:
-            return
-        spec = openapi_for_revision(version, tenant_slug, tenant_id)
-        # GOV-1.4: score under the revision's resolved style guide (project → tenant →
-        # default), so the captured score matches what the lint route reports.
-        result, _guide = guided_lint_openapi_spec(
-            spec, tenant_id, project_id=str(version.get("project_id") or "") or None
-        )
-        db.set_version_quality_score(
-            version_record_id,
-            tenant_id,
-            result.score,
-            result.grade,
-            result.report_fingerprint,
-            quality_report=result.report_dict(),
-        )
-        try:
-            from .openapi_validation_evidence import (
-                capture_openapi_external_validation_evidence_sync,
-            )
-
-            capture_openapi_external_validation_evidence_sync(
-                spec,
-                version_record_id=version_record_id,
-                tenant_id=tenant_id,
-                project_id=str(version.get("project_id") or "") or None,
-            )
-        except Exception:  # noqa: BLE001
-            logger.warning(
-                "Failed to capture external OpenAPI validation evidence for %s",
-                version_record_id,
-                exc_info=True,
-            )
-    except Exception:  # noqa: BLE001 - capture is strictly best-effort
-        logger.warning(
-            "Failed to capture quality score for revision %s",
-            version_record_id,
-            exc_info=True,
-        )
+# The capture helper lives in :mod:`app.version_quality_capture` (#5259) so revision-creating
+# pushes/forks and the lint route share one implementation; the private name is kept as the
+# import-engine seam (and patch target).
+_capture_version_quality_score = capture_version_quality_score
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 # Path segments relative to the ``apiome-ui`` package (yarn workspace cwd).
