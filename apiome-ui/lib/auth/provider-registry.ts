@@ -2,8 +2,12 @@
  * OAuth provider registry & deploy config (OLO-2.3, #4195).
  *
  * The single surface describing which sign-in providers exist and which are enabled in this
- * deployment. A provider is *enabled* purely from env config (its required env vars are set and
- * non-blank) — no code changes are needed to add or remove a provider from a deployment.
+ * deployment. A provider is *enabled* purely from config (every required key resolves to a
+ * non-blank value) — no code changes are needed to add or remove a provider from a deployment.
+ * This module reads that config through one injectable `env` map: `process.env` historically, and
+ * since OLO-8.5 the **DB-over-env overlay** (`provider-config-resolver.resolveProviderEnv`) — stored
+ * admin-screen config first, `.env` as the fallback. Everything below is written against the merged
+ * map, so precedence lives in one place and never has to be repeated per consumer.
  *
  * Consumers:
  *   - the Better Auth generic-OAuth provider set registers exactly the enabled providers
@@ -13,8 +17,9 @@
  *   - the signup-intent and link routes refuse providers that are not enabled;
  *   - setup docs list each provider's env contract (OLO-7.2, `docs/AUTH_PROVIDER_SETUP.md`);
  *   - boot-time validation (`validateProviderEnv`, called from `src/instrumentation.ts`)
- *     fails startup — or warns, per `AUTH_PROVIDER_VALIDATION` — when a provider's env is
- *     only partially configured (OLO-7.2).
+ *     fails startup — or warns, per `AUTH_PROVIDER_VALIDATION` — when a provider's config is
+ *     only partially set (OLO-7.2), reading the merged DB-over-env overlay so a provider
+ *     configured from the admin screen is not flagged as "missing env" (OLO-8.8).
  *
  * Adding a provider later (Atlassian #4991, Bitbucket #4992, …) means: one entry here, one
  * generic-OAuth config in `better-auth-oauth-providers.ts`, one brand icon in
@@ -375,18 +380,90 @@ export const PROVIDER_VALIDATION_ENV_KEY = 'AUTH_PROVIDER_VALIDATION';
 /** Setup guide referenced by every validation message. */
 const SETUP_DOC = 'apiome-ui/docs/AUTH_PROVIDER_SETUP.md';
 
-/** A provider whose env is partially configured (some, but not all, required vars set). */
+/** The admin screen that writes the DB provider config, named in DB-aware validation messages. */
+const ADMIN_CONFIG_SCREEN = 'Admin → System Configuration (/admin/dashboard/settings)';
+
+/**
+ * Where the config being validated came from (OLO-8.8, #4974).
+ *
+ * Since OLO-8.5 provider config is **DB-first with env fallback**: the env map handed to validation
+ * is a merged overlay, not raw `process.env`. Validation must know which it is, because the same
+ * "some vars set, some not" picture means different things per origin. Mirrors
+ * `provider-config-resolver.ProviderConfigSource`, which produces the value; kept as its own type so
+ * this module stays free of server-only imports and remains client-importable.
+ *
+ *   - `env-only`: no DB source configured (`INTERNAL_SERVICE_TOKEN` unset). Env is the whole truth,
+ *     so a partially-configured provider is operator error — validate exactly as before OLO-8.5.
+ *   - `db`: the merged overlay includes the stored config. A provider satisfied from the database is
+ *     complete and is **not** flagged; one still partial after the merge is genuinely partial, and
+ *     its message names the admin screen as well as the env vars.
+ *   - `unavailable`: a DB source is configured but could not be read. The merged env may be missing
+ *     values that *are* stored, so a "partial" provider is unproven — never fail startup on it.
+ */
+export type ProviderConfigOrigin = 'env-only' | 'db' | 'unavailable';
+
+/** A provider that is partially configured (some, but not all, required fields resolve). */
 export interface ProviderEnvIssue {
   /** Provider slug (e.g. `github`). */
   providerId: string;
   /** Human-readable provider name (e.g. `GitHub`). */
   label: string;
-  /** Required env vars that are set and non-blank. */
+  /** Required keys that resolved to a set, non-blank value (from either source). */
   presentKeys: string[];
-  /** Required env vars that are unset or blank. */
+  /** Required keys that resolved to nothing — unset or blank in every source consulted. */
   missingKeys: string[];
+  /** Which config source the issue was computed against — see {@link ProviderConfigOrigin}. */
+  origin: ProviderConfigOrigin;
   /** Actionable, operator-facing description of the problem and both ways to fix it. */
   message: string;
+}
+
+/**
+ * Compose the operator-facing message for one partially-configured provider.
+ *
+ * The wording tracks the config origin, because the *same* set of missing keys means something
+ * different per source (OLO-8.8): with no DB source the env vars are the only place a value can
+ * live; with one, the admin screen is an equally valid — and higher-precedence — home for it; and
+ * when the DB source is unreachable the finding itself may be a false alarm.
+ *
+ * @param provider The registry entry — supplies the name, slug, and full required-key list.
+ * @param presentKeys Required keys that resolved to a value.
+ * @param missingKeys Required keys that did not.
+ * @param origin Where the config being validated came from.
+ * @returns A single-sentence-per-clause message naming the problem and every way to resolve it.
+ */
+function partialConfigMessage(
+  provider: ProviderDescriptor,
+  presentKeys: string[],
+  missingKeys: string[],
+  origin: ProviderConfigOrigin
+): string {
+  const { id, label, requiredEnvKeys } = provider;
+  const missingIs = missingKeys.length === 1 ? 'is' : 'are';
+  const presentIs = presentKeys.length === 1 ? 'is' : 'are';
+  const missingClause =
+    origin === 'db'
+      ? `${missingKeys.join(', ')} ${missingIs} unset or blank in both the stored provider ` +
+        'config and env'
+      : origin === 'unavailable'
+        ? `${missingKeys.join(', ')} ${missingIs} unset or blank in env, and the stored provider ` +
+          'config could not be read'
+        : `${missingKeys.join(', ')} ${missingIs} unset or blank`;
+  const resolution =
+    origin === 'env-only'
+      ? `Set all of ${requiredEnvKeys.join(', ')} to enable ${label} sign-in, ` +
+        'or unset all of them to disable it.'
+      : `Set all of ${requiredEnvKeys.join(', ')} — in ${ADMIN_CONFIG_SCREEN}, which takes ` +
+        `precedence, or in env — to enable ${label} sign-in, or clear all of them to disable it.`;
+  const caveat =
+    origin === 'unavailable'
+      ? ` This may be a false alarm: ${label} may already be fully configured in the database.`
+      : '';
+  return (
+    `Sign-in provider '${label}' (${id}) is partially configured: ` +
+    `${missingClause} while ${presentKeys.join(', ')} ${presentIs} set. ` +
+    `${resolution}${caveat} Setup guide: ${SETUP_DOC}`
+  );
 }
 
 /**
@@ -401,16 +478,25 @@ export interface ProviderEnvIssue {
  * deployment that sets the id and secret but leaves the issuer env var unset is partial config and
  * the missing issuer var is named (OLO-9.1 acceptance).
  *
+ * Since OLO-8.5, `env` is normally the **merged** DB-over-env overlay rather than raw `process.env`
+ * (`provider-config-resolver.resolveProviderEnv`), so a provider whose credentials live only in the
+ * database reads as fully configured here and yields no issue — the OLO-8.8 acceptance criterion.
+ * `origin` does not change *which* providers are flagged (the merged env already decides that); it
+ * only makes each message name the right places a value can live.
+ *
  * @param env Environment to read (injectable for tests; defaults to `process.env`).
  * @param registry Registry to validate (injectable for tests; defaults to {@link PROVIDER_REGISTRY}).
+ * @param origin Where `env` came from (defaults to `env-only`, the pre-OLO-8.5 behaviour).
  * @returns One issue per partially-configured provider, in registry display order.
  */
 export function providerEnvIssues(
   env: Record<string, string | undefined> = process.env,
-  registry: readonly ProviderDescriptor[] = PROVIDER_REGISTRY
+  registry: readonly ProviderDescriptor[] = PROVIDER_REGISTRY,
+  origin: ProviderConfigOrigin = 'env-only'
 ): ProviderEnvIssue[] {
   const issues: ProviderEnvIssue[] = [];
-  for (const { id, label, status, requiredEnvKeys } of registry) {
+  for (const provider of registry) {
+    const { id, label, status, requiredEnvKeys } = provider;
     if (status !== 'available' || requiredEnvKeys.length === 0) continue;
     const presentKeys = requiredEnvKeys.filter((key) => readEnvString(env, key) !== null);
     const missingKeys = requiredEnvKeys.filter((key) => readEnvString(env, key) === null);
@@ -420,12 +506,8 @@ export function providerEnvIssues(
       label,
       presentKeys,
       missingKeys,
-      message:
-        `Sign-in provider '${label}' (${id}) is partially configured: ` +
-        `${missingKeys.join(', ')} ${missingKeys.length === 1 ? 'is' : 'are'} unset or blank ` +
-        `while ${presentKeys.join(', ')} ${presentKeys.length === 1 ? 'is' : 'are'} set. ` +
-        `Set all of ${requiredEnvKeys.join(', ')} to enable ${label} sign-in, ` +
-        `or unset all of them to disable it. Setup guide: ${SETUP_DOC}`,
+      origin,
+      message: partialConfigMessage(provider, presentKeys, missingKeys, origin),
     });
   }
   return issues;
@@ -454,32 +536,53 @@ export function providerValidationMode(
 }
 
 /**
- * Validate provider env config at boot (OLO-7.2 acceptance: misconfiguration fails loud at
- * startup, not at first login). Called from `src/instrumentation.ts` when the Node.js server
- * starts; also safe to call from tests or scripts.
+ * Validate provider config at boot (OLO-7.2 acceptance: misconfiguration fails loud at startup,
+ * not at first login). Called from `src/instrumentation.ts` when the Node.js server starts; also
+ * safe to call from tests or scripts.
  *
- * In `strict` mode (default) any partially-configured provider aborts startup with one
- * message per issue. In `warn` mode the issues are logged via `console.warn` and the
- * offending providers stay cleanly disabled.
+ * In `strict` mode (default) any partially-configured provider aborts startup with one message per
+ * issue. In `warn` mode the issues are logged via `console.warn` and the offending providers stay
+ * cleanly disabled.
+ *
+ * **DB-sourced config (OLO-8.8).** `env` should be the merged DB-over-env overlay, so a provider
+ * configured entirely from the admin screen is complete here and is never flagged as "missing env".
+ * The one case the merge cannot settle is `origin === 'unavailable'`: a DB source is configured but
+ * was unreadable, so the overlay silently degraded to env and a provider may look partial only
+ * because its stored half is missing from this view. Failing startup on unproven evidence would turn
+ * a transient REST outage into a boot outage, so `strict` is downgraded to a logged warning for that
+ * origin (and says so). An invalid `AUTH_PROVIDER_VALIDATION` value still throws in every case.
  *
  * @param env Environment to read (injectable for tests; defaults to `process.env`).
  * @param registry Registry to validate (injectable for tests; defaults to {@link PROVIDER_REGISTRY}).
- * @returns The issues found (empty when the deployment's provider env is coherent).
- * @throws Error in `strict` mode when any provider is partially configured, or for an
- *   invalid `AUTH_PROVIDER_VALIDATION` value in any mode.
+ * @param origin Where `env` came from (defaults to `env-only`, the pre-OLO-8.5 behaviour).
+ * @returns The issues found (empty when the deployment's provider config is coherent).
+ * @throws Error in `strict` mode when any provider is partially configured against a conclusive
+ *   source (`env-only` or `db`), or for an invalid `AUTH_PROVIDER_VALIDATION` value in any mode.
  */
 export function validateProviderEnv(
   env: Record<string, string | undefined> = process.env,
-  registry: readonly ProviderDescriptor[] = PROVIDER_REGISTRY
+  registry: readonly ProviderDescriptor[] = PROVIDER_REGISTRY,
+  origin: ProviderConfigOrigin = 'env-only'
 ): ProviderEnvIssue[] {
   const mode = providerValidationMode(env);
-  const issues = providerEnvIssues(env, registry);
+  const issues = providerEnvIssues(env, registry, origin);
   if (issues.length === 0) return issues;
   if (mode === 'strict') {
-    throw new Error(
-      `Refusing to start: ${issues.length} sign-in provider(s) partially configured.\n` +
-        issues.map((issue) => `  - ${issue.message}`).join('\n') +
-        `\nSet ${PROVIDER_VALIDATION_ENV_KEY}=warn to log instead and leave the provider(s) disabled.`
+    // Only a conclusive source justifies refusing to start: with `unavailable` the evidence is a
+    // view we know to be incomplete.
+    if (origin !== 'unavailable') {
+      throw new Error(
+        `Refusing to start: ${issues.length} sign-in provider(s) partially configured.\n` +
+          issues.map((issue) => `  - ${issue.message}`).join('\n') +
+          `\nSet ${PROVIDER_VALIDATION_ENV_KEY}=warn to log instead and leave the provider(s) disabled.`
+      );
+    }
+    // Say why the configured mode was not enforced, so the downgrade is never silent.
+    console.warn(
+      `[provider-registry] ${PROVIDER_VALIDATION_ENV_KEY}=strict not enforced: the stored provider ` +
+        'config could not be read, so partial config cannot be told apart from config that lives ' +
+        'in the database. Startup continues on env config; the provider(s) below are disabled ' +
+        'until the resolved endpoint is reachable again.'
     );
   }
   for (const issue of issues) {

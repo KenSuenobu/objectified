@@ -13,9 +13,13 @@
  *   4. `validateProviderEnv` behavior — strict throws with every issue aggregated; warn
  *      logs each issue and returns them; a coherent env is silent in both modes.
  *   5. Boot contract (source level) — `src/instrumentation.ts` runs the validation on the
- *      Node.js runtime at server startup.
- *   6. Docs contract — the setup guide and `.env.example` cover every required env var of
- *      every available provider, the validation mode var, and the Entra `xms_edov` claim.
+ *      Node.js runtime at server startup, against the merged DB-over-env overlay.
+ *   6. DB-source awareness (OLO-8.8) — a provider completed from the database is never flagged
+ *      as "missing env"; messages name the store a value can live in; and an unreadable DB
+ *      source downgrades strict rather than failing startup on unproven evidence.
+ *   7. Docs contract — the setup guide and `.env.example` cover every required env var of
+ *      every available provider, the validation mode var, the Entra `xms_edov` claim, and the
+ *      DB-first / env-fallback precedence, KEK, and rotation story.
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -247,6 +251,102 @@ describe('validateProviderEnv', () => {
   });
 });
 
+describe('DB-sourced config awareness (OLO-8.8, #4974)', () => {
+  let warnSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
+
+  /** Every message the validation logged, in order. */
+  const warnings = () => warnSpy.mock.calls.map((call) => String(call[0]));
+
+  it('reports no issue when the merged overlay completes a provider (the acceptance criterion)', () => {
+    // What the resolver hands boot validation: GITHUB_ID from env, GITHUB_SECRET from the DB row.
+    // The merged view is complete, so there is nothing to flag — and nothing to fail startup on.
+    const merged = { GITHUB_ID: 'env-gh-id', GITHUB_SECRET: 'db-gh-secret' };
+
+    expect(providerEnvIssues(merged, undefined, 'db')).toEqual([]);
+    expect(validateProviderEnv(merged, undefined, 'db')).toEqual([]);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('tags every issue with the origin it was computed against', () => {
+    for (const origin of ['env-only', 'db', 'unavailable'] as const) {
+      const [issue] = providerEnvIssues({ GITHUB_ID: 'gh-id' }, undefined, origin);
+      expect(issue.origin).toBe(origin);
+    }
+  });
+
+  it('defaults to the env-only origin and its pre-OLO-8.5 wording', () => {
+    // Callers that have no DB source (and every pre-existing call site) keep the original message.
+    const [issue] = providerEnvIssues({ GITHUB_ID: 'gh-id' });
+
+    expect(issue.origin).toBe('env-only');
+    expect(issue.message).toContain('GITHUB_SECRET is unset or blank while GITHUB_ID is set');
+    expect(issue.message).toContain('Set all of GITHUB_ID, GITHUB_SECRET to enable GitHub sign-in');
+    expect(issue.message).not.toContain('System Configuration');
+  });
+
+  it('names both stores and the admin screen when the DB source answered', () => {
+    const [issue] = providerEnvIssues({ GITHUB_ID: 'gh-id' }, undefined, 'db');
+
+    expect(issue.message).toContain(
+      'GITHUB_SECRET is unset or blank in both the stored provider config and env'
+    );
+    expect(issue.message).toContain('Admin → System Configuration (/admin/dashboard/settings)');
+    expect(issue.message).toContain('which takes precedence');
+    expect(issue.message).not.toContain('may already be fully configured in the database');
+  });
+
+  it('flags the finding as unproven when the DB source could not be read', () => {
+    const [issue] = providerEnvIssues({ GITHUB_ID: 'gh-id' }, undefined, 'unavailable');
+
+    expect(issue.message).toContain('the stored provider config could not be read');
+    expect(issue.message).toContain('may already be fully configured in the database');
+  });
+
+  it('strict still fails startup for config that is partial after a successful merge', () => {
+    // The DB answered and the merged view is genuinely incomplete — conclusive, so fail loud.
+    expect(() => validateProviderEnv({ GITHUB_ID: 'gh-id' }, undefined, 'db')).toThrow(
+      /Refusing to start: 1 sign-in provider\(s\) partially configured/
+    );
+  });
+
+  it('strict degrades to a warning when the DB source is unavailable, and says why', () => {
+    // A REST outage must not become a boot outage: the missing half may be in the database.
+    const issues = validateProviderEnv({ GITHUB_ID: 'gh-id' }, undefined, 'unavailable');
+
+    expect(issues).toHaveLength(1);
+    expect(warnings()[0]).toContain('AUTH_PROVIDER_VALIDATION=strict not enforced');
+    expect(warnings()[1]).toContain("'GitHub' (github)");
+    expect(warnings()[1]).toContain('(provider disabled)');
+  });
+
+  it('does not claim strict was skipped when warn was the configured mode', () => {
+    const issues = validateProviderEnv(
+      { GITHUB_ID: 'gh-id', [PROVIDER_VALIDATION_ENV_KEY]: 'warn' },
+      undefined,
+      'unavailable'
+    );
+
+    expect(issues).toHaveLength(1);
+    expect(warnings().filter((m) => m.includes('not enforced'))).toEqual([]);
+    expect(warnings()).toHaveLength(1);
+  });
+
+  it('still rejects an invalid validation mode when the DB source is unavailable', () => {
+    // The downgrade covers unproven partial config only — a typo'd mode is wrong either way.
+    expect(() =>
+      validateProviderEnv({ GITHUB_ID: 'gh-id', [PROVIDER_VALIDATION_ENV_KEY]: 'off' }, undefined, 'unavailable')
+    ).toThrow(/not a valid validation mode/);
+  });
+});
+
 describe('validateOidcDiscoveryEnv (OLO-9.6)', () => {
   const OIDC_ENABLED = {
     OIDC_CLIENT_ID: 'oidc-id',
@@ -310,13 +410,16 @@ describe('boot contract (source level)', () => {
   const read = (...segments: string[]) =>
     fs.readFileSync(path.resolve(__dirname, '..', ...segments), 'utf8');
 
-  it('instrumentation.ts validates provider env on the Node.js runtime at startup', () => {
+  it('instrumentation.ts validates the merged provider config on the Node.js runtime at startup', () => {
     const instrumentation = read('src', 'instrumentation.ts');
 
     expect(instrumentation).toContain('export async function register');
     expect(instrumentation).toContain("process.env.NEXT_RUNTIME !== 'nodejs'");
-    expect(instrumentation).toContain('validateProviderEnv()');
-    expect(instrumentation).toContain('validateOidcDiscoveryEnv');
+    // The merged DB-over-env overlay, not raw process.env — otherwise DB-sourced config would be
+    // reported as missing env (OLO-8.8).
+    expect(instrumentation).toContain('resolveProviderEnvWithSource()');
+    expect(instrumentation).toContain('validateProviderEnv(env, PROVIDER_REGISTRY, source)');
+    expect(instrumentation).toContain('validateOidcDiscoveryEnv(env)');
   });
 });
 
@@ -357,5 +460,55 @@ describe('docs contract (OLO-7.2 acceptance: guides published, env matrix docume
     }
     expect(envExample).toContain(PROVIDER_VALIDATION_ENV_KEY);
     expect(envExample).toContain('AUTH_PROVIDER_SETUP.md');
+  });
+});
+
+describe('docs contract (OLO-8.8 acceptance: precedence, KEK, rotation, env template)', () => {
+  const read = (...segments: string[]) =>
+    fs.readFileSync(path.resolve(__dirname, '..', ...segments), 'utf8');
+
+  it('the setup guide describes the DB-first / env-fallback precedence', () => {
+    const guide = read('docs', 'AUTH_PROVIDER_SETUP.md');
+
+    expect(guide).toContain('Config precedence');
+    expect(guide).toContain('auth_provider_config');
+    // The rule itself, plus the two facts an operator has to act on: who wins, and when it applies.
+    expect(guide).toMatch(/stored value wins/i);
+    expect(guide).toContain('/admin/dashboard/settings');
+    expect(guide).toContain('INTERNAL_SERVICE_TOKEN');
+  });
+
+  it('the setup guide documents the KEK requirement and how to rotate it', () => {
+    const guide = read('docs', 'AUTH_PROVIDER_SETUP.md');
+
+    expect(guide).toContain('AUTH_CONFIG_ENC_KEY');
+    expect(guide).toContain('AUTH_CONFIG_ENC_ACTIVE_KEY_ID');
+    expect(guide).toContain('enc_key_id');
+    expect(guide).toMatch(/rotat/i);
+    // The step that loses secrets if taken too early is called out explicitly.
+    expect(guide).toContain('Removing a KEK that still');
+  });
+
+  it('the setup guide explains how the admin screen relates to the env template', () => {
+    const guide = read('docs', 'AUTH_PROVIDER_SETUP.md');
+
+    expect(guide).toContain('How the screen relates to');
+    expect(guide).toContain('using .env fallback');
+  });
+
+  it('the setup guide records how validation treats each config source', () => {
+    const guide = read('docs', 'AUTH_PROVIDER_SETUP.md');
+
+    expect(guide).toContain('Validation and the database source');
+    expect(guide).toContain('not enforced');
+  });
+
+  it('.env.example annotates the provider vars as fallback / local dev', () => {
+    const envExample = read('.env.example');
+
+    expect(envExample).toContain('FALLBACK / LOCAL-DEV');
+    expect(envExample).toContain('/admin/dashboard/settings');
+    // The KEK is an apiome-rest variable; the template must not imply it belongs here.
+    expect(envExample).toContain('AUTH_CONFIG_ENC_KEY belongs in apiome-rest');
   });
 });

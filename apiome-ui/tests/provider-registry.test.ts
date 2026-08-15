@@ -411,14 +411,16 @@ describe('route contracts (source level)', () => {
     expect(providers).toContain('enabledProviders(');
   });
 
-  it('the signup-intent route gates on registry enablement', () => {
+  // Every surface below reads enablement through the merged DB-over-env overlay (OLO-8.5), not raw
+  // `process.env`, so a provider configured from the admin screen is honoured everywhere at once.
+  it('the signup-intent route gates on registry enablement against the merged config', () => {
     const route = read(path.join(APP_ROOT, 'api', 'auth', 'signup-intent', 'route.ts'));
-    expect(route).toContain('isProviderEnabled(provider)');
+    expect(route).toContain('isProviderEnabled(provider, await resolveProviderEnv())');
   });
 
   it('the link route gates on registry enablement for every provider', () => {
     const route = read(path.join(APP_ROOT, 'api', 'auth', 'link', '[provider]', 'route.ts'));
-    expect(route).toContain('isProviderEnabled(provider)');
+    expect(route).toContain('isProviderEnabled(provider, await resolveProviderEnv())');
     expect(route).toContain('LINKABLE_PROVIDERS.has(provider)');
   });
 
@@ -427,7 +429,7 @@ describe('route contracts (source level)', () => {
     const linkedAccountsPage = read(
       path.join(APP_ROOT, 'ade', 'dashboard', 'linked-accounts', 'page.tsx')
     );
-    expect(loginPage).toContain('providerSummaries()');
-    expect(linkedAccountsPage).toContain('providerSummaries()');
+    expect(loginPage).toContain('providerSummaries(await resolveProviderEnv())');
+    expect(linkedAccountsPage).toContain('providerSummaries(await resolveProviderEnv())');
   });
 });

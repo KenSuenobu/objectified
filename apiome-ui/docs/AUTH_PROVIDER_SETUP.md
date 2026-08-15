@@ -2,16 +2,81 @@
 
 How to register the OAuth applications Apiome signs users in with (GitHub, GitLab,
 Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak, generic OIDC, Auth0, LINE, VK, WeChat), which
-environment variables each provider needs, and how boot-time validation reacts when a provider is
-misconfigured.
+settings each provider needs, where those settings can live, and how boot-time validation reacts
+when a provider is misconfigured.
 
-The single source of truth for the provider list and each provider's env contract is the
+The single source of truth for the provider list and each provider's config contract is the
 provider registry: [`lib/auth/provider-registry.ts`](../lib/auth/provider-registry.ts)
-(OLO-2.3). A provider is **enabled** only when *all* of its required env vars are set and
-non-blank; unsetting them all **cleanly disables** it everywhere at once (login button,
+(OLO-2.3). A provider is **enabled** only when *all* of its required fields resolve to a set,
+non-blank value; clearing them all **cleanly disables** it everywhere at once (login button,
 linked-accounts panel, Better Auth sign-in route). No code changes are needed either way.
 
+## Config precedence — database first, `.env` fallback
+
+Each required field can be supplied from two places, merged **field by field** on every login
+(OLO-8.5/8.6):
+
+| Rank | Source | Written from | Takes effect |
+|---|---|---|---|
+| **1** | `apiome.auth_provider_config` (server-global table, V196) | **Admin → System Configuration** (`/admin/dashboard/settings`) | at the **next login** — no restart |
+| **2** | environment variables | `.env`, `docker-compose.env`, or your orchestrator's secret store | at the **next restart** |
+
+One rule covers every case: **a stored value wins; an absent or blank stored value falls through to
+the env var of the same name.** Consequences worth internalising:
+
+- **No DB row** for a provider → it is governed entirely by env, exactly as before OLO-8.
+- **A row with a `NULL`/blank field** → that field alone falls back to env. Rows are merged per
+  field, not wholesale: a stored client id happily pairs with an env client secret.
+- **`enabled = false`** pins the provider **off** even when env sets every var — the stored "off"
+  is an explicit operator decision, so it removes the credentials from the merged view.
+- **`enabled = NULL`** ("Use .env" in the admin screen) means enablement is derived the usual way:
+  the provider is on when every required field resolves from either source.
+- Forcing a provider **`enabled = true`** requires its client id *and* secret to be **stored in the
+  database** — env values do not count toward that check, so an operator cannot enable a provider
+  the DB alone could not serve.
+
+### The env template is the fallback and the local-dev path
+
+The provider variables in [`.env.example`](../.env.example) are **not** the primary configuration
+surface for a deployment that uses the admin screen. Treat them as:
+
+- the **local-dev path** — no database row, no admin login, no KEK needed; and
+- the **fallback** for anything not stored in the database, including the bootstrap case where the
+  admin screen itself is not yet usable.
+
+A production deployment can legitimately leave every provider var unset and configure providers
+entirely from Admin → System Configuration. It can equally run env-only and never create a row.
+Both are supported; mixing them per field is supported too.
+
+### Switching the database source on
+
+The merge is only consulted when apiome-ui can read the decrypted config from apiome-rest, which is
+gated by a shared service token:
+
+| Variable | Where | Purpose |
+|---|---|---|
+| `INTERNAL_SERVICE_TOKEN` | apiome-ui **and** apiome-rest (identical value) | authorises `GET /v1/internal/auth-providers/resolved`, the login-time read path |
+| `AUTH_CONFIG_ENC_KEY` | apiome-rest only | the KEK that seals/unseals stored client secrets — see [Encryption at rest](#encryption-at-rest-and-key-rotation-auth_config_enc_key) |
+| `AUTH_PROVIDER_CONFIG_CACHE_TTL_MS` | apiome-ui | optional TTL (ms) of the in-process resolved-config cache; clamped to `[5000, 60000]`, default `30000` |
+
+**Unset `INTERNAL_SERVICE_TOKEN` ⇒ the database layer is switched off entirely**: providers come
+from env alone and anything saved in the admin screen has no effect on login. Because that is
+indistinguishable from a dropped token, the server logs it **once at startup**:
+
+```
+[provider-config-resolver] INTERNAL_SERVICE_TOKEN is not set; sign-in providers are configured
+from env only, and admin-screen provider config will have no effect
+```
+
+If the token *is* set but apiome-rest is unreachable or errors, sign-in **degrades to env** rather
+than breaking (OLO-8.6) — see [Boot-time validation](#boot-time-validation) for how that affects
+startup checks.
+
 ## Environment variable matrix
+
+Every variable below is the **fallback** source for its field (rank 2 above). Providers whose
+config is stored in the database need none of them set; see
+[Config precedence](#config-precedence--database-first-env-fallback).
 
 | Variable | Provider / scope | Required | Purpose |
 |---|---|---|---|
@@ -58,11 +123,14 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 Rules that apply to every provider:
 
 - Blank or whitespace-only values count as **unset** — a commented-template line like
-  `GITHUB_ID=` does not enable a provider.
-- **All vars set** → provider enabled. **No vars set** → provider cleanly disabled. Both are
-  valid deployments.
-- **Some-but-not-all set** → misconfiguration; see
-  [Boot-time validation](#boot-time-validation) below.
+  `GITHUB_ID=` does not enable a provider, and a blank *stored* value falls back to env rather
+  than disabling the field.
+- **All fields resolved** → provider enabled. **No fields resolved** → provider cleanly disabled.
+  Both are valid deployments.
+- **Some-but-not-all resolved** → misconfiguration; see
+  [Boot-time validation](#boot-time-validation) below. "Resolved" is judged against the merged
+  DB-over-env view, so an env var left unset because the value is stored in the database is not a
+  gap.
 
 ### Required fields beyond client id/secret (OLO-9.1)
 
@@ -80,16 +148,16 @@ or unreachable IdP fails loud instead of leaving a broken login page.
 ## Boot-time validation
 
 At server startup ([`src/instrumentation.ts`](../src/instrumentation.ts) →
-`validateProviderEnv()`), every provider's env contract is checked. A *partially*
+`validateProviderEnv()`), every provider's config contract is checked. A *partially*
 configured provider — e.g. `GITHUB_ID` set but `GITHUB_SECRET` missing, typically a typo'd
 var name or a secret that never reached the deployment — is reported per
 `AUTH_PROVIDER_VALIDATION`:
 
 - **`strict`** (default): startup **fails** with one actionable message per issue, naming
-  the missing and present vars and both ways to resolve (set them all, or unset them all).
+  the missing and present fields and both ways to resolve (set them all, or clear them all).
   Misconfiguration fails loud at boot, not silently at first login.
 - **`warn`**: each issue is logged via `console.warn` and the provider stays **cleanly
-  disabled** (a provider missing any required var is never registered as a sign-in provider).
+  disabled** (a provider missing any required field is never registered as a sign-in provider).
 
 Any other value of `AUTH_PROVIDER_VALIDATION` is itself a startup error, so a typo cannot
 silently weaken validation.
@@ -103,6 +171,41 @@ Error: Refusing to start: 1 sign-in provider(s) partially configured.
     sign-in, or unset all of them to disable it. Setup guide: apiome-ui/docs/AUTH_PROVIDER_SETUP.md
 Set AUTH_PROVIDER_VALIDATION=warn to log instead and leave the provider(s) disabled.
 ```
+
+### Validation and the database source (OLO-8.8)
+
+Validation runs against the **merged** DB-over-env config, not raw `process.env`. Boot resolves the
+overlay first (which also warms the resolver's cache, so the first login does not pay for the
+fetch), then validates what login will actually see. Three cases, distinguished by whether the
+stored config could be read:
+
+| Config source | What it means | Strict-mode behaviour |
+|---|---|---|
+| **env-only** | `INTERNAL_SERVICE_TOKEN` unset — the database layer is off | unchanged: env is the whole truth, partial config fails startup |
+| **database** | the resolved endpoint answered; stored values are merged in | a provider completed from the database is **not** flagged; one still partial after the merge fails startup, and its message names the admin screen as well as the env vars |
+| **unavailable** | the token is set but the endpoint could not be read | strict is **downgraded to a warning** and startup continues |
+
+The first row is the acceptance criterion this feature exists for: with `GITHUB_ID` in `.env` and
+the secret stored from the admin screen, the deployment is complete and boot says nothing.
+
+The **unavailable** downgrade is deliberate. When apiome-rest is unreachable at UI startup — a
+common container-ordering situation — the merged view is missing whatever is stored, so a provider
+that *looks* partial may be perfectly configured. Refusing to start on that evidence would turn a
+transient REST outage into a boot outage. Startup continues, sign-in runs on env config until the
+endpoint is reachable again, and the downgrade is never silent:
+
+```
+[provider-registry] AUTH_PROVIDER_VALIDATION=strict not enforced: the stored provider config
+could not be read, so partial config cannot be told apart from config that lives in the
+database. Startup continues on env config; the provider(s) below are disabled until the
+resolved endpoint is reachable again.
+[provider-registry] Sign-in provider 'GitHub' (github) is partially configured: GITHUB_SECRET is
+unset or blank in env, and the stored provider config could not be read, while GITHUB_ID is set.
+… This may be a false alarm: GitHub may already be fully configured in the database. … (provider disabled)
+```
+
+An invalid `AUTH_PROVIDER_VALIDATION` value still aborts startup in every case — the downgrade
+covers unproven partial config only, never a typo'd mode.
 
 ## GitHub — OAuth app
 
@@ -121,6 +224,11 @@ Set AUTH_PROVIDER_VALIDATION=warn to log instead and leave the provider(s) disab
 GITHUB_ID=<Client ID>
 GITHUB_SECRET=<Client secret>
 ```
+
+   …or store the same client id and secret from **Admin → System Configuration** instead. The
+   stored values take precedence over these vars and take effect at the next login without a
+   restart; leave the vars unset if the database is where you keep them
+   ([Config precedence](#config-precedence--database-first-env-fallback)).
 
 No extra scopes need configuring in the app — the sign-in flow requests `read:user
 user:email` itself so it can resolve a **verified** primary email even when the public
@@ -144,6 +252,11 @@ profile email is hidden (OLO-2.5).
 GITLAB_CLIENT_ID=<Application ID>
 GITLAB_CLIENT_SECRET=<Secret>
 ```
+
+   …or store the same application id and secret from **Admin → System Configuration** instead —
+   along with `GITLAB_BASE_URL` for a self-managed instance, which lives in the same stored `config`
+   extras. Stored values take precedence over these vars and take effect at the next login without a
+   restart ([Config precedence](#config-precedence--database-first-env-fallback)).
 
 Step-by-step walkthrough with screenshots and self-managed-instance notes:
 [`GITLAB_SSO_SETUP.md`](./GITLAB_SSO_SETUP.md).
@@ -174,6 +287,13 @@ AZURE_AD_CLIENT_SECRET=<client secret Value>
 # Optional: restrict to one directory (defaults to `common`, multi-tenant)
 # AZURE_AD_TENANT=<tenant id or domain>
 ```
+
+   …or store the same application id and client secret from **Admin → System Configuration**
+   instead; `AZURE_AD_TENANT` (and the `AZURE_AD_AUTHORITY_BASE_URL` override) live in the same
+   stored `config` extras. Stored values take precedence over these vars and take effect at the next
+   login without a restart ([Config precedence](#config-precedence--database-first-env-fallback)).
+   The `xms_edov` optional claim in step 4 is configured in Entra either way — it is a property of
+   the app registration, not of Apiome's config.
 
 ## Google — OAuth client (Workspace sign-in)
 
@@ -528,15 +648,19 @@ deliberate operator choice.
   [`.env.example`](../.env.example) carries placeholders only.
 - OAuth client secrets are server-side only: never expose them under a `NEXT_PUBLIC_`
   name.
-- When rotating a secret, register the new secret in the provider console first, then
-  update the env var and restart — sessions already issued stay valid.
+- When rotating a **provider** secret, register the new secret in the provider console first, then
+  update wherever Apiome holds it — the env var (and restart) or the admin screen's secret field
+  (effective at the next login). Sessions already issued stay valid either way.
+- A secret stored from the admin screen is written **encrypted**; the database never holds
+  plaintext. See [Encryption at rest](#encryption-at-rest-and-key-rotation-auth_config_enc_key).
 - Docker deployments: see [`.env.docker`](../.env.docker) and
   [`DOCKER_README.md`](./DOCKER_README.md) for where these variables are injected.
 
 ## Database provider config store (OLO-8.2, env-fallback)
 
-Env vars are the baseline. A deployment can additionally override provider config from the
-admin UI (OLO-8.4) without editing env and restarting: the server-global table
+The store behind the [precedence rule](#config-precedence--database-first-env-fallback): a
+deployment can override provider config from the admin UI (OLO-8.4) without editing env and
+restarting. The server-global table
 `apiome.auth_provider_config` (migration **V196**, `apiome-db`) holds one row per provider
 with an explicit `enabled` toggle, `client_id`, an envelope-encrypted `client_secret`
 (ciphertext only — the DB never holds plaintext — with an `enc_key_id` for rotation,
@@ -553,6 +677,59 @@ The store is layered **over** env, field by field:
 The table is created empty and rows are written lazily on first save, so a fresh deployment
 behaves exactly as if the store did not exist.
 
+### Encryption at rest and key rotation (`AUTH_CONFIG_ENC_KEY`)
+
+A plaintext secret in Postgres is strictly worse than one in an env var, so stored client secrets
+are **envelope-encrypted** (OLO-8.3) and the key that protects them lives outside the database:
+
+- a random per-secret **data-encryption key (DEK)** encrypts the secret with AES-256-GCM;
+- a long-lived **key-encryption key (KEK)** from `AUTH_CONFIG_ENC_KEY` wraps that DEK;
+- only the wrapped DEK, the ciphertext, and the non-secret `enc_key_id` are stored.
+
+`AUTH_CONFIG_ENC_KEY` is read by **apiome-rest only** (the one process that seals and unseals
+secrets); apiome-ui never sees it. It accepts two forms:
+
+```bash
+# Single key — the common case. Sealed under AUTH_CONFIG_ENC_ACTIVE_KEY_ID (default "default").
+AUTH_CONFIG_ENC_KEY=<base64 32-byte key>
+
+# Key map — several ids at once, for rotation without a flag day.
+AUTH_CONFIG_ENC_KEY={"v1": "<base64 key>", "v2": "<base64 key>"}
+AUTH_CONFIG_ENC_ACTIVE_KEY_ID=v2
+```
+
+Generate a key with `openssl rand -base64 32` (or
+`python -c "import base64, os; print(base64.b64encode(os.urandom(32)).decode())"`). It must decode
+to exactly 32 bytes; both standard and URL-safe base64 are accepted.
+
+**When it is required.** Only for storing and reading *stored* secrets. An env-only deployment
+never needs it. Without it:
+
+- saving a client secret from the admin screen is refused (**503**) rather than stored in the clear;
+- a row that already carries a sealed secret **fails loud** on the read path instead of silently
+  falling back to the env secret — a wrong-OAuth-app sign-in is a worse outcome than a clear error.
+  A provider with no stored secret still falls back to env normally.
+
+A malformed key, or an active id with no matching key, fails **apiome-rest startup** rather than
+surfacing at the first save.
+
+**Rotating the KEK.** `enc_key_id` records which key sealed each row, and the id is bound into the
+GCM additional-authenticated-data, so rows cannot be silently re-pointed at another key:
+
+1. Switch to the map form and **add** the new key alongside the current one
+   (`{"v1": "<old>", "v2": "<new>"}`). Keep `v1` — existing rows still need it.
+2. Point `AUTH_CONFIG_ENC_ACTIVE_KEY_ID` at the new id (`v2`) and restart apiome-rest. New saves are
+   sealed under `v2`; older rows stay readable under `v1`.
+3. Re-seal the existing rows onto the active key (`reseal_provider_secret` in
+   `apiome-rest/src/app/auth_provider_secret_crypto.py`; `needs_reseal` identifies the rows).
+   Re-saving each provider's secret from the admin screen achieves the same thing by hand.
+4. Only once no row references `v1` may it be dropped from the map. **Removing a KEK that still
+   seals a row makes that secret unrecoverable** — the remedy is re-entering it from the provider's
+   console.
+
+Rotating the KEK does not touch the OAuth secrets themselves, so no provider console changes and no
+user sessions are affected.
+
 ### Admin configuration screen (OLO-8.7)
 
 The store is edited at **`/admin/dashboard/settings`** ("System Configuration" in the admin
@@ -564,6 +741,26 @@ ever shown), and the provider extras above. Every field that has no DB value car
 enough to enable. Forcing a provider **Enabled** requires its client id *and* secret to be
 stored in the DB (env values do not count toward that check); saves take effect at the next
 login without a restart (OLO-8.5/8.6).
+
+#### How the screen relates to `.env.example`
+
+The screen and the env template describe the **same fields**, one per row of the
+[matrix above](#environment-variable-matrix) — they are two ways to supply one contract, not two
+contracts:
+
+| | `.env` / `.env.example` | Admin → System Configuration |
+|---|---|---|
+| Precedence | fallback | **wins**, field by field |
+| Applies | at restart | at the next login |
+| Scope | that one host's process | every server sharing the database |
+| Secret at rest | plaintext in the env/secret store | envelope-encrypted (`AUTH_CONFIG_ENC_KEY`) |
+| Needs | nothing | `INTERNAL_SERVICE_TOKEN` on both sides, plus the KEK for secrets |
+| Good for | local dev, bootstrap, single-host deploys | multi-server deploys, rotating creds without a redeploy |
+
+Provider extras keep their **env-var names** as their keys inside the stored `config` JSONB
+(`OKTA_ISSUER`, `GITLAB_BASE_URL`, `AZURE_AD_TENANT`, …), so a field is named identically in both
+places and the template doubles as the field reference for the screen. A field with no stored value
+shows a **"using .env fallback"** badge, which is the screen's live read of exactly this precedence.
 
 #### Removing a provider
 

@@ -18,6 +18,8 @@
  *
  * Degrade-to-env, never break sign-in (OLO-8.6): if the token is unset, the endpoint is unreachable,
  * or it errors, the resolver returns the base env unchanged — login keeps working on `.env` config.
+ * {@link resolveProviderEnvWithSource} additionally reports *which* of those happened, so boot-time
+ * validation can tell "env is the whole truth" from "the DB source degraded" (OLO-8.8).
  *
  * Server-only: reads `INTERNAL_SERVICE_TOKEN` (a server secret) and calls apiome-rest. Import from
  * server code only (the NextAuth route / server components), never from a client component.
@@ -26,6 +28,31 @@ import { REST_API_BASE_URL } from '../rest-auth';
 
 /** An env-shaped map, matching the `readEnvString` seam's parameter type. */
 export type EnvMap = Record<string, string | undefined>;
+
+/**
+ * Where the provider config in a resolved overlay actually came from (OLO-8.8, #4974).
+ *
+ * Boot-time validation needs this distinction, not just the merged env: whether a partially
+ * configured provider is *really* an operator error depends on whether the DB source was consulted
+ * successfully. See {@link resolveProviderEnvWithSource} and `provider-registry.validateProviderEnv`.
+ *
+ *   - `env-only`: `INTERNAL_SERVICE_TOKEN` is unset, so the DB source is deliberately switched off.
+ *     Env is the whole truth and any gap in it is a real misconfiguration.
+ *   - `db`: the resolved endpoint answered and its values are overlaid on env. What the merged env
+ *     says is what login will see.
+ *   - `unavailable`: the DB source *is* configured but could not be read (unreachable, non-200,
+ *     malformed body). The overlay degraded to env, so the merged env may be missing values that
+ *     are in fact stored in the database — it is not evidence of misconfiguration.
+ */
+export type ProviderConfigSource = 'env-only' | 'db' | 'unavailable';
+
+/** A merged provider env together with the {@link ProviderConfigSource} it was built from. */
+export interface ResolvedProviderEnv {
+  /** The merged env-shaped overlay: DB value where set, else the base env value. */
+  env: EnvMap;
+  /** Where the config came from — see {@link ProviderConfigSource}. */
+  source: ProviderConfigSource;
+}
 
 /** One provider's resolved DB config, as returned by the REST resolved endpoint. */
 interface ResolvedProviderConfig {
@@ -101,9 +128,19 @@ function cacheTtlMs(env: EnvMap): number {
   return Math.min(MAX_CACHE_TTL_MS, Math.max(MIN_CACHE_TTL_MS, Math.trunc(parsed)));
 }
 
+/** Outcome of one resolved-endpoint read: the payload (when any) plus where it left us. */
+interface FetchOutcome {
+  /** The parsed payload, or `null` when there is no DB overlay to apply. */
+  value: ResolvedProviderConfigResponse | null;
+  /** Why `value` is what it is — see {@link ProviderConfigSource}. */
+  source: ProviderConfigSource;
+}
+
 interface CacheEntry {
   /** The resolved payload, or `null` when the last fetch failed / was skipped. */
   value: ResolvedProviderConfigResponse | null;
+  /** The source that produced `value`, cached with it so callers see a consistent pair. */
+  source: ProviderConfigSource;
   /** Epoch ms after which this entry is stale. */
   expiresAt: number;
 }
@@ -145,18 +182,18 @@ function isPresent(value: unknown): value is string {
 }
 
 /**
- * Fetch the resolved provider config from apiome-rest, or `null` on any failure.
+ * Fetch the resolved provider config from apiome-rest.
  *
- * Returns `null` (never throws) when the service token is unset, the endpoint is unreachable, times
- * out, or responds non-200 — the caller then degrades to env. Never logs the response body (it
- * carries decrypted secrets).
+ * Never throws. When the service token is unset the read path is off (`env-only`); when the endpoint
+ * is unreachable, times out, responds non-200, or returns a body of the wrong shape, the payload is
+ * `null` and the source is `unavailable` — the caller degrades to env either way, but only the first
+ * case is evidence that env is the whole truth (OLO-8.8). Never logs the response body (it carries
+ * decrypted secrets).
  *
  * @param env Environment to read the service token from (injectable for tests).
- * @returns The parsed payload, or `null` to signal "no DB overlay; use env".
+ * @returns The parsed payload and the {@link ProviderConfigSource} that produced it.
  */
-async function fetchResolvedProviderConfig(
-  env: EnvMap
-): Promise<ResolvedProviderConfigResponse | null> {
+async function fetchResolvedProviderConfig(env: EnvMap): Promise<FetchOutcome> {
   const token = env.INTERNAL_SERVICE_TOKEN?.trim();
   if (!token) {
     // No token ⇒ the resolved read path is disabled; run on env alone. Not an error — but say so
@@ -170,7 +207,7 @@ async function fetchResolvedProviderConfig(
           'configured from env only, and admin-screen provider config will have no effect'
       );
     }
-    return null;
+    return { value: null, source: 'env-only' };
   }
 
   const controller = new AbortController();
@@ -190,13 +227,19 @@ async function fetchResolvedProviderConfig(
       console.warn(
         `[provider-config-resolver] resolved endpoint returned ${response.status}; using env config`
       );
-      return null;
+      return { value: null, source: 'unavailable' };
     }
     const data = (await response.json()) as ResolvedProviderConfigResponse;
     if (!data || typeof data !== 'object' || typeof data.providers !== 'object') {
-      return null;
+      // A 200 with the wrong shape is as unusable as an outage — and just as much a reason not to
+      // treat env as authoritative. Shape only, never the body (it carries decrypted secrets).
+      console.warn(
+        '[provider-config-resolver] resolved endpoint returned an unexpected payload shape; ' +
+          'using env config'
+      );
+      return { value: null, source: 'unavailable' };
     }
-    return data;
+    return { value: data, source: 'db' };
   } catch (error) {
     // Network error / timeout / abort. Degrade to env; message only, never the (secret-bearing) body.
     console.warn(
@@ -204,7 +247,7 @@ async function fetchResolvedProviderConfig(
         error instanceof Error ? error.name : 'unknown'
       }); using env config`
     );
-    return null;
+    return { value: null, source: 'unavailable' };
   } finally {
     clearTimeout(timer);
   }
@@ -215,21 +258,18 @@ async function fetchResolvedProviderConfig(
  *
  * @param env Environment (for the token and TTL).
  * @param now Current epoch ms (injectable for tests).
- * @returns The cached-or-fresh payload, or `null` to signal env-only.
+ * @returns The cached-or-fresh payload with its {@link ProviderConfigSource}.
  */
-async function getResolvedProviderConfig(
-  env: EnvMap,
-  now: number
-): Promise<ResolvedProviderConfigResponse | null> {
+async function getResolvedProviderConfig(env: EnvMap, now: number): Promise<FetchOutcome> {
   if (cache && cache.expiresAt > now) {
-    return cache.value;
+    return { value: cache.value, source: cache.source };
   }
-  const value = await fetchResolvedProviderConfig(env);
-  // Successful fetches are cached for the full TTL; failures for a short window so an outage neither
-  // hammers REST nor lingers once it recovers.
-  const ttl = value === null ? FAILURE_CACHE_TTL_MS : cacheTtlMs(env);
-  cache = { value, expiresAt: now + ttl };
-  return value;
+  const outcome = await fetchResolvedProviderConfig(env);
+  // Successful fetches are cached for the full TTL; anything else for a short window so an outage
+  // neither hammers REST nor lingers once it recovers.
+  const ttl = outcome.source === 'db' ? cacheTtlMs(env) : FAILURE_CACHE_TTL_MS;
+  cache = { value: outcome.value, source: outcome.source, expiresAt: now + ttl };
+  return outcome;
 }
 
 /**
@@ -277,6 +317,26 @@ export function applyResolvedOverlay(
 }
 
 /**
+ * Resolve the merged provider env *and* report where its config came from (OLO-8.8).
+ *
+ * Same merge as {@link resolveProviderEnv}, but the caller also learns whether the DB source was
+ * consulted successfully. Boot-time validation needs that: with `unavailable`, a provider that looks
+ * partially configured in the merged env may simply be one whose stored config could not be read,
+ * which is not grounds for refusing to start.
+ *
+ * @param baseEnv Base environment; defaults to `process.env`.
+ * @param now Current epoch ms (injectable for tests; defaults to `Date.now()`).
+ * @returns The merged overlay and its {@link ProviderConfigSource}. Never throws.
+ */
+export async function resolveProviderEnvWithSource(
+  baseEnv: EnvMap = process.env,
+  now: number = Date.now()
+): Promise<ResolvedProviderEnv> {
+  const { value, source } = await getResolvedProviderConfig(baseEnv, now);
+  return { env: applyResolvedOverlay(baseEnv, value), source };
+}
+
+/**
  * Resolve the merged provider env: DB value where set, else `baseEnv`.
  *
  * This is the injectable `env` the rest of the auth stack should read through — pass its result to
@@ -291,6 +351,5 @@ export async function resolveProviderEnv(
   baseEnv: EnvMap = process.env,
   now: number = Date.now()
 ): Promise<EnvMap> {
-  const resolved = await getResolvedProviderConfig(baseEnv, now);
-  return applyResolvedOverlay(baseEnv, resolved);
+  return (await resolveProviderEnvWithSource(baseEnv, now)).env;
 }
