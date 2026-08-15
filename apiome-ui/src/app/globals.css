@@ -54,9 +54,9 @@
      3. `.fmt--*` format pills and `.method--*` HTTP chips, whose hues are fixed
         identities that must not tint with the theme (DESIGN.md §3.1, §4.2).
 
-   Everything else — components, page styles, per-theme blocks — must reference
-   a token. The legacy `.theme-*` block below is fenced as a temporary
-   exception and is removed by HIVE-1.2.
+   The per-theme swap blocks below (HIVE-1.2) carry the second fence: a theme *is*
+   a colour definition, so it is one of the places colour may be spelled outright.
+   Everything else — components, page styles — must reference a token.
    ========================================================================== */
 
 /* hex-allow-start: token layer — colour is defined here, and brand hues (2) are fixed by the mark */
@@ -162,12 +162,12 @@
 
   /* ---- Legacy utility aliases ----------------------------------------
      `bg-background` / `text-foreground` / `bg-surface` … keep working for one
-     release. `--color-background` and `--color-foreground` deliberately point
-     at the *legacy* `--background` / `--foreground` variables rather than at
-     the tokens directly, because the pre-Hive `.theme-*` blocks still swap
-     those two per theme. Removed with the legacy block in HIVE-1.2. */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+     release. They point at the tokens directly since HIVE-1.2 retired the
+     pre-Hive per-theme class blocks that used to swap `--background` /
+     `--foreground`; a theme swap now reaches them through
+     `--color-canvas` / `--color-fg`. Retired by the token sweep in HIVE-1.6. */
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-fg);
   --color-surface-muted: var(--color-subtle);
   --color-border-subtle: var(--color-border);
   --color-text-muted: var(--color-fg-muted);
@@ -352,133 +352,299 @@ html .radix-themes {
   --code-font-family: var(--app-font-mono);
 }
 
-/* ===== LEGACY THEME SYSTEM =====
-   Pre-Hive per-theme overrides. They only swap the six legacy aliases, which
-   is why the nine themes currently look nearly identical. HIVE-1.2 replaces
-   this whole section with `html[data-theme="…"]` blocks that swap the token
-   layer above; until then it stays so themed screens do not regress.
+/* ==========================================================================
+   PER-THEME TOKEN SWAPS (HIVE-1.2, #5275)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/assets/hive.css` §4; behaviour in
+   `docs/mockups/DESIGN.md` §4.2.
 
-   TODO(HIVE-1.2, #5275): delete this section, hex fence included. */
-/* hex-allow-start: legacy pre-Hive theme blocks — removed by HIVE-1.2 (#5275) */
-/* Light themes */
-.theme-light,
-[data-theme="light"] {
-  --background: #ffffff;
-  --foreground: #171717;
-  --surface: #ffffff;
-  --surface-muted: #f8fafc;
-  --border-subtle: #e2e8f0;
-  --text-muted: #475569;
+   A theme is a *token swap and nothing else*. Every block below declares custom
+   properties and `color-scheme` only — no selector reaches an element, no length,
+   font or radius is touched — so switching theme changes colour and never
+   geometry. `tests/hive-theme-blocks.test.ts` enforces that.
+
+   How a theme reaches the page
+   ----------------------------
+   `ThemeProvider` writes the **resolved** theme id to `html[data-theme]` and the
+   **raw** choice — `system` included — to `html[data-theme-choice]`. `light` is the
+   `:root` default, so it needs no block of its own.
+
+   `html.dark:not([data-theme])` rides along on the dark palette because next-themes
+   sets `.dark` from a blocking script before first paint, and on the routes that
+   never mount `ThemeProvider` (the login/signup shell) it is the only signal there
+   is: without it an OS-dark visitor would get `dark:` component utilities painted on
+   a light canvas. As soon as `data-theme` is present the selector drops out, so an
+   explicit choice — `nord`, which also carries `.dark` — is never overpainted.
+
+   Layering: these blocks are unlayered and therefore outrank the `@theme` defaults
+   (which land in `@layer theme`) without `!important`; see the token-layer note above.
+
+   Only the tokens that give a theme its character are restated — everything else
+   inherits the light palette, which is what keeps the blocks short enough to read.
+   Dark-based themes flip `--color-ink` light so the primary button keeps the highest
+   contrast on the page (DESIGN.md §4.2).
+   ========================================================================== */
+
+/* hex-allow-start: per-theme token swaps — this is where each theme's colour is defined */
+html[data-theme="dark"],
+html.dark:not([data-theme]) {
+  color-scheme: dark;
+
+  --color-canvas: #141311;
+  --color-rail: #100F0E;
+  --color-surface: #1B1A18;
+  --color-subtle: #23221F;
+  --color-inset: #2A2825;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+
+  --color-fg: #EDEBE6;
+  --color-fg-muted: #A8A49C;
+  --color-fg-subtle: #7C7871;
+  --color-fg-faint: #57544E;
+
+  --color-border: rgba(255, 250, 240, 0.09);
+  --color-border-strong: rgba(255, 250, 240, 0.18);
+
+  --color-accent: #5AA6F2;
+  --color-accent-hover: #79B7F5;
+  --color-accent-soft: rgba(90, 166, 242, 0.14);
+  --color-accent-fg: #9CCBF8;
+  --color-ink: #EDEBE6;
+  --color-ink-hover: #FFFFFF;
+  --color-ink-fg: #16150F;
+  --color-honey: #F5B301;
+  --color-honey-soft: rgba(245, 179, 1, 0.14);
+  --color-honey-fg: #F8CB4F;
+
+  --color-ok: #34C08A;
+  --color-ok-soft: rgba(52, 192, 138, 0.14);
+  --color-ok-fg: #6FDDB0;
+  --color-warn: #F0A02F;
+  --color-warn-soft: rgba(240, 160, 47, 0.14);
+  --color-warn-fg: #F7C36F;
+  --color-danger: #F26A63;
+  --color-danger-soft: rgba(242, 106, 99, 0.14);
+  --color-danger-fg: #FF9A94;
+  --color-neutral: #A8A49C;
+  --color-neutral-soft: rgba(255, 255, 255, 0.07);
+  --color-neutral-fg: #CFCBC3;
+  --color-violet: #9C84EE;
+  --color-violet-soft: rgba(156, 132, 238, 0.16);
+  --color-violet-fg: #C1B0FA;
+  --color-orange: #F0873F;
+  --color-orange-soft: rgba(240, 135, 63, 0.14);
+  --color-orange-fg: #F8B085;
+  --color-rose: #ED6AA0;
+  --color-rose-soft: rgba(237, 106, 160, 0.14);
+  --color-rose-fg: #F79CC0;
+
+  /* Elevation inverts: a dark surface reads as raised through a lighter hairline,
+     not through a heavier drop shadow. */
+  --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-md: 0 8px 20px -8px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --shadow-lg: 0 20px 48px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-.theme-whiteboard,
-[data-theme="whiteboard"] {
-  --background: #fafafa;
-  --foreground: #212121;
-  --surface: #ffffff;
-  --surface-muted: #f6f7f9;
-  --border-subtle: #dbe1e8;
-  --text-muted: #465466;
+/* Maximum legibility: pure black canvas, pure white ink (21:1, AAA), and borders
+   opaque enough to survive without a shadow — every elevation is a white hairline. */
+html[data-theme="high-contrast"] {
+  color-scheme: dark;
+
+  --color-canvas: #000000;
+  --color-rail: #000000;
+  --color-surface: #000000;
+  --color-subtle: #111111;
+  --color-inset: #1A1A1A;
+
+  --color-fg: #FFFFFF;
+  --color-fg-muted: #E6E6E6;
+  --color-fg-subtle: #C8C8C8;
+  --color-fg-faint: #9A9A9A;
+
+  --color-border: rgba(255, 255, 255, 0.55);
+  --color-border-strong: #FFFFFF;
+
+  --color-accent: #6FB8FF;
+  --color-accent-hover: #9CD0FF;
+  --color-accent-soft: rgba(111, 184, 255, 0.2);
+  --color-accent-fg: #BFE0FF;
+  --color-ink: #FFFFFF;
+  --color-ink-hover: #FFFFFF;
+  --color-ink-fg: #000000;
+
+  --color-ok: #4ADE80;
+  --color-warn: #FCD34D;
+  --color-danger: #FF7B7B;
+
+  --shadow-xs: 0 0 0 1px #FFFFFF;
+  --shadow-sm: 0 0 0 1px #FFFFFF;
+  --shadow-md: 0 0 0 1px #FFFFFF;
+  --shadow-lg: 0 0 0 2px #FFFFFF;
+  --shadow-raised: 0 0 0 1px #FFFFFF;
 }
 
-/* Dark themes - also add .dark class for Tailwind compatibility */
-.theme-dark,
-[data-theme="dark"] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --surface: #111827;
-  --surface-muted: #0f172a;
-  --border-subtle: #334155;
-  --text-muted: #cbd5e1;
+html[data-theme="blueprint"] {
+  color-scheme: dark;
+
+  --color-canvas: #0C1E3A;
+  --color-rail: #0A1830;
+  --color-surface: #102645;
+  --color-subtle: #153054;
+  --color-inset: #0B1E36;
+
+  --color-fg: #E3F2FD;
+  --color-fg-muted: #A9C4DE;
+  --color-fg-subtle: #7A9BBE;
+  --color-fg-faint: #4F6E92;
+
+  --color-border: rgba(160, 200, 255, 0.14);
+  --color-border-strong: rgba(160, 200, 255, 0.3);
+
+  --color-accent: #6FC1FF;
+  --color-accent-hover: #93D2FF;
+  --color-accent-soft: rgba(111, 193, 255, 0.16);
+  --color-accent-fg: #B6E1FF;
+  --color-ink: #E3F2FD;
+  --color-ink-hover: #FFFFFF;
+  --color-ink-fg: #0C1E3A;
 }
 
-.theme-high-contrast,
-[data-theme="high-contrast"] {
-  --background: #000000;
-  --foreground: #ffffff;
-  --surface: #000000;
-  --surface-muted: #111111;
-  --border-subtle: #ffffff;
-  --text-muted: #f3f4f6;
+html[data-theme="whiteboard"] {
+  color-scheme: light;
+
+  --color-canvas: #FAFAFA;
+  --color-rail: #F2F3F5;
+  --color-surface: #FFFFFF;
+  --color-subtle: #F3F4F6;
+  --color-inset: #E9EBEF;
+
+  --color-fg: #212121;
+  --color-fg-muted: #5B6470;
+  --color-fg-subtle: #8A93A0;
+  --color-fg-faint: #B7BEC8;
+
+  --color-border: rgba(30, 40, 60, 0.1);
+  --color-border-strong: rgba(30, 40, 60, 0.2);
+
+  --color-accent: #2563EB;
+  --color-accent-hover: #1D4ED8;
+  --color-accent-soft: #E8EEFC;
+  --color-accent-fg: #1E40AF;
+  --color-ink: #111827;
+  --color-ink-hover: #1F2937;
+  --color-ink-fg: #FFFFFF;
 }
 
-.theme-blueprint,
-[data-theme="blueprint"] {
-  --background: #0c1e3a;
-  --foreground: #e3f2fd;
-  --surface: #102645;
-  --surface-muted: #0b1e36;
-  --border-subtle: #33527a;
-  --text-muted: #cde0ef;
+html[data-theme="solarized"] {
+  color-scheme: dark;
+
+  --color-canvas: #002B36;
+  --color-rail: #00252E;
+  --color-surface: #073642;
+  --color-subtle: #0A3E4C;
+  --color-inset: #002530;
+
+  --color-fg: #EEE8D5;
+  --color-fg-muted: #93A1A1;
+  --color-fg-subtle: #657B83;
+  --color-fg-faint: #4A626A;
+
+  --color-border: rgba(147, 161, 161, 0.18);
+  --color-border-strong: rgba(147, 161, 161, 0.35);
+
+  --color-accent: #2AA198;
+  --color-accent-hover: #3BC0B5;
+  --color-accent-soft: rgba(42, 161, 152, 0.16);
+  --color-accent-fg: #6FD3CB;
+  --color-ink: #EEE8D5;
+  --color-ink-hover: #FDF6E3;
+  --color-ink-fg: #002B36;
+  /* Deviation from hive.css §4, which leaves `--honey-soft` at the light `#FFF3C4`
+     here: paired with this theme's own light honey ink that chip reads at ~1.2:1.
+     The fill follows the theme honey at the dark palette's alpha instead. */
+  --color-honey: #B58900;
+  --color-honey-soft: rgba(181, 137, 0, 0.16);
+  --color-honey-fg: #E1B12E;
+
+  --color-ok: #859900;
+  --color-warn: #CB4B16;
+  --color-danger: #DC322F;
 }
 
-.theme-solarized,
-[data-theme="solarized"] {
-  --background: #002b36;
-  --foreground: #839496;
-  --surface: #073642;
-  --surface-muted: #002530;
-  --border-subtle: #3f6470;
-  --text-muted: #93a1a1;
+html[data-theme="nord"] {
+  color-scheme: dark;
+
+  --color-canvas: #2E3440;
+  --color-rail: #272C36;
+  --color-surface: #3B4252;
+  --color-subtle: #434C5E;
+  --color-inset: #2A2F3A;
+
+  --color-fg: #ECEFF4;
+  --color-fg-muted: #C7CFDC;
+  --color-fg-subtle: #97A2B5;
+  --color-fg-faint: #66718A;
+
+  --color-border: rgba(216, 222, 233, 0.12);
+  --color-border-strong: rgba(216, 222, 233, 0.26);
+
+  --color-accent: #88C0D0;
+  --color-accent-hover: #A3D2DF;
+  --color-accent-soft: rgba(136, 192, 208, 0.16);
+  --color-accent-fg: #B6DEE9;
+  --color-ink: #ECEFF4;
+  --color-ink-hover: #FFFFFF;
+  --color-ink-fg: #2E3440;
+  /* Deviation from hive.css §4, which leaves `--honey-soft` at the light `#FFF3C4`
+     here: paired with this theme's own light honey ink that chip reads at ~1.2:1.
+     The fill follows the theme honey at the dark palette's alpha instead. */
+  --color-honey: #EBCB8B;
+  --color-honey-soft: rgba(235, 203, 139, 0.16);
+  --color-honey-fg: #F3DBA6;
+
+  --color-ok: #A3BE8C;
+  --color-warn: #D08770;
+  --color-danger: #BF616A;
 }
 
-.theme-nord,
-[data-theme="nord"] {
-  --background: #2e3440;
-  --foreground: #eceff4;
-  --surface: #3b4252;
-  --surface-muted: #2b313d;
-  --border-subtle: #4c566a;
-  --text-muted: #d8dee9;
+html[data-theme="darcula"] {
+  color-scheme: dark;
+
+  --color-canvas: #2B2B2B;
+  --color-rail: #242424;
+  --color-surface: #313335;
+  --color-subtle: #3A3D3F;
+  --color-inset: #262829;
+
+  --color-fg: #E8E8E8;
+  --color-fg-muted: #B9BCC0;
+  --color-fg-subtle: #8A8F94;
+  --color-fg-faint: #5F6469;
+
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.22);
+
+  --color-accent: #6897BB;
+  --color-accent-hover: #83ACCF;
+  --color-accent-soft: rgba(104, 151, 187, 0.18);
+  --color-accent-fg: #A9C7E0;
+  --color-ink: #E8E8E8;
+  --color-ink-hover: #FFFFFF;
+  --color-ink-fg: #2B2B2B;
+  /* Deviation from hive.css §4, which leaves `--honey-soft` at the light `#FFF3C4`
+     here: paired with this theme's own light honey ink that chip reads at ~1.2:1.
+     The fill follows the theme honey at the dark palette's alpha instead. */
+  --color-honey: #FFC66D;
+  --color-honey-soft: rgba(255, 198, 109, 0.16);
+  --color-honey-fg: #FFD48A;
+
+  --color-ok: #6A8759;
+  --color-warn: #CC7832;
+  --color-danger: #FF6B68;
 }
 
-.theme-darcula,
-[data-theme="darcula"] {
-  --background: #2b2b2b;
-  --foreground: #a9b7c6;
-  --surface: #333842;
-  --surface-muted: #262a31;
-  --border-subtle: #4b5563;
-  --text-muted: #b6c2d0;
-}
-
-/* Override background colors for each theme using data-theme */
-/* These override Tailwind's dark:bg-gray-900 etc. */
-
-[data-theme="high-contrast"] header,
-[data-theme="high-contrast"] .bg-white,
-body[data-theme="high-contrast"] .dark\:bg-gray-900,
-body[data-theme="high-contrast"] .dark\:bg-gray-800 {
-  background-color: #000000 !important;
-}
-
-[data-theme="blueprint"] header,
-[data-theme="blueprint"] .bg-white,
-body[data-theme="blueprint"] .dark\:bg-gray-900,
-body[data-theme="blueprint"] .dark\:bg-gray-800 {
-  background-color: #0c1e3a !important;
-}
-
-[data-theme="solarized"] header,
-[data-theme="solarized"] .bg-white,
-body[data-theme="solarized"] .dark\:bg-gray-900,
-body[data-theme="solarized"] .dark\:bg-gray-800 {
-  background-color: #002b36 !important;
-}
-
-[data-theme="nord"] header,
-[data-theme="nord"] .bg-white,
-body[data-theme="nord"] .dark\:bg-gray-900,
-body[data-theme="nord"] .dark\:bg-gray-800 {
-  background-color: #2e3440 !important;
-}
-
-[data-theme="darcula"] header,
-[data-theme="darcula"] .bg-white,
-body[data-theme="darcula"] .dark\:bg-gray-900,
-body[data-theme="darcula"] .dark\:bg-gray-800 {
-  background-color: #2b2b2b !important;
-}
 /* hex-allow-end */
 
 /* Radix UI Dialog animations */
@@ -576,19 +742,6 @@ body[data-theme="darcula"] .dark\:bg-gray-800 {
   animation: collapsible-slide-right-out 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* System preference dark mode (only when no explicit .dark class and no saved preference).
-   Legacy: HIVE-1.2 (#5275) resolves "system" in ThemeProvider and swaps the token layer
-   instead, at which point this block and its hex fence go away.
-
-   TODO(HIVE-1.2, #5275): delete with the legacy theme system. */
-/* hex-allow-start: legacy system-preference fallback — removed by HIVE-1.2 (#5275) */
-@media (prefers-color-scheme: dark) {
-  :root:not(.dark):not([data-theme="light"]) {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-/* hex-allow-end */
 
 body {
   background: var(--background);
@@ -742,31 +895,26 @@ button {
 
 /* Projection graph/table high-contrast accents (EFP-3.2) — colour is supplemental;
    status still uses text label + symbol + stroke pattern. Token-driven since
-   HIVE-1.1: under High contrast the aliases already resolve to pure black/white,
-   so the rendering is unchanged, and the block follows the palette automatically
-   once HIVE-1.2 swaps the token layer per theme. */
-[data-theme="high-contrast"] .projection-panel,
-.theme-high-contrast .projection-panel {
+   HIVE-1.1: under High contrast the aliases resolve to pure black/white through the
+   `html[data-theme="high-contrast"]` swap above, so the panel follows the palette
+   with no colour of its own. */
+[data-theme="high-contrast"] .projection-panel {
   border-color: var(--border-subtle);
   background: var(--background);
   color: var(--foreground);
 }
 
-[data-theme="high-contrast"] .projection-panel [data-testid="projection-table"],
-.theme-high-contrast .projection-panel [data-testid="projection-table"] {
+[data-theme="high-contrast"] .projection-panel [data-testid="projection-table"] {
   border-color: var(--border-subtle);
 }
 
 [data-theme="high-contrast"] .projection-panel [data-testid^="projection-node-"] rect,
-[data-theme="high-contrast"] .projection-panel [data-testid^="projection-node-"] circle,
-.theme-high-contrast .projection-panel [data-testid^="projection-node-"] rect,
-.theme-high-contrast .projection-panel [data-testid^="projection-node-"] circle {
+[data-theme="high-contrast"] .projection-panel [data-testid^="projection-node-"] circle {
   stroke: var(--foreground);
   stroke-width: 2px;
 }
 
-[data-theme="high-contrast"] .projection-panel [data-testid^="projection-row-"],
-.theme-high-contrast .projection-panel [data-testid^="projection-row-"] {
+[data-theme="high-contrast"] .projection-panel [data-testid^="projection-row-"] {
   border-color: var(--border-subtle);
   outline-color: var(--border-subtle);
 }

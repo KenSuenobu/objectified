@@ -266,3 +266,215 @@ export function contrastRatio(foreground: Rgb, background: Rgb): number {
   const dark = Math.min(relativeLuminance(foreground), relativeLuminance(background));
   return (light + 0.05) / (dark + 0.05);
 }
+
+/* ==========================================================================
+   Per-theme token swaps (HIVE-1.2, #5275)
+   ========================================================================== */
+
+/** One top-level rule of the stylesheet, comments already stripped. */
+export interface CssRule {
+  /** Everything before the opening brace, whitespace-collapsed. */
+  prelude: string;
+  /** Everything between the braces. */
+  body: string;
+  /** 1-based line the prelude starts on, for readable failure messages. */
+  line: number;
+}
+
+/**
+ * Walk the stylesheet's top-level rules.
+ *
+ * Nested rules (inside `@media`, `@keyframes`, …) are deliberately not descended into:
+ * the theme blocks this module reasons about are all top level, and flattening would make
+ * "no rule outside a theme block declares a token" impossible to state.
+ *
+ * @param css Stylesheet source. Defaults to the real `globals.css`.
+ * @returns Every top-level rule, in source order. At-statements without a body
+ *          (`@import`, `@source`, …) are skipped.
+ */
+export function topLevelRules(css: string = readGlobalsCss()): CssRule[] {
+  const source = stripCssComments(css);
+  const rules: CssRule[] = [];
+  let cursor = 0;
+
+  while (cursor < source.length) {
+    const open = source.indexOf('{', cursor);
+    if (open === -1) break;
+
+    // An at-statement terminated by `;` before the next `{` has no body of its own.
+    const semicolon = source.indexOf(';', cursor);
+    if (semicolon !== -1 && semicolon < open) {
+      cursor = semicolon + 1;
+      continue;
+    }
+
+    let depth = 0;
+    let close = -1;
+    for (let i = open; i < source.length; i += 1) {
+      if (source[i] === '{') depth += 1;
+      else if (source[i] === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          close = i;
+          break;
+        }
+      }
+    }
+    if (close === -1) throw new Error(`Unclosed rule at offset ${open} in globals.css`);
+
+    const raw = source.slice(cursor, open);
+    const preludeStart = cursor + (raw.length - raw.trimStart().length);
+    rules.push({
+      prelude: raw.trim().replace(/\s+/g, ' '),
+      body: source.slice(open + 1, close),
+      line: source.slice(0, preludeStart).split('\n').length,
+    });
+    cursor = close + 1;
+  }
+
+  return rules;
+}
+
+/**
+ * Split a rule body into declarations.
+ *
+ * Unlike {@link parseBlock} this keeps *every* property, not just custom ones, which is
+ * what lets a caller prove a theme block declares nothing but tokens.
+ *
+ * @param body Text between a rule's braces.
+ * @returns Property name to value, in source order.
+ */
+export function parseDeclarations(body: string): Map<string, string> {
+  const declarations = new Map<string, string>();
+  for (const statement of body.split(';')) {
+    const match = /^\s*([-a-zA-Z][-a-zA-Z0-9]*)\s*:\s*([\s\S]+)$/.exec(statement);
+    if (match) declarations.set(match[1], match[2].trim().replace(/\s+/g, ' '));
+  }
+  return declarations;
+}
+
+/** One `html[data-theme="…"]` block — a theme's entire definition. */
+export interface ThemeBlock {
+  /** Resolved theme id, e.g. `nord`. */
+  id: string;
+  /** The rule's full prelude, including any companion selectors. */
+  prelude: string;
+  /** Everything the block declares, tokens and `color-scheme` alike. */
+  declarations: Map<string, string>;
+  /** 1-based line the block starts on. */
+  line: number;
+}
+
+/**
+ * Collect the per-theme token swaps.
+ *
+ * @param css Stylesheet source. Defaults to the real `globals.css`.
+ * @returns Theme id to its block, in source order. `light` is absent by design — it is
+ *          the `:root` default and has no block.
+ */
+export function readThemeBlocks(css: string = readGlobalsCss()): Map<string, ThemeBlock> {
+  const blocks = new Map<string, ThemeBlock>();
+
+  for (const rule of topLevelRules(css)) {
+    const ids = [...rule.prelude.matchAll(/\[data-theme="([a-z-]+)"\]/g)].map((match) => match[1]);
+    if (ids.length === 0) continue;
+
+    // A rule naming several themes (or scoping a component) is not a theme definition.
+    const unique = [...new Set(ids)];
+    if (unique.length !== 1 || !/^html\[data-theme="[a-z-]+"\]/.test(rule.prelude)) continue;
+
+    blocks.set(unique[0], {
+      id: unique[0],
+      prelude: rule.prelude,
+      declarations: parseDeclarations(rule.body),
+      line: rule.line,
+    });
+  }
+
+  return blocks;
+}
+
+/**
+ * Resolve a token as it computes *under a theme*.
+ *
+ * Look-up order mirrors the cascade: the theme block outranks the unlayered `:root`
+ * aliases, which outrank `@theme` (`@layer theme` loses to everything unlayered).
+ *
+ * @param name Custom-property name, including the leading `--`.
+ * @param layer Parsed token layer.
+ * @param block The theme's block, or `undefined` for the `light` default.
+ * @returns The literal the token resolves to under that theme.
+ * @throws If the token is undeclared, or its chain dangles or loops.
+ */
+export function resolveThemeToken(name: string, layer: TokenLayer, block?: ThemeBlock): string {
+  const seen = new Set<string>();
+  let current = name;
+
+  for (;;) {
+    if (seen.has(current)) {
+      throw new Error(`Token ${name} resolves through a cycle at ${current}`);
+    }
+    seen.add(current);
+
+    const value = block?.declarations.get(current) ?? layer.root.get(current) ?? layer.theme.get(current);
+    if (value === undefined) {
+      throw new Error(
+        seen.size === 1
+          ? `Token ${name} is not declared in @theme, :root or [data-theme="${block?.id ?? 'light'}"]`
+          : `Token ${name} references ${current}, which is not declared`,
+      );
+    }
+
+    const alias = PURE_ALIAS.exec(value);
+    if (!alias) return value;
+    current = alias[1];
+  }
+}
+
+/**
+ * Alpha channel of a colour literal.
+ *
+ * @param color An `rgb()` / `rgba()` literal, or a hex literal with or without alpha.
+ * @returns The alpha, `1` when the literal is opaque.
+ * @throws If the literal is neither hex nor `rgb()`/`rgba()`.
+ */
+export function alphaOf(color: string): number {
+  const rgba = /^rgba?\(([^)]+)\)$/.exec(color.trim());
+  if (rgba) {
+    const parts = rgba[1].split(/[,/]/).map((part) => part.trim());
+    return parts.length > 3 ? Number(parts[3]) : 1;
+  }
+
+  const hex = /^#([0-9a-fA-F]{3,8})$/.exec(color.trim());
+  if (!hex) throw new Error(`Not a colour literal: ${color}`);
+  if (hex[1].length === 4) return parseInt(hex[1][3] + hex[1][3], 16) / 255;
+  if (hex[1].length === 8) return parseInt(hex[1].slice(6, 8), 16) / 255;
+  return 1;
+}
+
+/**
+ * Flatten a translucent colour onto an opaque backdrop.
+ *
+ * Border tokens are deliberately translucent so one value works on every surface; a
+ * contrast check therefore has to composite them first, the way the compositor does.
+ *
+ * @param color The (possibly translucent) foreground literal.
+ * @param backdrop The opaque colour painted behind it.
+ * @returns The resulting opaque sRGB channels.
+ */
+export function compositeOver(color: string, backdrop: Rgb): Rgb {
+  const alpha = alphaOf(color);
+  const rgba = /^rgba?\(([^)]+)\)$/.exec(color.trim());
+  const channels: Rgb = rgba
+    ? (() => {
+        const [r, g, b] = rgba[1].split(/[,/]/).map((part) => Number(part.trim()));
+        return { r, g, b };
+      })()
+    : hexToRgb(color);
+
+  return {
+    r: channels.r * alpha + backdrop.r * (1 - alpha),
+    g: channels.g * alpha + backdrop.g * (1 - alpha),
+    b: channels.b * alpha + backdrop.b * (1 - alpha),
+  };
+}

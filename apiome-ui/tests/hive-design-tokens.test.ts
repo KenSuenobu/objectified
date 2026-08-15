@@ -12,7 +12,7 @@
  *      `var(--surface)` call sites keep working through the migration;
  *   3. the layering contract holds — `@theme static`, and no name declared in both
  *      `@theme` and the unlayered `:root` block (either mistake silently pins a token and
- *      breaks the HIVE-1.2 theme swap without erroring);
+ *      breaks the per-theme swaps in `hive-theme-blocks.test.ts` without erroring);
  *   4. raw hex appears only inside a documented `hex-allow-start` / `hex-allow-end` fence.
  *
  * A fifth group covers the Radix Themes reconfiguration on both layouts, which is the one
@@ -73,8 +73,8 @@ const THEME_TOKEN_GROUPS: Record<string, string[]> = {
 /**
  * Pre-Hive variable names, and the Hive token each now points at.
  *
- * `--background` / `--foreground` are asserted only to resolve: the legacy `.theme-*`
- * blocks still override them per theme until HIVE-1.2 removes that section.
+ * Since HIVE-1.2 (#5275) these are plain pointers with no per-theme override of their
+ * own: a theme swaps the token underneath, and the alias follows.
  */
 const LEGACY_ALIASES: Record<string, string> = {
   '--background': '--color-canvas',

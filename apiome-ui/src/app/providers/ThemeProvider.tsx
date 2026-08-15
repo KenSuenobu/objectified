@@ -1,258 +1,200 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTheme as useNextTheme } from 'next-themes';
-import { Theme, themes, getThemeById, getDefaultTheme } from '../config/themes';
+import {
+  Theme,
+  themes,
+  appearanceOf,
+  getDefaultTheme,
+  getThemeById,
+  resolveTheme,
+  SYSTEM_THEME_ID,
+} from '../config/themes';
+
+/**
+ * Theme provider (HIVE-1.2, #5275).
+ *
+ * A theme is a token swap in `globals.css`, so all this provider does is state *which*
+ * swap applies. It writes three things to `<html>` and nothing else:
+ *
+ * | Attribute / property | Value | Read by |
+ * | --- | --- | --- |
+ * | `data-theme` | the **resolved** theme id — never `system` | the `html[data-theme="…"]` blocks |
+ * | `data-theme-choice` | the **raw** choice, `system` included | the picker, and anything that needs to know the OS is in charge |
+ * | `style.color-scheme` | `light` \| `dark` | the browser, for scrollbars and built-in controls |
+ *
+ * It deliberately does *not* write `body.style`, and no longer toggles per-theme classes:
+ * both belonged to the pre-Hive system where a theme was two colours applied by hand.
+ * next-themes keeps owning the `.dark` class, which the components that have not yet
+ * adopted tokens still read through their `dark:` utilities.
+ */
+
+/** localStorage key holding the raw choice, `system` included. */
+const CHOICE_STORAGE_KEY = 'app-theme';
+
+/** localStorage key owned by next-themes; read only as a fallback for older installs. */
+const NEXT_THEMES_STORAGE_KEY = 'theme';
+
+/** The query "follow system" resolves against. */
+const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)';
 
 interface ThemeContextType {
+  /** What the user chose — the `system` entry when following the OS. */
   currentTheme: Theme;
+  /** What is actually painted: `currentTheme`, or light/dark while following the OS. */
+  resolvedTheme: Theme;
+  /** Select a theme by id; persists, applies immediately, and re-resolves `system` live. */
   setTheme: (themeId: string) => void;
+  /** Every selectable theme, in picker order. */
   availableThemes: Theme[];
+  /** Whether the choice is "follow system". */
   isSystemTheme: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [currentTheme, setCurrentTheme] = useState<Theme>(getDefaultTheme());
-  const [isSystemTheme, setIsSystemTheme] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const mountedRef = useRef(false);
-  const { setTheme: setNextTheme, resolvedTheme, theme: nextTheme } = useNextTheme();
+/**
+ * Whether the OS currently asks for a dark palette.
+ *
+ * @returns `true` when `(prefers-color-scheme: dark)` matches; `false` during SSR, where
+ *          there is no preference to read and `light` is the `:root` default.
+ */
+function prefersDarkNow(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia(DARK_MEDIA_QUERY).matches;
+}
 
-  // Mark as mounted after hydration
+/**
+ * The theme choice to start from on this device.
+ *
+ * `app-theme` holds the full choice (`nord`, `system`, …). The next-themes key is
+ * consulted only when it does not — an install that predates this provider — and
+ * "no preference at all" means "follow system", which is the app default.
+ *
+ * @returns The stored choice, or the `system` entry.
+ */
+function readStoredChoice(): Theme {
+  const systemTheme = getThemeById(SYSTEM_THEME_ID) ?? getDefaultTheme();
+  try {
+    const stored = localStorage.getItem(CHOICE_STORAGE_KEY) ?? localStorage.getItem(NEXT_THEMES_STORAGE_KEY);
+    return (stored && getThemeById(stored)) || systemTheme;
+  } catch {
+    // Private-mode Safari and hardened browsers throw on localStorage access.
+    return systemTheme;
+  }
+}
+
+/**
+ * Persist a choice, ignoring storage failures.
+ *
+ * @param themeId The raw choice id.
+ */
+function storeChoice(themeId: string): void {
+  try {
+    localStorage.setItem(CHOICE_STORAGE_KEY, themeId);
+  } catch {
+    // Nothing to do: the theme still applies for this session.
+  }
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // Server and first client render agree on the app default (follow system); the mount
+  // effect below reconciles with what this device actually stored.
+  const initialChoice = getThemeById(SYSTEM_THEME_ID) ?? getDefaultTheme();
+  const [currentTheme, setCurrentTheme] = useState<Theme>(initialChoice);
+  const [resolvedTheme, setResolvedTheme] = useState<Theme>(() => resolveTheme(initialChoice.id, false));
+  const { setTheme: setNextTheme } = useNextTheme();
+
+  // The media-query listener is registered once per choice; this keeps the handler
+  // reading the current choice without re-subscribing on every render.
+  const choiceRef = useRef<Theme>(initialChoice);
+
+  /**
+   * Resolve a choice and write it to `<html>`.
+   *
+   * @param choice The raw choice, `system` included.
+   * @returns The theme that ended up painted.
+   */
+  const applyTheme = useCallback(
+    (choice: Theme): Theme => {
+      const resolved = resolveTheme(choice.id, prefersDarkNow());
+      const html = document.documentElement;
+
+      html.setAttribute('data-theme', resolved.id);
+      html.setAttribute('data-theme-choice', choice.id);
+      // Tells the browser which built-ins (scrollbars, form controls, spell-check
+      // underlines) to paint dark. The stylesheet declares it too, for the pre-hydration
+      // pass; setting it here keeps the two in step once a choice is made.
+      html.style.colorScheme = appearanceOf(resolved);
+
+      // next-themes still drives `.dark` for the `dark:` utilities that have not yet been
+      // migrated to tokens. Following the OS is delegated wholesale so its own listener
+      // keeps the class in step with the palette this provider resolves.
+      setNextTheme(choice.id === SYSTEM_THEME_ID ? SYSTEM_THEME_ID : appearanceOf(resolved));
+
+      choiceRef.current = choice;
+      setCurrentTheme(choice);
+      setResolvedTheme(resolved);
+      return resolved;
+    },
+    [setNextTheme],
+  );
+
+  // Apply the stored choice once, after hydration.
   useEffect(() => {
-    setMounted(true);
+    const choice = readStoredChoice();
+    applyTheme(choice);
+    storeChoice(choice.id);
+    // `applyTheme` is stable for the life of the provider; re-running this effect would
+    // undo a theme the user picked in the meantime.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Get the effective theme for system preference.
-  // Prefer matchMedia on the client so we always use the actual OS preference (e.g. when
-  // switching from Dark to System while OS is light, resolvedTheme can still be 'dark').
-  const getSystemPreferredTheme = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return prefersDark ? getThemeById('dark') || getDefaultTheme() : getThemeById('light') || getDefaultTheme();
-    }
-    // SSR/fallback: use resolvedTheme from next-themes when available
-    const prefersDark = resolvedTheme === 'dark';
-    return prefersDark ? getThemeById('dark') || getDefaultTheme() : getThemeById('light') || getDefaultTheme();
-  }, [resolvedTheme]);
-
-  // Apply theme to DOM
-  const applyTheme = useCallback((theme: Theme, isSystem: boolean = false) => {
-    const html = document.documentElement;
-    const body = document.body;
-
-    // Remove all theme classes from html and body
-    themes.forEach(t => {
-      html.classList.remove(t.cssClass);
-      body.classList.remove(t.cssClass);
-    });
-
-    // For system theme, we apply the actual light/dark theme but mark it as system
-    const effectiveTheme = isSystem ? getSystemPreferredTheme() : theme;
-
-    // Set data-theme attribute for CSS targeting
-    html.setAttribute('data-theme', effectiveTheme.id);
-    body.setAttribute('data-theme', effectiveTheme.id);
-
-    // Determine if this is a "dark" based theme (needs .dark class for Tailwind dark: variants)
-    const darkThemes = ['dark', 'high-contrast', 'blueprint', 'solarized', 'nord', 'darcula'];
-    const isDarkBased = darkThemes.includes(effectiveTheme.id);
-
-    // Use next-themes: when following system, set 'system' so it tracks OS and updates .dark;
-    // when using a fixed theme, set 'light' or 'dark' so .dark is correct.
-    if (isSystem) {
-      setNextTheme('system');
-    } else if (isDarkBased) {
-      setNextTheme('dark');
-    } else {
-      setNextTheme('light');
-    }
-
-    // Add new theme class to both html and body
-    html.classList.add(effectiveTheme.cssClass);
-    body.classList.add(effectiveTheme.cssClass);
-
-    // Set CSS custom properties directly on html style
-    html.style.setProperty('--background', effectiveTheme.colors.background);
-    html.style.setProperty('--foreground', effectiveTheme.colors.foreground);
-
-    // Force body background and color
-    body.style.backgroundColor = effectiveTheme.colors.background;
-    body.style.color = effectiveTheme.colors.foreground;
-  }, [getSystemPreferredTheme, setNextTheme]);
-
-  // Initialize theme from localStorage or system preference
+  // "Follow system" re-resolves live: no reload, and no listener while a fixed theme is
+  // selected.
+  const isSystemTheme = currentTheme.id === SYSTEM_THEME_ID;
   useEffect(() => {
-    if (!mounted) return;
-    if (mountedRef.current) return;
+    if (!isSystemTheme || typeof window === 'undefined') return;
 
-    mountedRef.current = true;
-    // Use same storage key as next-themes: 'theme'
-    const savedThemeId = localStorage.getItem('app-theme');
-    const nextThemeSaved = localStorage.getItem('theme');
+    const media = window.matchMedia(DARK_MEDIA_QUERY);
+    const handleChange = () => applyTheme(choiceRef.current);
 
-    // Check if next-themes is set to system or if no preference exists
-    const shouldUseSystem = !nextThemeSaved || nextThemeSaved === 'system';
+    media.addEventListener('change', handleChange);
+    return () => media.removeEventListener('change', handleChange);
+  }, [isSystemTheme, applyTheme]);
 
-    if (savedThemeId === 'system' || shouldUseSystem) {
-      // User chose to follow system
-      const systemTheme = getThemeById('system');
-      if (systemTheme) {
-        setCurrentTheme(systemTheme);
-        setIsSystemTheme(true);
-        applyTheme(systemTheme, true);
-      }
-    } else if (savedThemeId) {
-      const theme = getThemeById(savedThemeId);
-      if (theme) {
-        setCurrentTheme(theme);
-        setIsSystemTheme(false);
-        applyTheme(theme, false);
-      }
-    } else {
-      // No saved preference - default to system
-      const systemTheme = getThemeById('system') || getDefaultTheme();
-      setCurrentTheme(systemTheme);
-      setIsSystemTheme(true);
-      applyTheme(systemTheme, true);
-      localStorage.setItem('app-theme', 'system');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted]);
+  /**
+   * Select a theme.
+   *
+   * @param themeId A theme id, `system` included. Unknown ids are ignored so a stale
+   *                deep link cannot blank the palette.
+   */
+  const setTheme = useCallback(
+    (themeId: string) => {
+      const choice = getThemeById(themeId);
+      if (!choice) return;
 
-  // Listen for system preference changes via matchMedia
-  useEffect(() => {
-    if (!mounted || !isSystemTheme) return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      const effectiveTheme = e.matches
-        ? getThemeById('dark') || getDefaultTheme()
-        : getThemeById('light') || getDefaultTheme();
-
-      const html = document.documentElement;
-      const body = document.body;
-
-      // Remove existing theme classes
-      themes.forEach(t => {
-        html.classList.remove(t.cssClass);
-        body.classList.remove(t.cssClass);
-      });
-
-      // Set data-theme attribute
-      html.setAttribute('data-theme', effectiveTheme.id);
-      body.setAttribute('data-theme', effectiveTheme.id);
-
-      // Set dark class based on system preference
-      if (e.matches) {
-        html.classList.add('dark');
-        setNextTheme('dark');
-      } else {
-        html.classList.remove('dark');
-        setNextTheme('light');
-      }
-
-      // Add theme class
-      html.classList.add(effectiveTheme.cssClass);
-      body.classList.add(effectiveTheme.cssClass);
-
-      // Set CSS custom properties
-      html.style.setProperty('--background', effectiveTheme.colors.background);
-      html.style.setProperty('--foreground', effectiveTheme.colors.foreground);
-      body.style.backgroundColor = effectiveTheme.colors.background;
-      body.style.color = effectiveTheme.colors.foreground;
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [mounted, isSystemTheme, setNextTheme]);
-
-  // Listen for resolved theme changes from next-themes
-  useEffect(() => {
-    if (!mountedRef.current) return;
-
-    // When resolvedTheme changes and we're using system theme, reapply
-    if (isSystemTheme && resolvedTheme) {
-      const systemTheme = getThemeById('system');
-      if (systemTheme) {
-        // Get the actual theme to apply based on system preference
-        const effectiveTheme = getSystemPreferredTheme();
-
-        // Apply the dark class correctly based on system preference
-        const html = document.documentElement;
-        const body = document.body;
-
-        // Remove existing theme classes
-        themes.forEach(t => {
-          html.classList.remove(t.cssClass);
-          body.classList.remove(t.cssClass);
-        });
-
-        // Set data-theme attribute
-        html.setAttribute('data-theme', effectiveTheme.id);
-        body.setAttribute('data-theme', effectiveTheme.id);
-
-        // Determine if dark mode should be applied
-        const darkThemes = ['dark', 'high-contrast', 'blueprint', 'solarized', 'nord', 'darcula'];
-        const isDarkBased = darkThemes.includes(effectiveTheme.id);
-
-        // Use next-themes to properly set the dark class
-        if (isDarkBased) {
-          setNextTheme('dark');
-        } else {
-          setNextTheme('light');
-        }
-
-        // Add theme class
-        html.classList.add(effectiveTheme.cssClass);
-        body.classList.add(effectiveTheme.cssClass);
-
-        // Set CSS custom properties
-        html.style.setProperty('--background', effectiveTheme.colors.background);
-        html.style.setProperty('--foreground', effectiveTheme.colors.foreground);
-        body.style.backgroundColor = effectiveTheme.colors.background;
-        body.style.color = effectiveTheme.colors.foreground;
-      }
-    }
-  }, [isSystemTheme, resolvedTheme, getSystemPreferredTheme, setNextTheme]);
-
-  // Sync with next-themes when it changes
-  useEffect(() => {
-    if (!mountedRef.current) return;
-
-    // If next-themes is set to system, update our theme accordingly
-    if (nextTheme === 'system' && !isSystemTheme) {
-      const systemTheme = getThemeById('system');
-      if (systemTheme) {
-        setCurrentTheme(systemTheme);
-        setIsSystemTheme(true);
-        applyTheme(systemTheme, true);
-        localStorage.setItem('app-theme', 'system');
-      }
-    }
-  }, [nextTheme, isSystemTheme, applyTheme]);
-
-  const setTheme = (themeId: string) => {
-    const theme = getThemeById(themeId);
-    if (theme) {
-      const isSystem = themeId === 'system';
-      setCurrentTheme(theme);
-      setIsSystemTheme(isSystem);
-      applyTheme(theme, isSystem);
-      localStorage.setItem('app-theme', themeId);
-    }
-  };
+      applyTheme(choice);
+      storeChoice(choice.id);
+    },
+    [applyTheme],
+  );
 
   return (
-    <ThemeContext.Provider value={{ currentTheme, setTheme, availableThemes: themes, isSystemTheme }}>
+    <ThemeContext.Provider
+      value={{ currentTheme, resolvedTheme, setTheme, availableThemes: themes, isSystemTheme }}
+    >
       {children}
     </ThemeContext.Provider>
   );
 }
 
+/**
+ * Read the current theme state.
+ *
+ * @returns The theme context.
+ * @throws If called outside a `ThemeProvider`.
+ */
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
@@ -260,4 +202,3 @@ export function useTheme() {
   }
   return context;
 }
-
