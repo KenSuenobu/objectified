@@ -95,14 +95,14 @@
         <p class="app-card__desc">Tenants, projects, versions, repositories, and platform settings in one place.</p>
         <div class="app-card__foot"><span>Included</span><span class="kbd">G</span></div>
       </a>
-      <a class="card card--hover app-card" href="../studio/editor.html" style="--_c:var(--honey)">
-        <span class="app-card__go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-        <span class="icon-tile icon-tile--lg icon-tile--honey icon-tile--hex"><i data-lucide="layers"></i></span>
-        <div class="app-card__tag">Design workspace</div>
-        <div class="app-card__name">Designer Suite</div>
-        <p class="app-card__desc">Schema design and API path modeling in one suite — canvas, versions, tags, and OpenAPI operations.</p>
-        <div class="app-card__foot"><span class="badge badge--honey">Commercial</span><span>Editor · Paths · Code</span></div>
-      </a>
+        <div class="card app-card" style="--_c:var(--neutral);opacity:.72" aria-label="Commercial suite (not installed)">
+          <span class="app-card__go" aria-hidden="true"><i data-lucide="puzzle"></i></span>
+          <span class="icon-tile icon-tile--lg"><i data-lucide="layers"></i></span>
+          <div class="app-card__tag">Commercial suite</div>
+          <div class="app-card__name">Licensed apps</div>
+          <p class="app-card__desc">Suite apps you are entitled to appear here automatically. They are supplied and designed by their own product repositories.</p>
+          <div class="app-card__foot"><span class="badge badge--outline">Host-injected</span></div>
+        </div>
       <div class="card app-card is-disabled" role="button" aria-disabled="true" aria-label="Developer Suite (coming soon)" tabindex="0" style="--_c:var(--violet)">
         <span class="badge badge--outline" style="position:absolute;top:22px;right:18px">Coming soon</span>
         <span class="icon-tile icon-tile--lg icon-tile--violet icon-tile--hex"><i data-lucide="workflow"></i></span>
@@ -152,7 +152,7 @@
   <ul>
     <li>Top row: logo, version badge (<code>NEXT_PUBLIC_APP_BUILD_LABEL</code> or <code>v{version} RC</code>) → What’s new dialog; theme → Preferences pane; account chip (avatar/initials + first name, fallback “Account”); Sign out → <code>signOutEverywhere('/login')</code>.</li>
     <li>Hero: “✦ Apiome platform” pill, time-of-day greeting with first name (fallback “there”), H1 “Your API specification workspace”, paragraph.</li>
-    <li>Applications (ordered Control Panel → commercial cards from <code>getCommercialAccessForSession().homeCards</code> → Browser): same taglines/descriptions/hrefs; Designer Suite gated on <code>designer|paths</code> entitlement (href = studio root, external unless on the studio surface); Developer Suite always listed, disabled (60 %, not-allowed, <code>aria-label “… (coming soon)”</code>); Browser → <code>BROWSE_APP_URL</code> in a new tab with “Opens in a new tab”.</li>
+    <li>Applications (ordered Control Panel → commercial cards from <code>getCommercialAccessForSession().homeCards</code> → Browser): same taglines/descriptions/hrefs; commercial cards are entitlement-gated and supplied by their own repositories — this mockup only reserves the slot and never designs them; Developer Suite always listed, disabled (60 %, not-allowed, <code>aria-label “… (coming soon)”</code>); Browser → <code>BROWSE_APP_URL</code> in a new tab with “Opens in a new tab”.</li>
     <li>Card anatomy: gradient tile, top-right circular arrow (→ internal / ↗ external, inverts on hover) or “Coming soon” pill, uppercase tagline, name, 4-line clamp description, footer strip (“Commercial”).</li>
     <li>Resources: Help &amp; tutorials (YouTube, new tab) · Community (SOON) · Marketplace (SOON); dashed “On the roadmap” with Audit (disabled).</li>
     <li>Footer: version string left, “© 2021 – 2026 NobuData LLC” right. Internal cards <code>router.push</code>; external <code>window.open(_blank, noopener)</code>.</li>
@@ -160,7 +160,7 @@
   <h4>Adds</h4>
   <ul><li>Workspace/summary chips under the hero (current tenant · role · plan, project + published counts) linking into the app.</li><li>Honeycomb ornament, per-app accent hairline, <code>G</code> keyboard hint on Control Panel.</li></ul>
   <h4>States</h4>
-  <ul><li>No entitlement: Designer Suite card hidden (Developer Suite still listed, disabled). No tenant: launcher still renders — the onboarding guard replaces it when the user has zero memberships.</li></ul>
+  <ul><li>No entitlement: the commercial card is hidden entirely (Developer Suite still listed, disabled). No tenant: launcher still renders — the onboarding guard replaces it when the user has zero memberships.</li></ul>
 </template>
 </body>
 </html>

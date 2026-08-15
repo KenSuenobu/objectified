@@ -175,7 +175,6 @@ during migration so users don’t lose their theme.
 | Shell | Used by | Anatomy |
 | --- | --- | --- |
 | **App** (`data-shell="app"`) | every `/ade/dashboard/**` page, tools | rail + page |
-| **Studio** (`data-shell="studio"`) | `/ade/studio/**` | rail collapsed to 64 px icon rail + 52 px workspace topbar + panels |
 | **Admin** (`data-shell="admin"`) | `/admin/**` | rose-tinted rail with “Admin console” label, its own nav, “Back to app” |
 | **Auth** | `/login`, `/login/2fa`, `/signup/oauth`, `/admin` login | split brand panel + form card on hex canvas |
 
@@ -185,7 +184,7 @@ tenant pill + version badge + theme + profile) is **retired**. Its jobs move to:
 | Old header element | New home |
 | --- | --- |
 | Home / Control Panel tabs | rail brand → *All apps* launcher; rail *Home* item |
-| Designer / Developer suite menu | rail *Studio* item (Build group) + launcher cards; commercial items are appended to the rail by the private-suite host |
+| Designer / Developer suite menu | commercial suite entries injected into the rail and launcher by the host at runtime — those products live in their own repositories and are not designed here |
 | Tenant switcher | **Workspace switcher** at the top of the rail (hex avatar + name + role · plan) |
 | Version badge / What’s new | user menu → *What’s new* (honey dot when unread) + build string in menu footer |
 | Theme selector | Preferences pane (and quick light/dark toggle in the mock bar) |
@@ -218,11 +217,6 @@ Content max-width 1440 px; reading/forms pages use `.page-body--narrow` (920 px)
 * **Toast** — bottom-right, 360 px, icon + title + description + optional action
   (used for Undo on bulk lint decisions).
 
-### 5.5 Studio shell
-Icon rail + topbar: `Project ▸ Version` picker (pill), save state (“Saved · 2 m
-ago” / “Unsaved changes”), centre segmented **Editor · Paths · Code**, right
-search / share / generate / avatar. Body = tree panel (280) · canvas · inspector
-(340). Panels have 40 px caps headers and collapse to 40 px strips.
 
 ---
 
@@ -234,7 +228,6 @@ Routes are unchanged; only grouping and labels change.
 | --- | --- | --- |
 | — | **Home** | `/ade/dashboard` |
 | **Build** | Projects (→ Versions) | `/ade/dashboard/projects`, `/ade/dashboard/versions` |
-| | Studio ↗ | `/ade/studio/*` (Editor · Paths · Code) |
 | | Primitives & types | `/ade/dashboard/primitives`, `/[id]` |
 | **Bring in** | Catalog | `/ade/dashboard/catalog`, `/[id]` |
 | | Repositories | `/ade/dashboard/repositories/**` |
@@ -273,7 +266,7 @@ stand-in for `lib/platform-nav.ts`).
 | `.skeleton .spinner` | loading | `Skeleton`, `Spinner` |
 | `.dialog .drawer .menu .palette .toast .banner .callout .tooltip` | overlays | `Dialog`, new `Drawer`, `DropdownMenu`, `cmdk`, `sonner`, `Alert` |
 | `.avatar` `--hex --brand --a..e` `.avatar-stack` | people & workspaces | new `Avatar` |
-| `.stepper .step` `.timeline .tl-item` `.tree .tree__item` `.split .panel` | wizards, history, studio panels | new |
+| `.stepper .step` `.timeline .tl-item` `.tree .tree__item` `.split .panel` | wizards, history, split panels | new |
 | `.code` `--dark --lines` `.diff-add .diff-del` | code & diff | `ui/code/*` |
 | `.icon-tile` `--accent --honey --ok --warn --danger --violet --hex` | leading icons | new |
 | `.kbd` | shortcut chips | new |
@@ -338,8 +331,8 @@ Errors: what happened + what to do (“Slug is taken — try `acme-eu`”).
    sets `data-font-scale`, `data-density`, `data-motion`, `data-rail`; audit `px`
    font-sizes/heights in components → `rem`/tokens.
 4. **Shell** — new `AppShell` (rail + page) replaces `DashboardSideNav` +
-   `TopHeader` on `/ade/dashboard/**`; `ConditionalHeader` goes away; Studio
-   uses `WorkspaceShell`; `/admin` uses `AppShell` with `variant="admin"`.
+   `TopHeader` on `/ade/dashboard/**`; `ConditionalHeader` goes away;
+   `/admin` uses `AppShell` with `variant="admin"`.
    Nav model lives in `lib/platform-nav.ts` (groups + gating + commercial injection).
 5. **Preferences pane** — `PreferencesDrawer` (Radix Dialog as side sheet) with
    theme grid, slider, segmented, switches; replaces `ThemeSelector`.
@@ -365,15 +358,14 @@ mockup’s **Notes → Keeps (1:1) / Adds / States** as its acceptance criteria.
 | **P1** | Shell | `foundations/shell.html`, `home/overview.html`, `home/launcher.html` | `AppShell` (rail + page header) replacing `DashboardSideNav` + `TopHeader`, nav model in `lib/platform-nav.ts`, workspace switcher, user menu, ⌘K palette, shortcut sheet, Home + launcher. |
 | **P2** | Primitives + list pattern | `build/projects.html`, `build/versions.html`, `build/version-dialogs.html`, `build/import-wizard.html` | `DataTable`, `Segmented`, `Drawer`, `Stat`, `Avatar`, `EmptyState`, `Kbd`, `Stepper`; Projects + Versions + all version dialogs + the import wizard. Retires `dashboardScreenClasses.ts`. |
 | **P3** | Bring in | `sources/catalog*.html`, `sources/repository*.html`, `sources/webhook-allowlist.html`, `sources/mcp-*.html` | Catalog list & item (inspectors), Repositories (all 7 routes), MCP catalog/endpoint/analytics/capabilities/compare. |
-| **P4** | Ship + Govern | `ship/*.html`, `govern/*.html` | Published, sunset timeline, Export Studio; style guides + detail, lint posture. |
+| **P4** | Ship + Govern | `ship/*.html`, `govern/*.html` | Published, sunset timeline, Export studio; style guides + detail, lint posture. |
 | **P5** | Workspace + account | `workspace/*.html`, `account/*.html`, `auth/*.html` | Tenants (drawer-based admin), members, roles, API keys, audit; profile, linked accounts; login, 2FA, OAuth sign-up, onboarding. Replaces every `window.confirm`/`prompt`. |
-| **P6** | Studio | `studio/*.html` | Single 52 px topbar (replacing the stacked bars), tree/canvas/inspector panels, class-edit dialog tabs, paths designer, code view. |
-| **P7** | Admin + tools | `admin/*.html`, `tools/*.html` | Admin console on the same shell (rose variant), users/tenants/licenses/flags/templates/auth providers; data browser, migrations. Removes the three dead nav links. |
-| **P8** | Polish | all | Empty-state art pass, motion + reduced-motion, a11y sweep (focus, live regions, AAA in High contrast), density audit, copy pass. |
+| **P6** | Admin + tools | `admin/*.html`, `tools/*.html` | Admin console on the same shell (rose variant), users/tenants/licenses/flags/templates/auth providers; data browser, migrations. Removes the three dead nav links. |
+| **P7** | Polish | all | Empty-state art pass, motion + reduced-motion, a11y sweep (focus, live regions, AAA in High contrast), density audit, copy pass. |
 
 Ordering rule: **P0 → P1 first and in order** (everything else depends on tokens
 and the shell). P2 must precede P3–P5, which are otherwise independent of each
-other. P6–P7 can run in parallel with P3–P5 once P2 lands.
+other. P6 can run in parallel with P3–P5 once P2 lands.
 
 ## 13. Page index
 

@@ -9,12 +9,15 @@ it is the top-level navigation page; every screen is one click away.
   implementation mapping). Roadmap tickets should cite it by section.
 * **`assets/hive.css`** — the design system as CSS custom properties + component
   classes (all nine themes, density, font-scale).
-* **`assets/hive.js`** — renders the shared shell (rail / admin rail / studio),
+* **`assets/hive.js`** — renders the shared shell (rail / admin rail),
   the ⌘K palette, user & workspace menus, What’s new, and the **Preferences pane**
   (theme grid · font-size slider · density · reduce motion · rail default). These
   preferences are *live* on every mockup and persist in `localStorage`.
 * One HTML file per screen, grouped by job: `home/ build/ sources/ ship/ govern/
-  workspace/ account/ auth/ studio/ tools/ admin/ foundations/`.
+  workspace/ account/ auth/ tools/ admin/ foundations/`.
+* **Out of scope:** the commercial suite apps (designer / paths workspaces) are
+  owned by their own repositories. This set never designs or links to them — it
+  only reserves the entitlement-gated slots the host injects at runtime.
 
 ## How to read a mockup
 
@@ -32,7 +35,7 @@ Shortcuts: `⌘K` palette · `⌘,` preferences · `⌘\` collapse rail · `Esc`
 ## Page contract (for adding/editing mockups)
 
 ```html
-<body data-shell="app|admin|studio|auth|bare" data-nav="<rail item id>" data-page="<folder/file>" data-tenant="Acme Corp">
+<body data-shell="app|admin|auth|bare" data-nav="<rail item id>" data-page="<folder/file>" data-tenant="Acme Corp">
   <main class="page"> …page header + body… </main>
   …overlays (.overlay > .dialog/.drawer/.menu) opened via data-action="open" data-target="<id>"…
   <template id="notes"> …implementation notes… </template>
@@ -50,7 +53,7 @@ A roadmap ticket can be phrased as:
 > Keep every behaviour listed under **Notes → Keeps (1:1)**; add the items under
 > **Adds**; use the states under **States**. Tokens come from `assets/hive.css`.
 
-The nine roadmap phases (P0 foundations → P8 polish), each with its mockups
+The eight roadmap phases (P0 foundations → P7 polish), each with its mockups
 and what it ships, are in `DESIGN.md §12`.
 
 ## Page → route index
@@ -68,7 +71,6 @@ and what it ships, are in `DESIGN.md §12`.
 | `sources/catalog.html` · `catalog-item.html` | `/ade/dashboard/catalog[/id]` | app |
 | `sources/repositories.html` · `repository-new.html` · `repository-detail.html` · `repository-catalog.html` · `repository-telemetry.html` · `webhook-allowlist.html` | `/ade/dashboard/repositories/**` | app |
 | `sources/mcp-servers.html` · `mcp-endpoint.html` · `mcp-analytics.html` · `mcp-capabilities.html` · `mcp-compare.html` | `/ade/dashboard/mcp/**` | app |
-| `studio/home.html` · `editor.html` · `paths.html` · `code.html` | `/ade/studio/**` | studio |
 | `tools/database.html` · `migration.html` | `/ade/database` · `/ade/migration` | app |
 | `admin/login.html` · `overview.html` · `users.html` · `tenants.html` · `licenses.html` · `feature-flags.html` · `templates.html` · `settings.html` | `/admin/**` | admin |
 

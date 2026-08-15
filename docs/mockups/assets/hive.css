@@ -99,7 +99,6 @@
   /* Layout */
   --rail-w: 264px;
   --rail-w-collapsed: 64px;
-  --topbar-h: 52px;
   --page-max: 1440px;
   --content-max: 1200px;
 
@@ -386,12 +385,6 @@ html[data-rail="collapsed"] .rail__collapse i { transform: rotate(180deg); }
 .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
 .section-title h2 { font-size: var(--fs-lg); font-weight: 600; letter-spacing: -0.01em; }
 .section-title .t-muted { font-size: var(--fs-sm); }
-/* Studio-style topbar (full-bleed surfaces) */
-.topbar { height: var(--topbar-h); display: flex; align-items: center; gap: 12px; padding: 0 14px; background: var(--bg-surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 25; }
-.topbar__center { position: absolute; left: 50%; transform: translateX(-50%); }
-.topbar__right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.workspace { display: grid; grid-template-rows: var(--topbar-h) minmax(0, 1fr); height: 100vh; overflow-x: clip; }
-.workspace__body { display: grid; min-height: 0; }
 
 /* ---------- 8. Buttons ------------------------------------------------- */
 .btn { --_bg: var(--bg-surface); --_fg: var(--fg); --_bd: var(--border-strong);
@@ -896,16 +889,6 @@ html[data-annot="on"] .mock-annot { display: grid; }
 .table-wrap--scroll-x .table { min-width: 780px; }
 .fmt--arazzo { background: #FDF0D5; color: #8A5300; }
 
-/* ---------- 22. Studio workspace chrome (DESIGN.md §5.5) --------------- */
-.topbar--grid { display: grid; grid-template-columns: 1fr auto 1fr; }
-.topbar--grid .topbar__left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.topbar--grid .topbar__center { position: static; transform: none; justify-self: center; }
-.topbar--grid .topbar__right { justify-self: end; }
-.pv-pill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px 0 6px; border-radius: var(--r-full); background: var(--bg-subtle); box-shadow: 0 0 0 1px var(--border) inset; font-size: var(--fs-sm); white-space: nowrap; }
-.pv-pill:hover { background: var(--bg-inset); }
-.status-bar { height: 22px; display: flex; align-items: center; gap: 14px; padding: 0 12px; font-size: var(--fs-2xs); color: var(--fg-subtle); background: var(--bg-surface); border-top: 1px solid var(--border); flex-shrink: 0; }
-.status-bar .ml-auto { margin-left: auto; }
-/* Canvas surface: dotted grid, floating toolbars, minimap */
+/* ---------- 22. Canvas surface (version compare, migration designer) --- */
 .canvas { position: relative; overflow: hidden; background-color: var(--bg-canvas); background-image: radial-gradient(color-mix(in srgb, var(--fg) 16%, transparent) 1px, transparent 1px); background-size: 20px 20px; }
 .float { position: absolute; display: flex; gap: 4px; padding: 4px; background: color-mix(in srgb, var(--bg-surface) 90%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: var(--r-md); box-shadow: var(--shadow-sm); z-index: 4; }
-.minimap { position: absolute; right: 12px; bottom: 12px; width: 150px; height: 96px; border-radius: 8px; background: color-mix(in srgb, var(--bg-surface) 92%, transparent); box-shadow: var(--shadow-sm); overflow: hidden; z-index: 4; }

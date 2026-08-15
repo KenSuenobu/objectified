@@ -8,7 +8,7 @@
    tabs, the implementation-notes panel).
 
    Page contract (see README.md):
-     <body data-shell="app|admin|studio|auth|bare"
+     <body data-shell="app|admin|auth|bare"
            data-nav="<nav item id>"      → which rail item is active
            data-page="<slug>"            → used by the notes panel + index
            data-tenant="Acme Corp">      → optional workspace name
@@ -86,7 +86,6 @@
           ]},
           { label: 'Build', items: [
             { id: 'projects', label: 'Projects', icon: 'folder-kanban', href: p('build/projects.html') },
-            { id: 'studio', label: 'Studio', icon: 'pen-tool', href: p('studio/editor.html'), ext: true },
             { id: 'primitives', label: 'Primitives & types', icon: 'shapes', href: p('build/primitives.html') },
           ]},
           { label: 'Bring in', items: [
@@ -284,7 +283,6 @@
               <div class="row-between"><span>Projects</span><span><span class="kbd">G</span><span class="kbd">P</span></span></div>
               <div class="row-between"><span>Catalog</span><span><span class="kbd">G</span><span class="kbd">C</span></span></div>
               <div class="row-between"><span>Lint posture</span><span><span class="kbd">G</span><span class="kbd">L</span></span></div>
-              <div class="row-between"><span>Studio</span><span><span class="kbd">G</span><span class="kbd">S</span></span></div>
               <div class="row-between"><span>Members</span><span><span class="kbd">G</span><span class="kbd">M</span></span></div>
             </div></div>
             <div><div class="t-caps mb-2">On a list</div><div class="col gap-2 t-sm">
@@ -295,13 +293,13 @@
               <div class="row-between"><span>Select row</span><span class="kbd">X</span></div>
               <div class="row-between"><span>Row actions</span><span class="kbd">.</span></div>
             </div></div>
-            <div><div class="t-caps mb-2">Studio</div><div class="col gap-2 t-sm">
-              <div class="row-between"><span>Save</span><span><span class="kbd">⌘</span><span class="kbd">S</span></span></div>
-              <div class="row-between"><span>Search canvas</span><span><span class="kbd">⌘</span><span class="kbd">F</span></span></div>
-              <div class="row-between"><span>Auto-layout</span><span><span class="kbd">⇧</span><span class="kbd">L</span></span></div>
-              <div class="row-between"><span>Fit view</span><span><span class="kbd">⇧</span><span class="kbd">1</span></span></div>
-              <div class="row-between"><span>Toggle inspector</span><span><span class="kbd">⌘</span><span class="kbd">I</span></span></div>
-              <div class="row-between"><span>Editor · Paths · Code</span><span><span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span></span></div>
+            <div><div class="t-caps mb-2">Dialogs &amp; wizards</div><div class="col gap-2 t-sm">
+              <div class="row-between"><span>Save</span><span><span class="kbd">⌘</span><span class="kbd">↵</span></span></div>
+              <div class="row-between"><span>Next / previous step</span><span><span class="kbd">⌘</span><span class="kbd">→</span></span></div>
+              <div class="row-between"><span>Cancel</span><span class="kbd">Esc</span></div>
+              <div class="row-between"><span>Confirm destructive</span><span>type the name</span></div>
+              <div class="row-between"><span>Copy value</span><span><span class="kbd">⌘</span><span class="kbd">C</span></span></div>
+              <div class="row-between"><span>Toggle a switch</span><span><span class="kbd">space</span></span></div>
             </div></div>
           </div>
           <div class="dialog__footer"><span class="left t-xs t-subtle">Shortcut chips on buttons can be hidden in Preferences.</span><button class="btn" data-action="close">Done</button></div>
@@ -419,15 +417,6 @@
       shell.className = 'shell';
       const active = document.body.getAttribute('data-nav') || '';
       const rail = renderRail(kind, active, rel);
-      document.body.insertBefore(shell, main);
-      shell.appendChild(rail);
-      shell.appendChild(main);
-    } else if (kind === 'studio') {
-      // Studio pages render their own topbar; the rail is collapsed by default.
-      if (!root.hasAttribute('data-rail-user')) root.setAttribute('data-rail', store.get(PREF_KEYS.rail, 'collapsed'));
-      const shell = document.createElement('div');
-      shell.className = 'shell';
-      const rail = renderRail('app', document.body.getAttribute('data-nav') || 'studio', rel);
       document.body.insertBefore(shell, main);
       shell.appendChild(rail);
       shell.appendChild(main);

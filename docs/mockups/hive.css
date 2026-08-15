@@ -1,4 +1,0 @@
-/* Wide tables scroll inside their own card (never the page) */
-.table-wrap--scroll-x { overflow-x: auto; }
-.table-wrap--scroll-x .table { min-width: 780px; }
-.fmt--arazzo { background: #FDF0D5; color: #8A5300; }
