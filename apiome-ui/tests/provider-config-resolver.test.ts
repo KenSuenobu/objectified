@@ -10,7 +10,9 @@
  *   - `enabled === false` pins a provider off,
  *   - the TTL cache is bounded and invalidatable,
  *   - every failure mode (no token, non-200, network error) degrades to env — never throws,
- *   - the merged env drives `isProviderEnabled` unchanged.
+ *   - the merged env drives `isProviderEnabled` unchanged,
+ *   - and (OLO-8.8) the resolver reports *which* source produced the overlay, so boot validation can
+ *     tell "env is the whole truth" from "the DB source degraded and may be hiding stored config".
  */
 jest.mock('../lib/rest-auth', () => ({
   REST_API_BASE_URL: 'http://rest.test/v1',
@@ -22,6 +24,7 @@ import {
   applyResolvedOverlay,
   invalidateProviderConfigCache,
   resolveProviderEnv,
+  resolveProviderEnvWithSource,
 } from '../lib/auth/provider-config-resolver';
 
 const mockFetch = jest.fn<Promise<unknown>, unknown[]>();
@@ -228,6 +231,94 @@ describe('degrade to env, never throw', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
     await resolveProviderEnv(BASE, 1_000 + 6_000); // past it
     expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('config source reporting (OLO-8.8, #4974)', () => {
+  const BASE = { ...TOKEN_ENV, GITHUB_ID: 'env-gh-id', GITHUB_SECRET: 'env-gh-secret' };
+
+  it('reports env-only when no service token switches the DB source on', async () => {
+    // Legitimately env-only: nothing was lost, so boot validation may treat env as conclusive.
+    const { env, source } = await resolveProviderEnvWithSource({ GITHUB_ID: 'env-id' }, 1_000);
+
+    expect(source).toBe('env-only');
+    expect(env.GITHUB_ID).toBe('env-id');
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('reports db when the resolved endpoint answers, with the overlay applied', async () => {
+    mockFetch.mockResolvedValue(
+      okResponse({
+        github: { enabled: null, client_id: null, client_secret: 'db-gh-secret', config: {} },
+      })
+    );
+
+    const { env, source } = await resolveProviderEnvWithSource(BASE, 1_000);
+
+    expect(source).toBe('db');
+    expect(env.GITHUB_SECRET).toBe('db-gh-secret');
+  });
+
+  it('reports unavailable — not env-only — for every failure to read a configured source', async () => {
+    // The distinction boot validation depends on: config may be stored and simply unseen.
+    const cases: Array<[string, () => void]> = [
+      ['non-200', () => mockFetch.mockResolvedValue({ ok: false, status: 503, json: async () => ({}) })],
+      ['network error', () => mockFetch.mockRejectedValue(new Error('ECONNREFUSED'))],
+      [
+        'malformed payload',
+        () => mockFetch.mockResolvedValue({ ok: true, status: 200, json: async () => ({}) }),
+      ],
+    ];
+
+    for (const [name, arrange] of cases) {
+      invalidateProviderConfigCache();
+      mockFetch.mockReset();
+      arrange();
+
+      const { env, source } = await resolveProviderEnvWithSource(BASE, 1_000);
+
+      expect([name, source]).toEqual([name, 'unavailable']);
+      expect(env.GITHUB_ID).toBe('env-gh-id'); // degraded to env, never thrown
+    }
+  });
+
+  it('warns about a malformed payload without echoing the body', async () => {
+    // The body carries decrypted secrets, so only the shape of the failure may be logged.
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ providers: 'not-an-object' }),
+    });
+
+    await resolveProviderEnvWithSource(BASE, 1_000);
+
+    const notices = (console.warn as jest.Mock).mock.calls.filter((call) =>
+      String(call[0]).includes('unexpected payload shape')
+    );
+    expect(notices).toHaveLength(1);
+    expect(String(notices[0][0])).not.toContain('not-an-object');
+  });
+
+  it('serves the source from cache alongside the value it belongs to', async () => {
+    mockFetch.mockResolvedValue(okResponse({}));
+    const first = await resolveProviderEnvWithSource(BASE, 1_000);
+    const cached = await resolveProviderEnvWithSource(BASE, 5_000); // within the default TTL
+
+    expect(first.source).toBe('db');
+    expect(cached.source).toBe('db');
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolveProviderEnv returns exactly the env half of the pair', async () => {
+    mockFetch.mockResolvedValue(
+      okResponse({
+        github: { enabled: null, client_id: 'db-gh-id', client_secret: null, config: {} },
+      })
+    );
+    const withSource = await resolveProviderEnvWithSource(BASE, 1_000);
+    const plain = await resolveProviderEnv(BASE, 2_000); // same cache window
+
+    expect(plain).toEqual(withSource.env);
   });
 });
 
