@@ -107,7 +107,7 @@ function ChangeRow({ change }: { change: McpDigestChange }) {
         <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{change.item_type}</span>
       </span>
       <span
-        className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${style.chip}`}
+        className={`shrink-0 rounded-full border px-2 py-0.5 text-2xs font-medium uppercase tracking-wider ${style.chip}`}
       >
         {style.label}
       </span>

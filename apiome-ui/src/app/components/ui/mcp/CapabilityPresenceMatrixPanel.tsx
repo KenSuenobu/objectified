@@ -145,7 +145,7 @@ function ColumnHeader({
       >
         {mcpMatrixColumnLabel(column)}
         {isCurrent ? (
-          <span className="mt-0.5 text-[9px] font-normal uppercase tracking-wider text-indigo-500 dark:text-indigo-400">
+          <span className="mt-0.5 text-2xs font-normal uppercase tracking-wider text-indigo-500 dark:text-indigo-400">
             current
           </span>
         ) : null}
@@ -297,7 +297,7 @@ function MatrixRow({ row, columns }: { row: McpMatrixRow; columns: readonly McpM
             <span className="block truncate font-mono text-xs font-medium text-gray-900 dark:text-white" title={row.name}>
               {row.name}
             </span>
-            <span className="block text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <span className="block text-2xs uppercase tracking-wider text-gray-400 dark:text-gray-500">
               {mcpMatrixKindLabel(row.item_type)}
             </span>
           </span>

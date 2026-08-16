@@ -140,7 +140,7 @@ function ScoreSummaryCard({ score, grade, children }: { score: number; grade: st
       className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
           Lint score
         </span>
         <span
@@ -160,7 +160,7 @@ function ScoreSummaryCard({ score, grade, children }: { score: number; grade: st
           style={{ width: `${score}%` }}
         />
       </div>
-      <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+      <p className="mt-1 text-2xs text-gray-400 dark:text-gray-500">
         {tier.shortLabel} · deterministic lint
       </p>
       {children}
@@ -235,7 +235,7 @@ function SummaryTile({
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
           {label}
         </span>
         <span
@@ -247,7 +247,7 @@ function SummaryTile({
           {count}
         </span>
       </div>
-      <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">{caption}</p>
+      <p className="mt-1 text-2xs text-gray-400 dark:text-gray-500">{caption}</p>
     </div>
   );
 }
@@ -272,7 +272,7 @@ function ProvenanceCell({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <dt className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
         {icon}
         {label}
       </dt>
@@ -312,7 +312,7 @@ function ProvenanceStrip({
         <span
           data-testid="catalog-lint-provenance-source"
           className={cn(
-            'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold',
+            'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
             provenance.stale
               ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
               : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
@@ -399,7 +399,7 @@ function FindingRow({
               }}
               title="Show this finding in the source"
               className={cn(
-                'inline-flex items-center gap-1 font-mono text-[11px] font-medium',
+                'inline-flex items-center gap-1 font-mono text-2xs font-medium',
                 selected
                   ? 'text-indigo-700 dark:text-indigo-300'
                   : 'text-indigo-600 hover:underline dark:text-indigo-400',
@@ -416,7 +416,7 @@ function FindingRow({
             <button
               type="button"
               data-testid="catalog-lint-waive-button"
-              className="text-[11px] font-medium text-amber-700 hover:underline dark:text-amber-400"
+              className="text-2xs font-medium text-amber-700 hover:underline dark:text-amber-400"
               onClick={(event) => {
                 event.stopPropagation();
                 onWaive(finding);
@@ -434,7 +434,7 @@ function FindingRow({
               type="button"
               data-testid="catalog-lint-finding-link"
               onClick={() => onNavigateToEntity!(entityName!)}
-              className="inline-flex max-w-full items-center gap-1 font-mono text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+              className="inline-flex max-w-full items-center gap-1 font-mono text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
               title={`Jump to ${entityName} in Overview`}
             >
               <span className="truncate">{finding.path}</span>
@@ -442,7 +442,7 @@ function FindingRow({
             </button>
           ) : (
             <span
-              className="block truncate font-mono text-[11px] text-gray-400 dark:text-gray-500"
+              className="block truncate font-mono text-2xs text-gray-400 dark:text-gray-500"
               title={finding.path}
             >
               {finding.path}
@@ -491,7 +491,7 @@ function TierSection({
         <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
           <span
             className={cn(
-              'inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide',
+              'inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wide',
               meta.badgeClass,
             )}
           >
@@ -823,7 +823,7 @@ export function CatalogLintPanel({
             type="button"
             data-testid="catalog-lint-finding-link"
             onClick={() => onNavigateToEntity!(entityName!)}
-            className="inline-flex items-center gap-1 font-mono text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            className="inline-flex items-center gap-1 font-mono text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
             title={`Jump to ${entityName} in Overview`}
           >
             {finding.path}
@@ -832,7 +832,7 @@ export function CatalogLintPanel({
         );
       }
       return (
-        <span className="font-mono text-[11px] text-gray-400 dark:text-gray-500">{finding.path}</span>
+        <span className="font-mono text-2xs text-gray-400 dark:text-gray-500">{finding.path}</span>
       );
     },
     [entityNameSet, onNavigateToEntity],
@@ -941,7 +941,7 @@ export function CatalogLintPanel({
               report.scoreIsStale &&
               (report.score !== displayLint.score || report.grade !== displayLint.grade) ? (
                 <p
-                  className="mt-1 text-[11px] text-gray-500 dark:text-gray-400"
+                  className="mt-1 text-2xs text-gray-500 dark:text-gray-400"
                   data-testid="catalog-lint-live-recompute-note"
                 >
                   Converted OpenAPI lint: {report.grade} · {report.score}/100
@@ -977,7 +977,7 @@ export function CatalogLintPanel({
                       <CategoryBreakdownBar key={row.category} row={row} />
                     ))}
                   </div>
-                  <p className="mt-3 text-[11px] text-gray-400 dark:text-gray-500">
+                  <p className="mt-3 text-2xs text-gray-400 dark:text-gray-500">
                     Severity breakdown by category — per-category 0–100 scores arrive with the lint
                     rollup enrichment (MFI-25.6).
                   </p>
@@ -995,7 +995,7 @@ export function CatalogLintPanel({
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Findings
                 {findings.length > 0 ? (
-                  <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
+                  <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 font-mono text-2xs font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
                     {findings.length}
                   </span>
                 ) : null}
@@ -1076,7 +1076,7 @@ export function CatalogLintPanel({
                 </h3>
                 {selectedFinding ? (
                   <span
-                    className="ml-auto min-w-0 truncate font-mono text-[11px] text-gray-400 dark:text-gray-500"
+                    className="ml-auto min-w-0 truncate font-mono text-2xs text-gray-400 dark:text-gray-500"
                     title={selectedFinding.rule}
                   >
                     {selectedFinding.rule}
@@ -1123,14 +1123,14 @@ export function CatalogLintPanel({
                     ) : null}
                     {rawRange.start > 0 ? (
                       <p
-                        className="px-4 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
+                        className="px-4 py-1 font-mono text-2xs text-gray-400 dark:text-gray-500"
                         data-testid="catalog-lint-source-clipped-before"
                       >
                         … {rawRange.start.toLocaleString()} earlier{' '}
                         {rawRange.start === 1 ? 'line' : 'lines'}
                       </p>
                     ) : null}
-                    <ol className="py-1 font-mono text-[11px] leading-snug">
+                    <ol className="py-1 font-mono text-2xs leading-snug">
                       {rawLines.map((text, index) => {
                         const lineNumber = rawRange.start + index + 1;
                         const isTarget = selectedLine === lineNumber;
@@ -1156,7 +1156,7 @@ export function CatalogLintPanel({
                     </ol>
                     {rawRange.end < rawAllLines.length ? (
                       <p
-                        className="px-4 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
+                        className="px-4 py-1 font-mono text-2xs text-gray-400 dark:text-gray-500"
                         data-testid="catalog-lint-source-clipped-after"
                       >
                         … {(rawAllLines.length - rawRange.end).toLocaleString()} later{' '}
@@ -1188,7 +1188,7 @@ export function CatalogLintPanel({
               Raw severity stays visible; this records an audited policy decision with
               rationale and expiry.
             </p>
-            <p className="mt-3 font-mono text-[11px] text-gray-500">{waiveTarget.id}</p>
+            <p className="mt-3 font-mono text-2xs text-gray-500">{waiveTarget.id}</p>
             <label className="mt-3 block text-xs font-medium text-gray-700 dark:text-gray-300">
               Rationale
               <textarea

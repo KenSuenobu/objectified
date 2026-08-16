@@ -34,6 +34,7 @@ import {
 import { analyzeSpecification, type AnalysisResult } from '@/app/utils/openapi-analyzer';
 import { RepositoryFileSpecRelationshipFlow } from '@/app/components/ade/dashboard/repositories/RepositoryFileSpecRelationshipFlow';
 import type { RepositoryFileStagedImportTarget } from '@/app/components/ade/dashboard/repositories/repositoryFileStagedImport';
+import { CODE_BLOCK_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 /** Indexed file row from the repository files list API (subset used by file detail). */
 export type RepositoryFileDetailRow = {
@@ -260,9 +261,9 @@ function formatDetailFormatLabel(format: RepositoryFileDetailTables['format']): 
 }
 
 const detailTableTh =
-  'whitespace-nowrap px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400';
+  'whitespace-nowrap px-3 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400';
 const detailTableTd = 'px-3 py-3 align-top text-sm text-gray-800 dark:text-gray-200';
-const detailTableTdMono = cn(detailTableTd, 'font-mono text-[13px] leading-snug');
+const detailTableTdMono = cn(detailTableTd, 'font-mono text-sm leading-snug');
 
 /** Caps table body height when many rows; short tables stay only as tall as their content. */
 const detailSectionBodyScroll = 'max-h-[min(40vh,440px)] overflow-auto';
@@ -1070,18 +1071,18 @@ export function RepositoryFileDetail({
                   <>
                     <span
                       className={cn(
-                        'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                        'rounded-full px-2 py-0.5 text-2xs font-semibold',
                         kindPillClass(displayKind)
                       )}
                     >
                       {displayKind}
                     </span>
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-2xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
                       confidence: {confLabel}
                     </span>
                   </>
                 ) : null}
-                <span className="inline-flex flex-wrap items-center gap-x-1.5 font-mono text-[11px] text-gray-500 dark:text-gray-400">
+                <span className="inline-flex flex-wrap items-center gap-x-1.5 font-mono text-2xs text-gray-500 dark:text-gray-400">
                   {loading ? (
                     <span className="inline-flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
                       <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden />
@@ -1330,7 +1331,7 @@ export function RepositoryFileDetail({
             ) : sourceOnlyLayout ? (
               <>
                 <div className="flex flex-col gap-2 border-b border-gray-200 px-4 py-2 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <span className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     Source
                   </span>
                   {blobUrl ? (
@@ -1338,13 +1339,13 @@ export function RepositoryFileDetail({
                       href={blobUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex shrink-0 items-center gap-1 text-[11px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400"
+                      className="inline-flex shrink-0 items-center gap-1 text-2xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400"
                     >
                       <ExternalLink className="h-3 w-3" aria-hidden />
                       View on GitHub
                     </a>
                   ) : (
-                    <span className="text-[11px] text-gray-400">GitHub web link unavailable for this clone URL.</span>
+                    <span className="text-2xs text-gray-400">GitHub web link unavailable for this clone URL.</span>
                   )}
                 </div>
                 {showUnrecognizedImportFormatBlurb ? (
@@ -1375,7 +1376,7 @@ export function RepositoryFileDetail({
                   </div>
                 ) : (
                   <div className="flex flex-col">
-                    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 border-b border-gray-200 bg-gray-50 px-3 py-1.5 font-mono text-[10px] text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
+                    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 border-b border-gray-200 bg-gray-50 px-3 py-1.5 font-mono text-2xs text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
                       <span className="min-w-0 flex-1">
                         Syntax: <span className="text-indigo-600 dark:text-indigo-400">{monacoLanguage}</span>
                         <span className="mx-2 text-gray-300 dark:text-gray-600">·</span>
@@ -1400,7 +1401,7 @@ export function RepositoryFileDetail({
                           readOnly: true,
                           minimap: { enabled: true },
                           scrollBeyondLastLine: false,
-                          fontSize: 12,
+                          fontSize: CODE_BLOCK_FONT_SIZE,
                           wordWrap: 'on',
                           lineNumbers: 'on',
                           folding: true,
@@ -1445,13 +1446,13 @@ export function RepositoryFileDetail({
                   href={blobUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex shrink-0 items-center gap-1 text-[11px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400"
+                  className="inline-flex shrink-0 items-center gap-1 text-2xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400"
                 >
                   <ExternalLink className="h-3 w-3" aria-hidden />
                   View on GitHub
                 </a>
               ) : (
-                <span className="text-[11px] text-gray-400">GitHub web link unavailable for this clone URL.</span>
+                <span className="text-2xs text-gray-400">GitHub web link unavailable for this clone URL.</span>
               )}
             </div>
 
@@ -1461,7 +1462,7 @@ export function RepositoryFileDetail({
               <>
                 {tab === 'source' && (
                   <div className="flex flex-col">
-                    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 border-b border-gray-200 bg-gray-50 px-3 py-1.5 font-mono text-[10px] text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
+                    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 border-b border-gray-200 bg-gray-50 px-3 py-1.5 font-mono text-2xs text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
                       <span className="min-w-0 flex-1">
                         Syntax: <span className="text-indigo-600 dark:text-indigo-400">{monacoLanguage}</span>
                         <span className="mx-2 text-gray-300 dark:text-gray-600">·</span>
@@ -1486,7 +1487,7 @@ export function RepositoryFileDetail({
                           readOnly: true,
                           minimap: { enabled: true },
                           scrollBeyondLastLine: false,
-                          fontSize: 12,
+                          fontSize: CODE_BLOCK_FONT_SIZE,
                           wordWrap: 'on',
                           lineNumbers: 'on',
                           folding: true,

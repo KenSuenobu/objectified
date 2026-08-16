@@ -192,7 +192,7 @@ export default function SuiteNavMenu({
     }
   }
 
-  const triggerClassName = `inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-indigo-400 ${
+  const triggerClassName = `inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-indigo-400 ${
     isActive ? 'bg-slate-200/80 font-medium text-slate-900 dark:bg-slate-700 dark:text-white' : ''
   }`;
 
@@ -236,7 +236,7 @@ export default function SuiteNavMenu({
                     <div
                       id={headingId}
                       role="presentation"
-                      className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400"
+                      className="px-3 pb-1 pt-2 text-2xs font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400"
                     >
                       {group.label}
                     </div>
@@ -311,11 +311,11 @@ function SuiteNavMenuTile({
         })}
       <span className="min-w-0">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-[13px] font-medium text-slate-900 dark:text-slate-100">
+          <span className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
             {menuItem.label}
           </span>
           {menuItem.badge && (
-            <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+            <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-[0.04em] text-slate-600 dark:bg-slate-700 dark:text-slate-300">
               {menuItem.badge}
             </span>
           )}

@@ -23,6 +23,7 @@ import {
 } from '@/app/components/ui';
 import type { LintWorkspaceSavedView } from '@/app/utils/lint-workspace';
 import { cn } from '@lib/utils';
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
 
 const chipClass =
   'inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700';
@@ -74,7 +75,7 @@ export default function LintWorkspaceSavedViewsBar({
             data-testid="saved-view-pin"
           >
             <Pin
-              size={12}
+              size={ICON_SIZE.button}
               className={cn(
                 view.isPinned
                   ? 'text-indigo-600 dark:text-indigo-400'
@@ -89,7 +90,7 @@ export default function LintWorkspaceSavedViewsBar({
             onClick={() => onDelete(view)}
             data-testid="saved-view-delete"
           >
-            <X size={12} className="text-gray-400 hover:text-rose-500 dark:text-gray-500" />
+            <X size={ICON_SIZE.button} className="text-gray-400 hover:text-rose-500 dark:text-gray-500" />
           </button>
         </span>
       ))}
@@ -99,7 +100,7 @@ export default function LintWorkspaceSavedViewsBar({
         data-testid="saved-view-save-current"
         onClick={() => setSaveOpen(true)}
       >
-        <Plus size={14} />
+        <Plus size={ICON_SIZE.button} />
         Save view
       </Button>
 

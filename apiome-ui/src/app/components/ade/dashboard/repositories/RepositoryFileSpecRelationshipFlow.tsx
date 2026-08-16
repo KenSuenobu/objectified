@@ -16,6 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { buildRelationshipDiagramEdges } from '@/app/utils/schema-tree-utils';
+import { SVG_TEXT_SIZE } from '@/app/components/ui/svgTypography';
 
 function countSchemaProperties(schema: unknown): number {
   if (!schema || typeof schema !== 'object') return 0;
@@ -96,7 +97,7 @@ function PreviewClassNode({
       >
         <div className="flex items-center gap-1.5">
           {data.hasComposition && data.compositionType ? (
-            <span className="rounded bg-purple-200 px-1 py-0.5 text-[9px] text-purple-700 dark:bg-purple-800 dark:text-purple-300">
+            <span className="rounded bg-purple-200 px-1 py-0.5 text-2xs text-purple-700 dark:bg-purple-800 dark:text-purple-300">
               {data.compositionType}
             </span>
           ) : null}
@@ -104,7 +105,7 @@ function PreviewClassNode({
         </div>
       </div>
       <div className="px-3 py-2">
-        <div className="text-[10px] text-gray-500 dark:text-gray-400">
+        <div className="text-2xs text-gray-500 dark:text-gray-400">
           {data.propertyCount} {data.propertyCount === 1 ? 'property' : 'properties'}
         </div>
       </div>
@@ -184,7 +185,7 @@ export function RepositoryFileSpecRelationshipFlow({ document }: { document: unk
       type: 'smoothstep',
       animated: false,
       label,
-      labelStyle: { fill: '#4338ca', fontSize: 10, fontWeight: 500 },
+      labelStyle: { fill: '#4338ca', fontSize: SVG_TEXT_SIZE.label, fontWeight: 500 },
       labelBgStyle: { fill: 'white', fillOpacity: 0.9 },
       labelBgPadding: [4, 2] as [number, number],
       labelBgBorderRadius: 4,

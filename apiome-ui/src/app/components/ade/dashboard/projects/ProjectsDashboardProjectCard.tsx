@@ -142,7 +142,7 @@ export function ProjectsDashboardProjectCard({
                 <h3 className="truncate font-bold text-gray-900 dark:text-white">{project.name}</h3>
                 {domainCategoryLabel ? (
                   <span
-                    className="inline-flex max-w-full shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300"
+                    className="inline-flex max-w-full shrink-0 items-center rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300"
                     title={domainCategoryLabel}
                   >
                     {domainCategoryLabel}
@@ -150,7 +150,7 @@ export function ProjectsDashboardProjectCard({
                 ) : null}
               </div>
               <p
-                className="truncate font-mono text-[11px] text-gray-500 dark:text-gray-400"
+                className="truncate font-mono text-2xs text-gray-500 dark:text-gray-400"
                 title={project.slug ?? project.id}
               >
                 {shortProjectId}
@@ -159,15 +159,15 @@ export function ProjectsDashboardProjectCard({
             </div>
             <div className="shrink-0">
               {isDeleted ? (
-                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
                   Deleted
                 </span>
               ) : !project.enabled ? (
-                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                   Disabled
                 </span>
               ) : (
-                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                   Active
                 </span>
               )}
@@ -195,7 +195,7 @@ export function ProjectsDashboardProjectCard({
             <div className="mt-4 flex items-end gap-3">
               <div className="grid flex-1 grid-cols-3 gap-2 text-center">
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <p className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Quality
                   </p>
                   {qualityValue != null ? (
@@ -220,7 +220,7 @@ export function ProjectsDashboardProjectCard({
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <p className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Lint
                   </p>
                   {lintLetter ? (
@@ -245,7 +245,7 @@ export function ProjectsDashboardProjectCard({
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <p className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Debt
                   </p>
                   <span
@@ -271,10 +271,10 @@ export function ProjectsDashboardProjectCard({
           )}
 
           <div className="mt-4 flex items-center gap-2">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-semibold text-white ring-2 ring-white dark:ring-gray-800">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-2xs font-semibold text-white ring-2 ring-white dark:ring-gray-800">
               {(creatorInitials.slice(0, 2) || '?').toUpperCase()}
             </div>
-            <span className="truncate text-[11px] text-gray-500 dark:text-gray-400">{project.creator_name}</span>
+            <span className="truncate text-2xs text-gray-500 dark:text-gray-400">{project.creator_name}</span>
           </div>
         </div>
       </div>

@@ -161,7 +161,7 @@ export function VersionMockCell({
                 : 'Draft mock off'}
           </span>
           {mockEnabled && mockPrivate && (
-            <span className="text-[10px] uppercase tracking-wide font-semibold text-violet-600 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 px-1.5 py-0.5 rounded">
+            <span className="text-2xs uppercase tracking-wide font-semibold text-violet-600 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 px-1.5 py-0.5 rounded">
               Private
             </span>
           )}

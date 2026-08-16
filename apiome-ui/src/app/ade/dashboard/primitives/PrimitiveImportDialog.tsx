@@ -60,6 +60,7 @@ import {
   persistPrimitiveImportPreferences,
   readPrimitiveImportPreferences,
 } from '@/app/utils/primitive-import-preferences';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -803,7 +804,7 @@ function RefResolutionSection({
         </span>
         {summary.repaired > 0 ? (
           <span
-            className="rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
+            className="rounded bg-amber-50 px-1.5 py-0.5 text-2xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
             data-testid="ref-repaired-summary"
           >
             {summary.repaired} rewritten to resolve
@@ -818,7 +819,7 @@ function RefResolutionSection({
               key={`${entry.typeName}-${entry.ref}`}
               data-testid={`ref-resolved-${entry.ref}`}
               data-status={entry.status}
-              className="flex flex-wrap items-baseline gap-x-1.5 text-[11px]"
+              className="flex flex-wrap items-baseline gap-x-1.5 text-2xs"
             >
               <CheckCircle className="h-3 w-3 shrink-0 translate-y-0.5 text-emerald-500" aria-hidden />
               <span className="font-mono text-gray-700 dark:text-gray-300 break-all">{entry.ref}</span>
@@ -835,7 +836,7 @@ function RefResolutionSection({
             </li>
           ))}
           {resolved.length > REF_LIST_CAP ? (
-            <li className="text-[11px] text-gray-500 dark:text-gray-400" data-testid="ref-resolved-truncated">
+            <li className="text-2xs text-gray-500 dark:text-gray-400" data-testid="ref-resolved-truncated">
               +{resolved.length - REF_LIST_CAP} more resolved
             </li>
           ) : null}
@@ -861,7 +862,7 @@ function RefResolutionSection({
                 <li
                   key={`${entry.typeName}-${entry.ref}`}
                   data-testid={`ref-unresolved-${entry.ref}`}
-                  className="text-[11px]"
+                  className="text-2xs"
                 >
                   <span className="font-mono break-all">{entry.ref}</span>
                   <span className="text-gray-500 dark:text-gray-400"> in </span>
@@ -869,7 +870,7 @@ function RefResolutionSection({
                 </li>
               ))}
               {unresolved.length > REF_LIST_CAP ? (
-                <li className="text-[11px]" data-testid="ref-unresolved-truncated">
+                <li className="text-2xs" data-testid="ref-unresolved-truncated">
                   +{unresolved.length - REF_LIST_CAP} more unresolved
                 </li>
               ) : null}
@@ -1204,7 +1205,7 @@ function SourceMethodInput(props: SourceStepProps) {
               theme="vs-dark"
               value={schemaText}
               onChange={onSchemaTextChange}
-              options={{ minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 13 }}
+              options={{ minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: CODE_EDITOR_FONT_SIZE }}
             />
           </div>
           <div className="flex items-center justify-between">

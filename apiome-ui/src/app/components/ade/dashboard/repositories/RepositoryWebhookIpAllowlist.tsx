@@ -161,7 +161,7 @@ function ProviderCard({ provider }: { provider: IpProvider }) {
           {provider.ranges.map((range) => (
             <li
               key={range.cidr}
-              className="rounded border border-gray-200 px-1.5 py-0.5 font-mono text-[11px] text-gray-700 dark:border-gray-700 dark:text-gray-300"
+              className="rounded border border-gray-200 px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:border-gray-700 dark:text-gray-300"
               title={
                 range.source === 'configured'
                   ? 'Supplied by this deployment’s settings'
@@ -464,7 +464,7 @@ export function RepositoryWebhookIpAllowlist() {
                 <div className="min-w-[12rem] flex-1">
                   <label
                     htmlFor="allowlist-cidr"
-                    className="block text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                    className="block text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400"
                   >
                     Address or CIDR
                   </label>
@@ -485,7 +485,7 @@ export function RepositoryWebhookIpAllowlist() {
                 <div className="min-w-[14rem] flex-1">
                   <label
                     htmlFor="allowlist-description"
-                    className="block text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                    className="block text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400"
                   >
                     Why
                   </label>
@@ -552,7 +552,7 @@ export function RepositoryWebhookIpAllowlist() {
                   <div className="min-w-[16rem] flex-1">
                     <label
                       htmlFor="allowlist-bypass-reason"
-                      className="block text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                      className="block text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400"
                     >
                       Reason for bypassing
                     </label>
@@ -587,7 +587,7 @@ export function RepositoryWebhookIpAllowlist() {
                 </Button>
               )}
               {data.policyUpdatedAt ? (
-                <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-2xs text-gray-500 dark:text-gray-400">
                   Last changed {formatTimestamp(data.policyUpdatedAt)}.
                 </p>
               ) : null}

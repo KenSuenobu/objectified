@@ -75,7 +75,7 @@ export function DeferredFilePanel({
         )}
       </div>
       {plan.headOnly && (
-        <p className="text-[11px] text-amber-700 dark:text-amber-300">
+        <p className="text-2xs text-amber-700 dark:text-amber-300">
           The viewer will show the beginning of the file only — download it to read all of it.
         </p>
       )}

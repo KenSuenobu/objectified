@@ -124,7 +124,7 @@ export default function TablesSidebar() {
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Filter tables…"
               className={[
-                'w-full pl-7 pr-2 text-[12.5px] rounded-md border transition-colors',
+                'w-full pl-7 pr-2 text-xs rounded-md border transition-colors',
                 tokens.inputPaddingY,
                 sidebarTheme.inputBase,
               ].join(' ')}
@@ -136,20 +136,20 @@ export default function TablesSidebar() {
     >
       <div className={tokens.sectionPadding}>
         {loading ? (
-          <div className={['py-2 text-[12.5px]', sidebarTheme.textSecondary].join(' ')}>Loading tables…</div>
+          <div className={['py-2 text-xs', sidebarTheme.textSecondary].join(' ')}>Loading tables…</div>
         ) : tables.length === 0 ? (
           <div
             className={[
               'rounded-md border border-dashed py-6 px-3 text-center',
               sidebarTheme.borderSoft,
               sidebarTheme.textSecondary,
-              'text-[12px]',
+              'text-xs',
             ].join(' ')}
           >
             Publish a version to see class schemas.
           </div>
         ) : filteredTables.length === 0 ? (
-          <div className={['py-2 text-[12px]', sidebarTheme.textSecondary].join(' ')}>
+          <div className={['py-2 text-xs', sidebarTheme.textSecondary].join(' ')}>
             No tables match &quot;{filter}&quot;
           </div>
         ) : (
@@ -200,12 +200,12 @@ export default function TablesSidebar() {
                         />
                         <span className="truncate flex-1 min-w-0">{row.class_name}</span>
                         {countsLoading && !showCount && (
-                          <span className={['shrink-0 text-[10.5px]', sidebarTheme.textTertiary].join(' ')}>…</span>
+                          <span className={['shrink-0 text-2xs', sidebarTheme.textTertiary].join(' ')}>…</span>
                         )}
                         {showCount && (
                           <span
                             className={[
-                              'shrink-0 px-1.5 py-0.5 rounded text-[10.5px] font-semibold tabular-nums',
+                              'shrink-0 px-1.5 py-0.5 rounded text-2xs font-semibold tabular-nums',
                               isSelected
                                 ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300'
                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300',

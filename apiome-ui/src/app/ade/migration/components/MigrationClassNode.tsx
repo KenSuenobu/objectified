@@ -5,7 +5,12 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { NodeCard } from '../../../components/ade/canvas/NodeCard';
 import { NodeHeader } from '../../../components/ade/canvas/NodeHeader';
-import { accentVar, type NodeAccentRole } from '../../../components/ade/canvas/canvas-theme';
+import {
+  accentVar,
+  CANVAS_ICON_SIZE,
+  CANVAS_TYPE_SCALE,
+  type NodeAccentRole,
+} from '../../../components/ade/canvas/canvas-theme';
 
 export interface MigrationClassNodeData {
   className: string;
@@ -24,14 +29,14 @@ function MigrationClassNode(props: NodeProps) {
     <NodeCard role={role} minWidth={210} maxWidth={290} selected={props.selected}>
       <NodeHeader
         role={role}
-        icon={isFrom ? <ArrowRight size={14} strokeWidth={2.5} /> : <ArrowLeft size={14} strokeWidth={2.5} />}
+        icon={isFrom ? <ArrowRight size={CANVAS_ICON_SIZE.title} strokeWidth={2.5} /> : <ArrowLeft size={CANVAS_ICON_SIZE.title} strokeWidth={2.5} />}
         iconSize={26}
         compact
         title={
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', minWidth: 0 }}>
             <span
               style={{
-                fontSize: '9px',
+                fontSize: CANVAS_TYPE_SCALE.micro,
                 fontWeight: 700,
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
@@ -43,7 +48,7 @@ function MigrationClassNode(props: NodeProps) {
             </span>
             <span
               style={{
-                fontSize: '13px',
+                fontSize: CANVAS_TYPE_SCALE.title,
                 fontWeight: 600,
                 color: 'var(--node-text)',
                 overflow: 'hidden',
@@ -61,7 +66,7 @@ function MigrationClassNode(props: NodeProps) {
         {properties.length === 0 ? (
           <p
             style={{
-              fontSize: '11px',
+              fontSize: CANVAS_TYPE_SCALE.meta,
               color: 'var(--node-text-subtle)',
               fontStyle: 'italic',
               margin: 0,
@@ -87,7 +92,7 @@ function MigrationClassNode(props: NodeProps) {
               >
                 <span
                   style={{
-                    fontSize: '12px',
+                    fontSize: CANVAS_TYPE_SCALE.body,
                     fontWeight: 500,
                     color: 'var(--node-text)',
                     overflow: 'hidden',
@@ -101,7 +106,7 @@ function MigrationClassNode(props: NodeProps) {
                 {p.type != null && p.type !== '' ? (
                   <span
                     style={{
-                      fontSize: '10px',
+                      fontSize: CANVAS_TYPE_SCALE.caps,
                       color: 'var(--node-text-muted)',
                       fontFamily: 'var(--app-font-mono, monospace)',
                       flexShrink: 0,

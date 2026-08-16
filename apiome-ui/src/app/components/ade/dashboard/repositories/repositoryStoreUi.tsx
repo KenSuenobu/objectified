@@ -229,7 +229,7 @@ export function RepositoryKpiCard({
           aria-busy={valuePending}
           tabIndex={0}
         >
-          <p className="break-words text-[10px] uppercase leading-tight tracking-wider text-gray-500 dark:text-gray-400">
+          <p className="break-words text-2xs uppercase leading-tight tracking-wider text-gray-500 dark:text-gray-400">
             {label}
           </p>
           <div
@@ -343,11 +343,11 @@ export function RepositoryIndexSnapshot({ repo }: { repo: DashboardRepository })
           )}
         </div>
         {hasImportable ? (
-          <span className="text-[9px] font-medium tabular-nums leading-none text-slate-600 dark:text-slate-400">
+          <span className="text-2xs font-medium tabular-nums leading-none text-slate-600 dark:text-slate-400">
             {pct}%
           </span>
         ) : (
-          <span className="text-[9px] font-medium leading-none text-slate-500 dark:text-slate-400">…</span>
+          <span className="text-2xs font-medium leading-none text-slate-500 dark:text-slate-400">…</span>
         )}
       </div>
     );
@@ -425,7 +425,7 @@ export function repositoryStatusClass(status: RepositoryStatus): string {
 export function ProviderBadge({ provider }: { provider: RepositoryProvider }) {
   if (provider === 'github') {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+      <span className="inline-flex items-center gap-1 text-2xs text-gray-500 dark:text-gray-400">
         <Github className="h-3 w-3" aria-hidden />
         GitHub
       </span>
@@ -433,7 +433,7 @@ export function ProviderBadge({ provider }: { provider: RepositoryProvider }) {
   }
   if (provider === 'gitlab') {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+      <span className="inline-flex items-center gap-1 text-2xs text-gray-500 dark:text-gray-400">
         <Gitlab className="h-3 w-3 text-orange-500" aria-hidden />
         GitLab
       </span>
@@ -441,14 +441,14 @@ export function ProviderBadge({ provider }: { provider: RepositoryProvider }) {
   }
   if (provider === 'bitbucket') {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+      <span className="inline-flex items-center gap-1 text-2xs text-gray-500 dark:text-gray-400">
         <SiBitbucket className="h-3 w-3 text-sky-600" aria-hidden />
         Bitbucket
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+    <span className="inline-flex items-center gap-1 text-2xs text-gray-500 dark:text-gray-400">
       <Globe className="h-3 w-3 text-indigo-500" aria-hidden />
       Public URL
     </span>
@@ -502,7 +502,7 @@ export function RepositoryCard({
           </span>
           <div className="min-w-0">
             <p className="truncate font-semibold">{repo.name}</p>
-            <p className="truncate font-mono text-[11px] text-gray-500 dark:text-gray-400">{repo.full_name}</p>
+            <p className="truncate font-mono text-2xs text-gray-500 dark:text-gray-400">{repo.full_name}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -512,7 +512,7 @@ export function RepositoryCard({
           </div>
           <span
             className={cn(
-              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider',
               repositoryStatusClass(repo.status)
             )}
           >
@@ -538,7 +538,7 @@ export function RepositoryCard({
       ) : (
         <p className="mb-3 text-xs text-gray-400 dark:text-gray-500">No description</p>
       )}
-      <div className="mb-3 flex flex-wrap items-center gap-3 text-[11px] text-gray-500 dark:text-gray-400">
+      <div className="mb-3 flex flex-wrap items-center gap-3 text-2xs text-gray-500 dark:text-gray-400">
         <ProviderBadge provider={repo.provider} />
         <span className="inline-flex items-center gap-1">
           <GitBranch className="h-3 w-3" aria-hidden />
@@ -550,7 +550,7 @@ export function RepositoryCard({
         </span>
       </div>
       <div className="flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-700">
-        <span className="text-[11px] text-gray-500 dark:text-gray-400">{scanLabel}</span>
+        <span className="text-2xs text-gray-500 dark:text-gray-400">{scanLabel}</span>
         <div className="pointer-events-auto" onPointerDown={(e) => e.stopPropagation()}>
           <RepositoryIndexSnapshot repo={repo} />
         </div>
@@ -591,7 +591,7 @@ export function formatLastScan(iso: string | null | undefined, failed: boolean):
 
 export function ManageLinkedAccountsLink() {
   return (
-    <Link href="/ade/dashboard/linked-accounts" className="text-[11px] font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+    <Link href="/ade/dashboard/linked-accounts" className="text-2xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
       Manage linked accounts →
     </Link>
   );

@@ -12,10 +12,19 @@
  */
 import { KeyRound } from 'lucide-react';
 import { SiAmazon, SiAuth0, SiGithub, SiGitlab, SiGoogle, SiKeycloak, SiLine, SiOkta, SiVk, SiWechat } from 'react-icons/si';
+import { ICON_SIZE } from '../ui/iconSizes';
 
 /** Props every brand icon accepts (matches the `react-icons` component contract we use). */
 interface BrandIconProps {
-  size?: number;
+  /**
+   * Rendered width/height, as any CSS length.
+   *
+   * `string | number` rather than `number` because the DESIGN.md §3.5 sizes in
+   * `components/ui/iconSizes` are `rem` (HIVE-1.6), so a brand mark scales with the label
+   * beside it. This is also `react-icons`' own `IconBaseProps['size']` signature, so the
+   * Simple-Icons components below satisfy it unchanged.
+   */
+  size?: string | number;
   className?: string;
 }
 
@@ -26,11 +35,11 @@ interface BrandIconProps {
  * the mark is inlined. The four fills are the official Microsoft brand colors — logo content,
  * not theme styling, so they stay literal rather than CSS classes.
  *
- * @param size Rendered width/height in px (defaults to 20, like the SSO button icons).
+ * @param size Rendered width/height as a CSS length (defaults to the §3.5 dense size).
  * @param className Optional extra classes on the root svg.
  * @returns The Microsoft logo as an inline svg.
  */
-export function MicrosoftIcon({ size = 20, className }: BrandIconProps) {
+export function MicrosoftIcon({ size = ICON_SIZE.dense, className }: BrandIconProps) {
   return (
     <svg
       width={size}

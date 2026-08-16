@@ -21,6 +21,7 @@ import {
 import { getNumericScoreTier } from '../../../utils/numeric-score-tier';
 import { TAB_LIST_CLASS, tabTriggerClass } from '../../ui/tabStyles';
 import { cn } from '@lib/utils';
+import { SVG_TEXT_SIZE } from '../../ui/svgTypography';
 
 interface ProjectQualityHistoryDialogProps {
   open: boolean;
@@ -98,7 +99,7 @@ function QualityIssueList({ issues }: { issues: StoredQualityIssue[] }) {
                 <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', severityBadgeClass(issue.severity))}>
                   {issue.severity}
                 </span>
-                <span className="rounded bg-gray-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                <span className="rounded bg-gray-200 px-2 py-0.5 text-2xs font-medium uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                   {issue.category}
                 </span>
               </div>
@@ -168,7 +169,7 @@ function LintFindingList({ findings }: { findings: StoredLintFinding[] }) {
                 </span>
                 <span
                   className={cn(
-                    'rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                    'rounded px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide',
                     finding.type === 'error'
                       ? 'bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-100'
                       : 'bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-100'
@@ -307,7 +308,7 @@ export function ProjectQualityHistoryDialog({
                               className="stroke-gray-200 dark:stroke-gray-700"
                               strokeWidth={1}
                             />
-                            <text x={4} y={y + 4} className="fill-gray-500 text-[10px] font-medium">
+                            <text x={4} y={y + 4} fontSize={SVG_TEXT_SIZE.label} className="fill-gray-500 font-medium">
                               {tick}
                             </text>
                           </g>

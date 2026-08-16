@@ -41,10 +41,10 @@ function KpiCard({
         {value}
       </p>
       {subtitle ? (
-        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-mono">{subtitle}</p>
+        <p className="text-2xs text-gray-500 dark:text-gray-400 mt-1 font-mono">{subtitle}</p>
       ) : null}
       {href ? (
-        <span className="text-[10px] text-indigo-600 dark:text-indigo-400 mt-1 inline-block font-mono">
+        <span className="text-2xs text-indigo-600 dark:text-indigo-400 mt-1 inline-block font-mono">
           open resolver →
         </span>
       ) : null}

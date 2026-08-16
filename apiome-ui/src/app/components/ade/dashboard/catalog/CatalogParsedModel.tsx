@@ -229,7 +229,7 @@ function ParsedEntityHeading({ entity }: { entity: CatalogParsedEntity }) {
       <span
         data-testid="catalog-detail-parsed-tag"
         className={cn(
-          'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+          'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-2xs font-bold uppercase tracking-wider',
           parsedTagToneClass(entity.tag),
         )}
       >
@@ -309,7 +309,7 @@ function ParsedEntityDisclosure({
             aria-hidden
           />
           <ParsedEntityHeading entity={entity} />
-          <span className="ml-auto shrink-0 whitespace-nowrap font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500">
+          <span className="ml-auto shrink-0 whitespace-nowrap font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500">
             {entity.fields.length} {entity.fields.length === 1 ? 'field' : 'fields'}
           </span>
         </button>
@@ -375,7 +375,7 @@ function ParsedGroupCard({
         <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
           {group.title}
         </h2>
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
           {total}
         </span>
         {group.subtitle ? (
@@ -418,7 +418,7 @@ function ParsedGroupCard({
           {filtering && !rawOpen ? (
             <span
               data-testid="catalog-detail-parsed-filter-count"
-              className="shrink-0 font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500"
+              className="shrink-0 font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
             >
               {visible.length} of {total}
             </span>

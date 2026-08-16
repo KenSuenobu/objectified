@@ -59,7 +59,7 @@ function AxisRow({ axis }: { axis: McpPeerAxis }) {
         {badgeLabel ? (
           <McpBadge tone={tone}>{badgeLabel}</McpBadge>
         ) : (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300">
             Not ranked
           </span>
         )}

@@ -28,10 +28,10 @@ export default function PrimitivesRecentActivity({ imports, loading }: Primitive
           <Waypoints className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           Relative <span className="font-mono">$ref</span> resolution
         </h3>
-        <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">
+        <p className="text-2xs text-gray-500 dark:text-gray-400 mb-2">
           References resolve against the type&apos;s import-source base URL in the API server.
         </p>
-        <div className="rounded-lg bg-gray-900 dark:bg-black/40 p-3 font-mono text-[10px] leading-relaxed text-gray-300 overflow-x-auto">
+        <div className="rounded-lg bg-gray-900 dark:bg-black/40 p-3 font-mono text-2xs leading-relaxed text-gray-300 overflow-x-auto">
           <span className="text-gray-500"># std/v0/types/date</span>
           <br />
           &quot;$ref&quot;: <span className="text-emerald-300">&quot;../primitives/string&quot;</span>
@@ -44,7 +44,7 @@ export default function PrimitivesRecentActivity({ imports, loading }: Primitive
         </div>
         <Link
           href="/ade/dashboard/primitives?focus=resolver"
-          className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline mt-2 inline-block"
+          className="text-2xs text-indigo-600 dark:text-indigo-400 hover:underline mt-2 inline-block"
         >
           Open reference resolver →
         </Link>

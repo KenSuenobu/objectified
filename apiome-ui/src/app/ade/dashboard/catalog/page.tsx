@@ -177,7 +177,7 @@ function ConvertedBadge({ conversion }: { conversion?: CatalogConversion | null 
   return (
     <span
       data-testid="catalog-converted-badge"
-      className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+      className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-2xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
       title={title}
     >
       <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -1138,7 +1138,7 @@ const Catalog = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <span className="mr-2 text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Views:
                 </span>
                 <button
@@ -1196,7 +1196,7 @@ const Catalog = () => {
                 <span className="ml-auto flex flex-wrap items-center gap-2">
                   {viewMode === 'cards' ? (
                     <>
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      <span className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                         Group:
                       </span>
                       {CATALOG_GROUP_OPTIONS.map((opt) => {
@@ -1222,7 +1222,7 @@ const Catalog = () => {
                       <span className="mx-1 hidden h-4 w-px bg-gray-200 dark:bg-gray-700 sm:block" aria-hidden />
                     </>
                   ) : null}
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <span className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Sort:
                   </span>
                   {CATALOG_SORT_OPTIONS.map((opt) => {
@@ -1295,10 +1295,10 @@ const Catalog = () => {
                         className={index > 0 ? 'mt-10 pt-5' : undefined}
                       >
                         <div className="mb-3 flex items-center gap-2.5">
-                          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                          <span className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             {group.label}
                           </span>
-                          <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                          <span className="text-2xs text-gray-400 dark:text-gray-500">
                             {group.items.length} item{group.items.length === 1 ? '' : 's'}
                           </span>
                           <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" aria-hidden />
@@ -1437,7 +1437,7 @@ const Catalog = () => {
                                 <div className="flex items-center gap-3">
                                   <span
                                     className={cn(
-                                      'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br font-mono text-[11px] font-bold text-white',
+                                      'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br font-mono text-2xs font-bold text-white',
                                       catalogCardGradientClass(item.id)
                                     )}
                                     aria-hidden

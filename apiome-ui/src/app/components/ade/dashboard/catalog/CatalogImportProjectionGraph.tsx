@@ -71,6 +71,7 @@ import {
   PROJECTION_TABLE_VIRTUALIZE_ABOVE,
 } from '@/app/utils/preview-budgets';
 import { computeWindowedRange } from '@/app/utils/windowed-rows';
+import { SVG_TEXT_SIZE } from '@/app/components/ui/svgTypography';
 import {
   parseSourceLocation,
   PREVIEW_COVERAGE_LABEL,
@@ -133,7 +134,7 @@ function familyLabel(key: ImportFamilyKey): string {
 /** Status symbol + text, the colour-independent pairing used everywhere in this section. */
 function StatusText({ presentation }: { presentation: StatusPresentation }) {
   return (
-    <span className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold', presentation.badgeClass)}>
+    <span className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold', presentation.badgeClass)}>
       <span aria-hidden>{presentation.symbol}</span>
       {presentation.label}
     </span>
@@ -354,7 +355,7 @@ export function CatalogImportProjectionGraph({
             return (
               <span
                 key={status}
-                className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold', p.badgeClass)}
+                className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold', p.badgeClass)}
               >
                 <span aria-hidden>{p.symbol}</span>
                 {p.label}
@@ -367,7 +368,7 @@ export function CatalogImportProjectionGraph({
 
       {view.aggregated && (
         <p
-          className="text-[11px] text-gray-500 dark:text-gray-400"
+          className="text-2xs text-gray-500 dark:text-gray-400"
           data-testid="import-projection-aggregated-note"
         >
           Clean rows are aggregated to keep the map readable; expand them in the table below.
@@ -379,7 +380,7 @@ export function CatalogImportProjectionGraph({
       {drawnSelection.truncated && (
         <p
           role="status"
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
           data-testid="import-projection-draw-cap"
         >
           Drawing {drawnSelection.drawnRowCount.toLocaleString()} of{' '}
@@ -408,7 +409,8 @@ export function CatalogImportProjectionGraph({
               <text
                 x={layout.columns.source}
                 y={lane.headerY}
-                className="fill-gray-500 text-[10px] font-semibold uppercase tracking-wide dark:fill-gray-400"
+                fontSize={SVG_TEXT_SIZE.label}
+                className="fill-gray-500 font-semibold uppercase tracking-wide dark:fill-gray-400"
               >
                 {lane.label} ({lane.count})
               </text>
@@ -518,7 +520,7 @@ export function CatalogImportProjectionGraph({
           <thead>
             <tr
               aria-rowindex={1}
-              className="border-b border-gray-200 text-[10px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
+              className="border-b border-gray-200 text-2xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
             >
               <th scope="col" className="px-2 py-1.5">Status</th>
               <th scope="col" className="px-2 py-1.5">Source construct</th>
@@ -531,7 +533,7 @@ export function CatalogImportProjectionGraph({
         </table>
       </div>
       {tableVirtualized && (
-        <p className="text-[10px] text-gray-500 dark:text-gray-400" data-testid="import-projection-table-windowed">
+        <p className="text-2xs text-gray-500 dark:text-gray-400" data-testid="import-projection-table-windowed">
           The table is windowed — every one of its {tableRows.length.toLocaleString()} rows is
           reachable by scrolling.
         </p>
@@ -593,7 +595,7 @@ function EvidenceCard({
         <StatusText presentation={presentation} />
         <span
           className={cn(
-            'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold',
+            'inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-semibold',
             PREVIEW_COVERAGE_TONE[row.coverage],
           )}
         >
@@ -601,7 +603,7 @@ function EvidenceCard({
         </span>
         {row.reason && (
           <span
-            className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
             data-testid="import-projection-reason"
           >
             {row.reason}
@@ -611,7 +613,7 @@ function EvidenceCard({
 
       <p>{row.reasonSummary}</p>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 dark:text-gray-400">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-gray-500 dark:text-gray-400">
         {row.sourceLabel && row.sourceLabel !== row.construct && (
           <span>
             Source name: <span className="font-mono">{row.sourceLabel}</span>
@@ -634,7 +636,7 @@ function EvidenceCard({
 
       {capabilityRef && (
         <div
-          className="rounded-md bg-gray-50 p-2 text-[11px] text-gray-600 dark:bg-gray-900/50 dark:text-gray-300"
+          className="rounded-md bg-gray-50 p-2 text-2xs text-gray-600 dark:bg-gray-900/50 dark:text-gray-300"
           data-testid="import-projection-capability"
         >
           Capability: <span className="font-mono">{capabilityRef.format}</span> ·{' '}
@@ -646,7 +648,7 @@ function EvidenceCard({
         </div>
       )}
 
-      <p className="text-[11px] text-gray-500 dark:text-gray-400" data-testid="import-projection-remediation">
+      <p className="text-2xs text-gray-500 dark:text-gray-400" data-testid="import-projection-remediation">
         {REMEDIATION[row.coverage]}
       </p>
     </div>

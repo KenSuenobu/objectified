@@ -167,7 +167,7 @@ export function VersionExportPanel({
                 </span>
                 <span className="flex items-center gap-2">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${tierBadgeClass(entry.tier)}`}
+                    className={`rounded-full px-2 py-0.5 text-2xs font-semibold ${tierBadgeClass(entry.tier)}`}
                   >
                     {fidelityBadgeLabel(entry)}
                   </span>
@@ -241,7 +241,7 @@ function TargetBadgeRow({ label, cards, artifact, version, artifactLabel }: Targ
               })}
               data-testid="version-export-target-chip"
               title={`Export to ${card.entry.descriptor.label} — ${card.entry.fidelity.preserved_percent}% preserved`}
-              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-700 ${tierBadgeClass(card.entry.fidelity.tier)}`}
+              className={`rounded-full px-2 py-0.5 text-2xs font-semibold hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-700 ${tierBadgeClass(card.entry.fidelity.tier)}`}
             >
               {card.entry.descriptor.label}
             </Link>

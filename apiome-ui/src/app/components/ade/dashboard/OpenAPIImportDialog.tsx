@@ -21,7 +21,7 @@ const sxToStyle = (sx: any): React.CSSProperties => {
   if (sx.borderRadius != null) s.borderRadius = typeof sx.borderRadius === 'number' ? sx.borderRadius * 8 : sx.borderRadius;
   if (sx.border != null) s.border = sx.border; if (sx.borderBottom != null) s.borderBottom = sx.borderBottom; if (sx.borderColor != null) s.borderColor = sx.borderColor;
   if (sx.borderRight != null) s.borderRight = sx.borderRight; if (sx.bgcolor != null) s.backgroundColor = sx.bgcolor; if (sx.color != null) s.color = sx.color;
-  if (sx.fontSize != null) s.fontSize = typeof sx.fontSize === 'number' ? sx.fontSize : sx.fontSize; if (sx.fontWeight != null) s.fontWeight = sx.fontWeight;
+  if (sx.fontSize != null) s.fontSize = sx.fontSize; if (sx.fontWeight != null) s.fontWeight = sx.fontWeight;
   if (sx.overflow != null) s.overflow = sx.overflow; if (sx.overflowY != null) s.overflowY = sx.overflowY; if (sx.minWidth != null) s.minWidth = sx.minWidth;
   if (sx.maxWidth != null) s.maxWidth = sx.maxWidth; if (sx.width != null) s.width = sx.width; if (sx.height != null) s.height = sx.height;
   if (sx.minHeight != null) s.minHeight = sx.minHeight; if (sx.flexShrink != null) s.flexShrink = sx.flexShrink; if (sx.cursor != null) s.cursor = sx.cursor;
@@ -42,13 +42,14 @@ const Button = ({ onClick, children, variant, disabled, startIcon, fullWidth, ..
   <button type="button" onClick={onClick} disabled={disabled} className={`px-4 py-2 rounded-lg ${variant === 'contained' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border border-slate-300 hover:bg-slate-50'} disabled:opacity-50 ${fullWidth ? 'w-full' : ''}`} {...rest}>{startIcon}{children}</button>
 );
 const IconButton = ({ onClick, size, children, disabled, sx, ...rest }: any) => <button type="button" onClick={onClick} disabled={disabled} style={{ padding: size === 'small' ? 4 : 8, background: 'none', border: 'none', cursor: 'pointer', ...sxToStyle(sx) }} {...rest}>{children}</button>;
-const Chip = ({ label, size, icon, variant, sx, ...rest }: any) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 16, fontSize: 12, ...sxToStyle(sx) }} {...rest}>{icon}{label}</span>;
+const Chip = ({ label, size, icon, variant, sx, ...rest }: any) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 16, fontSize: 'var(--fs-xs)', ...sxToStyle(sx) }} {...rest}>{icon}{label}</span>;
 const FormControlLabel = ({ control, label, ...rest }: any) => <label className="flex items-center gap-2 cursor-pointer" {...rest}>{control}{label}</label>;
 const Checkbox = ({ checked, onChange, disabled, ...rest }: any) => <input type="checkbox" checked={checked} onChange={(e) => onChange?.(e, e.target.checked)} disabled={disabled} {...rest} />;
 const CircularProgress = ({ size }: any) => <span className="animate-spin rounded-full border-2 border-current border-t-transparent" style={{ width: size || 24, height: size || 24 }} />;
 import { parseOpenAPISpec, ParsedClass, type ParsedPath, type ParsedSecurityScheme, type ParsedOpenAPIServer } from '../../../utils/openapi-import';
 import { importProjectFromOpenAPI, getLinkedAccountsForUser } from '../../../../../lib/db/helper';
 import { filterSlugInput, generateSlug } from '../../../utils/slug';
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
 
 interface OpenAPIImportDialogProps {
   open: boolean;
@@ -530,13 +531,13 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
             <Tabs.Root value={importMethod} onValueChange={(v) => { setImportMethod(v as any); setErrorMessage(''); }} className="mb-6">
               <Tabs.List className={cn(TAB_LIST_CLASS, 'mb-4')}>
                 <Tabs.Trigger value="file" className={tabTriggerRadixClass()}>
-                  <Upload size={20} /> File Upload
+                  <Upload size={ICON_SIZE.button} /> File Upload
                 </Tabs.Trigger>
                 <Tabs.Trigger value="url" className={tabTriggerRadixClass()}>
-                  <Link2 size={20} /> From URL
+                  <Link2 size={ICON_SIZE.button} /> From URL
                 </Tabs.Trigger>
                 <Tabs.Trigger value="sso" className={tabTriggerRadixClass()} disabled={linkedAccounts.length === 0}>
-                  <Globe size={20} /> From SSO
+                  <Globe size={ICON_SIZE.button} /> From SSO
                 </Tabs.Trigger>
               </Tabs.List>
 
@@ -609,7 +610,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                   onClick={handleUrlImport}
                   disabled={!urlInput.trim() || isLoading}
                 >
-                  {isLoading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Link2 size={20} />}
+                  {isLoading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Link2 size={ICON_SIZE.button} />}
                   {isLoading ? 'Fetching...' : 'Import from URL'}
                 </button>
               </div>
@@ -657,15 +658,15 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                           const getProviderIcon = (provider: string) => {
                             switch (provider.toLowerCase()) {
                               case 'github':
-                                return <SiGithub size={16} />;
+                                return <SiGithub size={ICON_SIZE.dense} />;
                               case 'gitlab':
-                                return <SiGitlab size={16} />;
+                                return <SiGitlab size={ICON_SIZE.dense} />;
                               case 'google':
-                                return <SiGoogle size={16} />;
+                                return <SiGoogle size={ICON_SIZE.dense} />;
                               case 'aws':
-                                return <SiAmazon size={16} />;
+                                return <SiAmazon size={ICON_SIZE.dense} />;
                               default:
-                                return <Globe size={16} />;
+                                return <Globe size={ICON_SIZE.dense} />;
                             }
                           };
 
@@ -695,10 +696,10 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                                 {getProviderIcon(account.provider)}
                               </Box>
                               <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <Typography variant="body2" sx={{ fontSize: '13px', fontWeight: 400 }} noWrap>
+                                <Typography variant="body2" sx={{ fontSize: 'var(--fs-sm)', fontWeight: 400 }} noWrap>
                                   {account.provider.charAt(0).toUpperCase() + account.provider.slice(1)}
                                 </Typography>
-                                <Typography variant="caption" sx={{ fontSize: '11px', opacity: isSelected ? 0.9 : 0.6 }} noWrap>
+                                <Typography variant="caption" sx={{ fontSize: 'var(--fs-2xs)', opacity: isSelected ? 0.9 : 0.6 }} noWrap>
                                   {account.provider_username || account.provider_email}
                                 </Typography>
                               </Box>
@@ -734,11 +735,11 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRepoSearchQuery(e.target.value)}
                             fullWidth
                             InputProps={{
-                              startAdornment: <Search size={16} style={{ marginRight: 8, opacity: 0.6 }} />,
+                              startAdornment: <Search size={ICON_SIZE.dense} style={{ marginRight: 8, opacity: 0.6 }} />,
                             }}
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                fontSize: '13px',
+                                fontSize: 'var(--fs-sm)',
                                 '& input': {
                                   py: 0.75,
                                 }
@@ -751,7 +752,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                       <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                         {!selectedAccount ? (
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', p: 2 }}>
-                            <Typography variant="body2" sx={{ fontSize: '13px', color: 'text.secondary' }} textAlign="center">
+                            <Typography variant="body2" sx={{ fontSize: 'var(--fs-sm)', color: 'text.secondary' }} textAlign="center">
                               Select an account
                             </Typography>
                           </Box>
@@ -761,7 +762,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                           </Box>
                         ) : repositories.length === 0 ? (
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', p: 2 }}>
-                            <Typography variant="body2" sx={{ fontSize: '13px', color: 'text.secondary' }} textAlign="center">
+                            <Typography variant="body2" sx={{ fontSize: 'var(--fs-sm)', color: 'text.secondary' }} textAlign="center">
                               No repositories
                             </Typography>
                           </Box>
@@ -775,7 +776,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                           if (filteredRepos.length === 0) {
                             return (
                               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', p: 2 }}>
-                                <Typography variant="body2" sx={{ fontSize: '13px', color: 'text.secondary' }} textAlign="center">
+                                <Typography variant="body2" sx={{ fontSize: 'var(--fs-sm)', color: 'text.secondary' }} textAlign="center">
                                   No repositories match "{repoSearchQuery}"
                                 </Typography>
                               </Box>
@@ -802,15 +803,15 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                                 }}
                               >
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                  <Typography variant="body2" sx={{ fontSize: '13px', fontWeight: 400, flex: 1 }} noWrap>
+                                  <Typography variant="body2" sx={{ fontSize: 'var(--fs-sm)', fontWeight: 400, flex: 1 }} noWrap>
                                     {repo.name}
                                   </Typography>
                                   {repo.private && (
-                                    <Lock size={12} style={{ flexShrink: 0, opacity: isSelected ? 0.9 : 0.6 }} />
+                                    <Lock size={ICON_SIZE.dense} style={{ flexShrink: 0, opacity: isSelected ? 0.9 : 0.6 }} />
                                   )}
                                 </Box>
                                 {repo.description && (
-                                  <Typography variant="caption" sx={{ fontSize: '11px', opacity: isSelected ? 0.9 : 0.6, display: 'block' }} noWrap>
+                                  <Typography variant="caption" sx={{ fontSize: 'var(--fs-2xs)', opacity: isSelected ? 0.9 : 0.6, display: 'block' }} noWrap>
                                     {repo.description}
                                   </Typography>
                                 )}
@@ -855,9 +856,9 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                               }
                             }}
                           >
-                            <ArrowLeft size={14} />
+                            <ArrowLeft size={ICON_SIZE.button} />
                           </IconButton>
-                          <Typography variant="caption" sx={{ fontSize: '11px', color: 'text.secondary' }} noWrap>
+                          <Typography variant="caption" sx={{ fontSize: 'var(--fs-2xs)', color: 'text.secondary' }} noWrap>
                             /{currentPath}
                           </Typography>
                         </Box>
@@ -865,7 +866,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                       <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                         {!selectedRepo ? (
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', p: 2 }}>
-                            <Typography variant="body2" sx={{ fontSize: '13px', color: 'text.secondary' }} textAlign="center">
+                            <Typography variant="body2" sx={{ fontSize: 'var(--fs-sm)', color: 'text.secondary' }} textAlign="center">
                               Select a repository
                             </Typography>
                           </Box>
@@ -875,7 +876,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                           </Box>
                         ) : repoFiles.length === 0 ? (
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', p: 2 }}>
-                            <Typography variant="body2" sx={{ fontSize: '13px', color: 'text.secondary' }} textAlign="center">
+                            <Typography variant="body2" sx={{ fontSize: 'var(--fs-sm)', color: 'text.secondary' }} textAlign="center">
                               No files
                             </Typography>
                           </Box>
@@ -911,11 +912,11 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                                 }}
                               >
                                 {file.type === 'dir' ? (
-                                  <FolderOpen size={16} color="#94a3b8" />
+                                  <FolderOpen size={ICON_SIZE.dense} color="#94a3b8" />
                                 ) : (
-                                  <File size={16} color={isOpenAPIFile ? '#22c55e' : '#94a3b8'} />
+                                  <File size={ICON_SIZE.dense} color={isOpenAPIFile ? '#22c55e' : '#94a3b8'} />
                                 )}
-                                <Typography variant="body2" sx={{ fontSize: '13px', fontWeight: 400, color: 'text.primary' }} noWrap>
+                                <Typography variant="body2" sx={{ fontSize: 'var(--fs-sm)', fontWeight: 400, color: 'text.primary' }} noWrap>
                                   {file.name}
                                 </Typography>
                               </Box>
@@ -954,7 +955,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                     label={openAPIInfo.source}
                     size="small"
                     sx={{ mt: 1 }}
-                    icon={openAPIInfo.source.startsWith('URL:') ? <Link2 size={14} /> : <FileJson size={14} />}
+                    icon={openAPIInfo.source.startsWith('URL:') ? <Link2 size={ICON_SIZE.dense} /> : <FileJson size={ICON_SIZE.dense} />}
                   />
                 )}
               </Box>
@@ -1021,7 +1022,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                         return (
                           <Box key={wIdx} sx={{ mb: wIdx < cls.warnings.length - 1 ? 1.5 : 0 }}>
                             <Box sx={{ display: 'flex', alignItems: 'start', gap: 0.5, mb: suggestions ? 1 : 0 }}>
-                              <AlertCircle size={14} style={{ marginTop: 2, flexShrink: 0, color: '#f59e0b' }} />
+                              <AlertCircle size={ICON_SIZE.dense} style={{ marginTop: 2, flexShrink: 0, color: '#f59e0b' }} />
                               <Typography variant="caption" color="warning.dark">
                                 {mainMessage}
                               </Typography>
@@ -1034,7 +1035,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
                                 <Box component="pre" sx={{
                                   m: 0,
                                   fontFamily: 'monospace',
-                                  fontSize: '0.7rem',
+                                  fontSize: 'var(--fs-2xs)',
                                   color: 'text.secondary',
                                   whiteSpace: 'pre-wrap',
                                   wordBreak: 'break-word'
@@ -1309,7 +1310,7 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
 
             <Box sx={{ mt: 2, p: 2, bgcolor: 'success.lighter', borderRadius: 1 }}>
               <Typography variant="body2" color="success.dark">
-                <CheckCircle2 size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                <CheckCircle2 size={ICON_SIZE.dense} style={{ verticalAlign: 'middle', marginRight: 4 }} />
                 {classes.filter(c => c.selected).length} classes will be imported
               </Typography>
             </Box>

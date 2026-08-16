@@ -117,7 +117,7 @@ export function BenchSuiteRunHistory({ suiteId, refreshToken }: BenchSuiteRunHis
               </span>
               {run.status === 'error' ? (
                 <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${verdictToneClass('error')}`}
+                  className={`rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider ${verdictToneClass('error')}`}
                 >
                   error
                 </span>
@@ -129,13 +129,13 @@ export function BenchSuiteRunHistory({ suiteId, refreshToken }: BenchSuiteRunHis
               {run.regression ? (
                 <span
                   data-testid={`suite-run-regression-${run.id}`}
-                  className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${verdictToneClass('failed')}`}
+                  className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider ${verdictToneClass('failed')}`}
                 >
                   <TrendingDown className="h-3 w-3" aria-hidden /> regression
                 </span>
               ) : null}
               {run.created_at ? (
-                <span className="shrink-0 tabular-nums text-[10px] text-gray-400 dark:text-gray-500">
+                <span className="shrink-0 tabular-nums text-2xs text-gray-400 dark:text-gray-500">
                   {new Date(run.created_at).toLocaleString()}
                 </span>
               ) : null}
@@ -165,7 +165,7 @@ export function BenchSuiteRunHistory({ suiteId, refreshToken }: BenchSuiteRunHis
                           {result.payload_name}
                         </span>
                         <span
-                          className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${verdictToneClass(result.status)}`}
+                          className={`rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider ${verdictToneClass(result.status)}`}
                         >
                           {verdictDiffLabel(result)}
                         </span>

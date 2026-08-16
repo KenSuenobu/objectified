@@ -60,7 +60,7 @@ export function BenchGeneratedPanel({
             title={`${instance.description} Loads into the payload editor; labelled synthetic.`}
           >
             {instance.title}
-            <span className="rounded bg-violet-100 px-1 text-[9px] font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-900/50 dark:text-violet-300">
+            <span className="rounded bg-violet-100 px-1 text-2xs font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-900/50 dark:text-violet-300">
               synthetic
             </span>
           </button>
@@ -114,7 +114,7 @@ export function BenchGeneratedPanel({
 
       {(result?.diagnostics ?? []).map((diagnostic, index) => (
         <p key={`${diagnostic.code}:${index}`} className="text-xs text-gray-500 dark:text-gray-400">
-          <code className="font-mono text-[10px]">{diagnostic.code}</code> {diagnostic.message}
+          <code className="font-mono text-2xs">{diagnostic.code}</code> {diagnostic.message}
         </p>
       ))}
     </section>

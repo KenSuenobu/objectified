@@ -548,7 +548,7 @@ export function AnalysisPanel({ fileName, analysis }: AnalysisPanelProps) {
           Performance 10).
         </p>
         <div className="mb-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40 px-3 py-2">
-          <div className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+          <div className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
             Score guide
           </div>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-700 dark:text-gray-300">
@@ -585,7 +585,7 @@ export function AnalysisPanel({ fileName, analysis }: AnalysisPanelProps) {
                     <div className={`text-sm font-bold tabular-nums ${getNumericScoreTier(pct).textClass}`}>
                       {cat.points}/{cat.maxPoints}
                     </div>
-                    <div className="text-[10px] text-gray-500 dark:text-gray-400 tabular-nums">{pct}%</div>
+                    <div className="text-2xs text-gray-500 dark:text-gray-400 tabular-nums">{pct}%</div>
                   </div>
                 </div>
                 <Progress.Root

@@ -37,6 +37,7 @@ import {
   pointerToYamlRange,
   YAML_ERROR_MARKER_SEVERITY,
 } from '../customRuleYamlMarkers';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 const CUSTOM_RULES_MODEL_URI = 'inmemory://model/custom-rules.yaml';
 const VALIDATION_MARKER_OWNER = 'apiome-custom-rules-validation';
@@ -346,7 +347,7 @@ export default function CustomRulesTab({ guideId }: { guideId: string }) {
                 options={{
                   readOnly: readOnly || saving,
                   minimap: { enabled: false },
-                  fontSize: 13,
+                  fontSize: CODE_EDITOR_FONT_SIZE,
                   wordWrap: 'on',
                   scrollBeyondLastLine: false,
                   automaticLayout: true,

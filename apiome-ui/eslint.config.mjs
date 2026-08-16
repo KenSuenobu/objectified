@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import hive from "./eslint-rules/hive.js";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -16,6 +17,22 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "convert-mui-to-radix.js",
   ]),
+  {
+    /*
+     * The `rem` audit's lint backstop (HIVE-1.6, #5279).
+     *
+     * Scoped to the two trees the audit swept: every user-facing surface of the app.
+     * `src/app/utils/**` is deliberately outside it — the PDF exporters there measure in
+     * printer points, which is a physical unit by definition.
+     *
+     * The rule accepts any non-literal value, so the three documented exemptions (Monaco,
+     * SVG coordinate systems, react-flow nodes) satisfy it simply by importing their size
+     * from the module that owns it.
+     */
+    files: ["src/app/components/**/*.{ts,tsx}", "src/app/ade/**/*.{ts,tsx}"],
+    plugins: { hive },
+    rules: { "hive/no-px-typography": "error" },
+  },
 ]);
 
 export default eslintConfig;

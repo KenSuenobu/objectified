@@ -528,7 +528,7 @@ export default function StyleGuidesClient() {
       chips.push(
         <span
           key="default"
-          className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+          className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-2xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
         >
           <BadgeCheck className="h-3 w-3" />
           Tenant default
@@ -539,7 +539,7 @@ export default function StyleGuidesClient() {
       chips.push(
         <span
           key={a.projectId}
-          className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+          className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-2xs font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
         >
           {a.projectName}
         </span>,
@@ -632,7 +632,7 @@ export default function StyleGuidesClient() {
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wider text-gray-400 dark:border-slate-800">
+                    <tr className="border-b border-slate-200 text-left text-2xs uppercase tracking-wider text-gray-400 dark:border-slate-800">
                       <th className="px-4 py-3 font-semibold">Name</th>
                       <th className="px-4 py-3 font-semibold">Rules on</th>
                       <th className="px-4 py-3 font-semibold">Assignments</th>
@@ -652,12 +652,12 @@ export default function StyleGuidesClient() {
                               {guide.name}
                             </Link>
                             {guide.source === 'builtin' && (
-                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                 Built-in
                               </span>
                             )}
                             {guide.isDefault && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-2xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                                 <BadgeCheck className="h-3 w-3" />
                                 Default
                               </span>
@@ -730,7 +730,7 @@ export default function StyleGuidesClient() {
               </div>
             )}
 
-            <p className="mt-3 text-[11px] text-gray-400">
+            <p className="mt-3 text-2xs text-gray-400">
               The built-in “Apiome Recommended” guide is read-only — duplicate it to customize. Open a
               guide to tailor its rule catalog; custom rules arrive with GOV-2.3.
             </p>

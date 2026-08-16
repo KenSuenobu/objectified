@@ -149,7 +149,7 @@ export function DeliveryGatePanel({ delivery }: DeliveryGatePanelProps) {
         >
           <p>{delivery.override.instructions}</p>
           {delivery.override.available && (
-            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-[11px]">
+            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-2xs">
               {delivery.override.endpoint && (
                 <>
                   <dt className="text-gray-500 dark:text-gray-400">endpoint</dt>

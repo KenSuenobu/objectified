@@ -41,7 +41,7 @@ export function LintViolationFindingMeta({
             <TooltipTrigger asChild>
               <code
                 data-testid="lint-violation-rule-chip"
-                className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:bg-gray-800 dark:text-gray-300"
               >
                 {finding.rule}
               </code>
@@ -55,7 +55,7 @@ export function LintViolationFindingMeta({
       {finding.guideName ? (
         <span
           data-testid="lint-violation-guide-name"
-          className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+          className="rounded bg-indigo-50 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
           title="Style guide that produced this violation"
         >
           {finding.guideName}
@@ -67,7 +67,7 @@ export function LintViolationFindingMeta({
           data-testid="lint-violation-view-rule"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+          className="inline-flex items-center gap-0.5 text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
         >
           View rule
           <ExternalLink className="h-3 w-3" aria-hidden />
@@ -99,7 +99,7 @@ export function LintViolationRuleGroupHeader({ group }: LintViolationRuleGroupHe
           <TooltipTrigger asChild>
             <code
               data-testid="lint-violation-rule-chip"
-              className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+              className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-200"
             >
               {group.ruleId}
             </code>
@@ -109,13 +109,13 @@ export function LintViolationRuleGroupHeader({ group }: LintViolationRuleGroupHe
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <span className="text-[11px] tabular-nums text-gray-500 dark:text-gray-400">
+      <span className="text-2xs tabular-nums text-gray-500 dark:text-gray-400">
         {group.findings.length} violation{group.findings.length === 1 ? '' : 's'}
       </span>
       {group.guideName ? (
         <span
           data-testid="lint-violation-guide-name"
-          className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+          className="rounded bg-indigo-50 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
         >
           {group.guideName}
         </span>
@@ -126,7 +126,7 @@ export function LintViolationRuleGroupHeader({ group }: LintViolationRuleGroupHe
           data-testid="lint-violation-view-rule"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+          className="inline-flex items-center gap-0.5 text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
         >
           View rule
           <ExternalLink className="h-3 w-3" aria-hidden />

@@ -195,7 +195,7 @@ function GradeOrb({ score, grade }: { score: number | null; grade: string | null
           >
             {letter}
           </span>
-          <span className="mt-1 font-mono text-[11px] tabular-nums text-gray-500 dark:text-gray-400">
+          <span className="mt-1 font-mono text-2xs tabular-nums text-gray-500 dark:text-gray-400">
             {hasScore ? `${score}/100` : 'unscored'}
           </span>
         </div>
@@ -257,21 +257,21 @@ function FindingRow({
         )}
       >
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] tabular-nums text-gray-400">#{finding.rank}</span>
+          <span className="font-mono text-2xs tabular-nums text-gray-400">#{finding.rank}</span>
           <span
             className={cn(
-              'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase',
+              'inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-semibold uppercase',
               severityBadgeClass(finding.severity),
             )}
           >
             {finding.severity}
           </span>
-          <span className="truncate font-mono text-[11px] text-gray-500 dark:text-gray-400">
+          <span className="truncate font-mono text-2xs text-gray-500 dark:text-gray-400">
             {finding.rule}
           </span>
         </div>
         <div className="truncate text-sm text-gray-800 dark:text-gray-100">{finding.message}</div>
-        <div className="truncate font-mono text-[11px] text-gray-500 dark:text-gray-400">
+        <div className="truncate font-mono text-2xs text-gray-500 dark:text-gray-400">
           {finding.path || 'document root'}
           {line !== null ? ` · line ${line}` : ''}
         </div>
@@ -799,14 +799,14 @@ export function CatalogImportQualityStep({
                         <>
                           {rawRange.start > 0 && (
                             <p
-                              className="px-3 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
+                              className="px-3 py-1 font-mono text-2xs text-gray-400 dark:text-gray-500"
                               data-testid="import-quality-raw-clipped-before"
                             >
                               … {rawRange.start.toLocaleString()} earlier{' '}
                               {rawRange.start === 1 ? 'line' : 'lines'}
                             </p>
                           )}
-                          <ol className="py-1 font-mono text-[11px] leading-snug">
+                          <ol className="py-1 font-mono text-2xs leading-snug">
                             {rawLines.map((text, index) => {
                               const lineNumber = rawRange.start + index + 1;
                               const isTarget = selectedLine === lineNumber;
@@ -832,7 +832,7 @@ export function CatalogImportQualityStep({
                           </ol>
                           {rawRange.end < rawAllLines.length && (
                             <p
-                              className="px-3 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
+                              className="px-3 py-1 font-mono text-2xs text-gray-400 dark:text-gray-500"
                               data-testid="import-quality-raw-clipped-after"
                             >
                               … {(rawAllLines.length - rawRange.end).toLocaleString()} later{' '}

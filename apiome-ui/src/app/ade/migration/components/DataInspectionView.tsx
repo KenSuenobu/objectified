@@ -4,6 +4,7 @@ import * as React from 'react';
 import dynamic from 'next/dynamic';
 import { useMigration } from '../MigrationContext';
 import { Database, Search, List, FileJson, Play } from 'lucide-react';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -301,7 +302,7 @@ export default function DataInspectionView() {
                     readOnly: true,
                     minimap: { enabled: false },
                     scrollBeyondLastLine: false,
-                    fontSize: 13,
+                    fontSize: CODE_EDITOR_FONT_SIZE,
                     wordWrap: 'on',
                   }}
                 />
@@ -359,7 +360,7 @@ export default function DataInspectionView() {
                     readOnly: true,
                     minimap: { enabled: false },
                     scrollBeyondLastLine: false,
-                    fontSize: 13,
+                    fontSize: CODE_EDITOR_FONT_SIZE,
                     wordWrap: 'on',
                   }}
                 />

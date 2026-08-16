@@ -42,7 +42,7 @@ function DiffBadge({ kind }: { kind: 'NEW' | 'MOD' | 'REM' }) {
         ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200'
         : 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200';
   return (
-    <span className={`ml-2 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${cls}`}>
+    <span className={`ml-2 shrink-0 rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide ${cls}`}>
       {kind}
     </span>
   );
@@ -86,7 +86,7 @@ function PropertyBlock({ title, row, side }: { title: string; row: SchemaPropert
         <span className="font-semibold text-gray-800 dark:text-gray-200">{title}</span>
         {badge}
       </div>
-      <pre className="mt-1 whitespace-pre-wrap break-all text-[11px] leading-snug text-gray-600 dark:text-gray-400">
+      <pre className="mt-1 whitespace-pre-wrap break-all text-2xs leading-snug text-gray-600 dark:text-gray-400">
         {schemaSnippet(body)}
       </pre>
     </div>

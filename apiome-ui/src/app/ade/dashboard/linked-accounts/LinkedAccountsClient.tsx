@@ -45,6 +45,7 @@ import {
   dashboardTbodyClass,
   dashboardTrHoverClass,
 } from '@/app/components/ade/dashboard/dashboardScreenClasses';
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
 
 interface LinkedAccount {
   id: string;
@@ -321,7 +322,7 @@ const LinkedAccountsClient = ({ providers }: LinkedAccountsClientProps) => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
-                              <Icon size={20} className={iconClassName} />
+                              <Icon size={ICON_SIZE.dense} className={iconClassName} />
                             </div>
                             <div>
                               <div className="text-sm font-semibold text-gray-900 dark:text-white">{displayName}</div>
@@ -398,7 +399,7 @@ const LinkedAccountsClient = ({ providers }: LinkedAccountsClientProps) => {
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
-                        <Icon size={20} className={iconClassName} />
+                        <Icon size={ICON_SIZE.dense} className={iconClassName} />
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-gray-900 dark:text-white">{provider.label}</p>

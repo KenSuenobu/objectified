@@ -205,23 +205,23 @@ function AppLaunchCard({
               <LaunchArrow className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </span>
           ) : (
-            <span className="rounded-full border border-zinc-200/80 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-zinc-500 dark:border-zinc-700/80 dark:text-zinc-400">
+            <span className="rounded-full border border-zinc-200/80 px-2.5 py-1 text-2xs font-medium uppercase tracking-wide text-zinc-500 dark:border-zinc-700/80 dark:text-zinc-400">
               Coming Soon
             </span>
           )}
         </div>
 
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+        <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           {app.tagline}
         </p>
         <h3 className="mt-1 text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           {app.name}
         </h3>
-        <p className="mt-2 flex-1 text-[13px] leading-relaxed text-zinc-600 line-clamp-4 dark:text-zinc-400">
+        <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-600 line-clamp-4 dark:text-zinc-400">
           {app.description}
         </p>
         {app.external && app.enabled && (
-          <p className="mt-3 text-[11px] font-medium text-zinc-500 dark:text-zinc-500">
+          <p className="mt-3 text-2xs font-medium text-zinc-500 dark:text-zinc-500">
             Opens in a new tab
           </p>
         )}
@@ -235,7 +235,7 @@ function AppLaunchCard({
               : 'border-zinc-200/50 bg-zinc-100/60 dark:border-zinc-800/40 dark:bg-zinc-950/25'
           )}
         >
-          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
+          <span className="text-2xs font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
             {app.footerLabel}
           </span>
         </div>
@@ -279,7 +279,7 @@ function ResourceRow({
           <ArrowRight className="h-4 w-4 shrink-0 text-zinc-400 transition-transform group-hover:translate-x-0.5" />
         )
       ) : (
-        <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-zinc-400">Soon</span>
+        <span className="shrink-0 text-2xs font-medium uppercase tracking-wide text-zinc-400">Soon</span>
       )}
     </button>
   );
@@ -336,7 +336,7 @@ export default function AdeHome({
             <button
               type="button"
               onClick={() => setShowWhatsNew(true)}
-              className="rounded-full border border-zinc-200/80 px-2.5 py-1 text-[11px] font-medium tracking-wide text-zinc-500 transition-colors hover:border-indigo-300 hover:text-indigo-600 dark:border-zinc-700/80 dark:text-zinc-400 dark:hover:border-indigo-500/50 dark:hover:text-indigo-400"
+              className="rounded-full border border-zinc-200/80 px-2.5 py-1 text-2xs font-medium tracking-wide text-zinc-500 transition-colors hover:border-indigo-300 hover:text-indigo-600 dark:border-zinc-700/80 dark:text-zinc-400 dark:hover:border-indigo-500/50 dark:hover:text-indigo-400"
             >
               {APP_VERSION_BADGE}
             </button>
@@ -361,7 +361,7 @@ export default function AdeHome({
                   className="h-7 w-7 rounded-full object-cover"
                 />
               ) : (
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-[11px] font-semibold text-white">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-2xs font-semibold text-white">
                   {userInitials(session?.user?.name)}
                 </span>
               )}
@@ -383,7 +383,7 @@ export default function AdeHome({
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 pt-10 sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
         <section className="mb-10 max-w-3xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-zinc-200/80 bg-white/70 px-3 py-1 text-[12px] font-medium text-zinc-600 shadow-xs backdrop-blur dark:border-zinc-800/80 dark:bg-zinc-900/60 dark:text-zinc-400">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-zinc-200/80 bg-white/70 px-3 py-1 text-xs font-medium text-zinc-600 shadow-xs backdrop-blur dark:border-zinc-800/80 dark:bg-zinc-900/60 dark:text-zinc-400">
             <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
             Apiome platform
           </div>

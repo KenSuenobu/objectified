@@ -88,13 +88,13 @@ function namespaceIcon(namespace: string, isImported: boolean) {
 function scopeBadge(scope: 'system' | 'tenant') {
   if (scope === 'system') {
     return (
-      <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
+      <span className="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
         System · core
       </span>
     );
   }
   return (
-    <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+    <span className="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
       Tenant
     </span>
   );
@@ -103,7 +103,7 @@ function scopeBadge(scope: 'system' | 'tenant') {
 /** A group whose members do not share one scope; the badge says so rather than picking a winner. */
 function mixedScopeBadge() {
   return (
-    <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
+    <span className="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
       Mixed
     </span>
   );
@@ -112,13 +112,13 @@ function mixedScopeBadge() {
 function statusBadge(unresolvedCount: number) {
   if (unresolvedCount > 0) {
     return (
-      <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+      <span className="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
         {unresolvedCount} unresolved
       </span>
     );
   }
   return (
-    <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+    <span className="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
       Resolved
     </span>
   );
@@ -305,18 +305,18 @@ export default function PrimitivesNamespaceCollections({
                 <p className="font-medium font-mono text-gray-900 dark:text-white">
                   {ns.namespace}
                   {isGroupRoot ? (
-                    <span className="ml-2 text-[9px] px-1 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 uppercase">
+                    <span className="ml-2 text-2xs px-1 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 uppercase">
                       root
                     </span>
                   ) : null}
                   {row.isImported ? (
-                    <span className="ml-2 text-[9px] px-1 rounded bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-300 uppercase">
+                    <span className="ml-2 text-2xs px-1 rounded bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-300 uppercase">
                       imported
                     </span>
                   ) : null}
                 </p>
                 {ns.description ? (
-                  <p className="text-[10px] text-gray-400 line-clamp-1">{ns.description}</p>
+                  <p className="text-2xs text-gray-400 line-clamp-1">{ns.description}</p>
                 ) : null}
               </div>
             </div>
@@ -347,17 +347,17 @@ export default function PrimitivesNamespaceCollections({
               <div>
                 <p className="font-medium font-mono text-gray-900 dark:text-white">
                   {row.namespace}
-                  <span className="ml-2 text-[9px] px-1 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 uppercase">
+                  <span className="ml-2 text-2xs px-1 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 uppercase">
                     unregistered
                   </span>
                 </p>
-                <p className="text-[10px] text-gray-400">
+                <p className="text-2xs text-gray-400">
                   In use by types but not registered — add it from “New namespace”.
                 </p>
               </div>
             </div>
           </td>
-          <td className="px-3 py-3 text-[10px] uppercase tracking-wider text-gray-400">—</td>
+          <td className="px-3 py-3 text-2xs uppercase tracking-wider text-gray-400">—</td>
           <td className="px-3 py-3 text-right font-mono text-xs text-gray-700 dark:text-gray-300">
             {row.typeCount}
           </td>
@@ -381,13 +381,13 @@ export default function PrimitivesNamespaceCollections({
             </span>
             <div>
               <p className="font-medium text-gray-900 dark:text-white">Unassigned namespaces</p>
-              <p className="text-[10px] text-gray-400">
+              <p className="text-2xs text-gray-400">
                 Types saved without a namespace — they belong to no collection.
               </p>
             </div>
           </div>
         </td>
-        <td className="px-3 py-3 text-[10px] uppercase tracking-wider text-gray-400">—</td>
+        <td className="px-3 py-3 text-2xs uppercase tracking-wider text-gray-400">—</td>
         <td className="px-3 py-3 text-right font-mono text-xs text-gray-700 dark:text-gray-300">
           {row.typeCount}
         </td>
@@ -524,11 +524,11 @@ export default function PrimitivesNamespaceCollections({
                           <div>
                             <p className="font-semibold font-mono text-gray-900 dark:text-white">
                               {prefix}
-                              <span className="ml-2 font-sans text-[9px] px-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase">
+                              <span className="ml-2 font-sans text-2xs px-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase">
                                 group
                               </span>
                             </p>
-                            <p className="text-[10px] text-gray-400">
+                            <p className="text-2xs text-gray-400">
                               {header.collectionCount} namespace{header.collectionCount === 1 ? '' : 's'} ·{' '}
                               {header.typeCount} type{header.typeCount === 1 ? '' : 's'}
                             </p>
@@ -540,7 +540,7 @@ export default function PrimitivesNamespaceCollections({
                           ? mixedScopeBadge()
                           : header.scope
                             ? scopeBadge(header.scope)
-                            : <span className="text-[10px] uppercase tracking-wider text-gray-400">—</span>}
+                            : <span className="text-2xs uppercase tracking-wider text-gray-400">—</span>}
                       </td>
                       <td className="px-3 py-3 text-right font-mono text-xs font-semibold text-gray-700 dark:text-gray-300">
                         {header.typeCount}

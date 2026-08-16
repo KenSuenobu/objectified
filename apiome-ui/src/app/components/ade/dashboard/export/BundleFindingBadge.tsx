@@ -45,7 +45,7 @@ export function BundleFindingBadge({ counts, testId }: BundleFindingBadgeProps) 
       data-testid={testId}
       data-tone={tone}
       title={label}
-      className={`inline-flex min-w-[1.1rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums ${TONE_CLASS[tone]}`}
+      className={`inline-flex min-w-[1.1rem] items-center justify-center rounded-full px-1.5 py-0.5 text-2xs font-semibold tabular-nums ${TONE_CLASS[tone]}`}
     >
       {/* A bare digit in a coloured pill is not a label, and `aria-label` on a plain span is not
           allowed to name it (MFX-41.5) — so the number is decorative and the phrase is the text. */}

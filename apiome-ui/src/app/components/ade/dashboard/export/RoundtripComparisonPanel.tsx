@@ -151,7 +151,7 @@ export function RoundtripComparisonPanel({
         <div className="flex items-center gap-2">
           {fromCache && (
             <span
-              className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              className="rounded-full bg-gray-100 px-2 py-0.5 text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
               data-testid="roundtrip-from-cache"
             >
               restored from this session
@@ -183,7 +183,7 @@ export function RoundtripComparisonPanel({
       {/* Expected differences — the fidelity report explains each one. */}
       {result.matched.length > 0 && (
         <div data-testid="roundtrip-explained">
-          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <h4 className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
             Expected differences · explained by the fidelity report ({result.matched.length})
           </h4>
           <ul className="mt-1 space-y-1">
@@ -194,19 +194,19 @@ export function RoundtripComparisonPanel({
               >
                 <span
                   className={cn(
-                    'mr-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                    'mr-1.5 rounded-full px-1.5 py-0.5 text-2xs font-medium',
                     changeKindBadgeClass(pair.entry.change),
                   )}
                 >
                   {changeKindLabel(pair.entry.change)}
                 </span>
-                <span className="font-mono text-[11px] text-gray-700 dark:text-gray-200">
+                <span className="font-mono text-2xs text-gray-700 dark:text-gray-200">
                   {diffEntryLabel(pair.entry)}
                 </span>
                 <span className="ml-2 text-gray-500 dark:text-gray-400">
                   <span
                     className={cn(
-                      'mr-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                      'mr-1 rounded-full px-1.5 py-0.5 text-2xs font-medium',
                       kindBadgeClass(pair.finding.kind),
                     )}
                   >
@@ -224,7 +224,7 @@ export function RoundtripComparisonPanel({
       {(result.unexplained.length > 0 || result.overclaims.length > 0) && (
         <div data-testid="roundtrip-unexplained">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-[11px] font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
+            <h4 className="text-2xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
               Unexplained differences ({result.unexplained.length + result.overclaims.length})
             </h4>
             {issue && (
@@ -241,7 +241,7 @@ export function RoundtripComparisonPanel({
               </a>
             )}
           </div>
-          <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+          <p className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
             The fidelity report does not account for these. The report link carries only
             reproduction coordinates
             {issue && issue.redactedOptionKeys.length > 0
@@ -257,13 +257,13 @@ export function RoundtripComparisonPanel({
               >
                 <span
                   className={cn(
-                    'mr-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                    'mr-1.5 rounded-full px-1.5 py-0.5 text-2xs font-medium',
                     changeKindBadgeClass(entry.change),
                   )}
                 >
                   {changeKindLabel(entry.change)}
                 </span>
-                <span className="font-mono text-[11px] text-gray-700 dark:text-gray-200">
+                <span className="font-mono text-2xs text-gray-700 dark:text-gray-200">
                   {diffEntryLabel(entry)}
                 </span>
               </li>
@@ -274,10 +274,10 @@ export function RoundtripComparisonPanel({
                 className="rounded-md border border-red-200 px-2.5 py-1.5 text-xs dark:border-red-900/60"
                 data-testid="roundtrip-overclaim"
               >
-                <span className="mr-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800 dark:bg-red-900/40 dark:text-red-200">
+                <span className="mr-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-2xs font-medium text-red-800 dark:bg-red-900/40 dark:text-red-200">
                   Over-claimed
                 </span>
-                <span className="font-mono text-[11px] text-gray-700 dark:text-gray-200">
+                <span className="font-mono text-2xs text-gray-700 dark:text-gray-200">
                   {item.construct}
                 </span>
                 <span className="ml-2 text-gray-500 dark:text-gray-400">
@@ -291,7 +291,7 @@ export function RoundtripComparisonPanel({
 
       {/* Reproduction provenance — the coordinates an issue report (or a matrix cell) shares. */}
       <p
-        className="font-mono text-[10px] text-gray-400 dark:text-gray-500"
+        className="font-mono text-2xs text-gray-400 dark:text-gray-500"
         data-testid="roundtrip-provenance"
       >
         source {result.source_fingerprint.slice(0, 12)}

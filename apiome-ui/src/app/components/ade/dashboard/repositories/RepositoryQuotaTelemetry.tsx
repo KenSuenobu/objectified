@@ -71,7 +71,7 @@ const PRESSURE_BAR_CLASSES: Record<QuotaPressure, string> = {
 function QuotaFigure({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <dt className="text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400">
         {label}
       </dt>
       <dd className="mt-0.5 font-mono text-lg text-gray-900 dark:text-gray-100">{value}</dd>
@@ -140,7 +140,7 @@ function QuotaSummary({ quota }: { quota: RepositoryPollingQuota }) {
               style={{ width: `${percent}%` }}
             />
           </div>
-          <p className="mt-1 text-right text-[11px] text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-right text-2xs text-gray-500 dark:text-gray-400">
             {percent}% of this hour’s budget
           </p>
         </div>
@@ -183,7 +183,7 @@ function MetricCard({ metric }: { metric: QuotaTelemetryMetric }) {
           <p className="mt-1 font-mono text-2xl text-gray-900 dark:text-gray-100">
             {formatQuotaMetricValue(metric, metric.currentWindow)}
           </p>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400">
+          <p className="text-2xs text-gray-500 dark:text-gray-400">
             {quotaWindowLabel(metric)}
           </p>
         </div>
@@ -195,7 +195,7 @@ function MetricCard({ metric }: { metric: QuotaTelemetryMetric }) {
         />
       </div>
 
-      <dl className="mt-3 flex items-center gap-4 text-[11px] text-gray-500 dark:text-gray-400">
+      <dl className="mt-3 flex items-center gap-4 text-2xs text-gray-500 dark:text-gray-400">
         <div className="flex items-center gap-1">
           <dt>Range total</dt>
           <dd className="font-mono text-gray-700 dark:text-gray-300">

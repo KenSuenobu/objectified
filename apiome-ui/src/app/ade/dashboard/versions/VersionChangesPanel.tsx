@@ -318,12 +318,12 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
                                   <p className="text-sm text-gray-900 dark:text-gray-100">
                                     {entry.summary || entry.changeKind || entry.ruleId}
                                     {entry.unclassified ? (
-                                      <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                                      <span className="ml-2 text-2xs uppercase tracking-wide text-amber-700 dark:text-amber-300">
                                         unclassified
                                       </span>
                                     ) : null}
                                   </p>
-                                  <code className="text-[11px] text-gray-500 dark:text-gray-400 break-all">
+                                  <code className="text-2xs text-gray-500 dark:text-gray-400 break-all">
                                     {entry.pointer}
                                   </code>
                                 </div>

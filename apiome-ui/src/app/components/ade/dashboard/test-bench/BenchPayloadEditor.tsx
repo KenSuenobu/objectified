@@ -28,6 +28,7 @@ import {
   type BenchMarker,
   type EditorRange,
 } from '@/app/utils/schema-test-bench';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -115,7 +116,7 @@ export const BenchPayloadEditor = forwardRef<BenchPayloadEditorHandle, BenchPayl
         {synthetic ? (
           <span
             data-testid="test-bench-synthetic-badge"
-            className="absolute right-2 top-2 z-10 rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-900/50 dark:text-violet-300"
+            className="absolute right-2 top-2 z-10 rounded bg-violet-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-900/50 dark:text-violet-300"
             title="This payload was generated from the schema (IXH-5.2); it is not real data."
           >
             Synthetic
@@ -134,7 +135,7 @@ export const BenchPayloadEditor = forwardRef<BenchPayloadEditorHandle, BenchPayl
           options={{
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
-            fontSize: 13,
+            fontSize: CODE_EDITOR_FONT_SIZE,
             tabSize: 2,
             wordWrap: 'on',
             ariaLabel: 'Payload editor',

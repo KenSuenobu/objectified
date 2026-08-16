@@ -36,7 +36,7 @@ function StatCard({
       <div className="text-2xl font-semibold tabular-nums leading-none text-gray-900 dark:text-white">
         {value}
       </div>
-      <div className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <div className="mt-1.5 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
         {label}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">{detail}</div>
@@ -63,7 +63,7 @@ function StatBadge({
       'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
   }[tone];
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${toneClass}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium ${toneClass}`}>
       {children}
     </span>
   );
@@ -109,7 +109,7 @@ export function CatalogStatsRow({ items }: { items: readonly CatalogStatsItem[] 
         }
         label="Avg quality"
         detail={
-          <span className="text-[11px] text-gray-500 dark:text-gray-400">
+          <span className="text-2xs text-gray-500 dark:text-gray-400">
             across {stats.total} item{stats.total === 1 ? '' : 's'}
           </span>
         }
@@ -126,7 +126,7 @@ export function CatalogStatsRow({ items }: { items: readonly CatalogStatsItem[] 
               {stats.formatCount > stats.sampleFormats.length ? ' …' : ''}
             </StatBadge>
           ) : (
-            <span className="text-[11px] text-gray-400 dark:text-gray-600">No formats yet</span>
+            <span className="text-2xs text-gray-400 dark:text-gray-600">No formats yet</span>
           )
         }
       />

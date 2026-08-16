@@ -74,8 +74,8 @@ type TestMode = 'single' | 'array';
 const EMPTY_STATE: TestFormState = { values: {}, arrayLengths: {}, included: {}, extraNames: {} };
 
 const labelClass = 'text-xs font-medium text-gray-700 dark:text-gray-300';
-const hintClass = 'text-[11px] text-gray-500 dark:text-gray-400';
-const monoHintClass = 'font-mono text-[11px] text-gray-500 dark:text-gray-400';
+const hintClass = 'text-2xs text-gray-500 dark:text-gray-400';
+const monoHintClass = 'font-mono text-2xs text-gray-500 dark:text-gray-400';
 
 export function PrimitiveTestForm({ schema, name }: PrimitiveTestFormProps) {
   const [open, setOpen] = useState(false);
@@ -255,7 +255,7 @@ function PrimitiveTestFormBody({ schema, name }: PrimitiveTestFormProps) {
             {result.findings.map((finding, index) => (
               <li
                 key={`${finding.pointer}-${finding.keyword}-${index}`}
-                className="flex gap-2 text-[11px] text-red-700 dark:text-red-300"
+                className="flex gap-2 text-2xs text-red-700 dark:text-red-300"
               >
                 <span className="font-mono text-red-500 dark:text-red-400">{finding.pointer || '(root)'}</span>
                 <span>{finding.message}</span>
@@ -441,7 +441,7 @@ function PropertyRow({
         </label>
         <span className={monoHintClass}>{describeType(field)}</span>
         {field.required ? (
-          <span className="rounded bg-indigo-50 px-1 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
+          <span className="rounded bg-indigo-50 px-1 py-0.5 text-2xs font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
             required
           </span>
         ) : null}
@@ -516,7 +516,7 @@ function AdditionalPropertiesSection({
                 data-testid={`primitive-test-extra-remove-${pointer}/${index}`}
                 aria-label={`Remove property ${name || index}`}
                 onClick={() => ctx.removeExtra(pointer, index)}
-                className="inline-flex items-center gap-1 rounded border border-gray-200 px-1.5 py-0.5 text-[11px] text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="inline-flex items-center gap-1 rounded border border-gray-200 px-1.5 py-0.5 text-2xs text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 <Trash2 className="h-3 w-3" aria-hidden />
                 Remove
@@ -581,7 +581,7 @@ function ArrayNode({
                 data-testid={`primitive-test-array-remove-${elementPtr}`}
                 aria-label={`Remove item ${index}`}
                 onClick={() => ctx.setArrayLength(pointer, count - 1)}
-                className="inline-flex items-center gap-1 rounded border border-gray-200 px-1.5 py-0.5 text-[11px] text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="inline-flex items-center gap-1 rounded border border-gray-200 px-1.5 py-0.5 text-2xs text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 <Trash2 className="h-3 w-3" aria-hidden />
                 Remove
@@ -671,7 +671,7 @@ function ScalarInput({ field, pointer, ctx }: { field: TestField; pointer: strin
       ) : null}
 
       {coercionError ? (
-        <p className="text-[11px] text-red-600 dark:text-red-400" data-testid={`primitive-test-coercion-${pointer}`}>
+        <p className="text-2xs text-red-600 dark:text-red-400" data-testid={`primitive-test-coercion-${pointer}`}>
           {coercionError}
         </p>
       ) : null}
@@ -705,7 +705,7 @@ function PatternIndicator({
 
   return (
     <p
-      className={`flex flex-wrap items-center gap-1.5 text-[11px] ${tone}`}
+      className={`flex flex-wrap items-center gap-1.5 text-2xs ${tone}`}
       data-testid={`primitive-test-pattern-${pointer}`}
       data-matches={matches === null ? 'invalid-pattern' : String(matches)}
     >
@@ -730,7 +730,7 @@ function FieldFindings({ findings, pointer }: { findings: TestFinding[]; pointer
   return (
     <ul className="space-y-0.5" data-testid={`primitive-test-field-findings-${pointer}`}>
       {findings.map((finding, index) => (
-        <li key={`${finding.keyword}-${index}`} className="text-[11px] text-red-600 dark:text-red-400">
+        <li key={`${finding.keyword}-${index}`} className="text-2xs text-red-600 dark:text-red-400">
           {finding.message}
         </li>
       ))}

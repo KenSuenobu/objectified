@@ -109,7 +109,7 @@ function RoleBadge({ role, count }: { role: BundleFileRole; count?: number }) {
       data-role={role}
       title={BUNDLE_ROLE_HINT[role]}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
+        'inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
         BUNDLE_ROLE_TONE[role],
       )}
     >
@@ -139,10 +139,10 @@ function ImportRow({ edge }: { edge: BundleImportEdge }) {
       className="flex flex-col gap-0.5 py-1"
     >
       <span className="flex flex-wrap items-baseline gap-2">
-        <span className="font-mono text-[11px] text-gray-800 dark:text-gray-100">{edge.target}</span>
+        <span className="font-mono text-2xs text-gray-800 dark:text-gray-100">{edge.target}</span>
         <span
           className={cn(
-            'rounded px-1.5 py-0.5 text-[10px] font-semibold',
+            'rounded px-1.5 py-0.5 text-2xs font-semibold',
             unresolved
               ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
               : edge.resolution === 'provided'
@@ -152,22 +152,22 @@ function ImportRow({ edge }: { edge: BundleImportEdge }) {
         >
           {BUNDLE_RESOLUTION_LABEL[edge.resolution]}
         </span>
-        <span className="font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500">
+        <span className="font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500">
           {edge.directive} · line {edge.line}
         </span>
         {edge.to_path ? (
-          <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">
+          <span className="font-mono text-2xs text-gray-500 dark:text-gray-400">
             → {edge.to_path}
           </span>
         ) : null}
         {edge.provider ? (
-          <span className="text-[10px] text-gray-500 dark:text-gray-400">via {edge.provider}</span>
+          <span className="text-2xs text-gray-500 dark:text-gray-400">via {edge.provider}</span>
         ) : null}
       </span>
       {unresolved && edge.search_paths.length > 0 ? (
         <span
           data-testid="bundle-search-paths"
-          className="font-mono text-[10px] leading-relaxed text-gray-500 dark:text-gray-400"
+          className="font-mono text-2xs leading-relaxed text-gray-500 dark:text-gray-400"
         >
           Looked for: {edge.search_paths.join(' · ')}
         </span>
@@ -513,7 +513,7 @@ export function CatalogImportBundlePanel({
               <span className="truncate font-semibold text-gray-600 dark:text-gray-300">
                 {row.label}/
               </span>
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
                 {(row.count ?? 0).toLocaleString()}
               </span>
             </>
@@ -524,17 +524,17 @@ export function CatalogImportBundlePanel({
                 {row.file!.verdict === 'failed' ? (
                   <span
                     data-testid="bundle-verdict-failed"
-                    className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                    className="rounded bg-rose-100 px-1.5 py-0.5 text-2xs font-semibold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
                   >
                     {BUNDLE_VERDICT_LABEL.failed}
                   </span>
                 ) : null}
                 {row.file!.entity_count > 0 ? (
-                  <span className="font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500">
+                  <span className="font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500">
                     {row.file!.entity_count} entities
                   </span>
                 ) : null}
-                <span className="font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500">
+                <span className="font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500">
                   {formatBundleBytes(row.file!.bytes)}
                 </span>
                 <RoleBadge role={row.file!.role} />
@@ -556,7 +556,7 @@ export function CatalogImportBundlePanel({
           Files in this bundle
         </h3>
         {virtualized && (
-          <span className="text-[10px] font-normal text-gray-500 dark:text-gray-400">windowed</span>
+          <span className="text-2xs font-normal text-gray-500 dark:text-gray-400">windowed</span>
         )}
       </div>
 
@@ -644,7 +644,7 @@ export function CatalogImportBundlePanel({
                 </option>
               ))}
             </select>
-            <span className="text-[10px] text-gray-500 dark:text-gray-400">
+            <span className="text-2xs text-gray-500 dark:text-gray-400">
               {inventory.entry_point_pinned ? 'chosen by you' : 'auto-detected'}
             </span>
           </div>
@@ -695,7 +695,7 @@ export function CatalogImportBundlePanel({
             {filtering ? (
               <span
                 data-testid="bundle-filter-count"
-                className="shrink-0 font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500"
+                className="shrink-0 font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
               >
                 {fileRowCount} of {inventory.files.length}
               </span>
@@ -767,18 +767,18 @@ export function CatalogImportBundlePanel({
                   {selectedFile.path}
                 </span>
                 <RoleBadge role={selectedFile.role} />
-                <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                <span className="text-2xs text-gray-500 dark:text-gray-400">
                   {BUNDLE_VERDICT_LABEL[selectedFile.verdict]}
                   {selectedFile.lines > 0 ? ` · ${selectedFile.lines.toLocaleString()} lines` : ''}
                 </span>
               </div>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="text-2xs text-gray-500 dark:text-gray-400">
                 {BUNDLE_ROLE_HINT[selectedFile.role]}
               </p>
               {selectedFile.role === 'ignored' ? (
                 <p
                   data-testid="bundle-ignored-reason"
-                  className="text-[11px] text-amber-700 dark:text-amber-300"
+                  className="text-2xs text-amber-700 dark:text-amber-300"
                 >
                   Ignored: {bundleIgnoredReasonLabel(selectedFile.ignored_reason)}
                 </p>
@@ -786,7 +786,7 @@ export function CatalogImportBundlePanel({
               {selectedFile.error ? (
                 <p
                   data-testid="bundle-file-error"
-                  className="flex items-start gap-2 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 font-mono text-[11px] text-rose-800 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200"
+                  className="flex items-start gap-2 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 font-mono text-2xs text-rose-800 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200"
                 >
                   <FileWarning className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
                   <span className="min-w-0 flex-1">{selectedFile.error}</span>
@@ -794,7 +794,7 @@ export function CatalogImportBundlePanel({
               ) : null}
               {selectedFile.imports.length > 0 ? (
                 <div>
-                  <h4 className="text-[11px] font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                  <h4 className="text-2xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
                     Imports ({selectedFile.imports.length})
                   </h4>
                   <ul className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -807,7 +807,7 @@ export function CatalogImportBundlePanel({
               {selectedFile.imported_by.length > 0 ? (
                 <p
                   data-testid="bundle-imported-by"
-                  className="text-[11px] text-gray-500 dark:text-gray-400"
+                  className="text-2xs text-gray-500 dark:text-gray-400"
                 >
                   Imported by:{' '}
                   <span className="font-mono">{selectedFile.imported_by.join(', ')}</span>
@@ -815,7 +815,7 @@ export function CatalogImportBundlePanel({
               ) : null}
               <p
                 data-testid="bundle-file-entities"
-                className="text-[11px] text-gray-500 dark:text-gray-400"
+                className="text-2xs text-gray-500 dark:text-gray-400"
               >
                 {selectedFile.entity_count > 0
                   ? `Contributes ${selectedFile.entity_count.toLocaleString()} canonical ${
@@ -823,7 +823,7 @@ export function CatalogImportBundlePanel({
                     }: ${selectedFile.entity_keys.join(', ')}`
                   : 'No canonical entity was attributed to this file.'}
               </p>
-              <p className="text-[10px] italic text-gray-400 dark:text-gray-500">
+              <p className="text-2xs italic text-gray-400 dark:text-gray-500">
                 Contribution is matched by {inventory.attribution} — the file declares a symbol with
                 the entity’s name. It is evidence, not a record kept by the parser.
               </p>
@@ -835,7 +835,7 @@ export function CatalogImportBundlePanel({
               className="space-y-1 rounded-lg border border-rose-200 p-3 dark:border-rose-800"
               data-testid="bundle-unresolved"
             >
-              <h4 className="text-[11px] font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">
+              <h4 className="text-2xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">
                 Unresolved imports
                 {inventory.total_unresolved > unresolvedShown.length
                   ? ` — showing ${unresolvedShown.length} of ${inventory.total_unresolved}`
@@ -848,16 +848,16 @@ export function CatalogImportBundlePanel({
                       type="button"
                       data-testid="bundle-unresolved-source"
                       onClick={() => revealFile(edge.from_path)}
-                      className="font-mono text-[11px] text-indigo-600 underline decoration-dotted underline-offset-2 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      className="font-mono text-2xs text-indigo-600 underline decoration-dotted underline-offset-2 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
                     >
                       {edge.from_path}:{edge.line}
                     </button>
-                    <span className="ml-2 font-mono text-[11px] text-gray-800 dark:text-gray-100">
+                    <span className="ml-2 font-mono text-2xs text-gray-800 dark:text-gray-100">
                       {edge.target}
                     </span>
                     <span
                       data-testid="bundle-unresolved-search-paths"
-                      className="block font-mono text-[10px] text-gray-500 dark:text-gray-400"
+                      className="block font-mono text-2xs text-gray-500 dark:text-gray-400"
                     >
                       Looked for: {edge.search_paths.join(' · ')}
                     </span>

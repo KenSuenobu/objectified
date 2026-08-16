@@ -100,7 +100,7 @@ export default function SidebarShell({
         <div className="min-w-0 flex-1">
           <div
             className={[
-              'text-[13px] font-semibold leading-tight truncate',
+              'text-sm font-semibold leading-tight truncate',
               sidebarTheme.textPrimary,
             ].join(' ')}
           >
@@ -109,7 +109,7 @@ export default function SidebarShell({
           {subtitle != null && (
             <div
               className={[
-                'text-[11px] leading-tight truncate mt-0.5',
+                'text-2xs leading-tight truncate mt-0.5',
                 sidebarTheme.textSecondary,
               ].join(' ')}
             >
@@ -175,7 +175,7 @@ export function SidebarSectionLabel({
     <div className={['flex items-center justify-between px-1 mb-1.5', className ?? ''].join(' ')}>
       <span className={sidebarTheme.sectionLabel}>{children}</span>
       {trailing != null && (
-        <span className="text-[10.5px] text-slate-400 dark:text-slate-500 tabular-nums">
+        <span className="text-2xs text-slate-400 dark:text-slate-500 tabular-nums">
           {trailing}
         </span>
       )}

@@ -496,7 +496,7 @@ export function RepositoryFilesBrowser({
                 className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50"
               >
                 <GitBranch className="h-3.5 w-3.5 shrink-0 text-indigo-500" aria-hidden />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <span className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Branch
                 </span>
                 <span className="max-w-[200px] truncate font-mono font-medium">{branch}</span>
@@ -519,7 +519,7 @@ export function RepositoryFilesBrowser({
                       className="h-8 border-gray-200 pl-8 text-xs dark:border-gray-700"
                     />
                   </div>
-                  <div className="mt-2 inline-flex overflow-hidden rounded border border-gray-200 text-[11px] dark:border-gray-700">
+                  <div className="mt-2 inline-flex overflow-hidden rounded border border-gray-200 text-2xs dark:border-gray-700">
                     <span className="bg-indigo-50 px-2 py-1 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
                       Branches <span className="ml-1 font-mono">{branches.length}</span>
                     </span>
@@ -555,7 +555,7 @@ export function RepositoryFilesBrowser({
                         />
                         <span className="flex-1 truncate font-mono">{b}</span>
                         {b === defaultBranch ? (
-                          <span className="shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
+                          <span className="shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-2xs text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
                             default
                           </span>
                         ) : null}
@@ -563,7 +563,7 @@ export function RepositoryFilesBrowser({
                     ))
                   )}
                 </div>
-                <div className="flex items-center justify-between border-t border-gray-200 p-2 text-[11px] dark:border-gray-700">
+                <div className="flex items-center justify-between border-t border-gray-200 p-2 text-2xs dark:border-gray-700">
                   <button
                     type="button"
                     className="inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400"
@@ -599,7 +599,7 @@ export function RepositoryFilesBrowser({
         </span>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <label className="inline-flex cursor-pointer items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 text-2xs text-gray-500 dark:text-gray-400">
             <input
               type="checkbox"
               className="rounded border-gray-300 dark:border-gray-600"
@@ -626,7 +626,7 @@ export function RepositoryFilesBrowser({
       <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
         <div className="grid grid-cols-12 gap-3">
           <div className="col-span-12 md:col-span-4">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Importable preset
             </label>
             <select
@@ -642,7 +642,7 @@ export function RepositoryFilesBrowser({
             </select>
           </div>
           <div className="col-span-12 md:col-span-5">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Glob filter (comma-separated)
             </label>
             <Input
@@ -654,7 +654,7 @@ export function RepositoryFilesBrowser({
             />
           </div>
           <div className="col-span-12 md:col-span-3">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Regex (optional)
             </label>
             <Input
@@ -765,7 +765,7 @@ export function RepositoryFilesBrowser({
           <p className="px-4 py-8 text-center text-sm text-rose-600 dark:text-rose-400">{error}</p>
         ) : (
           <table className={cn('w-full table-fixed text-sm', loading && 'opacity-60')}>
-            <thead className="border-b border-gray-200 bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
+            <thead className="border-b border-gray-200 bg-gray-50 text-2xs uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
               <tr>
                 <th className="w-10 px-4 py-2 text-left align-middle">
                   <input
@@ -835,7 +835,7 @@ export function RepositoryFilesBrowser({
                     <td className="align-middle">
                       <span
                         className={cn(
-                          'inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                          'inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-2xs font-semibold',
                           kindPillClass(f.display_kind)
                         )}
                       >
@@ -845,7 +845,7 @@ export function RepositoryFilesBrowser({
                     <td className="align-middle">
                       <span
                         className={cn(
-                          'inline-block min-w-[2.25rem] whitespace-nowrap rounded px-2 py-0.5 text-center font-mono text-[11px] font-semibold',
+                          'inline-block min-w-[2.25rem] whitespace-nowrap rounded px-2 py-0.5 text-center font-mono text-2xs font-semibold',
                           quality.className
                         )}
                         title={quality.title}
@@ -855,7 +855,7 @@ export function RepositoryFilesBrowser({
                       </span>
                     </td>
                     <td className="align-middle">
-                      <span className={cn('font-mono text-[11px] px-2 py-0.5 rounded', cb.className)}>
+                      <span className={cn('font-mono text-2xs px-2 py-0.5 rounded', cb.className)}>
                         {cb.label}
                       </span>
                     </td>

@@ -62,7 +62,7 @@ export function SuiteRegressionBadge({ surface, artifact, className }: SuiteRegr
         `${regressedCount} test suite${regressedCount === 1 ? '' : 's'} whose latest run has a ` +
         'previously-passing payload now failing. Open the Test Bench tab for the verdict diff.'
       }
-      className={`inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 ${className ?? ''}`}
+      className={`inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 ${className ?? ''}`}
     >
       <TrendingDown className="h-3 w-3" aria-hidden />
       Suite regression{regressedCount === 1 ? '' : ` ×${regressedCount}`}

@@ -126,32 +126,32 @@ function statusPill(status: RepositoryStatus) {
   switch (status) {
     case 'ready':
       return (
-        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-2xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
           Active
         </span>
       );
     case 'scanning':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+        <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-2xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
           <Loader2 className="h-3 w-3 shrink-0 animate-spin" aria-hidden />
           Scanning
         </span>
       );
     case 'pending':
       return (
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
           Pending
         </span>
       );
     case 'error':
       return (
-        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-2xs font-semibold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
           Error
         </span>
       );
     case 'archived':
       return (
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
           Archived
         </span>
       );
@@ -183,7 +183,7 @@ function TabBtn({
       {badge !== undefined ? (
         <span
           className={cn(
-            'rounded-full px-1.5 py-0.5 text-[10px]',
+            'rounded-full px-1.5 py-0.5 text-2xs',
             active
               ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
               : 'bg-gray-200 dark:bg-gray-700'
@@ -484,7 +484,7 @@ export function RepositoryDetailClient() {
                       is it doing?" — and its tooltip names the most recent problem. */}
                   <RepositoryHealthBadge health={repo.health} />
                   {statusPill(repo.status)}
-                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[11px] text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                     {repo.provider === 'github' ? (
                       <Github className="h-3 w-3 shrink-0" aria-hidden />
                     ) : (
@@ -492,7 +492,7 @@ export function RepositoryDetailClient() {
                     )}
                     {providerSlug(repo)}
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 font-mono text-[11px] text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 font-mono text-2xs text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
                     <GitBranch className="h-3 w-3 shrink-0" aria-hidden />
                     {repo.default_branch}
                   </span>
@@ -629,7 +629,7 @@ export function RepositoryDetailClient() {
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Recent scans</h3>
                 <button
                   type="button"
-                  className="text-[11px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  className="text-2xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
                   onClick={() => toast.message('Scan history needs a `tenant_repository_scan_jobs` (or similar) collection exposed over REST.')}
                 >
                   View scan history →
@@ -715,14 +715,14 @@ export function RepositoryDetailClient() {
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Recent imports from this repo</h3>
               <button
                 type="button"
-                className="text-[11px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
+                className="text-2xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
                 onClick={() => setTab('imports')}
               >
                 See all →
               </button>
             </div>
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              <thead className="border-b border-gray-200 text-2xs uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:text-gray-400">
                 <tr>
                   <th className="py-2 align-middle text-left font-semibold">File</th>
                   <th className="py-2 align-middle text-left font-semibold">Project</th>
@@ -764,11 +764,11 @@ export function RepositoryDetailClient() {
                             {row.path}
                           </Link>
                           {blob ? (
-                            <span className="mt-0.5 block text-[11px] text-gray-500 dark:text-gray-400">
+                            <span className="mt-0.5 block text-2xs text-gray-500 dark:text-gray-400">
                               blob {blob} · {row.branch}
                             </span>
                           ) : (
-                            <span className="mt-0.5 block text-[11px] text-gray-500 dark:text-gray-400">
+                            <span className="mt-0.5 block text-2xs text-gray-500 dark:text-gray-400">
                               {row.branch}
                             </span>
                           )}
@@ -830,7 +830,7 @@ export function RepositoryDetailClient() {
               </p>
             </div>
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
+              <thead className="border-b border-gray-200 bg-gray-50 text-2xs uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-2 align-middle text-left font-semibold">When</th>
                   <th className="px-4 py-2 align-middle text-left font-semibold">File · blob</th>
@@ -873,7 +873,7 @@ export function RepositoryDetailClient() {
                           >
                             {row.path}
                           </Link>
-                          <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                          <div className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
                             {blob ? `blob ${blob} · ${row.branch}` : row.branch}
                           </div>
                         </td>
@@ -906,7 +906,7 @@ export function RepositoryDetailClient() {
             <h3 className="border-b border-gray-100 pb-2 text-sm font-semibold dark:border-gray-700 dark:text-gray-100">Source</h3>
             <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
               <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Provider
                 </label>
                 <p className="mt-1 inline-flex items-center gap-2 text-gray-900 dark:text-gray-100">
@@ -920,7 +920,7 @@ export function RepositoryDetailClient() {
                 </p>
               </div>
               <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Clone URL</label>
+                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Clone URL</label>
                 <p className="mt-1 break-all font-mono text-xs text-gray-900 dark:text-gray-100">{repo.clone_url ?? '—'}</p>
                 {webUrl ? (
                   <a
@@ -934,13 +934,13 @@ export function RepositoryDetailClient() {
                 ) : null}
               </div>
               <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Default branch
                 </label>
                 <Input readOnly value={repo.default_branch} className="mt-1 font-mono text-sm" />
               </div>
               <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Subpath glob (optional)
                 </label>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -958,7 +958,7 @@ export function RepositoryDetailClient() {
               <div className="space-y-1">
                 <label
                   htmlFor="auto-refresh-toggle"
-                  className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                  className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
                 >
                   Auto-refresh
                 </label>
@@ -986,13 +986,13 @@ export function RepositoryDetailClient() {
             </p>
             <fieldset disabled className="grid grid-cols-1 gap-4 text-sm opacity-70 sm:grid-cols-2">
               <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Schedule</label>
+                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Schedule</label>
                 <select className="mt-1 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
                   <option>Not configured</option>
                 </select>
               </div>
               <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Webhook</label>
+                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Webhook</label>
                 <p className="mt-2 inline-flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <span className="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-600" />
                   Inactive — delivery logs will mirror webhook worker tables when added.
@@ -1013,7 +1013,7 @@ export function RepositoryDetailClient() {
               JSON on repo settings or normalized mapping rows).
             </p>
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              <thead className="border-b border-gray-200 text-2xs uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:text-gray-400">
                 <tr>
                   <th className="py-2 text-left font-semibold">Path glob</th>
                   <th className="text-left font-semibold">Detected kind</th>

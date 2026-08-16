@@ -6,6 +6,7 @@ import { NodeCard } from '../canvas/NodeCard';
 import { NodeHeader } from '../canvas/NodeHeader';
 import { NodeHandleDot } from '../canvas/NodeHandleDot';
 import { NodeBadge } from '../canvas/NodeBadge';
+import { CANVAS_TYPE_SCALE } from '../canvas/canvas-theme';
 
 export interface PathNodeData {
   label: string;
@@ -65,7 +66,7 @@ const METHOD_COLORS: Record<string, string> = {
 };
 
 const SECTION_LABEL: React.CSSProperties = {
-  fontSize: '9px',
+  fontSize: CANVAS_TYPE_SCALE.micro,
   fontWeight: 600,
   letterSpacing: '0.06em',
   textTransform: 'uppercase',
@@ -104,23 +105,23 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
             customBackground={methodColor}
             customTextColor="#ffffff"
             icon={
-              <span style={{ fontSize: '10px', fontWeight: 700 }}>
+              <span style={{ fontSize: CANVAS_TYPE_SCALE.caps, fontWeight: 700 }}>
                 {(method || label || 'M').substring(0, 2).toUpperCase()}
               </span>
             }
             iconSize={28}
             title={
               <>
-                <div style={{ fontSize: '10px', fontWeight: 600, opacity: 0.88, letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: CANVAS_TYPE_SCALE.caps, fontWeight: 600, opacity: 0.88, letterSpacing: '0.04em' }}>
                   HTTP METHOD
                 </div>
-                <div style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '-0.01em' }}>
+                <div style={{ fontSize: CANVAS_TYPE_SCALE.heading, fontWeight: 700, letterSpacing: '-0.01em' }}>
                   {method || label}
                 </div>
                 {nodeData.operationId && (
                   <div
                     style={{
-                      fontSize: '10px',
+                      fontSize: CANVAS_TYPE_SCALE.caps,
                       opacity: 0.8,
                       fontFamily: 'var(--app-font-mono, monospace)',
                       marginTop: '2px',
@@ -138,11 +139,11 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
                 <div style={SECTION_LABEL}>Request</div>
                 <div style={PANEL_BOX}>
                   {nodeData.requestBody ? (
-                    <div style={{ fontSize: '10px', color: 'var(--node-text)' }}>{nodeData.requestBody}</div>
+                    <div style={{ fontSize: CANVAS_TYPE_SCALE.caps, color: 'var(--node-text)' }}>{nodeData.requestBody}</div>
                   ) : (
                     <div
                       style={{
-                        fontSize: '10px',
+                        fontSize: CANVAS_TYPE_SCALE.caps,
                         color: 'var(--node-text-subtle)',
                         fontStyle: 'italic',
                       }}
@@ -163,7 +164,7 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
                   nodeData.parameters.map((param: any, idx: number) => (
                     <div
                       key={idx}
-                      style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: CANVAS_TYPE_SCALE.caps }}
                     >
                       <span
                         style={{
@@ -187,7 +188,7 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
                       </span>
                       {param.required && (
                         <span
-                          style={{ color: 'var(--node-danger)', fontSize: '10px', fontWeight: 700 }}
+                          style={{ color: 'var(--node-danger)', fontSize: CANVAS_TYPE_SCALE.caps, fontWeight: 700 }}
                           title="required"
                         >
                           *
@@ -198,7 +199,7 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
                 ) : (
                   <div
                     style={{
-                      fontSize: '10px',
+                      fontSize: CANVAS_TYPE_SCALE.caps,
                       color: 'var(--node-text-subtle)',
                       fontStyle: 'italic',
                     }}
@@ -218,7 +219,7 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
                   nodeData.responses.map((response: any, idx: number) => (
                     <div
                       key={idx}
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: CANVAS_TYPE_SCALE.caps }}
                     >
                       <span
                         style={{
@@ -238,7 +239,7 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
                 ) : (
                   <div
                     style={{
-                      fontSize: '10px',
+                      fontSize: CANVAS_TYPE_SCALE.caps,
                       color: 'var(--node-text-subtle)',
                       fontStyle: 'italic',
                     }}
@@ -257,7 +258,7 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  fontSize: '10px',
+                  fontSize: CANVAS_TYPE_SCALE.caps,
                   color: 'var(--node-text-muted)',
                 }}
               >
@@ -316,7 +317,7 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <div
                 style={{
-                  fontSize: '9px',
+                  fontSize: CANVAS_TYPE_SCALE.micro,
                   fontWeight: 600,
                   opacity: 0.9,
                   letterSpacing: '0.06em',
@@ -332,7 +333,7 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
               </div>
               <div
                 style={{
-                  fontSize: nodeType === 'path' ? '12px' : '12px',
+                  fontSize: CANVAS_TYPE_SCALE.body,
                   fontWeight: nodeType === 'response' ? 700 : 600,
                   fontFamily:
                     nodeType === 'path'
@@ -352,7 +353,7 @@ const PathNode: React.FC<NodeProps> = ({ data, selected }) => {
                     <span
                       key={v}
                       style={{
-                        fontSize: '10px',
+                        fontSize: CANVAS_TYPE_SCALE.caps,
                         padding: '1px 6px',
                         background: 'rgba(255, 255, 255, 0.22)',
                         borderRadius: '3px',

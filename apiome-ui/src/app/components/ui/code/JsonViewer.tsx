@@ -4,13 +4,13 @@ import * as React from 'react';
 import dynamic from 'next/dynamic';
 import { Braces, Check, Copy } from 'lucide-react';
 import { cn } from '../../../../../lib/utils';
+import {
+  CODE_BLOCK_FONT_SIZE,
+  CODE_BLOCK_LINE_HEIGHT,
+  CODE_BLOCK_PADDING,
+} from './editorTypography';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
-
-/** Monaco line height at the viewer's 12px font size. */
-const LINE_HEIGHT_PX = 19;
-/** Vertical padding Monaco adds inside the viewport (matches the `padding` option below). */
-const EDITOR_PADDING_PX = 16;
 
 export interface JsonViewerProps {
   /** Pretty-printed source to display. */
@@ -57,7 +57,7 @@ export function JsonViewer({ value, label, language = 'json', maxLines = 24, cla
   }, [copied]);
 
   const lineCount = value ? value.split('\n').length : 1;
-  const height = Math.min(Math.max(lineCount, 3), maxLines) * LINE_HEIGHT_PX + EDITOR_PADDING_PX;
+  const height = Math.min(Math.max(lineCount, 3), maxLines) * CODE_BLOCK_LINE_HEIGHT + CODE_BLOCK_PADDING;
 
   const copy = async () => {
     try {
@@ -115,8 +115,8 @@ export function JsonViewer({ value, label, language = 'json', maxLines = 24, cla
             lineNumbers: 'on',
             lineNumbersMinChars: 3,
             folding: true,
-            fontSize: 12,
-            lineHeight: LINE_HEIGHT_PX,
+            fontSize: CODE_BLOCK_FONT_SIZE,
+            lineHeight: CODE_BLOCK_LINE_HEIGHT,
             padding: { top: 8, bottom: 8 },
             scrollBeyondLastLine: false,
             wordWrap: 'on',

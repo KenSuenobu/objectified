@@ -313,7 +313,7 @@ export default function RolesClient() {
                       <span className="text-xs font-mono text-gray-400">{role.member_count}</span>
                     </div>
                     <span
-                      className={`mt-1 inline-block text-[11px] ${
+                      className={`mt-1 inline-block text-2xs ${
                         role.is_builtin
                           ? 'text-gray-500 dark:text-gray-400'
                           : 'text-indigo-600 dark:text-indigo-400'
@@ -345,7 +345,7 @@ export default function RolesClient() {
                           />
                         )}
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full ${
+                          className={`text-2xs px-2 py-0.5 rounded-full ${
                             selectedRole.is_builtin
                               ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
                               : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
@@ -404,7 +404,7 @@ export default function RolesClient() {
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-slate-200 dark:border-slate-800 text-left text-[11px] uppercase tracking-wider text-gray-400">
+                        <tr className="border-b border-slate-200 dark:border-slate-800 text-left text-2xs uppercase tracking-wider text-gray-400">
                           <th className="px-4 py-3 font-semibold">Resource</th>
                           {ACTIONS.map((a) => (
                             <th key={a.key} className="px-3 py-3 font-semibold text-center">
@@ -444,7 +444,7 @@ export default function RolesClient() {
                     </table>
                   </div>
 
-                  <p className="text-[11px] text-gray-400 mt-3 flex items-center gap-1.5">
+                  <p className="text-2xs text-gray-400 mt-3 flex items-center gap-1.5">
                     <Info className="w-3.5 h-3.5" />
                     Cells map to a central permission guard (e.g.{' '}
                     <code className="font-mono">version:publish</code>) checked on every REST route,

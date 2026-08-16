@@ -99,11 +99,11 @@ export function BenchSavedPayloads({
                 {payload.name}
               </button>
               {payload.synthetic ? (
-                <span className="rounded bg-violet-100 px-1 text-[9px] font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-900/50 dark:text-violet-300">
+                <span className="rounded bg-violet-100 px-1 text-2xs font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-900/50 dark:text-violet-300">
                   synthetic
                 </span>
               ) : null}
-              <span className="shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500">
+              <span className="shrink-0 text-2xs tabular-nums text-gray-400 dark:text-gray-500">
                 {new Date(payload.savedAt).toLocaleDateString()}
               </span>
               <button

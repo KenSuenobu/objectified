@@ -114,21 +114,21 @@ function FindingLinkRow({
   return (
     <div className={`rounded-md p-2.5 ${rowClass}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-[11px] text-gray-600 dark:bg-gray-900/40 dark:text-gray-300">
+        <span className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-900/40 dark:text-gray-300">
           {finding.rule}
         </span>
         {target && onNavigateToItem ? (
           <button
             type="button"
             onClick={() => onNavigateToItem(target.item_type, target.name)}
-            className="inline-flex items-center gap-1 font-mono text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            className="inline-flex items-center gap-1 font-mono text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
             title={`Jump to ${finding.path} in Capabilities`}
           >
             {finding.path}
             <ArrowUpRight className="h-3 w-3" aria-hidden />
           </button>
         ) : (
-          <span className="font-mono text-[11px] text-gray-700 dark:text-gray-300">{finding.path}</span>
+          <span className="font-mono text-2xs text-gray-700 dark:text-gray-300">{finding.path}</span>
         )}
       </div>
       <p className="mt-1 text-xs text-gray-700 dark:text-gray-200">{finding.message}</p>
@@ -249,7 +249,7 @@ export function ScoreBreakdownPanel({ report, loading, error, onNavigateToItem }
               title="Findings by severity — MUST, SHOULD, and advisory counts"
               className="h-24"
             />
-            <div className="flex justify-between gap-x-2 text-[10px] text-gray-400 dark:text-gray-500">
+            <div className="flex justify-between gap-x-2 text-2xs text-gray-400 dark:text-gray-500">
               {severityBars.map((bar) => (
                 <span key={bar.label} className="tabular-nums">
                   {bar.label}
@@ -266,7 +266,7 @@ export function ScoreBreakdownPanel({ report, loading, error, onNavigateToItem }
                 <div key={group.meta.key} className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <FindingSeverity tier={group.meta.key} count={group.findings.length} />
-                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                    <span className="text-2xs text-gray-500 dark:text-gray-400">
                       {group.meta.description}
                     </span>
                   </div>

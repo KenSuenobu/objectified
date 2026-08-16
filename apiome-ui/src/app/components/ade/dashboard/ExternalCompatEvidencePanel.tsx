@@ -163,14 +163,14 @@ export function ExternalCompatEvidencePanel({
               >
                 <a
                   href={href}
-                  className="font-mono text-[11px] text-blue-600 dark:text-blue-400 underline underline-offset-2"
+                  className="font-mono text-2xs text-blue-600 dark:text-blue-400 underline underline-offset-2"
                   data-testid="external-compat-source-link"
                 >
                   {path}
                   {typeof line === 'number' ? `:${line}` : ''}
                 </a>
                 <div className="text-gray-600 dark:text-gray-400">
-                  <span className="font-mono text-[10px]">[{changeClass}] {rule}</span>
+                  <span className="font-mono text-2xs">[{changeClass}] {rule}</span>
                   {' — '}
                   {f.message}
                 </div>
@@ -184,7 +184,7 @@ export function ExternalCompatEvidencePanel({
           <summary className="cursor-pointer text-gray-700 dark:text-gray-300">
             Changelog (markdown)
           </summary>
-          <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap font-mono text-[10px] text-gray-600 dark:text-gray-400">
+          <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap font-mono text-2xs text-gray-600 dark:text-gray-400">
             {changelog}
           </pre>
         </details>

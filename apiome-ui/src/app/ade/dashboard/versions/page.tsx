@@ -175,6 +175,7 @@ import type { VersionLintReport } from '@/app/utils/version-lint-report';
 import type { VerificationPolicyDecision } from '../style-guides/verification-policy-api';
 import { useMockUsage } from '@/app/hooks/useMockUsage';
 import { mockUsageSeriesKey } from '@/app/utils/mock-usage-series';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 /** Radix Select cannot use empty string as a value; maps to no successor in metadata. */
 const SUCCESSOR_SELECT_NONE = '__none__';
@@ -4757,7 +4758,7 @@ const Versions = () => {
                     message="Loading specification..."
                   />
                 ) : (
-                  <Editor height="100%" language={format} value={format === 'json' ? openApiSpec : YAML.stringify(JSON.parse(openApiSpec || '{}'))} theme="vs-dark" options={{ readOnly: true, minimap: { enabled: true }, fontSize: 13 }} />
+                  <Editor height="100%" language={format} value={format === 'json' ? openApiSpec : YAML.stringify(JSON.parse(openApiSpec || '{}'))} theme="vs-dark" options={{ readOnly: true, minimap: { enabled: true }, fontSize: CODE_EDITOR_FONT_SIZE }} />
                 )}
               </TabsContent>
             ))}
@@ -5230,7 +5231,7 @@ const Versions = () => {
                             Show unchanged
                           </label>
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-gray-500 mb-1">
+                        <p className="text-2xs text-gray-500 dark:text-gray-500 mb-1">
                           Showing {filteredClassDiffRows.length} of {classDiffRows.length} classes
                           {classDiffListRender.virtualize ? ' · Virtualized list' : ''}
                         </p>
@@ -5304,7 +5305,7 @@ const Versions = () => {
                                     </Badge>
                                   )}
                                   {row.status === 'modified' && (
-                                    <span className="text-[10px] text-gray-600 dark:text-gray-400 shrink-0 hidden sm:inline">
+                                    <span className="text-2xs text-gray-600 dark:text-gray-400 shrink-0 hidden sm:inline">
                                       {row.propertyAdded ? `+${row.propertyAdded} ` : ''}
                                       {row.propertyRemoved ? `−${row.propertyRemoved} ` : ''}
                                       {row.propertyModified ? `~${row.propertyModified} ` : ''}
@@ -5312,19 +5313,19 @@ const Versions = () => {
                                     </span>
                                   )}
                                   {row.status === 'added' && (
-                                    <span className="text-[10px] text-green-800 dark:text-green-300 shrink-0">
+                                    <span className="text-2xs text-green-800 dark:text-green-300 shrink-0">
                                       +{row.propertyAdded} props
                                     </span>
                                   )}
                                   {row.status === 'removed' && (
-                                    <span className="text-[10px] text-red-800 dark:text-red-300 shrink-0">
+                                    <span className="text-2xs text-red-800 dark:text-red-300 shrink-0">
                                       −{row.propertyRemoved} props
                                     </span>
                                   )}
                                 </button>
                                 {expanded && drill.length > 0 && (
                                   <div className="px-3 pb-3 pt-0 space-y-1 bg-gray-50/80 dark:bg-gray-900/50 border-t border-dashed border-gray-200 dark:border-gray-700">
-                                    <p className="text-[10px] font-medium text-gray-600 dark:text-gray-400 pt-2">
+                                    <p className="text-2xs font-medium text-gray-600 dark:text-gray-400 pt-2">
                                       Property-level changes
                                     </p>
                                     {drillVisible.map((d, i) => (
@@ -5347,7 +5348,7 @@ const Versions = () => {
                                     {drill.length > CLASS_PROP_DRILL_LIMIT && (
                                       <button
                                         type="button"
-                                        className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline mt-1"
+                                        className="text-2xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setPropDrillShowAllByClass((prev) => ({
@@ -5364,7 +5365,7 @@ const Versions = () => {
                                   </div>
                                 )}
                                 {expanded && drill.length === 0 && row.status === 'unchanged' && (
-                                  <p className="text-[10px] text-gray-500 px-3 pb-2">No property-level changes.</p>
+                                  <p className="text-2xs text-gray-500 px-3 pb-2">No property-level changes.</p>
                                 )}
                               </div>
                             );
@@ -5550,7 +5551,7 @@ const Versions = () => {
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between shrink-0">
                       <p className="text-xs text-gray-600 dark:text-gray-400 max-w-prose">
                         Generated from the schema diff. Stable identifiers use{' '}
-                        <span className="font-mono text-[11px]">components.schemas…</span> paths. The same revision pair always yields the same text (template version is in the header).
+                        <span className="font-mono text-2xs">components.schemas…</span> paths. The same revision pair always yields the same text (template version is in the header).
                       </p>
                       <div className="flex flex-wrap gap-2 shrink-0">
                         <Button

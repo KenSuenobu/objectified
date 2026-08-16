@@ -24,7 +24,7 @@ import { dashboardPanelPaddedClass } from '../../dashboardScreenClasses';
 import { cn } from '@lib/utils';
 
 const groupLabelClass =
-  'text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400';
+  'text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400';
 const chipBaseClass =
   'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors';
 const chipOffClass =

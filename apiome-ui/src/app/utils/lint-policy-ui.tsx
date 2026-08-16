@@ -45,7 +45,7 @@ export function LintDecisionBadge({
     <span
       data-testid="lint-decision-badge"
       className={cn(
-        'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+        'inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide',
         STATE_CLASS[normalized],
       )}
       title={

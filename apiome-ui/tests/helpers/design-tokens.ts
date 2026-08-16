@@ -235,6 +235,76 @@ export function designDocColorTokens(
 }
 
 /**
+ * The DESIGN.md §3.2 type scale, as step name → size in CSS pixels.
+ *
+ * §3.2 writes the scale as one inline code span —
+ * `` `2xs 11 · xs 12 · sm 13 · md 14 (body) · …` `` — so the document stays the authority
+ * for the numbers and `tests/hive-type-scale.test.ts` cannot drift from it. Parenthesised
+ * notes (`(body)`, `(page title)`) are annotations and are ignored.
+ *
+ * @param markdown `DESIGN.md` source. Defaults to the real document.
+ * @returns Step name (without the `--fs-` prefix) to pixel size, in document order.
+ * @throws If §3.2 carries no recognisable scale.
+ */
+export function designDocTypeScale(
+  markdown: string = readFileSync(DESIGN_DOC_PATH, 'utf8'),
+): Map<string, number> {
+  const section = /###\s*3\.2[^\n]*\n([\s\S]*?)\n###\s/.exec(markdown);
+  if (!section) throw new Error('DESIGN.md has no §3.2 typography section');
+
+  const span = /`((?:\s*\d*[a-z]+ \d+(?:\s*\([^)]*\))?\s*·?)+)`/.exec(section[1]);
+  if (!span) throw new Error('DESIGN.md §3.2 has no `2xs 11 · xs 12 · …` scale span');
+
+  const scale = new Map<string, number>();
+  for (const step of span[1].split('·')) {
+    const match = /^\s*(\d*[a-z]+)\s+(\d+)/.exec(step);
+    if (match) scale.set(match[1], Number(match[2]));
+  }
+  if (scale.size === 0) throw new Error('DESIGN.md §3.2 scale span parsed to nothing');
+  return scale;
+}
+
+/** The DESIGN.md §3.5 icon vocabulary. */
+export interface DesignDocIconSizes {
+  /** Size in dense UI, in CSS pixels. */
+  dense: number;
+  /** Size in the rail, in CSS pixels. */
+  rail: number;
+  /** Size inside a button, in CSS pixels. */
+  button: number;
+  /** Stroke width every icon is drawn with. */
+  strokeWidth: number;
+}
+
+/**
+ * Parse §3.5's one-sentence icon rule — "Lucide, 16 px in dense UI, 18 px in the rail,
+ * 15 px in buttons, stroke 1.75."
+ *
+ * @param markdown `DESIGN.md` source. Defaults to the real document.
+ * @returns The three sizes and the stroke width.
+ * @throws If §3.5 no longer states them.
+ */
+export function designDocIconSizes(
+  markdown: string = readFileSync(DESIGN_DOC_PATH, 'utf8'),
+): DesignDocIconSizes {
+  const section = /###\s*3\.5[^\n]*\n([\s\S]*?)\n(?:###|##)\s/.exec(markdown);
+  if (!section) throw new Error('DESIGN.md has no §3.5 iconography section');
+
+  const read = (pattern: RegExp, what: string): number => {
+    const match = pattern.exec(section[1]);
+    if (!match) throw new Error(`DESIGN.md §3.5 no longer states the ${what}`);
+    return Number(match[1]);
+  };
+
+  return {
+    dense: read(/(\d+(?:\.\d+)?)\s*px in dense UI/, 'dense size'),
+    rail: read(/(\d+(?:\.\d+)?)\s*px in the rail/, 'rail size'),
+    button: read(/(\d+(?:\.\d+)?)\s*px in buttons/, 'button size'),
+    strokeWidth: read(/stroke\s+(\d+(?:\.\d+)?)/, 'stroke width'),
+  };
+}
+
+/**
  * Parse a `#rgb`, `#rrggbb` or `#rrggbbaa` literal into sRGB channels.
  *
  * @param hex Colour literal, with the leading `#`.

@@ -72,11 +72,11 @@ function ColumnHeader({ server }: { server: McpCompareServer }) {
             </div>
           ) : null}
           <div className="mt-1 flex flex-wrap gap-1">
-            <McpBadge tone={transport.tone} className="px-1.5 py-0 text-[0.625rem]">
+            <McpBadge tone={transport.tone} className="px-1.5 py-0 text-2xs">
               {transport.label}
             </McpBadge>
             {server.category ? (
-              <McpBadge tone="indigo" className="px-1.5 py-0 text-[0.625rem]">
+              <McpBadge tone="indigo" className="px-1.5 py-0 text-2xs">
                 {server.category}
               </McpBadge>
             ) : null}
@@ -185,7 +185,7 @@ export function ServerComparisonPanel({ servers, loading, error }: Props) {
                   <th
                     scope="colgroup"
                     colSpan={colCount + 1}
-                    className="px-3 py-1.5 text-left text-[0.7rem] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                    className="px-3 py-1.5 text-left text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
                   >
                     {section.title}
                   </th>

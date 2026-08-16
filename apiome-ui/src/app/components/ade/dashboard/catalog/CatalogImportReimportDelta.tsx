@@ -74,7 +74,7 @@ function ChangeChip({ kind, count }: { kind: ReimportChangeKind; count?: number 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
+        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
         REIMPORT_CHANGE_TONE[kind],
       )}
     >
@@ -121,7 +121,7 @@ export function CatalogImportReimportDelta({
         <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
           Re-import delta
         </h4>
-        <span className="text-[11px] text-gray-500 dark:text-gray-400">
+        <span className="text-2xs text-gray-500 dark:text-gray-400">
           against <span className="font-medium">{targetLabel}</span>
           {delta.current_version_record_id ? ' (current revision)' : ''}
         </span>
@@ -155,7 +155,7 @@ export function CatalogImportReimportDelta({
       ) : (
         <>
           <p
-            className="text-[11px] text-gray-500 dark:text-gray-400"
+            className="text-2xs text-gray-500 dark:text-gray-400"
             data-testid="import-reimport-classifier"
           >
             {graded ? (
@@ -212,7 +212,7 @@ export function CatalogImportReimportDelta({
                     </span>
                     {windowed && (
                       <span
-                        className="text-[10px] font-normal text-gray-500 dark:text-gray-400"
+                        className="text-2xs font-normal text-gray-500 dark:text-gray-400"
                         data-testid="import-reimport-windowed"
                       >
                         windowed
@@ -374,7 +374,7 @@ function DeltaEntryRow({
       {entry.severity ? (
         <span
           className={cn(
-            'rounded px-1.5 py-0.5 text-[10px] font-semibold',
+            'rounded px-1.5 py-0.5 text-2xs font-semibold',
             REIMPORT_SEVERITY_TONE[entry.severity],
           )}
           data-testid="import-reimport-severity"
@@ -383,7 +383,7 @@ function DeltaEntryRow({
         </span>
       ) : null}
       {entry.rationale ? (
-        <span className="min-w-0 flex-1 truncate text-[11px] text-gray-500 dark:text-gray-400">
+        <span className="min-w-0 flex-1 truncate text-2xs text-gray-500 dark:text-gray-400">
           {entry.rationale}
         </span>
       ) : null}

@@ -97,6 +97,7 @@ import {
   PROJECTION_TABLE_VIRTUALIZE_ABOVE,
 } from '@/app/utils/preview-budgets';
 import { computeWindowedRange } from '@/app/utils/windowed-rows';
+import { SVG_TEXT_SIZE } from '@/app/components/ui/svgTypography';
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
@@ -476,7 +477,7 @@ export function ConversionProjectionGraphPanel({
           <span
             data-testid="conversion-projection-snapshot"
             title={`Projection snapshot ${summary.manifest_hash}`}
-            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
           >
             snapshot {summary.manifest_hash.slice(0, 12)}
           </span>
@@ -557,7 +558,7 @@ export function ConversionProjectionGraphPanel({
           {summary.truncated && (
             <p
               data-testid="conversion-projection-server-truncation"
-              className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+              className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
               role="status"
             >
               The server bounded this manifest: {summary.dropped_edge_count.toLocaleString()}{' '}
@@ -580,7 +581,7 @@ export function ConversionProjectionGraphPanel({
                   key={status}
                   data-testid={`conversion-projection-legend-${status}`}
                   className={cn(
-                    'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
+                    'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
                     p.badgeClass,
                   )}
                 >
@@ -596,7 +597,7 @@ export function ConversionProjectionGraphPanel({
             <p
               role="status"
               data-testid="conversion-projection-partial"
-              className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+              className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
             >
               Loaded {rows.length.toLocaleString()} of {summary.edge_count.toLocaleString()}{' '}
               evidence rows — this view is incomplete.{' '}
@@ -625,7 +626,7 @@ export function ConversionProjectionGraphPanel({
             <>
               {view.aggregated && (
                 <p
-                  className="text-[11px] text-gray-500 dark:text-gray-400"
+                  className="text-2xs text-gray-500 dark:text-gray-400"
                   data-testid="conversion-projection-aggregated-note"
                 >
                   Clean rows are aggregated to keep the graph readable; expand them in the table
@@ -637,7 +638,7 @@ export function ConversionProjectionGraphPanel({
               {drawnSelection.truncated && (
                 <p
                   role="status"
-                  className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+                  className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
                   data-testid="conversion-projection-draw-cap"
                 >
                   Drawing {drawnSelection.drawnRowCount.toLocaleString()} of{' '}
@@ -684,7 +685,7 @@ export function ConversionProjectionGraphPanel({
                     type="button"
                     data-testid="conversion-projection-copy-mermaid"
                     onClick={copyMermaid}
-                    className="flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-2xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                   >
                     {copied ? (
                       <Check className="h-3.5 w-3.5" aria-hidden />
@@ -733,7 +734,8 @@ export function ConversionProjectionGraphPanel({
                       <text
                         x={layout.columns.source}
                         y={lane.headerY}
-                        className="fill-gray-500 text-[10px] font-semibold uppercase tracking-wide dark:fill-gray-400"
+                        fontSize={SVG_TEXT_SIZE.label}
+                        className="fill-gray-500 font-semibold uppercase tracking-wide dark:fill-gray-400"
                       >
                         {lane.label} ({lane.count})
                       </text>
@@ -858,7 +860,7 @@ export function ConversionProjectionGraphPanel({
                   <thead>
                     <tr
                       aria-rowindex={1}
-                      className="border-b border-gray-200 text-[10px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
+                      className="border-b border-gray-200 text-2xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
                     >
                       <th scope="col" className="px-2 py-1.5">Status</th>
                       <th scope="col" className="px-2 py-1.5">Construct</th>
@@ -872,7 +874,7 @@ export function ConversionProjectionGraphPanel({
               </div>
               {tableVirtualized && (
                 <p
-                  className="text-[10px] text-gray-500 dark:text-gray-400"
+                  className="text-2xs text-gray-500 dark:text-gray-400"
                   data-testid="conversion-projection-table-windowed"
                 >
                   The table is windowed — every one of its {tableRows.length.toLocaleString()}{' '}

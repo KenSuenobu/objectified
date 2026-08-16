@@ -137,7 +137,7 @@ export function FidelityWarningPanel({
             <AlertTriangle className="h-4 w-4" aria-hidden />
             <span className="text-sm font-semibold">{advisory.headline}</span>
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${advisorySeverityPillClass(advisory.severity)}`}
+              className={`rounded-full px-2 py-0.5 text-2xs font-semibold uppercase ${advisorySeverityPillClass(advisory.severity)}`}
             >
               {advisory.severity ?? 'info'}
             </span>
@@ -190,7 +190,7 @@ export function FidelityWarningPanel({
             >
               {fidelity.preserved_percent}%
             </div>
-            <div className="text-[9px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <div className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
               preserved
             </div>
           </div>
@@ -367,7 +367,7 @@ function FidelityReportRow({ item }: { item: LossItem }) {
     <li className="flex items-start gap-3 p-2.5 text-sm">
       <span
         data-testid={`export-fidelity-kind-${item.kind}`}
-        className={`mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${kindBadgeClass(item.kind)}`}
+        className={`mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold ${kindBadgeClass(item.kind)}`}
       >
         <span aria-hidden>{kindGlyph(item.kind)}</span>
         <span aria-hidden>{kindLabel(item.kind)}</span>
@@ -380,7 +380,7 @@ function FidelityReportRow({ item }: { item: LossItem }) {
           </code>
           {item.severity !== 'info' && (
             <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase ${advisorySeverityPillClass(item.severity)}`}
+              className={`rounded-full px-1.5 py-0.5 text-2xs font-semibold uppercase ${advisorySeverityPillClass(item.severity)}`}
             >
               {item.severity}
             </span>

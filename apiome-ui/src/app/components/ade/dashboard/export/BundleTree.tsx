@@ -255,7 +255,7 @@ function BundleTreeRowItem({
         <span className="ml-auto flex shrink-0 items-center gap-1.5">
           <BundleFindingBadge counts={counts} testId={`bundle-tree-badge-${node.path}`} />
           {node.kind === 'file' && (
-            <span className="text-[0.65rem] tabular-nums text-gray-400 dark:text-gray-500">
+            <span className="text-2xs tabular-nums text-gray-400 dark:text-gray-500">
               {formatByteSize(node.file.sizeBytes)}
             </span>
           )}

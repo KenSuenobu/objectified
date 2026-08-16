@@ -1,4 +1,5 @@
 import React from 'react';
+import { CANVAS_TYPE_SCALE } from './canvas-theme';
 
 /**
  * NodeBadge — compact pill for header metrics, warnings, or status markers.
@@ -80,7 +81,7 @@ export const NodeBadge: React.FC<NodeBadgeProps> = ({
         gap: '3px',
         padding: '2px 6px',
         borderRadius: '4px',
-        fontSize: '10px',
+        fontSize: CANVAS_TYPE_SCALE.caps,
         fontWeight: 600,
         lineHeight: 1.2,
         letterSpacing: '-0.01em',

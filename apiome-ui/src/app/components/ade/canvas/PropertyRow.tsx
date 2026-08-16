@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { CANVAS_TOKENS } from './canvas-theme';
+import { CANVAS_TOKENS, CANVAS_TYPE_SCALE, CANVAS_ICON_SIZE } from './canvas-theme';
 
 /**
  * PropertyRow — canonical row layout for property lists in canvas nodes.
@@ -124,7 +124,7 @@ export const PropertyRow: React.FC<PropertyRowProps> = ({
               e.currentTarget.style.color = 'var(--node-text-subtle)';
             }}
           >
-            {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            {expanded ? <ChevronDown size={CANVAS_ICON_SIZE.meta} /> : <ChevronRight size={CANVAS_ICON_SIZE.meta} />}
           </button>
         )}
       </div>
@@ -134,7 +134,7 @@ export const PropertyRow: React.FC<PropertyRowProps> = ({
         style={{
           fontWeight: 500,
           color: deprecated ? 'var(--node-text-subtle)' : 'var(--node-text)',
-          fontSize: '11px',
+          fontSize: CANVAS_TYPE_SCALE.meta,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
@@ -149,7 +149,7 @@ export const PropertyRow: React.FC<PropertyRowProps> = ({
           <span
             style={{
               color: 'var(--node-danger)',
-              fontSize: '11px',
+              fontSize: CANVAS_TYPE_SCALE.meta,
               fontWeight: 700,
               lineHeight: 1,
             }}
@@ -163,7 +163,7 @@ export const PropertyRow: React.FC<PropertyRowProps> = ({
           <span
             style={{
               color: 'var(--node-text-subtle)',
-              fontSize: '9px',
+              fontSize: CANVAS_TYPE_SCALE.micro,
               fontWeight: 600,
               background: 'var(--node-surface-strong)',
               padding: '0px 5px',

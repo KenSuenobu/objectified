@@ -194,8 +194,9 @@ exports[`Gauge matches its snapshot 1`] = `
       stroke-width="10"
     />
     <text
-      class="text-[22px] font-bold fill-gray-700 dark:fill-gray-200"
+      class="font-bold fill-gray-700 dark:fill-gray-200"
       dominant-baseline="central"
+      font-size="22"
       text-anchor="middle"
       x="60"
       y="60"

@@ -286,11 +286,11 @@ export function CatalogBulkImportPanel({ source, plan, onSuccess }: CatalogBulkI
               </div>
               <div className="flex items-center gap-2">
                 {row.target && (
-                  <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[11px] text-gray-600 dark:border-gray-700 dark:text-gray-300">
+                  <span className="rounded-full border border-gray-200 px-2 py-0.5 text-2xs text-gray-600 dark:border-gray-700 dark:text-gray-300">
                     {row.target}
                   </span>
                 )}
-                <span className={`rounded-full border px-2 py-0.5 text-[11px] ${stateTone(row.state)}`}>
+                <span className={`rounded-full border px-2 py-0.5 text-2xs ${stateTone(row.state)}`}>
                   {row.state}
                 </span>
               </div>

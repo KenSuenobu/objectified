@@ -114,7 +114,7 @@ export default function LintWorkspaceQueueTable({
                     {finding.isNew && (
                       <span
                         data-testid="finding-new-pill"
-                        className="inline-flex items-center rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
+                        className="inline-flex items-center rounded bg-rose-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
                       >
                         New
                       </span>
@@ -124,7 +124,7 @@ export default function LintWorkspaceQueueTable({
                     {finding.message}
                   </p>
                   {path && (
-                    <p className="mt-0.5 font-mono text-[11px] text-gray-400 dark:text-gray-500">
+                    <p className="mt-0.5 font-mono text-2xs text-gray-400 dark:text-gray-500">
                       {path}
                     </p>
                   )}
@@ -132,7 +132,7 @@ export default function LintWorkspaceQueueTable({
                 <td className={cellClass}>
                   <span
                     className={cn(
-                      'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                      'inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide',
                       severityBadgeClass(finding.severity ?? ''),
                     )}
                   >
@@ -153,7 +153,7 @@ export default function LintWorkspaceQueueTable({
                     {finding.compositeGrade && (
                       <span
                         className={cn(
-                          'inline-flex items-center rounded px-1 py-0 text-[10px] font-semibold',
+                          'inline-flex items-center rounded px-1 py-0 text-2xs font-semibold',
                           gradeChipClass(finding.compositeGrade),
                         )}
                       >

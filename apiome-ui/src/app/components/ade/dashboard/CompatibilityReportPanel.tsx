@@ -73,7 +73,7 @@ export function CompatibilityReportPanel({
       {ruleEntries.length > 0 ? (
         <div className="compat-report-rule-hits rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-2 py-1.5">
           <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Rule hits</p>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 font-mono text-[11px] text-gray-600 dark:text-gray-400">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 font-mono text-2xs text-gray-600 dark:text-gray-400">
             {ruleEntries.map(([rule, n]) => (
               <li key={rule}>
                 <span className="text-gray-800 dark:text-gray-200">{rule}</span>
@@ -104,7 +104,7 @@ export function CompatibilityReportPanel({
                       key={`${section.severity}-${path}`}
                       className="compat-report-path border-l-2 border-gray-200 dark:border-gray-600 pl-2"
                     >
-                      <div className="font-mono text-[11px] text-gray-700 dark:text-gray-300 break-all">
+                      <div className="font-mono text-2xs text-gray-700 dark:text-gray-300 break-all">
                         {href ? (
                           <a
                             href={href}
@@ -120,7 +120,7 @@ export function CompatibilityReportPanel({
                       <ul className="mt-0.5 space-y-0.5 list-disc pl-4 text-gray-600 dark:text-gray-400">
                         {pathFindings.map((f) => (
                           <li key={f.id ?? `${f.path}-${f.rule}-${f.message}`}>
-                            <span className="font-mono text-[10px] text-gray-500 dark:text-gray-500">
+                            <span className="font-mono text-2xs text-gray-500 dark:text-gray-500">
                               {f.rule}
                             </span>
                             {' — '}

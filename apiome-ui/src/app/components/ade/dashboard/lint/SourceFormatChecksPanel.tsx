@@ -83,7 +83,7 @@ export function SourceFormatChecksPanel({
           <p className="font-mono text-xs text-gray-500 dark:text-gray-400">{sourceFormat}</p>
         ) : null}
       </div>
-      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+      <p className="text-2xs text-gray-500 dark:text-gray-400">
         Scanners expected for this format. Not run / unavailable is never shown as a clean
         score.
       </p>
@@ -151,14 +151,14 @@ export function SourceFormatChecksPanel({
               </span>
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide',
+                  'rounded-full px-1.5 py-0.5 font-mono text-2xs uppercase tracking-wide',
                   outcomeChipClass(entry.outcome)
                 )}
               >
                 {entry.outcome.replace(/_/g, ' ')}
               </span>
               {entry.coverage?.state ? (
-                <span className="font-mono text-[10px] uppercase text-gray-500 dark:text-gray-400">
+                <span className="font-mono text-2xs uppercase text-gray-500 dark:text-gray-400">
                   {String(entry.coverage.state)}
                 </span>
               ) : null}

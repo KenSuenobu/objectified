@@ -315,7 +315,7 @@ export function CatalogAnalyticsDashboard({ data, loading, error }: Props) {
 
         <Tile title="Top capabilities" icon={<Sparkles className="h-4 w-4" />}>
           {/* A real "most widely exposed" aggregate — there is no search-query log to rank by. */}
-          <p className="mb-2 text-[11px] text-gray-400 dark:text-gray-500">
+          <p className="mb-2 text-2xs text-gray-400 dark:text-gray-500">
             Ranked by how many endpoints expose each capability.
           </p>
           {topCapabilities.length === 0 ? (
@@ -324,7 +324,7 @@ export function CatalogAnalyticsDashboard({ data, loading, error }: Props) {
             <ul className="space-y-1.5">
               {topCapabilities.map((cap) => (
                 <li key={`${cap.itemType}:${cap.itemName}`} className="flex items-center gap-2 text-sm">
-                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300">
                     {cap.itemType || 'item'}
                   </span>
                   <span className="min-w-0 flex-1 truncate font-medium text-gray-800 dark:text-gray-100">

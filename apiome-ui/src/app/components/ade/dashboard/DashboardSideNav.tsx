@@ -27,11 +27,12 @@ import {
 } from 'lucide-react';
 import { useDarkMode } from '@/app/hooks/useDarkMode';
 import { openPreferences } from '@/app/components/ade/preferences/preferencesDrawerBus';
+import { ICON_SIZE, type IconComponentProps } from '@/app/components/ui/iconSizes';
 
 interface NavItem {
   label: string;
   href: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<IconComponentProps>;
   disabled?: boolean;
   /** Small label next to the nav text (e.g. feature maturity). */
   pill?: string;
@@ -171,9 +172,11 @@ const DashboardSideNav: React.FC = () => {
 
   return (
     <aside
-      className="flex h-full w-[280px] shrink-0 flex-col border-r-0"
+      /* `w-sidenav` is `--sidenav-w` (17.5rem = the old 280px), so the column travels with
+         the font-size preference instead of clipping its own labels at the larger scales
+         (HIVE-1.6). The inline `width: 280` that used to shadow this class is gone with it. */
+      className="flex h-full w-sidenav shrink-0 flex-col border-r-0"
       style={{
-        width: 280,
         boxSizing: 'border-box',
         background: sidebarBg,
         boxShadow: sidebarShadow,
@@ -184,7 +187,7 @@ const DashboardSideNav: React.FC = () => {
           <div key={section.header ?? `section-${index}`} className={index < navSections.length - 1 ? 'mb-6' : ''}>
             {section.header ? (
             <div
-              className="flex items-center gap-2 px-3 py-2 font-semibold text-[0.65rem] uppercase tracking-[0.08em]"
+              className="flex items-center gap-2 px-3 py-2 font-semibold text-2xs uppercase tracking-[0.08em]"
               style={{ color: isDark ? '#94a3b8' : '#64748b' }}
             >
               <span
@@ -202,7 +205,7 @@ const DashboardSideNav: React.FC = () => {
                 const pillEl =
                   item.pill != null && item.pill !== '' ? (
                     <span
-                      className="inline-flex shrink-0 items-center rounded-md border border-amber-200/90 bg-amber-50 px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-amber-900 dark:border-amber-700/80 dark:bg-amber-950/60 dark:text-amber-100"
+                      className="inline-flex shrink-0 items-center rounded-md border border-amber-200/90 bg-amber-50 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-amber-900 dark:border-amber-700/80 dark:bg-amber-950/60 dark:text-amber-100"
                       title="Feature in preview"
                     >
                       {item.pill}
@@ -213,12 +216,12 @@ const DashboardSideNav: React.FC = () => {
                   <li key={item.href} className="mb-1">
                     {item.disabled ? (
                       <div
-                        className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 opacity-40"
+                        className="flex min-h-nav-item cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 opacity-40"
                         style={{
                           color: isDark ? '#e2e8f0' : '#334155',
                         }}
                       >
-                        <Icon size={20} className="flex-shrink-0 text-slate-500 dark:text-slate-400" />
+                        <Icon size={ICON_SIZE.rail} className="flex-shrink-0 text-slate-500 dark:text-slate-400" />
                         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
                           <span className="min-w-0 flex-1 truncate pr-1 text-sm font-medium">{item.label}</span>
                           {pillEl}
@@ -227,14 +230,14 @@ const DashboardSideNav: React.FC = () => {
                     ) : (
                       <Link
                         href={item.href}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 hover:bg-indigo-500/10 ${
+                        className={`flex min-h-nav-item items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-indigo-500/10 ${
                           active
                             ? 'border border-indigo-200 bg-indigo-500/10 dark:border-indigo-700/70'
                             : ''
                         }`}
                       >
                         <Icon
-                          size={20}
+                          size={ICON_SIZE.rail}
                           className={`flex-shrink-0 transition-colors ${active ? 'text-indigo-500' : 'text-slate-500 dark:text-slate-400'}`}
                         />
                         <span
@@ -271,10 +274,10 @@ const DashboardSideNav: React.FC = () => {
           data-testid="sidenav-preferences"
           onClick={() => openPreferences()}
           title="Preferences (⌘,)"
-          className="flex w-full cursor-pointer items-center gap-3 rounded-lg bg-transparent px-3 py-2.5 text-left transition-colors duration-200 hover:bg-indigo-500/10"
+          className="flex min-h-nav-item w-full cursor-pointer items-center gap-3 rounded-lg bg-transparent px-3 py-2 text-left transition-colors duration-200 hover:bg-indigo-500/10"
           style={{ color: isDark ? '#e2e8f0' : '#334155' }}
         >
-          <Settings2 size={20} className="flex-shrink-0 text-slate-500 dark:text-slate-400" aria-hidden />
+          <Settings2 size={ICON_SIZE.rail} className="flex-shrink-0 text-slate-500 dark:text-slate-400" aria-hidden />
           <span className="min-w-0 flex-1 truncate text-sm font-medium">Preferences</span>
         </button>
       </div>

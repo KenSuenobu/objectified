@@ -98,7 +98,7 @@ function ActionMenu({ data, nodeId, open, onOpenChange }: ActionMenuProps) {
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
-          className="shrink-0 inline-flex items-center gap-0.5 rounded border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+          className="shrink-0 inline-flex items-center gap-0.5 rounded border border-gray-200 bg-white px-1.5 py-0.5 text-2xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
           title="Revision actions"
           aria-label="Revision actions"
           onClick={(e) => e.stopPropagation()}
@@ -227,13 +227,13 @@ export default function RevisionHistoryNode({ id, data, selected }: NodeProps<No
             <ActionMenu data={data} nodeId={id} open={menuOpen} onOpenChange={setMenuOpen} />
           </div>
           {isMerge ? (
-            <div className="text-[10px] uppercase tracking-wide text-violet-800 dark:text-violet-200 font-semibold mt-0.5">
+            <div className="text-2xs uppercase tracking-wide text-violet-800 dark:text-violet-200 font-semibold mt-0.5">
               Merge commit
             </div>
           ) : null}
           {isBranchTip && branchNamesForTip.length > 0 ? (
             <div
-              className={`text-[10px] font-medium mt-0.5 truncate ${laneColor.text}`}
+              className={`text-2xs font-medium mt-0.5 truncate ${laneColor.text}`}
               title={branchNamesForTip.join(', ')}
             >
               Tip: {branchNamesForTip.join(', ')}
@@ -244,7 +244,7 @@ export default function RevisionHistoryNode({ id, data, selected }: NodeProps<No
               {tags.slice(0, 3).map((t) => (
                 <span
                   key={t.id}
-                  className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-900 dark:border-amber-600/60 dark:bg-amber-950/40 dark:text-amber-200"
+                  className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-2xs font-medium text-amber-900 dark:border-amber-600/60 dark:bg-amber-950/40 dark:text-amber-200"
                   title={t.immutable ? `${t.name} (immutable)` : t.name}
                 >
                   {t.immutable ? (
@@ -256,7 +256,7 @@ export default function RevisionHistoryNode({ id, data, selected }: NodeProps<No
                 </span>
               ))}
               {tags.length > 3 ? (
-                <span className="text-[10px] text-gray-500 dark:text-gray-400">+{tags.length - 3}</span>
+                <span className="text-2xs text-gray-500 dark:text-gray-400">+{tags.length - 3}</span>
               ) : null}
             </div>
           ) : null}
@@ -266,7 +266,7 @@ export default function RevisionHistoryNode({ id, data, selected }: NodeProps<No
             </div>
           ) : null}
           {(authorName || relativeTime) && (
-            <div className="mt-0.5 flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 truncate">
+            <div className="mt-0.5 flex items-center gap-1 text-2xs text-gray-500 dark:text-gray-400 truncate">
               {authorName ? <span className="truncate">{authorName}</span> : null}
               {authorName && relativeTime ? <span aria-hidden>·</span> : null}
               {relativeTime ? <span>{relativeTime}</span> : null}

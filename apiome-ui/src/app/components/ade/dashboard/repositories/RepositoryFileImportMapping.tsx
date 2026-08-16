@@ -782,7 +782,7 @@ export function RepositoryFileImportMapping({
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Map &amp; import</h2>
                 {stagedImportTargetForParent ? (
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-2xs font-semibold uppercase tracking-wide text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200"
                     data-testid="repository-file-ready-to-import-badge"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -882,7 +882,7 @@ export function RepositoryFileImportMapping({
                           <div className="space-y-1.5">
                             <Label
                               htmlFor="repo-import-project-select"
-                              className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                              className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
                             >
                               Map to existing project
                             </Label>
@@ -916,7 +916,7 @@ export function RepositoryFileImportMapping({
                                         <span className="truncate font-medium leading-snug text-slate-900 dark:text-slate-100">
                                           {p.name}
                                         </span>
-                                        <span className="font-mono text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                                        <span className="font-mono text-2xs leading-snug text-slate-500 dark:text-slate-400">
                                           {p.slug}
                                         </span>
                                       </span>
@@ -935,7 +935,7 @@ export function RepositoryFileImportMapping({
                           <div className="space-y-1.5">
                             <Label
                               htmlFor="repo-import-project-slug"
-                              className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                              className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
                             >
                               Project slug
                             </Label>
@@ -1062,19 +1062,19 @@ export function RepositoryFileImportMapping({
                 <>
                   <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                         From spec
                       </p>
                       <p className="mt-1 font-mono">{specVersionLabel ?? '—'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                         Latest existing
                       </p>
                       <p className="mt-1 font-mono text-gray-500 dark:text-gray-400">—</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                         Will create
                       </p>
                       <p className="mt-1 font-mono font-semibold text-indigo-600 dark:text-indigo-400">
@@ -1160,25 +1160,25 @@ export function RepositoryFileImportMapping({
               <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">Source</h3>
               <dl className="space-y-1.5 text-sm">
                 <div>
-                  <dt className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Repository
                   </dt>
                   <dd className="break-all font-mono text-xs text-gray-800 dark:text-gray-200">{sourceRepoDisplay}</dd>
                 </div>
                 <div>
-                  <dt className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Branch
                   </dt>
                   <dd className="font-mono text-xs text-gray-800 dark:text-gray-200">{branch}</dd>
                 </div>
                 <div>
-                  <dt className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Path
                   </dt>
                   <dd className="break-all font-mono text-xs text-gray-800 dark:text-gray-200">{file.path}</dd>
                 </div>
                 <div>
-                  <dt className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Commit
                   </dt>
                   <dd className="font-mono text-xs text-gray-800 dark:text-gray-200">
@@ -1228,19 +1228,19 @@ export function RepositoryFileImportMapping({
                 Cancel
               </Button>
               {canAttemptImport && targetMode === 'existing' && !stagedProject ? (
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="text-2xs text-gray-500 dark:text-gray-400">
                   Select an existing project in the dropdown to enable import.
                 </p>
               ) : null}
               {canAttemptImport && targetMode === 'new' && !stagedNewProject ? (
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="text-2xs text-gray-500 dark:text-gray-400">
                   Use <span className="font-medium">Set up new project…</span> under Create a new project, then{' '}
                   <span className="font-medium">Map to This Project</span>. <span className="font-medium">Import</span>{' '}
                   runs after the project is configured there.
                 </p>
               ) : null}
               {canAttemptImport && targetMode === 'existing' && stagedProject ? (
-                <p className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+                <p className="inline-flex items-center gap-1 text-2xs text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   Ready to import into{' '}
                   <span className="font-medium">{stagedProject.name}</span>
@@ -1248,7 +1248,7 @@ export function RepositoryFileImportMapping({
                 </p>
               ) : null}
               {canAttemptImport && targetMode === 'new' && stagedNewProject ? (
-                <p className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+                <p className="inline-flex items-center gap-1 text-2xs text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   Import will create{' '}
                   <span className="font-medium">{stagedNewProject.projectName}</span>

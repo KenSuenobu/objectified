@@ -165,11 +165,11 @@ export function PublishGuideViolationsPanel({
                   className="text-xs text-gray-700 dark:text-gray-300"
                   data-testid="publish-guide-error-finding"
                 >
-                  <span className="font-mono text-[11px] text-indigo-700 dark:text-indigo-300">
+                  <span className="font-mono text-2xs text-indigo-700 dark:text-indigo-300">
                     {finding.rule}
                   </span>
                   {finding.path ? (
-                    <span className="mt-0.5 block font-mono text-[11px] text-gray-500 dark:text-gray-400">
+                    <span className="mt-0.5 block font-mono text-2xs text-gray-500 dark:text-gray-400">
                       {finding.path}
                     </span>
                   ) : null}

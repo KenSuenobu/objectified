@@ -50,6 +50,7 @@ import {
   buildProviderUpdatePayload,
   extractRestErrorMessage,
 } from '@lib/auth/admin-provider-config';
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
 
 /** The three admin-selectable enablement states (mirrors `enabled: true | false | null`). */
 type EnablementChoice = 'on' | 'off' | 'env';
@@ -82,7 +83,7 @@ function extrasFromView(view: AdminProviderConfigView): Record<string, string> {
 /** Small slate chip marking a field whose effective value comes from `.env` (OLO-8.5). */
 function FallbackBadge() {
   return (
-    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
       using .env fallback
     </span>
   );
@@ -92,20 +93,20 @@ function FallbackBadge() {
 function EnablementChip({ enabled }: { enabled: boolean | null }) {
   if (enabled === true) {
     return (
-      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400">
+      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-2xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400">
         Enabled (database)
       </span>
     );
   }
   if (enabled === false) {
     return (
-      <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-400">
+      <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-2xs font-medium text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-400">
         Disabled (database)
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
       Env-derived
     </span>
   );
@@ -405,13 +406,13 @@ function AddProviderModal({
                               onClick={() => pick(candidate)}
                               className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
                             >
-                              <brand.Icon size={16} className={brand.iconClassName} />
+                              <brand.Icon size={ICON_SIZE.button} className={brand.iconClassName} />
                               <span className="min-w-0 flex-1 truncate">{candidate.label}</span>
                               <span className="truncate text-xs text-slate-400 dark:text-slate-500">
                                 {candidate.provider_id}
                               </span>
                               {comingSoon && (
-                                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400">
+                                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400">
                                   Coming soon
                                 </span>
                               )}
@@ -429,7 +430,7 @@ function AddProviderModal({
                       const brand = getProviderBrand(selected.provider_id);
                       return (
                         <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
-                          <brand.Icon size={20} className={brand.iconClassName} />
+                          <brand.Icon size={ICON_SIZE.dense} className={brand.iconClassName} />
                         </span>
                       );
                     })()}
@@ -529,7 +530,7 @@ function AddProviderModal({
                         setSecretInput(event.target.value);
                       }}
                     />
-                    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                       Secret: not set
                     </span>
                     {selected.secret_source === 'env-fallback' && <FallbackBadge />}
@@ -965,7 +966,7 @@ function ProviderCard({
       {/* Card header: brand, name, state chips */}
       <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
         <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
-          <brand.Icon size={20} className={brand.iconClassName} />
+          <brand.Icon size={ICON_SIZE.dense} className={brand.iconClassName} />
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -974,7 +975,7 @@ function ProviderCard({
           <p className="text-xs text-slate-500 dark:text-slate-400">{view.provider_id}</p>
         </div>
         {comingSoon ? (
-          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400">
+          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400">
             Coming soon
           </span>
         ) : (
@@ -1094,7 +1095,7 @@ function ProviderCard({
             />
             <span
               className={[
-                'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                'inline-flex items-center rounded-full border px-2 py-0.5 text-2xs font-medium',
                 view.secret_set
                   ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400'
                   : 'border-slate-300 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400',

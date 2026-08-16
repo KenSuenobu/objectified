@@ -81,11 +81,11 @@ function FormatChip({
           {fmt.label}
         </span>
         {unavailableNote ? (
-          <span className="block text-[11px] font-medium leading-snug text-amber-600 dark:text-amber-400">
+          <span className="block text-2xs font-medium leading-snug text-amber-600 dark:text-amber-400">
             {unavailableNote}
           </span>
         ) : fmt.description ? (
-          <span className="block text-[11px] leading-snug text-gray-500 dark:text-gray-400">
+          <span className="block text-2xs leading-snug text-gray-500 dark:text-gray-400">
             {fmt.description}
           </span>
         ) : null}
@@ -192,10 +192,10 @@ export function CatalogSupportedFormats({
         >
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-2xs font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
                 Importable now
               </span>
-              <span className="text-[11px] text-gray-500 dark:text-gray-400">
+              <span className="text-2xs text-gray-500 dark:text-gray-400">
                 Stored as-is; convert to OpenAPI later
               </span>
             </div>
@@ -214,10 +214,10 @@ export function CatalogSupportedFormats({
           {recognizedCount > 0 ? (
             <div className="border-t border-gray-100 pt-6 dark:border-gray-700/60">
               <div className="mb-2 flex items-center gap-2">
-                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
+                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-semibold text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
                   Recognized — not yet importable
                 </span>
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                <span className="text-2xs text-gray-500 dark:text-gray-400">
                   Detected and labelled; import support is on the roadmap
                 </span>
               </div>

@@ -58,6 +58,7 @@ import {
 } from '../../../../utils/conversion-fidelity';
 import { convertPreviewDialogTitle } from '../../../../utils/catalog-conversion';
 import { ConversionProjectionGraphPanel } from './ConversionProjectionGraphPanel';
+import { CODE_BLOCK_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 /** Offline fallback when Monaco cannot load — keeps the raw OpenAPI JSON visible.
  * `value` is optional to stay prop-compatible with Monaco's `EditorProps` in the
@@ -108,7 +109,7 @@ function ChecklistRow({ item }: { item: ChecklistItem }) {
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.title}</span>
         <span
-          className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold ${coverageBadgeClass(
+          className={`shrink-0 rounded px-1.5 py-0.5 text-2xs font-semibold ${coverageBadgeClass(
             item.coverage
           )}`}
         >
@@ -118,7 +119,7 @@ function ChecklistRow({ item }: { item: ChecklistItem }) {
       </div>
       <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">{item.reason}</p>
       {item.examples.length > 0 && (
-        <p className="mt-1 truncate font-mono text-[11px] text-gray-400 dark:text-gray-500" title={item.examples.join(', ')}>
+        <p className="mt-1 truncate font-mono text-2xs text-gray-400 dark:text-gray-500" title={item.examples.join(', ')}>
           {item.examples.join(', ')}
         </p>
       )}
@@ -133,7 +134,7 @@ function LossRow({ loss }: { loss: Loss }) {
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-xs font-medium text-gray-900 dark:text-gray-100">{loss.subject}</span>
         <span
-          className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold ${coverageBadgeClass(
+          className={`shrink-0 rounded px-1.5 py-0.5 text-2xs font-semibold ${coverageBadgeClass(
             loss.kind === 'n/a' ? 'n/a' : 'inferred'
           )}`}
         >
@@ -504,7 +505,7 @@ export function ConversionPreviewDialog({
                     >
                       {recomputing ? 'Recomputing…' : 'Apply & recompute preview'}
                     </button>
-                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                    <span className="text-2xs text-gray-500 dark:text-gray-400">
                       Recomputes the fidelity report and the projection graph together, and asks
                       for acknowledgement again.
                     </span>
@@ -564,7 +565,7 @@ export function ConversionPreviewDialog({
                           readOnly: true,
                           domReadOnly: true,
                           minimap: { enabled: false },
-                          fontSize: 12,
+                          fontSize: CODE_BLOCK_FONT_SIZE,
                           fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
                           lineNumbers: 'on',
                           scrollBeyondLastLine: false,

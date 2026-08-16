@@ -14,6 +14,7 @@ import { cn } from '@lib/utils';
 import dynamic from 'next/dynamic';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -835,7 +836,7 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
                     options={{
                       minimap: { enabled: false },
                       scrollBeyondLastLine: false,
-                      fontSize: 13,
+                      fontSize: CODE_EDITOR_FONT_SIZE,
                       readOnly: saving,
                     }}
                   />

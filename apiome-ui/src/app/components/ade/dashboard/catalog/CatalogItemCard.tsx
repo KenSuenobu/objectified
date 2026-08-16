@@ -120,7 +120,7 @@ export function CatalogItemCard({
   // The neutral (no-value) orb ring/text, shared by an empty Quality/Lint orb and the always-inert Debt orb.
   const orbNeutral = 'border-gray-300 text-gray-400 dark:border-gray-600';
   // The small caption rendered beneath each orb (MFI-24.5 puts the label below the orb, per the mockup).
-  const orbLabel = 'mt-1 text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
+  const orbLabel = 'mt-1 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
 
   return (
     <article
@@ -171,7 +171,7 @@ export function CatalogItemCard({
                 {item.name}
               </h3>
               <p
-                className="truncate font-mono text-[11px] text-gray-500 dark:text-gray-400"
+                className="truncate font-mono text-2xs text-gray-500 dark:text-gray-400"
                 title={item.slug ?? item.id}
               >
                 {shortItemId}
@@ -180,15 +180,15 @@ export function CatalogItemCard({
             </div>
             <div className="shrink-0">
               {isDeleted ? (
-                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
                   Deleted
                 </span>
               ) : !item.enabled ? (
-                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                   Disabled
                 </span>
               ) : (
-                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                   Active
                 </span>
               )}
@@ -295,7 +295,7 @@ export function CatalogItemCard({
         {/* Footer (MFI-24.5): creator chip on the left, updated-relative on the right (per the mockup). */}
         <span className="flex min-w-0 items-center gap-2 text-gray-500 dark:text-gray-400">
           <span
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[9px] font-semibold text-white ring-2 ring-white dark:ring-gray-800"
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-2xs font-semibold text-white ring-2 ring-white dark:ring-gray-800"
             aria-hidden
           >
             {(creatorInitials.slice(0, 2) || '?').toUpperCase()}

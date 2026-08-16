@@ -533,7 +533,7 @@ function LensBadge({ lens, result }: { lens: VerifyLensKey; result: ExportVerify
   return (
     <span
       data-testid={`verify-badge-${lens}`}
-      className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums ${tone}`}
+      className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 text-2xs font-semibold tabular-nums ${tone}`}
     >
       <span aria-hidden>{count}</span>
       <span className="sr-only">{lensBadgeLabel(lens, count)}</span>
