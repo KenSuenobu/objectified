@@ -21,6 +21,25 @@ export const APP_SHELL_ROUTE_PREFIXES: readonly string[] = ['/ade/dashboard'];
 export const LAUNCHER_ROUTE = '/ade';
 
 /**
+ * The admin console (HIVE-3.4, #5290).
+ *
+ * Listed in the rail's user menu for *every* reader, not only administrators: the route
+ * gates itself (`/admin` redirects to its own sign-in when the admin session is absent),
+ * and hiding the entry is what left "type the URL" as the only way anyone discovered it.
+ * It opens in this tab but leaves the Hive chrome, which is why the row is marked ↗.
+ */
+export const ADMIN_CONSOLE_ROUTE = '/admin';
+
+/**
+ * Help & docs, the rail footer's first row (`DESIGN.md` §5.2 region 5).
+ *
+ * The page itself is **HIVE-4.9 (#5303)** — its acceptance criteria include "the rail's
+ * Help & docs link resolves to a real page". Until it lands the row points at a route
+ * Next.js answers with the app's not-found page.
+ */
+export const HELP_ROUTE = '/ade/dashboard/help';
+
+/**
  * Does this pathname render inside the Hive application shell?
  *
  * @param pathname Current `usePathname()` value; `null` before hydration on some routes.

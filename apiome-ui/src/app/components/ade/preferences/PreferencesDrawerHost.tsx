@@ -3,15 +3,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PreferencesBoundary } from '../../../providers/PreferencesProvider';
 import PreferencesDrawer from '../PreferencesDrawer';
-import { registerPreferencesDrawerHost } from './preferencesDrawerBus';
-import { matchesPreferencesShortcut } from './shortcuts';
+import { registerPreferencesDrawerHost, type PreferencesTabId } from './preferencesDrawerBus';
+import { matchesPreferencesShortcut, matchesShortcutsShortcut } from './shortcuts';
 
 /**
  * Mounts the preferences pane and answers requests to open it (HIVE-1.4, #5277).
  *
- * The pane is reachable from three places the ticket names — the sidebar footer, the user
- * menu and `⌘,` — and none of them is a component that could sensibly own the drawer for
- * the other two. So the drawer lives here, hosts register on
+ * The pane is reachable from several places — the rail footer, the rail user menu, the
+ * legacy header's profile menu and `⌘,` — and none of them is a component that could
+ * sensibly own the drawer for the others. So the drawer lives here, hosts register on
  * {@link registerPreferencesDrawerHost}, and every entry point calls `openPreferences()`
  * without knowing where the pane is.
  *
@@ -24,16 +24,24 @@ import { matchesPreferencesShortcut } from './shortcuts';
  * Focus is returned to the trigger explicitly rather than relying on the dialog's own
  * restoration, because the subtree unmounts in the same commit that closes it — and it is
  * returned from an effect, after that unmount, so the drawer's focus trap is gone by then.
+ *
+ * Two chords are bound here, both documented in `shortcuts.ts`: `⌘,` opens the pane where
+ * it last was, and a bare `?` opens it on the Shortcuts tab (HIVE-3.4, #5290 — the rail
+ * user menu's "Keyboard shortcuts" row is the same request made with the mouse). HIVE-3.7
+ * (#5293) will point `?` at the generated shortcut sheet instead.
  */
 export default function PreferencesDrawerHost() {
   const [open, setOpen] = useState(false);
+  /** The tab the current request asked for; `undefined` leaves the pane's own default. */
+  const [tab, setTab] = useState<PreferencesTabId | undefined>(undefined);
 
   /** What had focus when the pane opened, so it can be given back on close. */
   const triggerRef = useRef<HTMLElement | null>(null);
 
-  const openDrawer = useCallback(() => {
+  const openDrawer = useCallback((requestedTab?: PreferencesTabId) => {
     const active = document.activeElement;
     triggerRef.current = active instanceof HTMLElement ? active : null;
+    setTab(requestedTab);
     setOpen(true);
   }, []);
 
@@ -52,13 +60,20 @@ export default function PreferencesDrawerHost() {
   // Answer `openPreferences()` for as long as this host is mounted.
   useEffect(() => registerPreferencesDrawerHost(openDrawer), [openDrawer]);
 
-  // `⌘,` / `Ctrl+,`, the chord every desktop platform already uses for settings. Bound on
-  // the document so it works wherever focus is, including inside a text field.
+  // `⌘,` / `Ctrl+,`, the chord every desktop platform already uses for settings, and `?`
+  // for the shortcuts reference. Bound on the document so they work wherever focus is —
+  // `⌘,` deliberately inside text fields too, `?` deliberately not (`isTypingTarget`).
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!matchesPreferencesShortcut(event)) return;
-      event.preventDefault();
-      openDrawer();
+      if (matchesPreferencesShortcut(event)) {
+        event.preventDefault();
+        openDrawer();
+        return;
+      }
+      if (matchesShortcutsShortcut(event)) {
+        event.preventDefault();
+        openDrawer('shortcuts');
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -69,7 +84,7 @@ export default function PreferencesDrawerHost() {
 
   return (
     <PreferencesBoundary>
-      <PreferencesDrawer open onOpenChange={setOpen} />
+      <PreferencesDrawer open initialTab={tab} onOpenChange={setOpen} />
     </PreferencesBoundary>
   );
 }

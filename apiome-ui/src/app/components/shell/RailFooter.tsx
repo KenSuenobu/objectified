@@ -2,31 +2,32 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { LogOut, Settings2 } from 'lucide-react';
-import { Avatar } from '@/app/components/ui/Avatar';
+import { CircleHelp, Settings2 } from 'lucide-react';
 import { Kbd } from '@/app/components/ui/Kbd';
 import { ICON_SIZE, ICON_STROKE_WIDTH } from '@/app/components/ui/iconSizes';
 import { openPreferences } from '@/app/components/ade/preferences/preferencesDrawerBus';
 import { cn } from '@lib/utils';
-import { signOutEverywhere } from '@lib/auth/sign-out-client';
+import { HELP_ROUTE } from './appShellRoutes';
 import { RAIL_ITEM_CLASS, RAIL_ITEM_HOVER_CLASS, RailTooltip } from './railChrome';
+import UserMenu from './UserMenu';
 
 /**
- * The rail footer — interim (HIVE-3.1, #5287; `DESIGN.md` §5.2 region 5).
+ * The rail footer (HIVE-3.4, #5290; `DESIGN.md` §5.2 region 5).
  *
- * The finished footer is **HIVE-3.4 (#5290)**: Help & docs, Preferences, and a user button
- * opening a menu of Profile · Linked accounts · Preferences · What's new · Shortcuts ·
- * Admin console · All apps · Sign out, with the build string beneath. That menu depends on
- * this shell, so it cannot land in the same ticket.
+ * Three rows, in the order the mockup draws them (`docs/mockups/assets/hive.js`
+ * `.rail__bottom`): **Help & docs**, **Preferences** (`⌘,`), and the user button — an
+ * avatar with a name and an email that opens the account menu.
  *
- * What ships here is the subset that must not disappear the moment the top bar stops
- * rendering — the pane the reader can already reach with `⌘,`, the profile page, and the
- * way out. Each is a plain row rather than a menu, so HIVE-3.4 replaces the region whole
- * instead of unpicking a half-built menu.
+ * This region is the reason the top bar can be retired. Everything the header's right-hand
+ * cluster carried now has a home: the profile menu and the version badge in
+ * {@link UserMenu}, preferences here as a first-class row rather than a menu entry two
+ * clicks in. HIVE-3.1 shipped an interim version of this file with a profile *link* where
+ * the menu now is; that link is gone, and nothing it reached went with it.
  *
- * *Not* here, and reachable elsewhere in the meantime: What's new and the build badge
- * (HIVE-3.4), and the app launcher — which is the rail's brand link, at the top. The
- * workspace switcher is the row above, `WorkspaceSwitcher` (HIVE-3.3, #5289).
+ * Two rows and a menu rather than everything in the menu, because the two are what a
+ * reader wants without deciding to go looking: help when they are stuck, and preferences
+ * because the theme, the density and the font size are the settings people actually
+ * change. `DESIGN.md` §5.2 makes the same call.
  */
 
 /** Props for {@link RailFooter}. */
@@ -37,8 +38,6 @@ export interface RailFooterProps {
   userEmail?: string | null;
   /** Stable id the avatar tint is hashed from; falls back to the name. */
   userId?: string | null;
-  /** Where the user row goes. */
-  profileHref: string;
   /** Whether the rail is drawing icon-only, in which case every label moves to a tooltip. */
   iconRail: boolean;
   /**
@@ -50,40 +49,39 @@ export interface RailFooterProps {
   signOutTo?: string;
 }
 
-/** Copy for a session that has not resolved a display name. */
-const FALLBACK_USER_NAME = 'Your account';
-
 /**
  * The rail footer.
  *
  * @param props See {@link RailFooterProps}.
- * @returns Preferences, the user row and sign-out, above a hairline.
+ * @returns Help, preferences and the user menu, above a hairline.
  */
 export default function RailFooter({
   userName,
   userEmail,
   userId,
-  profileHref,
   iconRail,
-  signOutTo = '/login',
+  signOutTo,
 }: RailFooterProps) {
-  const name = userName?.trim() || FALLBACK_USER_NAME;
-
-  /**
-   * Sign out of every device, then land on the login page.
-   *
-   * The failure is logged rather than surfaced: `signOutEverywhere` already clears the
-   * local session before it reaches the server, so a network error here means the reader
-   * is signed out locally and the page they are on will bounce to `/login` anyway.
-   */
-  const handleSignOut = React.useCallback(() => {
-    void signOutEverywhere(signOutTo).catch((error: unknown) => {
-      console.error('Sign out failed:', error);
-    });
-  }, [signOutTo]);
-
   return (
     <div className="shrink-0 space-y-0.5 border-t border-border px-3 py-2">
+      <RailTooltip label="Help & docs" when={iconRail}>
+        <Link
+          href={HELP_ROUTE}
+          data-testid="rail-help"
+          className={cn(RAIL_ITEM_CLASS, RAIL_ITEM_HOVER_CLASS, 'text-fg-muted')}
+        >
+          <CircleHelp
+            size={ICON_SIZE.rail}
+            strokeWidth={ICON_STROKE_WIDTH}
+            aria-hidden
+            className="shrink-0 text-fg-subtle group-hover/item:text-fg"
+          />
+          <span className="rail-label min-w-0 flex-1 items-center">
+            <span className="truncate">Help &amp; docs</span>
+          </span>
+        </Link>
+      </RailTooltip>
+
       <RailTooltip label="Preferences (⌘,)" when={iconRail}>
         <button
           type="button"
@@ -104,47 +102,13 @@ export default function RailFooter({
         </button>
       </RailTooltip>
 
-      <RailTooltip label={`${name} — profile`} when={iconRail}>
-        <Link
-          href={profileHref}
-          data-testid="rail-user"
-          className={cn(
-            'rail-item flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left',
-            'transition-colors duration-[var(--dur-fast)]',
-            RAIL_ITEM_HOVER_CLASS
-          )}
-        >
-          <Avatar size="sm" seed={userId ?? undefined} name={name} className="shrink-0" />
-          <span className="rail-label min-w-0 flex-1 flex-col">
-            <span className="truncate text-sm font-semibold leading-tight text-fg">{name}</span>
-            {userEmail ? (
-              // `--fg-muted`, not `--fg-subtle`: the quieter step measures 2.8–2.9:1 on the
-              // rail in the two lightest themes, and this is a line meant to be read. The
-              // workspace row above it (HIVE-3.3) makes the same call for its meta line.
-              <span className="truncate text-2xs text-fg-muted">{userEmail}</span>
-            ) : null}
-          </span>
-        </Link>
-      </RailTooltip>
-
-      <RailTooltip label="Sign out" when={iconRail}>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          data-testid="rail-sign-out"
-          className={cn(RAIL_ITEM_CLASS, RAIL_ITEM_HOVER_CLASS, 'text-fg-muted')}
-        >
-          <LogOut
-            size={ICON_SIZE.rail}
-            strokeWidth={ICON_STROKE_WIDTH}
-            aria-hidden
-            className="shrink-0 text-fg-subtle group-hover/item:text-fg"
-          />
-          <span className="rail-label min-w-0 flex-1 items-center">
-            <span className="truncate">Sign out</span>
-          </span>
-        </button>
-      </RailTooltip>
+      <UserMenu
+        userName={userName}
+        userEmail={userEmail}
+        userId={userId}
+        iconRail={iconRail}
+        signOutTo={signOutTo}
+      />
     </div>
   );
 }

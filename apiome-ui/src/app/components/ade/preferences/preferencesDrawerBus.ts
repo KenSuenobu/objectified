@@ -1,12 +1,12 @@
 /**
  * The channel every surface uses to ask for the preferences pane (HIVE-1.4, #5277).
  *
- * The pane is reachable from three places — the sidebar footer, the user menu and `⌘,` —
- * which sit in three different component trees. Rather than lift the drawer above all of
- * them (a provider each shell would have to remember to mount, including the commercial
- * Studio, which renders `TopHeader` under a layout of its own), a
- * {@link PreferencesDrawerHost} registers itself here and any component anywhere calls
- * {@link openPreferences}.
+ * The pane is reachable from several places — the rail footer, the rail user menu, the
+ * legacy header's profile menu and `⌘,` — which sit in different component trees. Rather
+ * than lift the drawer above all of them (a provider each shell would have to remember to
+ * mount, including the commercial Studio, which renders `TopHeader` under a layout of its
+ * own), a {@link PreferencesDrawerHost} registers itself here and any component anywhere
+ * calls {@link openPreferences}.
  *
  * Registration is a stack, and only the most recently mounted host answers. Two hosts are
  * not expected — `ConditionalHeader` renders `TopHeader` on every route except `/ade`,
@@ -17,16 +17,27 @@
  * caller can hide its entry point rather than offer a button that does nothing.
  */
 
+/**
+ * A pane a caller can ask for by name.
+ *
+ * The strings are `PreferencesDrawer`'s own tab ids. They are restated here rather than
+ * imported so that the bus — which every entry point imports — stays free of the drawer's
+ * module graph; `tests/preferences-drawer.test.tsx` asserts the two lists agree.
+ */
+export type PreferencesTabId = 'appearance' | 'account' | 'notifications' | 'shortcuts';
+
 /** Mounted hosts, most recent last. */
-const hosts: Array<() => void> = [];
+const hosts: Array<(tab?: PreferencesTabId) => void> = [];
 
 /**
  * Register a host's open callback for the life of its mount.
  *
- * @param open Called when a surface asks for the pane.
+ * @param open Called when a surface asks for the pane, with the tab it asked for (if any).
  * @returns The unregister function, for the effect's cleanup.
  */
-export function registerPreferencesDrawerHost(open: () => void): () => void {
+export function registerPreferencesDrawerHost(
+  open: (tab?: PreferencesTabId) => void
+): () => void {
   hosts.push(open);
   return () => {
     const index = hosts.lastIndexOf(open);
@@ -37,13 +48,15 @@ export function registerPreferencesDrawerHost(open: () => void): () => void {
 /**
  * Open the preferences pane.
  *
+ * @param tab Which tab to land on. Omitted, the pane opens where it always does
+ *   (Appearance) — a caller that means "settings" should not have to name a tab.
  * @returns `true` when a host answered; `false` when none is mounted, which is the case in
  *          a shell that has not adopted the pane yet.
  */
-export function openPreferences(): boolean {
+export function openPreferences(tab?: PreferencesTabId): boolean {
   const host = hosts[hosts.length - 1];
   if (!host) return false;
-  host();
+  host(tab);
   return true;
 }
 

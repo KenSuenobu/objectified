@@ -504,15 +504,35 @@ describe('AppShell — its regions', () => {
     consoleError.mockRestore();
   });
 
-  it('offers the preferences pane, the profile and the way out', async () => {
+  it('names the signed-in user on the footer button that opens their menu', async () => {
     await renderShell();
 
-    expect(screen.getByTestId('rail-user')).toHaveAttribute('href', '/ade/dashboard/profile');
-    expect(screen.getByTestId('rail-user')).toHaveTextContent('Ada Lovelace');
-    expect(screen.getByTestId('rail-user')).toHaveTextContent('ada@example.com');
+    // The row itself is the menu trigger from HIVE-3.4 (#5290); the destinations it used
+    // to be are inside it now, and `tests/rail-user-menu.test.tsx` drives them.
+    const trigger = screen.getByTestId('rail-user');
+    expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
+    expect(trigger).toHaveTextContent('Ada Lovelace');
+    expect(trigger).toHaveTextContent('ada@example.com');
 
-    fireEvent.click(screen.getByTestId('rail-sign-out'));
+    fireEvent.click(trigger);
+    expect(screen.getByTestId('user-menu-profile')).toHaveAttribute(
+      'href',
+      '/ade/dashboard/profile'
+    );
+
+    fireEvent.click(screen.getByTestId('user-menu-sign-out'));
     expect(mockSignOut).toHaveBeenCalledWith('/login');
+  });
+
+  it('offers help before preferences in the footer, as DESIGN.md §5.2 orders them', async () => {
+    await renderShell();
+
+    expect(screen.getByTestId('rail-help')).toHaveAttribute('href', '/ade/dashboard/help');
+    expect(
+      screen
+        .getByTestId('rail-help')
+        .compareDocumentPosition(screen.getByTestId('rail-preferences'))
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it('opens the preferences pane from the footer', async () => {

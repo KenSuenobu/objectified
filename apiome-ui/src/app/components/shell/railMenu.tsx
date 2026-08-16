@@ -54,6 +54,27 @@ export const RAIL_MENU_SURFACE_CLASS = [
 ].join(' ');
 
 /**
+ * Flip a rail menu so it grows *upward* from its trigger.
+ *
+ * Composed onto {@link RAIL_MENU_SURFACE_CLASS} by a menu anchored near the bottom of the
+ * rail — the footer's user menu (HIVE-3.4, #5290), which would otherwise open off the
+ * bottom of the viewport. Both the offset and the edge have to be restated: `mt-1` and
+ * `mt-0` are the same Tailwind group so `tailwind-merge` resolves them, but `top` and
+ * `bottom` are not, and a surface left with `top-full` as well as `bottom-full` is
+ * stretched between the two.
+ */
+export const RAIL_MENU_ABOVE_CLASS = 'top-auto bottom-full mt-0 mb-1';
+
+/**
+ * The hairline between two runs of menu rows (`hive.css` §17 `.menu__sep`).
+ *
+ * Drawn on an element with `role="none"` — a `separator` role would be announced, and the
+ * grouping it marks is visual: "these rows are about your account, those are about leaving
+ * it". A menu that reads out three separators is noisier, not clearer.
+ */
+export const RAIL_MENU_SEPARATOR_CLASS = 'mx-1 my-1.5 h-px bg-border';
+
+/**
  * One menu row: the 32 px item of `DESIGN.md` §5.4, as a full-width button or link.
  *
  * `aria-disabled` rather than `disabled` is the state a caller should reach for — see

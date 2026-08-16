@@ -3,9 +3,9 @@
  *
  * `AdeAppShell` is what a route group mounts; `AppShell` is the shell itself, for a surface
  * with its own session plumbing (the admin console, a commercial host). Everything else
- * exported here is a seam the later shell tickets build on — HIVE-3.4's footer menu and
- * HIVE-3.6's search trigger each replace one region, and both open from `railMenu`'s chrome
- * the way HIVE-3.3's `WorkspaceSwitcher` does.
+ * exported here is a seam the later shell tickets build on — HIVE-3.6's search trigger
+ * replaces the one region still empty, and opens from `railMenu`'s chrome the way
+ * HIVE-3.3's `WorkspaceSwitcher` and HIVE-3.4's `UserMenu` do.
  */
 export { default as AppShell } from './AppShell';
 export type { AppShellProps, RailRegion, RailRegionContext } from './AppShell';
@@ -15,14 +15,18 @@ export { default as RailNav } from './RailNav';
 export type { RailNavProps } from './RailNav';
 export { default as RailFooter } from './RailFooter';
 export type { RailFooterProps } from './RailFooter';
+export { default as UserMenu } from './UserMenu';
+export type { UserMenuProps } from './UserMenu';
 export { default as WorkspaceSwitcher, formatWorkspaceMeta, WORKSPACE_ROLE_TONE } from './WorkspaceSwitcher';
 export type { WorkspaceSwitcherProps } from './WorkspaceSwitcher';
 export { RAIL_ITEM_CLASS, RAIL_ITEM_HOVER_CLASS, RailTooltip } from './railChrome';
 export type { RailTooltipProps } from './railChrome';
 export {
+  RAIL_MENU_ABOVE_CLASS,
   RAIL_MENU_ITEM_CLASS,
   RAIL_MENU_ITEM_DISABLED_CLASS,
   RAIL_MENU_LABEL_CLASS,
+  RAIL_MENU_SEPARATOR_CLASS,
   RAIL_MENU_SURFACE_CLASS,
   useRailMenu,
 } from './railMenu';
@@ -35,8 +39,18 @@ export {
   writeCollapsedNavGroups,
 } from './navGroupCollapse';
 export {
+  ADMIN_CONSOLE_ROUTE,
   APP_SHELL_ROUTE_PREFIXES,
+  HELP_ROUTE,
   LAUNCHER_ROUTE,
   isAppShellRoute,
   suppressesTopHeader,
 } from './appShellRoutes';
+export {
+  WHATS_NEW_SEEN_STORAGE_KEY,
+  hasUnreadWhatsNew,
+  markWhatsNewSeen,
+  readLastSeenWhatsNew,
+  useWhatsNewUnread,
+} from './whatsNewSeen';
+export type { WhatsNewUnread } from './whatsNewSeen';
