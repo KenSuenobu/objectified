@@ -24,9 +24,9 @@ import { RAIL_ITEM_CLASS, RAIL_ITEM_HOVER_CLASS, RailTooltip } from './railChrom
  * way out. Each is a plain row rather than a menu, so HIVE-3.4 replaces the region whole
  * instead of unpicking a half-built menu.
  *
- * *Not* here, and reachable elsewhere in the meantime: the workspace switcher (the row
- * above, `RailWorkspaceLink`), What's new and the build badge (HIVE-3.4), and the app
- * launcher — which is the rail's brand link, at the top.
+ * *Not* here, and reachable elsewhere in the meantime: What's new and the build badge
+ * (HIVE-3.4), and the app launcher — which is the rail's brand link, at the top. The
+ * workspace switcher is the row above, `WorkspaceSwitcher` (HIVE-3.3, #5289).
  */
 
 /** Props for {@link RailFooter}. */
@@ -118,7 +118,10 @@ export default function RailFooter({
           <span className="rail-label min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-semibold leading-tight text-fg">{name}</span>
             {userEmail ? (
-              <span className="truncate text-2xs text-fg-subtle">{userEmail}</span>
+              // `--fg-muted`, not `--fg-subtle`: the quieter step measures 2.8–2.9:1 on the
+              // rail in the two lightest themes, and this is a line meant to be read. The
+              // workspace row above it (HIVE-3.3) makes the same call for its meta line.
+              <span className="truncate text-2xs text-fg-muted">{userEmail}</span>
             ) : null}
           </span>
         </Link>

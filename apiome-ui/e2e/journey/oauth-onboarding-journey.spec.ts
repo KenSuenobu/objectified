@@ -17,7 +17,7 @@
  *      summary, provision, dashboard.
  *   5. Member invites succeed up to the Free-tier seat limit (5) and the structured
  *      `license-seats-exhausted` refusal surfaces in the members UI.
- *   6. A two-tenant user switches tenants from the header switcher, and the choice
+ *   6. A two-tenant user switches tenants from the rail's workspace switcher, and the choice
  *      survives a reload (durable last-active tenant).
  *   7. Mocked **Google** (the fourth provider) auto-links to the existing account.
  *   8. A seeded **credentials** user signs in through the login page's email/password form.
@@ -120,14 +120,20 @@ async function startLogin(page: Page, provider: ProviderId): Promise<void> {
   await page.getByRole('button', { name: PROVIDER_BUTTONS[provider] }).click();
 }
 
-/** The header tenant-switcher trigger (shows the active tenant's name). */
+/**
+ * The rail's workspace-switcher trigger (shows the active tenant's name).
+ *
+ * HIVE-3.3 (#5289) moved the switcher out of the retired top bar and into the rail, and
+ * renamed it for the reader: the accessible name now starts with "Switch workspace" and
+ * continues with the workspace it is currently in, so the match is a substring.
+ */
 function switcherButton(page: Page) {
-  return page.getByRole('button', { name: 'Switch tenant' });
+  return page.getByRole('button', { name: /switch workspace/i });
 }
 
 /**
- * Navigate to the dashboard shell, where the TopHeader (and its tenant switcher)
- * renders — `/ade` itself is the application launcher without the header.
+ * Navigate to the dashboard shell, where the rail (and its workspace switcher) renders —
+ * `/ade` itself is the application launcher, which has no rail.
  */
 async function gotoDashboard(page: Page): Promise<void> {
   await page.goto('/ade/dashboard');
@@ -167,10 +173,10 @@ test.describe('OLO journey — login, invariants, onboarding, license, switcher'
     await gotoDashboard(page);
     await expect(switcherButton(page)).toContainText(RILEY_ORG);
 
-    // The tenant switcher shows the Free license chip for the new tenant (OLO-5.x).
+    // The workspace switcher shows the Free license chip for the new tenant (OLO-5.x).
     await switcherButton(page).click();
-    const menu = page.getByRole('menu', { name: 'Your tenants' });
-    const rileyEntry = menu.getByRole('menuitem', { name: new RegExp(RILEY_ORG) });
+    const menu = page.getByRole('menu', { name: 'Your workspaces' });
+    const rileyEntry = menu.getByRole('menuitemradio', { name: new RegExp(RILEY_ORG) });
     await expect(rileyEntry.getByTestId('tenant-license-chip')).toContainText('Free');
   });
 
@@ -334,8 +340,8 @@ test.describe('OLO journey — login, invariants, onboarding, license, switcher'
     const selectTenant = async (name: string) => {
       await switcherButton(page).click();
       await page
-        .getByRole('menu', { name: 'Your tenants' })
-        .getByRole('menuitem', { name: new RegExp(name) })
+        .getByRole('menu', { name: 'Your workspaces' })
+        .getByRole('menuitemradio', { name: new RegExp(name) })
         .click();
       await expect(switcherButton(page)).toContainText(name);
     };

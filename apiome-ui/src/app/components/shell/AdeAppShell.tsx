@@ -10,10 +10,9 @@ import {
   type PlatformNavInjection,
 } from '@lib/platform-nav';
 import { getCommercialAccessForSession } from '@lib/db/commercial-access';
-import { loadTenantMembershipContext } from '@lib/auth/tenant-membership-context';
 import AppShell from './AppShell';
 import RailFooter from './RailFooter';
-import RailWorkspaceLink from './RailWorkspaceLink';
+import WorkspaceSwitcher from './WorkspaceSwitcher';
 
 /**
  * The `/ade/dashboard/**` application shell (HIVE-3.1, #5287).
@@ -25,18 +24,20 @@ import RailWorkspaceLink from './RailWorkspaceLink';
  * (HIVE-9.1) and by a commercial host without either inheriting the dashboard's session
  * plumbing.
  *
- * Everything it loads, it loads the way `TopHeader` did — the header used to make exactly
- * these two calls on exactly these routes, so nothing new is fetched by moving them here:
+ * The one thing it loads, it loads the way `TopHeader` did — the header made exactly this
+ * call on exactly these routes, so nothing new is fetched by moving it here:
  *
  * - `getCommercialAccessForSession()` → entitlement-filtered suite destinations, injected
  *   into the model's reserved Build slot (`toPlatformNavInjections`, HIVE-3.2). This
  *   repository still names no commercial route.
- * - `loadTenantMembershipContext()` → the active workspace's display name for the rail's
- *   workspace row. HIVE-3.3 (#5289) needs the whole context for its menu; until then only
- *   the name is read from it.
  *
- * Both failures are non-fatal by design: a rail without suite entries or without a
- * workspace name is still a working rail, and neither is worth a broken page.
+ * Failure is non-fatal by design: a rail without suite entries is still a working rail, and
+ * it is not worth a broken page.
+ *
+ * The membership context that names the active workspace is *not* loaded here. HIVE-3.3
+ * (#5289) put it inside `WorkspaceSwitcher`, which is the component that needs all of it —
+ * rows, roles, licences and the create-workspace cap — rather than the one name this shell
+ * used to read out of it.
  */
 
 /** Props for {@link AdeAppShell}. */
@@ -62,7 +63,6 @@ export default function AdeAppShell({ children }: AdeAppShellProps) {
   const userId = user?.user_id ?? user?.id;
 
   const [injected, setInjected] = React.useState<PlatformNavInjection[]>([]);
-  const [tenantName, setTenantName] = React.useState<string>('');
 
   // Commercial destinations, if this licence has any. `cancelled` guards the state write:
   // a route change can unmount the shell while the entitlement call is still in flight.
@@ -87,29 +87,6 @@ export default function AdeAppShell({ children }: AdeAppShellProps) {
     };
   }, [session]);
 
-  // The active workspace's name for the rail's workspace row.
-  React.useEffect(() => {
-    if (!session?.user || !currentTenantId) {
-      setTenantName('');
-      return;
-    }
-
-    let cancelled = false;
-    loadTenantMembershipContext()
-      .then(({ tenants }) => {
-        if (cancelled) return;
-        setTenantName(tenants.find((tenant) => tenant.id === currentTenantId)?.name ?? '');
-      })
-      .catch((error: unknown) => {
-        console.error('Failed to load the active workspace:', error);
-        if (!cancelled) setTenantName('');
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [session, currentTenantId]);
-
   const groups = React.useMemo(
     () => getPlatformNavGroups({ currentTenantId, injected }),
     [currentTenantId, injected]
@@ -119,13 +96,7 @@ export default function AdeAppShell({ children }: AdeAppShellProps) {
     <AppShell
       groups={groups}
       pathname={pathname}
-      workspace={({ iconRail }) => (
-        <RailWorkspaceLink
-          tenantName={tenantName}
-          tenantId={currentTenantId}
-          iconRail={iconRail}
-        />
-      )}
+      workspace={({ iconRail }) => <WorkspaceSwitcher iconRail={iconRail} />}
       footer={({ iconRail }) => (
         <RailFooter
           userName={user?.name}

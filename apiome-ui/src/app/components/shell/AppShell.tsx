@@ -30,7 +30,7 @@ import { useIconRail } from './useIconRail';
  * | # | Region | Owner |
  * | --- | --- | --- |
  * | 1 | Brand lock-up → the app launcher | HIVE-1.5, here |
- * | 2 | Workspace switcher | HIVE-3.3 (#5289) — `workspace` slot |
+ * | 2 | Workspace switcher | HIVE-3.3's `WorkspaceSwitcher`, in the `workspace` slot |
  * | 3 | Search trigger (`⌘K`) | HIVE-3.6 (#5292) — `search` slot |
  * | 4 | Grouped navigation | HIVE-3.2's model, drawn by `RailNav` |
  * | 5 | Footer: preferences, user, sign out | HIVE-3.4 (#5290) — `footer` slot |
