@@ -2,7 +2,7 @@
  * Render tests for the "Catalog" side-nav entry (MFI-23.6, #4015).
  *
  * These pin the acceptance criteria: the Catalog entry appears in the
- * Specifications section, links to `/ade/dashboard/catalog`, is tenant-gated
+ * Bring in group, links to `/ade/dashboard/catalog`, is tenant-gated
  * like Projects (rendered as a disabled, non-navigable element with no tenant),
  * carries no "Preview" pill, and highlights as active on its own routes.
  */
@@ -51,15 +51,15 @@ beforeEach(() => {
 });
 
 describe('DashboardSideNav — Catalog entry (MFI-23.6)', () => {
-  it('renders a Catalog entry in the Specifications section with no Preview pill', () => {
+  it('renders a Catalog entry in the Bring in group with no Preview pill', () => {
     withTenant();
     render(<DashboardSideNav />);
 
     const catalog = screen.getByText('Catalog');
     expect(catalog).toBeInTheDocument();
 
-    // The Specifications header and the Catalog entry coexist.
-    expect(screen.getByText('Specifications')).toBeInTheDocument();
+    // The "Bring in" heading and the Catalog entry coexist.
+    expect(screen.getByText('Bring in')).toBeInTheDocument();
 
     // Catalog is out of preview — no pill rides alongside the label.
     const item = catalog.closest('li');

@@ -5,44 +5,50 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
 import { useAuthSession } from '@lib/auth/session-client';
-import {
-  User,
-  Building2,
-  Folders,
-  FolderGit2,
-  Key,
-  Eye,
-  Link as LinkIcon,
-  Database,
-  Sun,
-  LayoutDashboard,
-  Shield,
-  Users,
-  ScrollText,
-  Network,
-  Library,
-  BookOpenCheck,
-  ShieldCheck,
-  Settings2,
-} from 'lucide-react';
+import { Settings2 } from 'lucide-react';
 import { useDarkMode } from '@/app/hooks/useDarkMode';
 import { openPreferences } from '@/app/components/ade/preferences/preferencesDrawerBus';
-import { ICON_SIZE, type IconComponentProps } from '@/app/components/ui/iconSizes';
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
+import {
+  getPlatformNavGroups,
+  getPlatformUserMenuItems,
+  isPlatformNavItemActive,
+  type ResolvedPlatformNavItem,
+} from '@lib/platform-nav';
+import { resolvePlatformNavIcon } from '@lib/platform-nav-icons';
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ComponentType<IconComponentProps>;
-  disabled?: boolean;
-  /** Small label next to the nav text (e.g. feature maturity). */
-  pill?: string;
+/**
+ * The dashboard sidebar.
+ *
+ * Since HIVE-3.2 (#5288) it renders entirely from the navigation model in
+ * `lib/platform-nav.ts`: this component owns the *chrome* — headings, hover and
+ * active treatment, the tenant-gated disabled state — and knows nothing about
+ * which destinations exist, where they live or when they are reachable. Adding
+ * a nav entry is a change to the model, not to this file.
+ *
+ * Two later tickets consume the same model: HIVE-3.1 replaces this sidebar with
+ * the collapsible `AppShell` rail, and HIVE-3.8 deletes this component once
+ * nothing renders it.
+ */
+
+/** One rendered run of destinations: a model group, or the account footer. */
+interface SideNavSection {
+  /** Stable key. */
+  id: string;
+  /** Heading; omitted for the leading, unlabelled run (Home). */
+  label?: string;
+  items: ResolvedPlatformNavItem[];
 }
 
-interface NavSection {
-  /** When omitted, section items render without a group heading (e.g. top-level Dashboard). */
-  header?: string;
-  items: NavItem[];
-}
+/**
+ * Heading for the account destinations.
+ *
+ * DESIGN.md §6 files Profile and Linked accounts under the rail footer's user
+ * menu, which arrives with HIVE-3.4. Until it does they keep their own section
+ * here so neither route becomes unreachable — the *items* still come from the
+ * model, only this heading is local.
+ */
+const ACCOUNT_SECTION_LABEL = 'Account';
 
 const DashboardSideNav: React.FC = () => {
   const pathname = usePathname();
@@ -50,120 +56,15 @@ const DashboardSideNav: React.FC = () => {
   const isDark = useDarkMode();
 
   const currentTenantId = (session?.user as { current_tenant_id?: string })?.current_tenant_id;
-  const hasTenant = !!currentTenantId;
 
-  const navSections: NavSection[] = [
+  const sections: SideNavSection[] = [
+    ...getPlatformNavGroups({ currentTenantId }),
     {
-      items: [{ label: 'Dashboard', href: '/ade/dashboard', icon: LayoutDashboard }],
-    },
-    {
-      header: 'Account',
-      items: [
-        { label: 'Profile', href: '/ade/dashboard/profile', icon: User },
-        { label: 'Linked Accounts', href: '/ade/dashboard/linked-accounts', icon: LinkIcon },
-      ],
-    },
-    {
-      header: 'Administration',
-      items: [
-        { label: 'Tenants', href: '/ade/dashboard/tenants', icon: Building2 },
-        { label: 'API Keys', href: '/ade/dashboard/api-keys', icon: Key, disabled: !hasTenant },
-      ],
-    },
-    {
-      header: 'Access & IAM',
-      items: [
-        { label: 'Roles', href: '/ade/dashboard/roles', icon: Shield, disabled: !hasTenant },
-        { label: 'Members', href: '/ade/dashboard/members', icon: Users, disabled: !hasTenant },
-        { label: 'Access Audit', href: '/ade/dashboard/audit', icon: ScrollText, disabled: !hasTenant },
-      ],
-    },
-    {
-      header: 'Governance',
-      items: [
-        {
-          label: 'Style Guides',
-          href: '/ade/dashboard/style-guides',
-          icon: BookOpenCheck,
-          disabled: !hasTenant,
-        },
-        {
-          label: 'Lint Posture',
-          href: '/ade/dashboard/lint-workspace',
-          icon: ShieldCheck,
-          disabled: !hasTenant,
-          pill: 'Preview',
-        },
-      ],
-    },
-    {
-      header: 'Specifications',
-      items: [
-        { label: 'Projects', href: '/ade/dashboard/projects', icon: Folders, disabled: !hasTenant },
-        {
-          label: 'Repositories',
-          href: '/ade/dashboard/repositories',
-          icon: FolderGit2,
-          disabled: !hasTenant,
-        },
-        {
-          label: 'Primitives/Types',
-          href: '/ade/dashboard/primitives',
-          icon: Database,
-          disabled: !hasTenant,
-        },
-        {
-          label: 'Catalog',
-          href: '/ade/dashboard/catalog',
-          icon: Library,
-          disabled: !hasTenant,
-        },
-        {
-          label: 'MCP Servers',
-          href: '/ade/dashboard/mcp',
-          icon: Network,
-          disabled: !hasTenant,
-        },
-        { label: 'Sunset timeline', href: '/ade/dashboard/versions/sunset-timeline', icon: Sun, disabled: !hasTenant },
-        { label: 'Published', href: '/ade/dashboard/published', icon: Eye, disabled: !hasTenant },
-      ],
+      id: 'account',
+      label: ACCOUNT_SECTION_LABEL,
+      items: getPlatformUserMenuItems({ currentTenantId }),
     },
   ];
-
-  const isActive = (href: string) => {
-    if (href === '/ade/dashboard/versions/sunset-timeline') {
-      return pathname === '/ade/dashboard/versions/sunset-timeline';
-    }
-    if (href === '/ade/dashboard/projects') {
-      return (
-        pathname === '/ade/dashboard/projects' ||
-        pathname === '/ade/dashboard/versions' ||
-        (pathname.startsWith('/ade/dashboard/versions/') &&
-          pathname !== '/ade/dashboard/versions/sunset-timeline')
-      );
-    }
-    if (href === '/ade/dashboard/repositories') {
-      return pathname === '/ade/dashboard/repositories' || pathname.startsWith('/ade/dashboard/repositories/');
-    }
-    if (href === '/ade/dashboard/primitives') {
-      return pathname === '/ade/dashboard/primitives' || pathname.startsWith('/ade/dashboard/primitives/');
-    }
-    if (href === '/ade/dashboard/mcp') {
-      // "MCP Servers" owns the catalog plus its related sections (capabilities, analytics,
-      // comparison), which are reached via the in-page tab bar rather than their own nav entries.
-      return pathname === '/ade/dashboard/mcp' || pathname.startsWith('/ade/dashboard/mcp/');
-    }
-    if (href === '/ade/dashboard/catalog') {
-      return pathname === '/ade/dashboard/catalog' || pathname.startsWith('/ade/dashboard/catalog/');
-    }
-    if (href === '/ade/dashboard/lint-workspace') {
-      return (
-        pathname === '/ade/dashboard/lint-workspace' ||
-        pathname.startsWith('/ade/dashboard/lint-workspace/')
-      );
-    }
-    return pathname === href;
-  };
 
   const sidebarBg = isDark
     ? 'linear-gradient(180deg, #172033 0%, #0f172a 100%)'
@@ -183,9 +84,9 @@ const DashboardSideNav: React.FC = () => {
       }}
     >
       <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-4">
-        {navSections.map((section, index) => (
-          <div key={section.header ?? `section-${index}`} className={index < navSections.length - 1 ? 'mb-6' : ''}>
-            {section.header ? (
+        {sections.map((section, index) => (
+          <div key={section.id} className={index < sections.length - 1 ? 'mb-6' : ''}>
+            {section.label ? (
             <div
               className="flex items-center gap-2 px-3 py-2 font-semibold text-2xs uppercase tracking-[0.08em]"
               style={{ color: isDark ? '#94a3b8' : '#64748b' }}
@@ -194,13 +95,13 @@ const DashboardSideNav: React.FC = () => {
                 className="w-1 h-1 rounded-full opacity-60"
                 style={{ backgroundColor: '#6366f1' }}
               />
-              {section.header}
+              {section.label}
             </div>
             ) : null}
-            <ul className={`m-0 list-none space-y-1 p-0 ${section.header ? 'mt-1' : ''}`}>
+            <ul className={`m-0 list-none space-y-1 p-0 ${section.label ? 'mt-1' : ''}`}>
               {section.items.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
+                const Icon = resolvePlatformNavIcon(item.icon);
+                const active = isPlatformNavItemActive(item, pathname);
 
                 const pillEl =
                   item.pill != null && item.pill !== '' ? (
@@ -213,10 +114,12 @@ const DashboardSideNav: React.FC = () => {
                   ) : null;
 
                 return (
-                  <li key={item.href} className="mb-1">
+                  <li key={item.id} className="mb-1">
                     {item.disabled ? (
                       <div
                         className="flex min-h-nav-item cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 opacity-40"
+                        title={item.disabledReason}
+                        aria-disabled="true"
                         style={{
                           color: isDark ? '#e2e8f0' : '#334155',
                         }}
@@ -230,6 +133,7 @@ const DashboardSideNav: React.FC = () => {
                     ) : (
                       <Link
                         href={item.href}
+                        aria-current={active ? 'page' : undefined}
                         className={`flex min-h-nav-item items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-indigo-500/10 ${
                           active
                             ? 'border border-indigo-200 bg-indigo-500/10 dark:border-indigo-700/70'
@@ -257,7 +161,7 @@ const DashboardSideNav: React.FC = () => {
                 );
               })}
             </ul>
-            {index < navSections.length - 1 && (
+            {index < sections.length - 1 && (
               <hr className="my-4 border-indigo-500/10" />
             )}
           </div>
