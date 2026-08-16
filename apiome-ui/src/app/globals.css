@@ -647,6 +647,110 @@ html[data-theme="darcula"] {
 
 /* hex-allow-end */
 
+/* ==========================================================================
+   DEVICE PREFERENCES (HIVE-1.3, #5276)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/assets/hive.css` §2–§3; behaviour in
+   `docs/mockups/DESIGN.md` §3.3, §3.4, §4.1 and §5.2.
+
+   A preference is a token swap, exactly like a theme: `PreferencesProvider`
+   writes `data-font-scale`, `data-density`, `data-motion` and `data-rail` to
+   `<html>` — before first paint, from the blocking `<head>` script — and the
+   blocks below restate the handful of tokens each one changes. No component
+   reads a setting to lay itself out.
+
+   Unset attributes need no rules of their own: the `:root` layer already holds
+   the `md` / `comfortable` / `auto` / `expanded` defaults, so a document that
+   never got the boot script still renders correctly.
+   ========================================================================== */
+
+/* ---- Density (DESIGN.md §3.3) -------------------------------------------
+   Spacing only. Colour, radius and type are untouched, so switching density
+   re-flows the shell without repainting it. */
+html[data-density="compact"] {
+  --control-h: 32px;
+  --control-h-sm: 26px;
+  --control-h-lg: 38px;
+  --row-h: 38px;
+  --page-pad: 24px;
+  --card-pad: 16px;
+  --nav-item-h: 28px;
+  --space-6: 20px;
+  --space-8: 24px;
+}
+
+/* ---- Font scale (DESIGN.md §4.1) ----------------------------------------
+   A percentage, not a `px` value: it keeps the reader's own browser font size
+   in play, and since every dimension in the token layer is `rem`, the *whole*
+   interface scales — rail, tables, dialogs and body copy together. */
+html[data-font-scale="xs"] {
+  font-size: 87.5%; /* 14px */
+}
+
+html[data-font-scale="sm"] {
+  font-size: 93.75%; /* 15px */
+}
+
+html[data-font-scale="md"],
+html:not([data-font-scale]) {
+  font-size: 100%; /* 16px — the default */
+}
+
+html[data-font-scale="lg"] {
+  font-size: 106.25%; /* 17px */
+}
+
+html[data-font-scale="xl"] {
+  font-size: 112.5%; /* 18px */
+}
+
+html[data-font-scale="2xl"] {
+  font-size: 125%; /* 20px */
+}
+
+/* ---- Motion (DESIGN.md §3.4) --------------------------------------------
+   `!important` because the durations being overridden come from utility
+   classes and third-party component CSS, which a custom property cannot
+   reach. Durations are zeroed rather than animations removed, so a transition
+   still fires its `transitionend` and no state machine waiting on one stalls. */
+html[data-motion="reduce"] *,
+html[data-motion="reduce"] *::before,
+html[data-motion="reduce"] *::after {
+  animation-delay: 0ms !important;
+  animation-duration: 0ms !important;
+  transition-delay: 0ms !important;
+  transition-duration: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* The operating-system setting is honoured on its own: a reader who asked the
+   OS for less motion should not have to find the preference here as well. It is
+   deliberately not gated on `data-motion`, because `auto` — the default — means
+   "follow the system"; `reduce` is the stronger choice of forcing it either way. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-delay: 0ms !important;
+    animation-duration: 0ms !important;
+    transition-delay: 0ms !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- Sidebar rail (DESIGN.md §5.2) --------------------------------------
+   The width the shell lays its first column out at. Declared as a token so the
+   rail — which lands in HIVE-3.1 — reads one variable instead of branching on
+   the attribute, and so a collapse animation interpolates a length. */
+html {
+  --rail-w-current: var(--rail-w);
+}
+
+html[data-rail="collapsed"] {
+  --rail-w-current: var(--rail-w-collapsed);
+}
+
 /* Radix UI Dialog animations */
 @keyframes enter {
   from {

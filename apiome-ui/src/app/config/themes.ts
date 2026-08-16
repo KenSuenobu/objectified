@@ -69,7 +69,7 @@ export interface ThemeColors {
 
 /** One selectable entry in the theme picker. */
 export interface Theme {
-  /** Stable id, written to `html[data-theme-choice]` and to `localStorage['app-theme']`. */
+  /** Stable id, written to `html[data-theme-choice]` and to `localStorage['hive.theme']`. */
   id: string;
   /** Human-readable label. */
   name: string;

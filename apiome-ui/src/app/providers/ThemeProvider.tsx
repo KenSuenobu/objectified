@@ -11,6 +11,7 @@ import {
   resolveTheme,
   SYSTEM_THEME_ID,
 } from '../config/themes';
+import { readStoredThemeChoice, storeThemeChoice } from '../config/preferences';
 
 /**
  * Theme provider (HIVE-1.2, #5275).
@@ -28,13 +29,12 @@ import {
  * both belonged to the pre-Hive system where a theme was two colours applied by hand.
  * next-themes keeps owning the `.dark` class, which the components that have not yet
  * adopted tokens still read through their `dark:` utilities.
+ *
+ * Since HIVE-1.3 the same three values are written once more, earlier: the blocking
+ * preferences script in `<head>` resolves the stored choice before first paint, so this
+ * provider re-states rather than introduces them. Both read the storage rules from
+ * `config/preferences`, which is what keeps them from disagreeing.
  */
-
-/** localStorage key holding the raw choice, `system` included. */
-const CHOICE_STORAGE_KEY = 'app-theme';
-
-/** localStorage key owned by next-themes; read only as a fallback for older installs. */
-const NEXT_THEMES_STORAGE_KEY = 'theme';
 
 /** The query "follow system" resolves against. */
 const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)';
@@ -67,34 +67,17 @@ function prefersDarkNow(): boolean {
 /**
  * The theme choice to start from on this device.
  *
- * `app-theme` holds the full choice (`nord`, `system`, …). The next-themes key is
- * consulted only when it does not — an install that predates this provider — and
- * "no preference at all" means "follow system", which is the app default.
+ * The keys, their order and the write-back live in `config/preferences`, because the
+ * blocking boot script of HIVE-1.3 resolves the very same choice before first paint and
+ * the two must not disagree. "No preference at all" means "follow system", the app
+ * default.
  *
- * @returns The stored choice, or the `system` entry.
+ * @returns The stored choice, or the `system` entry when nothing valid is stored.
  */
 function readStoredChoice(): Theme {
   const systemTheme = getThemeById(SYSTEM_THEME_ID) ?? getDefaultTheme();
-  try {
-    const stored = localStorage.getItem(CHOICE_STORAGE_KEY) ?? localStorage.getItem(NEXT_THEMES_STORAGE_KEY);
-    return (stored && getThemeById(stored)) || systemTheme;
-  } catch {
-    // Private-mode Safari and hardened browsers throw on localStorage access.
-    return systemTheme;
-  }
-}
-
-/**
- * Persist a choice, ignoring storage failures.
- *
- * @param themeId The raw choice id.
- */
-function storeChoice(themeId: string): void {
-  try {
-    localStorage.setItem(CHOICE_STORAGE_KEY, themeId);
-  } catch {
-    // Nothing to do: the theme still applies for this session.
-  }
+  const stored = readStoredThemeChoice();
+  return (stored && getThemeById(stored)) || systemTheme;
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -144,7 +127,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const choice = readStoredChoice();
     applyTheme(choice);
-    storeChoice(choice.id);
+    storeThemeChoice(choice.id);
     // `applyTheme` is stable for the life of the provider; re-running this effect would
     // undo a theme the user picked in the meantime.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -175,7 +158,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       if (!choice) return;
 
       applyTheme(choice);
-      storeChoice(choice.id);
+      storeThemeChoice(choice.id);
     },
     [applyTheme],
   );
