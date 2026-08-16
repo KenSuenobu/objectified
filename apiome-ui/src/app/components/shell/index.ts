@@ -6,11 +6,19 @@
  * exported here is a seam the later shell tickets build on — HIVE-3.6's search trigger
  * replaces the one region still empty, and opens from `railMenu`'s chrome the way
  * HIVE-3.3's `WorkspaceSwitcher` and HIVE-3.4's `UserMenu` do.
+ *
+ * `Page` / `PageHeader` / `PageBody` (HIVE-3.5) are what a *page* inside that shell is made
+ * of, rather than parts of the shell itself: the page epics (5–9) compose the three instead
+ * of hand-rolling a header bar each.
  */
 export { default as AppShell } from './AppShell';
 export type { AppShellProps, RailRegion, RailRegionContext } from './AppShell';
 export { default as AdeAppShell } from './AdeAppShell';
 export type { AdeAppShellProps } from './AdeAppShell';
+export { default as PageHeader } from './PageHeader';
+export type { PageBreadcrumbItem, PageHeaderProps } from './PageHeader';
+export { Page, PageBody } from './pageChrome';
+export type { PageBodyProps, PageProps, PageWidth } from './pageChrome';
 export { default as RailNav } from './RailNav';
 export type { RailNavProps } from './RailNav';
 export { default as RailFooter } from './RailFooter';
