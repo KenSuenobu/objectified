@@ -13,6 +13,18 @@ export interface SwitchProps extends Omit<
   onCheckedChange?: (checked: boolean) => void;
 }
 
+/**
+ * Switch — the Hive toggle (HIVE-2.1, #5280).
+ *
+ * Authority: `docs/mockups/assets/hive.css` §9 (`.switch`), `docs/mockups/DESIGN.md` §7.
+ *
+ * A 34 × 20 track carrying a 16 px thumb, inset track when off and accent when on. **Mixed**
+ * — a group where some members are on — parks the thumb in the middle over the soft accent,
+ * so "some" never looks like "all".
+ *
+ * The visible parts are styled directly rather than through descendant selectors, so a
+ * switch row may nest arbitrary content (a hint, a field) without inheriting its chrome.
+ */
 const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
   ({ className, checked, indeterminate = false, onCheckedChange, disabled, ...props }, ref) => {
     const inputRef = React.useRef<HTMLInputElement | null>(null);
@@ -32,7 +44,7 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
     return (
       <label
         className={cn(
-          'relative inline-flex items-center cursor-pointer',
+          'relative inline-flex shrink-0 cursor-pointer items-center',
           disabled && 'cursor-not-allowed opacity-50'
         )}
       >
@@ -44,26 +56,28 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
           onChange={handleChange}
           disabled={disabled}
           aria-checked={indeterminate ? 'mixed' : Boolean(checked)}
-          className="sr-only peer"
+          className="peer sr-only"
           {...props}
         />
-        <div
+        <span
           className={cn(
-            'w-11 h-6 rounded-full transition-colors duration-200',
-            'bg-gray-200 dark:bg-gray-700',
-            'peer-checked:bg-emerald-500',
-            indeterminate && 'bg-emerald-400 dark:bg-emerald-600',
-            'peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-emerald-500 peer-focus:ring-offset-white dark:peer-focus:ring-offset-gray-900',
+            'h-5 w-[2.125rem] rounded-full bg-inset shadow-[inset_0_0_0_1px_var(--border)]',
+            'transition-[background-color,box-shadow] duration-[var(--dur-base)]',
+            'peer-checked:bg-accent peer-checked:shadow-none',
+            indeterminate && 'bg-accent-soft shadow-none',
             className
           )}
-        >
-          <div
-            className={cn(
-              'absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200',
-              (checked || indeterminate) && 'translate-x-5'
-            )}
-          />
-        </div>
+        />
+        <span
+          aria-hidden="true"
+          className={cn(
+            'pointer-events-none absolute left-0.5 size-4 rounded-full bg-white',
+            'shadow-[0_1px_2px_rgba(0,0,0,.25)]',
+            'transition-transform duration-[var(--dur-base)] ease-out',
+            checked && !indeterminate && 'translate-x-3.5',
+            indeterminate && 'translate-x-[0.4375rem]'
+          )}
+        />
       </label>
     );
   }
@@ -71,4 +85,3 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
 Switch.displayName = 'Switch';
 
 export { Switch };
-

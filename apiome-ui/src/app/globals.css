@@ -159,6 +159,10 @@
   --color-honey: var(--color-brand-honey);
   --color-honey-soft: var(--color-brand-honey-soft);
   --color-honey-fg: #6B4E00;
+  /* Text drawn on *solid* honey. `--color-honey-fg` is the ink for honey-*soft* tints and
+     lightens on dark palettes; solid honey is a fixed brand hue on every theme, so the ink
+     that sits on it is fixed too — a theme that lightened it would print pale-on-pale. */
+  --color-honey-ink: #2A1F00;
 
   /* ---- Semantic — status vocabulary (DESIGN.md §3.1) ------------------ */
   --color-ok: #0E8A5F;
@@ -203,6 +207,25 @@
      the light-theme azure and stop it following the HIVE-1.2 per-theme swap. */
   --shadow-focus: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
   --shadow-raised: 0 1px 2px rgba(20, 18, 14, 0.08), 0 0 0 1px rgba(20, 18, 14, 0.06);
+
+  /* ---- Control chrome (HIVE-2.1, DESIGN.md §7) -----------------------
+     A Hive control is not drawn with a `border`: it is a surface carrying a
+     hairline *inside* its own box plus a 1 px lift, so the control keeps its
+     full `--control-h` height and its radius stays crisp at any density.
+     These are the four states of that hairline, as `shadow-*` utilities.
+
+     Every one reads a `:root` alias (`var(--border-strong)`), never the
+     `--color-*` name: Tailwind resolves theme-variable references inside
+     `color-mix()` at build time, and — as with `--shadow-focus` above — an
+     early-resolved reference freezes the value at the light palette instead
+     of following the HIVE-1.2 per-theme swap. */
+  --shadow-control: inset 0 0 0 1px var(--border-strong), 0 1px 1px rgba(20, 18, 14, 0.04);
+  --shadow-control-hover: inset 0 0 0 1px color-mix(in srgb, var(--fg) 30%, transparent), 0 1px 1px rgba(20, 18, 14, 0.04);
+  --shadow-control-focus: inset 0 0 0 1px var(--accent), 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+  --shadow-control-invalid: inset 0 0 0 1px var(--danger), 0 1px 1px rgba(20, 18, 14, 0.04);
+  /* A *filled* control (primary, accent, danger…) has no hairline: it reads as a solid
+     object, so it gets a drop shadow and a top highlight instead. */
+  --shadow-control-solid: 0 1px 2px rgba(20, 18, 14, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 
   /* ---- Motion (DESIGN.md §3.4) ---------------------------------------- */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -300,6 +323,7 @@
   --honey: var(--color-honey);
   --honey-soft: var(--color-honey-soft);
   --honey-fg: var(--color-honey-fg);
+  --honey-ink: var(--color-honey-ink);
 
   /* Semantic */
   --ok: var(--color-ok);
@@ -436,6 +460,28 @@ html .radix-themes {
   --default-font-family: var(--app-font-sans);
   --heading-font-family: var(--app-font-sans);
   --code-font-family: var(--app-font-mono);
+
+  /* ---- Token-name collisions (HIVE-2.1, #5280) ------------------------
+     `@radix-ui/themes` declares three names of its own on `.radix-themes`:
+     `--color-background`, `--color-overlay` and `--color-surface`. Those are
+     also `@theme` token names here, and Tailwind compiles `bg-surface` to
+     `background-color: var(--color-surface)` — so inside `<Theme>` (which is
+     the whole app: both layouts wrap their tree in it) every Hive component
+     would inherit Radix's translucent panel white instead of the theme's
+     surface, in all nine themes alike.
+
+     A custom property is inherited from the *nearest declaring ancestor*, so
+     specificity on `:root` cannot help: the value has to be restated on the
+     same element Radix declares it on. Re-pointing rather than renaming keeps
+     Radix's own components (`Card variant="surface"`, its dialog scrim) on the
+     Hive palette too, which is what DESIGN.md §11 asks for.
+
+     `tests/hive-primitive-tokens.test.ts` re-derives the collision set from the
+     installed stylesheet, so a Radix upgrade that adds a fourth name fails
+     rather than silently repainting a component. */
+  --color-surface: var(--bg-surface);
+  --color-overlay: var(--bg-overlay);
+  --color-background: var(--bg-canvas);
 }
 
 /* ==========================================================================
@@ -1255,16 +1301,76 @@ p {
   color: var(--text-muted);
 }
 
-input,
-textarea,
-select,
-button {
-  font: inherit;
-}
+/* `input, textarea, select, button { font: inherit }` used to live here. It is
+   already in Tailwind's preflight (`@layer base`), and stating it again
+   *unlayered* made it outrank `@layer utilities` — so `text-sm` on a control
+   was silently swallowed and every button rendered at the inherited body size.
+   Removed by HIVE-2.1 (#5280); preflight still supplies the inheritance. */
 
+/* The app-wide focus ring. Unlayered on purpose: it has to outrank the
+   `@layer utilities` box-shadow a component may already carry, so *every*
+   interactive element — primitive or not — shows the same DESIGN.md §9 ring.
+   A primitive that needs to keep its own chrome while focused (the inset
+   hairline on `.control-*`, below) restates both shadows in one value. */
 *:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring) 30%, transparent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* ==========================================================================
+   HIVE CONTROL CHROME (HIVE-2.1, #5280)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/assets/hive.css` §9; `docs/mockups/DESIGN.md` §7.
+
+   A text control's hairline is drawn *inside* its own box as a shadow rather
+   than as a `border`, so the control keeps its full `--control-h` height and
+   its corners stay crisp. Its focus state therefore has to restate that
+   hairline *and* add the ring in one `box-shadow` value.
+
+   Why this is CSS and not a Tailwind variant
+   ------------------------------------------
+   `*:focus-visible` above is **unlayered**, and an unlayered rule outranks
+   every `@layer utilities` class no matter how specific it is. A
+   `focus-visible:shadow-…` utility on the element would therefore never be
+   seen. These rules are unlayered too, and win on specificity — the only
+   lever left once both sides are outside a layer.
+
+   Scope is deliberately narrow: `box-shadow` only. Size, colour, radius and
+   spacing stay in Tailwind utilities on the component, so a caller's
+   `className` still overrides them in the ordinary way.
+
+   Invalidity is read from `aria-invalid`, the attribute that already tells
+   assistive technology the same thing — so the ring and the announcement can
+   never disagree.
+   ========================================================================== */
+.hive-control {
+  box-shadow: var(--shadow-control);
+}
+
+.hive-control:hover:not(:disabled):not([aria-invalid='true']) {
+  box-shadow: var(--shadow-control-hover);
+}
+
+.hive-control:focus,
+.hive-control:focus-visible,
+.hive-control:focus-within {
+  box-shadow: var(--shadow-control-focus);
+}
+
+.hive-control[aria-invalid='true'] {
+  box-shadow: var(--shadow-control-invalid);
+}
+
+.hive-control[aria-invalid='true']:focus,
+.hive-control[aria-invalid='true']:focus-visible,
+.hive-control[aria-invalid='true']:focus-within {
+  box-shadow:
+    inset 0 0 0 1px var(--danger),
+    0 0 0 3px color-mix(in srgb, var(--danger) 28%, transparent);
+}
+
+.hive-control:disabled {
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 /* Layout Animation Styles */

@@ -3,59 +3,108 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../../../lib/utils';
-import { AlertCircle, CheckCircle2, Info, AlertTriangle, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, AlertTriangle, Sparkles, X } from 'lucide-react';
 
+/**
+ * Alert — the Hive banner (HIVE-2.1, #5280).
+ *
+ * Authority: `docs/mockups/assets/hive.css` §17 (`.banner`), `docs/mockups/DESIGN.md` §7,
+ * gallery §Feedback.
+ *
+ * A tinted strip, not a bordered box: leading icon, title and body, and an optional row of
+ * actions pinned to the trailing edge. The tint *is* the severity, so the six tones are the
+ * whole vocabulary — `info` · `ok` · `warn` · `danger` · `honey` · `neutral`.
+ */
 const alertVariants = cva(
-  'relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4',
+  'relative flex w-full items-start gap-2.5 rounded-md px-3.5 py-2.5 text-sm',
   {
     variants: {
       variant: {
-        default: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100',
-        info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-100 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400',
-        success: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100 [&>svg]:text-emerald-600 dark:[&>svg]:text-emerald-400',
-        warning: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-100 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400',
-        error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-900 dark:text-red-100 [&>svg]:text-red-600 dark:[&>svg]:text-red-400',
+        /** Accent tint — something the reader should know. */
+        info: 'bg-accent-soft text-accent-fg',
+        /** Green tint — something finished, and it worked. */
+        ok: 'bg-ok-soft text-ok-fg',
+        /** Amber tint — something needs attention but nothing is broken. */
+        warn: 'bg-warn-soft text-warn-fg',
+        /** Red tint — something failed, or is about to. */
+        danger: 'bg-danger-soft text-danger-fg',
+        /** Honey tint — a brand moment (a tip, a new capability). */
+        honey: 'bg-honey-soft text-honey-fg',
+        /** Untinted — a note with no severity at all. */
+        neutral: 'bg-subtle text-fg-muted',
+
+        // ---- pre-Hive aliases -------------------------------------------------
+        /** Was a white bordered box; reads as `neutral`. */
+        default: 'bg-subtle text-fg-muted',
+        /** Was emerald. */
+        success: 'bg-ok-soft text-ok-fg',
+        /** Was amber. */
+        warning: 'bg-warn-soft text-warn-fg',
+        /** Was red. */
+        error: 'bg-danger-soft text-danger-fg',
       },
+      /** Edge-to-edge, square — a banner spanning the top of a page or a panel. */
+      bar: { true: 'rounded-none px-[var(--page-pad)] py-2', false: '' },
     },
     defaultVariants: {
       variant: 'default',
+      bar: false,
     },
   }
 );
 
+/** The glyph each tone leads with. Aliases resolve to the same icon as their tone. */
 const iconMap = {
-  default: Info,
   info: Info,
+  ok: CheckCircle2,
+  warn: AlertTriangle,
+  danger: AlertCircle,
+  honey: Sparkles,
+  neutral: Info,
+  default: Info,
   success: CheckCircle2,
   warning: AlertTriangle,
   error: AlertCircle,
-};
+} as const;
 
 export interface AlertProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof alertVariants> {
+  /** Show a dismiss button, and what to do when it is pressed. */
   onClose?: () => void;
+  /**
+   * Buttons for the trailing edge — "Retry", "View log", "Dismiss".
+   *
+   * DESIGN.md §8: an error is "what happened + what to do", and this is the "what to do".
+   */
+  actions?: React.ReactNode;
+  /** Replace the leading glyph, or pass `null` for a banner that carries none. */
+  icon?: React.ReactNode;
 }
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
-  ({ className, variant = 'default', children, onClose, ...props }, ref) => {
+  ({ className, variant = 'default', bar, children, actions, icon, onClose, ...props }, ref) => {
     const IconComponent = iconMap[variant || 'default'];
+    const leading =
+      icon === undefined ? <IconComponent className="mt-px size-4 shrink-0" aria-hidden="true" /> : icon;
 
     return (
       <div
         ref={ref}
         role="alert"
-        className={cn(alertVariants({ variant }), className)}
+        className={cn(alertVariants({ variant, bar }), className)}
         {...props}
       >
-        <IconComponent className="h-4 w-4" />
-        <div className="flex-1">{children}</div>
+        {leading}
+        <div className="min-w-0 flex-1">{children}</div>
+        {actions && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
         {onClose && (
           <button
+            type="button"
             onClick={onClose}
-            className="absolute right-2 top-2 p-1 rounded-md opacity-70 hover:opacity-100 transition-opacity"
+            className="-mr-1 shrink-0 rounded-sm p-1 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" aria-hidden="true" />
             <span className="sr-only">Close</span>
           </button>
         )}
@@ -71,7 +120,7 @@ const AlertTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h5
     ref={ref}
-    className={cn('mb-1 font-medium leading-none tracking-tight', className)}
+    className={cn('font-semibold leading-snug tracking-[-0.005em]', className)}
     {...props}
   />
 ));
@@ -81,13 +130,8 @@ const AlertDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn('text-sm [&_p]:leading-relaxed', className)}
-    {...props}
-  />
+  <div ref={ref} className={cn('opacity-90 [&_p]:leading-normal', className)} {...props} />
 ));
 AlertDescription.displayName = 'AlertDescription';
 
-export { Alert, AlertTitle, AlertDescription };
-
+export { Alert, AlertTitle, AlertDescription, alertVariants };

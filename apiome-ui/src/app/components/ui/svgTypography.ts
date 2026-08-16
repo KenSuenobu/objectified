@@ -15,7 +15,7 @@
  * pass one as the `fontSize` attribute of the `<text>` or `<g>` that needs it.
  *
  * ```tsx
- * <text x={x} y={y} fontSize={SVG_TEXT_SIZE.label} className="fill-gray-500">{label}</text>
+ * <text x={x} y={y} fontSize={SVG_TEXT_SIZE.label} className="fill-fg-subtle">{label}</text>
  * ```
  *
  * Chrome *around* a graph — its title, legend, toolbar, the text alternative table — is
