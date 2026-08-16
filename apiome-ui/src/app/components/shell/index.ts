@@ -2,10 +2,9 @@
  * The Hive application shell (HIVE-3.1, #5287).
  *
  * `AdeAppShell` is what a route group mounts; `AppShell` is the shell itself, for a surface
- * with its own session plumbing (the admin console, a commercial host). Everything else
- * exported here is a seam the later shell tickets build on — HIVE-3.6's search trigger
- * replaces the one region still empty, and opens from `railMenu`'s chrome the way
- * HIVE-3.3's `WorkspaceSwitcher` and HIVE-3.4's `UserMenu` do.
+ * with its own session plumbing (the admin console, a commercial host). Every rail region
+ * is filled: HIVE-3.3's `WorkspaceSwitcher`, HIVE-3.6's `RailSearchTrigger` and HIVE-3.4's
+ * `RailFooter`.
  *
  * `Page` / `PageHeader` / `PageBody` (HIVE-3.5) are what a *page* inside that shell is made
  * of, rather than parts of the shell itself: the page epics (5–9) compose the three instead
@@ -23,6 +22,53 @@ export { default as RailNav } from './RailNav';
 export type { RailNavProps } from './RailNav';
 export { default as RailFooter } from './RailFooter';
 export type { RailFooterProps } from './RailFooter';
+export { default as RailSearchTrigger } from './RailSearchTrigger';
+export type { RailSearchTriggerProps } from './RailSearchTrigger';
+export { default as CommandPalette } from './CommandPalette';
+export type { CommandPaletteProps } from './CommandPalette';
+export { default as CommandPaletteHost } from './CommandPaletteHost';
+export type { CommandPaletteHostProps } from './CommandPaletteHost';
+export {
+  isCommandPaletteMounted,
+  openCommandPalette,
+  registerCommandPaletteHost,
+  subscribeCommandPalette,
+} from './commandPaletteBus';
+export type { CommandPaletteRequest } from './commandPaletteBus';
+export {
+  COMMANDS_ONLY_PREFIX,
+  PALETTE_ACTIONS,
+  PALETTE_GROUP_HEADINGS,
+  buildActionCommands,
+  buildCommandGroups,
+  buildJumpCommands,
+  buildRecentCommands,
+  parseCommandQuery,
+} from './commandPaletteModel';
+export type {
+  CommandGroupsOptions,
+  PaletteCommand,
+  PaletteCommandGroup,
+  PaletteCommandGroupId,
+  ParsedCommandQuery,
+} from './commandPaletteModel';
+export {
+  PALETTE_RECENTS_LIMIT,
+  PALETTE_RECENTS_STORAGE_KEY,
+  clearCommandPaletteRecents,
+  readCommandPaletteRecents,
+  recordCommandPaletteRecent,
+  useCommandPaletteRecents,
+} from './commandPaletteRecents';
+export type { CommandPaletteRecent, CommandPaletteRecents } from './commandPaletteRecents';
+export {
+  OPEN_ACTION_IDS,
+  OPEN_ACTION_PARAM,
+  OPEN_ACTIONS,
+  openActionHref,
+  useOpenAction,
+} from './openActions';
+export type { OpenAction } from './openActions';
 export { default as UserMenu } from './UserMenu';
 export type { UserMenuProps } from './UserMenu';
 export { default as WorkspaceSwitcher, formatWorkspaceMeta, WORKSPACE_ROLE_TONE } from './WorkspaceSwitcher';

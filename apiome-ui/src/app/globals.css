@@ -1187,6 +1187,199 @@ html[data-rail="collapsed"] {
   padding-top: 0;
 }
 
+/* ---- Command palette (HIVE-3.6, #5292; DESIGN.md §5.4) -------------------
+   `docs/mockups/assets/hive.css` §15 (`.palette`). One 640 px dialog that
+   rises from 12 vh, over the same scrim every other overlay uses.
+
+   Why the whole surface is CSS rather than utilities on the component: the
+   palette is a *stack of rows that all behave the same way* — 40 px tall, icon,
+   label, quiet meta, chips pushed right — and cmdk draws those rows itself,
+   from `Command.Item`. The row's chrome therefore has to be reachable by class
+   rather than composed per element, and the active row is selected by cmdk's
+   own `[data-selected]` attribute, which no utility can express.
+
+   Two things here are load-bearing:
+
+     1. `top: 12vh` with `align-self` unused — the dialog is positioned rather
+        than centred, because a palette that grows downwards from a fixed line
+        does not jump under the reader's eye as results are filtered. A centred
+        one moves with every keystroke.
+     2. `--fg-muted` for the meta line and the footer, not the mockup's
+        `--fg-subtle`. `--fg-subtle` measures 2.8–4.0:1 in every theme block,
+        and a disabled row states its *reason* in that line — the one piece of
+        copy in the palette a reader most needs to be able to read
+        (`tests/command-palette-css.test.ts` guards it, as HIVE-3.3 and
+        HIVE-3.5 guard their own quiet text). */
+
+/* 640 px at the default root, in `rem` so it follows the font-size preference
+   — the palette is a dialog wrapped around type, exactly like the rail, and
+   like the five `Dialog` widths it sits beside. The viewport clamp is what
+   keeps it inside a phone. */
+.palette {
+  position: fixed;
+  z-index: 9999;
+  top: 12vh;
+  left: 50%;
+  width: calc(100vw - var(--space-8));
+  max-width: 40rem;
+  overflow: hidden;
+  transform: translateX(-50%);
+  border-radius: var(--r-xl);
+  background: var(--bg-surface);
+  color: var(--fg);
+  box-shadow: var(--shadow-lg);
+  animation: palette-rise var(--dur-slow) var(--ease-out);
+}
+
+/* The rise of `foundations/shell.html` §"Motion & focus": 8 px and a fade.
+   `html[data-motion="reduce"]` flattens every animation app-wide, so this
+   needs no reduced-motion rule of its own. */
+@keyframes palette-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.palette__input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  color: var(--fg-muted);
+}
+
+/* The field itself is chrome-less: the row above is the control, and a second
+   border inside it would read as a box in a box. Unlayered, so the app-wide
+   `input` reset in `@layer base` cannot put its own border and height back. */
+.palette__input input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  box-shadow: none;
+  font-size: var(--fs-lg);
+  color: var(--fg);
+}
+
+.palette__input input::placeholder {
+  color: var(--fg-muted);
+}
+
+.palette__list {
+  max-height: min(26rem, 50vh);
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+/* cmdk renders the heading inside the group wrapper, so the heading is styled
+   through the attribute it stamps rather than through a class of our own. */
+.palette__group [cmdk-group-heading] {
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  color: var(--fg-muted);
+}
+
+/* A row. `min-height` rather than `height`, so the row grows with the type at
+   the larger font scales instead of clipping its own label. */
+.palette__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 2.5rem;
+  padding: 0 var(--space-2);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+/* The active row, wherever the arrows or the pointer put it. `[data-selected]`
+   is cmdk's; `:hover` is here because a pointer that has not moved yet still
+   deserves the affordance. */
+.palette__item:hover,
+.palette__item[data-selected='true'] {
+  background: var(--bg-subtle);
+}
+
+/* A gated row keeps its place and its reason, and stops looking clickable.
+   `aria-disabled`, never `disabled`: cmdk skips it with the arrows, and the
+   reason beside it is still readable. */
+.palette__item[data-disabled='true'] {
+  cursor: not-allowed;
+  color: var(--fg-muted);
+}
+
+.palette__item[data-disabled='true'] .palette__item-icon {
+  opacity: 0.55;
+}
+
+.palette__item-icon {
+  color: var(--fg-muted);
+}
+
+/* The label truncates rather than wrapping, and a flex item can only shrink
+   below its content once its automatic minimum size is lifted — the same
+   `min-width: 0` rule the page header needed (HIVE-3.5). */
+.palette__item-label {
+  min-width: 0;
+}
+
+.palette__item-meta {
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* Chips ride the right edge. `margin-left: auto` rather than a spacer, so the
+   row still collapses correctly when the label is the only thing in it. */
+.palette__item-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+.palette__empty {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* The legend of DESIGN.md §5.4. It wraps rather than scrolls: at the largest
+   font scale four hints do not fit one 640 px line, and a legend that scrolls
+   sideways is a legend nobody reads. */
+.palette__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.palette__foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.palette__foot-end {
+  margin-left: auto;
+}
+
 /* ---- Metric utilities (HIVE-1.6, #5279) ---------------------------------
    The density and control tokens above are only worth having if something
    spends them, and a component should spend them by *name* rather than by

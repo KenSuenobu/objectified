@@ -10,6 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ChevronDown, Check, Plus, Settings2, Shield } from 'lucide-react';
 import WhatsNewDialog from './WhatsNewDialog';
 import PreferencesDrawerHost from './preferences/PreferencesDrawerHost';
+import CommandPaletteHost from '@/app/components/shell/CommandPaletteHost';
 import { openPreferences } from './preferences/preferencesDrawerBus';
 import CreateTenantDialog, { type CreatedTenant } from './CreateTenantDialog';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -720,6 +721,11 @@ function TopHeaderView({
       {/* Preferences pane (HIVE-1.4, #5277) — also the host for `⌘,` and for every
           other surface that calls `openPreferences()`, the sidebar footer included. */}
       <PreferencesDrawerHost />
+      {/* The command palette (HIVE-3.6, #5292) on the routes that still draw this header —
+          Tools and the studio surface — so `⌘K` works on every `/ade` route rather than
+          only inside the Hive shell. `ConditionalHeader` guarantees the shell's own host
+          and this one are never mounted together. */}
+      <CommandPaletteHost currentTenantId={currentTenantId} />
     </header>
   );
 }

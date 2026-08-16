@@ -11,6 +11,7 @@ import PreferencesDrawerHost from '@/app/components/ade/preferences/PreferencesD
 import { matchesRailShortcut } from '@/app/components/ade/preferences/shortcuts';
 import { cn } from '@lib/utils';
 import type { ResolvedPlatformNavGroup } from '@lib/platform-nav';
+import CommandPaletteHost from './CommandPaletteHost';
 import RailNav from './RailNav';
 import { RAIL_ITEM_HOVER_CLASS, RailTooltip } from './railChrome';
 import { useIconRail } from './useIconRail';
@@ -31,7 +32,7 @@ import { useIconRail } from './useIconRail';
  * | --- | --- | --- |
  * | 1 | Brand lock-up → the app launcher | HIVE-1.5, here |
  * | 2 | Workspace switcher | HIVE-3.3's `WorkspaceSwitcher`, in the `workspace` slot |
- * | 3 | Search trigger (`⌘K`) | HIVE-3.6 (#5292) — `search` slot |
+ * | 3 | Search trigger (`⌘K`) | HIVE-3.6's `RailSearchTrigger`, in the `search` slot |
  * | 4 | Grouped navigation | HIVE-3.2's model, drawn by `RailNav` |
  * | 5 | Footer: preferences, user, sign out | HIVE-3.4 (#5290) — `footer` slot |
  *
@@ -67,6 +68,13 @@ export interface AppShellProps {
   groups: readonly ResolvedPlatformNavGroup[];
   /** Current `usePathname()` value, for active state. */
   pathname: string | null;
+  /**
+   * `current_tenant_id` from the session, if any.
+   *
+   * The rail's own gating already arrives resolved in {@link groups}; this is what the
+   * command palette needs to scope its Recent group and gate its actions.
+   */
+  currentTenantId?: string | null;
   /** Where the brand lock-up goes — the "All apps" launcher (`DESIGN.md` §5.2). */
   brandHref?: string;
   /** The word under the brand: `Platform` in the app shell. */
@@ -77,6 +85,15 @@ export interface AppShellProps {
   search?: RailRegion;
   /** Region 5 — the rail footer. */
   footer?: RailRegion;
+  /**
+   * Whether this shell hosts the command palette and binds `⌘K` (default `true`).
+   *
+   * Pass `false` for a shell with nothing to search: the admin console's rail is specified
+   * with no `⌘K` at all (`docs/mockups/foundations/shell.html`, "Admin shell"), because it
+   * has no workspace scope for a palette to search within. With it off, `RailSearchTrigger`
+   * renders nothing either — the trigger asks the bus whether a palette exists.
+   */
+  commandPalette?: boolean;
 }
 
 /** Tooltip delay shared with the dashboard's own provider, so hovers feel identical. */
@@ -92,11 +109,13 @@ function AppShellFrame({
   children,
   groups,
   pathname,
+  currentTenantId = null,
   brandHref = '/ade',
   brandSub = 'Platform',
   workspace,
   search,
   footer,
+  commandPalette = true,
 }: AppShellProps) {
   const { preferences, toggleRail } = usePreferences();
   const iconRail = useIconRail();
@@ -204,6 +223,11 @@ function AppShellFrame({
           `⌘,`, the footer row and anything else calling `openPreferences()` reach it here
           (HIVE-1.4's bus; only the newest host answers, so panes never stack). */}
       <PreferencesDrawerHost />
+
+      {/* And the command palette, for the same reason and through the same kind of bus
+          (HIVE-3.6). It is handed the shell's *resolved* groups — commercial destinations
+          included — so `⌘K` and the rail can never disagree about where a reader can go. */}
+      {commandPalette && <CommandPaletteHost groups={groups} currentTenantId={currentTenantId} />}
     </div>
   );
 }

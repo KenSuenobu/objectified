@@ -18,6 +18,7 @@ import { Label } from '../../../components/ui/Label';
 import { Alert } from '../../../components/ui/Alert';
 import { Textarea } from '../../../components/ui/Textarea';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { OPEN_ACTIONS, useOpenAction } from '../../../components/shell/openActions';
 import {
   dashboardContentStackClass,
   dashboardMainClass,
@@ -113,6 +114,13 @@ const ApiKeys = () => {
     setErrorMessage('');
     setShowCreateModal(true);
   };
+
+  /*
+   * The command palette's "Create API key…" action (HIVE-3.6, #5292). The palette navigates
+   * here with `?open=new-api-key`; this page opens the dialog it already owns, and
+   * `useOpenAction` strips the parameter so a reload does not reopen it.
+   */
+  useOpenAction(OPEN_ACTIONS.newApiKey, handleCreateApiKey);
 
   const handleCreateSubmit = async () => {
     if (!newApiKeyName.trim()) {

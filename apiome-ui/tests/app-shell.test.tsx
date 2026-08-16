@@ -83,6 +83,9 @@ jest.mock('next-themes', () => ({
 }));
 
 import AdeAppShell from '../src/app/components/shell/AdeAppShell';
+import AppShell from '../src/app/components/shell/AppShell';
+import RailSearchTrigger from '../src/app/components/shell/RailSearchTrigger';
+import { isCommandPaletteMounted } from '../src/app/components/shell/commandPaletteBus';
 import { ThemeProvider } from '../src/app/providers/ThemeProvider';
 import { NAV_COLLAPSED_STORAGE_KEY } from '../src/app/components/shell/navGroupCollapse';
 import { RAIL_ICON_BREAKPOINT_PX } from '../src/app/components/shell/useIconRail';
@@ -541,6 +544,56 @@ describe('AppShell — its regions', () => {
     fireEvent.click(screen.getByTestId('rail-preferences'));
 
     expect(await screen.findByRole('dialog')).toHaveTextContent(/preferences/i);
+  });
+
+  it('offers the search trigger in region 3, above the navigation (HIVE-3.6)', async () => {
+    await renderShell();
+
+    const trigger = screen.getByTestId('rail-search');
+    expect(trigger).toBeInTheDocument();
+    // Region 3 sits between the workspace row and the nav groups (`DESIGN.md` §5.2).
+    expect(screen.getByTestId('rail-workspace').compareDocumentPosition(trigger)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(
+      trigger.compareDocumentPosition(screen.getByRole('navigation', { name: 'Primary' }))
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it('hosts the command palette, so the trigger and ⌘K reach the same dialog', async () => {
+    await renderShell();
+
+    expect(isCommandPaletteMounted()).toBe(true);
+
+    fireEvent.click(screen.getByTestId('rail-search'));
+
+    expect(await screen.findByRole('dialog')).toHaveAccessibleName('Command palette');
+  });
+
+  it('draws no search trigger for a shell that hosts no palette', async () => {
+    // What the admin console's rail needs: `foundations/shell.html` specifies it with no
+    // ⌘K search at all, because it has no workspace scope to search within.
+    mockUsePathname.mockReturnValue('/ade/dashboard');
+    mockUseSession.mockReturnValue({ data: { user: { user_id: 'u-1', current_tenant_id: 't-1' } } });
+
+    render(
+      <ThemeProvider>
+        <AppShell
+          groups={getPlatformNavGroups({ currentTenantId: 't-1' })}
+          pathname="/ade/dashboard"
+          commandPalette={false}
+          search={({ iconRail }) => <RailSearchTrigger iconRail={iconRail} />}
+        >
+          page content
+        </AppShell>
+      </ThemeProvider>
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(isCommandPaletteMounted()).toBe(false);
+    expect(screen.queryByTestId('rail-search')).not.toBeInTheDocument();
   });
 });
 
