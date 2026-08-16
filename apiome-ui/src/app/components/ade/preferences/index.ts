@@ -15,5 +15,6 @@ export {
   SHELL_SHORTCUTS,
   SURFACE_SHORTCUTS,
   matchesPreferencesShortcut,
+  matchesRailShortcut,
   type ShortcutEntry,
 } from './shortcuts';

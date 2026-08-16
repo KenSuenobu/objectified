@@ -77,7 +77,9 @@ test.describe('preferences pane', () => {
     await page.keyboard.press('Escape');
     await expect(drawer(page)).toBeHidden();
 
-    await page.getByTestId('sidenav-preferences').click();
+    // The rail footer's Preferences row (HIVE-3.1, #5287) — the sidebar that used to carry
+    // this entry point no longer renders inside the application shell.
+    await page.getByTestId('rail-preferences').click();
     await expect(drawer(page)).toBeVisible();
     await page.getByRole('button', { name: 'Done' }).click();
     await expect(drawer(page)).toBeHidden();
