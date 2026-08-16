@@ -19,6 +19,8 @@ import {
   MoreVertical,
 } from 'lucide-react';
 import { SkeletonTableRows } from '@/app/components/ui/Skeleton';
+import { useDialog } from '@/app/components/providers/DialogProvider';
+import { destructiveConfirm } from '@/app/components/dialogs/destructiveConfirm';
 import {
   getAllPropertyTemplates,
   getPropertyTemplateStats,
@@ -105,6 +107,7 @@ const defaultSchema = {
 };
 
 export default function PropertyTemplateManagementClient() {
+  const { confirm } = useDialog();
   const [templates, setTemplates] = useState<PropertyTemplate[]>([]);
   const [filteredTemplates, setFilteredTemplates] = useState<PropertyTemplate[]>([]);
   const [stats, setStats] = useState<TemplateStats | null>(null);
@@ -324,9 +327,16 @@ export default function PropertyTemplateManagementClient() {
   };
 
   const handleDelete = async (template: PropertyTemplate) => {
-    if (!confirm(`Are you sure you want to delete the template "${template.name}"?`)) {
-      return;
-    }
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Delete',
+        noun: 'template',
+        name: template.name,
+        consequence:
+          'The template stops being offered when authors add a property. Properties already created from it are not changed.',
+      })
+    );
+    if (!confirmed) return;
 
     try {
       const result = JSON.parse(await deletePropertyTemplateAdmin(template.id));

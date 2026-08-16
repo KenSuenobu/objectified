@@ -1,104 +1,211 @@
 'use client';
 
-import React from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
-import { AlertTriangle, Info, CheckCircle, XCircle } from 'lucide-react';
+import * as React from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/AlertDialog';
+import { Alert } from '../ui/Alert';
+import { FormField } from '../ui/FormField';
+import { Input } from '../ui/Input';
+import { Spinner } from '../ui/Spinner';
+import { cn } from '../../../../lib/utils';
+import { useReturnFocus } from './useReturnFocus';
+import {
+  DIALOG_TONE_BUTTON,
+  DIALOG_TONE_ICON,
+  DIALOG_TONE_INK,
+  normalizeDialogTone,
+  type DialogToneInput,
+} from './dialogTone';
 
-export type ConfirmDialogVariant = 'danger' | 'warning' | 'info' | 'success';
+/**
+ * ConfirmDialog — the Hive confirm (HIVE-2.7, #5286).
+ *
+ * Authority: `docs/mockups/DESIGN.md` §8 "Destructive" — *red primary, object named,
+ * consequence sentence, optional type-to-confirm for tenants and projects*.
+ *
+ * The pre-Hive version was a hand-rolled `@radix-ui/react-dialog` in `bg-white`,
+ * `text-red-600` and `bg-indigo-600`: nine themes could not reach it, and `role="dialog"`
+ * let a screen reader treat "delete this tenant" as an ordinary panel. This is the HIVE-2.1
+ * `AlertDialog` surface instead, which is `role="alertdialog"`, focus-trapped, and made of
+ * tokens — plus the two things §8 asks of a destructive confirm that no confirm in the app
+ * had: a **consequence sentence** and **type-to-confirm**.
+ *
+ * The dialog is fully controlled. Both buttons report upwards and nothing here closes
+ * itself, which is what lets the caller hold it open — and marked `busy` — while the
+ * request the confirm authorised is still in flight.
+ */
 
-interface ConfirmDialogProps {
+/** The four severities, in either the Hive or the pre-Hive spelling. */
+export type ConfirmDialogVariant = DialogToneInput;
+
+export interface ConfirmDialogProps {
   open: boolean;
+  /** The question, with the object **named**: `Delete role "Editor"?`. */
   title?: string;
+  /** What is being confirmed. A string keeps its line breaks. */
   message: string | React.ReactNode;
+  /**
+   * One sentence saying what the click costs, shown under the message in full-strength ink.
+   *
+   * DESIGN.md §8 requires it of every destructive action. `destructiveConfirm()` composes it
+   * for the common shapes.
+   */
+  consequence?: React.ReactNode;
   variant?: ConfirmDialogVariant;
   confirmLabel?: string;
   cancelLabel?: string;
+  /**
+   * The exact phrase the operator has to type before the primary action enables — usually
+   * the object's own name.
+   *
+   * Reserved for the three irreversible cases (permanent project delete, tenant delete,
+   * user delete): a guard on every confirm is a guard nobody reads. Compared after trimming
+   * and **case-sensitively**, so "delete" does not pass for a tenant called "DELETE".
+   */
+  typeToConfirm?: string;
+  /** Label above the type-to-confirm field. Defaults to a sentence naming the phrase. */
+  typeToConfirmLabel?: string;
+  /**
+   * A request is in flight: both buttons are disabled, and `Esc`, the scrim and the cancel
+   * button no longer dismiss — a half-finished delete must not lose its dialog.
+   */
+  busy?: boolean;
+  /** A failure to show *inside* the dialog, instead of closing it and toasting. */
+  error?: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
+/**
+ * A confirm, with an optional type-to-confirm gate.
+ *
+ * @param props See {@link ConfirmDialogProps}.
+ * @returns The dialog, or nothing when `open` is false.
+ */
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   open,
   title,
   message,
-  variant = 'warning',
+  consequence,
+  variant,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
+  typeToConfirm,
+  typeToConfirmLabel,
+  busy = false,
+  error = null,
   onConfirm,
   onCancel,
 }) => {
-  const getIcon = () => {
-    switch (variant) {
-      case 'danger':
-        return <XCircle className="h-6 w-6 text-red-600" />;
-      case 'warning':
-        return <AlertTriangle className="h-6 w-6 text-yellow-600" />;
-      case 'info':
-        return <Info className="h-6 w-6 text-blue-600" />;
-      case 'success':
-        return <CheckCircle className="h-6 w-6 text-green-600" />;
-    }
-  };
+  const tone = normalizeDialogTone(variant, 'warning');
+  const ToneIcon = DIALOG_TONE_ICON[tone];
+  const [typed, setTyped] = React.useState('');
+  const gateRef = React.useRef<HTMLInputElement>(null);
+  const returnFocus = useReturnFocus(open);
 
-  const getConfirmButtonClass = () => {
-    const base = 'px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
-    switch (variant) {
-      case 'danger':
-        return `${base} bg-red-600 text-white hover:bg-red-700 focus:ring-red-500`;
-      case 'warning':
-        return `${base} bg-amber-600 text-white hover:bg-amber-700 focus:ring-amber-500`;
-      case 'info':
-        return `${base} bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500`;
-      case 'success':
-        return `${base} bg-green-600 text-white hover:bg-green-700 focus:ring-green-500`;
-    }
+  // A reopened dialog must not inherit the phrase typed into the last one. The provider
+  // unmounts this component between uses, so this only matters for a caller that keeps it
+  // mounted — but "the gate was already satisfied" is not a failure mode worth leaving open.
+  React.useEffect(() => {
+    if (!open) setTyped('');
+  }, [open]);
+
+  const gated = Boolean(typeToConfirm);
+  const unlocked = !gated || typed.trim() === typeToConfirm;
+  const blocked = busy || !unlocked;
+
+  /** Dismissal, from `Esc`, the scrim or the cancel button — refused while busy. */
+  const handleOpenChange = (next: boolean) => {
+    if (next || busy) return;
+    onCancel();
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={(open) => !open && onCancel()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[10001]" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[10002] w-full max-w-sm bg-white dark:bg-gray-900 rounded-xl shadow-xl p-0 flex flex-col max-h-[90vh]"
-          onEscapeKeyDown={onCancel}
-          onPointerDownOutside={onCancel}
-        >
-          <div className="p-6 pb-2">
-            <Dialog.Title className="flex items-center gap-3 text-xl font-semibold text-gray-900 dark:text-gray-100">
-              {getIcon()}
-              <span>{title || 'Confirm Action'}</span>
-            </Dialog.Title>
-          </div>
-          <div className="px-6 py-2 flex-1 overflow-auto">
-            {typeof message === 'string' ? (
-              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                {message}
-              </p>
-            ) : (
-              <div className="text-gray-700 dark:text-gray-300">{message}</div>
-            )}
-          </div>
-          <div className="flex justify-end gap-2 p-4 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-            >
-              {cancelLabel}
-            </button>
-            <button
-              type="button"
-              onClick={onConfirm}
-              className={getConfirmButtonClass()}
-              autoFocus
-            >
-              {confirmLabel}
-            </button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogContent
+        size="sm"
+        // The gate is the thing to type into, so it takes focus over Radix's default of the
+        // cancel button. Without a gate the default stands: on a destructive confirm, the
+        // safe button is the one that should already be under the reader's hands.
+        onOpenAutoFocus={(event) => {
+          if (!gated) return;
+          event.preventDefault();
+          gateRef.current?.focus();
+        }}
+        onCloseAutoFocus={returnFocus}
+        onEscapeKeyDown={(event) => {
+          if (busy) event.preventDefault();
+        }}
+      >
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2.5">
+            <ToneIcon className={cn('size-5 shrink-0', DIALOG_TONE_INK[tone])} aria-hidden="true" />
+            <span>{title || 'Confirm action'}</span>
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="flex flex-col gap-2">
+              {typeof message === 'string' ? (
+                <p className="whitespace-pre-wrap">{message}</p>
+              ) : (
+                message
+              )}
+              {consequence && <p className="font-medium text-fg">{consequence}</p>}
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        {gated && (
+          <FormField
+            label={typeToConfirmLabel ?? `Type ${typeToConfirm} to confirm`}
+            helperText="This cannot be undone."
+          >
+            <Input
+              ref={gateRef}
+              value={typed}
+              onChange={(event) => setTyped(event.target.value)}
+              disabled={busy}
+              autoComplete="off"
+              spellCheck={false}
+              placeholder={typeToConfirm}
+              aria-label={typeToConfirmLabel ?? `Type ${typeToConfirm} to confirm`}
+            />
+          </FormField>
+        )}
+
+        {error && <Alert variant="danger">{error}</Alert>}
+
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={busy}>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogAction
+            variant={DIALOG_TONE_BUTTON[tone]}
+            disabled={blocked}
+            aria-busy={busy || undefined}
+            // Radix's `Action` is a `Dialog.Close`: left alone it would close the dialog
+            // itself, which is exactly what a `busy` confirm must not do. Preventing the
+            // default suppresses that (Radix's `composeEventHandlers` checks for it) and
+            // leaves the caller as the only thing that decides when this closes.
+            onClick={(event) => {
+              event.preventDefault();
+              if (blocked) return;
+              onConfirm();
+            }}
+          >
+            {/* Decorative: the button keeps its own label, and `aria-busy` is what the
+                state is announced through. A second live region would only talk over it. */}
+            {busy && <Spinner size="sm" tone="light" role="presentation" aria-hidden="true" />}
+            {confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

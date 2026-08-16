@@ -41,6 +41,8 @@ import {
 import { isCommercialProductFlag } from '../../../../../lib/commercial-products';
 import { FeatureFlagUserOverridesPanel } from '../components/FeatureFlagUserOverridesPanel';
 import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
+import { useDialog } from '@/app/components/providers/DialogProvider';
+import { destructiveConfirm } from '@/app/components/dialogs/destructiveConfirm';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -869,6 +871,7 @@ export default function LicenseManagementClient({
 }: {
   initialTab?: LicenseManagementTab;
 } = {}) {
+  const { confirm } = useDialog();
   const [activeTab, setActiveTab] = useState<LicenseManagementTab>(initialTab);
   const [licenses, setLicenses] = useState<License[]>([]);
   const [featureFlags, setFeatureFlags] = useState<FeatureFlag[]>([]);
@@ -926,7 +929,16 @@ export default function LicenseManagementClient({
   // ── License tab ───────────────────────────────────────────────────────────
 
   const handleDeleteLicense = async (lic: License) => {
-    if (!confirm(`Delete license "${lic.name}"? This cannot be undone.`)) return;
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Delete',
+        noun: 'license',
+        name: lic.name,
+        consequence:
+          'Users holding this license lose the features it granted the next time they load the app.',
+      })
+    );
+    if (!confirmed) return;
     const res = JSON.parse(await deleteLicense(lic.id));
     if (res.success) { showMessage('success', `License "${lic.name}" deleted`); loadAll(); }
     else showMessage('error', res.error);
@@ -935,7 +947,16 @@ export default function LicenseManagementClient({
   // ── Feature flag tab ──────────────────────────────────────────────────────
 
   const handleDeleteFlag = async (ff: FeatureFlag) => {
-    if (!confirm(`Delete feature flag "${ff.label}"? It will be removed from all licenses.`)) return;
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Delete',
+        noun: 'feature flag',
+        name: ff.label,
+        consequence:
+          'The flag is removed from every license and from every per-user override that named it.',
+      })
+    );
+    if (!confirmed) return;
     const res = JSON.parse(await deleteFeatureFlag(ff.id));
     if (res.success) { showMessage('success', `Feature flag "${ff.label}" deleted`); loadAll(); }
     else showMessage('error', res.error);
@@ -948,7 +969,16 @@ export default function LicenseManagementClient({
   };
 
   const handleDeletePackage = async (g: FeatureFlagGroup) => {
-    if (!confirm(`Delete package "${g.label}"? Existing per-user overrides are not changed.`)) return;
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Delete',
+        noun: 'package',
+        name: g.label,
+        consequence:
+          'The grouping goes; the flags inside it stay, and per-user overrides already granted are not changed.',
+      })
+    );
+    if (!confirmed) return;
     const res = JSON.parse(await deleteFeatureFlagGroup(g.id));
     if (res.success) {
       showMessage('success', `Package "${g.label}" deleted`);
@@ -965,7 +995,17 @@ export default function LicenseManagementClient({
   };
 
   const handleRemoveLicense = async (user: UserWithLicense) => {
-    if (!confirm(`Remove license from ${user.name}?`)) return;
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Remove',
+        noun: 'license from',
+        name: user.name,
+        consequence:
+          'They drop to the unlicensed feature set the next time they load the app. A license can be assigned again at any time.',
+        confirmLabel: 'Remove license',
+      })
+    );
+    if (!confirmed) return;
     const res = JSON.parse(await removeUserLicense(user.id));
     if (res.success) { showMessage('success', 'License removed'); loadAll(); }
     else showMessage('error', res.error);

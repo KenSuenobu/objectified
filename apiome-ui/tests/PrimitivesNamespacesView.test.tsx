@@ -247,7 +247,7 @@ describe('PrimitivesNamespacesView — removing a namespace registration', () =>
 
   async function removeNamespace(namespace: string) {
     fireEvent.click(screen.getByTestId(`remove-namespace-${namespace}`));
-    const dialog = await screen.findByRole('dialog');
+    const dialog = await screen.findByRole('alertdialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
   }
 
@@ -312,10 +312,10 @@ describe('PrimitivesNamespacesView — removing a namespace registration', () =>
 
     renderView();
     fireEvent.click(screen.getByTestId('remove-namespace-tenant/acme/v1/types'));
-    const dialog = await screen.findByRole('dialog');
+    const dialog = await screen.findByRole('alertdialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(fetchMock).not.toHaveBeenCalled();
     expect(onRefresh).not.toHaveBeenCalled();
   });
@@ -362,7 +362,7 @@ describe('PrimitivesNamespacesView — removing a namespace registration', () =>
     renderView();
     fireEvent.click(screen.getByTestId('remove-namespace-tenant/acme/v1/types'));
 
-    const dialog = await screen.findByRole('dialog');
+    const dialog = await screen.findByRole('alertdialog');
     expect(dialog).toHaveTextContent('are not deleted');
     expect(dialog).toHaveTextContent('unregistered');
     expect(fetchMock).not.toHaveBeenCalled();

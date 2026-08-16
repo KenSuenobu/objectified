@@ -57,6 +57,7 @@ import OpenAPIImportDialog from '../../../components/ade/dashboard/OpenAPIImport
 import ImportDialog from '../../../components/ade/dashboard/ImportDialog';
 import { LLMChatPanel } from '../../../components/ade/dashboard/LLMImportDialog';
 import { useDialog } from '../../../components/providers/DialogProvider';
+import { destructiveConfirm } from '../../../components/dialogs/destructiveConfirm';
 import { filterSlugInput } from '../../../utils/slug';
 import { isProjectPublishable } from '../../../utils/catalog-publishable';
 import { SPDX_LICENSES, getLicenseUrl, SPDXLicense } from '../../../utils/spdx-licenses';
@@ -739,24 +740,22 @@ const Projects = () => {
   };
 
   const handlePermanentDelete = async (project: Project) => {
-    const confirmed = await confirmDialog({
-      title: 'Permanently Delete Project',
-      message: `Are you absolutely sure you want to permanently delete "${project.name}"?\n\nThis will permanently delete:\n• All versions of this project\n• All publications associated with those versions\n• All classes and their properties\n• All properties directly linked to this project\n\nThis action CANNOT be undone and all data will be lost forever.`,
-      variant: 'danger',
-      confirmLabel: 'Permanently Delete',
-      cancelLabel: 'Cancel',
-    });
+    // One gated confirm, not two ungated ones. The pair this replaces asked the reader to
+    // to type DELETE in their head — two identical clicks, a delay rather than a check.
+    // DESIGN.md §8 names projects as a type-to-confirm case: the gate is the project's own
+    // name, so the click cannot land on the wrong row.
+    const confirmed = await confirmDialog(
+      destructiveConfirm({
+        action: 'Permanently delete',
+        noun: 'project',
+        name: project.name,
+        consequence:
+          'Every version of this project, the publications made from them, and all its classes and properties are destroyed.',
+        typeToConfirm: true,
+        confirmLabel: 'Permanently delete project',
+      })
+    );
     if (!confirmed) return;
-
-    // Double confirmation for safety
-    const doubleConfirmed = await confirmDialog({
-      title: 'Final Confirmation',
-      message: `Type "DELETE" mentally and confirm: You are about to permanently destroy all data for project "${project.name}". This is your last chance to cancel.`,
-      variant: 'danger',
-      confirmLabel: 'Yes, Delete Everything',
-      cancelLabel: 'Cancel',
-    });
-    if (!doubleConfirmed) return;
 
     try {
       const result = await permanentDeleteProject(project.id);

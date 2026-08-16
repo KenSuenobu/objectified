@@ -113,6 +113,10 @@ import {
   Stat,
   StatGrid,
 } from '@/app/components/ui/metrics';
+// The imperative dialogs (HIVE-2.7, #5286): the gallery drives them through the hook, the
+// same way a page does, rather than mounting the components directly.
+import { useDialog } from '@/app/components/providers/DialogProvider';
+import { destructiveConfirm } from '@/app/components/dialogs/destructiveConfirm';
 import { FormatPill } from '@/app/components/ui/catalog/FormatPill';
 import { GradeChip } from '@/app/components/ui/catalog/GradeChip';
 import { DENSITIES, FONT_SCALES } from '@/app/config/preferences';
@@ -243,6 +247,140 @@ function Demo({ children, className }: { children: React.ReactNode; className?: 
     >
       {children}
     </div>
+  );
+}
+
+/**
+ * The imperative dialogs (HIVE-2.7, #5286), driven exactly as a page drives them.
+ *
+ * Every specimen goes through `useDialog()` rather than rendering a dialog inline, because
+ * the awaited call *is* the surface under review: the gallery is where the destructive copy
+ * rule, the type-to-confirm gate and the in-flight lock can be seen side by side, and it is
+ * what `e2e/hive-dialogs.spec.ts` drives.
+ */
+function ImperativeDialogsShowcase() {
+  const { confirm, prompt, alert } = useDialog();
+  const [outcome, setOutcome] = React.useState('Nothing asked yet.');
+
+  /** A `perform` that takes a beat and then fails, so the busy lock is visible. */
+  const failingPerform = () =>
+    new Promise<void>((_resolve, reject) => {
+      setTimeout(() => reject(new Error('The tenant still owns 3 projects.')), 600);
+    });
+
+  return (
+    <>
+      <Demo>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void confirm(
+              destructiveConfirm({
+                action: 'Delete',
+                noun: 'role',
+                name: 'Release manager',
+                consequence: 'Members holding this role lose its permissions immediately.',
+              })
+            ).then((ok) => setOutcome(ok ? 'Role deleted.' : 'Cancelled.'));
+          }}
+        >
+          Destructive confirm
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void confirm(
+              destructiveConfirm({
+                action: 'Delete',
+                noun: 'tenant',
+                name: 'Acme Corp',
+                consequence:
+                  'Every member loses access, and the projects, versions and API keys belonging to this tenant go with it.',
+                typeToConfirm: true,
+              })
+            ).then((ok) => setOutcome(ok ? 'Tenant deleted.' : 'Cancelled.'));
+          }}
+        >
+          Type-to-confirm
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void confirm({
+              title: 'Publish version 2.4.0?',
+              message: 'Consumers see the new contract as soon as this is published.',
+              variant: 'info',
+              confirmLabel: 'Publish version',
+            }).then((ok) => setOutcome(ok ? 'Published.' : 'Cancelled.'));
+          }}
+        >
+          Ordinary confirm
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void confirm({
+              title: 'Delete tenant "Acme Corp"?',
+              message: 'This one fails on purpose, to show the in-flight lock and the error.',
+              variant: 'danger',
+              confirmLabel: 'Delete tenant',
+              perform: failingPerform,
+            }).then((ok) => setOutcome(ok ? 'Tenant deleted.' : 'Cancelled.'));
+          }}
+        >
+          Confirm that fails
+        </Button>
+      </Demo>
+
+      <Demo>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void prompt({
+              title: 'New role',
+              label: 'Role name',
+              placeholder: 'Release manager',
+              helperText: 'Members see this name when their access is assigned.',
+              confirmLabel: 'Create role',
+            }).then((name) => setOutcome(name === null ? 'Cancelled.' : `Created "${name}".`));
+          }}
+        >
+          Prompt
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void prompt({
+              title: 'Rename "Payments"',
+              message: 'The public URL follows the name.',
+              label: 'Collection name',
+              defaultValue: 'Payments',
+              confirmLabel: 'Rename collection',
+              validate: (value) =>
+                value === 'Payments' ? 'That is already the name of this collection.' : null,
+            }).then((name) => setOutcome(name === null ? 'Cancelled.' : `Renamed to "${name}".`));
+          }}
+        >
+          Prompt with validation
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void alert({
+              title: 'Could not publish',
+              message: 'The upstream contract has an unresolved $ref.',
+              variant: 'error',
+            }).then(() => setOutcome('Acknowledged.'));
+          }}
+        >
+          Alert
+        </Button>
+      </Demo>
+
+      <p className="text-sm text-fg-muted" data-testid="dialog-outcome">
+        {outcome}
+      </p>
+    </>
   );
 }
 
@@ -799,6 +937,14 @@ export default function HiveDesignSystemPage() {
               </Alert>
             ))}
           </div>
+        </Section>
+
+        <Section
+          id="dialogs"
+          title="Confirms &amp; prompts"
+          description="The imperative pair, awaited from `useDialog()`. A destructive confirm names its object, states the consequence and takes a red primary; the irreversible ones add a type-to-confirm gate. A prompt is a real form field — label, hint, validation — not an unlabelled line."
+        >
+          <ImperativeDialogsShowcase />
         </Section>
 
         <Section

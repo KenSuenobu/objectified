@@ -35,6 +35,8 @@ import {
 } from '../../../../../lib/db/admin-helper';
 import { FeatureFlagUserOverridesPanel } from '../components/FeatureFlagUserOverridesPanel';
 import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
+import { useDialog } from '@/app/components/providers/DialogProvider';
+import { destructiveConfirm } from '@/app/components/dialogs/destructiveConfirm';
 
 interface User {
   id: string;
@@ -86,6 +88,7 @@ const LICENSE_TYPE_COLORS: Record<string, string> = {
 };
 
 export default function UserManagementClient() {
+  const { confirm } = useDialog();
   const [users, setUsers] = useState<User[]>([]);
   const [signups, setSignups] = useState<Signup[]>([]);
   const [licenses, setLicenses] = useState<License[]>([]);
@@ -239,9 +242,13 @@ export default function UserManagementClient() {
   };
 
   const handleCreateUserFromSignup = async (signup: Signup) => {
-    if (!confirm(`Create user account for ${signup.name} (${signup.email_address})?`)) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: `Create an account for ${signup.name}?`,
+      message: `${signup.email_address} gets a verified, enabled account and can sign in straight away.`,
+      variant: 'info',
+      confirmLabel: 'Create account',
+    });
+    if (!confirmed) return;
 
     try {
       const result = await createUserFromSignup(signup.email_address, true, true);
@@ -260,9 +267,17 @@ export default function UserManagementClient() {
   };
 
   const handleDeleteSignup = async (email: string) => {
-    if (!confirm(`Delete signup request for ${email}?`)) {
-      return;
-    }
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Delete',
+        noun: 'signup request from',
+        name: email,
+        consequence:
+          'The request leaves the queue. Nobody is emailed, and the address can sign up again.',
+        confirmLabel: 'Delete request',
+      })
+    );
+    if (!confirmed) return;
 
     try {
       const result = await deleteSignup(email);
@@ -315,9 +330,20 @@ export default function UserManagementClient() {
   };
 
   const handleDeleteUser = async (user: User) => {
-    if (!confirm(`Delete user ${user.name} (${user.email})? This action cannot be undone.`)) {
-      return;
-    }
+    // Type-to-confirm: #5286 names the admin user delete alongside tenants and projects as
+    // the irreversible cases. The phrase is the email, not the display name — two people
+    // can share a name, and it is the email the row is identified by everywhere else.
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Delete',
+        noun: 'user',
+        name: user.email,
+        consequence: `${user.name} loses their account, every tenant membership it carried and any licence assigned to it.`,
+        typeToConfirm: true,
+        confirmLabel: 'Delete user',
+      })
+    );
+    if (!confirmed) return;
 
     try {
       const result = await deleteUser(user.id);
