@@ -17,6 +17,11 @@
  *
  * `tests/unit/platform-nav-model.test.ts` fails if the model ever names an icon
  * this map does not carry, so an unresolved glyph cannot reach the rail.
+ *
+ * Since HIVE-3.6 (#5292) the command palette resolves its own rows through the same
+ * function, so the map carries a few glyphs the *nav* model never names — a command is a
+ * row with an icon exactly as a destination is, and two resolvers would mean two places for
+ * an unknown name to fall back differently.
  */
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -24,6 +29,8 @@ import {
   Box,
   Building2,
   CircleUser,
+  Clock,
+  FileJson2,
   FolderKanban,
   GitBranch,
   Globe,
@@ -32,12 +39,16 @@ import {
   Library,
   Link,
   Network,
+  Package,
   PackageOpen,
+  Palette,
+  Plus,
   ScrollText,
   Shapes,
   Shield,
   ShieldCheck,
   Sunset,
+  Upload,
   Users,
 } from 'lucide-react';
 import { DEFAULT_PLATFORM_NAV_ICON } from './platform-nav';
@@ -48,6 +59,8 @@ export const PLATFORM_NAV_ICONS: Readonly<Record<string, LucideIcon>> = {
   box: Box,
   'building-2': Building2,
   'circle-user': CircleUser,
+  clock: Clock,
+  'file-json-2': FileJson2,
   'folder-kanban': FolderKanban,
   'git-branch': GitBranch,
   globe: Globe,
@@ -56,12 +69,16 @@ export const PLATFORM_NAV_ICONS: Readonly<Record<string, LucideIcon>> = {
   library: Library,
   link: Link,
   network: Network,
+  package: Package,
   'package-open': PackageOpen,
+  palette: Palette,
+  plus: Plus,
   'scroll-text': ScrollText,
   shapes: Shapes,
   shield: Shield,
   'shield-check': ShieldCheck,
   sunset: Sunset,
+  upload: Upload,
   users: Users,
 };
 

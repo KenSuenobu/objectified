@@ -11,6 +11,7 @@ import {
 import { getCommercialAccessForSession } from '@lib/db/commercial-access';
 import AppShell from './AppShell';
 import RailFooter from './RailFooter';
+import RailSearchTrigger from './RailSearchTrigger';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 
 /**
@@ -32,6 +33,10 @@ import WorkspaceSwitcher from './WorkspaceSwitcher';
  *
  * Failure is non-fatal by design: a rail without suite entries is still a working rail, and
  * it is not worth a broken page.
+ *
+ * Every rail region is now filled: HIVE-3.3 took `workspace`, HIVE-3.4 `footer`, and
+ * HIVE-3.6 (#5292) `search` — the trigger that opens the command palette `AppShell` itself
+ * hosts, handed the same resolved groups the rail draws.
  *
  * The membership context that names the active workspace is *not* loaded here. HIVE-3.3
  * (#5289) put it inside `WorkspaceSwitcher`, which is the component that needs all of it —
@@ -97,7 +102,9 @@ export default function AdeAppShell({ children }: AdeAppShellProps) {
     <AppShell
       groups={groups}
       pathname={pathname}
+      currentTenantId={currentTenantId}
       workspace={({ iconRail }) => <WorkspaceSwitcher iconRail={iconRail} />}
+      search={({ iconRail }) => <RailSearchTrigger iconRail={iconRail} />}
       footer={({ iconRail }) => (
         <RailFooter
           userName={user?.name}

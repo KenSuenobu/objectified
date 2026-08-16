@@ -26,6 +26,7 @@ import {
 } from '../../../../lib/external-links';
 import { cn } from '../../../../lib/utils';
 import PreferencesDrawerHost from './preferences/PreferencesDrawerHost';
+import CommandPaletteHost from '@/app/components/shell/CommandPaletteHost';
 import { openPreferences } from './preferences/preferencesDrawerBus';
 import WhatsNewDialog from './WhatsNewDialog';
 // The one place the build string is derived (HIVE-3.4, #5290) — the launcher, the top bar
@@ -468,6 +469,13 @@ export default function AdeHome({
       {/* Preferences pane (HIVE-1.4, #5277). `/ade` renders no TopHeader — see
           `ConditionalHeader` — so the launcher hosts the pane itself. */}
       <PreferencesDrawerHost />
+      {/* And the command palette (HIVE-3.6, #5292), for the same reason: `⌘K` has to work
+          on the launcher too, and this is the only chrome the route draws. */}
+      <CommandPaletteHost
+        currentTenantId={
+          (session?.user as { current_tenant_id?: string } | undefined)?.current_tenant_id ?? null
+        }
+      />
       <WhatsNewDialog isOpen={showWhatsNew} onClose={() => setShowWhatsNew(false)} />
     </div>
   );

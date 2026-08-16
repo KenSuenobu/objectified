@@ -42,6 +42,7 @@ import {
   SHELL_SHORTCUTS,
   isTypingTarget,
   matchesPreferencesShortcut,
+  matchesCommandPaletteShortcut,
   matchesShortcutsShortcut,
 } from '../src/app/components/ade/preferences/shortcuts';
 import { TABS } from '../src/app/components/ade/PreferencesDrawer';
@@ -531,6 +532,23 @@ describe('the other tabs', () => {
     expect(
       matchesPreferencesShortcut({
         key: ',',
+        metaKey: true,
+        ctrlKey: false,
+        altKey: false,
+        shiftKey: false,
+        repeat: false,
+        defaultPrevented: false,
+      } as KeyboardEvent),
+    ).toBe(true);
+
+    // …and for the palette's chord (HIVE-3.6, #5292), which this tab also documents.
+    expect(panel.querySelector('[data-shortcut="palette"]')).toHaveTextContent(
+      'Open the command palette',
+    );
+    expect(SHELL_SHORTCUTS.find((entry) => entry.id === 'palette')!.keys).toEqual(['⌘', 'K']);
+    expect(
+      matchesCommandPaletteShortcut({
+        key: 'k',
         metaKey: true,
         ctrlKey: false,
         altKey: false,

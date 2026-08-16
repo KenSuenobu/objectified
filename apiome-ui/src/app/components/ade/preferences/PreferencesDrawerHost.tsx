@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PreferencesBoundary } from '../../../providers/PreferencesProvider';
 import PreferencesDrawer from '../PreferencesDrawer';
 import { registerPreferencesDrawerHost, type PreferencesTabId } from './preferencesDrawerBus';
@@ -57,8 +57,16 @@ export default function PreferencesDrawerHost() {
     if (trigger && trigger.isConnected) trigger.focus();
   }, [open]);
 
-  // Answer `openPreferences()` for as long as this host is mounted.
-  useEffect(() => registerPreferencesDrawerHost(openDrawer), [openDrawer]);
+  const closeDrawer = useCallback(() => setOpen(false), []);
+
+  // Answer `openPreferences()` and `closePreferences()` for as long as this host is
+  // mounted. The second exists so the Shortcuts tab can hand off to the command palette
+  // (HIVE-3.6, #5292) rather than stack it on top of this pane.
+  const controls = useMemo(
+    () => ({ open: openDrawer, close: closeDrawer }),
+    [openDrawer, closeDrawer]
+  );
+  useEffect(() => registerPreferencesDrawerHost(controls), [controls]);
 
   // `⌘,` / `Ctrl+,`, the chord every desktop platform already uses for settings, and `?`
   // for the shortcuts reference. Bound on the document so they work wherever focus is —

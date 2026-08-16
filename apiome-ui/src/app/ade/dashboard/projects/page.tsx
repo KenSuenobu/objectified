@@ -2,6 +2,7 @@
 
 import { useAuthSession } from '@lib/auth/session-client';
 import { useRouter } from 'next/navigation';
+import { OPEN_ACTIONS, useOpenAction } from '@/app/components/shell/openActions';
 import {
   useEffect,
   useState,
@@ -594,6 +595,19 @@ const Projects = () => {
   };
 
   const handleImportClick = () => setShowImportDialog(true);
+
+  /*
+   * The command palette's "New project…" and "Import a spec…" actions (HIVE-3.6, #5292).
+   * The palette navigates here with `?open=…` and this page opens the dialog it already
+   * owns, so the two entry points cannot drift into two different forms. `useOpenAction`
+   * strips the parameter, so a reload or the back button does not reopen the dialog.
+   */
+  useOpenAction(OPEN_ACTIONS.newProject, handleCreateClick);
+  useOpenAction(OPEN_ACTIONS.importSpec, () => {
+    setImportOpenedFromNewProjectAI(false);
+    setShowNewImportDialog(true);
+  });
+
   const handleImportSuccess = async () => {
     await loadProjects();
     setQualityHistoryEpoch((e) => e + 1);

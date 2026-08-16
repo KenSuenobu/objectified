@@ -54,6 +54,33 @@ export function matchesRailShortcut(event: KeyboardEvent): boolean {
 }
 
 /**
+ * Whether a keyboard event is the "open the command palette" shortcut: `⌘K` on macOS,
+ * `Ctrl+K` elsewhere (HIVE-3.6, #5292; `DESIGN.md` §5.4).
+ *
+ * Matched the same way as {@link matchesPreferencesShortcut}: a command modifier with `k`
+ * produces no text, so the chord deliberately fires inside fields too. That is the point
+ * of a palette — a reader half-way through a filter box should be able to leave for
+ * somewhere else without first clearing what they typed.
+ *
+ * `Ctrl+K` is claimed by the browser on some platforms (Firefox focuses its search bar), so
+ * the caller must `preventDefault()`; the matcher itself refuses an event that another
+ * handler has already answered.
+ *
+ * @param event The keydown event.
+ * @returns `true` when the command palette should open.
+ */
+export function matchesCommandPaletteShortcut(event: KeyboardEvent): boolean {
+  if (event.defaultPrevented) return false;
+  if (event.repeat) return false;
+  // `key` is the produced character, which is lower case unless shift is held; `⌘⇧K` is a
+  // different chord and is deliberately not this one.
+  if (event.key !== 'k' && event.key !== 'K') return false;
+  if (!(event.metaKey || event.ctrlKey)) return false;
+  if (event.altKey || event.shiftKey) return false;
+  return true;
+}
+
+/**
  * Whether a keyboard event is the "show the keyboard shortcuts" chord: a bare `?`
  * (HIVE-3.4, #5290; `DESIGN.md` §5.4 prints the chip beside the menu row).
  *
@@ -134,6 +161,12 @@ export interface ShortcutEntry {
 
 /** The shell shortcuts, in the order the tab lists them. */
 export const SHELL_SHORTCUTS: readonly ShortcutEntry[] = [
+  {
+    id: 'palette',
+    keys: ['⌘', 'K'],
+    description: 'Open the command palette',
+    global: true,
+  },
   {
     id: 'preferences',
     keys: ['⌘', ','],
