@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import type { CSSProperties } from 'react';
 
-import BeeGlyph, { type BeeGlyphTone } from './BeeGlyph';
+import BeeGlyph from './BeeGlyph';
 
 /**
  * The Apiome brand mark (HIVE-1.5, #5278).
@@ -15,11 +15,12 @@ import BeeGlyph, { type BeeGlyphTone } from './BeeGlyph';
  * | `wordmark` | the full "apiome" lock-up artwork | auth brand panel, launcher hero |
  * | `lockup` | bee + "apiome" + an optional subtitle | rail top, admin console |
  *
- * The bee is vector ({@link BeeGlyph}) and follows the theme. The wordmark is still the
- * shipped artwork — `Apiome-02.png` on a light base, `Apiome-05.png` on a dark one — and
- * this is the only module allowed to name those files; the swap happens in CSS from the
+ * Every variant is the shipped artwork. The bee is `bee-logo.png` ({@link BeeGlyph}); the
+ * wordmark is `Apiome-02.png` on a light base and `Apiome-05.png` on a dark one, and this
+ * is the only module allowed to name those two files. Their swap happens in CSS from the
  * theme's `--brand-on-dark`, not from a `dark:` utility, so the nine themes all get the
- * right one rather than only the two that set `.dark`.
+ * right one rather than only the two that set `.dark`. The bee needs no such swap: it is
+ * one file on every theme.
  */
 
 /** Which shape of the mark to render. */
@@ -36,13 +37,11 @@ export interface BrandMarkProps {
   size?: number;
   /** Subtitle under the word — `lockup` only. `"Platform"` on the rail (DESIGN.md §5.2). */
   sub?: string;
-  /** How the bee takes its colour. Defaults to the brand hues. */
-  tone?: BeeGlyphTone;
   /** Accessible name for the variants that carry no visible text. Defaults to `"Apiome"`. */
   label?: string;
   /** Hide the mark from assistive technology — for a second copy, or pure ornament. */
   decorative?: boolean;
-  /** Ask Next to preload the wordmark artwork. Set it on an above-the-fold hero. */
+  /** Ask Next to preload the artwork. Set it on an above-the-fold hero. */
   priority?: boolean;
   /** Extra classes on the outermost element. */
   className?: string;
@@ -83,7 +82,6 @@ export default function BrandMark({
   variant = 'lockup',
   size,
   sub,
-  tone = 'brand',
   label = 'Apiome',
   decorative = false,
   priority = false,
@@ -93,7 +91,7 @@ export default function BrandMark({
   const name = decorative ? undefined : label;
 
   if (variant === 'glyph') {
-    return <BeeGlyph size={pixels} tone={tone} label={name} className={className} />;
+    return <BeeGlyph size={pixels} label={name} priority={priority} className={className} />;
   }
 
   if (variant === 'wordmark') {
@@ -132,7 +130,7 @@ export default function BrandMark({
   // that artwork already contains a bee: pairing the two would print the mark twice.
   return (
     <span className={classes('brand-lockup', className)} aria-hidden={decorative || undefined}>
-      <BeeGlyph size={pixels} tone={tone} />
+      <BeeGlyph size={pixels} priority={priority} />
       <span className="brand-lockup__text">
         <span className="brand-lockup__name">apiome</span>
         {sub ? <span className="brand-lockup__sub">{sub}</span> : null}

@@ -82,6 +82,14 @@ function callersOf(needle: string): string[] {
   return sourceFiles('src').filter((path) => readFileSync(join(APP_ROOT, path), 'utf8').includes(needle));
 }
 
+/**
+ * The rule that sizes and tints whatever art an empty state is given.
+ *
+ * `img` joined `svg` when the brand mark became artwork: `EmptyState`'s `brand` prop
+ * swaps a Lucide icon for the bee, and the bee is now `public/bee-logo.png`.
+ */
+const EMPTY_ART_GLYPH = '.hive-empty-art > :is(svg, img)';
+
 describe('the hex art (hive.css §14 `.empty__art`)', () => {
   const art = declarationsOf('.hive-empty-art');
   const outer = declarationsOf('.hive-empty-art__hex');
@@ -107,18 +115,19 @@ describe('the hex art (hive.css §14 `.empty__art`)', () => {
     // One rule set has to serve the 88 px block art and the 52 px inline art, and both have
     // to follow the font-size preference. A frozen inset would only ever fit one of them.
     expect(inner.get('inset')).toMatch(/%$/);
-    const glyph = declarationsOf('.hive-empty-art > svg');
+    const glyph = declarationsOf(EMPTY_ART_GLYPH);
     expect(glyph.get('width')).toMatch(/%$/);
     expect(glyph.get('height')).toMatch(/%$/);
   });
 
   it('reaches the glyph as a descendant, so a call site’s own classes cannot win', () => {
-    // `.hive-empty-art > svg` is (0,1,1); `.text-white` and `.h-10` are (0,1,0). That one
-    // point of specificity is the whole migration strategy for the forty-two call sites
-    // still passing the old gradient tile's utilities.
-    const prelude = rules.find((candidate) => candidate.prelude === '.hive-empty-art > svg');
+    // `.hive-empty-art > :is(svg, img)` is (0,1,1) — `:is()` takes the specificity of its
+    // strongest argument, and both of these are type selectors — while `.text-white` and
+    // `.h-10` are (0,1,0). That one point is the whole migration strategy for the forty-two
+    // call sites still passing the old gradient tile's utilities.
+    const prelude = rules.find((candidate) => candidate.prelude === EMPTY_ART_GLYPH);
     expect(prelude).toBeDefined();
-    const glyph = declarationsOf('.hive-empty-art > svg');
+    const glyph = declarationsOf(EMPTY_ART_GLYPH);
     expect(glyph.get('color')).toBe('var(--empty-art-ink)');
     // Unlayered, like the rest of this stylesheet's component rules — a rule inside
     // `@layer` would lose to every utility whatever its specificity.

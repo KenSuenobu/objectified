@@ -23,12 +23,7 @@ import '@testing-library/jest-dom';
 
 import BrandMark from '../src/app/components/brand/BrandMark';
 import BeeGlyph from '../src/app/components/brand/BeeGlyph';
-import {
-  BEE_GLYPH_BRAND_PALETTE,
-  BEE_GLYPH_PART_OPACITY,
-  BEE_GLYPH_SHAPES,
-  BEE_GLYPH_STROKE_WIDTH,
-} from '../src/app/components/brand/beeGlyph';
+import { BEE_LOGO_FILE } from '../src/app/components/brand/beeGlyph';
 import {
   parseBlock,
   parseDeclarations,
@@ -95,65 +90,51 @@ function walk(directory: string, extensions: string[]): string[] {
 }
 
 describe('BeeGlyph', () => {
-  it('draws every shape of the mark', () => {
+  it('draws the shipped artwork rather than a drawing of it', () => {
+    // The whole point of the change this suite was rewritten for: one bee, and it is the
+    // file the brand ships. `next/image` rewrites the `src` into its own optimiser URL, so
+    // the file name is what survives to assert on.
     const { container } = render(<BeeGlyph />);
-    expect(container.querySelectorAll('svg.bee-glyph > g > *')).toHaveLength(
-      BEE_GLYPH_SHAPES.length,
-    );
-  });
-
-  it('tags each shape with the brand role that paints it, and how', () => {
-    const { container } = render(<BeeGlyph />);
-    for (const shape of BEE_GLYPH_SHAPES) {
-      const drawn = container.querySelectorAll(
-        `.bee-glyph__${shape.part}.bee-glyph__${shape.paint}`,
-      );
-      expect(drawn.length).toBeGreaterThan(0);
-    }
-    expect(container.querySelectorAll('.bee-glyph__stroke')).toHaveLength(
-      BEE_GLYPH_SHAPES.filter((shape) => shape.paint === 'stroke').length,
-    );
+    const image = container.querySelector('img.bee-glyph')!;
+    expect(image.getAttribute('src')).toContain(BEE_LOGO_FILE);
   });
 
   it('hides itself from assistive technology when it has no name', () => {
     // The common case: a visible "apiome" or a link label already says what it is, and a
-    // second announcement is noise.
+    // second announcement is noise. An empty `alt` is what takes an image out of the tree.
     const { container } = render(<BeeGlyph />);
-    const svg = container.querySelector('svg')!;
-    expect(svg).toHaveAttribute('aria-hidden', 'true');
-    expect(svg).not.toHaveAttribute('role');
+    expect(container.querySelector('img')).toHaveAttribute('alt', '');
+    expect(screen.queryByRole('img')).toBeNull();
   });
 
   it('announces itself as an image when it is given one', () => {
     render(<BeeGlyph label="Apiome" />);
-    const glyph = screen.getByRole('img', { name: 'Apiome' });
-    expect(glyph).not.toHaveAttribute('aria-hidden');
+    expect(screen.getByRole('img', { name: 'Apiome' })).toBeInTheDocument();
   });
 
   it('sizes itself in pixels, and takes the rail size by default', () => {
     const { container } = render(<BeeGlyph size={72} />);
-    expect(container.querySelector('svg')).toHaveAttribute('width', '72');
+    const image = container.querySelector('img')!;
+    // Square: the caller gives one edge, because the artwork is square.
+    expect(image).toHaveAttribute('width', '72');
+    expect(image).toHaveAttribute('height', '72');
 
     const { container: byDefault } = render(<BeeGlyph />);
-    expect(byDefault.querySelector('svg')).toHaveAttribute('width', '26');
+    expect(byDefault.querySelector('img')).toHaveAttribute('width', '26');
   });
 
-  it('switches to the one-colour tone on request', () => {
-    const { container } = render(<BeeGlyph tone="mono" />);
-    expect(container.querySelector('svg')).toHaveClass('bee-glyph', 'bee-glyph--mono');
-
-    const { container: brand } = render(<BeeGlyph />);
-    expect(brand.querySelector('svg')).not.toHaveClass('bee-glyph--mono');
+  it('takes a caller-supplied class alongside its own', () => {
+    const { container } = render(<BeeGlyph className="mb-10" />);
+    expect(container.querySelector('img')).toHaveClass('bee-glyph', 'mb-10');
   });
 });
 
 describe('BrandMark', () => {
   it('renders the bee alone for the glyph variant', () => {
     const { container } = render(<BrandMark variant="glyph" size={26} />);
-    const svg = container.querySelector('svg.bee-glyph')!;
-    expect(svg).toHaveAttribute('width', '26');
-    expect(svg).toHaveAttribute('role', 'img');
-    expect(svg).toHaveAttribute('aria-label', 'Apiome');
+    const bee = container.querySelector('img.bee-glyph')!;
+    expect(bee).toHaveAttribute('width', '26');
+    expect(bee).toHaveAttribute('alt', 'Apiome');
   });
 
   it('renders both wordmark files, one per base, and names the pair once', () => {
@@ -180,14 +161,15 @@ describe('BrandMark', () => {
   });
 
   it('sets the word as text in the lock-up, so the bee is not printed twice', () => {
-    // `Apiome-02.png` already contains the bee; pairing the artwork with the glyph would
-    // show two of them.
+    // `Apiome-02.png` already contains the bee; pairing that artwork with the glyph would
+    // show two of them, so the lock-up pairs the bee with the word set as text.
     const { container } = render(<BrandMark variant="lockup" sub="Platform" />);
     expect(screen.getByText('apiome')).toHaveClass('brand-lockup__name');
     expect(screen.getByText('Platform')).toHaveClass('brand-lockup__sub');
-    expect(container.querySelector('img')).toBeNull();
-    // The visible word is the accessible name, so the glyph beside it stays hidden.
-    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    expect(container.querySelector('.brand-wordmark')).toBeNull();
+    // The visible word is the accessible name, so the bee beside it stays unnamed.
+    expect(container.querySelectorAll('img')).toHaveLength(1);
+    expect(container.querySelector('img.bee-glyph')).toHaveAttribute('alt', '');
   });
 
   it('omits the subtitle when the lock-up has none', () => {
@@ -212,53 +194,36 @@ describe('BrandMark', () => {
   });
 });
 
-describe('the stylesheet paints the glyph', () => {
-  it.each(['ink', 'wing', 'comb', 'honey'])('gives the %s role a colour', (part) => {
-    expect(ruleFor(`.bee-glyph__${part}`).get('--bee-part')).toBeDefined();
+describe('the stylesheet places the glyph', () => {
+  it('never lets the mark be what gives way in a tight row', () => {
+    // The rail's brand row and the ADE header are both flex containers that run out of
+    // room; without this the bee is the first thing squashed.
+    expect(ruleFor('.bee-glyph').get('flex')).toBe('none');
   });
 
-  it('fills with the role colour and strokes with it too', () => {
-    expect(ruleFor('.bee-glyph__fill').get('fill')).toBe('var(--bee-part)');
-
-    const stroked = ruleFor('.bee-glyph__stroke');
-    expect(stroked.get('fill')).toBe('none');
-    expect(stroked.get('stroke')).toBe('var(--bee-part)');
-    // The raster renderer writes this number inline; a drift would make the generated
-    // favicon's antennae a different weight from the one on screen.
-    expect(stroked.get('stroke-width')).toBe(String(BEE_GLYPH_STROKE_WIDTH));
+  it('keeps the artwork square whatever box it lands in', () => {
+    // `.hive-empty-art` sizes its art in per cent of a square plate, not in pixels, so the
+    // bee is one of the few images here whose box is not set from its own ratio.
+    expect(ruleFor('.bee-glyph').get('object-fit')).toBe('contain');
   });
 
-  it('keeps the wings at the same opacity both renderers use', () => {
-    expect(ruleFor('.bee-glyph__wing').get('opacity')).toBe(String(BEE_GLYPH_PART_OPACITY.wing));
-  });
-
-  it('shades the one-colour tone so the comb still reads as rings', () => {
-    const opacities = ['ink', 'comb', 'honey', 'wing'].map((part) =>
-      Number(ruleFor(`.bee-glyph--mono .bee-glyph__${part}`).get('opacity')),
-    );
-    expect(new Set(opacities).size).toBe(opacities.length);
-    for (const part of ['ink', 'comb', 'honey', 'wing']) {
-      expect(ruleFor(`.bee-glyph--mono .bee-glyph__${part}`).get('--bee-part')).toBe('currentColor');
-    }
+  it('sizes the empty state’s art whether it is an icon or the bee', () => {
+    // The art is a Lucide `svg` or the bee `img` depending on the `brand` prop; a rule that
+    // named only one of them would leave the other at its intrinsic size.
+    const art = ruleFor('.hive-empty-art > :is(svg, img)');
+    expect(art.get('width')).toBe('34%');
+    expect(art.get('height')).toBe('34%');
   });
 });
 
 describe('the brand tokens', () => {
-  it('declares the ink in the token layer, at the navy the mark is drawn in', () => {
+  it('declares the brand ink in the token layer, at the brand navy', () => {
     expect(layer.theme.has('--color-brand-ink')).toBe(true);
-    expect(resolveToken('--color-brand-ink', layer)).toBe(BEE_GLYPH_BRAND_PALETTE.ink);
+    expect(resolveToken('--color-brand-ink', layer)).toBe(resolveToken('--color-brand-navy', layer));
   });
 
-  it('aliases it under the hive spelling the glyph reads', () => {
+  it('aliases it under the hive spelling', () => {
     expect(layer.root.get('--brand-ink')).toBe('var(--color-brand-ink)');
-  });
-
-  it('matches the raster palette to the tokens, hue for hue', () => {
-    // The favicon and the on-screen mark are the same bee; the only reason two palettes
-    // exist is that one of them has no stylesheet.
-    expect(resolveToken('--color-brand-azure', layer)).toBe(BEE_GLYPH_BRAND_PALETTE.comb);
-    expect(resolveToken('--color-brand-azure', layer)).toBe(BEE_GLYPH_BRAND_PALETTE.wing);
-    expect(resolveToken('--color-brand-honey', layer)).toBe(BEE_GLYPH_BRAND_PALETTE.honey);
   });
 
   it('starts on the light wordmark', () => {
@@ -268,18 +233,20 @@ describe('the brand tokens', () => {
   it.each(DARK_THEMES)('%s lightens the ink and asks for the dark wordmark', (id) => {
     const block = blocks.get(id)!;
     expect(block.declarations.get('--brand-on-dark')).toBe('1');
-    // Resolved rather than compared literally: each palette points the mark at its own ink.
+    // Resolved rather than compared literally: each palette points the token at its own
+    // ink. The mark itself no longer reads this — it is artwork, and its navy is fixed —
+    // but the token is still the brand's ink for anything that has to survive a dark base.
     expect(resolveThemeToken('--color-brand-ink', layer, block)).not.toBe(
-      BEE_GLYPH_BRAND_PALETTE.ink,
+      resolveToken('--color-brand-navy', layer),
     );
   });
 
   it.each(themes.filter((theme) => theme.appearance === 'light').map((theme) => theme.id))(
-    '%s leaves the mark in brand navy',
+    '%s leaves the brand ink in navy',
     (id) => {
       const block = blocks.get(id);
       expect(resolveThemeToken('--color-brand-ink', layer, block)).toBe(
-        BEE_GLYPH_BRAND_PALETTE.ink,
+        resolveToken('--color-brand-navy', layer),
       );
     },
   );
@@ -335,11 +302,16 @@ describe('the mark has exactly one owner', () => {
     expect(offenders).toEqual(['src/app/components/brand/BrandMark.tsx']);
   });
 
-  it('leaves no raster bee behind either', () => {
+  it('lets only the asset module name the bee', () => {
+    // Quoted with `'` or `"` — an actual string literal. Backticks are left out on
+    // purpose: every module in the brand folder names the artwork in its doc comment to say
+    // where the bee comes from, and prose is not a second copy of the decision. Both the
+    // fetched path and the bare file name count, since `beeLogoFile.ts` reads it off disk —
+    // and it does that through the constant rather than by spelling the name again.
     const offenders = sources
-      .filter((path) => /\/bee-logo\.png/.test(readFileSync(path, 'utf8')))
+      .filter((path) => /['"]\/?bee-logo\.png['"]/.test(readFileSync(path, 'utf8')))
       .map((path) => path.slice(APP_ROOT.length + 1));
-    expect(offenders).toEqual([]);
+    expect(offenders).toEqual(['src/app/components/brand/beeGlyph.ts']);
   });
 
   it('puts the mark on the surfaces the ticket names', () => {
@@ -362,8 +334,10 @@ describe('the icon routes draw from the same glyph', () => {
   it.each([
     ['icon.tsx', icon],
     ['apple-icon.tsx', appleIcon],
-  ])('%s renders the shared glyph rather than a traced PNG', (_name, source) => {
-    expect(source).toContain('beeGlyphDataUri');
+  ])('%s embeds the shipped artwork rather than art of its own', (_name, source) => {
+    // Satori has no `public/`, so the bytes have to be inlined — `beeLogoDataUri` is the
+    // one reader that does it, and `tests/bee-glyph.test.ts` checks it reads the real file.
+    expect(source).toContain('beeLogoDataUri');
     expect(source).toContain("from 'next/og'");
     expect(source).toContain("export const contentType = 'image/png'");
   });
@@ -375,15 +349,25 @@ describe('the icon routes draw from the same glyph', () => {
     }
   });
 
+  it('awaits the id Next asks it for, so each size is really that size', () => {
+    // Next passes `id` as a promise. Compared unawaited it matches no entry of ICON_SIZES,
+    // the `?? ICON_SIZES[0].edge` fallback takes over, and every route serves a 32 px image
+    // under a `<link sizes="512x512">` — silently, because the route still returns a PNG.
+    expect(icon).toMatch(/export default async function Icon/);
+    expect(icon).toMatch(/await id/);
+    // The comparison has to use the awaited value, not the promise it came from.
+    expect(icon).toMatch(/icon\.id === requested/);
+  });
+
   it('gives the Apple icon an opaque plate, because iOS composites on black', () => {
     expect(appleIcon).toContain('background: PLATE');
     expect(appleIcon).toMatch(/width: 180, height: 180/);
   });
 });
 
-describe('the glyph classes are declared where the token layer can reach them', () => {
+describe('the brand classes are declared where the token layer can reach them', () => {
   it('keeps the brand section inside globals.css, not a module', () => {
-    // A CSS module would scope the class names and the theme swap would never reach them.
+    // A CSS module would scope the class names and the wordmark swap would never reach them.
     expect(css).toContain('BRAND MARK (HIVE-1.5, #5278)');
     expect(parseBlock(css, ':root').has('--brand-ink')).toBe(true);
   });

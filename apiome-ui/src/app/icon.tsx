@@ -1,17 +1,19 @@
 import { ImageResponse } from 'next/og';
 
-import { beeGlyphDataUri } from '@/app/components/brand/beeGlyph';
+import { beeLogoDataUri } from '@/app/components/brand/beeLogoFile';
 
 /**
- * Browser and installed-app icons, drawn from the bee glyph (HIVE-1.5, #5278).
+ * Browser and installed-app icons, drawn from the bee artwork (HIVE-1.5, #5278).
  *
  * Next renders each entry below at build time and links it from `<head>`, so the tab and
- * the home-screen icon come from the same vector the app draws its brand mark with —
- * `Apiome-07.png` is no longer traced by hand into an `.ico`.
+ * the home-screen icon are the same `bee-logo.png` the app draws its brand mark with.
  *
- * The glyph is handed to the renderer as an SVG data URI rather than as inline JSX: the
- * generator has no stylesheet, so `renderBeeGlyphSvg` bakes the fixed brand hues in. These
- * images are cached by the browser as files and have no theme to follow.
+ * The artwork is handed to the renderer as a base64 data URI rather than as a path: Satori
+ * has no network and no `public/` directory, so `beeLogoDataUri` reads the bytes off disk.
+ *
+ * `app-large` asks for 512 px from a 256 px file, so that one entry is an upscale — it is
+ * the size an installed PWA keeps for its splash screen, where it is shown well below its
+ * pixel size. The other two are at or under the artwork's own resolution.
  *
  * `favicon.ico` stays in this directory as the legacy fallback for clients that ask for
  * `/favicon.ico` without reading the document.
@@ -43,11 +45,17 @@ export function generateImageMetadata() {
 /**
  * Render one icon.
  *
+ * `id` is awaited because Next hands it over as a promise, the same way it does `params`.
+ * Read synchronously it is an object, no entry of {@link ICON_SIZES} matches it, and every
+ * size silently falls back to the first one — which is how `app` and `app-large` were both
+ * being served as 32 px images while `<head>` advertised them at 192 and 512.
+ *
  * @param params.id The {@link ICON_SIZES} id Next is asking for.
  * @returns A PNG of the bee at that size, on a transparent ground.
  */
-export default function Icon({ id }: { id: string }) {
-  const edge = ICON_SIZES.find((icon) => icon.id === id)?.edge ?? ICON_SIZES[0].edge;
+export default async function Icon({ id }: { id: string | Promise<string> }) {
+  const requested = await id;
+  const edge = ICON_SIZES.find((icon) => icon.id === requested)?.edge ?? ICON_SIZES[0].edge;
 
   return new ImageResponse(
     (
@@ -60,8 +68,9 @@ export default function Icon({ id }: { id: string }) {
           height: '100%',
         }}
       >
-        {/* Satori renders a plain `img`; `next/image` has no meaning outside the DOM. */}
-        <img src={beeGlyphDataUri({ size: edge })} width={edge} height={edge} alt="" />
+        {/* Satori renders a plain `img`; `next/image` has no meaning outside the DOM,
+            and it cannot fetch `/bee-logo.png` — the bytes have to be inline. */}
+        <img src={beeLogoDataUri()} width={edge} height={edge} alt="" />
       </div>
     ),
     { width: edge, height: edge },

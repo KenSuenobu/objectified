@@ -1,13 +1,13 @@
 import { ImageResponse } from 'next/og';
 
-import { beeGlyphDataUri } from '@/app/components/brand/beeGlyph';
+import { beeLogoDataUri } from '@/app/components/brand/beeLogoFile';
 
 /**
  * The home-screen icon iOS asks for (HIVE-1.5, #5278).
  *
- * Same glyph as `icon.tsx`, with two differences iOS forces: the canvas is opaque — iOS
- * composites a transparent icon onto black, which would swallow the navy — and the bee is
- * inset, because the system rounds the corners off with its own mask.
+ * Same artwork as `icon.tsx`, with two differences iOS forces: the canvas is opaque — iOS
+ * composites a transparent icon onto black, which would swallow the bee's navy line work —
+ * and the bee is inset, because the system rounds the corners off with its own mask.
  */
 
 /** The size iOS asks for. */
@@ -42,8 +42,9 @@ export default function AppleIcon() {
           background: PLATE,
         }}
       >
-        {/* Satori renders a plain `img`; `next/image` has no meaning outside the DOM. */}
-        <img src={beeGlyphDataUri({ size: edge })} width={edge} height={edge} alt="" />
+        {/* Satori renders a plain `img`; `next/image` has no meaning outside the DOM,
+            and it cannot fetch `/bee-logo.png` — the bytes have to be inline. */}
+        <img src={beeLogoDataUri()} width={edge} height={edge} alt="" />
       </div>
     ),
     size,

@@ -1,23 +1,11 @@
-import {
-  BEE_GLYPH_SHAPES,
-  BEE_GLYPH_TRANSFORM,
-  BEE_GLYPH_VIEWBOX,
-  type BeeGlyphShape,
-} from './beeGlyph';
+import Image from 'next/image';
 
-/** How the glyph takes its colour. */
-export type BeeGlyphTone =
-  /** The brand hues, from `--brand-ink` / `--brand-azure` / `--brand-honey`. */
-  | 'brand'
-  /** One colour — `currentColor`, shaded per part. For tinted surfaces and ornament. */
-  | 'mono';
+import { BEE_LOGO_SRC } from './beeGlyph';
 
 /** Props for {@link BeeGlyph}. */
 export interface BeeGlyphProps {
   /** Edge length of the square glyph in pixels. A CSS rule on `className` still wins. */
   size?: number;
-  /** Which palette to paint with. Defaults to `brand`. */
-  tone?: BeeGlyphTone;
   /**
    * Accessible name.
    *
@@ -25,7 +13,9 @@ export interface BeeGlyphProps {
    * technology, which is right wherever a visible label already says "Apiome".
    */
   label?: string;
-  /** Extra classes on the `<svg>`. */
+  /** Ask Next to preload the artwork. Set it where the mark is above the fold. */
+  priority?: boolean;
+  /** Extra classes on the `<img>`. */
   className?: string;
 }
 
@@ -33,60 +23,38 @@ export interface BeeGlyphProps {
 export const BEE_GLYPH_DEFAULT_SIZE = 26;
 
 /**
- * One shape of the glyph.
+ * The Apiome bee.
  *
- * @param shape The shape to draw, from `BEE_GLYPH_SHAPES`.
- * @returns An `<ellipse>` or `<path>` carrying the classes that colour it.
- */
-function Shape({ shape }: { shape: BeeGlyphShape }) {
-  const className = `bee-glyph__${shape.part} bee-glyph__${shape.paint}`;
-  return shape.el === 'ellipse' ? (
-    <ellipse className={className} {...shape.attrs} />
-  ) : (
-    <path className={className} {...shape.attrs} />
-  );
-}
-
-/**
- * The Apiome bee, as inline SVG.
+ * The shipped artwork — `public/bee-logo.png` — rather than a drawing of it. Between
+ * HIVE-1.5 and this change the app rendered a hand-authored vector approximation, which
+ * read as a different insect: no molecule lattice, different wings, different proportions.
+ * There is now one bee, and it is the brand's.
  *
- * Inline rather than an `<img>` so the ink follows the theme: every shape is painted from
- * a CSS class (`globals.css` → "BRAND MARK"), and a dark base lightens `--brand-ink` so the
- * bee keeps its silhouette instead of sinking into the background.
+ * `next/image` serves it at the requested edge with a 2× source in the `srcset`, so the
+ * mark is sharp on a retina display without every caller shipping the full 256 px file.
  *
  * Prefer {@link BrandMark} — this is the glyph on its own, for the places that want the bee
- * and nothing else: a favicon, an avatar, empty-state art.
+ * and nothing else: an avatar, empty-state art, a favicon.
  *
- * @param props Size, tone, accessible name and class — see {@link BeeGlyphProps}.
- * @returns The glyph, `aria-hidden` unless it was given a `label`.
+ * @param props Size, accessible name, preload and class — see {@link BeeGlyphProps}.
+ * @returns The artwork, decorative unless it was given a `label`.
  */
 export default function BeeGlyph({
   size = BEE_GLYPH_DEFAULT_SIZE,
-  tone = 'brand',
   label,
+  priority = false,
   className,
 }: BeeGlyphProps) {
-  const classes = ['bee-glyph', tone === 'mono' ? 'bee-glyph--mono' : null, className]
-    .filter(Boolean)
-    .join(' ');
-
   return (
-    <svg
-      className={classes}
+    <Image
+      className={['bee-glyph', className].filter(Boolean).join(' ')}
+      src={BEE_LOGO_SRC}
+      // An empty `alt` is the raster spelling of `aria-hidden`: it takes the image out of
+      // the accessibility tree entirely, rather than leaving an unnamed `img` behind.
+      alt={label ?? ''}
       width={size}
       height={size}
-      viewBox={BEE_GLYPH_VIEWBOX}
-      xmlns="http://www.w3.org/2000/svg"
-      role={label ? 'img' : undefined}
-      aria-label={label}
-      aria-hidden={label ? undefined : true}
-      focusable="false"
-    >
-      <g transform={BEE_GLYPH_TRANSFORM}>
-        {BEE_GLYPH_SHAPES.map((shape) => (
-          <Shape key={shape.id} shape={shape} />
-        ))}
-      </g>
-    </svg>
+      priority={priority}
+    />
   );
 }

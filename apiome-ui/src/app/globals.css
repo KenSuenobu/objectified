@@ -118,9 +118,10 @@
   --color-brand-azure: #1E90E8;
   --color-brand-honey: #F5B301;
   --color-brand-honey-soft: #FFF3C4;
-  /* The bee's own line and body colour (HIVE-1.5). Navy is the mark as drawn; on a dark
-     base the theme block lightens it, because navy on near-black is a 1.4:1 silhouette —
-     the azure comb and honey stripes would float with nothing holding them together. */
+  /* Brand navy, adjusted per base: navy as the brand draws it, the palette's own ink on a
+     dark base, where navy is a 1.4:1 silhouette. It was the bee's line colour until the
+     mark became artwork — see "BRAND MARK" below — and is kept as the token for anything
+     that wants the brand's ink and has to survive a dark theme. */
   --color-brand-ink: var(--color-brand-navy);
   /* `1` on the six dark-based palettes, `0` everywhere else. The one thing about a theme
      the brand needs to know: which of the two shipped wordmark files to show. Declared as
@@ -1678,7 +1679,10 @@ html[data-kbd-hints="off"] .kbd-group {
   background: color-mix(in srgb, var(--empty-art-tint) 30%, var(--bg-surface));
 }
 
-.hive-empty-art > svg {
+/* `img` as well as `svg`: the art is either a Lucide icon or the bee, and the
+   bee is artwork (`BeeGlyph`). `color` only reaches the icon, which is the one
+   of the two that draws in `currentColor`. */
+.hive-empty-art > :is(svg, img) {
   position: relative;
   width: 34%;
   height: 34%;
@@ -1952,8 +1956,8 @@ html[data-kbd-hints="off"] .kbd-group {
 
 /* A descendant selector — specificity (0,1,1) — so the strip sizes and tints
    its own glyph and a call site passing `className="h-5 w-5 text-indigo-500"`
-   on its icon cannot get it wrong. Same reason `.hive-empty-art > svg` is
-   written this way. */
+   on its icon cannot get it wrong. Same reason `.hive-empty-art > :is(svg, img)`
+   is written this way. */
 .hive-stat__label > svg {
   width: var(--icon-dense);
   height: var(--icon-dense);
@@ -2181,77 +2185,33 @@ html[data-kbd-hints="off"] .kbd-group {
 /* ==========================================================================
    BRAND MARK (HIVE-1.5, #5278)
    --------------------------------------------------------------------------
-   Authority: `docs/mockups/DESIGN.md` §2 (the mark is a bee on a honeycomb) and
-   the mockups' `.brand-mark` placeholder, which these rules replace with the
-   real bee.
+   Authority: `docs/mockups/DESIGN.md` §2 (the mark is a bee on a honeycomb, in
+   navy / azure / honey) and the mockups' `.brand-mark` placeholder, which these
+   rules replace with the real bee. The shipped file carries one thing §2 does
+   not describe — a molecule lattice behind the bee — and that is part of why it
+   had to be the file rather than a redraw from the prose.
 
-   The glyph's colour lives here rather than on the SVG, which is what lets one
-   component serve all nine themes: `BeeGlyph` tags every shape with the brand
-   role that paints it and each role resolves to a token below. `--brand-ink` is
-   the only one a theme swaps — navy as the mark is drawn, the palette's own ink
-   on a dark base, where navy would read as a 1.4:1 silhouette.
+   The bee is the shipped artwork, `public/bee-logo.png`, served through
+   `next/image` by `BeeGlyph`. HIVE-1.5 drew it as themed vector shapes instead
+   — a class per brand role, each resolving to a token, so a dark base could
+   lighten the line work — but the drawing was a simplification of the logo
+   rather than the logo, and the app ended up showing a bee the brand does not
+   use. Fidelity won: there is one bee now, it is the file, and its colour is
+   fixed in the artwork on all nine themes.
 
-   `--bee-part` carries the role's colour so one declaration can serve a fill and
-   a stroke: the antennae are stroked, everything else is filled.
+   What that costs is the ink swap. `--brand-ink` still exists in the token
+   layer and the dark themes still point it at their own ink, but nothing
+   paints the mark with it — on a dark base the bee keeps its navy line work
+   and leans on the azure and honey it is drawn with to hold its silhouette.
    ========================================================================== */
 
 .bee-glyph {
   display: block;
   /* The mark is never the thing that gives way when a header runs out of room. */
   flex: none;
-}
-
-.bee-glyph__ink {
-  --bee-part: var(--brand-ink);
-}
-
-.bee-glyph__wing {
-  --bee-part: var(--brand-azure);
-  opacity: 0.55;
-}
-
-.bee-glyph__comb {
-  --bee-part: var(--brand-azure);
-}
-
-.bee-glyph__honey {
-  --bee-part: var(--brand-honey);
-}
-
-.bee-glyph__fill {
-  fill: var(--bee-part);
-}
-
-.bee-glyph__stroke {
-  fill: none;
-  stroke: var(--bee-part);
-  /* In viewBox units, and the same number as `BEE_GLYPH_STROKE_WIDTH` — the raster
-     renderer has no stylesheet and writes it inline, so `tests/brand-mark.test.tsx`
-     checks the two agree. A whole pixel at 20 px, so an antenna never half-fades. */
-  stroke-width: 3;
-  stroke-linecap: round;
-}
-
-/* One-colour tone, for a tinted surface or ornament: the parts keep their order of
-   emphasis through opacity, so the comb still reads as concentric rings. */
-.bee-glyph--mono .bee-glyph__ink {
-  --bee-part: currentColor;
-  opacity: 1;
-}
-
-.bee-glyph--mono .bee-glyph__comb {
-  --bee-part: currentColor;
-  opacity: 0.45;
-}
-
-.bee-glyph--mono .bee-glyph__honey {
-  --bee-part: currentColor;
-  opacity: 0.7;
-}
-
-.bee-glyph--mono .bee-glyph__wing {
-  --bee-part: currentColor;
-  opacity: 0.25;
+  /* The artwork is square. `object-fit` keeps it so even where a caller's layout
+     stretches the box — the empty-state art sizes it in per cent, not pixels. */
+  object-fit: contain;
 }
 
 /* ---- Wordmark -----------------------------------------------------------
