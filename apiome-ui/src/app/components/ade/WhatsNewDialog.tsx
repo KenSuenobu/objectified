@@ -1,76 +1,104 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
 import { Markdown } from '@/app/components/ui/Markdown';
 import { githubMarkdownComponents } from '@/app/components/ui/markdownGithubComponents';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/app/components/ui/Dialog';
+import { APP_VERSION_BADGE } from '@lib/app-version';
 
-interface WhatsNewDialogProps {
+/**
+ * The release notes (`public/WHATS_NEW.md`), as a dialog.
+ *
+ * Opened from the rail user menu's *What's new* row and from the build string beneath it
+ * (HIVE-3.4, #5290), and from the launcher's own badge. The markdown is fetched rather
+ * than bundled so a release can update the notes without a rebuild.
+ *
+ * Re-tokened onto the Hive `Dialog` primitive by HIVE-3.4. It used to be a hand-rolled
+ * portal painted in `bg-white` / `dark:bg-gray-800`, which meant it read as the *old* app
+ * on all nine themes and — more seriously — had no focus trap, no `Esc` and no focus
+ * restoration, because those are the things the primitive was introduced to stop every
+ * overlay reimplementing. The behaviour a reader notices is unchanged: it is still a
+ * centred, viewport-fixed sheet that closes on a click outside (#2531).
+ */
+
+/** Props for {@link WhatsNewDialog}. */
+export interface WhatsNewDialogProps {
+  /** Whether the notes are showing. */
   isOpen: boolean;
+  /** Called on `Esc`, the backdrop, and the close button. */
   onClose: () => void;
 }
+
+/** What the body says while the markdown is in flight. */
+const LOADING_COPY = 'Loading…';
+
+/** What the body says when the notes could not be fetched. */
+const ERROR_COPY = "# Couldn't load the release notes\n\nPlease try again in a moment.";
 
 const WhatsNewDialog: React.FC<WhatsNewDialogProps> = ({ isOpen, onClose }) => {
   const [markdownContent, setMarkdownContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
+  // Fetched on open rather than on mount: the dialog is mounted by the rail on every
+  // dashboard route, and a reader who never opens it should not pay for the request.
+  //
+  // `isLoading` is only ever turned *off* here. Re-arming it on a reopen would flash the
+  // spinner over notes the reader has already been shown, and it is the kind of
+  // synchronous setState in an effect that `react-hooks/set-state-in-effect` exists to
+  // catch — the second fetch simply replaces the text in place when it arrives.
   useEffect(() => {
-    if (isOpen) {
-      fetch('/WHATS_NEW.md')
-        .then((response) => response.text())
-        .then((text) => {
-          setMarkdownContent(text);
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          console.error("Error loading What's New content:", error);
-          setMarkdownContent("# Error\n\nFailed to load What's New content.");
-          setIsLoading(false);
-        });
-    }
+    if (!isOpen) return;
+
+    let cancelled = false;
+    fetch('/WHATS_NEW.md')
+      .then((response) => response.text())
+      .then((text) => {
+        if (cancelled) return;
+        setMarkdownContent(text);
+        setIsLoading(false);
+      })
+      .catch((error: unknown) => {
+        console.error("Error loading What's New content:", error);
+        if (cancelled) return;
+        setMarkdownContent(ERROR_COPY);
+        setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full max-w-3xl max-h-[85vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
-        onClick={(e) => e.stopPropagation()}
+  return (
+    <Dialog open={isOpen} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent
+        size="lg"
+        data-testid="whats-new-dialog"
+        // The notes are long; the sheet scrolls its body rather than the page behind it.
+        className="max-h-[85vh] grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/80">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">What&apos;s New</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-            aria-label="Close dialog"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        <DialogHeader>
+          <DialogTitle>What&apos;s new</DialogTitle>
+          <DialogDescription className="mono text-2xs">{APP_VERSION_BADGE}</DialogDescription>
+        </DialogHeader>
 
-        <div className="px-6 py-5 overflow-y-auto max-h-[calc(85vh-80px)] scroll-smooth">
+        <div className="min-h-0 overflow-y-auto scroll-smooth">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-gray-500 dark:text-gray-400 animate-pulse">Loading…</div>
-            </div>
+            <p className="py-12 text-center text-sm text-fg-muted">{LOADING_COPY}</p>
           ) : (
-            <Markdown
-              variant="article"
-              allowHtml
-              components={githubMarkdownComponents}
-            >
+            <Markdown variant="article" allowHtml components={githubMarkdownComponents}>
               {markdownContent}
             </Markdown>
           )}
         </div>
-      </div>
-    </div>,
-    document.body,
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -14,7 +14,9 @@ import { openPreferences } from './preferences/preferencesDrawerBus';
 import CreateTenantDialog, { type CreatedTenant } from './CreateTenantDialog';
 import { useTheme } from '../../providers/ThemeProvider';
 import { BrandMark } from '../brand';
-import packageJson from '../../../../package.json';
+// The build string is shared with the rail's user menu (HIVE-3.4, #5290): two surfaces
+// printing two different builds is the bug that duplication produces.
+import { APP_VERSION_BADGE } from '@lib/app-version';
 import {
   getPlatformNavItems,
   isStudioSurface,
@@ -33,12 +35,6 @@ import type {
   TenantMembershipRow,
 } from '../../../../lib/auth/tenant-membership-context-mapping';
 
-/** Optional CI/build stamp (e.g. `2026.05.05-84a231c`). Otherwise badge uses semver from package.json. */
-const APP_BUILD_LABEL = process.env.NEXT_PUBLIC_APP_BUILD_LABEL?.trim();
-const APP_VERSION_BADGE =
-  APP_BUILD_LABEL && APP_BUILD_LABEL.length > 0
-    ? APP_BUILD_LABEL
-    : `v${packageJson.version} RC`;
 
 type NavItem = ReturnType<typeof getPlatformNavItems>[number];
 

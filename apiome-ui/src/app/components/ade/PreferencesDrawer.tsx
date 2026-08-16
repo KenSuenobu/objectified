@@ -7,6 +7,7 @@ import { TAB_LIST_CLASS } from '../ui/tabStyles';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs';
 import { usePreferences } from '../../providers/PreferencesProvider';
 import { useTheme } from '../../providers/ThemeProvider';
+import type { PreferencesTabId } from './preferences/preferencesDrawerBus';
 import AccountTab from './preferences/AccountTab';
 import AppearanceTab from './preferences/AppearanceTab';
 import NotificationsTab from './preferences/NotificationsTab';
@@ -37,7 +38,7 @@ import ShortcutsTab from './preferences/ShortcutsTab';
  */
 
 /** The tabs, in the order `DESIGN.md` §4.1 lists them. */
-const TABS = [
+export const TABS = [
   { id: 'appearance', label: 'Appearance', icon: Palette },
   { id: 'account', label: 'Account', icon: CircleUser },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -60,12 +61,26 @@ export interface PreferencesDrawerProps {
   open: boolean;
   /** Called with the next open state — on Done, `Esc`, the backdrop and the close button. */
   onOpenChange: (open: boolean) => void;
+  /**
+   * Which tab to land on (HIVE-3.4, #5290).
+   *
+   * The pane is a settings *drawer*, so most callers mean "open settings" and leave this
+   * unset — Appearance, the first tab. A caller that names a tab is asking a specific
+   * question: the rail user menu's "Keyboard shortcuts" row, and the `?` chord, both ask
+   * for `shortcuts`. Read once per mount, which is all it needs to be: the host unmounts
+   * the whole subtree on close, so the next request starts from this prop again.
+   */
+  initialTab?: PreferencesTabId;
 }
 
-export default function PreferencesDrawer({ open, onOpenChange }: PreferencesDrawerProps) {
+export default function PreferencesDrawer({
+  open,
+  onOpenChange,
+  initialTab,
+}: PreferencesDrawerProps) {
   const { currentTheme, resolvedTheme, setTheme, availableThemes, isSystemTheme } = useTheme();
   const { preferences, setPreference } = usePreferences();
-  const [tab, setTab] = useState<string>(TABS[0].id);
+  const [tab, setTab] = useState<string>(initialTab ?? TABS[0].id);
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

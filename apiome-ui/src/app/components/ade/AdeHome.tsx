@@ -19,7 +19,6 @@ import {
   Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import packageJson from '../../../../package.json';
 import { BROWSE_APP_URL } from '../../../../lib/app-urls';
 import {
   resolveExternalLinkIcon,
@@ -29,10 +28,11 @@ import { cn } from '../../../../lib/utils';
 import PreferencesDrawerHost from './preferences/PreferencesDrawerHost';
 import { openPreferences } from './preferences/preferencesDrawerBus';
 import WhatsNewDialog from './WhatsNewDialog';
+// The one place the build string is derived (HIVE-3.4, #5290) — the launcher, the top bar
+// and the rail's user menu must never print three different builds.
+import { APP_VERSION_BADGE } from '@lib/app-version';
+import { markWhatsNewSeen } from '../shell/whatsNewSeen';
 
-const APP_BUILD_LABEL = process.env.NEXT_PUBLIC_APP_BUILD_LABEL?.trim();
-const APP_VERSION_BADGE =
-  APP_BUILD_LABEL && APP_BUILD_LABEL.length > 0 ? APP_BUILD_LABEL : `v${packageJson.version} RC`;
 
 type AppCardConfig = {
   id: string;
@@ -335,7 +335,13 @@ export default function AdeHome({
             <BrandMark variant="wordmark" size={32} priority />
             <button
               type="button"
-              onClick={() => setShowWhatsNew(true)}
+              onClick={() => {
+                // The launcher's badge and the rail's user menu (HIVE-3.4, #5290) show the
+                // same notes for the same build, so reading them here has to clear the
+                // rail's unread dot as well.
+                markWhatsNewSeen();
+                setShowWhatsNew(true);
+              }}
               className="rounded-full border border-zinc-200/80 px-2.5 py-1 text-2xs font-medium tracking-wide text-zinc-500 transition-colors hover:border-indigo-300 hover:text-indigo-600 dark:border-zinc-700/80 dark:text-zinc-400 dark:hover:border-indigo-500/50 dark:hover:text-indigo-400"
             >
               {APP_VERSION_BADGE}

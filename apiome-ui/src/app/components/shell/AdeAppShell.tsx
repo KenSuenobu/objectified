@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { useAuthSession } from '@lib/auth/session-client';
 import {
   getPlatformNavGroups,
-  platformProfilePath,
   toPlatformNavInjections,
   type PlatformNavInjection,
 } from '@lib/platform-nav';
@@ -37,7 +36,9 @@ import WorkspaceSwitcher from './WorkspaceSwitcher';
  * The membership context that names the active workspace is *not* loaded here. HIVE-3.3
  * (#5289) put it inside `WorkspaceSwitcher`, which is the component that needs all of it —
  * rows, roles, licences and the create-workspace cap — rather than the one name this shell
- * used to read out of it.
+ * used to read out of it. The footer's account destinations follow the same rule: HIVE-3.4
+ * (#5290) reads them from the navigation model inside `UserMenu`, so this shell passes only
+ * the identity it already has from the session.
  */
 
 /** Props for {@link AdeAppShell}. */
@@ -102,7 +103,6 @@ export default function AdeAppShell({ children }: AdeAppShellProps) {
           userName={user?.name}
           userEmail={user?.email}
           userId={userId}
-          profileHref={platformProfilePath()}
           iconRail={iconRail}
         />
       )}
