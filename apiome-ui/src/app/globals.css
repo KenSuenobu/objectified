@@ -243,6 +243,7 @@
   --rail-w: 16.5rem;          /* 264px */
   --rail-w-collapsed: 4rem;   /* 64px */
   --page-max: 1440px;
+  --page-narrow: 920px;
   --content-max: 1200px;
 
   /* ---- Legacy utility aliases ----------------------------------------
@@ -935,12 +936,20 @@ html[data-motion="reduce"] *::after {
         collapse animates for free at `--dur-slow` (260 ms). The reduced-motion
         block above already flattens it to zero.
 
-   The custom properties below are the whole vocabulary of "icon mode". They
+   The `--rail-*` properties below are the whole vocabulary of "icon mode". They
    are declared once in the expanded default and restated in *two* places — the
    `data-rail="collapsed"` block and the `max-width: 900px` block — which must
    stay in step; `tests/app-shell-css.test.ts` compares the two and fails when
-   one gains a declaration the other lacks. */
+   one gains a declaration the other lacks. (`--page-width` rides in the same
+   `html` block but belongs to the page chrome below, not to the rail: it is
+   swapped by a class on the page, never by `data-rail`.) */
 html {
+  /* The page's content cap (HIVE-3.5, below). Declared here rather than in a second bare
+     `html` rule so the stylesheet keeps exactly one: everything the layout inherits from
+     the root is in this block, and `tests/hive-preference-blocks.test.ts` reads it by that
+     prelude alone. `Page width="narrow"` re-declares it for the body. */
+  --page-width: var(--page-max);
+
   --rail-w-current: var(--rail-w);
   /* Labels, group headings and the brand word: `flex` because every one of
      them is a flex row or column, so a single property serves them all. */
@@ -1021,6 +1030,161 @@ html[data-rail="collapsed"] {
 .rail-handle:hover,
 .rail-handle:focus-visible {
   opacity: 1;
+}
+
+/* ---- Page chrome (HIVE-3.5, #5291; DESIGN.md §5.3) ----------------------
+   The shell above draws the rail; this draws what sits beside it. A page is
+   three elements — a scroll container, a sticky header and a body — and the
+   only thing they have to agree on is how wide the content is allowed to be.
+
+   That agreement is a custom property rather than a class on each part.
+   `--page-width` is declared at its default in the `html` block above and
+   re-declared by `.page--narrow` on the *container*, so the header and the body
+   cannot end up at different caps: there is one place to set it and both read
+   it. The same reason the rail's icon mode is a property vocabulary rather than
+   React state — a value declared once and inherited cannot drift.
+
+   `overflow-x: clip` (not `hidden`) on the container is load-bearing. `hidden`
+   would make the container a scroll container on *both* axes, and a scroll
+   container is what `position: sticky` sticks to — a header inside a
+   horizontally-hidden ancestor still sticks, but the clip form is the one that
+   costs nothing: it clips stray sub-pixel and backdrop overflow without
+   changing what scrolls. Wide content (tables, diagrams, code) still scrolls
+   inside its own container, which is what keeps the document from doing it.
+
+   Why CSS rather than Tailwind utilities on the components: the translucent
+   fill is a `color-mix` of a themed token, the blur needs its `-webkit-`
+   twin, and both widths are tokens the density preference does not touch.
+   Spelling those at three call sites is how a header ends up looking
+   different on the page that forgot one. */
+
+/* The scroll container. `min-height: 0` lets it shrink inside the shell's
+   `<main>` flex column, which is what makes *this* element scroll rather than
+   the document — one scrollbar per app, and the rail stays put. */
+.page {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: clip;
+}
+
+/* Reading and form pages (DESIGN.md §5.3). Set on the container so the body
+   narrows; the header's own cap is deliberately left at `--page-max`, matching
+   `sources/repository-new.html` — a 920 px column of fields under a full-width
+   title reads as a form, a 920 px title bar reads as a dialog. */
+.page--narrow .page-body {
+  --page-width: var(--page-narrow);
+}
+
+/* Sticky, translucent, one hairline. `z-index` clears the page's own content
+   without reaching dialog or toast territory (both portal to the body). */
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--bg-canvas) 86%, transparent);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+/* A browser without `backdrop-filter` gets the opaque canvas instead of an
+   86 % wash: the acceptance criterion is that the header stays *legible* over
+   scrolled content, and a wash with nothing blurred behind it is not. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .page-header {
+    background: var(--bg-canvas);
+  }
+}
+
+.page-header__inner {
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: var(--space-5) var(--page-pad) 0;
+}
+
+/* The title and the description, and why their type is here rather than in a
+   utility class. This stylesheet ends with unlayered `h1 { font-size: clamp(…) }`
+   and `p { color: … }` rules for prose, and an *unlayered* rule outranks every
+   `@layer utilities` class whatever its specificity — a `text-3xl` on this `h1`
+   would be silently swallowed, exactly as an unlayered `font: inherit` once
+   swallowed `text-sm` on every button (the note beside that rule). A class of
+   the same origin wins on specificity instead, so the page title is the
+   DESIGN.md §5.3 size — 24 px, 600 weight, -0.02em — at every font scale. */
+.page-header__title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: calc(var(--space-1) * 2.5);
+  font-size: var(--fs-3xl);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: var(--track-tight);
+  color: var(--fg);
+}
+
+.page-header__desc {
+  margin-top: var(--space-1);
+  max-width: 72ch;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* The breadcrumb's separators. Sized here, in `rem`, rather than through the
+   three-size icon vocabulary of DESIGN.md §3.5: a `>` between two crumbs is a
+   delimiter drawn as art, not a glyph that carries meaning, and at the crumb
+   line's `--fs-xs` the smallest vocabulary size would read as an arrowhead
+   wedged between the words. `hive.css` §7 sizes it 12 px; this is that size at
+   the default root, and it follows the font-scale preference besides. */
+.page-header__crumbs svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  opacity: 0.7;
+}
+
+/* The title block and the action cluster. `flex-wrap` plus the `min-width: 0`
+   on the title block is the whole answer to "long title + four actions must
+   not scroll the document": the cluster drops to its own line before either
+   side is squeezed past its content. `380px` is the flex *basis*, not a floor —
+   `min-width: 0` overrides the automatic minimum that would otherwise hold a
+   long unbroken title at its intrinsic width. */
+.page-header__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+.page-header__row > :first-child {
+  min-width: 0;
+  flex: 1 1 23.75rem;
+}
+
+/* With a tab row the header keeps its rhythm by giving the tabs the space the
+   row would have used, rather than adding to it. */
+.page-header--with-tabs .page-header__row {
+  padding-bottom: var(--space-2);
+}
+
+.page-body {
+  display: flex;
+  width: 100%;
+  max-width: var(--page-width);
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-inline: auto;
+  padding: var(--space-6) var(--page-pad) var(--space-12);
+}
+
+/* Content that begins immediately under the header — a full-bleed table, a
+   split pane — and so must not be pushed down by the body's own top padding. */
+.page-body--flush {
+  padding-top: 0;
 }
 
 /* ---- Metric utilities (HIVE-1.6, #5279) ---------------------------------

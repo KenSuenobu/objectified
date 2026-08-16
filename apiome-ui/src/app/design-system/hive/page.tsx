@@ -119,8 +119,7 @@ import { useDialog } from '@/app/components/providers/DialogProvider';
 import { destructiveConfirm } from '@/app/components/dialogs/destructiveConfirm';
 import { FormatPill } from '@/app/components/ui/catalog/FormatPill';
 import { GradeChip } from '@/app/components/ui/catalog/GradeChip';
-import { DENSITIES, FONT_SCALES } from '@/app/config/preferences';
-import { SYSTEM_THEME_ID, appearanceOf, themes } from '@/app/config/themes';
+import PreferenceAxes, { setPreferenceAxis } from '../PreferenceAxes';
 import { TablesShowcase } from './TablesShowcase';
 
 /**
@@ -169,35 +168,6 @@ const GALLERY_FORMATS: readonly string[] = [
 const GALLERY_NOW_MS = Date.parse('2026-01-15T12:00:00.000Z');
 const GALLERY_TIMESTAMP = '2026-01-15T09:30:00.000Z';
 
-/**
- * The three preference axes this gallery drives, derived from the same catalogues the
- * preferences pane reads — so a theme or scale added in HIVE-1.2/1.3 shows up here for free.
- *
- * `system` is excluded: it is a *choice*, not a palette, and `ThemeProvider` writes the
- * resolved id to `data-theme`. Writing `system` there would match no block at all.
- */
-const AXES = [
-  {
-    attribute: 'data-theme',
-    label: 'Theme',
-    initial: 'light',
-    options: themes
-      .filter((theme) => theme.id !== SYSTEM_THEME_ID)
-      .map((theme) => ({ value: theme.id, label: theme.name })),
-  },
-  {
-    attribute: 'data-density',
-    label: 'Density',
-    initial: 'comfortable',
-    options: DENSITIES.map((entry) => ({ value: entry.id, label: entry.label })),
-  },
-  {
-    attribute: 'data-font-scale',
-    label: 'Font scale',
-    initial: 'md',
-    options: FONT_SCALES.map((scale) => ({ value: scale.id, label: scale.label })),
-  },
-] as const;
 
 /** One titled block of the gallery. */
 function Section({
@@ -393,23 +363,6 @@ export default function HiveDesignSystemPage() {
   const [view, setView] = React.useState('cards');
   const [scope, setScope] = React.useState('mine');
 
-  /** Write a preference axis onto `<html>`, the same place the preferences pane writes it. */
-  const setAxis = (attribute: string, value: string) => {
-    document.documentElement.setAttribute(attribute, value);
-    // `ThemeProvider` hands next-themes the resolved *appearance*, which is what puts `.dark`
-    // on `<html>` for every dark-based palette. The gallery has no provider, so it does the
-    // same thing by hand — otherwise the rules keyed on `.dark` (the format pill's dark-base
-    // settling, and every `dark:` utility not yet migrated) would be missing here and only
-    // here, which is the one place a reviewer looks to catch them.
-    if (attribute === 'data-theme') {
-      const theme = themes.find((entry) => entry.id === value);
-      document.documentElement.classList.toggle(
-        'dark',
-        theme ? appearanceOf(theme) === 'dark' : false,
-      );
-    }
-  };
-
   return (
     <TooltipProvider>
       <main className="mx-auto flex max-w-[75rem] flex-col gap-6 p-[var(--page-pad)]">
@@ -425,24 +378,7 @@ export default function HiveDesignSystemPage() {
             <code className="mono">docs/mockups/DESIGN.md</code> §7. Switch theme, density and font
             scale below — nothing here names a colour or a size, so all three reach every specimen.
           </p>
-          <div className="flex flex-wrap gap-4">
-            {AXES.map((axis) => (
-              <label key={axis.attribute} className="flex items-center gap-2 text-sm text-fg-muted">
-                {axis.label}
-                <select
-                  className="hive-control h-[var(--control-h)] rounded-md bg-surface px-3 text-sm text-fg"
-                  defaultValue={axis.initial}
-                  onChange={(event) => setAxis(axis.attribute, event.target.value)}
-                >
-                  {axis.options.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ))}
-          </div>
+          <PreferenceAxes />
         </header>
 
         <Section
@@ -575,7 +511,7 @@ export default function HiveDesignSystemPage() {
                   checked={density === 'compact'}
                   onCheckedChange={(next) => {
                     setDensity(next ? 'compact' : 'comfortable');
-                    setAxis('data-density', next ? 'compact' : 'comfortable');
+                    setPreferenceAxis('data-density', next ? 'compact' : 'comfortable');
                   }}
                 />
               </div>
@@ -792,7 +728,7 @@ export default function HiveDesignSystemPage() {
               value={density}
               onValueChange={(next) => {
                 setDensity(next);
-                setAxis('data-density', next);
+                setPreferenceAxis('data-density', next);
               }}
               aria-label="Density"
             >
