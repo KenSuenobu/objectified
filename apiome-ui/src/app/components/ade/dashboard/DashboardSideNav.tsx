@@ -23,8 +23,10 @@ import {
   Library,
   BookOpenCheck,
   ShieldCheck,
+  Settings2,
 } from 'lucide-react';
 import { useDarkMode } from '@/app/hooks/useDarkMode';
+import { openPreferences } from '@/app/components/ade/preferences/preferencesDrawerBus';
 
 interface NavItem {
   label: string;
@@ -257,6 +259,24 @@ const DashboardSideNav: React.FC = () => {
             )}
           </div>
         ))}
+      </div>
+      {/*
+       * Rail footer (HIVE-1.4, #5277) — the sidebar's own way into the preferences pane,
+       * alongside the user menu and `⌘,`. The pane itself is hosted by `TopHeader`, which
+       * renders on every route this sidebar does.
+       */}
+      <div className="shrink-0 border-t border-indigo-500/10 p-4">
+        <button
+          type="button"
+          data-testid="sidenav-preferences"
+          onClick={() => openPreferences()}
+          title="Preferences (⌘,)"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-lg bg-transparent px-3 py-2.5 text-left transition-colors duration-200 hover:bg-indigo-500/10"
+          style={{ color: isDark ? '#e2e8f0' : '#334155' }}
+        >
+          <Settings2 size={20} className="flex-shrink-0 text-slate-500 dark:text-slate-400" aria-hidden />
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">Preferences</span>
+        </button>
       </div>
     </aside>
   );

@@ -12,7 +12,7 @@ import {
   HelpCircle,
   LayoutDashboard,
   LogOut,
-  PaletteIcon,
+  Settings2,
   Shield,
   Sparkles,
   Store,
@@ -26,7 +26,8 @@ import {
   type ExternalHomeCard,
 } from '../../../../lib/external-links';
 import { cn } from '../../../../lib/utils';
-import ThemeSelector from './ThemeSelector';
+import PreferencesDrawerHost from './preferences/PreferencesDrawerHost';
+import { openPreferences } from './preferences/preferencesDrawerBus';
 import WhatsNewDialog from './WhatsNewDialog';
 
 const APP_BUILD_LABEL = process.env.NEXT_PUBLIC_APP_BUILD_LABEL?.trim();
@@ -290,7 +291,6 @@ export default function AdeHome({
 }: AdeHomeProps) {
   const router = useRouter();
   const { data: session } = useAuthSession();
-  const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   const primaryApps: AppCardConfig[] = [
@@ -362,11 +362,12 @@ export default function AdeHome({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setShowThemeSelector(true)}
+              onClick={() => openPreferences()}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200/80 bg-white/80 text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              aria-label="Change theme"
+              aria-label="Preferences"
+              title="Preferences (⌘,)"
             >
-              <PaletteIcon className="h-4 w-4" />
+              <Settings2 className="h-4 w-4" aria-hidden />
             </button>
             <div className="hidden items-center gap-2 rounded-full border border-zinc-200/80 bg-white/80 py-1 pl-1 pr-2 dark:border-zinc-700/80 dark:bg-zinc-900/80 sm:flex">
               {session?.user?.image ? (
@@ -475,7 +476,9 @@ export default function AdeHome({
         </div>
       </footer>
 
-      <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
+      {/* Preferences pane (HIVE-1.4, #5277). `/ade` renders no TopHeader — see
+          `ConditionalHeader` — so the launcher hosts the pane itself. */}
+      <PreferencesDrawerHost />
       <WhatsNewDialog isOpen={showWhatsNew} onClose={() => setShowWhatsNew(false)} />
     </div>
   );

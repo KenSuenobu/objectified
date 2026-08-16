@@ -153,11 +153,15 @@ Appearance contains, in order:
    *whole* interface scales, not just body text.
 3. **Density** — segmented **Comfortable / Compact** (`html[data-density]`), swaps
    the spacing tokens in §3.3.
-4. Switches — **Reduce motion**, **Collapse sidebar by default**, **Monospace for
-   identifiers**, **Show keyboard hints**.
+4. Switches — **Reduce motion** (`html[data-motion]`), **Collapse sidebar by
+   default** (`html[data-rail]`), **Monospace for identifiers**
+   (`html[data-mono-ids]`, swaps the face of `.mono` — ids, hashes, versions —
+   never of a code block), **Show keyboard hints** (`html[data-kbd-hints]`, hides
+   the `.kbd` chips; the shortcuts themselves keep working).
 
 Footer: “Saved automatically”. Persistence keys (localStorage, per device):
-`hive.theme`, `hive.fontScale`, `hive.density`, `hive.rail`, `hive.motion`. The
+`hive.theme`, `hive.fontScale`, `hive.density`, `hive.rail`, `hive.motion`,
+`hive.monoIds`, `hive.kbdHints`. The
 production build should keep the existing `app-theme` / `theme` keys as aliases
 during migration so users don’t lose their theme.
 

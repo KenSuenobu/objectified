@@ -21,13 +21,15 @@ import {
   type PreferenceKey,
   type Preferences,
   type RailId,
+  type ToggleId,
 } from '../config/preferences';
 
 /**
  * Preferences provider (HIVE-1.3, #5276).
  *
- * Owns the device-local shell settings — font scale, density, motion and the sidebar start
- * state — and applies them the way `ThemeProvider` applies a theme: as attributes on
+ * Owns the device-local shell settings — font scale, density, motion, the sidebar start
+ * state, the identifier face and the keyboard hints — and applies them the way
+ * `ThemeProvider` applies a theme: as attributes on
  * `<html>` that `globals.css` swaps tokens for. No component reads a preference to lay
  * itself out; it reads tokens, and the tokens change underneath it.
  *
@@ -171,6 +173,10 @@ interface PreferencesContextType {
   setRail: (value: RailId) => void;
   /** Flip the sidebar between expanded and collapsed. */
   toggleRail: () => void;
+  /** Set whether ids, hashes and versions render in the monospace face. */
+  setMonoIds: (value: ToggleId) => void;
+  /** Set whether shortcut chips are shown. */
+  setKbdHints: (value: ToggleId) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
@@ -227,6 +233,8 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       setRail: (rail: RailId) => setPreference('rail', rail),
       toggleRail: () =>
         setPreference('rail', preferences.rail === 'collapsed' ? 'expanded' : 'collapsed'),
+      setMonoIds: (monoIds: ToggleId) => setPreference('monoIds', monoIds),
+      setKbdHints: (kbdHints: ToggleId) => setPreference('kbdHints', kbdHints),
     }),
     [preferences, osReducedMotion, setPreference],
   );
@@ -246,4 +254,37 @@ export function usePreferences(): PreferencesContextType {
     throw new Error('usePreferences must be used within a PreferencesProvider');
   }
   return context;
+}
+
+/**
+ * Whether a {@link PreferencesProvider} is mounted above this component.
+ *
+ * @returns `true` when {@link usePreferences} would succeed here.
+ */
+export function useHasPreferences(): boolean {
+  return useContext(PreferencesContext) !== undefined;
+}
+
+/**
+ * Guarantee a {@link PreferencesProvider} above `children`, mounting one only if the tree
+ * does not already have it.
+ *
+ * The preferences pane (HIVE-1.4) is rendered by `TopHeader`, which this app mounts under
+ * its root layout — where the provider always is — *and* which the commercial Studio
+ * mounts under a layout of its own, where it may not be. Rather than make every host
+ * remember, the pane brings the provider with it.
+ *
+ * Nesting is harmless when it happens: `localStorage` is the source of truth, the snapshot
+ * cache and the change event are module-level, and both instances write the same four
+ * attributes to the same `<html>` — so two providers cannot disagree, they can only agree
+ * twice.
+ *
+ * @param props.children The subtree that needs {@link usePreferences}.
+ */
+export function PreferencesBoundary({ children }: { children: React.ReactNode }) {
+  // Constant for the life of this component: a provider does not appear above an already
+  // mounted child, so the branch cannot change between renders.
+  const hasProvider = useHasPreferences();
+  if (hasProvider) return <>{children}</>;
+  return <PreferencesProvider>{children}</PreferencesProvider>;
 }

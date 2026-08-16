@@ -47,7 +47,7 @@ jest.mock('@/app/components/ade/WhatsNewDialog', () => ({
   default: () => null,
 }));
 
-jest.mock('@/app/components/ade/ThemeSelector', () => ({
+jest.mock('@/app/components/ade/preferences/PreferencesDrawerHost', () => ({
   __esModule: true,
   default: () => null,
 }));
