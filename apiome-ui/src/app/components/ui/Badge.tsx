@@ -3,12 +3,17 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../../../lib/utils';
+import {
+  STATUS_TONE_SOFT_CLASS,
+  statusTone,
+  type StatusTone,
+} from './statusVocabulary';
 
 /**
- * Badge — the Hive status pill (HIVE-2.1, #5280).
+ * Badge — the Hive status pill (HIVE-2.1, #5280; vocabulary HIVE-2.4, #5283).
  *
- * Authority: `docs/mockups/assets/hive.css` §11 (`.badge`), `docs/mockups/DESIGN.md` §7,
- * gallery §Badges.
+ * Authority: `docs/mockups/assets/hive.css` §11 (`.badge`), `docs/mockups/DESIGN.md` §3.1
+ * and §7, gallery §Badges.
  *
  * Two ways to reach the same tones:
  *
@@ -16,96 +21,29 @@ import { cn } from '../../../../lib/utils';
  *    `"degraded"`, `"failed"`) and it picks the tone. This is the API DESIGN.md §7 calls
  *    `.badge[data-status]`; the attribute is written to the DOM as well, so a page can
  *    still style or query off it. A published version is the same green on every screen
- *    because the *string* decides, not whoever wrote the page. HIVE-2.4 grows this map
- *    into the app-wide vocabulary; the tones here are hive.css §11 as it stands.
+ *    because the *string* decides, not whoever wrote the page. The map itself lives in
+ *    `statusVocabulary.ts`, shared with the MCP and catalog pills, so adding a state is a
+ *    line of data rather than a change to this component.
  * 2. **`variant`** — name the tone outright, for a badge that is not a lifecycle state
  *    (a count, an "Outline" chip, a mono identifier).
  *
  * `status` wins when both are given, because the vocabulary is the point.
  */
 
-/** Tone classes shared by the `variant` map and the `status` map below. */
-const TONE = {
-  neutral: 'bg-neutral-soft text-neutral-fg',
-  ok: 'bg-ok-soft text-ok-fg',
-  warn: 'bg-warn-soft text-warn-fg',
-  danger: 'bg-danger-soft text-danger-fg',
-  accent: 'bg-accent-soft text-accent-fg',
-  honey: 'bg-honey-soft text-honey-fg',
-  violet: 'bg-violet-soft text-violet-fg',
-  orange: 'bg-orange-soft text-orange-fg',
-  rose: 'bg-rose-soft text-rose-fg',
-  outline: 'bg-transparent text-fg-subtle shadow-[inset_0_0_0_1px_var(--border-strong)]',
-  ink: 'bg-fg text-surface',
-} as const;
-
-/** The tone names a caller may ask for directly. */
-export type BadgeTone = keyof typeof TONE;
-
-/**
- * Lifecycle, health, severity and maturity strings the app already uses, mapped to a tone.
- *
- * Mirrors the `.badge[data-status="…"]` rules of hive.css §11 one for one. Anything not
- * listed falls back to `neutral`, which is the honest answer for a state the design
- * language has not been told about yet.
- */
-const STATUS_TONE: Readonly<Record<string, BadgeTone>> = {
-  // Nothing has happened yet.
-  draft: 'neutral',
-  pending: 'neutral',
-  unknown: 'neutral',
-  // In flight, or needs a look.
-  review: 'warn',
-  warning: 'warn',
-  warn: 'warn',
-  degraded: 'warn',
-  running: 'warn',
-  // Good.
-  published: 'ok',
-  ok: 'ok',
-  pass: 'ok',
-  passed: 'ok',
-  active: 'ok',
-  healthy: 'ok',
-  verified: 'ok',
-  success: 'ok',
-  completed: 'ok',
-  public: 'ok',
-  // On the way out.
-  deprecated: 'orange',
-  sunsetting: 'orange',
-  // Bad.
-  sunset: 'danger',
-  error: 'danger',
-  failed: 'danger',
-  down: 'danger',
-  revoked: 'danger',
-  blocked: 'danger',
-  breaking: 'danger',
-  // Informational.
-  info: 'accent',
-  hint: 'accent',
-  preview: 'accent',
-  beta: 'accent',
-  // Set aside.
-  archived: 'outline',
-  disabled: 'outline',
-  // Marked by a person.
-  new: 'honey',
-  pinned: 'honey',
-  starred: 'honey',
-  // Scope.
-  private: 'violet',
-};
+/** The tone names a caller may ask for directly — the shared vocabulary's tones. */
+export type BadgeTone = StatusTone;
 
 /**
  * The tone a status string resolves to.
+ *
+ * Kept as a named export because ~all `status` call sites and the HIVE-2.1 suite reach for
+ * it under this name; it is {@link statusTone} from the shared vocabulary.
  *
  * @param status A vocabulary string, in any case (`"Published"` and `"published"` agree).
  * @returns The tone name, or `neutral` when the string is not in the vocabulary.
  */
 export function badgeToneForStatus(status: string): BadgeTone {
-  return STATUS_TONE[status.trim().toLowerCase()] ?? 'neutral';
+  return statusTone(status);
 }
 
 const badgeVariants = cva(
@@ -118,18 +56,18 @@ const badgeVariants = cva(
     variants: {
       /** Tone. The DESIGN.md §7 names, plus the pre-Hive ones as aliases. */
       variant: {
-        ...TONE,
+        ...STATUS_TONE_SOFT_CLASS,
         // ---- pre-Hive aliases ---------------------------------------------
         /** Was indigo; the Hive "this is informational" tone is accent. */
-        default: TONE.accent,
+        default: STATUS_TONE_SOFT_CLASS.accent,
         /** Was grey. */
-        secondary: TONE.neutral,
+        secondary: STATUS_TONE_SOFT_CLASS.neutral,
         /** Was emerald. */
-        success: TONE.ok,
+        success: STATUS_TONE_SOFT_CLASS.ok,
         /** Was amber. */
-        warning: TONE.warn,
+        warning: STATUS_TONE_SOFT_CLASS.warn,
         /** Was red. */
-        error: TONE.danger,
+        error: STATUS_TONE_SOFT_CLASS.danger,
       },
       /** Height: 20 px normally, 24 px for a badge that carries an icon or sits alone. */
       size: {

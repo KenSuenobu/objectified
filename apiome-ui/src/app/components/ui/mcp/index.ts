@@ -10,6 +10,7 @@
 export * from './GradeGlyph';
 export * from './McpBadge';
 export * from './HealthPill';
+export * from './FreshnessPill';
 export * from './RecencyPill';
 export * from './ServerProfileCard';
 export * from './CapabilityGraphPanel';

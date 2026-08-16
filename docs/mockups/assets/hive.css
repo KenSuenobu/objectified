@@ -515,8 +515,8 @@ html[data-rail="collapsed"] .rail__collapse i { transform: rotate(180deg); }
 .badge--sq { border-radius: var(--r-xs); }
 .badge--mono { font-family: var(--font-mono); font-weight: 500; }
 /* Status vocabularies (map 1:1 to lifecycle/health/severity values in the app) */
-.badge[data-status="draft"], .badge[data-status="pending"], .badge[data-status="unknown"] { background: var(--neutral-soft); color: var(--neutral-fg); }
-.badge[data-status="review"], .badge[data-status="warning"], .badge[data-status="warn"], .badge[data-status="degraded"], .badge[data-status="running"] { background: var(--warn-soft); color: var(--warn-fg); }
+.badge[data-status="draft"], .badge[data-status="unknown"] { background: var(--neutral-soft); color: var(--neutral-fg); }
+.badge[data-status="review"], .badge[data-status="warning"], .badge[data-status="warn"], .badge[data-status="degraded"], .badge[data-status="running"], .badge[data-status="pending"], .badge[data-status="suspended"] { background: var(--warn-soft); color: var(--warn-fg); }
 .badge[data-status="published"], .badge[data-status="ok"], .badge[data-status="pass"], .badge[data-status="passed"], .badge[data-status="active"], .badge[data-status="healthy"], .badge[data-status="verified"], .badge[data-status="success"], .badge[data-status="completed"] { background: var(--ok-soft); color: var(--ok-fg); }
 .badge[data-status="deprecated"], .badge[data-status="sunsetting"] { background: var(--orange-soft); color: var(--orange-fg); }
 .badge[data-status="sunset"], .badge[data-status="error"], .badge[data-status="failed"], .badge[data-status="down"], .badge[data-status="revoked"], .badge[data-status="blocked"], .badge[data-status="breaking"] { background: var(--danger-soft); color: var(--danger-fg); }

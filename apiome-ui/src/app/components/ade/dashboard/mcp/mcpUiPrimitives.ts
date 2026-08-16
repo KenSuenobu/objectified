@@ -12,82 +12,79 @@
  * the brand indigo / slate / emerald / amber / red scales and their `dark:` variants in
  * `globals.css`). Consumers never hard-code a hex or spacing value — they pass a domain value
  * (e.g. a transport string) and receive a {@link McpBadgeTone} + label.
+ *
+ * HIVE-2.4 (#5283) moved the three mappings that answer a *status* question — the grade bands,
+ * the health pill and the freshness pill — onto the app-wide vocabulary in
+ * `ui/statusVocabulary.ts`. They keep their names and their shapes, and gained a `tone`; what
+ * changed is that the colour is now the same one every other surface gives that state, and it
+ * follows the reader's theme through the Hive token layer instead of a `dark:` variant. The
+ * mappings that answer a *property* question (transport, auth, provenance, lint tier) are
+ * untouched — they are not part of the status vocabulary.
  */
 
 import type { McpLintTier } from './mcpLintUi';
+import {
+  GRADE_BANDS,
+  GRADE_BAND_UNSCORED,
+  GRADE_LETTERS,
+  STATUS_TONE_DOT_CLASS,
+  STATUS_TONE_TEXT_CLASS,
+  statusTone,
+  type GradeLetter,
+  type StatusTone,
+} from '../../../ui/statusVocabulary';
 
 // --- Grade glyph ----------------------------------------------------------------------------
-// The A–F glyph is the lead signal on cards, headers, and the lint gauge. Each letter gets a solid
-// fill mirroring the mockup's `.g-*` swatches (A emerald, B green, C amber, D orange, F red); an
-// unscored endpoint renders a neutral slate glyph.
+// The A–F glyph is the lead signal on cards, headers, and the lint gauge. Since HIVE-2.4 (#5283)
+// the bands themselves live in the shared status vocabulary, alongside the catalog's `GradeChip`
+// — the two used to carry a palette each, so the same B was two different greens. The helpers
+// below stay, because the MCP surface asks for a grade by this name; they are now a thin
+// projection of `ui/statusVocabulary`.
 
 /** Normalized A–F letter grade (anything unrecognized collapses to `null` → unscored). */
-export type McpGradeLetter = 'A' | 'B' | 'C' | 'D' | 'F';
+export type McpGradeLetter = GradeLetter;
 
 /** Visual styling for one grade glyph: the solid chip fill and the matching on-surface text tint. */
 export interface McpGradeGlyphStyle {
   /** A–F, or `null` when the endpoint/version is unscored. */
   letter: McpGradeLetter | null;
-  /** Tailwind classes for the solid square chip (background + readable foreground). */
+  /** The status tone the band belongs to — its place in the wider vocabulary. */
+  tone: StatusTone;
+  /** Classes for the solid square chip (background + readable foreground). */
   chipClass: string;
-  /** Tailwind text-color class for the letter when drawn over a surface (e.g. the gauge center). */
+  /** Text-color class for the letter when drawn over a surface (e.g. the gauge center). */
   textClass: string;
-  /** Tailwind `stroke-current` color class for the gauge ring arc. */
+  /** Color class for the gauge ring arc (the arc strokes `currentColor`). */
   ringClass: string;
 }
 
-const GRADE_GLYPH_STYLES: Record<McpGradeLetter, McpGradeGlyphStyle> = {
-  A: {
-    letter: 'A',
-    chipClass: 'bg-emerald-500 text-white',
-    textClass: 'text-emerald-600 dark:text-emerald-400',
-    ringClass: 'text-emerald-500 dark:text-emerald-400',
-  },
-  B: {
-    letter: 'B',
-    chipClass: 'bg-green-500 text-white',
-    textClass: 'text-green-600 dark:text-green-400',
-    ringClass: 'text-green-500 dark:text-green-400',
-  },
-  C: {
-    letter: 'C',
-    chipClass: 'bg-amber-500 text-white',
-    textClass: 'text-amber-600 dark:text-amber-400',
-    ringClass: 'text-amber-500 dark:text-amber-400',
-  },
-  D: {
-    letter: 'D',
-    chipClass: 'bg-orange-500 text-white',
-    textClass: 'text-orange-600 dark:text-orange-400',
-    ringClass: 'text-orange-500 dark:text-orange-400',
-  },
-  F: {
-    letter: 'F',
-    chipClass: 'bg-red-500 text-white',
-    textClass: 'text-red-600 dark:text-red-400',
-    ringClass: 'text-red-500 dark:text-red-400',
-  },
-};
+/** The five bands, as a set, for the exact-match normalization below. */
+const GRADE_LETTER_SET: ReadonlySet<string> = new Set(GRADE_LETTERS);
 
-/** The neutral glyph used when there is no grade yet. */
-const GRADE_GLYPH_UNSCORED: McpGradeGlyphStyle = {
-  letter: null,
-  chipClass: 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-  textClass: 'text-slate-500 dark:text-slate-400',
-  ringClass: 'text-slate-300 dark:text-slate-600',
-};
-
-/** Coerce an arbitrary grade value to a known A–F letter, or `null` when unrecognized/empty. */
+/**
+ * Coerce an arbitrary grade value to a known A–F letter, or `null` when unrecognized/empty.
+ *
+ * Deliberately stricter than the catalog's `normalizeGradeLetter`, which reads the leading
+ * character so a fuller `A-` still lands on its band: an MCP grade is always a bare letter, so a
+ * value like `A+` is a sign the caller has the wrong field rather than a grade to round off.
+ */
 export function mcpNormalizeGrade(grade: string | null | undefined): McpGradeLetter | null {
   if (typeof grade !== 'string') return null;
   const upper = grade.trim().toUpperCase();
-  return upper in GRADE_GLYPH_STYLES ? (upper as McpGradeLetter) : null;
+  return GRADE_LETTER_SET.has(upper) ? (upper as McpGradeLetter) : null;
 }
 
 /** Resolve the glyph styling for a grade letter (defensively normalized); unscored → neutral. */
 export function mcpGradeGlyphStyle(grade: string | null | undefined): McpGradeGlyphStyle {
   const letter = mcpNormalizeGrade(grade);
-  return letter ? GRADE_GLYPH_STYLES[letter] : GRADE_GLYPH_UNSCORED;
+  const band = letter ? GRADE_BANDS[letter] : GRADE_BAND_UNSCORED;
+  return {
+    letter: band.letter,
+    tone: band.tone,
+    chipClass: band.solidClass,
+    textClass: band.textClass,
+    ringClass: band.arcClass,
+  };
 }
 
 // --- Badge tones ----------------------------------------------------------------------------
@@ -258,8 +255,12 @@ export function mcpProvenanceAddedViaBadge(addedVia: string | null | undefined):
 
 // --- Health pill ----------------------------------------------------------------------------
 // An endpoint's reachability, distilled from its last discovery status into three signal states
-// (plus an "unknown" fallback before the first discovery). The dot color follows the mockup's
-// `.dot.ok/.warn/.err` swatches.
+// (plus an "unknown" fallback before the first discovery).
+//
+// Since HIVE-2.4 (#5283) the colour is not decided here: each state names the vocabulary string
+// it *is* (`healthy`, `degraded`, `unreachable`, `unknown`) and the shared vocabulary answers
+// with the tone. That is the whole point of the ticket — a degraded MCP endpoint and a degraded
+// anything-else are the same amber, because the same table answered both.
 
 /** Endpoint health signal states, strongest (healthy) to weakest (unreachable). */
 export type McpHealthStatus = 'healthy' | 'degraded' | 'unreachable' | 'unknown';
@@ -268,37 +269,47 @@ export type McpHealthStatus = 'healthy' | 'degraded' | 'unreachable' | 'unknown'
 export interface McpHealthMeta {
   status: McpHealthStatus;
   label: string;
-  /** Tailwind background class for the status dot. */
+  /** The shared vocabulary tone this state resolves to. */
+  tone: StatusTone;
+  /** Token class for the status-dot fill. */
   dotClass: string;
-  /** Tailwind text class for the accompanying label. */
+  /** Token class for the accompanying label. */
   textClass: string;
 }
 
+/** The vocabulary string each health state speaks, for {@link statusTone} to answer. */
+const HEALTH_VOCABULARY: Record<McpHealthStatus, string> = {
+  healthy: 'healthy',
+  degraded: 'degraded',
+  unreachable: 'unreachable',
+  unknown: 'unknown',
+};
+
+/** Human labels; the MCP surface says "Unreachable" where the vocabulary says `down`. */
+const HEALTH_LABEL: Record<McpHealthStatus, string> = {
+  healthy: 'Healthy',
+  degraded: 'Degraded',
+  unreachable: 'Unreachable',
+  unknown: 'Unknown',
+};
+
+/** Build one health entry from the shared vocabulary, so no colour is chosen locally. */
+function healthEntry(status: McpHealthStatus): McpHealthMeta {
+  const tone = statusTone(HEALTH_VOCABULARY[status]);
+  return {
+    status,
+    label: HEALTH_LABEL[status],
+    tone,
+    dotClass: STATUS_TONE_DOT_CLASS[tone],
+    textClass: STATUS_TONE_TEXT_CLASS[tone],
+  };
+}
+
 const HEALTH_META: Record<McpHealthStatus, McpHealthMeta> = {
-  healthy: {
-    status: 'healthy',
-    label: 'Healthy',
-    dotClass: 'bg-emerald-500',
-    textClass: 'text-emerald-700 dark:text-emerald-300',
-  },
-  degraded: {
-    status: 'degraded',
-    label: 'Degraded',
-    dotClass: 'bg-amber-500',
-    textClass: 'text-amber-700 dark:text-amber-300',
-  },
-  unreachable: {
-    status: 'unreachable',
-    label: 'Unreachable',
-    dotClass: 'bg-red-500',
-    textClass: 'text-red-700 dark:text-red-300',
-  },
-  unknown: {
-    status: 'unknown',
-    label: 'Unknown',
-    dotClass: 'bg-slate-400',
-    textClass: 'text-slate-600 dark:text-slate-400',
-  },
+  healthy: healthEntry('healthy'),
+  degraded: healthEntry('degraded'),
+  unreachable: healthEntry('unreachable'),
+  unknown: healthEntry('unknown'),
 };
 
 /** Resolve the display metadata for a health status. */
@@ -366,35 +377,45 @@ export type McpFreshnessStatus = 'fresh' | 'stale' | 'failing' | 'backoff' | 'qu
 export interface McpFreshnessMeta {
   status: McpFreshnessStatus;
   label: string;
+  /** The shared vocabulary tone this state resolves to. */
+  tone: StatusTone;
+  /** Token class for the status-dot fill. */
   dotClass: string;
+  /** Token class for the accompanying label. */
   textClass: string;
 }
 
+/** Human labels for the four states that are worth showing (`fresh` renders nothing). */
+const FRESHNESS_LABEL: Record<Exclude<McpFreshnessStatus, 'fresh'>, string> = {
+  stale: 'Stale',
+  failing: 'Failing',
+  backoff: 'Backoff',
+  quarantined: 'Quarantined',
+};
+
+/**
+ * Build one freshness entry from the shared vocabulary (HIVE-2.4, #5283).
+ *
+ * Every freshness value is already a status string the vocabulary knows — `stale` and `backoff`
+ * are warnings, `failing` and `quarantined` are failures — so the tone comes from the same table
+ * that colours the version lifecycle and the health pill.
+ */
+function freshnessEntry(status: Exclude<McpFreshnessStatus, 'fresh'>): McpFreshnessMeta {
+  const tone = statusTone(status === 'failing' ? 'failed' : status);
+  return {
+    status,
+    label: FRESHNESS_LABEL[status],
+    tone,
+    dotClass: STATUS_TONE_DOT_CLASS[tone],
+    textClass: STATUS_TONE_TEXT_CLASS[tone],
+  };
+}
+
 const FRESHNESS_META: Record<Exclude<McpFreshnessStatus, 'fresh'>, McpFreshnessMeta> = {
-  stale: {
-    status: 'stale',
-    label: 'Stale',
-    dotClass: 'bg-amber-500',
-    textClass: 'text-amber-700 dark:text-amber-300',
-  },
-  failing: {
-    status: 'failing',
-    label: 'Failing',
-    dotClass: 'bg-red-500',
-    textClass: 'text-red-700 dark:text-red-300',
-  },
-  backoff: {
-    status: 'backoff',
-    label: 'Backoff',
-    dotClass: 'bg-amber-500',
-    textClass: 'text-amber-700 dark:text-amber-300',
-  },
-  quarantined: {
-    status: 'quarantined',
-    label: 'Quarantined',
-    dotClass: 'bg-red-500',
-    textClass: 'text-red-700 dark:text-red-300',
-  },
+  stale: freshnessEntry('stale'),
+  failing: freshnessEntry('failing'),
+  backoff: freshnessEntry('backoff'),
+  quarantined: freshnessEntry('quarantined'),
 };
 
 export function mcpFreshnessMeta(status: string | null | undefined): McpFreshnessMeta | null {

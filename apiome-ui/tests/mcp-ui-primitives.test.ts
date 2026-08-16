@@ -41,25 +41,37 @@ describe('mcpNormalizeGrade', () => {
 });
 
 describe('mcpGradeGlyphStyle', () => {
-  it('paints each letter with the mockup swatch fill', () => {
-    expect(mcpGradeGlyphStyle('A').chipClass).toContain('bg-emerald-500');
-    expect(mcpGradeGlyphStyle('B').chipClass).toContain('bg-green-500');
-    expect(mcpGradeGlyphStyle('C').chipClass).toContain('bg-amber-500');
-    expect(mcpGradeGlyphStyle('D').chipClass).toContain('bg-orange-500');
-    expect(mcpGradeGlyphStyle('F').chipClass).toContain('bg-red-500');
+  // Since HIVE-2.4 (#5283) the bands are the shared ones in `ui/statusVocabulary`, so the
+  // glyph paints from Hive tokens rather than from the Tailwind palette. The band *order* is
+  // what these assert — A is the ok tone through to F on danger.
+  it('paints each letter with its shared band fill', () => {
+    expect(mcpGradeGlyphStyle('A').chipClass).toContain('bg-ok');
+    expect(mcpGradeGlyphStyle('B').chipClass).toContain('var(--ok)');
+    expect(mcpGradeGlyphStyle('C').chipClass).toContain('bg-warn');
+    expect(mcpGradeGlyphStyle('D').chipClass).toContain('bg-orange');
+    expect(mcpGradeGlyphStyle('F').chipClass).toContain('bg-danger');
+  });
+
+  it('places each band in the wider status vocabulary', () => {
+    expect(mcpGradeGlyphStyle('A').tone).toBe('ok');
+    expect(mcpGradeGlyphStyle('C').tone).toBe('warn');
+    expect(mcpGradeGlyphStyle('D').tone).toBe('orange');
+    expect(mcpGradeGlyphStyle('F').tone).toBe('danger');
   });
 
   it('exposes the resolved letter and matching ring/text tints', () => {
     const a = mcpGradeGlyphStyle('a');
     expect(a.letter).toBe('A');
-    expect(a.ringClass).toContain('emerald');
-    expect(a.textClass).toContain('emerald');
+    expect(a.ringClass).toBe('text-ok');
+    expect(a.textClass).toBe('text-ok-fg');
   });
 
   it('falls back to a neutral unscored glyph for unknown/absent grades', () => {
     const unscored = mcpGradeGlyphStyle(null);
     expect(unscored.letter).toBeNull();
-    expect(unscored.chipClass).toContain('slate');
+    expect(unscored.tone).toBe('outline');
+    // A well, not a sixth (worse) grade.
+    expect(unscored.chipClass).toContain('bg-inset');
   });
 });
 
@@ -235,10 +247,16 @@ describe('mcpHealthFromDiscoveryStatus', () => {
     expect(mcpHealthFromDiscoveryStatus('weird')).toBe('unreachable');
   });
 
-  it('exposes a colored dot + label per state', () => {
-    expect(mcpHealthMeta('healthy').dotClass).toContain('emerald');
-    expect(mcpHealthMeta('degraded').dotClass).toContain('amber');
-    expect(mcpHealthMeta('unreachable').dotClass).toContain('red');
+  it('exposes a colored dot + label per state, from the shared vocabulary', () => {
+    // HIVE-2.4 (#5283): the tone is whatever the vocabulary says that state is, so a degraded
+    // endpoint is the same amber as a degraded anything-else.
+    expect(mcpHealthMeta('healthy').tone).toBe('ok');
+    expect(mcpHealthMeta('healthy').dotClass).toBe('bg-ok');
+    expect(mcpHealthMeta('degraded').tone).toBe('warn');
+    expect(mcpHealthMeta('degraded').dotClass).toBe('bg-warn');
+    expect(mcpHealthMeta('unreachable').tone).toBe('danger');
+    expect(mcpHealthMeta('unreachable').dotClass).toBe('bg-danger');
+    expect(mcpHealthMeta('unknown').tone).toBe('neutral');
     expect(mcpHealthMeta('unknown').label).toBe('Unknown');
   });
 });

@@ -34,7 +34,10 @@ export const RecencyPill = React.forwardRef<HTMLSpanElement, RecencyPillProps>(
       <span
         ref={ref}
         className={cn(
-          'inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400',
+          // `text-fg-muted` rather than a grey from the palette (HIVE-2.4, #5283): recency is
+          // supporting text, and the token keeps it that way on every theme. The quieter
+          // `--fg-subtle` step would not clear AA at this size.
+          'inline-flex items-center gap-1.5 text-xs font-medium text-fg-muted',
           className,
         )}
         {...props}

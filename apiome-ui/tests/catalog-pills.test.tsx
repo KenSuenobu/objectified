@@ -26,8 +26,18 @@ describe('FormatPill', () => {
     render(<FormatPill format="mystery-format" />);
     const pill = screen.getByTestId('format-pill');
     expect(pill).toHaveTextContent('mystery-format');
-    // Neutral tone (gray), not a coloured tone.
-    expect(pill.className).toContain('bg-gray-100');
+    // Neutral hue, not a coloured one. Since HIVE-2.4 (#5283) the hue is a fixed `.fmt--*`
+    // class rather than a theme-tinted utility — a format's colour is an identity.
+    expect(pill.className).toContain('fmt--neutral');
+  });
+
+  it('gives a known format a fixed hue that does not tint with the theme', () => {
+    render(<FormatPill format="asyncapi" />);
+    const pill = screen.getByTestId('format-pill');
+    // The registry's tone names the hue; the hue itself is frozen in `globals.css`.
+    expect(pill.className).toContain('fmt--violet');
+    expect(pill.className).not.toMatch(/dark:/);
+    expect(pill).toHaveAttribute('data-format', 'asyncapi');
   });
 
   it('renders nothing when the format is empty or absent', () => {

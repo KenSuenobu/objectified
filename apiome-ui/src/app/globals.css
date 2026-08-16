@@ -1139,6 +1139,125 @@ html[data-kbd-hints="off"] .kbd-group {
 }
 
 /* ==========================================================================
+   FIXED IDENTITY HUES (HIVE-2.4, #5283)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/DESIGN.md` §3.1 (the two rows at the foot of the
+   status-vocabulary table) and `docs/mockups/assets/hive.css` §11 (`.fmt`,
+   `.method`).
+
+   Everything else in this stylesheet is a token, so it moves when the reader
+   picks a theme. These two families deliberately do not.
+
+   A *status* tone is a statement about a thing's state, and it has to keep its
+   contrast wherever it is drawn — so `published` is `--ok`, and `--ok` is a
+   different green on Nord than on Solarized. A *format* hue and an HTTP *verb*
+   hue are not statements about state; they are identities. Someone who has
+   learnt that AsyncAPI is the violet pill has learnt it once, and a pill that
+   re-tinted per theme would make them learn it nine times. Identity beats tint,
+   so the hues below are frozen — which is why the raw-hex allow-list at the top
+   of this file names `.fmt--*` and `.method--*` as two of its three exceptions.
+
+   Why these particular hues
+   -------------------------
+   The format palette is the one the catalog already ships in the light theme
+   (the registry's `CatalogPillTone`, previously spelled as Tailwind
+   `bg-<tone>-100 text-<tone>-800` pairs with a `dark:` variant). Freezing the
+   pair it already had is what makes this ticket a *stability* change: the
+   catalog table, the item detail header, the format facet and the
+   supported-formats gallery all keep the hue a reader already associates with
+   the format, and the pill simply stops changing under them on a dark theme.
+   Re-assigning 45 formats to new hues is a design decision, not this one.
+
+   Each pair is a `-100` fill under `-800` ink, which clears WCAG AA for the
+   pill's 11 px bold text by a wide margin on every theme, since neither end
+   moves — the narrowest of the fifteen is amber at 6.4:1.
+   `tests/hive-status-vocabulary-styles.test.ts` measures them rather than
+   trusting that sentence.
+
+   The verb hues are `hive.css` §11's, darkened just enough to clear 4.5:1
+   against the white they are printed on — the mockup's originals sit between
+   3.2:1 and 3.9:1, which is a serious axe violation for 11 px text. Hue family
+   and recognisability are unchanged: GET is still blue, POST still green.
+   ========================================================================== */
+
+/* The pill itself: geometry only, so the hue blocks stay a table of colour. */
+.fmt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  height: 1.375rem;
+  padding: 0 0.5rem;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* hex-allow-start: `.fmt--*` — a format's hue is its identity and never tints */
+.fmt--sky { background: #E0F2FE; color: #075985; }
+.fmt--emerald { background: #D1FAE5; color: #065F46; }
+.fmt--violet { background: #EDE9FE; color: #5B21B6; }
+.fmt--pink { background: #FCE7F3; color: #9D174D; }
+.fmt--orange { background: #FFEDD5; color: #9A3412; }
+.fmt--slate { background: #F1F5F9; color: #1E293B; }
+.fmt--amber { background: #FEF3C7; color: #92400E; }
+.fmt--red { background: #FEE2E2; color: #991B1B; }
+.fmt--blue { background: #DBEAFE; color: #1E40AF; }
+.fmt--cyan { background: #CFFAFE; color: #155E75; }
+.fmt--indigo { background: #E0E7FF; color: #3730A3; }
+.fmt--teal { background: #CCFBF1; color: #115E59; }
+.fmt--lime { background: #ECFCCB; color: #3F6212; }
+.fmt--stone { background: #F5F5F4; color: #292524; }
+.fmt--neutral { background: #F3F4F6; color: #374151; }
+/* hex-allow-end */
+
+/* A pale pill on a dark canvas glares. `hive.css` §11's answer — take the
+   brightness and a little saturation out, and put the lost separation back with
+   contrast — keeps the hue (and therefore the identity) while settling the pill
+   into the page. Filtering the whole element moves fill and ink together, so the
+   contrast measured above survives. Keyed on `.dark`, which `ThemeProvider`
+   writes for every dark-based palette, so a tenth dark theme is covered for
+   free. */
+.dark .fmt {
+  filter: saturate(0.9) brightness(0.85) contrast(1.05);
+}
+
+/* The verb chip. `min-width` is what turns a column of them into a readable
+   left edge; `.method--fit` gives it up for a chip that sits inline in prose. */
+.method {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.875rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: var(--r-xs);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.method--fit {
+  min-width: 0;
+}
+
+/* hex-allow-start: `.method--*` — an HTTP verb's hue is its identity, per theme-independent */
+.method--get { background: #1E6FBF; color: #FFFFFF; }
+.method--post { background: #0F8466; color: #FFFFFF; }
+.method--put { background: #A35F00; color: #FFFFFF; }
+.method--patch { background: #7B4CE0; color: #FFFFFF; }
+.method--delete { background: #CC3A34; color: #FFFFFF; }
+.method--head,
+.method--options,
+.method--trace,
+.method--connect,
+.method--unknown { background: #626973; color: #FFFFFF; }
+/* hex-allow-end */
+
+/* ==========================================================================
    BRAND MARK (HIVE-1.5, #5278)
    --------------------------------------------------------------------------
    Authority: `docs/mockups/DESIGN.md` §2 (the mark is a bee on a honeycomb) and

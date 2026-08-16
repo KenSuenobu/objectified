@@ -14,6 +14,12 @@
  * alongside each dark variant. Solid, saturated chips/dots/bars (e.g. `bg-emerald-500 text-white`)
  * read in both themes by design and are asserted to stay saturated solids rather than needing a
  * dark override.
+ *
+ * Two of the mappings have since left this mechanism behind: HIVE-2.4 (#5283) moved the grade
+ * bands and the health pill onto the Hive token layer, where a *token* is swapped per theme
+ * rather than a second palette being named per utility. Their blocks below assert the stronger
+ * property that replaced the `dark:` variant — a token and no palette literal — and the tones
+ * themselves are pinned in `tests/hive-status-vocabulary.test.tsx`.
  */
 
 import {
@@ -54,48 +60,55 @@ const HEALTH_STATUSES: McpHealthStatus[] = ['healthy', 'degraded', 'unreachable'
 const BADGE_TONES: McpBadgeTone[] = ['indigo', 'green', 'amber', 'red', 'blue', 'slate', 'violet'];
 const CHANGE_TYPES = ['added', 'removed', 'modified'] as const;
 
-describe('grade glyph dark-theme tokens', () => {
-  it.each(GRADE_LETTERS)('paints a saturated solid chip for grade %s (legible on dark)', (letter) => {
+/**
+ * The grade glyph and the health pill left this mechanism behind in HIVE-2.4 (#5283).
+ *
+ * A `dark:` variant is one palette swapped for a second one, and it only knows about the app's
+ * original light/dark pair. Both surfaces now paint from the Hive token layer, where the *token*
+ * is swapped per theme — which is strictly stronger, because it covers all nine palettes rather
+ * than two. So the assertion worth making here is no longer "has a dark variant" but "spends a
+ * token and no palette literal"; the tones themselves are pinned in
+ * `tests/hive-status-vocabulary.test.tsx`.
+ */
+const PALETTE_LITERAL = /\b(?:bg|text|border|ring|stroke|fill)-(?:slate|gray|zinc|neutral|stone|emerald|green|lime|amber|yellow|orange|red|rose|pink|violet|purple|indigo|blue|sky|cyan|teal)-\d{2,3}\b/;
+
+describe('grade glyph — Hive tokens rather than a dark variant', () => {
+  it.each(GRADE_LETTERS)('paints grade %s from tokens, with no palette literal', (letter) => {
     const style = mcpGradeGlyphStyle(letter);
-    // The lead chip is a saturated fill with white text — it reads in both themes by design.
-    expect(isSaturatedSolidBg(style.chipClass)).toBe(true);
-    expect(style.chipClass).toContain('text-white');
+    for (const className of [style.chipClass, style.textClass, style.ringClass]) {
+      expect(className).not.toMatch(PALETTE_LITERAL);
+      expect(hasDarkVariant(className)).toBe(false);
+    }
   });
 
-  it.each(GRADE_LETTERS)('gives grade %s on-surface text & ring a dark variant', (letter) => {
-    const style = mcpGradeGlyphStyle(letter);
-    // text / ring tints sit on the card or gauge surface, so they must adapt to dark.
-    expect(hasDarkVariant(style.textClass)).toBe(true);
-    expect(hasDarkVariant(style.ringClass)).toBe(true);
+  it.each(GRADE_LETTERS)('gives grade %s a legible ink on its solid chip', (letter) => {
+    // The chip is a solid fill, so it must name the ink that sits on it rather than inherit.
+    expect(mcpGradeGlyphStyle(letter).chipClass).toMatch(/\btext-(?:fg-on-accent|honey-ink)\b/);
   });
 
-  it('gives the neutral unscored glyph a dark variant on every surface tint', () => {
+  it('paints the unscored glyph as a well rather than a sixth grade', () => {
     const unscored = mcpGradeGlyphStyle(null);
-    expect(hasDarkVariant(unscored.chipClass)).toBe(true);
-    expect(hasDarkVariant(unscored.textClass)).toBe(true);
-    expect(hasDarkVariant(unscored.ringClass)).toBe(true);
-  });
-
-  it('keeps the light grade tints (light theme is unchanged)', () => {
-    expect(mcpGradeGlyphStyle('A').textClass).toContain('text-emerald-600');
-    expect(mcpGradeGlyphStyle('A').textClass).toContain('dark:text-emerald-400');
-    expect(mcpGradeGlyphStyle(null).chipClass).toContain('bg-slate-200');
+    expect(unscored.chipClass).toContain('bg-inset');
+    expect(unscored.chipClass).not.toMatch(PALETTE_LITERAL);
+    expect(unscored.textClass).not.toMatch(PALETTE_LITERAL);
+    expect(unscored.ringClass).not.toMatch(PALETTE_LITERAL);
   });
 });
 
-describe('health pill dark-theme tokens', () => {
-  it.each(HEALTH_STATUSES)('gives the %s label text a dark variant', (status) => {
-    expect(hasDarkVariant(mcpHealthMeta(status).textClass)).toBe(true);
+describe('health pill — Hive tokens rather than a dark variant', () => {
+  it.each(HEALTH_STATUSES)('paints the %s state from tokens, with no palette literal', (status) => {
+    const meta = mcpHealthMeta(status);
+    for (const className of [meta.dotClass, meta.textClass]) {
+      expect(className).not.toMatch(PALETTE_LITERAL);
+      expect(hasDarkVariant(className)).toBe(false);
+    }
   });
 
-  it.each(HEALTH_STATUSES)('paints the %s status dot as a saturated solid', (status) => {
-    // The dot is a small saturated swatch (e.g. bg-emerald-500) — readable on light & dark.
-    expect(isSaturatedSolidBg(mcpHealthMeta(status).dotClass)).toBe(true);
-  });
-
-  it('keeps the light health text tint (light theme is unchanged)', () => {
-    expect(mcpHealthMeta('healthy').textClass).toContain('text-emerald-700');
-    expect(mcpHealthMeta('healthy').textClass).toContain('dark:text-emerald-300');
+  it('draws the dot in the saturated role colour and the label in its ink', () => {
+    // The dot is a swatch (`--ok`); the label is body text on the page surface, so it takes the
+    // `-fg` ink that was calibrated to clear AA there.
+    expect(mcpHealthMeta('healthy').dotClass).toBe('bg-ok');
+    expect(mcpHealthMeta('healthy').textClass).toBe('text-ok-fg');
   });
 });
 
