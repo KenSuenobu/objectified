@@ -33,6 +33,26 @@ export function matchesPreferencesShortcut(event: KeyboardEvent): boolean {
   return true;
 }
 
+/**
+ * Whether a keyboard event is the "collapse the rail" shortcut: `⌘\` on macOS, `Ctrl+\`
+ * elsewhere (HIVE-3.1, #5287; `DESIGN.md` §5.2).
+ *
+ * Matched the same way as {@link matchesPreferencesShortcut}, and for the same reason: a
+ * command modifier with a backslash produces no text, so suppressing it inside a field
+ * would only make the shortcut unreliable without protecting anything the reader typed.
+ *
+ * @param event The keydown event.
+ * @returns `true` when the rail should flip between expanded and collapsed.
+ */
+export function matchesRailShortcut(event: KeyboardEvent): boolean {
+  if (event.defaultPrevented) return false;
+  if (event.repeat) return false;
+  if (event.key !== '\\') return false;
+  if (!(event.metaKey || event.ctrlKey)) return false;
+  if (event.altKey || event.shiftKey) return false;
+  return true;
+}
+
 /** One row in the Shortcuts tab. */
 export interface ShortcutEntry {
   /** Stable id, used as the React key and by tests. */
@@ -56,6 +76,12 @@ export const SHELL_SHORTCUTS: readonly ShortcutEntry[] = [
     id: 'preferences',
     keys: ['⌘', ','],
     description: 'Open preferences',
+    global: true,
+  },
+  {
+    id: 'rail',
+    keys: ['⌘', '\\'],
+    description: 'Collapse or expand the sidebar',
     global: true,
   },
   {

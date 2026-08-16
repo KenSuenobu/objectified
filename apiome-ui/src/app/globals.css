@@ -920,16 +920,107 @@ html[data-motion="reduce"] *::after {
   }
 }
 
-/* ---- Sidebar rail (DESIGN.md §5.2) --------------------------------------
-   The width the shell lays its first column out at. Declared as a token so the
-   rail — which lands in HIVE-3.1 — reads one variable instead of branching on
-   the attribute, and so a collapse animation interpolates a length. */
+/* ---- Application shell and rail (HIVE-3.1, #5287; DESIGN.md §5.1-5.2) ----
+   `AppShell` is a two-column CSS grid — rail, then page — and the rail has two
+   widths. Everything about *which* width is in force is decided here rather
+   than in the component, for three reasons:
+
+     1. The preferences boot script writes `data-rail` before first paint, so a
+        device that chose the icon rail never renders the expanded one and
+        flips after hydration.
+     2. Below 900 px the icon rail is forced regardless of the preference
+        (DESIGN.md §5.2 and the mockup's Responsive note) — a viewport question
+        no React state should be asked.
+     3. `grid-template-columns` interpolates between two lengths, so the
+        collapse animates for free at `--dur-slow` (260 ms). The reduced-motion
+        block above already flattens it to zero.
+
+   The custom properties below are the whole vocabulary of "icon mode". They
+   are declared once in the expanded default and restated in *two* places — the
+   `data-rail="collapsed"` block and the `max-width: 900px` block — which must
+   stay in step; `tests/app-shell-css.test.ts` compares the two and fails when
+   one gains a declaration the other lacks. */
 html {
   --rail-w-current: var(--rail-w);
+  /* Labels, group headings and the brand word: `flex` because every one of
+     them is a flex row or column, so a single property serves them all. */
+  --rail-label-display: flex;
+  --rail-item-justify: flex-start;
+  /* Collapsed, the group headings go — hairlines separate the runs instead. */
+  --rail-group-border: 0 none;
+  --rail-group-gap: 0rem;
+  /* The collapse handle is a hover affordance while the rail is expanded. */
+  --rail-handle-opacity: 0;
 }
 
 html[data-rail="collapsed"] {
   --rail-w-current: var(--rail-w-collapsed);
+  --rail-label-display: none;
+  --rail-item-justify: center;
+  --rail-group-border: 1px solid var(--border);
+  --rail-group-gap: var(--space-2);
+  --rail-handle-opacity: 1;
+}
+
+/* Below 900 px the rail is icon-only whatever the preference says. It is never
+   a hamburger drawer: the destinations stay on screen, they just lose their
+   labels (the tooltip carries the name). */
+@media (max-width: 900px) {
+  html {
+    --rail-w-current: var(--rail-w-collapsed);
+    --rail-label-display: none;
+    --rail-item-justify: center;
+    --rail-group-border: 1px solid var(--border);
+    --rail-group-gap: var(--space-2);
+    --rail-handle-opacity: 1;
+  }
+}
+
+/* The shell itself. `minmax(0, 1fr)` — not `1fr` — is what stops a wide table
+   inside the page from widening the column and scrolling the document. */
+.hive-shell {
+  display: grid;
+  grid-template-columns: var(--rail-w-current) minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+  transition: grid-template-columns var(--dur-slow) var(--ease-out);
+}
+
+/* Rail parts that answer to icon mode. Unlayered on purpose: `@layer utilities`
+   loses to these, so a Tailwind `flex` on the same element cannot re-show a
+   label the collapsed rail has hidden. */
+.rail-label {
+  display: var(--rail-label-display);
+}
+
+.rail-item {
+  justify-content: var(--rail-item-justify);
+}
+
+/* The brand lock-up (HIVE-1.5) is the rail's first row, and its word is a label like any
+   other: `.brand-lockup__text` is already the flex column the vocabulary above expects, so
+   the collapsed rail keeps the bee and drops "apiome / Platform". */
+.rail .brand-lockup__text {
+  display: var(--rail-label-display);
+}
+
+.rail-group + .rail-group {
+  border-top: var(--rail-group-border);
+  padding-top: var(--rail-group-gap);
+}
+
+/* The collapse handle sits on the rail's edge and appears on hover — or stays
+   put once the rail is collapsed, because it is then the only way back. It is
+   always reachable from the keyboard: focus reveals it. */
+.rail-handle {
+  opacity: var(--rail-handle-opacity);
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.rail:hover .rail-handle,
+.rail-handle:hover,
+.rail-handle:focus-visible {
+  opacity: 1;
 }
 
 /* ---- Metric utilities (HIVE-1.6, #5279) ---------------------------------
