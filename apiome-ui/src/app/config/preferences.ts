@@ -13,6 +13,8 @@
  * | `density`   | `data-density`     | `comfortable` \| `compact`    | `hive.density`   |
  * | `motion`    | `data-motion`      | `auto` \| `reduce`            | `hive.motion`    |
  * | `rail`      | `data-rail`        | `expanded` \| `collapsed`     | `hive.rail`      |
+ * | `monoIds`   | `data-mono-ids`    | `on` \| `off`                 | `hive.monoIds`   |
+ * | `kbdHints`  | `data-kbd-hints`   | `on` \| `off`                 | `hive.kbdHints`  |
  *
  * Everything here is a pure function of its arguments or a thin, failure-tolerant wrapper
  * over `localStorage`, so `PreferencesProvider` stays a DOM writer and the rules can be
@@ -46,6 +48,15 @@ export type MotionId = 'auto' | 'reduce';
 
 /** Whether the sidebar starts expanded or as an icon rail. */
 export type RailId = 'expanded' | 'collapsed';
+
+/**
+ * A preference that is simply on or off.
+ *
+ * Spelled as a two-value vocabulary rather than a boolean so it travels through the same
+ * machinery as every other preference: one `<html>` attribute, one stored string, and one
+ * CSS block per non-default value. Nothing has to know which preferences are toggles.
+ */
+export type ToggleId = 'on' | 'off';
 
 /** One selectable value, with the copy the preferences pane renders for it. */
 export interface PreferenceOption<T extends string> {
@@ -128,6 +139,12 @@ export const RAILS: readonly PreferenceOption<RailId>[] = [
   },
 ];
 
+/** The two states of every {@link ToggleId} preference, "on" first. */
+export const TOGGLES: readonly PreferenceOption<ToggleId>[] = [
+  { id: 'on', label: 'On', description: 'Enabled.' },
+  { id: 'off', label: 'Off', description: 'Disabled.' },
+];
+
 /** Every device-local preference this provider owns. */
 export interface Preferences {
   /** Root font-size step. */
@@ -138,6 +155,10 @@ export interface Preferences {
   motion: MotionId;
   /** Sidebar start state. */
   rail: RailId;
+  /** Whether ids, hashes and versions render in the monospace face. */
+  monoIds: ToggleId;
+  /** Whether shortcut chips are shown on buttons and menus. */
+  kbdHints: ToggleId;
 }
 
 /** A preference name — the key of {@link Preferences}. */
@@ -149,6 +170,8 @@ export const DEFAULT_PREFERENCES: Readonly<Preferences> = {
   density: 'comfortable',
   motion: 'auto',
   rail: 'expanded',
+  monoIds: 'on',
+  kbdHints: 'on',
 };
 
 /** The `<html>` attribute each preference is applied as. */
@@ -157,6 +180,8 @@ export const PREFERENCE_ATTRIBUTES: Readonly<Record<PreferenceKey, string>> = {
   density: 'data-density',
   motion: 'data-motion',
   rail: 'data-rail',
+  monoIds: 'data-mono-ids',
+  kbdHints: 'data-kbd-hints',
 };
 
 /** The canonical `localStorage` key each preference is written to. */
@@ -165,6 +190,8 @@ export const PREFERENCE_STORAGE_KEYS: Readonly<Record<PreferenceKey, string>> = 
   density: 'hive.density',
   motion: 'hive.motion',
   rail: 'hive.rail',
+  monoIds: 'hive.monoIds',
+  kbdHints: 'hive.kbdHints',
 };
 
 /**
@@ -179,6 +206,8 @@ export const LEGACY_PREFERENCE_KEYS: Readonly<Record<PreferenceKey, readonly str
   density: ['apiome.sidebar.density'],
   motion: [],
   rail: [],
+  monoIds: [],
+  kbdHints: [],
 };
 
 /** The values each preference accepts, in picker order. */
@@ -187,6 +216,8 @@ export const PREFERENCE_VALUES: Readonly<Record<PreferenceKey, readonly string[]
   density: DENSITIES.map((density) => density.id),
   motion: MOTIONS.map((motion) => motion.id),
   rail: RAILS.map((rail) => rail.id),
+  monoIds: TOGGLES.map((toggle) => toggle.id),
+  kbdHints: TOGGLES.map((toggle) => toggle.id),
 };
 
 /**
@@ -203,7 +234,95 @@ export const PREFERENCE_VALUE_ALIASES: Readonly<
   density: { standard: 'comfortable' },
   motion: {},
   rail: {},
+  monoIds: {},
+  kbdHints: {},
 };
+
+/* ==========================================================================
+   Pane vocabulary
+   ========================================================================== */
+
+/**
+ * One switch row in the preferences pane (`DESIGN.md` §4.1, item 4).
+ *
+ * Four of the preferences above have exactly two states, and the pane renders all four
+ * the same way. Describing them here — rather than branching per row in the component —
+ * is what keeps "which preference does this switch set, and which way round" a data
+ * question: the pane maps over this list and never names a preference itself.
+ *
+ * `on`/`off` are the *stored* values, not the switch position: "Reduce motion" is on when
+ * `motion` is `reduce`, and "Collapse sidebar by default" is on when `rail` is
+ * `collapsed`, so neither reads as a double negative in the pane.
+ */
+export interface SwitchPreference {
+  /** Which preference the row sets. */
+  key: PreferenceKey;
+  /** Row title, as the design document spells it. */
+  title: string;
+  /** One-line explanation shown under the title. */
+  description: string;
+  /** The value stored when the switch is on. */
+  on: string;
+  /** The value stored when the switch is off. */
+  off: string;
+}
+
+/** The four switch rows, in the order `DESIGN.md` §4.1 lists them. */
+export const SWITCH_PREFERENCES: readonly SwitchPreference[] = [
+  {
+    key: 'motion',
+    title: 'Reduce motion',
+    description: 'Turn off transitions and animated progress.',
+    on: 'reduce',
+    off: 'auto',
+  },
+  {
+    key: 'rail',
+    title: 'Collapse sidebar by default',
+    description: 'Start with the icon rail; hover to peek labels.',
+    on: 'collapsed',
+    off: 'expanded',
+  },
+  {
+    key: 'monoIds',
+    title: 'Monospace for identifiers',
+    description: 'Render ids, hashes and versions in JetBrains Mono.',
+    on: 'on',
+    off: 'off',
+  },
+  {
+    key: 'kbdHints',
+    title: 'Show keyboard hints',
+    description: 'Display shortcut chips on buttons and menus.',
+    on: 'on',
+    off: 'off',
+  },
+];
+
+/**
+ * Look up a font-size stop by id.
+ *
+ * @param id The stop id.
+ * @returns The stop, or the `md` default when the id is unknown — the slider always has a
+ *          position, even against a value written by a build with different stops.
+ */
+export function fontScaleById(id: string): FontScale {
+  return (
+    FONT_SCALES.find((scale) => scale.id === id) ??
+    FONT_SCALES.find((scale) => scale.id === DEFAULT_PREFERENCES.fontScale)!
+  );
+}
+
+/**
+ * The slider position of a font-size stop.
+ *
+ * @param id The stop id.
+ * @returns Its index in {@link FONT_SCALES}, or the default stop's index when unknown.
+ */
+export function fontScaleIndexOf(id: string): number {
+  const index = FONT_SCALES.findIndex((scale) => scale.id === id);
+  return index === -1 ? FONT_SCALES.findIndex((scale) => scale.id === DEFAULT_PREFERENCES.fontScale) : index;
+}
 
 /** Canonical key holding the theme choice, `system` included. */
 export const THEME_STORAGE_KEY = 'hive.theme';
@@ -301,6 +420,8 @@ export function readPreferences(): Preferences {
     density: readPreference('density'),
     motion: readPreference('motion'),
     rail: readPreference('rail'),
+    monoIds: readPreference('monoIds'),
+    kbdHints: readPreference('kbdHints'),
   };
 }
 

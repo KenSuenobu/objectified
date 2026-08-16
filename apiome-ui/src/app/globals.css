@@ -751,6 +751,46 @@ html[data-rail="collapsed"] {
   --rail-w-current: var(--rail-w-collapsed);
 }
 
+/* ---- Identifier face (DESIGN.md §4.1) -----------------------------------
+   `.mono` marks a *fact* rendered in the monospace face — an id, a hash, a
+   version, a path — as distinct from a block of code, which is monospace
+   because it is code and stays that way. Hive components adopt the class as
+   they land; the preference then reaches all of them at once. */
+.mono {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+}
+
+html[data-mono-ids="off"] .mono {
+  font-family: var(--font-sans);
+}
+
+/* ---- Keyboard hints (DESIGN.md §4.1) ------------------------------------
+   `.kbd` is the shortcut chip on a button, menu row or field. Hiding it is a
+   presentation choice only: the shortcut itself keeps working, and the chip is
+   `aria-hidden` at the component level, so nothing accessible is removed with
+   it. HIVE-2.6 gives the chip its full styling; this is the geometry the
+   preference needs to have something to hide. */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  padding: 0.1em 0.35em;
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  box-shadow: 0 0 0 1px var(--border) inset;
+  color: var(--fg-muted);
+  font-family: var(--font-sans);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+html[data-kbd-hints="off"] .kbd {
+  display: none;
+}
+
 /* Radix UI Dialog animations */
 @keyframes enter {
   from {

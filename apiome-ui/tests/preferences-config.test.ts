@@ -134,15 +134,19 @@ describe('the vocabulary matches DESIGN.md §4.1', () => {
       density: 'data-density',
       motion: 'data-motion',
       rail: 'data-rail',
+      monoIds: 'data-mono-ids',
+      kbdHints: 'data-kbd-hints',
     });
   });
 
-  it('defaults to the middle scale, comfortable, animated and expanded', () => {
+  it('defaults to the middle scale, comfortable, animated, expanded and fully hinted', () => {
     expect(DEFAULT_PREFERENCES).toEqual({
       fontScale: 'md',
       density: 'comfortable',
       motion: 'auto',
       rail: 'expanded',
+      monoIds: 'on',
+      kbdHints: 'on',
     });
     (Object.keys(DEFAULT_PREFERENCES) as PreferenceKey[]).forEach((key) => {
       expect(PREFERENCE_VALUES[key]).toContain(DEFAULT_PREFERENCES[key]);
@@ -188,12 +192,16 @@ describe('reading what a device stored', () => {
     localStorage.setItem('hive.density', 'compact');
     localStorage.setItem('hive.motion', 'reduce');
     localStorage.setItem('hive.rail', 'collapsed');
+    localStorage.setItem('hive.monoIds', 'off');
+    localStorage.setItem('hive.kbdHints', 'off');
 
     expect(readPreferences()).toEqual({
       fontScale: 'xl',
       density: 'compact',
       motion: 'reduce',
       rail: 'collapsed',
+      monoIds: 'off',
+      kbdHints: 'off',
     });
   });
 
@@ -260,6 +268,8 @@ describe('writing preferences back', () => {
       density: 'compact',
       motion: 'reduce',
       rail: 'collapsed',
+      monoIds: 'off',
+      kbdHints: 'off',
     });
 
     expect(Object.values(PREFERENCE_STORAGE_KEYS).map((key) => localStorage.getItem(key))).toEqual([
@@ -267,6 +277,8 @@ describe('writing preferences back', () => {
       'compact',
       'reduce',
       'collapsed',
+      'off',
+      'off',
     ]);
   });
 });
@@ -296,18 +308,22 @@ describe('the theme choice shares the same storage rules', () => {
 });
 
 describe('applying preferences to an element', () => {
-  it('writes all four attributes and nothing else', () => {
+  it('writes every preference attribute and nothing else', () => {
     applyPreferences(html(), {
       fontScale: 'lg',
       density: 'compact',
       motion: 'reduce',
       rail: 'collapsed',
+      monoIds: 'off',
+      kbdHints: 'off',
     });
 
     expect(html().getAttribute('data-font-scale')).toBe('lg');
     expect(html().getAttribute('data-density')).toBe('compact');
     expect(html().getAttribute('data-motion')).toBe('reduce');
     expect(html().getAttribute('data-rail')).toBe('collapsed');
+    expect(html().getAttribute('data-mono-ids')).toBe('off');
+    expect(html().getAttribute('data-kbd-hints')).toBe('off');
     expect(html().getAttribute('data-theme')).toBeNull();
   });
 });
@@ -334,11 +350,15 @@ describe('the blocking boot script', () => {
     expect(html().getAttribute('data-density')).toBe(stored.density);
     expect(html().getAttribute('data-motion')).toBe(stored.motion);
     expect(html().getAttribute('data-rail')).toBe(stored.rail);
+    expect(html().getAttribute('data-mono-ids')).toBe(stored.monoIds);
+    expect(html().getAttribute('data-kbd-hints')).toBe(stored.kbdHints);
     expect(stored).toEqual({
       fontScale: 'xl',
       density: 'comfortable',
       motion: 'auto',
       rail: 'expanded',
+      monoIds: 'on',
+      kbdHints: 'on',
     });
   });
 
@@ -423,7 +443,9 @@ describe('the blocking boot script', () => {
     // only the closing sequence matters.)
     expect(source).not.toContain('</');
     expect(payload).not.toContain('<');
-    expect(JSON.parse(payload.replace(/\\u003c/g, '<')).prefs).toHaveLength(4);
+    expect(JSON.parse(payload.replace(/\\u003c/g, '<')).prefs).toHaveLength(
+      Object.keys(PREFERENCE_ATTRIBUTES).length,
+    );
   });
 
   it('stays small enough to sit on the critical path', () => {

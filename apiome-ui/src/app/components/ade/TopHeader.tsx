@@ -7,9 +7,10 @@ import { useAuthSession } from '@lib/auth/session-client';
 import { signOutEverywhere } from '../../../../lib/auth/sign-out-client';
 import type { AppSession } from '@lib/auth/better-auth-session-shape';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, Check, Plus, Shield } from 'lucide-react';
+import { ChevronDown, Check, Plus, Settings2, Shield } from 'lucide-react';
 import WhatsNewDialog from './WhatsNewDialog';
-import ThemeSelector from './ThemeSelector';
+import PreferencesDrawerHost from './preferences/PreferencesDrawerHost';
+import { openPreferences } from './preferences/preferencesDrawerBus';
 import CreateTenantDialog, { type CreatedTenant } from './CreateTenantDialog';
 import { useTheme } from '../../providers/ThemeProvider';
 import { useDarkMode } from '../../hooks/useDarkMode';
@@ -105,7 +106,6 @@ function TopHeaderView({
   const [tenantMenuOpen, setTenantMenuOpen] = useState(false);
   const [openNavMenuId, setOpenNavMenuId] = useState<string | null>(null);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
-  const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [currentTenantName, setCurrentTenantName] = useState<string>(() => {
     const currentId = (session?.user as { current_tenant_id?: string } | undefined)?.current_tenant_id;
     if (!currentId || !initialTenantContext) return '';
@@ -667,21 +667,23 @@ function TopHeaderView({
               View Profile
             </Link>
             <div role="separator" className="h-px bg-gray-200 dark:bg-gray-600 my-1" />
-            {/* Theme Selector */}
+            {/*
+             * Preferences (HIVE-1.4). The menu closes first so focus is inside the pane
+             * rather than behind it, and the chip keeps naming the current theme — the
+             * theme is what this entry used to set, and is still the first thing in it.
+             */}
             <button
               onClick={() => {
-                setShowThemeSelector(true);
                 setOpen(false);
+                openPreferences();
               }}
               role="menuitem"
               className="w-full text-left flex items-center justify-between px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white rounded text-sm transition-colors text-gray-700 dark:text-gray-300"
               style={{ border: "none" }}
             >
               <span className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                </svg>
-                Theme
+                <Settings2 className="w-4 h-4" aria-hidden />
+                Preferences
               </span>
               {/* gray-400 on the dark chip measured 3.96:1; gray-300 is 7.00:1. */}
               <span
@@ -724,11 +726,9 @@ function TopHeaderView({
         onClose={() => setShowWhatsNew(false)}
       />
 
-      {/* Theme Selector Dialog */}
-      <ThemeSelector
-        isOpen={showThemeSelector}
-        onClose={() => setShowThemeSelector(false)}
-      />
+      {/* Preferences pane (HIVE-1.4, #5277) — also the host for `⌘,` and for every
+          other surface that calls `openPreferences()`, the sidebar footer included. */}
+      <PreferencesDrawerHost />
     </header>
   );
 }

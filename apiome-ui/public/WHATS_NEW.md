@@ -18,9 +18,12 @@ We continue to improve the platform based on your feedback with improvements and
 - Repository: a new **Quota & limits** page (Repositories → Quota & limits) shows what the polling ceiling and the scanner have actually been doing over the last 7, 30 or 90 days — polls, scans and content scanned, with the repositories and files the quota *deferred* charted separately so "we were throttled" is never mistaken for "we were quiet". The panel leads with how much of the current hour's budget is spent and warns as you approach the ceiling, rather than after work has already been postponed. Counters survive restarts and are combined across servers, and if they cannot be read the page says so instead of showing you a flat line
 - Repository: webhook deliveries can now be filtered by **source address** before their signature is ever checked (Repositories → Webhook IPs). The provider's own published ranges — GitHub's `meta` endpoint, Atlassian's for Bitbucket — are fetched daily and cached, so the list stays right as the providers move; your workspace can add its own ranges for a self-hosted runner or an egress gateway, and each one records why it exists. The page states in a sentence whether the filter is actually protecting anything right now, rather than leaving you to combine three switches, and flags a provider whose range list has stopped refreshing. Turning the filter off for your workspace is a tenant-administrator action and asks for a reason, which goes into the audit trail
 - Repository: you can now choose what an auto-refresh does when it finds a spec you edited in Apiome after it was first imported (repository detail → Settings → **Refresh conflicts**). **Hold for review** stays the default and changes nothing: the refresh is skipped and the file is flagged, so nothing is overwritten until someone looks. **Overwrite** lets the repository win — the divergence is still recorded, so you can always see what was replaced. **New branch** keeps both, landing the refresh on a new branch instead of touching your edited version. Set it once for the repository, and override it for the one file that needs to differ; clearing an override puts that file back on whatever the repository is set to next, not on a stale copy of today's choice
-- UI/UX: Updates look and feel for tabs
-- UI/UX: Added tabbed sections to Style Guides
-- UI/UX: Softened the font of the entire application
+- UI/UX
+  - Major updates look and feel
+  - Added tabbed sections to Style Guides
+  - Softened the font of the entire application
+  - Moved Preferences to the bottom of the left-hand sidebar
+  - Changed "Themes" to "Preferences" in the upper right-hand profile button
 - Primitives
   - Major UX improvements in the import functionality
   - Shows unregistered namespaces that were detected

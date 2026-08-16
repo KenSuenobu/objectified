@@ -183,11 +183,13 @@ To add a new theme:
 ### Created Files
 - `/src/app/config/themes.ts` - Theme definitions
 - `/src/app/providers/ThemeProvider.tsx` - Theme context and logic
-- `/src/app/components/ade/ThemeSelector.tsx` - Theme selector dialog
+- `/src/app/components/ade/PreferencesDrawer.tsx` - The preferences pane, whose Appearance
+  tab holds the theme picker (HIVE-1.4, #5277; it replaced the standalone `ThemeSelector`
+  dialog). Its parts live in `/src/app/components/ade/preferences/`.
 
 ### Modified Files
 - `/src/app/ade/layout.tsx` - Added ThemeProvider wrapper
-- `/src/app/components/ade/TopHeader.tsx` - Replaced theme toggle with theme selector
+- `/src/app/components/ade/TopHeader.tsx` - Profile menu opens the preferences pane
 - `/src/app/globals.css` - Added theme CSS classes
 
 ## Browser Support
