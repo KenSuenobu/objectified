@@ -10,7 +10,13 @@
  *  Compact tightens every dashboard screen at once and the Largest font scale grows them
  *  all together. `table-density` reaches the cells each page writes for itself, which is
  *  why the shared `th` classes no longer carry a vertical padding of their own.
- *  Retired by HIVE-2.3's `DataTable`, which inherits the same classes. */
+ *
+ *  Superseded by `components/ui/DataTable` (HIVE-2.3, #5282), which draws the same card
+ *  from the same tokens and adds everything each page used to re-implement on top of these
+ *  strings — sorting, selection, the bulk bar, paging, and the loading / empty / error
+ *  states. Nothing new should reach for this module. It stays only until the last of its
+ *  consumers has migrated with its own page epic (Epics 5–9); the file itself goes in
+ *  HIVE-10.6. */
 export const dashboardMainClass = 'relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-page';
 export const dashboardContentStackClass = 'space-y-6';
 

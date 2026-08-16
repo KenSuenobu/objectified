@@ -78,8 +78,15 @@ async function openGallery(page: Page): Promise<void> {
   await freezeMotion(page);
 }
 
-/** The view switch at the top of the §Segmented section. */
-const viewSwitch = (page: Page) => page.getByRole('radiogroup', { name: 'View' });
+/**
+ * The view switch at the top of the §Segmented section.
+ *
+ * Scoped to the section, and `exact`: the gallery grew a §Tables section in HIVE-2.3 whose
+ * toolbar carries a view switch of its own, and Playwright matches an accessible name by
+ * substring unless told otherwise.
+ */
+const viewSwitch = (page: Page) =>
+  page.locator('#segmented').getByRole('radiogroup', { name: 'View', exact: true });
 
 test.describe('Hive primitives gallery', () => {
   test.beforeEach(async ({ page }) => {
