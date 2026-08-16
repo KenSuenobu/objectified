@@ -960,8 +960,6 @@ const Projects = () => {
               title="No Projects Yet"
               description="Get started by creating your first project"
               variant="compact"
-              showOrbs={false}
-              iconContainerClassName="from-indigo-500 to-purple-600 shadow-indigo-500/30"
             />
           </div>
         </div>

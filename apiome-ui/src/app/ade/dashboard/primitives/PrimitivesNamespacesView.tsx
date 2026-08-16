@@ -232,8 +232,6 @@ export default function PrimitivesNamespacesView({
               title="No Namespaces Yet"
               description="Create a tenant namespace to group your types under a scoped base URI."
               variant="compact"
-              showOrbs={false}
-              iconContainerClassName="h-14 w-14 from-gray-400 to-gray-500 shadow-gray-500/30"
             />
           </div>
         ) : (

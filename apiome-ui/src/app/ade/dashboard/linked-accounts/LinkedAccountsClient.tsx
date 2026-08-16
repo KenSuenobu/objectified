@@ -298,7 +298,6 @@ const LinkedAccountsClient = ({ providers }: LinkedAccountsClientProps) => {
             icon={<LinkIcon className="h-10 w-10" />}
             title="No Linked Accounts"
             description="Link a provider below to sign in with SSO and manage repository access."
-            iconContainerClassName="from-cyan-500 to-blue-600 shadow-cyan-500/30"
           />
         ) : (
           <div className={dashboardTableWrapClass}>

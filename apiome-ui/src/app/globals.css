@@ -364,6 +364,12 @@
   --rose-soft: var(--color-rose-soft);
   --rose-fg: var(--color-rose-fg);
 
+  /* The hexagon of DESIGN.md §2, as one silhouette the whole interface shares.
+     A workspace avatar (`.avatar-hex`, HIVE-2.2) and the stacked hex of an
+     empty state's art (`.hive-empty-art`, HIVE-2.5) are the same shape, and a
+     second copy of the six points is a copy waiting to drift. */
+  --hex-clip: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+
   /* Radii — `--r-*` is the hive.css spelling of the `--radius-*` scale. */
   --r-xs: var(--radius-xs);
   --r-sm: var(--radius-sm);
@@ -1093,11 +1099,12 @@ html[data-kbd-hints="off"] .kbd-group {
    size at every scale, and still clips a photograph.
 
    It is CSS rather than a Tailwind arbitrary value because the polygon is a
-   fixed silhouette used in several places, and one shared definition is what
-   keeps every hexagon in the interface the same hexagon. */
+   fixed silhouette used in several places, and one shared definition — the
+   `--hex-clip` token above — is what keeps every hexagon in the interface the
+   same hexagon. */
 .avatar-hex {
   border-radius: 0;
-  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  clip-path: var(--hex-clip);
 }
 
 /* ---- Drawer motion (HIVE-2.2, #5281; DESIGN.md §3.4) --------------------
@@ -1136,6 +1143,125 @@ html[data-kbd-hints="off"] .kbd-group {
 
 .hive-drawer[data-state="closed"] {
   animation: hive-drawer-out var(--dur-base) var(--ease-out);
+}
+
+/* ==========================================================================
+   FEEDBACK SET (HIVE-2.5, #5284)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/assets/hive.css` §14 (`.empty`, `.empty__art`,
+   `.skeleton`, `.spinner`), `docs/mockups/DESIGN.md` §2 (honey is brand
+   ornament, and empty-state art is one of the places it belongs), §8
+   ("Loading = skeletons shaped like the final content, never spinners in
+   tables") and §10 (the voice the copy is written in).
+
+   Only two things here have to be CSS. Everything else about an empty state —
+   its layout, type and spacing — is Tailwind on the component, where a caller
+   can still override it.
+
+   1. THE HEX ART
+      Two stacked hexagons with a Lucide glyph on top. The silhouette is the
+      shared `--hex-clip` token, so the ornament of an empty state and the
+      avatar of a workspace are provably the same hexagon.
+
+      The inner hex and the glyph are sized in **percentages of the art box**
+      rather than in absolute lengths: the same rules then serve the 88 px
+      block art and the 52 px inline art (hive.css §14 draws both), and the
+      font-size preference moves the whole assembly together because the box
+      itself is `rem`.
+
+      Tone is three custom properties rather than three rule sets, so a tone is
+      one line and a component never spells a colour. Honey is the default
+      because DESIGN.md §2 reserves honey for exactly this; `danger` exists for
+      {@link ErrorState}, where a brand ornament would be the wrong register,
+      and `neutral` for a state that is merely uneventful.
+
+      The glyph rules are deliberately `descendant` selectors — specificity
+      (0,1,1) — so they outrank the `text-white` / `h-10 w-10` utilities that
+      pre-Hive call sites pass on their icon for the old gradient tile. The art
+      colours and sizes its own glyph; a call site cannot get that wrong.
+
+   2. THE SKELETON SHIMMER
+      hive.css §14 sweeps a translucent band across the inset fill rather than
+      pulsing opacity: a pulse reads as "something is blinking", a sweep reads
+      as "something is arriving". Reduced motion needs no rule of its own — the
+      `html[data-motion="reduce"]` and `prefers-reduced-motion` blocks above
+      zero every animation duration, which parks the band off the left edge and
+      leaves a still placeholder.
+   ========================================================================== */
+
+.hive-empty-art {
+  /* Honey — DESIGN.md §2: the hex art is brand ornament. */
+  --empty-art-tint: var(--honey);
+  --empty-art-fill: var(--honey-soft);
+  --empty-art-ink: var(--honey-fg);
+
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+/* Something failed. A honey ornament would say "brand moment" over an error. */
+.hive-empty-art--danger {
+  --empty-art-tint: var(--danger);
+  --empty-art-fill: var(--danger-soft);
+  --empty-art-ink: var(--danger-fg);
+}
+
+/* Nothing is wrong and nothing is celebrated — a filtered-out list, a gate. */
+.hive-empty-art--neutral {
+  --empty-art-tint: var(--neutral);
+  --empty-art-fill: var(--neutral-soft);
+  --empty-art-ink: var(--neutral-fg);
+}
+
+.hive-empty-art__hex {
+  position: absolute;
+  inset: 0;
+  background: var(--empty-art-fill);
+  clip-path: var(--hex-clip);
+}
+
+/* The second hex of hive.css §14 (`.hex--2`): inset 10 px inside the 88 px art,
+   expressed as the same ratio so the inline art nests identically. Mixed from
+   the tone rather than stated, so a theme that re-tints honey re-tints it. */
+.hive-empty-art__hex--inner {
+  inset: 11.4%;
+  background: color-mix(in srgb, var(--empty-art-tint) 30%, var(--bg-surface));
+}
+
+.hive-empty-art > svg {
+  position: relative;
+  width: 34%;
+  height: 34%;
+  color: var(--empty-art-ink);
+}
+
+.hive-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-inset);
+  border-radius: var(--r-sm);
+}
+
+.hive-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--bg-surface) 60%, transparent),
+    transparent
+  );
+  animation: hive-shimmer 1.4s infinite;
+}
+
+@keyframes hive-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* ==========================================================================

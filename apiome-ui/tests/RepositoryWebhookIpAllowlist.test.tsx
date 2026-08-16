@@ -174,7 +174,9 @@ describe('the allowlist view', () => {
   test('no tenant selected is a guard, not an error', async () => {
     currentTenantId = undefined;
     render(<RepositoryWebhookIpAllowlist />);
-    expect(await screen.findByText('No tenant selected')).toBeInTheDocument();
+    // The shared gate (HIVE-2.5, #5284) — a lock and a way through, not an amber warning.
+    expect(await screen.findByText('Pick a workspace first')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
   });
 

@@ -342,7 +342,10 @@ describe('degradation', () => {
     currentTenantId = undefined;
     render(<RepositoryQuotaTelemetry />);
 
-    expect(await screen.findByText('No tenant selected')).toBeInTheDocument();
+    // The shared gate (HIVE-2.5, #5284): one lock, one sentence, one way through it, rather
+    // than the amber card this screen used to grow for itself.
+    expect(await screen.findByText('Pick a workspace first')).toBeInTheDocument();
+    expect(screen.getByText('Quota telemetry is scoped to one workspace.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Go to tenants/i })).toHaveAttribute(
       'href',
       '/ade/dashboard/tenants'

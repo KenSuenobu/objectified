@@ -17,7 +17,15 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshCw, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, EmptyState, Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui';
+import {
+  Button,
+  EmptyState,
+  GatedState,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/app/components/ui';
 import {
   dashboardContentStackClass,
   dashboardMainClass,
@@ -355,11 +363,7 @@ function LintWorkspacePageInner() {
   if (!currentTenantId) {
     return (
       <main className={dashboardMainClass}>
-        <EmptyState
-          icon={<ShieldCheck className="h-8 w-8" aria-hidden />}
-          title="No tenant selected"
-          description="Select a tenant to review its catalog-wide lint posture."
-        />
+        <GatedState description="Lint posture is measured across one workspace at a time." />
       </main>
     );
   }

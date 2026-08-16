@@ -5,8 +5,8 @@
  *
  * The production counterpart of `docs/mockups/foundations/design-system.html`: a data-free
  * route at `/design-system/hive` that renders the §Buttons, §Forms, §Badges, §Status
- * vocabulary, §Cards, §Tabs, §Segmented, §Avatars, §Tables and §Overlays sections of the
- * mockup with the **real** `components/ui` primitives.
+ * vocabulary, §Cards, §Tabs, §Segmented, §Avatars, §Tables, §Overlays and §Feedback
+ * sections of the mockup with the **real** `components/ui` primitives.
  * Standing beside the mockup it answers the only question that matters about a re-token —
  * does the component now look like the design language? — and it is where a theme, density
  * or font-scale regression shows up first.
@@ -21,9 +21,11 @@
 import * as React from 'react';
 import {
   Filter,
+  FolderOpen,
   LayoutGrid,
   List,
   Plus,
+  SearchX,
   Sparkles,
   Trash2,
   Upload,
@@ -61,14 +63,19 @@ import {
   DrawerOpenFullPageLink,
   DrawerTitle,
   DrawerTrigger,
+  EmptyState,
+  ErrorBanner,
+  ErrorState,
   FormField,
   FreshnessPill,
   GRADE_LETTERS,
+  GatedState,
   GradeGlyph,
   HTTP_METHODS,
   HealthPill,
   Input,
   Kbd,
+  LoadingState,
   MethodChip,
   RadioGroup,
   RadioGroupItem,
@@ -81,6 +88,8 @@ import {
   SelectTrigger,
   SelectValue,
   Skeleton,
+  SkeletonCard,
+  SkeletonText,
   Spinner,
   Switch,
   Tabs,
@@ -248,7 +257,7 @@ export default function HiveDesignSystemPage() {
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-fg">
             Hive primitives{' '}
             <Badge variant="honey" size="lg">
-              HIVE-2.1 · 2.2 · 2.3
+              HIVE-2.1 · 2.2 · 2.3 · 2.4 · 2.5
             </Badge>
           </h1>
           <p className="max-w-[72ch] text-sm text-fg-muted">
@@ -768,6 +777,95 @@ export default function HiveDesignSystemPage() {
               </Alert>
             ))}
           </div>
+        </Section>
+
+        <Section
+          id="feedback"
+          title="Feedback: empty, gated, error, loading"
+          description="Honeycomb art, a title that names the situation, a description that teaches the way out, and at most two actions. Errors add a retry; loading holds the shape of what is coming."
+        >
+          <Demo>
+            <EmptyState
+              className="w-full"
+              icon={<FolderOpen />}
+              title="No projects yet"
+              description="Create one from a template, or import an existing spec."
+              action={
+                <Button variant="primary">
+                  <Plus aria-hidden />
+                  New project
+                </Button>
+              }
+              secondaryAction={
+                <Button variant="outline">
+                  <Upload aria-hidden />
+                  Import
+                </Button>
+              }
+            />
+          </Demo>
+
+          <Demo>
+            <div className="grid w-full gap-3 md:grid-cols-2">
+              <Card variant="flat">
+                <GatedState variant="inline" description="API keys are scoped to one workspace." />
+              </Card>
+              <Card variant="flat">
+                <EmptyState
+                  variant="inline"
+                  dashed
+                  tone="neutral"
+                  icon={<SearchX />}
+                  title="No projects match your filters"
+                  description="Try clearing the search, or the “Needs attention” chip."
+                />
+              </Card>
+              <Card variant="flat">
+                <ErrorState
+                  variant="inline"
+                  title="Catalog analytics unavailable"
+                  description="The insight service returned 503 — try again in a moment."
+                  onRetry={() => undefined}
+                />
+              </Card>
+              <Card variant="flat">
+                <EmptyState
+                  variant="inline"
+                  brand
+                  title="Welcome to Apiome"
+                  description="Pick a starting point and the workspace fills itself in."
+                />
+              </Card>
+            </div>
+          </Demo>
+
+          <ErrorBanner
+            title="Couldn’t load projects."
+            description="The API returned 502."
+            onRetry={() => undefined}
+          />
+
+          <Demo>
+            <div className="grid w-full gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-3">
+                <p className="text-xs font-semibold tracking-[var(--track-caps)] uppercase text-fg-muted">
+                  Skeleton — shaped like the content
+                </p>
+                <SkeletonCard />
+                <SkeletonText lines={3} />
+              </div>
+              <div className="flex flex-col gap-3">
+                <p className="text-xs font-semibold tracking-[var(--track-caps)] uppercase text-fg-muted">
+                  Spinner — only when the result has no shape
+                </p>
+                <LoadingState
+                  message="Publishing version 2.4.0…"
+                  minHeightClassName="min-h-40"
+                  className="rounded-md bg-surface"
+                />
+              </div>
+            </div>
+          </Demo>
         </Section>
       </main>
     </TooltipProvider>

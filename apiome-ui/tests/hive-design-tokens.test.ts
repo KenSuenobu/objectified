@@ -178,8 +178,9 @@ describe('layering contract', () => {
         // Type, spacing and control metrics are defined here outright; colour never is.
         // `--gradient-*` (HIVE-2.2) is not an exception to that: a gradient is a picture
         // rather than a colour, and the case below proves every stop inside one is a
-        // token reference.
-        !/^--(app-|font-|fs-|lh-|track-|space-|control-|row-h|page-pad|card-pad|nav-item-h|sidenav-w|table-|r-full|gradient-)/.test(name) &&
+        // token reference. `--hex-clip` (HIVE-2.5) is a silhouette — six points, no
+        // colour — shared so the avatar hexagon and the empty-state art cannot drift.
+        !/^--(app-|font-|fs-|lh-|track-|space-|control-|row-h|page-pad|card-pad|nav-item-h|sidenav-w|table-|r-full|gradient-|hex-clip)/.test(name) &&
         !value.startsWith('var('),
     );
     expect(literals).toEqual([]);

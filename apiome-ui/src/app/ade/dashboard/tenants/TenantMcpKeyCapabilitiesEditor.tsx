@@ -425,11 +425,9 @@ export default function TenantMcpKeyCapabilitiesEditor({
       <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
         <EmptyState
           variant="compact"
-          showOrbs={false}
           icon={<KeyRound className="h-8 w-8" />}
           title="No MCP API keys yet"
           description="Create an MCP API key to grant agents call access under this tenant’s policy."
-          iconContainerClassName="from-indigo-500 to-violet-600 shadow-indigo-500/30"
           action={
             isAdmin ? (
               <Button onClick={openCreateModal}>

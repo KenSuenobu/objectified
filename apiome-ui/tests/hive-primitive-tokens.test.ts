@@ -41,9 +41,6 @@ const layer = readTokenLayer(css);
  * down, and a file only leaves the list by being re-tokened.
  */
 const DEFERRED: Readonly<Record<string, string>> = {
-  'EmptyState.tsx': 'HIVE-2.5 — empty / error / skeleton states, with the hex art',
-  'ErrorState.tsx': 'HIVE-2.5 — empty / error / skeleton states',
-  'LoadingState.tsx': 'HIVE-2.5 — empty / error / skeleton states',
   'Markdown.tsx': 'HIVE-2.x — prose styling travels with the docs surfaces',
   'markdownGithubComponents.tsx': 'HIVE-2.x — prose styling travels with the docs surfaces',
 };
@@ -126,6 +123,12 @@ describe('the sweep — no primitive names a palette colour', () => {
         'Kbd.tsx',
         'Segmented.tsx',
         'Toaster.tsx',
+        // HIVE-2.5 (#5284): the feedback set, which HIVE-2.1 deferred because it was a
+        // redesign rather than a re-token — the gradient orb and the red-tinted box had no
+        // token equivalent to be pointed at.
+        'EmptyState.tsx',
+        'ErrorState.tsx',
+        'LoadingState.tsx',
       ])
     );
   });

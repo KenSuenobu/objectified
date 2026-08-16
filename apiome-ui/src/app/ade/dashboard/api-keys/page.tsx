@@ -283,8 +283,6 @@ const ApiKeys = () => {
                 title="No API Keys Yet"
                 description="Create your first API key to access your tenant data via REST API"
                 variant="compact"
-                showOrbs={false}
-                iconContainerClassName="from-amber-500 to-orange-600 shadow-amber-500/30"
               />
             </div>
           </div>

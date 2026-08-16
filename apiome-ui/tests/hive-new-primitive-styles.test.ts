@@ -24,6 +24,7 @@ import {
   parseDeclarations,
   readGlobalsCss,
   readTokenLayer,
+  resolveToken,
   stripCssComments,
   topLevelRules,
   type CssRule,
@@ -73,7 +74,12 @@ describe('avatar silhouette (hive.css §19)', () => {
   it('clips to the mockup hexagon, point by point', () => {
     // The same six points as `.avatar--hex`: a flat-topped hexagon, 3% inset top and
     // bottom so the silhouette has a little air inside its own box.
-    expect(avatar.get('clip-path')).toBe(
+    //
+    // Read through the token rather than spelled here: HIVE-2.5 gave the empty-state art
+    // the same silhouette, and `--hex-clip` is what makes "the same hexagon" a fact rather
+    // than a coincidence between two copies of six numbers.
+    expect(avatar.get('clip-path')).toBe('var(--hex-clip)');
+    expect(resolveToken('--hex-clip', layer)).toBe(
       'polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%)'
     );
   });
