@@ -21,11 +21,20 @@ import 'jest-axe/extend-expect';
 const mockUsePathname = jest.fn<string, []>();
 const mockUseSession = jest.fn<{ data: unknown }, []>();
 const mockCommercialAccess = jest.fn<Promise<{ navItems: unknown[] }>, []>();
-const mockTenantContext = jest.fn<Promise<{ tenants: { id: string; name: string }[] }>, []>();
+const mockTenantContext = jest.fn<
+  Promise<{
+    tenants: { id: string; name: string; role?: string; licenseName?: string }[];
+    adminTenantIds: string[];
+    createTenant: { allowed: boolean; used: number; max: number } | null;
+  }>,
+  []
+>();
 const mockSignOut = jest.fn<Promise<void>, [string]>();
 
 jest.mock('next/navigation', () => ({
   usePathname: () => mockUsePathname(),
+  // The workspace switcher (HIVE-3.3) refreshes the server components after a switch.
+  useRouter: () => ({ refresh: jest.fn(), push: jest.fn() }),
 }));
 
 jest.mock('next/link', () => ({
@@ -53,6 +62,18 @@ jest.mock('@lib/auth/tenant-membership-context', () => ({
 
 jest.mock('@lib/auth/sign-out-client', () => ({
   signOutEverywhere: (callbackUrl: string) => mockSignOut(callbackUrl),
+}));
+
+jest.mock('@lib/auth/last-active-tenant-actions', () => ({
+  persistLastActiveTenant: jest.fn(async () => undefined),
+}));
+
+// The create-workspace dialog is a server-action client of its own, covered by
+// `create-tenant-dialog.test.tsx`; the shell only cares that the menu can open it.
+jest.mock('@/app/components/ade/CreateTenantDialog', () => ({
+  __esModule: true,
+  default: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="create-tenant-dialog-stub" /> : null,
 }));
 
 // next-themes still owns the `.dark` class; stubbing only its hook keeps the real
@@ -161,7 +182,11 @@ beforeEach(() => {
   mockCommercialAccess.mockReset();
   mockCommercialAccess.mockResolvedValue({ navItems: [] });
   mockTenantContext.mockReset();
-  mockTenantContext.mockResolvedValue({ tenants: [{ id: 't-1', name: 'Acme Corp' }] });
+  mockTenantContext.mockResolvedValue({
+    tenants: [{ id: 't-1', name: 'Acme Corp', role: 'owner', licenseName: 'Free' }],
+    adminTenantIds: [],
+    createTenant: { allowed: true, used: 1, max: 5 },
+  });
 
   viewportWidth = 1440;
   mockMatchMedia();
@@ -442,13 +467,23 @@ describe('AppShell — the icon rail', () => {
   });
 });
 
-describe('AppShell — the regions later tickets replace', () => {
-  it('names the active workspace and reaches the page that switches it', async () => {
+describe('AppShell — its regions', () => {
+  it('mounts the workspace switcher in region 2, naming the active workspace', async () => {
     await renderShell();
 
     const workspace = await screen.findByTestId('rail-workspace');
     expect(workspace).toHaveTextContent('Acme Corp');
-    expect(workspace).toHaveAttribute('href', '/ade/dashboard/tenants');
+    expect(workspace).toHaveTextContent('Owner · Free');
+    // A switcher now, not the interim link to the tenants page (HIVE-3.3, #5289).
+    expect(workspace).toHaveAttribute('aria-haspopup', 'menu');
+  });
+
+  it('opens the switcher menu from the rail', async () => {
+    await renderShell();
+
+    fireEvent.click(await screen.findByTestId('rail-workspace'));
+
+    expect(screen.getByRole('menu', { name: 'Your workspaces' })).toBeInTheDocument();
   });
 
   it('says so plainly when there is no workspace yet', async () => {
@@ -463,7 +498,9 @@ describe('AppShell — the regions later tickets replace', () => {
 
     await renderShell();
 
-    expect(screen.getByTestId('rail-workspace')).toHaveTextContent('No workspace');
+    await waitFor(() =>
+      expect(screen.getByTestId('rail-workspace')).toHaveTextContent('No workspace')
+    );
     consoleError.mockRestore();
   });
 

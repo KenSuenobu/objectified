@@ -11,7 +11,7 @@
  *
  * It asserts the two user-visible halves of multi-tenant membership:
  *
- *   1. **Switcher rendering + license-tier chips** — the header switcher lists all three
+ *   1. **Switcher rendering + license-tier chips** — the rail's workspace switcher lists all three
  *      memberships, each with its own role badge and its own license chip (Free/Paid/Sponsor).
  *   2. **Permission divergence** — the same user manages members in the tenant they own but not
  *      in the tenant they only view: the members invite form is present in Aurora and absent in
@@ -40,22 +40,30 @@ const GRACE_PERSONA: MockPersona = {
   verified: true,
 };
 
-/** The header tenant-switcher trigger (shows the active tenant's name). */
+/**
+ * The rail's workspace-switcher trigger (shows the active tenant's name).
+ *
+ * HIVE-3.3 (#5289) moved the switcher out of the retired top bar and into the rail, and
+ * renamed it for the reader: the accessible name now starts with "Switch workspace" and
+ * continues with the workspace it is currently in, so the match is a substring.
+ */
 function switcherButton(page: Page) {
-  return page.getByRole('button', { name: 'Switch tenant' });
+  return page.getByRole('button', { name: /switch workspace/i });
 }
 
 /** Open the switcher dropdown and return its menu locator. */
 async function openSwitcher(page: Page) {
   await switcherButton(page).click();
-  return page.getByRole('menu', { name: 'Your tenants' });
+  return page.getByRole('menu', { name: 'Your workspaces' });
 }
 
 /** The switcher menu item for a tenant, matched by its display name. */
 function tenantEntry(page: Page, name: string) {
   return page
-    .getByRole('menu', { name: 'Your tenants' })
-    .getByRole('menuitem', { name: new RegExp(name) });
+    .getByRole('menu', { name: 'Your workspaces' })
+    // `menuitemradio`: the switcher is a single-choice list, and the current workspace is
+    // the checked one (HIVE-3.3).
+    .getByRole('menuitemradio', { name: new RegExp(name) });
 }
 
 test.describe.configure({ mode: 'serial' });
