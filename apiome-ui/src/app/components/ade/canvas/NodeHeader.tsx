@@ -1,5 +1,5 @@
 import React from 'react';
-import { accentTintVar, accentVar, CANVAS_TOKENS, type NodeAccentRole } from './canvas-theme';
+import { accentTintVar, accentVar, CANVAS_TOKENS, type NodeAccentRole, CANVAS_TYPE_SCALE } from './canvas-theme';
 
 /**
  * NodeHeader — title strip for all canvas node cards.
@@ -97,7 +97,7 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '10px',
+              fontSize: CANVAS_TYPE_SCALE.caps,
               fontWeight: 700,
               letterSpacing: '-0.3px',
               flexShrink: 0,
@@ -120,7 +120,7 @@ export const NodeHeader: React.FC<NodeHeaderProps> = ({
           {subtitle && (
             <div
               style={{
-                fontSize: '10px',
+                fontSize: CANVAS_TYPE_SCALE.caps,
                 color: customBackground ? 'rgba(255, 255, 255, 0.75)' : 'var(--node-text-muted)',
                 letterSpacing: '-0.01em',
                 overflow: 'hidden',

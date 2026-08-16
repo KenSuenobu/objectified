@@ -41,6 +41,7 @@ import {
 import { useCapabilityReasons } from './useCapabilityReasons';
 import { useProjectionEvidence } from './useProjectionEvidence';
 import { trackProjectionMetric } from './projectionMetrics';
+import { SVG_TEXT_SIZE } from '@/app/components/ui/svgTypography';
 
 /** Zoom bounds/step for the graph view (pure scale; layout stays deterministic). */
 const MIN_ZOOM = 0.5;
@@ -242,7 +243,7 @@ export function ProjectionGraphPanel({
           <span
             data-testid="projection-snapshot"
             title={`Projection snapshot ${snapshotHash}`}
-            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
           >
             snapshot {snapshotHash.slice(0, 12)}
           </span>
@@ -495,7 +496,8 @@ function ProjectionGraphSvg({
             <text
               x={layout.columns.outcome}
               y={lane.headerY}
-              className="fill-gray-500 text-[10px] font-semibold uppercase tracking-wide dark:fill-gray-400"
+              fontSize={SVG_TEXT_SIZE.label}
+              className="fill-gray-500 font-semibold uppercase tracking-wide dark:fill-gray-400"
             >
               {lane.label} ({lane.count})
             </text>
@@ -600,7 +602,7 @@ function ProjectionTable({ entries, selectedKey, onSelect }: ProjectionTableProp
           node has one row here with the same status and evidence.
         </caption>
         <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
-          <tr className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <tr className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
             <th scope="col" className="px-3 py-2 font-semibold">Status</th>
             <th scope="col" className="px-3 py-2 font-semibold">Source construct</th>
             <th scope="col" className="px-3 py-2 font-semibold">Destination</th>
@@ -639,7 +641,7 @@ function ProjectionTable({ entries, selectedKey, onSelect }: ProjectionTableProp
                     {expanded && (
                       <ul className="mt-1.5 max-h-32 space-y-0.5 overflow-y-auto">
                         {entry.members?.map((member) => (
-                          <li key={member.id} className="font-mono text-[11px] text-gray-600 dark:text-gray-300">
+                          <li key={member.id} className="font-mono text-2xs text-gray-600 dark:text-gray-300">
                             {member.construct}
                             {member.targetLocation ? (
                               <span className="text-gray-400 dark:text-gray-500"> → {member.targetLocation}</span>
@@ -665,19 +667,19 @@ function ProjectionTable({ entries, selectedKey, onSelect }: ProjectionTableProp
                     aria-pressed={isSelected}
                     aria-label={entryAriaLabel(entry)}
                     onClick={() => onSelect(entry.key)}
-                    className="break-all text-left font-mono text-[11px] font-medium text-gray-900 underline-offset-2 hover:underline dark:text-gray-100"
+                    className="break-all text-left font-mono text-2xs font-medium text-gray-900 underline-offset-2 hover:underline dark:text-gray-100"
                   >
                     {row.construct}
                   </button>
                   {row.sourceLocation && (
-                    <div className="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+                    <div className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
                       from {row.sourceLocation}
                     </div>
                   )}
                 </td>
                 <td className="px-3 py-2 align-top">
                   {row.targetLocation ? (
-                    <code className="break-all font-mono text-[11px] text-gray-700 dark:text-gray-300">
+                    <code className="break-all font-mono text-2xs text-gray-700 dark:text-gray-300">
                       {row.targetLocation}
                     </code>
                   ) : row.targetLabel ? (
@@ -704,7 +706,7 @@ function ProjectionTable({ entries, selectedKey, onSelect }: ProjectionTableProp
 function StatusCell({ presentation }: { presentation: ReturnType<typeof statusPresentation> }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold ${presentation.badgeClass}`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-2xs font-semibold ${presentation.badgeClass}`}
     >
       <span aria-hidden>{presentation.symbol}</span>
       {presentation.label}
@@ -730,7 +732,7 @@ function ReasonCell({ row, entryKey }: { row: ProjectionEvidenceRow; entryKey: s
       {categoryView && (
         <span
           data-testid={`projection-row-category-${entryKey}`}
-          className={`inline-block rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${categoryView.badgeClass}`}
+          className={`inline-block rounded-full px-1.5 py-0.5 text-2xs font-semibold ${categoryView.badgeClass}`}
         >
           {categoryView.label}
         </span>

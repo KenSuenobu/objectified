@@ -37,7 +37,7 @@ const TOKENS: Record<SidebarDensity, SidebarDensityTokens> = {
   compact: {
     rowPaddingY: 'py-1',
     rowPaddingX: 'px-2',
-    rowText: 'text-[12px]',
+    rowText: 'text-xs',
     headerHeight: 'h-11',
     sectionPadding: 'px-2 py-2',
     rowGap: 'gap-0.5',
@@ -47,7 +47,7 @@ const TOKENS: Record<SidebarDensity, SidebarDensityTokens> = {
   standard: {
     rowPaddingY: 'py-1.5',
     rowPaddingX: 'px-2.5',
-    rowText: 'text-[13px]',
+    rowText: 'text-sm',
     headerHeight: 'h-12',
     sectionPadding: 'px-3 py-3',
     rowGap: 'gap-1',
@@ -169,5 +169,5 @@ export const sidebarTheme = {
   inputBase:
     'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-400 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none',
   sectionLabel:
-    'text-[10.5px] font-semibold tracking-[0.08em] uppercase text-slate-400 dark:text-slate-500',
+    'text-2xs font-semibold tracking-[0.08em] uppercase text-slate-400 dark:text-slate-500',
 } as const;

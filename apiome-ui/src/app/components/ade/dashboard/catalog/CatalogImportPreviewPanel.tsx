@@ -118,7 +118,7 @@ function CoverageBadge({ coverage, count }: { coverage: string; count?: number }
       data-testid="import-preview-coverage"
       data-coverage={coverage}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
+        'inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
         tone,
       )}
     >
@@ -517,7 +517,7 @@ export function CatalogImportPreviewPanel({
                 {row.label}
               </span>
               {row.count !== null ? (
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
                   {row.count.toLocaleString()}
                 </span>
               ) : null}
@@ -526,7 +526,7 @@ export function CatalogImportPreviewPanel({
             <>
               <span
                 className={cn(
-                  'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider',
+                  'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider',
                   parsedTagToneClass(entityKindTag(row.entity!.entity_kind)),
                 )}
               >
@@ -541,7 +541,7 @@ export function CatalogImportPreviewPanel({
                 {row.label}
               </span>
               {row.entity!.deprecated ? (
-                <span className="shrink-0 rounded bg-slate-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-slate-500 dark:bg-slate-700/60 dark:text-slate-300">
+                <span className="shrink-0 rounded bg-slate-100 px-1 py-0.5 text-2xs font-semibold uppercase text-slate-500 dark:bg-slate-700/60 dark:text-slate-300">
                   deprecated
                 </span>
               ) : null}
@@ -559,12 +559,12 @@ export function CatalogImportPreviewPanel({
                         setSelectedKey(row.key);
                         onSelectSourceLine(line);
                       }}
-                      className="font-mono text-[10px] tabular-nums text-indigo-600 underline decoration-dotted underline-offset-2 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      className="font-mono text-2xs tabular-nums text-indigo-600 underline decoration-dotted underline-offset-2 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
                     >
                       {row.entity!.source_location}
                     </span>
                   ) : (
-                    <span className="font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500">
+                    <span className="font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500">
                       {row.entity!.source_location}
                     </span>
                   )
@@ -587,7 +587,7 @@ export function CatalogImportPreviewPanel({
           What this import would add
         </h3>
         {virtualized && (
-          <span className="text-[10px] font-normal text-gray-500 dark:text-gray-400">windowed</span>
+          <span className="text-2xs font-normal text-gray-500 dark:text-gray-400">windowed</span>
         )}
       </div>
 
@@ -645,7 +645,7 @@ export function CatalogImportPreviewPanel({
               ).map(([kind, count]) => (
                 <span
                   key={kind}
-                  className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+                  className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-2xs font-medium text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
                 >
                   <span className="font-mono tabular-nums">{(count ?? 0).toLocaleString()}</span>
                   {kind}
@@ -655,14 +655,14 @@ export function CatalogImportPreviewPanel({
             {grade ? (
               <span
                 className={cn(
-                  'inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold',
+                  'inline-flex items-center rounded-md border px-2 py-0.5 text-2xs font-semibold',
                   gradeChipClass(grade),
                 )}
               >
                 Grade {grade}
               </span>
             ) : null}
-            <span className="text-[10px] text-gray-400 dark:text-gray-500">
+            <span className="text-2xs text-gray-400 dark:text-gray-500">
               via {manifest.adapter.adapter_label}
             </span>
           </div>
@@ -707,7 +707,7 @@ export function CatalogImportPreviewPanel({
             {filtering ? (
               <span
                 data-testid="import-preview-filter-count"
-                className="shrink-0 font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500"
+                className="shrink-0 font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
               >
                 {entityRowCount} of {manifest.entities.length}
               </span>
@@ -783,7 +783,7 @@ export function CatalogImportPreviewPanel({
 
           {selectedEntity ? (
             <div
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 dark:text-gray-400"
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-gray-500 dark:text-gray-400"
               data-testid="import-preview-provenance"
             >
               {selectedEntity.native_name && selectedEntity.native_name !== selectedEntity.name ? (

@@ -354,7 +354,7 @@ function TopHeaderView({
         <BrandMark variant="wordmark" size={40} priority />
         <button
           onClick={() => setShowWhatsNew(true)}
-          className="cursor-pointer rounded-md border border-slate-300 px-2 py-1 text-[11px] font-medium tracking-[0.02em] text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
+          className="cursor-pointer rounded-md border border-slate-300 px-2 py-1 text-2xs font-medium tracking-[0.02em] text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
           title="View What's New"
         >
           {APP_VERSION_BADGE}
@@ -382,7 +382,7 @@ function TopHeaderView({
          * edges of the nav and out of the document.
          */}
         <ul
-          className="m-0 flex list-none flex-wrap items-center justify-center gap-2 p-0 text-[13px]"
+          className="m-0 flex list-none flex-wrap items-center justify-center gap-2 p-0 text-sm"
         >
           {navItems.map((item) => {
             const href = resolvePlatformNavHref(item);
@@ -410,7 +410,7 @@ function TopHeaderView({
                     // (6.78:1) keep this "coming soon" item muted while clearing WCAG 2.2
                     // AA 1.4.3 — the previous slate-400/slate-500 pair sat at 2.63:1 and
                     // 3.74:1. Measured by tests/top-header-a11y.test.tsx.
-                    className="inline-flex cursor-not-allowed items-center gap-1 rounded-md px-2 py-1 text-[13px] text-slate-500 dark:text-slate-400"
+                    className="inline-flex cursor-not-allowed items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-500 dark:text-slate-400"
                     title="Coming soon"
                   >
                     {item.label}
@@ -435,7 +435,7 @@ function TopHeaderView({
                     href={href}
                     target={item.opensNewBrowser ? '_blank' : undefined}
                     rel={item.opensNewBrowser ? 'noopener noreferrer' : undefined}
-                    className="rounded-md px-2 py-1 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
+                    className="rounded-md px-2 py-1 text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
                   >
                     {item.label}
                   </a>
@@ -445,7 +445,7 @@ function TopHeaderView({
                     target={item.opensNewBrowser ? '_blank' : undefined}
                     rel={item.opensNewBrowser ? 'noopener noreferrer' : undefined}
                     aria-current={isActive ? 'page' : undefined}
-                    className={`rounded-md px-2 py-1 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-indigo-400 ${
+                    className={`rounded-md px-2 py-1 text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-indigo-400 ${
                       isActive ? 'bg-slate-200/80 font-medium text-slate-900 dark:bg-slate-700 dark:text-white' : ''
                     }`}
                   >
@@ -567,7 +567,7 @@ function TopHeaderView({
                             >
                               <span className="min-w-0 flex-1 truncate">{t.name}</span>
                               {isSuspended && (
-                                <span className="inline-flex shrink-0 items-center rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                <span className="inline-flex shrink-0 items-center rounded bg-gray-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                                   Suspended
                                 </span>
                               )}
@@ -609,7 +609,7 @@ function TopHeaderView({
                           <Plus className="h-4 w-4 shrink-0" aria-hidden />
                           <span className="min-w-0 flex-1 truncate">Create tenant</span>
                           {!createTenantGate.allowed && (
-                            <span className="shrink-0 text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                            <span className="shrink-0 text-2xs font-medium text-gray-500 dark:text-gray-400">
                               {createTenantGate.used}/{createTenantGate.max}
                             </span>
                           )}
@@ -752,7 +752,7 @@ function TenantRoleBadge({ role, isLegacyAdmin }: { role?: string; isLegacyAdmin
     if (!isLegacyAdmin) return null;
     return (
       <span
-        className="inline-flex shrink-0 items-center gap-0.5 rounded bg-amber-100/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-950/60 dark:text-amber-200"
+        className="inline-flex shrink-0 items-center gap-0.5 rounded bg-amber-100/90 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-950/60 dark:text-amber-200"
         title="You are an administrator of this tenant"
       >
         <Shield className="h-3.5 w-3.5" aria-hidden />
@@ -764,7 +764,7 @@ function TenantRoleBadge({ role, isLegacyAdmin }: { role?: string; isLegacyAdmin
   return (
     <span
       data-testid="tenant-role-badge"
-      className={`inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide ${
         ROLE_BADGE_CLASSES[role] ?? ROLE_BADGE_NEUTRAL_CLASS
       }`}
       title={`Your role in this tenant: ${role}`}
@@ -807,7 +807,7 @@ function TenantLicenseChip({
   return (
     <span
       data-testid="tenant-license-chip"
-      className={`inline-flex shrink-0 items-center text-[11px] font-medium ${colorClass}`}
+      className={`inline-flex shrink-0 items-center text-2xs font-medium ${colorClass}`}
       title={
         name
           ? `License plan: ${name}`

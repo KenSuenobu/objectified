@@ -117,7 +117,7 @@ export default function VerificationPolicyDecisionPanel({
           </div>
 
           {decision.evaluationId && (
-            <p className="font-mono text-[11px] text-gray-500">
+            <p className="font-mono text-2xs text-gray-500">
               evaluationId: {decision.evaluationId}
             </p>
           )}
@@ -127,7 +127,7 @@ export default function VerificationPolicyDecisionPanel({
               <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                 Cited evidence runs
               </p>
-              <ul className="mt-1 space-y-0.5 font-mono text-[11px] text-gray-500">
+              <ul className="mt-1 space-y-0.5 font-mono text-2xs text-gray-500">
                 {decision.evidenceRunIds.map((id) => (
                   <li key={id}>{id}</li>
                 ))}

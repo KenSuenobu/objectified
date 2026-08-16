@@ -58,7 +58,7 @@ export function RepositoryHealthBadge({
           aria-label={repositoryHealthAriaLabel(health)}
           tabIndex={0}
           className={cn(
-            'inline-flex cursor-default items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider outline-none',
+            'inline-flex cursor-default items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider outline-none',
             'focus-visible:ring-2 focus-visible:ring-indigo-500/50',
             repositoryHealthClass(health.level),
             className

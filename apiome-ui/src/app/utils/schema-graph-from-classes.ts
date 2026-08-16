@@ -5,6 +5,7 @@
  */
 
 import type { Edge, Node } from '@xyflow/react';
+import { SVG_TEXT_SIZE } from '@/app/components/ui/svgTypography';
 
 function extractClassNameFromRef(ref: string): string | null {
   if (ref.includes('/')) {
@@ -63,7 +64,7 @@ function createPropertyRefEdgesForMetrics(classes: any[]): Edge[] {
                 label: `${prop.name} (${label}:${refClassName}${isSourceArray ? '[]' : ''})`,
                 data: { sourceNodeId: cls.id, targetNodeId: targetClassId },
                 style: { stroke: edgeColor, strokeWidth: 3, strokeDasharray },
-                labelStyle: { fill: edgeColor, fontSize: 10, fontWeight: 600 },
+                labelStyle: { fill: edgeColor, fontSize: SVG_TEXT_SIZE.label, fontWeight: 600 },
                 labelBgStyle: { fill: 'white', fillOpacity: 0.95 },
                 zIndex: 0,
               });
@@ -172,7 +173,7 @@ function createPropertyRefEdgesForMetrics(classes: any[]): Edge[] {
           style: { stroke: edgeColor, strokeWidth: 2 },
           markerStart,
           markerEnd,
-          labelStyle: { fill: '#6b7280', fontSize: 11, fontWeight: 500 },
+          labelStyle: { fill: '#6b7280', fontSize: SVG_TEXT_SIZE.body, fontWeight: 500 },
           labelBgStyle: { fill: 'white', fillOpacity: 0.9 },
         });
       }
@@ -207,7 +208,7 @@ function createCompositionEdgesForMetrics(classes: any[]): Edge[] {
               data: { sourceNodeId: cls.id, targetNodeId: targetId },
               style: { stroke: '#2563eb', strokeWidth: 3, strokeDasharray: '0' },
               markerEnd: { type: 'arrowclosed', color: '#2563eb', width: 15, height: 15 },
-              labelStyle: { fill: '#2563eb', fontSize: 10, fontWeight: 600 },
+              labelStyle: { fill: '#2563eb', fontSize: SVG_TEXT_SIZE.label, fontWeight: 600 },
               labelBgStyle: { fill: 'white', fillOpacity: 0.95 },
               zIndex: 0,
             });
@@ -233,7 +234,7 @@ function createCompositionEdgesForMetrics(classes: any[]): Edge[] {
               data: { sourceNodeId: cls.id, targetNodeId: targetId },
               style: { stroke: '#ea580c', strokeWidth: 3, strokeDasharray: '5,5' },
               markerEnd: { type: 'arrowclosed', color: '#ea580c', width: 15, height: 15 },
-              labelStyle: { fill: '#ea580c', fontSize: 10, fontWeight: 600 },
+              labelStyle: { fill: '#ea580c', fontSize: SVG_TEXT_SIZE.label, fontWeight: 600 },
               labelBgStyle: { fill: 'white', fillOpacity: 0.95 },
               zIndex: 0,
             });
@@ -259,7 +260,7 @@ function createCompositionEdgesForMetrics(classes: any[]): Edge[] {
               data: { sourceNodeId: cls.id, targetNodeId: targetId },
               style: { stroke: '#9333ea', strokeWidth: 3, strokeDasharray: '2,3' },
               markerEnd: { type: 'arrowclosed', color: '#9333ea', width: 15, height: 15 },
-              labelStyle: { fill: '#9333ea', fontSize: 10, fontWeight: 600 },
+              labelStyle: { fill: '#9333ea', fontSize: SVG_TEXT_SIZE.label, fontWeight: 600 },
               labelBgStyle: { fill: 'white', fillOpacity: 0.95 },
             });
           }

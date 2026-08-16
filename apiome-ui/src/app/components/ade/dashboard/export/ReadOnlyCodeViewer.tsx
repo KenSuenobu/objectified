@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import type { OnMount } from '@monaco-editor/react';
 import { cn } from '@lib/utils';
 import { guardedEditorOptions } from './exportViewerGuards';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 /**
  * ReadOnlyCodeViewer — the shared read-only `@monaco-editor/react` viewer (MFX-43.1, #4361).
@@ -77,7 +78,7 @@ const READ_ONLY_OPTIONS = {
   readOnly: true,
   domReadOnly: true,
   minimap: { enabled: false },
-  fontSize: 13,
+  fontSize: CODE_EDITOR_FONT_SIZE,
   fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
   lineNumbers: 'on' as const,
   scrollBeyondLastLine: false,

@@ -431,7 +431,7 @@ export function BundleExplorer({
       {budgetNotice && (
         <p
           data-testid="bundle-budget-notice"
-          className="mt-1 shrink-0 text-[11px] text-gray-500 dark:text-gray-400"
+          className="mt-1 shrink-0 text-2xs text-gray-500 dark:text-gray-400"
         >
           {budgetNotice}
         </p>
@@ -476,7 +476,7 @@ function BundleHeader({ fileCount, activeFile, language }: BundleHeaderProps) {
       {activeFile && (
         <span
           data-testid="bundle-active-meta"
-          className="ml-auto truncate text-[11px] text-gray-400 dark:text-gray-500"
+          className="ml-auto truncate text-2xs text-gray-400 dark:text-gray-500"
         >
           {activeFile.path} · {formatByteSize(activeFile.sizeBytes)}
           {activeFile.mediaType ? ` · ${activeFile.mediaType}` : ''} · {language}

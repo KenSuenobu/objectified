@@ -3,16 +3,16 @@
 import * as React from 'react';
 import dynamic from 'next/dynamic';
 import { cn } from '../../../../../lib/utils';
+import {
+  CODE_BLOCK_FONT_SIZE,
+  CODE_BLOCK_LINE_HEIGHT,
+  CODE_BLOCK_PADDING,
+} from './editorTypography';
 
 const MonacoDiffEditor = dynamic(
   () => import('@monaco-editor/react').then((mod) => mod.DiffEditor),
   { ssr: false },
 );
-
-/** Monaco line height at the viewer's 12px font size. */
-const LINE_HEIGHT_PX = 19;
-/** Vertical padding Monaco adds inside the viewport (matches the `padding` option below). */
-const EDITOR_PADDING_PX = 16;
 
 /** How the two sides are laid out: `split` (side-by-side) or `unified` (inline). */
 export type DiffMode = 'split' | 'unified';
@@ -76,7 +76,7 @@ export function JsonDiffViewer({
     modified ? modified.split('\n').length : 1,
   );
   const height =
-    Math.min(Math.max(lineCount, minLines), maxLines) * LINE_HEIGHT_PX + EDITOR_PADDING_PX;
+    Math.min(Math.max(lineCount, minLines), maxLines) * CODE_BLOCK_LINE_HEIGHT + CODE_BLOCK_PADDING;
 
   return (
     <div
@@ -99,8 +99,8 @@ export function JsonDiffViewer({
           lineNumbers: 'on',
           lineNumbersMinChars: 3,
           folding: false,
-          fontSize: 12,
-          lineHeight: LINE_HEIGHT_PX,
+          fontSize: CODE_BLOCK_FONT_SIZE,
+          lineHeight: CODE_BLOCK_LINE_HEIGHT,
           padding: { top: 8, bottom: 8 },
           scrollBeyondLastLine: false,
           diffWordWrap: 'on',

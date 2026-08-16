@@ -6,6 +6,7 @@ import { Button } from '../../../components/ui/Button';
 import { extractFileMetadata, FileMetadataPreview } from '../../../utils/openapi-analyzer';
 import dynamic from 'next/dynamic';
 import { TAB_LIST_CLASS, tabTriggerClass } from '../../ui/tabStyles';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 // Dynamic import for Monaco Editor to avoid SSR issues
 const Editor = dynamic(() => import('@monaco-editor/react'), {
@@ -279,7 +280,7 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
             options={{
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
-              fontSize: 13,
+              fontSize: CODE_EDITOR_FONT_SIZE,
               lineNumbers: 'on',
               folding: true,
               wordWrap: 'on',

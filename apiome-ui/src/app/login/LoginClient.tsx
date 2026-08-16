@@ -10,6 +10,7 @@ import { getProviderBrand } from '../components/auth/provider-brand';
 import BetaBackground from './BetaBackground';
 import { getAuthErrorCopy } from './auth-error-copy';
 import styles from './login.module.css';
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
 
 const FORMAT_CHIPS = ['OpenAPI', 'AsyncAPI', 'GraphQL', 'gRPC', 'Avro', 'WSDL', 'TypeSpec', 'OData'];
 
@@ -302,7 +303,7 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
                           : 'border-red-300 hover:bg-red-100/80 dark:border-red-600/60 dark:hover:bg-red-900/50'
                       }`}
                     >
-                      <RotateCcw size={14} aria-hidden="true" />
+                      <RotateCcw size={ICON_SIZE.button} aria-hidden="true" />
                       Try again
                     </a>
                   )}
@@ -327,7 +328,7 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
                         <SSOButton
                           key={provider.id}
                           provider={provider.label}
-                          icon={<Icon size={20} className={iconClassName} />}
+                          icon={<Icon size={ICON_SIZE.button} className={iconClassName} />}
                           onClick={() => handleSSOLogin(provider.id)}
                           isSignUp={isSignUp}
                         />
@@ -379,7 +380,7 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
                     </label>
                     <div className="group relative">
                       <div className={iconWrapClasses}>
-                        <User size={18} className={fieldIconClasses} />
+                        <User size={ICON_SIZE.dense} className={fieldIconClasses} />
                       </div>
                       <input
                         id="name"
@@ -402,7 +403,7 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
                   </label>
                   <div className="group relative">
                     <div className={iconWrapClasses}>
-                      <Mail size={18} className={fieldIconClasses} />
+                      <Mail size={ICON_SIZE.dense} className={fieldIconClasses} />
                     </div>
                     <input
                       id="email"
@@ -424,7 +425,7 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
                   </label>
                   <div className="group relative">
                     <div className={iconWrapClasses}>
-                      <Lock size={18} className={fieldIconClasses} />
+                      <Lock size={ICON_SIZE.dense} className={fieldIconClasses} />
                     </div>
                     <input
                       id="password"
@@ -448,7 +449,7 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
                     </label>
                     <div className="group relative">
                       <div className={iconWrapClasses}>
-                        <Info size={18} className={fieldIconClasses} />
+                        <Info size={ICON_SIZE.dense} className={fieldIconClasses} />
                       </div>
                       <input
                         id="signupSource"
@@ -485,7 +486,7 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
                 >
                   <span className="inline-flex items-center justify-center gap-2">
                     {isSignUp ? 'Create Account' : 'Sign In'}
-                    <ArrowRight size={17} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+                    <ArrowRight size={ICON_SIZE.button} className="transition-transform duration-200 group-hover:translate-x-0.5" />
                   </span>
                 </button>
               </form>
@@ -512,15 +513,15 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
               {!isSignUp && (
                 <div className="mt-6 flex items-center justify-center gap-6 text-xs text-slate-400 dark:text-slate-500">
                   <div className="flex items-center gap-1.5">
-                    <ShieldCheck size={15} className="text-emerald-500" />
+                    <ShieldCheck size={ICON_SIZE.dense} className="text-emerald-500" />
                     <span>Secure</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Zap size={15} className="text-emerald-500" />
+                    <Zap size={ICON_SIZE.dense} className="text-emerald-500" />
                     <span>Free to start</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <CreditCard size={15} className="text-emerald-500" />
+                    <CreditCard size={ICON_SIZE.dense} className="text-emerald-500" />
                     <span>No credit card</span>
                   </div>
                 </div>

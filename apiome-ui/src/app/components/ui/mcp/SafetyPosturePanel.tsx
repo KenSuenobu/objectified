@@ -149,7 +149,7 @@ function HintMatrix({ rows }: { rows: readonly McpToolSafetyRow[] }) {
               >
                 {row.displayName}
                 {row.unannotated ? (
-                  <span className="ml-2 font-sans text-[10px] font-normal uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                  <span className="ml-2 font-sans text-2xs font-normal uppercase tracking-wider text-amber-600 dark:text-amber-400">
                     unannotated
                   </span>
                 ) : null}
@@ -295,7 +295,7 @@ export function SafetyPosturePanel({ items, authType, loading, error }: Props) {
           Asserted
         </li>
         <li className="flex items-center gap-1.5">
-          <span className="inline-flex h-4 w-4 items-center justify-center rounded border border-gray-200 text-[8px] font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
+          <span className="inline-flex h-4 w-4 items-center justify-center rounded border border-gray-200 text-2xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
             false
           </span>
           Declared false

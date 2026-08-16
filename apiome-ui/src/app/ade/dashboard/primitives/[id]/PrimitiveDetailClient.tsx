@@ -73,9 +73,9 @@ interface PrimitiveDetail {
   created_at?: string | null;
 }
 
-const badgeBase = 'text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded inline-flex items-center gap-1';
+const badgeBase = 'text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded inline-flex items-center gap-1';
 const codeBlockClass =
-  'rounded-lg bg-gray-900 dark:bg-black/40 p-4 font-mono text-[11px] leading-relaxed text-gray-200 overflow-x-auto whitespace-pre';
+  'rounded-lg bg-gray-900 dark:bg-black/40 p-4 font-mono text-2xs leading-relaxed text-gray-200 overflow-x-auto whitespace-pre';
 const sectionHeadClass = 'px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center gap-3';
 
 /**
@@ -386,7 +386,7 @@ export default function PrimitiveDetailClient() {
                 </div>
                 {(primitive.refs?.length ?? 0) > 0 ? (
                   <table className="w-full text-sm">
-                    <thead className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50/60 dark:bg-gray-900/40">
+                    <thead className="text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50/60 dark:bg-gray-900/40">
                       <tr>
                         <th className="text-left px-5 py-2 font-semibold">Relative $ref</th>
                         <th className="text-left px-3 py-2 font-semibold">Resolved target</th>
@@ -444,7 +444,7 @@ export default function PrimitiveDetailClient() {
                   </p>
                 )}
                 {primitive.base_uri ? (
-                  <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-700/60 text-[11px] text-gray-500 font-mono">
+                  <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-700/60 text-2xs text-gray-500 font-mono">
                     Base: {primitive.base_uri}
                   </div>
                 ) : null}
@@ -471,7 +471,7 @@ export default function PrimitiveDetailClient() {
                 </div>
                 {dependents.length > 0 ? (
                   <table className="w-full text-sm">
-                    <thead className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50/60 dark:bg-gray-900/40">
+                    <thead className="text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50/60 dark:bg-gray-900/40">
                       <tr>
                         <th className="text-left px-5 py-2 font-semibold">Type</th>
                         <th className="text-left px-3 py-2 font-semibold">Property</th>
@@ -536,7 +536,7 @@ export default function PrimitiveDetailClient() {
                 <dl className="space-y-3 text-xs">
                   <div>
                     <dt className="text-gray-500 dark:text-gray-400 mb-0.5">$id</dt>
-                    <dd className="font-mono text-[10px] break-all text-gray-700 dark:text-gray-300">
+                    <dd className="font-mono text-2xs break-all text-gray-700 dark:text-gray-300">
                       {primitive.schema_id ?? '—'}
                     </dd>
                   </div>
@@ -603,15 +603,15 @@ export default function PrimitiveDetailClient() {
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="rounded-lg bg-gray-50 dark:bg-gray-900/40 p-3">
                       <p className="text-2xl font-bold font-mono text-indigo-600 dark:text-indigo-400">{usage.dependentTypes}</p>
-                      <p className="text-[10px] text-gray-500 mt-1">dependent types</p>
+                      <p className="text-2xs text-gray-500 mt-1">dependent types</p>
                     </div>
                     <div className="rounded-lg bg-gray-50 dark:bg-gray-900/40 p-3">
                       <p className="text-2xl font-bold font-mono text-gray-900 dark:text-white">{usage.properties}</p>
-                      <p className="text-[10px] text-gray-500 mt-1">properties</p>
+                      <p className="text-2xs text-gray-500 mt-1">properties</p>
                     </div>
                     <div className="rounded-lg bg-gray-50 dark:bg-gray-900/40 p-3">
                       <p className="text-2xl font-bold font-mono text-gray-900 dark:text-white">{usage.tenants}</p>
-                      <p className="text-[10px] text-gray-500 mt-1">tenants</p>
+                      <p className="text-2xs text-gray-500 mt-1">tenants</p>
                     </div>
                   </div>
                 </section>
@@ -621,7 +621,7 @@ export default function PrimitiveDetailClient() {
                 <h3 className="text-sm font-semibold mb-1 flex items-center gap-2 text-gray-900 dark:text-white">
                   <GitCommitVertical className="w-4 h-4 text-indigo-500" /> Base chain
                 </h3>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
+                <p className="text-2xs text-gray-500 dark:text-gray-400 mb-3">
                   Relative-ref chain down to a primitive · click a resolved step to open it.
                 </p>
                 <ol className="relative ml-1.5 border-l border-gray-200 dark:border-gray-700 space-y-4 text-xs">
@@ -652,7 +652,7 @@ export default function PrimitiveDetailClient() {
                       ) : (
                         <p className="font-mono font-medium text-gray-700 dark:text-gray-200">{node.label}</p>
                       )}
-                      <p className="text-[10px] text-gray-400 font-mono">
+                      <p className="text-2xs text-gray-400 font-mono">
                         {node.kind === 'self'
                           ? `${primitive.category} · this type`
                           : node.target

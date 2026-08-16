@@ -124,7 +124,7 @@ export default function AdminSidebar() {
             className={[
               'flex items-center gap-1.5 rounded-md transition-colors',
               tokens.rowPaddingY,
-              'px-2.5 text-[12.5px] font-medium',
+              'px-2.5 text-xs font-medium',
               'text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400',
               'hover:bg-rose-50 dark:hover:bg-rose-950/30',
               'border border-transparent hover:border-rose-200 dark:hover:border-rose-900/60',

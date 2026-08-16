@@ -255,7 +255,7 @@ export default function GuideEditorClient({ guideId }: { guideId: string }) {
                     {view?.guideName ?? 'Style guide'}
                   </h2>
                   {view?.source === 'builtin' && (
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                       Built-in
                     </span>
                   )}
@@ -415,12 +415,12 @@ export default function GuideEditorClient({ guideId }: { guideId: string }) {
                                   {rule.ruleId}
                                 </code>
                                 <span
-                                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${severityBadgeClasses[rule.defaultSeverity]}`}
+                                  className={`rounded-full px-2 py-0.5 text-2xs font-medium ${severityBadgeClasses[rule.defaultSeverity]}`}
                                 >
                                   default: {rule.defaultSeverity}
                                 </span>
                                 {changed && (
-                                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-2xs font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
                                     modified
                                   </span>
                                 )}

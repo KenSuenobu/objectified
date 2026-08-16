@@ -91,17 +91,29 @@ async function freshVisit(
 }
 
 /**
- * Read a custom property off `<html>`.
+ * Resolve a length token to the number of CSS pixels it actually renders at.
+ *
+ * The metric tokens are `rem` since HIVE-1.6 (#5279), so their *string* value no longer
+ * says what a reader sees — that is the point of the change. Applying the token to a probe
+ * and measuring it asks the browser the question the assertion is really about, and keeps
+ * working whichever unit the token is authored in.
  *
  * @param page The page under test.
- * @param token Custom-property name.
- * @returns The computed value, trimmed.
+ * @param token Custom-property name, including the leading `--`.
+ * @returns The rendered length, in CSS pixels.
  */
-async function tokenValue(page: Page, token: string): Promise<string> {
-  return page.evaluate(
-    (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim(),
-    token,
-  );
+async function tokenPixels(page: Page, token: string): Promise<number> {
+  return page.evaluate((name) => {
+    let probe = document.getElementById('hive-metric-probe');
+    if (!probe) {
+      probe = document.createElement('div');
+      probe.id = 'hive-metric-probe';
+      probe.style.cssText = 'position:absolute;top:-9999px;';
+      document.body.appendChild(probe);
+    }
+    probe.style.height = `var(${name})`;
+    return probe.getBoundingClientRect().height;
+  }, token);
 }
 
 /**
@@ -181,14 +193,14 @@ test.describe('Device preferences', () => {
     page,
   }) => {
     await applyPreference(page, 'data-density', null);
-    expect(await tokenValue(page, '--row-h')).toBe('46px');
-    expect(await tokenValue(page, '--page-pad')).toBe('32px');
-    expect(await tokenValue(page, '--control-h')).toBe('36px');
+    expect(await tokenPixels(page, '--row-h')).toBeCloseTo(46, 0);
+    expect(await tokenPixels(page, '--page-pad')).toBeCloseTo(32, 0);
+    expect(await tokenPixels(page, '--control-h')).toBeCloseTo(36, 0);
 
     await applyPreference(page, 'data-density', 'compact');
-    expect(await tokenValue(page, '--row-h')).toBe('38px');
-    expect(await tokenValue(page, '--page-pad')).toBe('24px');
-    expect(await tokenValue(page, '--control-h')).toBe('32px');
+    expect(await tokenPixels(page, '--row-h')).toBeCloseTo(38, 0);
+    expect(await tokenPixels(page, '--page-pad')).toBeCloseTo(24, 0);
+    expect(await tokenPixels(page, '--control-h')).toBeCloseTo(32, 0);
 
     const overflow = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
@@ -239,11 +251,14 @@ test.describe('Device preferences', () => {
   });
 
   test('the rail width follows the collapse preference', async ({ page }) => {
+    // Measured rather than compared as a string: the widths are `rem` since HIVE-1.6
+    // (#5279) and `getComputedStyle` resolves the alias chain, so the value read back is
+    // the rail's length, not the `var()` that points at it.
     await applyPreference(page, 'data-rail', null);
-    expect(await tokenValue(page, '--rail-w-current')).toBe('264px');
+    expect(await tokenPixels(page, '--rail-w-current')).toBeCloseTo(264, 0);
 
     await applyPreference(page, 'data-rail', 'collapsed');
-    expect(await tokenValue(page, '--rail-w-current')).toBe('64px');
+    expect(await tokenPixels(page, '--rail-w-current')).toBeCloseTo(64, 0);
   });
 
   test('a hard reload paints the stored preferences with no flash', async ({ browser }) => {

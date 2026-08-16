@@ -36,7 +36,7 @@ interface FeatureFlagGroupRow {
 
 function PreviewBadge() {
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase bg-amber-900/40 text-amber-300 border border-amber-700/40">
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold uppercase bg-amber-900/40 text-amber-300 border border-amber-700/40">
       Preview
     </span>
   );
@@ -257,9 +257,9 @@ export function FeatureFlagUserOverridesPanel({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium text-gray-900 dark:text-white">{flag.label}</span>
-            <code className="text-[11px] text-gray-500 truncate">{flag.name}</code>
+            <code className="text-2xs text-gray-500 truncate">{flag.name}</code>
             {inLicense && (
-              <span className="px-1.5 py-0.5 bg-emerald-900/30 text-emerald-400 text-[10px] rounded shrink-0">
+              <span className="px-1.5 py-0.5 bg-emerald-900/30 text-emerald-400 text-2xs rounded shrink-0">
                 license
               </span>
             )}

@@ -2,6 +2,7 @@
 
 import { useId } from 'react';
 import type { PortfolioQualityPoint } from '@/app/utils/project-quality-score-history';
+import { SVG_TEXT_SIZE } from '../../ui/svgTypography';
 
 interface PortfolioQualityTrendChartProps {
   series: PortfolioQualityPoint[];
@@ -63,7 +64,7 @@ export function PortfolioQualityTrendChart({ series, className }: PortfolioQuali
         <line x1={padL} y1={scaleY(85)} x2={w - padR} y2={scaleY(85)} />
         <line x1={padL} y1={scaleY(70)} x2={w - padR} y2={scaleY(70)} />
       </g>
-      <g className="fill-gray-400 font-mono text-[9px]">
+      <g fontSize={SVG_TEXT_SIZE.tick} className="fill-gray-400 font-mono">
         <text x={2} y={scaleY(100) + 3}>
           100
         </text>
@@ -81,7 +82,7 @@ export function PortfolioQualityTrendChart({ series, className }: PortfolioQuali
           <circle key={i} cx={p.x} cy={p.y} r={3} />
         ))}
       </g>
-      <g className="fill-gray-400 font-mono text-[9px]">
+      <g fontSize={SVG_TEXT_SIZE.tick} className="fill-gray-400 font-mono">
         <text x={padL} y={h - 6}>
           start
         </text>
@@ -92,7 +93,12 @@ export function PortfolioQualityTrendChart({ series, className }: PortfolioQuali
           now
         </text>
       </g>
-      <text x={w - padR - 52} y={padT + 4} className="fill-emerald-600 text-[10px] font-semibold dark:fill-emerald-400">
+      <text
+        x={w - padR - 52}
+        y={padT + 4}
+        fontSize={SVG_TEXT_SIZE.label}
+        className="fill-emerald-600 font-semibold dark:fill-emerald-400"
+      >
         avg {lastAvg}
       </text>
     </svg>

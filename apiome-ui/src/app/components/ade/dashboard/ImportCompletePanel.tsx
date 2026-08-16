@@ -456,7 +456,7 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <Badge variant={isError ? 'error' : 'warning'} className="text-[10px] uppercase">
+                              <Badge variant={isError ? 'error' : 'warning'} className="text-2xs uppercase">
                                 {entry.level}
                               </Badge>
                               <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{entry.code}</span>
@@ -471,7 +471,7 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
                               {entry.message}
                             </p>
                             {entry.context != null && (
-                              <pre className="mt-2 max-h-40 overflow-auto rounded bg-gray-100 dark:bg-gray-900 p-2 text-[11px] text-gray-700 dark:text-gray-300">
+                              <pre className="mt-2 max-h-40 overflow-auto rounded bg-gray-100 dark:bg-gray-900 p-2 text-2xs text-gray-700 dark:text-gray-300">
                                 {typeof entry.context === 'string'
                                   ? entry.context
                                   : JSON.stringify(entry.context, null, 2)}

@@ -343,28 +343,28 @@ export default function AddRepositoryPage() {
       <div className="space-y-5 px-6 pb-10">
         <ol className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
           <li className="flex items-center gap-2">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-semibold text-white">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-2xs font-semibold text-white">
               1
             </span>
             Source
           </li>
           <li className="hidden w-8 border-t border-gray-300 sm:block dark:border-gray-600" aria-hidden />
           <li className="flex items-center gap-2 text-gray-400">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold dark:bg-gray-700">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-2xs font-semibold dark:bg-gray-700">
               2
             </span>
             Repository
           </li>
           <li className="hidden w-8 border-t border-gray-300 sm:block dark:border-gray-600" aria-hidden />
           <li className="flex items-center gap-2 text-gray-400">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold dark:bg-gray-700">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-2xs font-semibold dark:bg-gray-700">
               3
             </span>
             Scan settings
           </li>
           <li className="hidden w-8 border-t border-gray-300 sm:block dark:border-gray-600" aria-hidden />
           <li className="flex items-center gap-2 text-gray-400">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold dark:bg-gray-700">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-2xs font-semibold dark:bg-gray-700">
               4
             </span>
             Confirm
@@ -429,7 +429,7 @@ export default function AddRepositoryPage() {
                         <LinkedAccountIcon provider={a.provider} />
                         <span className="text-sm font-medium capitalize">{a.provider}</span>
                       </div>
-                      <p className="mt-1 font-mono text-[11px] text-gray-500 dark:text-gray-400">{accountLabel(a)}</p>
+                      <p className="mt-1 font-mono text-2xs text-gray-500 dark:text-gray-400">{accountLabel(a)}</p>
                     </button>
                   );
                 })}

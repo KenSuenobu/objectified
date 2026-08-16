@@ -107,7 +107,7 @@ const CAUTION_BADGE =
   'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300';
 
 const BADGE_BASE =
-  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium';
+  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-medium';
 
 /** A labelled badge. `tone` reinforces the label; it never replaces it. */
 function Badge({
@@ -151,7 +151,7 @@ function Facet({
         {title}
       </h4>
       <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300">{statement}</p>
-      <p className="mt-1 text-[11px] leading-snug text-gray-500 dark:text-gray-400">{note}</p>
+      <p className="mt-1 text-2xs leading-snug text-gray-500 dark:text-gray-400">{note}</p>
     </div>
   );
 }
@@ -182,15 +182,15 @@ function ConstructList({
       >
         {title}
       </h4>
-      <p className="mt-0.5 text-[11px] leading-snug text-gray-500 dark:text-gray-400">{caption}</p>
+      <p className="mt-0.5 text-2xs leading-snug text-gray-500 dark:text-gray-400">{caption}</p>
       {constructs.length === 0 ? (
-        <p className="mt-2 text-[11px] italic text-gray-500 dark:text-gray-400">{emptyNote}</p>
+        <p className="mt-2 text-2xs italic text-gray-500 dark:text-gray-400">{emptyNote}</p>
       ) : (
         <ul className="mt-2 flex flex-wrap gap-1.5">
           {constructs.map((construct) => (
             <li
               key={construct}
-              className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-[11px] text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300"
+              className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300"
             >
               {construct}
             </li>
@@ -266,7 +266,7 @@ export function FormatCapabilityPanel({
           <p className="mt-1 text-xs leading-snug text-indigo-900/90 dark:text-indigo-200/90">
             {renderAbsence(absence, absenceConstruct ?? null)}
           </p>
-          <p className="mt-1 text-[11px] leading-snug text-indigo-800/80 dark:text-indigo-300/80">
+          <p className="mt-1 text-2xs leading-snug text-indigo-800/80 dark:text-indigo-300/80">
             {absence.remediation}
           </p>
           {/*
@@ -274,7 +274,7 @@ export function FormatCapabilityPanel({
            * source material is genuinely absent. Every other cause renders the counter-statement
            * instead, so a parser limit can never be read as missing data.
            */}
-          <p className="mt-1.5 text-[11px] font-medium text-indigo-800 dark:text-indigo-300">
+          <p className="mt-1.5 text-2xs font-medium text-indigo-800 dark:text-indigo-300">
             {absence.source_missing
               ? 'No source material was captured for this revision.'
               : 'The source material is unaffected — this describes what apiome recorded, not what the source contains.'}
@@ -338,7 +338,7 @@ export function FormatCapabilityPanel({
           <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300">
             {COVERAGE_LABEL[capability.canonical_projection.coverage]}
           </p>
-          <p className="mt-1 text-[11px] leading-snug text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-2xs leading-snug text-gray-500 dark:text-gray-400">
             {capability.canonical_projection.note}
           </p>
           {capability.canonical_projection.dropped_constructs.length > 0 ? (
@@ -346,7 +346,7 @@ export function FormatCapabilityPanel({
               {capability.canonical_projection.dropped_constructs.map((construct) => (
                 <li
                   key={construct}
-                  className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-[11px] text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300"
+                  className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300"
                 >
                   {construct}
                 </li>
@@ -368,7 +368,7 @@ export function FormatCapabilityPanel({
           <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300">
             {CONVERSION_LABEL[capability.conversion.support]}
           </p>
-          <p className="mt-1 text-[11px] leading-snug text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-2xs leading-snug text-gray-500 dark:text-gray-400">
             {capability.conversion.note}
           </p>
         </section>
@@ -382,7 +382,7 @@ export function FormatCapabilityPanel({
           >
             Parsing limits
           </h4>
-          <dl className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-600 dark:text-gray-400">
+          <dl className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-2xs text-gray-600 dark:text-gray-400">
             {limits.map(([name, value]) => (
               <div key={name} className="flex items-baseline gap-1">
                 <dt className="font-medium">{LIMIT_LABEL[name] ?? name}</dt>
@@ -401,7 +401,7 @@ export function FormatCapabilityPanel({
           >
             Boundaries
           </h4>
-          <ul className="mt-1 list-disc space-y-1 pl-4 text-[11px] leading-snug text-gray-600 dark:text-gray-400">
+          <ul className="mt-1 list-disc space-y-1 pl-4 text-2xs leading-snug text-gray-600 dark:text-gray-400">
             {capability.notes.map((note) => (
               <li key={note}>{note}</li>
             ))}
@@ -409,7 +409,7 @@ export function FormatCapabilityPanel({
         </section>
       ) : null}
 
-      <footer className="mt-3 border-t border-gray-100 pt-2 text-[11px] text-gray-500 dark:border-gray-700/60 dark:text-gray-400">
+      <footer className="mt-3 border-t border-gray-100 pt-2 text-2xs text-gray-500 dark:border-gray-700/60 dark:text-gray-400">
         <p>
           Analyzer{' '}
           <span className="font-mono">

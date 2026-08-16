@@ -1,5 +1,5 @@
 import React from 'react';
-import { classifyTypeLabel, type TypeChipRole } from './canvas-theme';
+import { classifyTypeLabel, type TypeChipRole, CANVAS_TYPE_SCALE } from './canvas-theme';
 
 /**
  * NodeTypeChip — mono pill used to display a property's resolved type.
@@ -44,7 +44,7 @@ export const NodeTypeChip: React.FC<NodeTypeChipProps> = ({
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        fontSize: dense ? '9px' : '10px',
+        fontSize: dense ? CANVAS_TYPE_SCALE.micro : CANVAS_TYPE_SCALE.caps,
         lineHeight: 1.4,
         fontFamily: 'var(--app-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
         fontWeight: 500,

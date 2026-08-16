@@ -37,6 +37,7 @@ import {
   type GitImportRecentSpec,
 } from '../../../utils/git-import-recent-specs';
 import { Button } from '../../../components/ui/Button';
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
 
 interface GitImportPanelProps {
   userId: string;
@@ -144,15 +145,15 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
   const getProviderIcon = (provider: string) => {
     switch (provider.toLowerCase()) {
       case 'github':
-        return <SiGithub size={16} />;
+        return <SiGithub size={ICON_SIZE.dense} />;
       case 'gitlab':
-        return <SiGitlab size={16} />;
+        return <SiGitlab size={ICON_SIZE.dense} />;
       case 'google':
-        return <SiGoogle size={16} />;
+        return <SiGoogle size={ICON_SIZE.dense} />;
       case 'aws':
-        return <SiAmazon size={16} />;
+        return <SiAmazon size={ICON_SIZE.dense} />;
       default:
-        return <Globe size={16} />;
+        return <Globe size={ICON_SIZE.dense} />;
     }
   };
 
@@ -1004,7 +1005,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
               ) : null}
             </div>
             {repositoryListTab === 'history' && selectedAccount ? (
-              <p className="text-[10px] leading-snug text-gray-500 dark:text-gray-400">
+              <p className="text-2xs leading-snug text-gray-500 dark:text-gray-400">
                 {selectedRepo
                   ? 'Specs you opened from this repository on this device.'
                   : 'Specs you opened from any repository for this account on this device.'}
@@ -1064,7 +1065,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                         </div>
                       ) : null}
                       <div className="text-sm font-medium truncate">{entry.specPath}</div>
-                      <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                      <div className="text-2xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                         {entry.refKind === 'tag' ? `Tag ${entry.refName}` : `Branch ${entry.refName}`}
                         <span className="mx-1">·</span>
                         {formatRecentOpenedAt(entry.openedAt)}

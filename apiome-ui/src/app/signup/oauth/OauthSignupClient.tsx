@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from '@lib/auth/session-client';
 import { User, Building2, Link2 } from "lucide-react";
 import { completeOAuthSignup } from "../../../../lib/auth/oauth-signup-actions";
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
 
 function generateSlug(name: string) {
   return name
@@ -90,7 +91,7 @@ export default function OauthSignupClient({ token, emailHint }: Props) {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User size={18} className="text-gray-400 dark:text-slate-500" />
+                  <User size={ICON_SIZE.dense} className="text-gray-400 dark:text-slate-500" />
                 </div>
                 <input
                   id="displayName"
@@ -111,7 +112,7 @@ export default function OauthSignupClient({ token, emailHint }: Props) {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Building2 size={18} className="text-gray-400 dark:text-slate-500" />
+                  <Building2 size={ICON_SIZE.dense} className="text-gray-400 dark:text-slate-500" />
                 </div>
                 <input
                   id="orgName"

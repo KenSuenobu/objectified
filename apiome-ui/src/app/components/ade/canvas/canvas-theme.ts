@@ -99,6 +99,56 @@ export const CANVAS_TOKENS = {
   nodeMaxWidth: 440,
 } as const;
 
+/**
+ * The type scale a react-flow node is drawn at (HIVE-1.6, #5279).
+ *
+ * Everywhere else in the app, type is `rem` and follows the reader's font-size preference
+ * (DESIGN.md §3.2). A canvas node cannot: its box is `CANVAS_TOKENS.nodeMinWidth`-wide in
+ * **graph coordinates**, its rows are `propertyRowHeight` tall, and the auto-layout in
+ * `canvas-layout` packs nodes using those same numbers. Type that grew while the geometry
+ * around it stayed fixed would overflow the box and desynchronise the layout — so a node's
+ * text is part of the drawing, and the drawing is scaled as a whole by react-flow's zoom
+ * transform. That is the "canvas geometry" exemption DESIGN.md grants, and the reader's
+ * equivalent control here is the zoom, not the font scale.
+ *
+ * The steps are collected here, next to the geometry they are proportioned against, so a
+ * node component never spells a size out. Values are CSS lengths (they land in an inline
+ * `style`), stated in `px` because the surrounding coordinates are.
+ */
+export const CANVAS_TYPE_SCALE = {
+  /** Dense chips and handle captions — the smallest mark on a node. */
+  micro: '9px',
+  /** Uppercase badges, type chips and metadata. */
+  caps: '10px',
+  /** Property rows and secondary node text. */
+  meta: '11px',
+  /** A node's ordinary body text. */
+  body: '12px',
+  /** A node's title. */
+  title: '13px',
+  /** The headline of a wide node (e.g. a path template). */
+  heading: '15px',
+} as const;
+
+/**
+ * Lucide icon sizes for react-flow nodes, in graph coordinates.
+ *
+ * The DESIGN.md §3.5 vocabulary (16 dense / 18 rail / 15 button, `components/ui/iconSizes`)
+ * is `rem` and belongs to the document; a glyph on a node is proportioned against
+ * {@link CANVAS_TYPE_SCALE} instead, for the reason that scale documents. Each step here is
+ * named after the type step it sits beside, so an icon and its label stay a matched pair.
+ */
+export const CANVAS_ICON_SIZE = {
+  /** Beside {@link CANVAS_TYPE_SCALE.micro}. */
+  micro: 9,
+  /** Beside {@link CANVAS_TYPE_SCALE.caps}. */
+  caps: 10,
+  /** Beside {@link CANVAS_TYPE_SCALE.meta} and `.body`. */
+  meta: 12,
+  /** Beside {@link CANVAS_TYPE_SCALE.title}. */
+  title: 14,
+} as const;
+
 /* ---- Color manipulation (for existing custom-color picker integration) ---- */
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {

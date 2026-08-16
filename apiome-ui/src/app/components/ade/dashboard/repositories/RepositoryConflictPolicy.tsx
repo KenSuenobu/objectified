@@ -50,7 +50,7 @@ const sectionHeadingClass =
   'border-b border-gray-100 pb-2 text-sm font-semibold dark:border-gray-700 dark:text-gray-100';
 
 const fieldLabelClass =
-  'text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400';
+  'text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400';
 
 const mutedTextClass = 'text-xs text-gray-500 dark:text-gray-400';
 

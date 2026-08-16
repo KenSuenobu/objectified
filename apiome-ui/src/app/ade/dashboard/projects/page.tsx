@@ -968,7 +968,7 @@ const Projects = () => {
       ) : (
         <>
           <section className="flex flex-wrap items-center gap-2">
-            <span className="mr-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <span className="mr-2 text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Views:
             </span>
             <button

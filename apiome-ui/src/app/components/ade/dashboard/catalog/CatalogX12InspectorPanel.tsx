@@ -66,10 +66,10 @@ const TONE: Record<'positive' | 'caution' | 'neutral', string> = {
 };
 
 const BADGE_BASE =
-  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium';
+  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-medium';
 
 const SECTION_HEADING =
-  'text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
+  'text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
 
 const CELL = 'px-2 py-1.5 text-left align-top';
 
@@ -105,7 +105,7 @@ function Fact({ label, value }: { label: string; value: string | null }) {
       <dt className={SECTION_HEADING}>{label}</dt>
       <dd
         className={cn(
-          'mt-0.5 break-words font-mono text-[11px]',
+          'mt-0.5 break-words font-mono text-2xs',
           value === null
             ? 'italic text-gray-400 dark:text-gray-500'
             : 'text-gray-700 dark:text-gray-300',
@@ -135,9 +135,9 @@ function ControlTotal({ total }: { total: X12ControlTotal }) {
         <span className="font-mono text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
           {total.observed.toLocaleString()}
         </span>
-        <span className="text-[11px] text-gray-500 dark:text-gray-400">observed</span>
+        <span className="text-2xs text-gray-500 dark:text-gray-400">observed</span>
         {total.declared === null ? (
-          <span className="text-[11px] italic text-gray-400 dark:text-gray-500">
+          <span className="text-2xs italic text-gray-400 dark:text-gray-500">
             · {total.declaredBy} declared nothing readable
           </span>
         ) : (
@@ -165,7 +165,7 @@ function Separator({ separator }: { separator: X12Separator }) {
         {separator.character === null ? (
           <span
             data-testid="x12-separator-absent"
-            className="text-[11px] italic leading-snug text-gray-500 dark:text-gray-400"
+            className="text-2xs italic leading-snug text-gray-500 dark:text-gray-400"
           >
             {separator.absence}
           </span>
@@ -174,7 +174,7 @@ function Separator({ separator }: { separator: X12Separator }) {
             <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800 dark:bg-gray-700/60 dark:text-gray-200">
               {separator.character}
             </code>
-            <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">
+            <span className="font-mono text-2xs text-gray-500 dark:text-gray-400">
               {separator.codePoint}
             </span>
           </>
@@ -230,14 +230,14 @@ function Group({
       {group.transactions.length === 0 ? (
         <p
           data-testid="x12-group-no-transactions"
-          className="mt-2 text-[11px] text-gray-500 dark:text-gray-400"
+          className="mt-2 text-2xs text-gray-500 dark:text-gray-400"
         >
           No transaction set is recorded under this group. The analyzer&apos;s node budget bounds
           leaves before envelopes, so this means the record has none — not that the source had none.
         </p>
       ) : (
         <div className="mt-2 overflow-x-auto">
-          <table className="w-full min-w-[34rem] border-collapse text-[11px]">
+          <table className="w-full min-w-[34rem] border-collapse text-2xs">
             <caption className="sr-only">
               Transaction sets in functional group {group.functionalId ?? index + 1}
             </caption>
@@ -316,7 +316,7 @@ function Group({
                         />
                       </span>
                     ) : (
-                      <span className="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
+                      <span className="ml-1 text-2xs text-gray-500 dark:text-gray-400">
                         matches SE01
                       </span>
                     )}
@@ -330,7 +330,7 @@ function Group({
                           <li
                             key={repeat.segmentId}
                             data-testid="x12-repeated-segment"
-                            className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-700 dark:bg-gray-700/60 dark:text-gray-300"
+                            className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:bg-gray-700/60 dark:text-gray-300"
                           >
                             {repeat.segmentId}
                             <span className="tabular-nums font-semibold">×{repeat.count}</span>
@@ -456,7 +456,7 @@ export function CatalogX12InspectorPanel({
         {groups.length === 0 ? (
           <p
             data-testid="x12-no-groups"
-            className="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
+            className="mt-1.5 text-2xs text-gray-500 dark:text-gray-400"
           >
             This record carries no functional group. A bounded analysis keeps envelopes before
             leaves, so an interchange with groups would still show them here.

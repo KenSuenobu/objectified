@@ -150,7 +150,7 @@ export default function MigrationSidebar() {
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Filter classes…"
             className={[
-              'w-full pl-7 pr-2 text-[12.5px] rounded-md border transition-colors',
+              'w-full pl-7 pr-2 text-xs rounded-md border transition-colors',
               tokens.inputPaddingY,
               sidebarTheme.inputBase,
             ].join(' ')}
@@ -161,20 +161,20 @@ export default function MigrationSidebar() {
     >
       <div className={tokens.sectionPadding}>
         {loading ? (
-          <div className={['py-2', sidebarTheme.textSecondary, 'text-[12.5px]'].join(' ')}>Loading classes…</div>
+          <div className={['py-2', sidebarTheme.textSecondary, 'text-xs'].join(' ')}>Loading classes…</div>
         ) : combinedList.length === 0 ? (
           <div
             className={[
               'rounded-md border border-dashed py-6 px-3 text-center',
               sidebarTheme.borderSoft,
               sidebarTheme.textSecondary,
-              'text-[12px]',
+              'text-xs',
             ].join(' ')}
           >
             No classes in either version.
           </div>
         ) : filteredList.length === 0 ? (
-          <div className={['py-2 text-[12px]', sidebarTheme.textSecondary].join(' ')}>
+          <div className={['py-2 text-xs', sidebarTheme.textSecondary].join(' ')}>
             No classes match &quot;{filter}&quot;
           </div>
         ) : (
@@ -228,7 +228,7 @@ export default function MigrationSidebar() {
                       {count > 0 && (
                         <span
                           className={[
-                            'shrink-0 ml-2 px-1.5 py-0.5 rounded text-[10.5px] font-semibold tabular-nums',
+                            'shrink-0 ml-2 px-1.5 py-0.5 rounded text-2xs font-semibold tabular-nums',
                             isSelected
                               ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300'
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300',

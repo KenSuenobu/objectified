@@ -85,11 +85,11 @@ export function RepositoryRefreshActivityCardView({
       className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 text-[10px] uppercase leading-tight tracking-wider text-gray-500 dark:text-gray-400">
+        <p className="flex items-center gap-1.5 text-2xs uppercase leading-tight tracking-wider text-gray-500 dark:text-gray-400">
           <RefreshCw className="h-3 w-3 shrink-0" aria-hidden />
           Refresh activity
         </p>
-        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+        <p className="text-2xs text-gray-500 dark:text-gray-400">
           {summary.total === 0
             ? 'No imported specs tracked yet'
             : `${summary.total.toLocaleString()} spec${summary.total === 1 ? '' : 's'} tracked · ${summary.refreshedRecently.toLocaleString()} refreshed (24h)`}
@@ -140,7 +140,7 @@ export function RepositoryRefreshActivityCardView({
             </p>
           )}
           {hiddenCount > 0 ? (
-            <p className="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+            <p className="mt-1.5 text-2xs text-gray-500 dark:text-gray-400">
               +{hiddenCount.toLocaleString()} more{' '}
               {hiddenCount === 1 ? 'repository needs' : 'repositories need'} attention.
             </p>

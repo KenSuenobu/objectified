@@ -379,7 +379,7 @@ export function CommitRevisionDialog({
                   </span>
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  This revision will stack on that branch&apos;s tip — the same as <code className="text-[11px]">git commit</code>{' '}
+                  This revision will stack on that branch&apos;s tip — the same as <code className="text-2xs">git commit</code>{' '}
                   while you&apos;re on this branch.
                 </p>
               </div>

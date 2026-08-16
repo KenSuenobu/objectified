@@ -1,5 +1,5 @@
 import React from 'react';
-import { accentVar, CANVAS_TOKENS, type NodeAccentRole } from './canvas-theme';
+import { accentVar, CANVAS_TOKENS, type NodeAccentRole, CANVAS_TYPE_SCALE } from './canvas-theme';
 
 /**
  * NodeCard — the universal shell for every react-flow node card.
@@ -115,7 +115,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
         boxShadow: shadow,
         overflow: 'hidden',
         transition: 'box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.18s ease',
-        fontSize: '12px',
+        fontSize: CANVAS_TYPE_SCALE.body,
         ...style,
       }}
     >
@@ -157,7 +157,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
                 transform: 'translateX(-50%)',
                 background: 'var(--node-danger)',
                 color: 'white',
-                fontSize: '11px',
+                fontSize: CANVAS_TYPE_SCALE.meta,
                 padding: '3px 10px',
                 borderRadius: '6px',
                 whiteSpace: 'nowrap',

@@ -28,6 +28,7 @@ import { monacoLanguageForCatalogFormat } from '@/app/utils/catalog-source-langu
 import type { CatalogSource } from '@/app/utils/catalog-format-registry';
 import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import { cn } from '@lib/utils';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 /**
  * The offline fallback the Monaco dynamic import resolves to when the editor library can't load. It
@@ -389,7 +390,7 @@ export function CatalogSourceViewer({
                   readOnly: true,
                   domReadOnly: true,
                   minimap: { enabled: true },
-                  fontSize: 13,
+                  fontSize: CODE_EDITOR_FONT_SIZE,
                   fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
                   lineNumbers: 'on',
                   scrollBeyondLastLine: false,

@@ -165,7 +165,7 @@ function buildSeatsFromRows(rows: SeatEntryRow[]): { ok: true; seats: Record<str
 
 function Badge({ type }: { type: string }) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wide ${TYPE_COLORS[type] ?? 'bg-gray-700 text-gray-200'}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-2xs font-semibold uppercase tracking-wide ${TYPE_COLORS[type] ?? 'bg-gray-700 text-gray-200'}`}>
       {type}
     </span>
   );
@@ -173,7 +173,7 @@ function Badge({ type }: { type: string }) {
 
 function PreviewBadge() {
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase bg-amber-900/40 text-amber-300 border border-amber-700/40">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold uppercase bg-amber-900/40 text-amber-300 border border-amber-700/40">
       <Eye className="w-3 h-3" /> Preview
     </span>
   );
@@ -256,7 +256,7 @@ function LicenseSeatEntriesEditor({
                 className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-300 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-900/40"
               >
                 <div className="min-w-[200px] flex-1 space-y-1">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <span className="text-2xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     Key
                   </span>
                   <select
@@ -285,14 +285,14 @@ function LicenseSeatEntriesEditor({
                     <option value="__custom__">Custom key…</option>
                   </select>
                   {isPresetRow ? (
-                    <p className="text-[11px] leading-snug text-gray-500 dark:text-gray-400">
+                    <p className="text-2xs leading-snug text-gray-500 dark:text-gray-400">
                       {SEAT_LIMIT_PRESETS.find((p) => p.key === row.key)?.description}
                     </p>
                   ) : null}
                 </div>
                 {selectValue === '__custom__' ? (
                   <div className="min-w-[160px] flex-1 space-y-1">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    <span className="text-2xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                       Custom key
                     </span>
                     <input
@@ -306,7 +306,7 @@ function LicenseSeatEntriesEditor({
                   </div>
                 ) : null}
                 <div className="w-28 space-y-1">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <span className="text-2xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     Value
                   </span>
                   <input
@@ -473,7 +473,7 @@ function LicenseForm({ existing, allFlags, onSave, onCancel }: LicenseFormProps)
               if (sectionFlags.length === 0) return null;
               return (
                 <div key={section} className="space-y-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <p className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     {section === 'products' ? 'Commercial applications' : 'Additional platform features'}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
@@ -1139,7 +1139,7 @@ export default function LicenseManagementClient({
                               key={k}
                               className="flex items-baseline justify-between gap-2 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-900/60"
                             >
-                              <dt className="font-mono text-[11px] text-gray-600 dark:text-gray-400">{k}</dt>
+                              <dt className="font-mono text-2xs text-gray-600 dark:text-gray-400">{k}</dt>
                               <dd className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">{v}</dd>
                             </div>
                           ))}

@@ -786,7 +786,7 @@ export function CatalogImportDialog({
                     >
                       <Icon className="mx-auto mb-2 h-5 w-5" aria-hidden />
                       <div className="text-sm font-medium">{card.label}</div>
-                      <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">{card.description}</div>
+                      <div className="mt-1 text-2xs text-gray-500 dark:text-gray-400">{card.description}</div>
                     </button>
                   );
                 })}

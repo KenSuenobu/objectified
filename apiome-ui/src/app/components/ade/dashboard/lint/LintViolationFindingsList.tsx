@@ -57,7 +57,7 @@ function ViolationRow({
     <li className={cn('rounded-lg p-3', rowClassName)} data-testid="lint-violation-row">
       <LintViolationFindingMeta finding={finding} hideRuleChip={hideRuleChip} />
       {finding.path ? (
-        <div className="mt-1 font-mono text-[11px] text-gray-500 dark:text-gray-400">
+        <div className="mt-1 font-mono text-2xs text-gray-500 dark:text-gray-400">
           {renderPath ? renderPath(finding) : finding.path}
         </div>
       ) : null}

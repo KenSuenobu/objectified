@@ -150,8 +150,12 @@ describe('@theme token layer — ticket scope list', () => {
   });
 
   it('carries the DESIGN.md §5.2 rail and page-width constants', () => {
-    expect(resolveToken('--rail-w', layer)).toBe('264px');
-    expect(resolveToken('--rail-w-collapsed', layer)).toBe('64px');
+    // The rail is chrome wrapped around type, so HIVE-1.6 (#5279) restated its two widths
+    // in `rem` — 16.5rem is §5.2's 264px on a default 16px root, and it follows the
+    // font-size preference from there. The page cap stays `px`: it is measured against the
+    // viewport, and a cap that grew with the scale would force horizontal scroll.
+    expect(resolveToken('--rail-w', layer)).toBe('16.5rem');
+    expect(resolveToken('--rail-w-collapsed', layer)).toBe('4rem');
     expect(resolveToken('--page-max', layer)).toBe('1440px');
   });
 });
@@ -172,7 +176,7 @@ describe('layering contract', () => {
     const literals = [...layer.root.entries()].filter(
       ([name, value]) =>
         // Type, spacing and control metrics are defined here outright; colour never is.
-        !/^--(app-|font-|fs-|lh-|track-|space-|control-|row-h|page-pad|card-pad|nav-item-h|r-full)/.test(name) &&
+        !/^--(app-|font-|fs-|lh-|track-|space-|control-|row-h|page-pad|card-pad|nav-item-h|sidenav-w|table-|r-full)/.test(name) &&
         !value.startsWith('var('),
     );
     expect(literals).toEqual([]);

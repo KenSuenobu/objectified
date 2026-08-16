@@ -69,6 +69,7 @@ import {
   type ProjectionTableRow,
   type ProjectionViewEntry,
 } from './exportMappingGraph';
+import { SVG_TEXT_SIZE } from '@/app/components/ui/svgTypography';
 import type { ProjectionLaneKey } from './projectionGraph';
 import {
   ProjectionColumnHeading,
@@ -400,7 +401,7 @@ export function ExportMappingGraphPanel({
           <span
             data-testid="export-mapping-snapshot"
             title={`Manifest snapshot ${page.manifest_hash}`}
-            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
           >
             snapshot {page.manifest_hash.slice(0, 12)}
           </span>
@@ -418,7 +419,7 @@ export function ExportMappingGraphPanel({
                 key={status}
                 data-testid={`export-mapping-legend-${status}`}
                 className={cn(
-                  'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
+                  'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
                   p.badgeClass,
                 )}
               >
@@ -439,7 +440,7 @@ export function ExportMappingGraphPanel({
 
       {view.aggregated && (
         <p
-          className="text-[11px] text-gray-500 dark:text-gray-400"
+          className="text-2xs text-gray-500 dark:text-gray-400"
           data-testid="export-mapping-aggregated-note"
         >
           Clean rows are aggregated to keep the map readable; expand them in the table below.
@@ -451,7 +452,7 @@ export function ExportMappingGraphPanel({
       {drawnSelection.truncated && (
         <p
           role="status"
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
           data-testid="export-mapping-draw-cap"
         >
           Drawing {drawnSelection.drawnRowCount.toLocaleString()} of{' '}
@@ -480,7 +481,8 @@ export function ExportMappingGraphPanel({
               <text
                 x={layout.columns.outcome}
                 y={lane.headerY}
-                className="fill-gray-500 text-[10px] font-semibold uppercase tracking-wide dark:fill-gray-400"
+                fontSize={SVG_TEXT_SIZE.label}
+                className="fill-gray-500 font-semibold uppercase tracking-wide dark:fill-gray-400"
               >
                 {lane.label} ({lane.count})
               </text>
@@ -596,7 +598,7 @@ export function ExportMappingGraphPanel({
           <thead>
             <tr
               aria-rowindex={1}
-              className="border-b border-gray-200 text-[10px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
+              className="border-b border-gray-200 text-2xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
             >
               <th scope="col" className="px-2 py-1.5">Status</th>
               <th scope="col" className="px-2 py-1.5">Canonical entity</th>
@@ -609,7 +611,7 @@ export function ExportMappingGraphPanel({
         </table>
       </div>
       {tableVirtualized && (
-        <p className="text-[10px] text-gray-500 dark:text-gray-400" data-testid="export-mapping-table-windowed">
+        <p className="text-2xs text-gray-500 dark:text-gray-400" data-testid="export-mapping-table-windowed">
           The table is windowed — every one of its {tableRows.length.toLocaleString()} rows is
           reachable by scrolling.
         </p>
@@ -650,7 +652,7 @@ function ReconciliationStrip({
   if (reconciliation.partial) {
     return (
       <div
-        className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-[11px] text-gray-600 dark:border-gray-700 dark:text-gray-300"
+        className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-2xs text-gray-600 dark:border-gray-700 dark:text-gray-300"
         data-testid="export-mapping-partial"
       >
         <span>
@@ -684,7 +686,7 @@ function ReconciliationStrip({
     return (
       <p
         role="status"
-        className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+        className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
         data-testid="export-mapping-mismatch"
       >
         <AlertTriangle className="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" aria-hidden />
@@ -702,7 +704,7 @@ function ReconciliationStrip({
 
   return (
     <p
-      className="text-[11px] text-gray-500 dark:text-gray-400"
+      className="text-2xs text-gray-500 dark:text-gray-400"
       data-testid="export-mapping-reconciled"
     >
       Reconciles with the fidelity report for this job:{' '}
@@ -719,7 +721,7 @@ function StatusText({ status }: { status: ProjectionStatus }) {
     <span
       data-status={status}
       className={cn(
-        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
+        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
         p.badgeClass,
       )}
     >

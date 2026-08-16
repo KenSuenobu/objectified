@@ -17,8 +17,11 @@ const BetaBackground: React.FC = () => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%) rotate(-45deg)',
-            fontSize: '120px',
-            lineHeight: '180px',
+            /* The rotated watermark behind the sign-in card. `rem`, like the rest of the
+               interface (HIVE-1.6): the ornament is proportioned against the card in
+               front of it, so it has to travel with the font-size preference too. */
+            fontSize: '7.5rem',
+            lineHeight: '11.25rem',
             fontWeight: 'bold',
             color: '#D1D5DB',
             opacity: 0.25,

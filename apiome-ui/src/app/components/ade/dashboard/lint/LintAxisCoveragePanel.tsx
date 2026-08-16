@@ -39,7 +39,7 @@ function AxisScoreCell({ axis }: { axis: LintAxis }) {
   if (!axis.assessed) {
     return (
       <span
-        className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300"
+        className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300"
         title={axis.notAssessedReason ?? undefined}
       >
         Not assessed
@@ -81,7 +81,7 @@ export function LintAxisCoveragePanel({
           )}
         </p>
       </div>
-      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+      <p className="text-2xs text-gray-500 dark:text-gray-400">
         Algorithm{' '}
         <a
           href={buildGovernanceDocsHref(evaluation.algorithmDocsPage)}
@@ -99,7 +99,7 @@ export function LintAxisCoveragePanel({
       <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
         <table className="min-w-full border-collapse text-left text-sm">
           <caption className="sr-only">{title}</caption>
-          <thead className="bg-gray-50 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
+          <thead className="bg-gray-50 text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
             <tr>
               <th scope="col" className="px-3 py-2">
                 Axis

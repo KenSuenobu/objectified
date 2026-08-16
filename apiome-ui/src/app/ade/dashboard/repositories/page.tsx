@@ -504,7 +504,7 @@ export default function RepositoriesPage() {
                           >
                             <span
                               className={cn(
-                                "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded bg-gradient-to-br font-mono text-[10px] font-bold text-white",
+                                "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded bg-gradient-to-br font-mono text-2xs font-bold text-white",
                                 i % 6 === 0
                                   ? "from-emerald-500 to-teal-500"
                                   : i % 6 === 1
@@ -524,7 +524,7 @@ export default function RepositoriesPage() {
                               <span className="block truncate font-semibold text-gray-900 hover:text-indigo-600 dark:text-gray-100 dark:hover:text-indigo-300">
                                 {repo.name}
                               </span>
-                              <span className="block truncate font-mono text-[10px] text-gray-500 dark:text-gray-400">
+                              <span className="block truncate font-mono text-2xs text-gray-500 dark:text-gray-400">
                                 {repo.full_name}
                               </span>
                             </span>
@@ -551,7 +551,7 @@ export default function RepositoriesPage() {
                         <td className="px-6 py-3 align-middle">
                           <span
                             className={cn(
-                              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider",
                               repositoryStatusClass(repo.status),
                             )}
                           >
@@ -577,7 +577,7 @@ export default function RepositoriesPage() {
                           <div className="flex items-center justify-end gap-1">
                             <Link
                               href={`/ade/dashboard/repositories/${repo.id}/preview`}
-                              className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                              className="inline-flex items-center gap-1 text-2xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                             >
                               Detail{" "}
                               <ArrowRight className="h-3 w-3" aria-hidden />

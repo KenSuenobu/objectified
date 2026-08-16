@@ -124,7 +124,7 @@ export default function LintWorkspaceFindingDetailDialog({
             <span>{finding.ruleId ?? 'Finding'}</span>
             <span
               className={cn(
-                'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                'inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide',
                 severityBadgeClass(finding.severity ?? ''),
               )}
             >

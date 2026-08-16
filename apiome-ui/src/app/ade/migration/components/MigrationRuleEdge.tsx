@@ -8,6 +8,7 @@ import {
   getSmoothStepPath,
 } from '@xyflow/react';
 import { Plus } from 'lucide-react';
+import { CANVAS_TYPE_SCALE, CANVAS_ICON_SIZE } from '@/app/components/ade/canvas/canvas-theme';
 
 const BUTTON_SIZE = 20;
 
@@ -103,13 +104,13 @@ function MigrationRuleEdge({
                 : 'color-mix(in srgb, var(--node-accent-rule) 14%, var(--node-surface))',
               color: isPassthrough ? 'var(--node-text-muted)' : 'var(--node-accent-rule)',
               fontFamily: 'var(--app-font-mono, monospace)',
-              fontSize: '11px',
+              fontSize: CANVAS_TYPE_SCALE.meta,
               fontWeight: 600,
               lineHeight: 1,
             }}
           >
             {isPassthrough ? (
-              <Plus size={12} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+              <Plus size={CANVAS_ICON_SIZE.meta} strokeWidth={2.5} style={{ flexShrink: 0 }} />
             ) : (
               <span
                 style={{

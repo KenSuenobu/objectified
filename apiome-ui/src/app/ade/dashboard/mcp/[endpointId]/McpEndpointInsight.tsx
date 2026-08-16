@@ -1427,7 +1427,7 @@ export default function McpEndpointInsight({
               // a real block on wide screens so each group stacks under its label.
               <div key={group.key} className="contents lg:block">
                 {group.label ? (
-                  <p className="hidden px-3 pb-1 pt-4 text-[0.65rem] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 lg:block">
+                  <p className="hidden px-3 pb-1 pt-4 text-2xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 lg:block">
                     {group.label}
                   </p>
                 ) : null}

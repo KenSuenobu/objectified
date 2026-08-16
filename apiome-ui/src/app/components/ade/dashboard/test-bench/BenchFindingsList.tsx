@@ -109,7 +109,7 @@ function FindingRow({
         title="Reveal in payload editor"
       >
         <span className="flex w-full min-w-0 items-center gap-2">
-          <code className="shrink-0 rounded bg-rose-100 px-1 py-0.5 font-mono text-[10px] font-semibold text-rose-800 dark:bg-rose-900/50 dark:text-rose-300">
+          <code className="shrink-0 rounded bg-rose-100 px-1 py-0.5 font-mono text-2xs font-semibold text-rose-800 dark:bg-rose-900/50 dark:text-rose-300">
             {finding.keyword}
           </code>
           <code className="truncate font-mono text-xs text-gray-600 dark:text-gray-400">
@@ -194,7 +194,7 @@ export function BenchFindingsList({ result, onSelectFinding }: BenchFindingsList
           aria-label={windowed ? `Findings (${findings.length}, windowed)` : undefined}
         >
           {windowed ? (
-            <p className="mb-1 text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <p className="mb-1 text-2xs uppercase tracking-wider text-gray-400 dark:text-gray-500">
               windowed — every finding stays reachable by scrolling
             </p>
           ) : null}
@@ -227,7 +227,7 @@ export function BenchFindingsList({ result, onSelectFinding }: BenchFindingsList
                   aria-hidden
                 />
                 <span>
-                  <code className="font-mono text-[10px] text-gray-500 dark:text-gray-500">
+                  <code className="font-mono text-2xs text-gray-500 dark:text-gray-500">
                     {diagnostic.code}
                   </code>{' '}
                   {diagnostic.message}

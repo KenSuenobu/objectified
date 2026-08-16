@@ -211,7 +211,7 @@ export function ArtifactPreviewCard({
         </span>
         <span
           data-testid="export-artifact-badge"
-          className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${artifactBadgeClass(badge.tone)}`}
+          className={`ml-auto rounded-full px-2 py-0.5 text-2xs font-semibold ${artifactBadgeClass(badge.tone)}`}
         >
           {badge.label}
         </span>
@@ -274,7 +274,7 @@ export function ArtifactPreviewCard({
       <p
         data-testid="export-artifact-meta"
         data-truncated={plan.truncated ? 'true' : 'false'}
-        className="mt-0.5 shrink-0 text-[11px] text-gray-400 dark:text-gray-500"
+        className="mt-0.5 shrink-0 text-2xs text-gray-400 dark:text-gray-500"
       >
         {size}
         {/* When the viewer holds less than the document, the meta line says so too — the size on

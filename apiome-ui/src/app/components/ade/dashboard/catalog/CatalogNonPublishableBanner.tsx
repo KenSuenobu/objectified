@@ -28,7 +28,7 @@ export function CatalogNonPublishableBanner() {
     <div
       role="note"
       data-testid="catalog-nonpublishable-banner"
-      className="flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 p-3.5 text-[12.5px] leading-relaxed text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
+      className="flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 p-3.5 text-xs leading-relaxed text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
     >
       <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
       <div>

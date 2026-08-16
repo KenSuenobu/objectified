@@ -139,28 +139,28 @@ export function ExportTargetGrid({
               }`}
             >
               <span
-                className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${tierBadgeClass(card.entry.fidelity.tier)}`}
+                className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-2xs font-semibold ${tierBadgeClass(card.entry.fidelity.tier)}`}
               >
                 {tierLabel(card.entry.fidelity.tier)}
               </span>
               {target && (
                 <span
                   data-testid={`export-target-band-${card.key}`}
-                  className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${bandBadgeClass(target.band)}`}
+                  className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-2xs font-semibold ${bandBadgeClass(target.band)}`}
                 >
                   {bandLabel(target.band)}
                 </span>
               )}
               <Icon className="mx-auto mb-2 mt-3 h-5 w-5" aria-hidden />
               <div className="text-sm font-medium">{card.entry.descriptor.label}</div>
-              <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+              <div className="mt-1 text-2xs text-gray-500 dark:text-gray-400">
                 {card.entry.descriptor.paradigm}
                 {card.entry.descriptor.multi_file ? ' · multi-file' : ''}
               </div>
               {target && (
                 <div
                   data-testid={`export-target-rationale-${card.key}`}
-                  className="mt-2 text-[11px] leading-snug text-gray-500 dark:text-gray-400"
+                  className="mt-2 text-2xs leading-snug text-gray-500 dark:text-gray-400"
                 >
                   {target.rationale}
                 </div>

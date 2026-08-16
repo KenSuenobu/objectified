@@ -41,7 +41,7 @@ export function OriginalSourceOption({ artifact, sourceFormat, className }: Orig
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-emerald-900 dark:text-emerald-100">
             Original source
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-2xs font-semibold uppercase text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
               {sourceFormat}
             </span>
           </div>

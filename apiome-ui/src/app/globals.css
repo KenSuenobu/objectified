@@ -65,6 +65,54 @@
   --font-sans: var(--app-font-sans);
   --font-mono: var(--app-font-mono);
 
+  /* ---- Type scale → Tailwind's `text-*` utilities (HIVE-1.6, #5279) ----
+     Tailwind ships its own scale (`text-sm` = 14px, `text-base` = 16px, …),
+     which is a size apart from the Hive one at almost every step. Re-pointing
+     the namespace here is what makes `text-sm` mean §3.2's 13 px in the ~2,900
+     places the app already writes it, instead of asking every component to
+     spell `text-[13px]` — the exact habit this ticket removes.
+
+     Values are `var(--fs-*)` rather than literals so the scale keeps one
+     definition, down in the `:root` block. `--text-2xs` has no Tailwind
+     counterpart at all; it is the 11 px caps/meta step §3.2 adds at the bottom,
+     and it is the floor — nothing in the interface is smaller.
+
+     Each step also carries its `--text-*--line-height`, because Tailwind's
+     `text-*` utility emits `line-height: var(--tw-leading, var(--text-*--line-height))`
+     and would otherwise pair a Hive size with a Tailwind leading. The three
+     §3.2 leadings do the work: body copy `normal`, headings `snug`, display
+     `tight`. `leading-*` still overrides per call site. */
+  --text-2xs: var(--fs-2xs);
+  --text-2xs--line-height: var(--lh-snug);
+  --text-xs: var(--fs-xs);
+  --text-xs--line-height: var(--lh-snug);
+  --text-sm: var(--fs-sm);
+  --text-sm--line-height: var(--lh-normal);
+  --text-base: var(--fs-md);
+  --text-base--line-height: var(--lh-normal);
+  --text-lg: var(--fs-lg);
+  --text-lg--line-height: var(--lh-normal);
+  --text-xl: var(--fs-xl);
+  --text-xl--line-height: var(--lh-snug);
+  --text-2xl: var(--fs-2xl);
+  --text-2xl--line-height: var(--lh-snug);
+  --text-3xl: var(--fs-3xl);
+  --text-3xl--line-height: var(--lh-tight);
+  --text-4xl: var(--fs-4xl);
+  --text-4xl--line-height: var(--lh-tight);
+  --text-5xl: var(--fs-5xl);
+  --text-5xl--line-height: var(--lh-tight);
+
+  /* ---- Icon sizes (DESIGN.md §3.5) ------------------------------------
+     16 px in dense UI, 18 px in the rail, 15 px in buttons — as `rem`, so a
+     glyph keeps its proportion to the label beside it at every font scale.
+     `components/ui/iconSizes.ts` mirrors these for the `size` prop of
+     `lucide-react`, which writes an SVG attribute a stylesheet cannot reach;
+     `tests/icon-sizes.test.ts` fails if the two drift. */
+  --icon-dense: 1rem;        /* 16px */
+  --icon-rail: 1.125rem;     /* 18px */
+  --icon-button: 0.9375rem;  /* 15px */
+
   /* ---- Brand (bee on a honeycomb; DESIGN.md §2) ----------------------- */
   --color-brand-navy: #16265C;
   --color-brand-azure: #1E90E8;
@@ -163,9 +211,14 @@
   --dur-base: 180ms;
   --dur-slow: 260ms;
 
-  /* ---- Layout (DESIGN.md §5.2, §5.3) ---------------------------------- */
-  --rail-w: 264px;
-  --rail-w-collapsed: 64px;
+  /* ---- Layout (DESIGN.md §5.2, §5.3) ----------------------------------
+     The rail is chrome wrapped around type, so its two widths are `rem` and
+     travel with the font-size preference (HIVE-1.6). The page and content caps
+     stay in `px` on purpose: they are measured against the viewport, not
+     against the text, and a cap that grew with the scale would push a wide
+     layout into horizontal scroll — the one thing DESIGN.md §5 forbids. */
+  --rail-w: 16.5rem;          /* 264px */
+  --rail-w-collapsed: 4rem;   /* 64px */
   --page-max: 1440px;
   --content-max: 1200px;
 
@@ -284,9 +337,9 @@
 
   /* ======================================================================
      Type scale (DESIGN.md §3.2). `rem`, so the HIVE-1.3 font-size preference
-     scales the whole interface. Deliberately *not* mapped onto Tailwind's
-     `--text-*` namespace: re-pointing `text-sm` & co. app-wide belongs to the
-     `rem` audit (HIVE-1.6), not to the token layer.
+     scales the whole interface. HIVE-1.6 re-points Tailwind's `--text-*`
+     namespace at these names in the `@theme` block above, so `text-sm` & co.
+     *are* the Hive scale — a component never has to spell a size out.
      ====================================================================== */
   --fs-2xs: 0.6875rem;  /* 11px */
   --fs-xs: 0.75rem;     /* 12px */
@@ -308,23 +361,46 @@
      Spacing, control and row metrics (DESIGN.md §3.3) — *comfortable*
      defaults. The `html[data-density="compact"]` swap lands with the
      preferences provider (HIVE-1.3).
+
+     Authored in `rem` (HIVE-1.6), with the §3.3 pixel value of each step in a
+     trailing comment. A control whose height is frozen in `px` clips its own
+     label the moment the font-size preference moves off `md`, so the 4 px grid
+     is a grid of *root-relative* quarter-rems: it reads as 4 px at the default
+     16 px root and grows with the reader's chosen scale, keeping the shell in
+     proportion instead of pulling text and chrome apart.
+
+     Tailwind's own `--spacing` is already `0.25rem`, so `p-4` and
+     `var(--space-4)` stay the same length in both vocabularies.
      ====================================================================== */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --control-h: 36px;
-  --control-h-sm: 30px;
-  --control-h-lg: 42px;
-  --row-h: 46px;
-  --page-pad: 32px;
-  --card-pad: 20px;
-  --nav-item-h: 32px;
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --control-h: 2.25rem;      /* 36px */
+  --control-h-sm: 1.875rem;  /* 30px */
+  --control-h-lg: 2.625rem;  /* 42px */
+  --row-h: 2.875rem;         /* 46px */
+  --page-pad: 2rem;          /* 32px */
+  --card-pad: 1.25rem;       /* 20px */
+  --nav-item-h: 2rem;        /* 32px */
+  /* Vertical padding of a data-table cell, derived rather than stated: it is half of what
+     a `--row-h` row has left over after one line of `--fs-sm` body copy, so a table row
+     *is* the row metric at any density and any font scale. The head strip takes 60% of it
+     — DESIGN.md §3.2 sets caps labels one step down from body copy, and the sticky header
+     reads as a rule rather than as a row. */
+  --table-cell-pad-y: calc((var(--row-h) - var(--fs-sm) * var(--lh-normal)) / 2);
+  --table-head-pad-y: calc(var(--table-cell-pad-y) * 0.6);
+  /* Width of the pre-rail dashboard sidebar (`DashboardSideNav`). It carried a
+     literal 280 px in both a Tailwind class and an inline style, which is the
+     single widest piece of frozen chrome in the app: at the Largest scale its
+     labels grew into the edge while the column did not. Retired together with
+     the component itself when HIVE-3.1 lands the `--rail-w` rail. */
+  --sidenav-w: 17.5rem;      /* 280px */
 
   /* ======================================================================
      Legacy aliases — kept for one release so nothing breaks mid-migration.
@@ -708,15 +784,15 @@ html[data-theme="darcula"] {
    Spacing only. Colour, radius and type are untouched, so switching density
    re-flows the shell without repainting it. */
 html[data-density="compact"] {
-  --control-h: 32px;
-  --control-h-sm: 26px;
-  --control-h-lg: 38px;
-  --row-h: 38px;
-  --page-pad: 24px;
-  --card-pad: 16px;
-  --nav-item-h: 28px;
-  --space-6: 20px;
-  --space-8: 24px;
+  --control-h: 2rem;         /* 32px */
+  --control-h-sm: 1.625rem;  /* 26px */
+  --control-h-lg: 2.375rem;  /* 38px */
+  --row-h: 2.375rem;         /* 38px */
+  --page-pad: 1.5rem;        /* 24px */
+  --card-pad: 1rem;          /* 16px */
+  --nav-item-h: 1.75rem;     /* 28px */
+  --space-6: 1.25rem;        /* 20px */
+  --space-8: 1.5rem;         /* 24px */
 }
 
 /* ---- Font scale (DESIGN.md §4.1) ----------------------------------------
@@ -789,6 +865,94 @@ html {
 
 html[data-rail="collapsed"] {
   --rail-w-current: var(--rail-w-collapsed);
+}
+
+/* ---- Metric utilities (HIVE-1.6, #5279) ---------------------------------
+   The density and control tokens above are only worth having if something
+   spends them, and a component should spend them by *name* rather than by
+   re-deriving `h-[var(--control-h)]` at each call site. These are Tailwind
+   `@utility` rules, so they land in `@layer utilities` beside `h-10` and
+   `p-6`, compose with variants (`md:p-page`), and can still be overridden by
+   an unlayered rule.
+
+   Sizes come from the token, so one class is simultaneously font-scale-aware
+   (the tokens are `rem`) and density-aware (the `data-density` block swaps
+   them). Replacing `h-10` with `h-control` is what turns the preferences of
+   HIVE-1.3 from a stored value into something the interface does. */
+@utility h-control {
+  height: var(--control-h);
+}
+
+/* A square icon-button: one metric on both axes, so it stays square at every density. */
+@utility size-control {
+  width: var(--control-h);
+  height: var(--control-h);
+}
+
+@utility h-control-sm {
+  height: var(--control-h-sm);
+}
+
+@utility h-control-lg {
+  height: var(--control-h-lg);
+}
+
+@utility h-row {
+  height: var(--row-h);
+}
+
+@utility h-nav-item {
+  height: var(--nav-item-h);
+}
+
+/* `min-h-*` companions, for rows that must be *at least* the metric but may grow: a nav
+   row carrying a preview pill, or a control wrapping onto a second line at the Largest
+   font scale. A fixed `height` there would clip rather than scale, which is the failure
+   this ticket exists to remove. */
+@utility min-h-control {
+  min-height: var(--control-h);
+}
+
+@utility min-h-nav-item {
+  min-height: var(--nav-item-h);
+}
+
+@utility w-sidenav {
+  width: var(--sidenav-w);
+}
+
+@utility p-page {
+  padding: var(--page-pad);
+}
+
+@utility p-card {
+  padding: var(--card-pad);
+}
+
+/* ---- Data-table rhythm (DESIGN.md §3.3, §8 "List page") -----------------
+   Vertical padding of a table's cells, from the density tokens.
+
+   Descendant rules under one wrapper class rather than a class on every cell,
+   because the cells are written by ~40 different pages: `dashboardScreenClasses.ts`
+   puts `table-density` on the single shared wrapper and every dashboard table
+   gains the density response at once. Horizontal padding stays with the page —
+   that is column rhythm, not density.
+
+   Deliberately *unlayered*, unlike the metric utilities above. Tailwind emits
+   `py-4` into `@layer utilities`, which loses to any unlayered rule whatever its
+   specificity; inside the same layer this would be a specificity tie decided by
+   source order, and Tailwind sorts `.py-4` last. A page-authored `py-4` on a data
+   row is exactly the frozen metric this ticket replaces, so the wrapper has to
+   win. `:where()` keeps the selector at the weight of a bare element, so a table
+   that genuinely needs its own row (a nested table, an editor row) still wins with
+   one unlayered rule of its own. HIVE-2.3's `DataTable` inherits this behaviour
+   when it retires the shared class module. */
+.table-density :where(thead) :where(th) {
+  padding-block: var(--table-head-pad-y);
+}
+
+.table-density :where(tbody) :where(td) {
+  padding-block: var(--table-cell-pad-y);
 }
 
 /* ---- Identifier face (DESIGN.md §4.1) -----------------------------------

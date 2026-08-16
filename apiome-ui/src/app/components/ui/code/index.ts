@@ -14,3 +14,5 @@
 export * from './JsonViewer';
 export * from './JsonDiffViewer';
 export * from './Disclosure';
+// Monaco's type metrics, in one place (HIVE-1.6, #5279).
+export * from './editorTypography';

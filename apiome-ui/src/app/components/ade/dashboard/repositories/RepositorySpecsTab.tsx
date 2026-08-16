@@ -240,7 +240,7 @@ export function RepositorySpecsTable({
         </div>
       ) : null}
       <table className="w-full text-sm">
-        <thead className="border-b border-gray-200 bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
+        <thead className="border-b border-gray-200 bg-gray-50 text-2xs uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
           <tr>
             <th className="px-4 py-2 align-middle text-left font-semibold">File</th>
             <th className="px-4 py-2 align-middle text-left font-semibold">Status</th>
@@ -300,7 +300,7 @@ export function RepositorySpecsTable({
                     >
                       {spec.path}
                     </Link>
-                    <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                    <div className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
                       {spec.project_name ? (
                         <span>
                           {spec.project_name} · {spec.branch}
@@ -313,7 +313,7 @@ export function RepositorySpecsTable({
                       <span
                         data-testid="repository-spec-backfilled"
                         title="This file was imported before import-spec capture existed; a default spec was seeded so it stays refresh-eligible. Re-importing the file records your actual options."
-                        className="mt-1 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300"
+                        className="mt-1 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-medium text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300"
                       >
                         Imported before spec capture
                       </span>
@@ -325,7 +325,7 @@ export function RepositorySpecsTable({
                       {isDiverged ? (
                         <Link
                           href={reviewHref}
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-purple-700 hover:underline dark:text-purple-300"
+                          className="inline-flex items-center gap-1 text-2xs font-medium text-purple-700 hover:underline dark:text-purple-300"
                         >
                           <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
                           Review divergence

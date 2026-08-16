@@ -17,6 +17,7 @@ import {
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 import { Switch } from '../../../components/ui/Switch';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 const PAGE_SIZE = 20;
 
@@ -538,7 +539,7 @@ export default function MigrationPlanView() {
                       readOnly: true,
                       minimap: { enabled: false },
                       scrollBeyondLastLine: false,
-                      fontSize: 13,
+                      fontSize: CODE_EDITOR_FONT_SIZE,
                       wordWrap: 'on',
                     }}
                   />
@@ -605,7 +606,7 @@ export default function MigrationPlanView() {
                       readOnly: true,
                       minimap: { enabled: false },
                       scrollBeyondLastLine: false,
-                      fontSize: 13,
+                      fontSize: CODE_EDITOR_FONT_SIZE,
                       wordWrap: 'on',
                     }}
                   />

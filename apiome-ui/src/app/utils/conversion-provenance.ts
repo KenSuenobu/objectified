@@ -141,17 +141,17 @@ export function snapshotHashShort(hash: string | null): string {
 
 /** Chip class for a row's snapshot reference. */
 export function snapshotChipClass(): string {
-  return 'inline-flex items-center gap-1 rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[11px] text-gray-600 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-300';
+  return 'inline-flex items-center gap-1 rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-2xs text-gray-600 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-300';
 }
 
 /** Muted chip class for a row with no stored snapshot. */
 export function snapshotMissingChipClass(): string {
-  return 'inline-flex items-center rounded border border-dashed border-gray-300 px-1.5 py-0.5 text-[11px] text-gray-500 dark:border-gray-600 dark:text-gray-400';
+  return 'inline-flex items-center rounded border border-dashed border-gray-300 px-1.5 py-0.5 text-2xs text-gray-500 dark:border-gray-600 dark:text-gray-400';
 }
 
 /** Amber badge class for "the source changed since this conversion". */
 export function sourceChangedBadgeClass(): string {
-  return 'inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
+  return 'inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-2xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
 }
 
 // ---------------------------------------------------------------------------

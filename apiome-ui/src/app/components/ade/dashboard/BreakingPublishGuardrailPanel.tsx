@@ -182,10 +182,10 @@ export function BreakingPublishGuardrailPanel({
                     className="text-xs text-gray-700 dark:text-gray-300"
                     data-testid="breaking-publish-change"
                   >
-                    <span className="font-mono text-[11px] text-rose-700 dark:text-rose-300">
+                    <span className="font-mono text-2xs text-rose-700 dark:text-rose-300">
                       {change.ruleId}
                     </span>
-                    <span className="mt-0.5 block font-mono text-[11px] text-gray-500 dark:text-gray-400">
+                    <span className="mt-0.5 block font-mono text-2xs text-gray-500 dark:text-gray-400">
                       {change.pointer}
                     </span>
                     <span className="mt-0.5 block text-gray-600 dark:text-gray-400">

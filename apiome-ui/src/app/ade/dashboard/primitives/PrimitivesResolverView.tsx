@@ -161,7 +161,7 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
                 {base}
               </span>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1 font-mono">
+            <p className="text-2xs text-gray-400 mt-1 font-mono">
               read-only · API server import-source root
             </p>
           </div>
@@ -207,7 +207,7 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
             <p className="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 leading-none">
               {summary.resolved}
             </p>
-            <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-1">Resolved</p>
+            <p className="text-2xs text-emerald-700 dark:text-emerald-300 mt-1">Resolved</p>
           </div>
         </div>
         <div className="flex items-center gap-3 rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
@@ -218,7 +218,7 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
             <p className="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 leading-none">
               {summary.unresolved}
             </p>
-            <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1">Unresolved</p>
+            <p className="text-2xs text-amber-700 dark:text-amber-300 mt-1">Unresolved</p>
           </div>
         </div>
         <div className="flex items-center gap-3 rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 px-4 py-3">
@@ -229,7 +229,7 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
             <p className="text-2xl font-bold font-mono text-red-600 dark:text-red-400 leading-none">
               {summary.circular}
             </p>
-            <p className="text-[11px] text-red-700 dark:text-red-300 mt-1">Circular</p>
+            <p className="text-2xs text-red-700 dark:text-red-300 mt-1">Circular</p>
           </div>
         </div>
       </section>
@@ -256,11 +256,11 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
             <h3 className="text-sm font-semibold mb-1 flex items-center gap-2 text-gray-900 dark:text-white">
               <GitFork className="w-4 h-4 text-indigo-500" /> Reference graph
             </h3>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-2xs text-gray-500 dark:text-gray-400 mb-4">
               Each edge is one relative <span className="font-mono">$ref</span>. Cross-scope edges
               (tenant → core) are highlighted · click a resolved target to open its details.
             </p>
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4 font-mono text-[12px] leading-7 overflow-x-auto">
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4 font-mono text-xs leading-7 overflow-x-auto">
               {rows.length === 0 ? (
                 <p className="text-gray-400">No references match this filter.</p>
               ) : (
@@ -294,7 +294,7 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
                       {row.resolvedTarget || row.relativeRef}
                     </ResolvedTargetLink>
                     {row.crossScope ? (
-                      <span className="text-teal-500 text-[10px]">(cross-scope: tenant → core)</span>
+                      <span className="text-teal-500 text-2xs">(cross-scope: tenant → core)</span>
                     ) : null}
                   </div>
                 ))
@@ -342,7 +342,7 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50/60 dark:bg-gray-900/40">
+                  <thead className="text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50/60 dark:bg-gray-900/40">
                     <tr>
                       <th className="text-left px-5 py-2 font-semibold">Source type</th>
                       <th className="text-left px-3 py-2 font-semibold">Relative $ref</th>
@@ -380,14 +380,14 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
                             <span className="text-gray-400">—</span>
                           )}
                           {row.crossScope ? (
-                            <span className="ml-2 text-[9px] px-1 rounded bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-300">
+                            <span className="ml-2 text-2xs px-1 rounded bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-300">
                               cross-scope
                             </span>
                           ) : null}
                         </td>
                         <td className="px-5 py-3 text-right">
                           <span
-                            className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${statusBadgeClass(
+                            className={`text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded ${statusBadgeClass(
                               row.status
                             )}`}
                           >

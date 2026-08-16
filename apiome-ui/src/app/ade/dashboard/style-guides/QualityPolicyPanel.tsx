@@ -103,8 +103,8 @@ function ScopeFields({
           data-testid={`quality-policy-${scope}-mode`}
           className={
             blocking
-              ? 'rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-medium normal-case text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
-              : 'rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium normal-case text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+              ? 'rounded-full bg-rose-100 px-2 py-0.5 text-2xs font-medium normal-case text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+              : 'rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium normal-case text-slate-600 dark:bg-slate-800 dark:text-slate-300'
           }
         >
           {blocking ? 'Blocking' : 'Advisory'}
@@ -322,14 +322,14 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
           {policy?.isDefault ? (
             <span
               data-testid="quality-policy-default-badge"
-              className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
             >
               Not configured — advisory
             </span>
           ) : (
             <span
               data-testid="quality-policy-version-badge"
-              className="whitespace-nowrap rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+              className="whitespace-nowrap rounded-full bg-indigo-100 px-2 py-0.5 text-2xs font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
             >
               v{policy?.versionNumber}
             </span>
@@ -384,7 +384,7 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
                     placeholder={ROLE_OPTIONS.join(', ')}
                     className={`${inputClasses} w-full`}
                   />
-                  <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-2xs text-gray-500 dark:text-gray-400">
                     Comma-separated role slugs ({ROLE_OPTIONS.join(', ')}). Tenant administrators
                     resolve to <code>owner</code>. An empty list means nobody may waive.
                   </p>
@@ -409,7 +409,7 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
                     }
                     className={`${inputClasses} w-full`}
                   />
-                  <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-2xs text-gray-500 dark:text-gray-400">
                     A waiver is honoured until it expires; the waiver-expiry sweep warns before it
                     lapses.
                   </p>
@@ -441,7 +441,7 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
                   ))}
                 </ul>
               )}
-              <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-2xs text-gray-500 dark:text-gray-400">
                 Resolution is format override → tenant → default; the pre-flight verdict names the
                 tier that won.
               </p>
@@ -523,7 +523,7 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
                     <span className="font-medium text-gray-900 dark:text-white">
                       {waiver.subjectLabel || waiver.subjectKey.slice(0, 12)}
                     </span>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                       {waiver.scope}
                       {waiver.formatKey ? ` · ${waiver.formatKey}` : ''}
                     </span>
@@ -535,7 +535,7 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-300">{waiver.reason}</p>
-                  <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                  <p className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
                     {waiver.actorLabel ?? 'unknown actor'}
                     {waiver.actorRole ? ` (${waiver.actorRole})` : ''} · expires{' '}
                     {formatInstant(waiver.expiresAt)}

@@ -6,6 +6,7 @@ import { getNumericScoreTier } from '../../../../utils/numeric-score-tier';
 import { ChartFrame } from './ChartFrame';
 import { chartSeriesStyle, type ChartSeriesTone, CHART_SURFACE } from './chartTokens';
 import { clamp, describeArc } from './chartGeometry';
+import { SVG_TEXT_SIZE } from '../../svgTypography';
 
 const SIZE = 120;
 const CENTER = SIZE / 2;
@@ -115,7 +116,8 @@ export function Gauge({
           y={CENTER}
           textAnchor="middle"
           dominantBaseline="central"
-          className={cn('text-[22px] font-bold', CHART_SURFACE.labelStrongClass)}
+          fontSize={SVG_TEXT_SIZE.display}
+          className={cn('font-bold', CHART_SURFACE.labelStrongClass)}
         >
           {center}
         </text>

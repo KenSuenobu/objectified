@@ -391,12 +391,12 @@ export function CatalogVersionsPanel({
                         {formatVersionWithPrefix(rev.version_id)}
                       </span>
                       {rev.published ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                           <Lock className="h-3 w-3" aria-hidden /> Published
                         </span>
                       ) : null}
                       {rev.lifecycle && rev.lifecycle !== 'stable' ? (
-                        <span className="inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        <span className="inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                           {rev.lifecycle}
                         </span>
                       ) : null}
@@ -404,7 +404,7 @@ export function CatalogVersionsPanel({
                     {note ? (
                       <p className="mt-0.5 text-sm text-gray-700 dark:text-gray-200">{note}</p>
                     ) : null}
-                    <p className="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">
+                    <p className="mt-0.5 text-2xs text-gray-400 dark:text-gray-500">
                       {formatTimestamp(rev.created_at)}
                       {rev.creator_name || rev.creator_email
                         ? ` · ${rev.creator_name || rev.creator_email}`

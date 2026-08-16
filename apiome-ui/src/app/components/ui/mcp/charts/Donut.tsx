@@ -10,6 +10,7 @@ import {
   CHART_SURFACE,
 } from './chartTokens';
 import { describeAnnularArc, sumValues } from './chartGeometry';
+import { SVG_TEXT_SIZE } from '../../svgTypography';
 
 /** One donut segment. `tone` pins the color; otherwise a stable categorical tone is assigned. */
 export interface DonutSegment {
@@ -102,7 +103,8 @@ export function Donut({ segments, title, centerLabel, className }: DonutProps) {
           y={CENTER}
           textAnchor="middle"
           dominantBaseline="central"
-          className={cn('text-[16px] font-semibold', CHART_SURFACE.labelStrongClass)}
+          fontSize={SVG_TEXT_SIZE.value}
+          className={cn('font-semibold', CHART_SURFACE.labelStrongClass)}
         >
           {centerLabel}
         </text>

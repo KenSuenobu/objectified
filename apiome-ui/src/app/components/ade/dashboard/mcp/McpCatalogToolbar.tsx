@@ -57,7 +57,7 @@ function DensityToggle({
   onDensityChange: (density: McpCatalogDensity) => void;
 }): React.ReactElement {
   const base =
-    'inline-flex h-9 w-9 items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500';
+    'inline-flex size-control items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500';
   const active = 'bg-indigo-600 text-white';
   const idle =
     'bg-white text-gray-500 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700';
@@ -183,7 +183,7 @@ export function McpCatalogToolbar({
               type="button"
               variant={filtersOpen || activeFilters > 0 ? 'secondary' : 'outline'}
               size="sm"
-              className="h-9"
+              className="h-control"
               aria-expanded={filtersOpen}
               onClick={() => setFiltersOpen((v) => !v)}
             >
@@ -205,7 +205,7 @@ export function McpCatalogToolbar({
               Sort
             </label>
             <Select value={sort} onValueChange={(v) => onSortChange(v as McpCatalogSortKey)}>
-              <SelectTrigger id="mcp-catalog-sort" className="h-9 w-[170px]">
+              <SelectTrigger id="mcp-catalog-sort" className="h-control w-[170px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

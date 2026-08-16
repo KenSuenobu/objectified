@@ -73,10 +73,10 @@ const TONE: Record<'positive' | 'caution' | 'neutral', string> = {
 };
 
 const BADGE_BASE =
-  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium';
+  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-medium';
 
 const SECTION_HEADING =
-  'text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
+  'text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
 
 const CELL = 'px-2 py-1.5 text-left align-top';
 
@@ -228,7 +228,7 @@ export function CatalogCopybookInspectorPanel({
           Storage map
         </h4>
         <div className="mt-1.5 overflow-x-auto">
-          <table className="w-full min-w-[40rem] border-collapse text-[11px]">
+          <table className="w-full min-w-[40rem] border-collapse text-2xs">
             <caption className="sr-only">
               Every item in {record.name}, in declaration order, with the bytes it occupies
             </caption>
@@ -270,7 +270,7 @@ export function CatalogCopybookInspectorPanel({
                       style={{ '--copybook-depth': row.depth } as React.CSSProperties}
                       className={cn(CELL, DEPTH_INDENT, 'font-normal')}
                     >
-                      <span className="mr-1.5 font-mono text-[10px] text-gray-400 dark:text-gray-500">
+                      <span className="mr-1.5 font-mono text-2xs text-gray-400 dark:text-gray-500">
                         {row.level ?? '—'}
                       </span>
                       {onRevealNode ? (
@@ -294,7 +294,7 @@ export function CatalogCopybookInspectorPanel({
                         <span className="italic text-gray-400 dark:text-gray-500">group</span>
                       )}
                       {row.usage ? (
-                        <span className="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
+                        <span className="ml-1 text-2xs text-gray-500 dark:text-gray-400">
                           {row.usage}
                         </span>
                       ) : null}
@@ -317,25 +317,25 @@ export function CatalogCopybookInspectorPanel({
                         {row.storage.basis ? (
                           <span
                             title={copybookBasisLabel(row.storage.basis)}
-                            className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+                            className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs font-medium text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
                           >
                             {row.storage.basis}
                           </span>
                         ) : null}
                         {row.storage.signed ? (
-                          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
+                          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
                             signed
                           </span>
                         ) : null}
                         {row.storage.decimals !== null ? (
-                          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
+                          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
                             {row.storage.decimals} dp
                           </span>
                         ) : null}
                         {row.occursMax !== null ? (
                           <span
                             data-testid="copybook-occurs"
-                            className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-300"
+                            className="rounded bg-sky-100 px-1.5 py-0.5 text-2xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-300"
                           >
                             OCCURS {row.occursMin ?? row.occursMax}
                             {row.occursMin !== null && row.occursMin !== row.occursMax
@@ -346,7 +346,7 @@ export function CatalogCopybookInspectorPanel({
                         {row.storage.redefines ? (
                           <span
                             data-testid="copybook-redefines"
-                            className="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
+                            className="rounded bg-violet-100 px-1.5 py-0.5 text-2xs font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
                           >
                             redefines {row.storage.redefines}
                           </span>
@@ -357,7 +357,7 @@ export function CatalogCopybookInspectorPanel({
                             title={row.conditions
                               .map((entry) => `${entry.name}${entry.value ? ` = ${entry.value}` : ''}`)
                               .join(', ')}
-                            className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+                            className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
                           >
                             {row.conditions.length} condition
                             {row.conditions.length === 1 ? '' : 's'}
@@ -369,7 +369,7 @@ export function CatalogCopybookInspectorPanel({
                             data-testid="copybook-canonical-link"
                             data-entity={target.entity}
                             onClick={() => onRevealEntity(target.entity)}
-                            className="rounded text-[10px] font-medium text-indigo-700 underline decoration-dotted underline-offset-2 hover:decoration-solid focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-indigo-300"
+                            className="rounded text-2xs font-medium text-indigo-700 underline decoration-dotted underline-offset-2 hover:decoration-solid focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-indigo-300"
                           >
                             {target.field ? `field on ${target.entity}` : 'parsed entity'}
                             <span className="sr-only">
@@ -405,7 +405,7 @@ export function CatalogCopybookInspectorPanel({
                 data-testid="copybook-overlay"
                 className="rounded-lg border border-gray-200 p-2.5 dark:border-gray-700"
               >
-                <p className="text-[11px] text-gray-700 dark:text-gray-300">
+                <p className="text-2xs text-gray-700 dark:text-gray-300">
                   <span className="font-mono font-semibold">{overlay.baseName}</span>
                   {overlay.offset !== null && overlay.baseLength !== null ? (
                     <>
@@ -439,7 +439,7 @@ export function CatalogCopybookInspectorPanel({
                   ))}
                 </ul>
                 {overlay.overlays.some((entry) => entry.oversized) ? (
-                  <p className="mt-1.5 flex items-start gap-1.5 text-[11px] text-amber-800 dark:text-amber-300">
+                  <p className="mt-1.5 flex items-start gap-1.5 text-2xs text-amber-800 dark:text-amber-300">
                     <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
                     <span>
                       A redefining item needs more storage than the item it redefines. Both lengths
@@ -469,7 +469,7 @@ export function CatalogCopybookInspectorPanel({
                 key={table.node.id}
                 data-testid="copybook-table"
                 data-variable={table.variable}
-                className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[11px] text-gray-700 dark:text-gray-300"
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-2xs text-gray-700 dark:text-gray-300"
               >
                 <span className="font-mono font-semibold">{table.name}</span>
                 <Badge
@@ -517,7 +517,7 @@ export function CatalogCopybookInspectorPanel({
         {assumptions.length > 0 ? (
           <ul
             data-testid="copybook-assumptions"
-            className="mt-1.5 list-disc space-y-1 rounded-lg border border-indigo-100 bg-indigo-50/60 py-2 pl-7 pr-3 text-[11px] leading-snug text-indigo-800 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-300"
+            className="mt-1.5 list-disc space-y-1 rounded-lg border border-indigo-100 bg-indigo-50/60 py-2 pl-7 pr-3 text-2xs leading-snug text-indigo-800 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-300"
           >
             {assumptions.map((assumption) => (
               <li key={assumption}>{assumption}</li>
@@ -526,7 +526,7 @@ export function CatalogCopybookInspectorPanel({
         ) : (
           <p
             data-testid="copybook-assumptions-absent"
-            className="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
+            className="mt-1.5 text-2xs text-gray-500 dark:text-gray-400"
           >
             This analysis did not record the assumptions behind its byte counts, so none are shown
             here. Treat the lengths above as computed rather than observed.

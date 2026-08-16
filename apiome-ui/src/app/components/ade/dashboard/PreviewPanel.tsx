@@ -28,6 +28,8 @@ import '@xyflow/react/dist/style.css';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/Collapsible';
 import { ImportOptionsForm } from './ImportOptionsForm';
 import { TAB_LIST_CLASS, tabTriggerClass } from '../../ui/tabStyles';
+import { CODE_BLOCK_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
+import { SVG_TEXT_SIZE } from '@/app/components/ui/svgTypography';
 
 interface PreviewPanelProps {
   analysis: AnalysisResult;
@@ -159,7 +161,7 @@ function PreviewClassNode({ data }: { data: { label: string; propertyCount: numb
       }`}>
         <div className="flex items-center gap-1.5">
           {data.hasComposition && data.compositionType && (
-            <span className="text-[9px] px-1 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded">
+            <span className="text-2xs px-1 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded">
               {data.compositionType}
             </span>
           )}
@@ -169,7 +171,7 @@ function PreviewClassNode({ data }: { data: { label: string; propertyCount: numb
         </div>
       </div>
       <div className="px-3 py-2">
-        <div className="text-[10px] text-gray-500 dark:text-gray-400">
+        <div className="text-2xs text-gray-500 dark:text-gray-400">
           {data.propertyCount} {data.propertyCount === 1 ? 'property' : 'properties'}
         </div>
       </div>
@@ -651,7 +653,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
       type: 'smoothstep',
       animated: false,
       label,
-      labelStyle: { fill: '#4338ca', fontSize: 10, fontWeight: 500 },
+      labelStyle: { fill: '#4338ca', fontSize: SVG_TEXT_SIZE.label, fontWeight: 500 },
       labelBgStyle: { fill: 'white', fillOpacity: 0.9 },
       labelBgPadding: [4, 2] as [number, number],
       labelBgBorderRadius: 4,
@@ -1372,7 +1374,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                         readOnly: true,
                         minimap: { enabled: false },
                         scrollBeyondLastLine: false,
-                        fontSize: 12,
+                        fontSize: CODE_BLOCK_FONT_SIZE,
                         lineNumbers: 'on',
                         folding: true,
                         wordWrap: 'on',
@@ -1391,7 +1393,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                         readOnly: true,
                         minimap: { enabled: false },
                         scrollBeyondLastLine: false,
-                        fontSize: 12,
+                        fontSize: CODE_BLOCK_FONT_SIZE,
                         lineNumbers: 'on',
                         folding: true,
                         wordWrap: 'on',

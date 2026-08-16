@@ -202,7 +202,7 @@ function StateBadge({
     <span
       data-testid={testId}
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium',
+        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-medium',
         BADGE_TONE[tone],
       )}
     >
@@ -222,7 +222,7 @@ function StateBadge({
 function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <dt className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
         {label}
       </dt>
       <dd className="mt-0.5">
@@ -230,7 +230,7 @@ function Metric({ label, value, hint }: { label: string; value: string; hint?: s
           {value}
         </span>
         {hint ? (
-          <span className="mt-0.5 block text-[11px] leading-snug text-gray-500 dark:text-gray-400">
+          <span className="mt-0.5 block text-2xs leading-snug text-gray-500 dark:text-gray-400">
             {hint}
           </span>
         ) : null}
@@ -261,12 +261,12 @@ function WarningRow({ warning, testId }: { warning: AnalysisWarning; testId: str
       className="flex flex-wrap items-baseline gap-x-2 gap-y-1 py-1.5"
     >
       <StateBadge label="Severity" value={`${meta.symbol} ${meta.label}`} tone={meta.tone} />
-      <code className="font-mono text-[11px] text-gray-600 dark:text-gray-400">{warning.code}</code>
+      <code className="font-mono text-2xs text-gray-600 dark:text-gray-400">{warning.code}</code>
       <span className="min-w-0 flex-1 text-xs text-gray-700 dark:text-gray-300">
         {warning.message || 'The analyzer recorded no message for this warning.'}
       </span>
       {location ? (
-        <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">{location}</span>
+        <span className="font-mono text-2xs text-gray-500 dark:text-gray-400">{location}</span>
       ) : null}
     </li>
   );
@@ -735,12 +735,12 @@ export function CatalogFormatDetailPanel({
           ) : (
             <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
           )}
-          <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
+          <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
             {analysisKindLabel(row.node.kind)}
           </span>
           <span className="truncate font-mono">{analysisNodeLabel(row.node)}</span>
           {row.node.redacted ? (
-            <span className="shrink-0 rounded bg-violet-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+            <span className="shrink-0 rounded bg-violet-100 px-1 py-0.5 text-2xs font-semibold uppercase text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
               redacted
             </span>
           ) : null}
@@ -748,7 +748,7 @@ export function CatalogFormatDetailPanel({
             <span
               data-testid="catalog-format-detail-node-presence"
               data-presence={presence}
-              className="shrink-0 rounded bg-sky-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-sky-800 dark:bg-sky-900/40 dark:text-sky-300"
+              className="shrink-0 rounded bg-sky-100 px-1 py-0.5 text-2xs font-semibold uppercase text-sky-800 dark:bg-sky-900/40 dark:text-sky-300"
             >
               {presenceBadge.label}
             </span>
@@ -756,14 +756,14 @@ export function CatalogFormatDetailPanel({
           {worst ? (
             <span
               data-testid="catalog-format-detail-node-warning"
-              className="shrink-0 rounded bg-amber-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+              className="shrink-0 rounded bg-amber-100 px-1 py-0.5 text-2xs font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
             >
               {(SEVERITY_META[worst.severity] ?? SEVERITY_META.warning).label}
               {warnings.length > 1 ? ` ×${warnings.length}` : ''}
             </span>
           ) : null}
           {location ? (
-            <span className="ml-auto shrink-0 font-mono text-[10px] text-gray-500 dark:text-gray-400">
+            <span className="ml-auto shrink-0 font-mono text-2xs text-gray-500 dark:text-gray-400">
               {location}
             </span>
           ) : null}
@@ -823,7 +823,7 @@ export function CatalogFormatDetailPanel({
           />
         ) : null}
         {analyzerKey ? (
-          <span className="font-mono text-[11px] text-gray-500 dark:text-gray-400">
+          <span className="font-mono text-2xs text-gray-500 dark:text-gray-400">
             {analyzerKey}@{analyzerVersion ?? '0.0.0'}
           </span>
         ) : null}
@@ -853,7 +853,7 @@ export function CatalogFormatDetailPanel({
 
       {kindCounts.length > 0 ? (
         <div className="mt-3">
-          <h3 className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          <h3 className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
             Native constructs
           </h3>
           <ul
@@ -863,7 +863,7 @@ export function CatalogFormatDetailPanel({
             {kindCounts.map(([kind, count]) => (
               <li
                 key={kind}
-                className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+                className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-2xs font-bold uppercase tracking-wider text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
               >
                 {analysisKindLabel(kind)}
                 <span className="font-mono font-semibold tabular-nums normal-case">
@@ -930,7 +930,7 @@ export function CatalogFormatDetailPanel({
         <section aria-labelledby="catalog-format-detail-warnings-heading" className="mt-4">
           <h3
             id="catalog-format-detail-warnings-heading"
-            className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+            className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
           >
             Analyzer warnings
           </h3>
@@ -1015,7 +1015,7 @@ export function CatalogFormatDetailPanel({
             </div>
             <span
               data-testid="catalog-format-detail-row-count"
-              className="shrink-0 font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500"
+              className="shrink-0 font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
             >
               {rows.length.toLocaleString()} of {nodeCount.toLocaleString()} nodes shown
             </span>
@@ -1024,14 +1024,14 @@ export function CatalogFormatDetailPanel({
               data-testid="catalog-format-detail-collapse-all"
               onClick={() => setExpandedIds(new Set<string>())}
               disabled={!anythingExpanded || filtering}
-              className="shrink-0 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="shrink-0 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-2xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
             >
               Collapse all
             </button>
             {virtualized ? (
               <span
                 data-testid="catalog-format-detail-windowed"
-                className="shrink-0 text-[10px] text-gray-500 dark:text-gray-400"
+                className="shrink-0 text-2xs text-gray-500 dark:text-gray-400"
               >
                 windowed
               </span>
@@ -1123,7 +1123,7 @@ export function CatalogFormatDetailPanel({
                 {selectedReference ? (
                   <span
                     data-testid="catalog-format-detail-selected-reference"
-                    className="font-mono text-[11px] text-gray-500 dark:text-gray-400"
+                    className="font-mono text-2xs text-gray-500 dark:text-gray-400"
                   >
                     {selectedReference}
                   </span>
@@ -1132,7 +1132,7 @@ export function CatalogFormatDetailPanel({
                   href={nodeHref(selectedNode.id)}
                   data-testid="catalog-format-detail-node-link"
                   title="A shareable address for this construct in this analysis"
-                  className="ml-auto inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-indigo-700 transition-colors hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-800 dark:text-indigo-300 dark:hover:bg-indigo-950/30"
+                  className="ml-auto inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-2xs font-medium text-indigo-700 transition-colors hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-800 dark:text-indigo-300 dark:hover:bg-indigo-950/30"
                 >
                   <Link2 className="h-3.5 w-3.5" aria-hidden /> Link to this construct
                 </Link>
@@ -1142,7 +1142,7 @@ export function CatalogFormatDetailPanel({
               {selectedValue.value !== null ? (
                 <pre
                   data-testid="catalog-format-detail-node-value"
-                  className="mt-1 overflow-x-auto rounded bg-gray-50 p-2 font-mono text-[11px] text-gray-800 dark:bg-gray-900/60 dark:text-gray-200"
+                  className="mt-1 overflow-x-auto rounded bg-gray-50 p-2 font-mono text-2xs text-gray-800 dark:bg-gray-900/60 dark:text-gray-200"
                 >
                   {selectedValue.value}
                 </pre>
@@ -1150,12 +1150,12 @@ export function CatalogFormatDetailPanel({
 
               <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2">
                 <div className="min-w-0">
-                  <dt className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <dt className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Source location
                   </dt>
                   <dd
                     data-testid="catalog-format-detail-node-location"
-                    className="mt-0.5 break-words font-mono text-[11px] text-gray-700 dark:text-gray-300"
+                    className="mt-0.5 break-words font-mono text-2xs text-gray-700 dark:text-gray-300"
                   >
                     {sourceLocationText(selectedLocation) ??
                       'This analyzer recorded no source location for this construct.'}
@@ -1163,10 +1163,10 @@ export function CatalogFormatDetailPanel({
                 </div>
                 {selectedAttributes.map(([name, value]) => (
                   <div key={name} className="min-w-0">
-                    <dt className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <dt className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                       {name}
                     </dt>
-                    <dd className="mt-0.5 break-words font-mono text-[11px] text-gray-700 dark:text-gray-300">
+                    <dd className="mt-0.5 break-words font-mono text-2xs text-gray-700 dark:text-gray-300">
                       {value}
                     </dd>
                   </div>
@@ -1202,7 +1202,7 @@ export function CatalogFormatDetailPanel({
                         `${analysisKindLabel(selectedNode.kind)} ${analysisNodeLabel(selectedNode)}`,
                       )
                     }
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-2xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
                     <Code className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
                     {selectedRange !== null
@@ -1214,7 +1214,7 @@ export function CatalogFormatDetailPanel({
                 ) : (
                   <p
                     data-testid="catalog-format-detail-no-source-jump"
-                    className="text-[11px] text-gray-500 dark:text-gray-400"
+                    className="text-2xs text-gray-500 dark:text-gray-400"
                   >
                     {!sourceAvailable
                       ? 'The raw source was not captured at import, so there is nothing to open.'

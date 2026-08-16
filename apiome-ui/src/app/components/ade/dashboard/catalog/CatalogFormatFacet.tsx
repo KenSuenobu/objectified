@@ -95,7 +95,7 @@ export function CatalogFormatFacet({ options, selected, onChange }: CatalogForma
         <Filter className="h-3.5 w-3.5 shrink-0" aria-hidden />
         Format
         {activeCount > 0 ? (
-          <span className="ml-0.5 rounded-full bg-indigo-500 px-1.5 text-[10px] font-semibold leading-4 text-white">
+          <span className="ml-0.5 rounded-full bg-indigo-500 px-1.5 text-2xs font-semibold leading-4 text-white">
             {activeCount}
           </span>
         ) : null}
@@ -109,7 +109,7 @@ export function CatalogFormatFacet({ options, selected, onChange }: CatalogForma
           className="absolute right-0 top-full z-30 mt-1 max-h-72 w-56 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900"
         >
           <div className="flex items-center justify-between px-3 py-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <span className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Formats
             </span>
             {activeCount > 0 ? (
@@ -117,7 +117,7 @@ export function CatalogFormatFacet({ options, selected, onChange }: CatalogForma
                 type="button"
                 data-testid="catalog-format-clear"
                 onClick={() => onChange([])}
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
+                className="inline-flex items-center gap-1 text-2xs font-medium text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
               >
                 <X className="h-3 w-3" aria-hidden />
                 Clear

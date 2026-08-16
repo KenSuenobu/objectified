@@ -25,6 +25,7 @@ import {
 } from '../MigrationContext';
 import { Play, AlertCircle, BookOpen } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -465,7 +466,7 @@ export default function MigrationRuleDialog({
                     readOnly: false,
                     minimap: { enabled: false },
                     scrollBeyondLastLine: false,
-                    fontSize: 13,
+                    fontSize: CODE_EDITOR_FONT_SIZE,
                     wordWrap: 'on',
                     lineNumbers: 'on',
                   }}

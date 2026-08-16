@@ -178,7 +178,7 @@ function SpecCatalogTableRow({ spec }: { spec: SpecCatalogRow }) {
             {file}
           </span>
           {unresolved > 0 ? (
-            <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
+            <span className="mt-0.5 inline-flex items-center gap-1 text-2xs text-amber-600 dark:text-amber-400">
               <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
               {unresolved} unresolved external $ref{unresolved === 1 ? '' : 's'}
             </span>
@@ -192,7 +192,7 @@ function SpecCatalogTableRow({ spec }: { spec: SpecCatalogRow }) {
         >
           {spec.repository_full_name || '—'}
         </Link>
-        <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
+        <span className="mt-0.5 inline-flex items-center gap-1 text-2xs text-gray-400 dark:text-gray-500">
           <GitBranch className="h-3 w-3 shrink-0" aria-hidden />
           <span className="font-mono">{spec.branch}</span>
         </span>
@@ -200,7 +200,7 @@ function SpecCatalogTableRow({ spec }: { spec: SpecCatalogRow }) {
       <td className="px-6 py-3 align-middle">
         <span
           className={cn(
-            'inline-block whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium',
+            'inline-block whitespace-nowrap rounded px-2 py-0.5 text-2xs font-medium',
             repositoryFormatPillClass(spec.format)
           )}
         >
@@ -222,7 +222,7 @@ function SpecCatalogTableRow({ spec }: { spec: SpecCatalogRow }) {
       <td className="px-6 py-3 align-middle">
         <span
           className={cn(
-            'inline-block whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium',
+            'inline-block whitespace-nowrap rounded px-2 py-0.5 text-2xs font-medium',
             badge.className
           )}
           title={badge.title}

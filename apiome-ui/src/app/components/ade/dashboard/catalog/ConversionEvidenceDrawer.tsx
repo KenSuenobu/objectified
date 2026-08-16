@@ -65,7 +65,7 @@ export function StatusText({ presentation }: { presentation: StatusPresentation 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
+        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
         presentation.badgeClass,
       )}
     >
@@ -129,18 +129,18 @@ export function ConversionEvidenceDrawer({
           <StatusText presentation={presentation} />
           {row && row.severity !== 'info' && (
             <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase ${advisorySeverityPillClass(row.severity)}`}
+              className={`rounded-full px-1.5 py-0.5 text-2xs font-semibold uppercase ${advisorySeverityPillClass(row.severity)}`}
             >
               {row.severity}
             </span>
           )}
           {row && (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
               {CONVERSION_SCOPE_LABEL[row.scope]} evidence
             </span>
           )}
           {row && row.edgeCount > 1 && (
-            <span className="text-[10px] text-gray-500 dark:text-gray-400">
+            <span className="text-2xs text-gray-500 dark:text-gray-400">
               stands for {row.edgeCount.toLocaleString()} instances
             </span>
           )}
@@ -209,14 +209,14 @@ function DrawerBody({
           {categoryView && (
             <span
               data-testid="conversion-projection-category"
-              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${categoryView.badgeClass}`}
+              className={`rounded-full px-2 py-0.5 text-2xs font-semibold ${categoryView.badgeClass}`}
             >
               {categoryView.label}
             </span>
           )}
           {row.reason && (
             <span
-              className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
               data-testid="conversion-projection-reason"
             >
               {row.reason}
@@ -235,7 +235,7 @@ function DrawerBody({
       {finding && (
         <p
           data-testid="conversion-projection-finding"
-          className="rounded-md bg-white/60 p-2 text-[11px] text-gray-600 dark:bg-gray-900/40 dark:text-gray-300"
+          className="rounded-md bg-white/60 p-2 text-2xs text-gray-600 dark:bg-gray-900/40 dark:text-gray-300"
         >
           <span className="font-semibold text-gray-700 dark:text-gray-200">
             Fidelity finding ({finding.kind === 'checklist' ? 'checklist' : 'loss'}):
@@ -245,7 +245,7 @@ function DrawerBody({
       )}
 
       {/* Where — canonical object, source path/range, and OpenAPI JSON Pointer. */}
-      <dl className="space-y-1 text-[11px]">
+      <dl className="space-y-1 text-2xs">
         {(row.constructKey || row.canonicalKind) && (
           <div data-testid="conversion-projection-canonical">
             <dt className="inline font-medium text-gray-500 dark:text-gray-400">
@@ -291,7 +291,7 @@ function DrawerBody({
       {/* Evidence references — structured paths and ranges only, never source content. */}
       {row.conversionEdge.evidence.length > 0 && (
         <ul
-          className="space-y-0.5 rounded-md bg-gray-50 p-2 text-[11px] text-gray-600 dark:bg-gray-900/50 dark:text-gray-300"
+          className="space-y-0.5 rounded-md bg-gray-50 p-2 text-2xs text-gray-600 dark:bg-gray-900/50 dark:text-gray-300"
           data-testid="conversion-projection-evidence-refs"
         >
           {row.conversionEdge.evidence.slice(0, 5).map((ref) => {
@@ -315,7 +315,7 @@ function DrawerBody({
           data-testid="conversion-projection-remediation"
           className="rounded-md border border-indigo-200 bg-white/60 p-2 dark:border-indigo-900 dark:bg-gray-900/40"
         >
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <div className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
             What you can do
           </div>
           {remediationText && <p className="mt-1">{remediationText}</p>}
@@ -335,7 +335,7 @@ function DrawerBody({
       {(toolVersions || summary) && (
         <p
           data-testid="conversion-projection-provenance"
-          className="text-[10px] text-gray-500 dark:text-gray-400"
+          className="text-2xs text-gray-500 dark:text-gray-400"
         >
           {toolVersions ? `Evidence produced by ${toolVersions}` : 'Evidence'}
           {summary ? ` · snapshot ${summary.manifest_hash.slice(0, 12)}` : ''}.
@@ -380,7 +380,7 @@ function SafeDefaultForm({
 
   return (
     <div className="mt-1.5" data-testid="conversion-projection-safe-default">
-      <label className="flex flex-col gap-1 text-[11px] text-gray-600 dark:text-gray-300">
+      <label className="flex flex-col gap-1 text-2xs text-gray-600 dark:text-gray-300">
         {remediation.label}
         <input
           type="text"
@@ -392,7 +392,7 @@ function SafeDefaultForm({
           className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
         />
       </label>
-      <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-2xs text-gray-500 dark:text-gray-400">
         {remediation.description} Applying recomputes the fidelity report and this graph
         together and re-asks for acknowledgement; cancelling changes nothing.
       </p>
@@ -402,7 +402,7 @@ function SafeDefaultForm({
           data-testid="conversion-projection-safe-default-apply"
           disabled={recomputing || !dirty}
           onClick={() => onApply(applySafeDefault(currentDefaults, remediation.field, draft))}
-          className="flex items-center gap-1 rounded-md border border-indigo-300 px-2 py-1 text-[11px] font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+          className="flex items-center gap-1 rounded-md border border-indigo-300 px-2 py-1 text-2xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
         >
           {recomputing && <Loader2 className="h-3 w-3 motion-safe:animate-spin" aria-hidden />}
           {recomputing ? 'Recomputing…' : 'Apply & recompute'}
@@ -412,7 +412,7 @@ function SafeDefaultForm({
           data-testid="conversion-projection-safe-default-cancel"
           disabled={recomputing || !dirty}
           onClick={() => setDraft(applied)}
-          className="rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="rounded-md border border-gray-200 px-2 py-1 text-2xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           Cancel
         </button>

@@ -282,7 +282,7 @@ const Dashboard = () => {
                           {item.name}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5">
-                          <Badge variant="default" className="text-[10px] px-2 py-0">
+                          <Badge variant="default" className="text-2xs px-2 py-0">
                             {item.tenant_name}
                           </Badge>
                           <span className="text-xs text-gray-400 dark:text-gray-500">

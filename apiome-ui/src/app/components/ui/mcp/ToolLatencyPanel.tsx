@@ -51,7 +51,7 @@ const ERROR_RATE_TONE: Record<ReturnType<typeof mcpErrorRateKind>, string> = {
 function PercentileCell({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="text-right">
-      <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+      <div className="text-2xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
         {label}
       </div>
       <div className="tabular-nums text-gray-700 dark:text-gray-200">{mcpFormatMs(value)}</div>
@@ -67,7 +67,7 @@ function SlowestRow({ tool }: { tool: McpToolLatency }) {
         <div className="truncate font-medium text-gray-900 dark:text-gray-100" title={tool.tool_name}>
           {tool.tool_name}
         </div>
-        <div className="text-[11px] text-gray-500 dark:text-gray-400">
+        <div className="text-2xs text-gray-500 dark:text-gray-400">
           <span className="tabular-nums">{tool.call_count}</span>{' '}
           {tool.call_count === 1 ? 'call' : 'calls'}
         </div>
@@ -89,7 +89,7 @@ function FlakiestRow({ tool }: { tool: McpToolLatency }) {
         <div className="truncate font-medium text-gray-900 dark:text-gray-100" title={tool.tool_name}>
           {tool.tool_name}
         </div>
-        <div className="text-[11px] text-gray-500 dark:text-gray-400">
+        <div className="text-2xs text-gray-500 dark:text-gray-400">
           <span className="tabular-nums">{tool.error_count}</span> of{' '}
           <span className="tabular-nums">{tool.call_count}</span> errored
         </div>
@@ -190,7 +190,7 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
             title="Tool-call latency distribution — number of calls per latency range"
             className="h-28"
           />
-          <div className="flex flex-wrap justify-between gap-x-2 text-[10px] text-gray-400 dark:text-gray-500">
+          <div className="flex flex-wrap justify-between gap-x-2 text-2xs text-gray-400 dark:text-gray-500">
             {distribution.map((bar) => (
               <span key={bar.label} className="tabular-nums">
                 {bar.label}

@@ -119,7 +119,7 @@ export function McpSectionTabs({
             {tab.label}
             {tab.pill ? (
               <span
-                className="inline-flex shrink-0 items-center rounded-md border border-amber-200/90 bg-amber-50 px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-amber-900 dark:border-amber-700/80 dark:bg-amber-950/60 dark:text-amber-100"
+                className="inline-flex shrink-0 items-center rounded-md border border-amber-200/90 bg-amber-50 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-amber-900 dark:border-amber-700/80 dark:bg-amber-950/60 dark:text-amber-100"
                 title="Feature in preview"
               >
                 {tab.pill}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link2, Braces, Code2 } from 'lucide-react';
+import { CANVAS_TYPE_SCALE, CANVAS_ICON_SIZE } from './canvas-theme';
 
 /**
  * ContentTypeBadge — compact pill describing a body's content-type binding.
@@ -53,7 +54,7 @@ export const ContentTypeBadge: React.FC<ContentTypeBadgeProps> = ({
         gap: '5px',
         padding: '2px 8px',
         borderRadius: '10px',
-        fontSize: '10px',
+        fontSize: CANVAS_TYPE_SCALE.caps,
         fontWeight: 600,
         letterSpacing: '-0.01em',
         background: `color-mix(in srgb, ${accent} 12%, var(--node-surface))`,
@@ -69,15 +70,15 @@ export const ContentTypeBadge: React.FC<ContentTypeBadgeProps> = ({
       title={isReference ? `$ref -> ${reference!.className}` : `inline · ${propertyCount ?? 0} props`}
     >
       {isReference ? (
-        <Link2 size={10} strokeWidth={2.5} />
+        <Link2 size={CANVAS_ICON_SIZE.caps} strokeWidth={2.5} />
       ) : (
-        <Braces size={10} strokeWidth={2.5} />
+        <Braces size={CANVAS_ICON_SIZE.caps} strokeWidth={2.5} />
       )}
       {isReference ? (
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{reference!.className}</span>
       ) : (
         <>
-          <Code2 size={9} strokeWidth={2.5} />
+          <Code2 size={CANVAS_ICON_SIZE.micro} strokeWidth={2.5} />
           <span>{propertyCount ?? 0} props</span>
         </>
       )}

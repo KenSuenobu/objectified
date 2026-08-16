@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { openRuleDialogRef } from '../openRuleDialogRef';
 import { accentVar } from '../../../components/ade/canvas/canvas-theme';
+import { CANVAS_TYPE_SCALE } from '@/app/components/ade/canvas/canvas-theme';
 
 export interface MigrationRuleNodeData {
   ruleKey: string;
@@ -79,7 +80,7 @@ function MigrationRuleNode(props: NodeProps) {
           alignItems: 'center',
           justifyContent: 'center',
           padding: '0 8px',
-          fontSize: '11px',
+          fontSize: CANVAS_TYPE_SCALE.meta,
           fontWeight: 500,
           color: 'var(--node-text)',
           background: 'transparent',

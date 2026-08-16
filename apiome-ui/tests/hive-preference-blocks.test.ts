@@ -51,11 +51,20 @@ function rule(prelude: string): CssRule {
 /** Declarations of the rule with that prelude. */
 const declarationsOf = (prelude: string) => parseDeclarations(rule(prelude).body);
 
-/** A length in `px`, as a number. */
+/**
+ * A `px` or `rem` length, as the number of CSS pixels it renders at.
+ *
+ * The metric tokens became `rem` in HIVE-1.6 (#5279) so the font-size preference reaches
+ * control and row heights too. What the roadmap commits to is unchanged — it is the size
+ * a reader on the default 16 px root actually sees — so the assertions below still read in
+ * pixels, and this is the one place that knows the two spellings mean the same thing.
+ */
+const ROOT_FONT_SIZE_PX = 16;
+
 function pixels(value: string | undefined): number {
-  const match = /^(-?\d+(?:\.\d+)?)px$/.exec(value ?? '');
-  if (!match) throw new Error(`Not a pixel length: ${value}`);
-  return Number(match[1]);
+  const match = /^(-?\d+(?:\.\d+)?)(px|rem)$/.exec(value ?? '');
+  if (!match) throw new Error(`Not a px or rem length: ${value}`);
+  return Number(match[1]) * (match[2] === 'rem' ? ROOT_FONT_SIZE_PX : 1);
 }
 
 describe('density is a spacing swap and nothing else', () => {

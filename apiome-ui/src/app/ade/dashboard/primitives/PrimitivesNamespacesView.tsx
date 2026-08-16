@@ -73,13 +73,13 @@ export function describeNamespaceRemoval(namespace: TypeNamespaceCollection): st
 function ScopeBadge({ scope }: { scope: 'system' | 'tenant' }) {
   if (scope === 'system') {
     return (
-      <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
+      <span className="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
         System · core
       </span>
     );
   }
   return (
-    <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+    <span className="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
       Tenant
     </span>
   );
@@ -184,7 +184,7 @@ export default function PrimitivesNamespacesView({
             <span className="font-mono">std/*</span> — core system types curated by the platform; visible to
             all tenants; immutable except by platform governance.
           </p>
-          <div className="mt-3 rounded-md bg-white/70 dark:bg-black/30 border border-teal-200/60 dark:border-teal-800/40 px-2.5 py-1.5 font-mono text-[11px] text-teal-700 dark:text-teal-300">
+          <div className="mt-3 rounded-md bg-white/70 dark:bg-black/30 border border-teal-200/60 dark:border-teal-800/40 px-2.5 py-1.5 font-mono text-2xs text-teal-700 dark:text-teal-300">
             api.apiome.dev/types/std/
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function PrimitivesNamespacesView({
             <span className="font-mono">tenant/&lt;slug&gt;/*</span> — a tenant&apos;s private types; can
             reference core types but are isolated from other tenants.
           </p>
-          <div className="mt-3 rounded-md bg-white/70 dark:bg-black/30 border border-indigo-200/60 dark:border-indigo-800/40 px-2.5 py-1.5 font-mono text-[11px] text-indigo-700 dark:text-indigo-300">
+          <div className="mt-3 rounded-md bg-white/70 dark:bg-black/30 border border-indigo-200/60 dark:border-indigo-800/40 px-2.5 py-1.5 font-mono text-2xs text-indigo-700 dark:text-indigo-300">
             api.apiome.dev/types/tenant/&lt;slug&gt;/
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function PrimitivesNamespacesView({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50/60 dark:bg-gray-900/40">
+              <thead className="text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50/60 dark:bg-gray-900/40">
                 <tr>
                   <th className="text-left px-5 py-2 font-semibold">Namespace</th>
                   <th className="text-left px-3 py-2 font-semibold">Scope</th>
@@ -259,7 +259,7 @@ export default function PrimitivesNamespacesView({
                       <td className="px-5 py-3 font-mono font-medium text-gray-900 dark:text-white">
                         {ns.namespace}
                         {unresolved > 0 && (
-                          <span className="ml-2 text-[9px] px-1 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                          <span className="ml-2 text-2xs px-1 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
                             {unresolved} unresolved
                           </span>
                         )}
@@ -267,7 +267,7 @@ export default function PrimitivesNamespacesView({
                       <td className="px-3 py-3">
                         <ScopeBadge scope={ns.scope} />
                       </td>
-                      <td className="px-3 py-3 font-mono text-[11px] text-gray-500 dark:text-gray-400">
+                      <td className="px-3 py-3 font-mono text-2xs text-gray-500 dark:text-gray-400">
                         {shortBaseUri(ns.base_uri)}
                       </td>
                       <td className="px-3 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">
@@ -352,9 +352,9 @@ export default function PrimitivesNamespacesView({
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
                   Tenant namespace{' '}
-                  <span className="font-mono text-[11px] text-gray-500">(tenant/&lt;slug&gt;/…)</span>
+                  <span className="font-mono text-2xs text-gray-500">(tenant/&lt;slug&gt;/…)</span>
                 </p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="text-2xs text-gray-500 dark:text-gray-400">
                   Most specific — the tenant&apos;s own private types win.
                 </p>
               </div>
@@ -365,7 +365,7 @@ export default function PrimitivesNamespacesView({
               </span>
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">Imported vendor namespaces</p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="text-2xs text-gray-500 dark:text-gray-400">
                   Vendor schemas imported for that tenant <span className="font-mono">(vendor/…)</span>.
                 </p>
               </div>
@@ -376,9 +376,9 @@ export default function PrimitivesNamespacesView({
               </span>
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  System core <span className="font-mono text-[11px] text-gray-500">(std/…)</span>
+                  System core <span className="font-mono text-2xs text-gray-500">(std/…)</span>
                 </p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="text-2xs text-gray-500 dark:text-gray-400">
                   Shared fallback available to every tenant.
                 </p>
               </div>
@@ -386,7 +386,7 @@ export default function PrimitivesNamespacesView({
           </ol>
           <div className="mt-4 rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/15 px-3 py-2.5 flex gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-            <p className="text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
+            <p className="text-2xs text-amber-800 dark:text-amber-200 leading-relaxed">
               Core types may be referenced by tenant types; tenant types are never visible across tenants
               or from core.
             </p>
@@ -403,7 +403,7 @@ export default function PrimitivesNamespacesView({
             Promote a vetted tenant type into <span className="font-mono">std/*</span> so all tenants can use it.
           </p>
           <div className="rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 p-3 mb-4">
-            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Example</p>
+            <p className="text-2xs uppercase tracking-wider text-gray-500 mb-2">Example</p>
             <div className="flex items-center gap-2 font-mono text-xs flex-wrap">
               <span className="px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
                 tenant/acme/v1/types/money
@@ -419,7 +419,7 @@ export default function PrimitivesNamespacesView({
               <ArrowUpCircle className="w-4 h-4 mr-2" />
               Request promotion
             </Button>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <p className="text-2xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
               <Lock className="w-3.5 h-3.5" /> requires platform admin approval
             </p>
           </div>

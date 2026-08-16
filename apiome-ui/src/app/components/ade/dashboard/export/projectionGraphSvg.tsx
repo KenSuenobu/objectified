@@ -23,6 +23,7 @@
 
 import type { PlacedBox, PlacedEntry, StatusPresentation } from './projectionGraph';
 import { statusPresentation } from './projectionGraph';
+import { SVG_TEXT_SIZE } from '../../../ui/svgTypography';
 
 /**
  * Truncate a label to what fits one node box. The full text always remains available in
@@ -44,7 +45,8 @@ export function ProjectionColumnHeading({ x, label }: { x: number; label: string
       x={x}
       y={10}
       aria-hidden
-      className="fill-gray-400 text-[10px] font-semibold uppercase tracking-wide dark:fill-gray-500"
+      fontSize={SVG_TEXT_SIZE.label}
+      className="fill-gray-400 font-semibold uppercase tracking-wide dark:fill-gray-500"
     >
       {label}
     </text>
@@ -123,7 +125,8 @@ export function ProjectionNodeBox({
       <text
         x={box.x + 8}
         y={box.y + box.height / 2 + 3.5}
-        className={`${mono ? 'font-mono' : ''} text-[11px] ${
+        fontSize={SVG_TEXT_SIZE.body}
+        className={`${mono ? 'font-mono' : ''} ${
           muted ? 'fill-gray-500 dark:fill-gray-400' : 'fill-gray-900 dark:fill-gray-100'
         }`}
       >
@@ -166,7 +169,8 @@ export function ProjectionOutcomeBox({
       <text
         x={box.x + 8}
         y={box.y + (location ? 12.5 : box.height / 2 + 3.5)}
-        className="fill-gray-900 text-[10px] font-semibold dark:fill-gray-100"
+        fontSize={SVG_TEXT_SIZE.label}
+        className="fill-gray-900 font-semibold dark:fill-gray-100"
       >
         {fitProjectionLabel(`${presentation.symbol} ${presentation.label}`)}
       </text>
@@ -174,7 +178,8 @@ export function ProjectionOutcomeBox({
         <text
           x={box.x + 8}
           y={box.y + 24}
-          className="fill-gray-500 font-mono text-[9px] dark:fill-gray-400"
+          fontSize={SVG_TEXT_SIZE.tick}
+          className="fill-gray-500 font-mono dark:fill-gray-400"
         >
           {fitProjectionLabel(location, 32)}
         </text>

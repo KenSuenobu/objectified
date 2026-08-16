@@ -60,7 +60,7 @@ function OffenderRow({ offender }: { offender: McpDocOffender }) {
         <span className="truncate font-mono text-xs text-gray-800 dark:text-gray-200" title={offender.displayName}>
           {offender.displayName}
         </span>
-        <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+        <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300">
           {kindLabel(offender.itemType)}
         </span>
       </span>

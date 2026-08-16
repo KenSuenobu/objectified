@@ -157,7 +157,7 @@ export default function AuditClient() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="border-b border-slate-200 dark:border-slate-800 text-left text-[11px] uppercase tracking-wider text-gray-400">
+                  <thead className="border-b border-slate-200 dark:border-slate-800 text-left text-2xs uppercase tracking-wider text-gray-400">
                     <tr>
                       <th className="px-4 py-3 font-semibold">When</th>
                       <th className="px-3 py-3 font-semibold">Actor</th>
@@ -191,7 +191,7 @@ export default function AuditClient() {
           </div>
         )}
 
-        <p className="text-[11px] text-gray-400 mt-3 flex items-center gap-1.5">
+        <p className="text-2xs text-gray-400 mt-3 flex items-center gap-1.5">
           <Lock className="w-3.5 h-3.5" />
           Entries are append-only and hash-chained; they cannot be edited or deleted, satisfying
           SOC 2 / ISO 27001 access-review evidence.

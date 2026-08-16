@@ -389,32 +389,32 @@ export function BenchSuitesPanel({
                   <span className="min-w-0 flex-1 truncate text-sm text-gray-800 dark:text-gray-100">
                     {suite.name}
                   </span>
-                  <span className="shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500">
+                  <span className="shrink-0 text-2xs tabular-nums text-gray-400 dark:text-gray-500">
                     {suite.payload_count} payloads · v{suite.suite_version}
                   </span>
                   {latest ? (
                     latest.status === 'error' ? (
                       <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${verdictToneClass('error')}`}
+                        className={`rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider ${verdictToneClass('error')}`}
                       >
                         last run errored
                       </span>
                     ) : (
                       <span
                         data-testid={`suite-latest-${suite.id}`}
-                        className="tabular-nums text-[11px] text-gray-500 dark:text-gray-400"
+                        className="tabular-nums text-2xs text-gray-500 dark:text-gray-400"
                       >
                         {latest.passed}/{latest.total} passed
                         {latest.resolved_version_label ? ` @ ${latest.resolved_version_label}` : ''}
                       </span>
                     )
                   ) : (
-                    <span className="text-[11px] text-gray-400 dark:text-gray-500">never run</span>
+                    <span className="text-2xs text-gray-400 dark:text-gray-500">never run</span>
                   )}
                   {latest?.regression ? (
                     <span
                       data-testid={`suite-regression-${suite.id}`}
-                      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${verdictToneClass('failed')}`}
+                      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider ${verdictToneClass('failed')}`}
                     >
                       <TrendingDown className="h-3 w-3" aria-hidden /> regression
                     </span>

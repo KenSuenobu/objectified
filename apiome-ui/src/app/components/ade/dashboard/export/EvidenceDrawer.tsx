@@ -80,13 +80,13 @@ export function EvidenceDrawer({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${p.badgeClass}`}>
+          <span className={`rounded-full px-2 py-0.5 text-2xs font-semibold ${p.badgeClass}`}>
             <span aria-hidden>{p.symbol} </span>
             {p.label}
           </span>
           {entry.kind === 'row' && entry.row && entry.row.severity !== 'info' && (
             <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase ${advisorySeverityPillClass(entry.row.severity)}`}
+              className={`rounded-full px-1.5 py-0.5 text-2xs font-semibold uppercase ${advisorySeverityPillClass(entry.row.severity)}`}
             >
               {entry.row.severity}
             </span>
@@ -177,13 +177,13 @@ function EvidenceDrawerBody({
           {categoryView && (
             <span
               data-testid="projection-detail-category"
-              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${categoryView.badgeClass}`}
+              className={`rounded-full px-2 py-0.5 text-2xs font-semibold ${categoryView.badgeClass}`}
             >
               {categoryView.label}
             </span>
           )}
           {row.reason && isKnownReasonCode(row.reason) && (
-            <span className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-[10px] text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+            <span className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:bg-gray-700 dark:text-gray-200">
               {row.reason}
             </span>
           )}
@@ -257,7 +257,7 @@ function EvidenceDrawerBody({
           data-testid="projection-detail-remediation"
           className="rounded-md border border-indigo-200 bg-white/60 p-2 dark:border-indigo-900 dark:bg-gray-900/40"
         >
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <div className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
             What you can do
           </div>
           {remediationText && (
@@ -269,7 +269,7 @@ function EvidenceDrawerBody({
                 type="button"
                 data-testid={`projection-detail-action-${action.kind}`}
                 onClick={action.kind === 'change-target' ? onChangeTarget : onChangeOptions}
-                className="rounded-md border border-indigo-300 px-2 py-1 text-[11px] font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                className="rounded-md border border-indigo-300 px-2 py-1 text-2xs font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
               >
                 {action.label}
               </button>
@@ -283,7 +283,7 @@ function EvidenceDrawerBody({
       {provenanceParts.length > 0 && (
         <p
           data-testid="projection-detail-provenance"
-          className="text-[10px] text-gray-500 dark:text-gray-400"
+          className="text-2xs text-gray-500 dark:text-gray-400"
         >
           Evidence produced by {provenanceParts.join(' · ')}.
         </p>

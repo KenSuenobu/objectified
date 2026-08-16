@@ -75,7 +75,7 @@ function StatusBadge({ status, count }: { status: string; count?: number }) {
       data-testid="export-manifest-status"
       data-status={status}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
+        'inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
         STATUS_TONE[status] ?? STATUS_TONE['not-applicable'],
       )}
     >
@@ -411,7 +411,7 @@ export function ExportManifestPanel({
                 {row.label}
               </span>
               {row.count !== null ? (
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
                   {row.count.toLocaleString()}
                 </span>
               ) : null}
@@ -420,7 +420,7 @@ export function ExportManifestPanel({
             <>
               <span
                 className={cn(
-                  'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider',
+                  'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider',
                   KIND_TONE[row.entity!.entity_kind],
                 )}
               >
@@ -444,14 +444,14 @@ export function ExportManifestPanel({
                        Enter on the row already does — activation reveals the location. */
                     <span
                       data-testid="export-manifest-location"
-                      className="font-mono text-[10px] tabular-nums text-emerald-600 underline decoration-dotted underline-offset-2 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+                      className="font-mono text-2xs tabular-nums text-emerald-600 underline decoration-dotted underline-offset-2 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
                     >
                       {locationLabel}
                     </span>
                   ) : (
                     <span
                       data-testid="export-manifest-location"
-                      className="font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500"
+                      className="font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
                     >
                       {locationLabel}
                     </span>
@@ -476,12 +476,12 @@ export function ExportManifestPanel({
           Artifact entities
         </h3>
         {virtualized && (
-          <span className="text-[10px] font-normal text-gray-500 dark:text-gray-400">windowed</span>
+          <span className="text-2xs font-normal text-gray-500 dark:text-gray-400">windowed</span>
         )}
         {page ? (
           <span
             data-testid="export-manifest-summary"
-            className="ml-auto flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-400"
+            className="ml-auto flex items-center gap-1.5 text-2xs text-gray-500 dark:text-gray-400"
           >
             <span className="tabular-nums">{page.total_entities.toLocaleString()} entities</span>
             {droppedCount > 0 ? <StatusBadge status="dropped" count={droppedCount} /> : null}
@@ -540,7 +540,7 @@ export function ExportManifestPanel({
             {filtering ? (
               <span
                 data-testid="export-manifest-filter-count"
-                className="shrink-0 font-mono text-[10px] tabular-nums text-gray-400 dark:text-gray-500"
+                className="shrink-0 font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
               >
                 {entityRowCount} of {entities.length}
               </span>
@@ -618,25 +618,25 @@ export function ExportManifestPanel({
                 {selectedEntity.reason ? (
                   <span
                     data-testid="export-manifest-reason"
-                    className="rounded bg-rose-50 px-1.5 py-0.5 font-mono text-[10px] text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                    className="rounded bg-rose-50 px-1.5 py-0.5 font-mono text-2xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
                   >
                     {selectedEntity.reason}
                   </span>
                 ) : null}
                 {!selectedEntity.emitted ? (
-                  <span className="text-[10px] font-semibold uppercase text-rose-600 dark:text-rose-400">
+                  <span className="text-2xs font-semibold uppercase text-rose-600 dark:text-rose-400">
                     not in artifact
                   </span>
                 ) : null}
               </div>
               <p className="mt-1 text-gray-600 dark:text-gray-300">{selectedEntity.detail}</p>
               {selectedEntity.target_mapping ? (
-                <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
                   Mapped as: {selectedEntity.target_mapping}
                 </p>
               ) : null}
               {selectedEntity.location ? (
-                <p className="mt-0.5 font-mono text-[11px] tabular-nums text-gray-500 dark:text-gray-400">
+                <p className="mt-0.5 font-mono text-2xs tabular-nums text-gray-500 dark:text-gray-400">
                   {normalizedLocationFile(selectedEntity)}
                   {selectedEntity.location.line != null ? `:${selectedEntity.location.line}` : ''}
                   {selectedEntity.location.pointer ? ` · ${selectedEntity.location.pointer}` : ''}

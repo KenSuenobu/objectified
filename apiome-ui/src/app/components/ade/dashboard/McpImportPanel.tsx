@@ -85,7 +85,7 @@ export default function McpImportPanel({ form, onChange }: McpImportPanelProps) 
         <ol className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-indigo-100 px-4 py-2.5 dark:border-indigo-900/60">
           {IMPORT_STEPS.map((step, index) => (
             <li key={step.label} className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[0.65rem] font-semibold text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-2xs font-semibold text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">
                 {index + 1}
               </span>
               <step.icon className="h-3.5 w-3.5 text-indigo-500" aria-hidden />

@@ -289,14 +289,14 @@ function SurfaceTile({
         >
           <meta.Icon className="h-4 w-4" />
         </span>
-        <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
           {meta.label}
         </span>
       </div>
       <span className="mt-2 font-mono text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
         {captured ? value : '—'}
       </span>
-      <span className="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">
+      <span className="mt-0.5 text-2xs text-gray-400 dark:text-gray-500">
         {captured
           ? percent !== null
             ? `${percent}% of surface`
@@ -331,7 +331,7 @@ function CoverageMeter({
       className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
           {label}
         </span>
         <span className="font-mono text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
@@ -345,7 +345,7 @@ function CoverageMeter({
           style={{ width: `${percent ?? 0}%` }}
         />
       </div>
-      <p className="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+      <p className="mt-1.5 text-2xs text-gray-400 dark:text-gray-500">
         {percent !== null ? `${percent}% ${caption}` : `No fields to measure`}
       </p>
     </div>
@@ -365,7 +365,7 @@ function StatusChip({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium',
+        'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium',
         tone === 'positive' &&
           'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
         tone === 'accent' &&
@@ -434,7 +434,7 @@ function PipelineStage({
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex flex-wrap items-baseline gap-x-2">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h3>
-          <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+          <span className="text-2xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
             Step {step}
           </span>
         </div>
@@ -449,7 +449,7 @@ function PipelineStage({
 function StageFact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <dt className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
         {label}
       </dt>
       <dd className="mt-0.5 min-w-0 text-sm text-gray-800 dark:text-gray-200">{children}</dd>
@@ -746,15 +746,15 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
                   {item.name}
                 </h1>
                 {isDeleted ? (
-                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
                     Deleted
                   </span>
                 ) : !item.enabled ? (
-                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                     Disabled
                   </span>
                 ) : (
-                  <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                     Active
                   </span>
                 )}
@@ -778,7 +778,7 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
             {/* Quality + lint orbs (open the shared dialog). */}
             <div className="flex shrink-0 items-start gap-4">
               <div className="text-center">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <p className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Quality
                 </p>
                 {qualityValue != null ? (
@@ -802,7 +802,7 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
                 )}
               </div>
               <div className="text-center">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <p className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Lint
                 </p>
                 {lintLetter ? (
@@ -1126,7 +1126,7 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
               </div>
               {tagDistribution.length > 0 ? (
                 <div className="mt-4">
-                  <h3 className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <h3 className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Entity kinds
                   </h3>
                   <div
@@ -1137,7 +1137,7 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
                       <span
                         key={row.tag}
                         className={cn(
-                          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
+                          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-2xs font-bold uppercase tracking-wider',
                           parsedTagToneClass(row.tag),
                         )}
                       >

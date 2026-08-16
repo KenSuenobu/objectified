@@ -50,7 +50,7 @@ export function ProblemsPanel({ problems, selectedId, onSelect, className }: Pro
         className,
       )}
     >
-      <div className="sticky top-0 border-b border-gray-200 bg-gray-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:bg-gray-800/90 dark:text-gray-400">
+      <div className="sticky top-0 border-b border-gray-200 bg-gray-50 px-3 py-1.5 text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:bg-gray-800/90 dark:text-gray-400">
         Problems
         <span className="ml-1.5 tabular-nums" data-testid="verify-problems-count">
           {problems.length}

@@ -35,7 +35,7 @@ const GLYPH_SIZES: Record<GradeGlyphSize, { box: string; letter: string; score: 
 
 /** Gauge (ring) diameter per size. */
 const GAUGE_SIZES: Record<GradeGlyphSize, { box: string; letter: string; score: string }> = {
-  sm: { box: 'h-16 w-16', letter: 'text-xl', score: 'text-[0.625rem]' },
+  sm: { box: 'h-16 w-16', letter: 'text-xl', score: 'text-2xs' },
   md: { box: 'h-24 w-24', letter: 'text-3xl', score: 'text-xs' },
   lg: { box: 'h-32 w-32', letter: 'text-4xl', score: 'text-xs' },
 };
