@@ -373,8 +373,6 @@ const PublishedVersions = ({
             title="No Matching Versions"
             description="No published versions match your search query."
             variant="compact"
-            showOrbs={false}
-            iconContainerClassName="from-gray-400 to-gray-500 shadow-gray-500/30"
           />
         ) : (
           <div className={dashboardTableWrapClass}>

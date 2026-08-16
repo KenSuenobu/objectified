@@ -3,10 +3,10 @@
 import { useAuthSession } from '@lib/auth/session-client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Sun, Download, Lock, Package, ArrowLeft } from 'lucide-react';
+import { Sun, Download, Package, ArrowLeft } from 'lucide-react';
 import { Button } from '../../../../components/ui/Button';
 import { LoadingState } from '../../../../components/ui/LoadingState';
-import { EmptyState } from '../../../../components/ui/EmptyState';
+import { EmptyState, GatedState } from '../../../../components/ui/EmptyState';
 import { Badge } from '../../../../components/ui/Badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/Select';
 import { Alert } from '../../../../components/ui/Alert';
@@ -170,18 +170,7 @@ export default function SunsetTimelinePage() {
   if (!currentTenantId) {
     return (
       <div className="p-6 max-w-3xl mx-auto">
-        <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-6 flex gap-4">
-          <Lock className="h-8 w-8 text-amber-600 flex-shrink-0" />
-          <div>
-            <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-100">No tenant selected</h2>
-            <p className="text-sm text-amber-800 dark:text-amber-200 mt-1">
-              Select a tenant to see deprecation and sunset events for your projects.
-            </p>
-            <Button asChild className="mt-4">
-              <a href="/ade/dashboard/tenants">Go to Tenants</a>
-            </Button>
-          </div>
-        </div>
+        <GatedState description="Deprecation and sunset dates belong to one workspace." />
       </div>
     );
   }
@@ -266,8 +255,6 @@ export default function SunsetTimelinePage() {
               title="No deprecation or sunset entries"
               description="Mark revisions as deprecated or set a sunset date on revision metadata to see them here."
               variant="compact"
-              showOrbs={false}
-              iconContainerClassName="from-amber-500 to-orange-600 shadow-amber-500/30"
             />
           </div>
         </div>

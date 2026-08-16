@@ -388,7 +388,6 @@ export function VersionChangeReportPanel({
         icon={<FileText className="h-10 w-10" />}
         title="Select a project"
         description="Choose a project to work with publication change reports."
-        iconContainerClassName="from-slate-500 to-gray-600 shadow-slate-500/30"
       />
     );
   }
@@ -400,7 +399,6 @@ export function VersionChangeReportPanel({
           icon={<FileText className="h-10 w-10" />}
           title="No published revisions"
           description="Publish a schema revision first. Change reports are generated when a version is published (CR-04)."
-          iconContainerClassName="from-slate-500 to-gray-600 shadow-slate-500/30"
         />
       </div>
     );

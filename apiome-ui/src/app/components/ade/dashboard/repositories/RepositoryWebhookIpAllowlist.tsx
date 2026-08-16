@@ -34,6 +34,7 @@ import { toast } from 'sonner';
 import { useAuthSession } from '@lib/auth/session-client';
 import { cn } from '@lib/utils';
 import { Button } from '@/app/components/ui/Button';
+import { GatedState } from '@/app/components/ui/EmptyState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
 import {
   dashboardContentStackClass,
@@ -369,20 +370,7 @@ export function RepositoryWebhookIpAllowlist() {
   if (!currentTenantId) {
     return (
       <main className={dashboardMainClass}>
-        <div className={cn(dashboardPanelPaddedClass, TONE_PANEL_CLASSES.warn)}>
-          <h2 className="text-sm font-semibold text-amber-900 dark:text-amber-200">
-            No tenant selected
-          </h2>
-          <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
-            The allowlist is scoped to one workspace. Choose a tenant to continue.
-          </p>
-          <Link
-            href="/ade/dashboard/tenants"
-            className="mt-3 inline-block text-sm font-medium text-amber-900 underline dark:text-amber-200"
-          >
-            Go to tenants
-          </Link>
-        </div>
+        <GatedState description="The webhook allowlist is scoped to one workspace." />
       </main>
     );
   }

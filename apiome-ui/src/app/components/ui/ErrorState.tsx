@@ -1,92 +1,175 @@
 'use client';
 
 import * as React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+
 import { cn } from '../../../../lib/utils';
+import { Alert, AlertDescription, AlertTitle } from './Alert';
 import { Button } from './Button';
+import { EmptyState, type EmptyStateProps, type EmptyStateVariant } from './EmptyState';
 
-type ErrorStateVariant = 'default' | 'compact';
+/**
+ * ErrorState / ErrorBanner — "what happened, and what to do" (HIVE-2.5, #5284).
+ *
+ * Authority: `docs/mockups/DESIGN.md` §8 (*"Error = inline banner with retry"*), §10
+ * (*"Errors: what happened + what to do"*), and the mockups' two spellings of a failure:
+ * an `.empty--inline` with a Retry button where a panel would have been
+ * (`sources/mcp-analytics.html`), and a `.banner--danger` where the page still has content
+ * to show (`sources/mcp-servers.html`).
+ *
+ * Which of the two to use is the whole decision:
+ *
+ * | | Use | Because |
+ * | --- | --- | --- |
+ * | {@link ErrorState} | the thing that failed **is** the content | there is nothing behind it to look at |
+ * | {@link ErrorBanner} | the page still works, one part of it did not | a full-height error would hide what did load |
+ *
+ * ### Why it is built on `EmptyState`
+ *
+ * A failure and an emptiness are the same shape — art, a sentence, a way forward — and the
+ * app had them as two unrelated boxes: a red-tinted panel with a `red-100` icon tile on one
+ * side, a blue gradient orb on the other. Sharing the anatomy is what makes the four
+ * feedback surfaces read as one family; only the tone of the art differs, and it differs
+ * because DESIGN.md §2 will not let honey mean "something is wrong".
+ *
+ * ### Announcing it
+ *
+ * Both carry `role="alert"`, which is an assertive live region: a failure that arrives after
+ * the page has settled has to interrupt, or a screen-reader user is left waiting on content
+ * that is never coming.
+ */
 
-export interface ErrorStateProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Headline (default `Something went wrong`). */
+/** The retry label the whole app uses, so the verb is learnable. */
+const RETRY_LABEL = 'Try again';
+
+export interface ErrorStateProps
+  extends Omit<EmptyStateProps, 'title' | 'tone' | 'action' | 'brand'> {
+  /** What happened, in sentence case. Defaults to the app-wide phrasing. */
   title?: string;
-  /** Detail message — typically the caught error's message. */
+  /**
+   * Why, and what to do — typically the caught error's message.
+   *
+   * A message the reader cannot act on ("Request failed with status code 500") is worth
+   * pairing with one they can: *"The insight service is unavailable — try again in a
+   * moment."*
+   */
   description?: React.ReactNode;
-  /** Replace the default warning icon. */
+  /** Replace the warning glyph. */
   icon?: React.ReactNode;
-  /** When given, renders a "Try again" button wired to this handler. */
+  /** Renders the retry button, wired to this handler. */
   onRetry?: () => void;
-  /** Label for the retry button (default `Try again`). */
+  /** Label for the retry button. */
   retryLabel?: string;
-  /** Extra action rendered next to (or instead of) the retry button. */
+  /** A further way out — "Open the log", "Contact support". */
   action?: React.ReactNode;
-  variant?: ErrorStateVariant;
 }
 
 /**
- * `<ErrorState>` — the shared error placeholder that completes the empty / loading / error trio
- * alongside {@link EmptyState} and {@link LoadingState}. A red-tinted icon, a title + description,
- * and an optional retry affordance. Used wherever an MCP panel fails to load (endpoint, lint
- * report, versions). Token-driven: colors come from the shared red scale, no literals in consumers.
+ * The failure that replaces the content.
+ *
+ * @param props See {@link ErrorStateProps}; everything {@link EmptyState} takes passes through.
+ * @returns The state, in an assertive live region.
  */
 export const ErrorState = React.forwardRef<HTMLDivElement, ErrorStateProps>(
   (
     {
-      className,
       title = 'Something went wrong',
       description,
       icon,
       onRetry,
-      retryLabel = 'Try again',
+      retryLabel = RETRY_LABEL,
       action,
       variant = 'default',
       ...props
     },
-    ref,
-  ) => {
-    const isCompact = variant === 'compact';
-    return (
-      <div
-        ref={ref}
-        role="alert"
-        className={cn(
-          'rounded-2xl border border-red-200 bg-red-50/60 text-center dark:border-red-900/50 dark:bg-red-900/10',
-          isCompact ? 'p-8' : 'p-12',
-          className,
-        )}
-        {...props}
-      >
-        <div
-          className={cn(
-            'mx-auto mb-4 flex items-center justify-center rounded-2xl bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300',
-            isCompact ? 'h-12 w-12' : 'h-16 w-16',
-          )}
-        >
-          {icon ?? <AlertTriangle className={isCompact ? 'h-6 w-6' : 'h-8 w-8'} aria-hidden />}
-        </div>
-        <h3
-          className={cn(
-            'font-bold text-gray-900 dark:text-white',
-            isCompact ? 'mb-1 text-lg' : 'mb-2 text-xl',
-          )}
-        >
-          {title}
-        </h3>
-        {description ? (
-          <p className="mx-auto max-w-md text-sm text-gray-600 dark:text-gray-300">{description}</p>
-        ) : null}
-        {onRetry || action ? (
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+    ref
+  ) => (
+    <EmptyState
+      ref={ref}
+      role="alert"
+      tone="danger"
+      icon={icon ?? <AlertTriangle />}
+      title={title}
+      description={description}
+      variant={variant}
+      action={
+        onRetry ? (
+          <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            <RefreshCw aria-hidden />
+            {retryLabel}
+          </Button>
+        ) : (
+          action
+        )
+      }
+      secondaryAction={onRetry ? action : undefined}
+      {...props}
+    />
+  )
+);
+ErrorState.displayName = 'ErrorState';
+
+export interface ErrorBannerProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** What happened — a short clause, not a stack frame. */
+  title?: string;
+  /** What to do about it. */
+  description?: React.ReactNode;
+  /** Renders the retry button, wired to this handler. */
+  onRetry?: () => void;
+  /** Label for the retry button. */
+  retryLabel?: string;
+  /** A further action, rendered beside retry. */
+  action?: React.ReactNode;
+  /** Show a dismiss affordance, and what to do when it is pressed. */
+  onClose?: () => void;
+}
+
+/**
+ * The failure that sits above content that still works — DESIGN.md §8's "inline banner with
+ * retry".
+ *
+ * The pattern it replaces is a bare red string: `{error && <p className="text-red-600">
+ * {error}</p>}`, which says what happened and never what to do. Passing `onRetry` is
+ * therefore the normal case, not the decorated one.
+ *
+ * ```tsx
+ * {error ? <ErrorBanner title="Couldn't load projects." description={error} onRetry={reload} /> : null}
+ * ```
+ *
+ * @param props See {@link ErrorBannerProps}.
+ * @returns A danger-tinted `Alert` carrying the two sentences and the way out.
+ */
+export const ErrorBanner = React.forwardRef<HTMLDivElement, ErrorBannerProps>(
+  (
+    { className, title, description, onRetry, retryLabel = RETRY_LABEL, action, onClose, ...props },
+    ref
+  ) => (
+    <Alert
+      ref={ref}
+      variant="danger"
+      onClose={onClose}
+      className={cn(className)}
+      actions={
+        onRetry || action ? (
+          <>
             {onRetry ? (
               <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+                <RefreshCw aria-hidden />
                 {retryLabel}
               </Button>
             ) : null}
             {action}
-          </div>
-        ) : null}
-      </div>
-    );
-  },
+          </>
+        ) : undefined
+      }
+      {...props}
+    >
+      {title ? <AlertTitle>{title}</AlertTitle> : null}
+      {description ? <AlertDescription>{description}</AlertDescription> : null}
+    </Alert>
+  )
 );
-ErrorState.displayName = 'ErrorState';
+ErrorBanner.displayName = 'ErrorBanner';
+
+/** Re-exported so a caller can type an error surface without importing two modules. */
+export type { EmptyStateVariant as ErrorStateVariant };

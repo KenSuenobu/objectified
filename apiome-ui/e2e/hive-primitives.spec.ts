@@ -285,7 +285,11 @@ test.describe('Hive primitives gallery', () => {
       await page.evaluate(() =>
         document.documentElement.setAttribute('data-kbd-hints', 'off')
       );
-      await expect(page.getByRole('button', { name: 'New project' })).toBeVisible();
+      // Scoped to §Buttons: the §Feedback section (HIVE-2.5) shows the same verb on an
+      // empty state's primary action, which is the mockup's own copy in both places.
+      await expect(
+        page.locator('#buttons').getByRole('button', { name: 'New project' })
+      ).toBeVisible();
       await page.evaluate(() => document.documentElement.setAttribute('data-kbd-hints', 'on'));
     });
   });

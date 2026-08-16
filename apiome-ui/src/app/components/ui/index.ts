@@ -18,6 +18,12 @@ export * from './Collapsible';
 export * from './RadioGroup';
 export * from './FormField';
 export * from './Spinner';
+
+// The feedback set (HIVE-2.5, #5284): the four states every screen is in when it has no
+// content to draw — nothing yet, still coming, it broke, or you cannot see it from here.
+// `EmptyState` carries the honeycomb art, `GatedState` is its lock preset, `ErrorState` and
+// `ErrorBanner` are the two spellings of a failure, `LoadingState` is the live region, and
+// the `Skeleton*` presets are the shapes it holds space with.
 export * from './LoadingState';
 export * from './EmptyState';
 export * from './ErrorState';

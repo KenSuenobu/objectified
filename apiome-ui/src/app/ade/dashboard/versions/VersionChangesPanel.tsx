@@ -177,7 +177,6 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
         icon={<ScrollText className="h-10 w-10" />}
         title="No Published Versions"
         description="Publish a version to see its classified changelog here."
-        iconContainerClassName="from-indigo-500 to-purple-600 shadow-indigo-500/30"
       />
     );
   }

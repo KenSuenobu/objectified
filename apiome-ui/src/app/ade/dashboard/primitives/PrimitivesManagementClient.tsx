@@ -558,8 +558,6 @@ export default function PrimitivesManagementClient() {
                   title="No Primitives Found"
                   description="Try adjusting your filters or create a new primitive."
                   variant="compact"
-                  showOrbs={false}
-                  iconContainerClassName="h-14 w-14 from-gray-400 to-gray-500 shadow-gray-500/30"
                 />
               </div>
             ) : (

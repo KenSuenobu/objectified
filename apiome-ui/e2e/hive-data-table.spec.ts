@@ -238,7 +238,7 @@ test.describe('DataTable', () => {
       await setState(page, 'Loading');
 
       const table = page.getByRole('table', { name: 'Projects' });
-      await expect(table.locator('tbody .animate-pulse').first()).toBeVisible();
+      await expect(table.locator('tbody .hive-skeleton').first()).toBeVisible();
       // The header is still there: a loading table keeps the shape of what is coming.
       await expect(table.getByRole('columnheader', { name: /Project/ })).toBeVisible();
     });

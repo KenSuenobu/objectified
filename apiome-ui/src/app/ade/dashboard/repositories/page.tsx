@@ -19,7 +19,7 @@ import {
 import { Button, buttonVariants } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
 import { LoadingState } from "@/app/components/ui/LoadingState";
-import { EmptyState } from "@/app/components/ui/EmptyState";
+import { EmptyState, GatedState } from "@/app/components/ui/EmptyState";
 import {
   Select,
   SelectContent,
@@ -214,17 +214,7 @@ export default function RepositoriesPage() {
   if (!currentTenantId) {
     return (
       <div className={cn(dashboardMainClass, "max-w-3xl")}>
-        <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-8 dark:border-amber-700/50 dark:from-amber-900/20 dark:to-yellow-900/20">
-          <h2 className="mb-2 text-xl font-bold text-amber-900 dark:text-amber-100">
-            No tenant selected
-          </h2>
-          <p className="mb-4 text-amber-800 dark:text-amber-200">
-            Select a tenant to manage repositories.
-          </p>
-          <Link href="/ade/dashboard/tenants" className={cn(buttonVariants())}>
-            Go to Tenants
-          </Link>
-        </div>
+        <GatedState description="Repositories are registered against one workspace." />
       </div>
     );
   }

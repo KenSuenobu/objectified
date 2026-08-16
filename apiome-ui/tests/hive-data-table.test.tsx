@@ -614,13 +614,66 @@ describe('the states a list is in when it has no rows', () => {
 
     // Shaped per column, not one uniform bar: the name column is the widest, and the
     // actions column gets no bar at all because nothing loads into it.
-    const bars = container.querySelectorAll<HTMLElement>('tbody tr:first-child .animate-pulse');
+    const bars = container.querySelectorAll<HTMLElement>('tbody tr:first-child .hive-skeleton');
     expect(bars).toHaveLength(PROJECT_COLUMNS.length - 1);
     expect(bars[0]).toHaveStyle({ width: '9rem' });
     expect(bars[1]).toHaveStyle({ width: '60%' });
 
-    // Never a spinner in a table (DESIGN.md §8).
+    // Never a spinner in a table (DESIGN.md §8) — the ring carries `aria-label="Loading"`,
+    // so its absence from the accessibility tree is the assertion.
     expect(screen.queryByRole('status', { name: /loading/i })).not.toBeInTheDocument();
+
+    // The placeholders are `aria-hidden`, so without this the wait would be silent
+    // (HIVE-2.5, #5284). One region, on the table, saying what is on its way.
+    expect(container.querySelector('table')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('status')).toHaveTextContent('Loading…');
+  });
+
+  it('names what is loading when the caller says so, and falls silent once it lands', () => {
+    const { rerender } = render(
+      <DataTable
+        caption="Projects"
+        columns={PROJECT_COLUMNS}
+        rows={[]}
+        getRowId={(project: Project) => project.id}
+        loading
+        loadingLabel="Loading projects…"
+      />
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Loading projects…');
+
+    rerender(
+      <DataTable
+        caption="Projects"
+        columns={PROJECT_COLUMNS}
+        rows={PROJECTS}
+        getRowId={(project: Project) => project.id}
+        loadingLabel="Loading projects…"
+      />
+    );
+    // The region stays mounted and empties, so the reader hears the text *change* rather
+    // than hearing a region disappear.
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  it('offers a retry beside the failure, and calls back when it is pressed', () => {
+    const onRetry = jest.fn();
+    render(
+      <DataTable
+        caption="Projects"
+        columns={PROJECT_COLUMNS}
+        rows={[]}
+        getRowId={(project: Project) => project.id}
+        error="The API returned 502."
+        onRetry={onRetry}
+      />
+    );
+
+    // DESIGN.md §10: what happened, and what to do about it.
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('The API returned 502.');
+    fireEvent.click(screen.getByRole('button', { name: /Try again/i }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
   it('shows the empty slot when there is nothing, and its own words when given none', () => {

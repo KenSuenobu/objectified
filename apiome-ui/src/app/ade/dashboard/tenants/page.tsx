@@ -466,7 +466,6 @@ const Tenants = () => {
           icon={<Building2 className="h-10 w-10" />}
           title="No Tenants Available"
           description="You are not a member of any tenants yet"
-          iconContainerClassName="from-blue-500 to-cyan-600 shadow-blue-500/30"
         />
       ) : (
         <div className="space-y-6">

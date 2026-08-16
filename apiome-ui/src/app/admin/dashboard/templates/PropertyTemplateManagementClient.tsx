@@ -18,6 +18,7 @@ import {
   Copy,
   MoreVertical,
 } from 'lucide-react';
+import { SkeletonTableRows } from '@/app/components/ui/Skeleton';
 import {
   getAllPropertyTemplates,
   getPropertyTemplateStats,
@@ -27,6 +28,15 @@ import {
   deletePropertyTemplateAdmin,
   togglePropertyTemplateStatus,
 } from '../../../../../lib/db/admin-helper';
+
+/**
+ * Placeholder bar width per column of the templates table, in header order — template,
+ * category, type, schema type, usage, status, actions.
+ *
+ * Stated per column rather than uniformly because a row of identical grey bars is a spinner
+ * with extra steps: the shape has to be the shape of the answer (DESIGN.md §8).
+ */
+const TEMPLATE_SKELETON_COLUMNS = ['45%', '6rem', '5rem', '7rem', '3rem', '4.5rem', ''] as const;
 
 interface PropertyTemplate {
   id: string;
@@ -520,7 +530,12 @@ export default function PropertyTemplateManagementClient() {
 
       {/* Templates Table */}
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <table className="w-full">
+        {/* The placeholder rows are decoration (`aria-hidden`), so this is the only thing a
+            screen reader is told about the wait. */}
+        <p role="status" aria-live="polite" className="sr-only">
+          {loading ? 'Loading templates…' : ''}
+        </p>
+        <table className="w-full" aria-busy={loading || undefined}>
           <thead className="bg-slate-50 dark:bg-slate-800">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-300">Template</th>
@@ -532,15 +547,18 @@ export default function PropertyTemplateManagementClient() {
               <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 dark:text-gray-300">Actions</th>
             </tr>
           </thead>
+          {/* DESIGN.md §8: never a spinner in a table body. A `colSpan` row collapses the
+              column widths, so every column jumps sideways the moment the rows land; the
+              placeholder cells keep the grid and the wait is announced by the region. */}
+          {loading ? (
+            <SkeletonTableRows
+              columns={TEMPLATE_SKELETON_COLUMNS}
+              cellClassName="px-4 py-3"
+              className="divide-y divide-slate-200 dark:divide-slate-800"
+            />
+          ) : null}
           <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-            {loading ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
-                  Loading templates...
-                </td>
-              </tr>
-            ) : filteredTemplates.length === 0 ? (
+            {loading ? null : filteredTemplates.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                   No templates found

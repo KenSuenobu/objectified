@@ -8,12 +8,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  SearchX,
   X,
 } from 'lucide-react';
 
 import { cn } from '../../../../lib/utils';
 import { Button, type ButtonProps } from './Button';
 import { Checkbox } from './Checkbox';
+import { EmptyState } from './EmptyState';
+import { ErrorState } from './ErrorState';
 import { Input } from './Input';
 import { Skeleton } from './Skeleton';
 import { nextSortState } from './dataTableUrlState';
@@ -302,9 +305,26 @@ export interface DataTableProps<Row>
   loading?: boolean;
   /** How many skeleton rows (default 5). */
   skeletonRows?: number;
-  /** Replaces the body when the load failed. Rendered in an `alert`, above a retry. */
+  /**
+   * What the live region says while `loading` — `"Loading projects…"`.
+   *
+   * The rows themselves are `aria-hidden` decoration, so this sentence is the *only* thing
+   * a screen reader is told about the wait (DESIGN.md §9). Name the content.
+   */
+  loadingLabel?: string;
+  /**
+   * Replaces the body when the load failed. Rendered inside an {@link ErrorState}, so it
+   * arrives as an alert with a retry beside it.
+   */
   error?: React.ReactNode;
-  /** Replaces the body when `rows` is empty and nothing is loading or broken. */
+  /** Called by the error state's retry button. Without it, no retry is offered. */
+  onRetry?: () => void;
+  /**
+   * Replaces the body when `rows` is empty and nothing is loading or broken.
+   *
+   * Give it an {@link EmptyState} — DESIGN.md §8 puts the empty state *inside* the card, so
+   * the toolbar, the header and the foot stay where they were.
+   */
   empty?: React.ReactNode;
 
   /** The strip above the table — search, filter chips, view switch, sort. */
@@ -338,7 +358,9 @@ function DataTable<Row>({
   rowClassName,
   loading,
   skeletonRows = DEFAULT_SKELETON_ROWS,
+  loadingLabel = 'Loading…',
   error,
+  onRetry,
   empty,
   toolbar,
   footer,
@@ -494,6 +516,9 @@ function DataTable<Row>({
           aria-label={scrolls && caption ? caption : undefined}
         >
           <table
+            // The subtree is mid-change, not merely sparse — which is the difference
+            // between "still loading" and "there is nothing here" for a screen reader.
+            aria-busy={bodyState === 'loading' || undefined}
             className={cn(
               'w-full border-separate border-spacing-0 text-sm text-fg',
               scrollX && SCROLL_X_MIN_WIDTH
@@ -549,19 +574,30 @@ function DataTable<Row>({
 
               {bodyState === 'error' ? (
                 <tr>
-                  <td colSpan={columnCount} className="border-b border-border p-card">
-                    <div role="alert" className="text-sm text-danger-fg">
-                      {error}
-                    </div>
+                  <td colSpan={columnCount} className="border-b border-border">
+                    <ErrorState
+                      variant="compact"
+                      surface={false}
+                      title="Couldn't load this list"
+                      description={error}
+                      onRetry={onRetry}
+                    />
                   </td>
                 </tr>
               ) : null}
 
               {bodyState === 'empty' ? (
                 <tr>
-                  <td colSpan={columnCount} className="border-b border-border p-card">
+                  <td colSpan={columnCount} className="border-b border-border">
                     {empty ?? (
-                      <p className="text-center text-sm text-fg-muted">Nothing to show yet.</p>
+                      <EmptyState
+                        variant="compact"
+                        surface={false}
+                        tone="neutral"
+                        icon={<SearchX />}
+                        title="Nothing to show yet."
+                        description="Add the first one, or clear a filter above."
+                      />
                     )}
                   </td>
                 </tr>
@@ -653,13 +689,17 @@ function DataTable<Row>({
         {footer}
       </div>
 
-      {/* Always mounted while the table has a selection model, so a screen reader hears the
-          count *change* rather than hearing a region appear. Empty selection, nothing said. */}
-      {selectable ? (
-        <p role="status" aria-live="polite" className="sr-only">
-          {selected.size > 0 ? `${selected.size} selected` : ''}
-        </p>
-      ) : null}
+      {/* The table's one live region, always mounted, so a screen reader hears its text
+          *change* rather than hearing a region appear — and so a table never has two
+          regions arguing over the same reader. Loading wins: while the body is
+          placeholders, what is selected underneath is not the news. Empty, nothing said. */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {bodyState === 'loading'
+          ? loadingLabel
+          : selectable && selected.size > 0
+            ? `${selected.size} selected`
+            : ''}
+      </p>
 
       {selectable && selected.size > 0 ? (
         <DataTableBulkBar

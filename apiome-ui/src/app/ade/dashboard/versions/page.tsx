@@ -3091,7 +3091,6 @@ const Versions = () => {
           icon={<Package className="h-10 w-10" />}
           title="No Projects Available"
           description="Please create a project before managing versions."
-          iconContainerClassName="from-indigo-500 to-purple-600 shadow-indigo-500/30"
           action={(
             <Button asChild className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700">
               <a href="/ade/dashboard/projects">Go to Projects</a>
@@ -3477,7 +3476,6 @@ const Versions = () => {
           icon={<Package className="h-10 w-10" />}
           title="No Versions Yet"
           description="Get started by creating your first version"
-          iconContainerClassName="from-emerald-500 to-teal-600 shadow-emerald-500/30"
         />
       ) : (
         <>

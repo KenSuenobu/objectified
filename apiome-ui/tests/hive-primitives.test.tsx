@@ -484,9 +484,16 @@ describe('Tabs', () => {
 });
 
 describe('Loading primitives', () => {
-  it('pulses the skeleton on the inset surface', () => {
+  it('draws the skeleton as the shared shimmer placeholder', () => {
+    // HIVE-2.5 (#5284) moved the fill, the radius and the sweep into the `.hive-skeleton`
+    // rule: hive.css §14 draws a band travelling across the inset surface, and a
+    // pseudo-element cannot be spelled as a utility. `tests/hive-feedback-styles.test.ts`
+    // is what proves the rule itself is there.
     const { container } = render(<Skeleton className="h-4 w-24" />);
-    expect(classesOf(container.firstElementChild as Element)).toContain('bg-inset');
+    const bar = container.firstElementChild as Element;
+    expect(classesOf(bar)).toContain('hive-skeleton');
+    // Decoration: the region around it does the announcing, not the bar.
+    expect(bar).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('draws the spinner as a hairline ring with one accent quadrant', () => {
