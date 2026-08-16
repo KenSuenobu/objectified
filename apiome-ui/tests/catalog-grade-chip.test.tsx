@@ -14,6 +14,7 @@ import {
   GRADE_CHIP_TONE_CLASS,
   normalizeGradeLetter,
 } from '../src/app/components/ui/catalog/GradeChip';
+import { mcpGradeGlyphStyle } from '../src/app/components/ade/dashboard/mcp/mcpUiPrimitives';
 
 describe('normalizeGradeLetter', () => {
   it('maps recognised band tokens to their letter (uppercased first char)', () => {
@@ -42,18 +43,27 @@ describe('GradeChip', () => {
     expect(chip).toHaveAttribute('title', `Grade ${letter}`);
   });
 
-  it('keeps a present-but-unknown grade on a neutral slate tile without dropping it', () => {
+  it('keeps a present-but-unknown grade on the neutral unscored tile without dropping it', () => {
     render(<GradeChip grade="E" />);
     const chip = screen.getByTestId('grade-chip');
     expect(chip).toHaveTextContent('E');
-    expect(chip.className).toContain('bg-slate-300');
+    // HIVE-2.4 (#5283): the unscored tile is a token well, so it follows the theme.
+    expect(chip.className).toContain('bg-inset');
+    expect(chip).toHaveAttribute('data-grade', 'unscored');
   });
 
-  it('renders a slate placeholder when the grade is absent', () => {
+  it('renders a neutral placeholder when the grade is absent', () => {
     render(<GradeChip grade={null} />);
     const chip = screen.getByTestId('grade-chip');
     expect(chip).toHaveTextContent('–');
-    expect(chip.className).toContain('bg-slate-300');
+    expect(chip.className).toContain('bg-inset');
     expect(chip).toHaveAttribute('title', 'No grade captured yet');
+  });
+
+  it('shares its bands with the MCP grade glyph, so one B is one green', () => {
+    // The chip and the glyph read the same `GRADE_BANDS`; this is the seam that used to drift.
+    for (const letter of ['A', 'B', 'C', 'D', 'F'] as const) {
+      expect(GRADE_CHIP_TONE_CLASS[letter]).toBe(mcpGradeGlyphStyle(letter).chipClass);
+    }
   });
 });

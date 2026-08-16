@@ -57,6 +57,10 @@ function resolveLetter(grade?: string | null, score?: number | null): string | n
  *
  * All colors come from the token mappings — no literals here or in consumers. An absent score/grade
  * renders a neutral "unscored" glyph.
+ *
+ * Since HIVE-2.4 (#5283) the bands behind `mcpGradeGlyphStyle` are the shared ones in
+ * `ui/statusVocabulary.ts`, which the catalog's `GradeChip` reads as well — so a B is one green,
+ * not two, and the letters follow the reader's theme.
  */
 export const GradeGlyph = React.forwardRef<HTMLDivElement, GradeGlyphProps>(
   (
@@ -103,7 +107,8 @@ export const GradeGlyph = React.forwardRef<HTMLDivElement, GradeGlyphProps>(
               r={radius}
               fill="none"
               strokeWidth="10"
-              className="stroke-gray-200 dark:stroke-gray-700"
+              // The unfilled part of the ring is a well, not a colour (HIVE-2.4, #5283).
+              className="stroke-inset"
             />
             <circle
               cx="60"
@@ -124,10 +129,7 @@ export const GradeGlyph = React.forwardRef<HTMLDivElement, GradeGlyphProps>(
             </span>
             {showScore && roundedScore !== null ? (
               <span
-                className={cn(
-                  'mt-1 font-medium tabular-nums text-gray-500 dark:text-gray-400',
-                  dims.score,
-                )}
+                className={cn('mt-1 font-medium tabular-nums text-fg-muted', dims.score)}
               >
                 {roundedScore} / 100
               </span>

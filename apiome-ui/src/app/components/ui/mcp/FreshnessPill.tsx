@@ -16,6 +16,10 @@ export interface FreshnessPillProps extends React.HTMLAttributes<HTMLSpanElement
 /**
  * `<FreshnessPill>` — catalog staleness as a colored dot + label. Renders nothing when the endpoint
  * is `fresh` (healthy and within cadence).
+ *
+ * Since HIVE-2.4 (#5283) the tone comes from the shared status vocabulary — `stale`/`backoff` are
+ * the vocabulary's warn, `failing`/`quarantined` its danger — so staleness reads the same as every
+ * other warning in the product.
  */
 export const FreshnessPill = React.forwardRef<HTMLSpanElement, FreshnessPillProps>(
   ({ freshness, lastKnownGoodAt, dotOnly = false, className, ...props }, ref) => {
@@ -29,6 +33,7 @@ export const FreshnessPill = React.forwardRef<HTMLSpanElement, FreshnessPillProp
     return (
       <span
         ref={ref}
+        data-status={meta.status}
         className={cn('inline-flex items-center gap-1.5 text-xs font-medium', meta.textClass, className)}
         title={title}
         {...props}

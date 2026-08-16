@@ -19,9 +19,13 @@ export interface HealthPillProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 /**
  * `<HealthPill>` — an endpoint's reachability as a colored dot + label: `Healthy` (green),
- * `Degraded` (amber), `Unreachable` (red), or `Unknown` (slate) before the first discovery. Pass an
- * explicit {@link HealthPillProps.status}, or a raw {@link HealthPillProps.discoveryStatus} to have
- * it resolved. All colors come from {@link mcpHealthMeta} — no literals in consumers.
+ * `Degraded` (amber), `Unreachable` (red), or `Unknown` (neutral) before the first discovery. Pass
+ * an explicit {@link HealthPillProps.status}, or a raw {@link HealthPillProps.discoveryStatus} to
+ * have it resolved. All colors come from {@link mcpHealthMeta} — no literals in consumers.
+ *
+ * Since HIVE-2.4 (#5283) those colours are the shared status vocabulary's, so a degraded endpoint
+ * is the same amber as a degraded anything-else, and the pill writes `data-status` for the same
+ * reason `Badge` does — a page can style or query the state without re-deriving it.
  */
 export const HealthPill = React.forwardRef<HTMLSpanElement, HealthPillProps>(
   ({ status, discoveryStatus, dotOnly = false, className, ...props }, ref) => {
@@ -30,6 +34,7 @@ export const HealthPill = React.forwardRef<HTMLSpanElement, HealthPillProps>(
     return (
       <span
         ref={ref}
+        data-status={meta.status}
         className={cn('inline-flex items-center gap-1.5 text-xs font-medium', meta.textClass, className)}
         title={dotOnly ? meta.label : undefined}
         {...props}

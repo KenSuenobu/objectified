@@ -19,7 +19,7 @@ import { Button } from '@/app/components/ui/Button';
 import {
   IMPORTABLE_ALTERNATIVE_FORMATS,
   RECOGNIZED_ALTERNATIVE_FORMATS,
-  CATALOG_PILL_TONE_CLASS,
+  catalogFormatHueClass,
   type CatalogFormat,
 } from '@/app/utils/catalog-format-registry';
 import { catalogAdapterForFormat } from '@/app/utils/catalog-import-formats';
@@ -64,8 +64,10 @@ function FormatChip({
     <>
       <span
         className={cn(
+          // The same fixed hue the format's pill carries (HIVE-2.4, #5283), so the gallery
+          // teaches the colour the catalog table then uses.
           'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
-          CATALOG_PILL_TONE_CLASS[fmt.tone],
+          catalogFormatHueClass(fmt.tone),
           dimmed && 'opacity-60',
         )}
       >

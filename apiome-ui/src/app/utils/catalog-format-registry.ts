@@ -72,6 +72,21 @@ export type CatalogPillTone =
   | 'stone'
   | 'neutral';
 
+/**
+ * The `.fmt--*` class that paints one tone as a **fixed** hue (HIVE-2.4, #5283).
+ *
+ * `CATALOG_PILL_TONE_CLASS` below tints with the theme, which is right for the protocol pill and
+ * the source badge — they describe a *property*, and a property may sit quietly. A format is an
+ * identity: someone learns the AsyncAPI violet once and should not relearn it per theme. So the
+ * format pill paints from these classes, whose hues are frozen in `globals.css`.
+ *
+ * @param tone The registry tone, or `undefined` for an unrecognised format.
+ * @returns The `.fmt--*` class name; `fmt--neutral` when the tone is absent.
+ */
+export function catalogFormatHueClass(tone: CatalogPillTone | undefined): string {
+  return `fmt--${tone ?? 'neutral'}`;
+}
+
 /** Light+dark pill classes per tone. The neutral tone is the unknown-format fallback. */
 export const CATALOG_PILL_TONE_CLASS: Readonly<Record<CatalogPillTone, string>> = {
   sky: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',

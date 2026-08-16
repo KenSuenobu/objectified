@@ -4,9 +4,9 @@
  * Hive primitives — live showcase gallery (HIVE-2.1, #5280).
  *
  * The production counterpart of `docs/mockups/foundations/design-system.html`: a data-free
- * route at `/design-system/hive` that renders the §Buttons, §Forms, §Badges, §Cards,
- * §Tabs, §Segmented, §Avatars, §Tables and §Overlays sections of the mockup with the
- * **real** `components/ui` primitives.
+ * route at `/design-system/hive` that renders the §Buttons, §Forms, §Badges, §Status
+ * vocabulary, §Cards, §Tabs, §Segmented, §Avatars, §Tables and §Overlays sections of the
+ * mockup with the **real** `components/ui` primitives.
  * Standing beside the mockup it answers the only question that matters about a re-token —
  * does the component now look like the design language? — and it is where a theme, density
  * or font-scale regression shows up first.
@@ -62,10 +62,17 @@ import {
   DrawerTitle,
   DrawerTrigger,
   FormField,
+  FreshnessPill,
+  GRADE_LETTERS,
+  GradeGlyph,
+  HTTP_METHODS,
+  HealthPill,
   Input,
   Kbd,
+  MethodChip,
   RadioGroup,
   RadioGroupItem,
+  RecencyPill,
   Segmented,
   SegmentedItem,
   Select,
@@ -87,9 +94,57 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/app/components/ui';
+import { FormatPill } from '@/app/components/ui/catalog/FormatPill';
+import { GradeChip } from '@/app/components/ui/catalog/GradeChip';
 import { DENSITIES, FONT_SCALES } from '@/app/config/preferences';
-import { SYSTEM_THEME_ID, themes } from '@/app/config/themes';
+import { SYSTEM_THEME_ID, appearanceOf, themes } from '@/app/config/themes';
 import { TablesShowcase } from './TablesShowcase';
+
+/**
+ * The §Status vocabulary specimens (HIVE-2.4, #5283), grouped exactly as DESIGN.md §3.1
+ * groups them — the point of the section is that the *grouping* is learnable, not that any
+ * one badge looks nice.
+ */
+const VOCABULARIES: readonly { title: string; values: readonly string[] }[] = [
+  { title: 'Version lifecycle', values: ['draft', 'review', 'published', 'deprecated', 'sunset', 'archived'] },
+  { title: 'Visibility', values: ['private', 'public'] },
+  { title: 'Health / jobs', values: ['healthy', 'completed', 'degraded', 'running', 'pending', 'down', 'failed', 'unknown'] },
+  { title: 'Lint severity', values: ['error', 'warning', 'info', 'hint'] },
+  { title: 'Keys / members', values: ['active', 'revoked', 'disabled', 'suspended'] },
+  { title: 'Maturity', values: ['preview', 'beta', 'new'] },
+];
+
+/**
+ * The formats DESIGN.md §3.1 names by hand, in its order, as raw `sourceFormat` tokens — so the
+ * row also demonstrates that the pill resolves aliases (`x12`, `copybook`) to their entry.
+ *
+ * The last token is deliberately not a format: an unknown-but-present value keeps its raw text
+ * on the neutral hue rather than disappearing, and that contract is worth seeing.
+ */
+const GALLERY_FORMATS: readonly string[] = [
+  'openapi',
+  'asyncapi',
+  'graphql',
+  'protobuf',
+  'jsonschema',
+  'wsdl',
+  'x12',
+  'copybook',
+  'avro',
+  'raml',
+  'wit',
+  'postman',
+  'mystery-format',
+];
+
+/**
+ * A fixed instant and a fixed "now" for the recency specimen.
+ *
+ * The gallery is a visual-regression surface, so nothing on it may read the wall clock: a
+ * pill that says "2h ago" on one run and "3h ago" on the next is a diff every time.
+ */
+const GALLERY_NOW_MS = Date.parse('2026-01-15T12:00:00.000Z');
+const GALLERY_TIMESTAMP = '2026-01-15T09:30:00.000Z';
 
 /**
  * The three preference axes this gallery drives, derived from the same catalogues the
@@ -172,6 +227,18 @@ export default function HiveDesignSystemPage() {
   /** Write a preference axis onto `<html>`, the same place the preferences pane writes it. */
   const setAxis = (attribute: string, value: string) => {
     document.documentElement.setAttribute(attribute, value);
+    // `ThemeProvider` hands next-themes the resolved *appearance*, which is what puts `.dark`
+    // on `<html>` for every dark-based palette. The gallery has no provider, so it does the
+    // same thing by hand — otherwise the rules keyed on `.dark` (the format pill's dark-base
+    // settling, and every `dark:` utility not yet migrated) would be missing here and only
+    // here, which is the one place a reviewer looks to catch them.
+    if (attribute === 'data-theme') {
+      const theme = themes.find((entry) => entry.id === value);
+      document.documentElement.classList.toggle(
+        'dark',
+        theme ? appearanceOf(theme) === 'dark' : false,
+      );
+    }
   };
 
   return (
@@ -382,6 +449,73 @@ export default function HiveDesignSystemPage() {
               Large
             </Badge>
           </Demo>
+        </Section>
+
+        <Section
+          id="status-vocabulary"
+          title="Status vocabulary"
+          description="One mapping from the app's own enum strings to a tone (DESIGN.md §3.1). A state follows the theme; a format or an HTTP verb does not, because that hue is an identity."
+        >
+          {VOCABULARIES.map((vocabulary) => (
+            <div key={vocabulary.title} className="flex flex-col gap-1.5">
+              <div className="text-2xs font-semibold uppercase tracking-[0.06em] text-fg-muted">
+                {vocabulary.title}
+              </div>
+              <Demo>
+                {vocabulary.values.map((value) => (
+                  <Badge key={value} status={value} dot>
+                    {value}
+                  </Badge>
+                ))}
+              </Demo>
+            </div>
+          ))}
+
+          <div className="flex flex-col gap-1.5">
+            <div className="text-2xs font-semibold uppercase tracking-[0.06em] text-fg-muted">
+              Formats — fixed hues
+            </div>
+            <Demo>
+              {GALLERY_FORMATS.map((format) => (
+                <FormatPill key={format} format={format} />
+              ))}
+            </Demo>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <div className="text-2xs font-semibold uppercase tracking-[0.06em] text-fg-muted">
+              HTTP methods — fixed hues
+            </div>
+            <Demo>
+              {HTTP_METHODS.map((method) => (
+                <MethodChip key={method} method={method} />
+              ))}
+            </Demo>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <div className="text-2xs font-semibold uppercase tracking-[0.06em] text-fg-muted">
+              The pills that share the vocabulary
+            </div>
+            <Demo>
+              <HealthPill status="healthy" />
+              <HealthPill status="degraded" />
+              <HealthPill status="unreachable" />
+              <HealthPill status="unknown" />
+              <FreshnessPill freshness="stale" />
+              <FreshnessPill freshness="quarantined" />
+              <RecencyPill timestamp={GALLERY_TIMESTAMP} nowMs={GALLERY_NOW_MS} />
+            </Demo>
+            <Demo>
+              {GRADE_LETTERS.map((letter) => (
+                <GradeChip key={letter} grade={letter} />
+              ))}
+              <GradeChip grade={null} />
+              <GradeGlyph grade="A" score={94} size="sm" />
+              <GradeGlyph grade="C" score={71} size="sm" />
+              <GradeGlyph grade={null} size="sm" />
+            </Demo>
+          </div>
         </Section>
 
         <Section

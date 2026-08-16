@@ -38,6 +38,15 @@ export * from './DataTable';
 export * from './dataTableUrlState';
 export * from './useDataTableUrlState';
 
+// The status vocabulary (HIVE-2.4, #5283): one mapping from the app's own enum strings to a
+// tone, plus the A–F quality bands. `Badge`, the MCP health/freshness/grade surfaces and the
+// catalog grade chip all resolve through it, so a state is one colour everywhere.
+export * from './statusVocabulary';
+
+// The HTTP verb chip (HIVE-2.4, #5283) — a fixed hue per method, unlike a status tone, because
+// a verb's colour is an identity rather than a state.
+export * from './MethodChip';
+
 // Shared MCP catalog primitives (V2-MCP-24.7)
 export * from './mcp';
 
