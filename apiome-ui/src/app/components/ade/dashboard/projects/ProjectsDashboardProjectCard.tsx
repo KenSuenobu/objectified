@@ -3,21 +3,21 @@
 import type { ReactNode } from 'react';
 import { cn } from '@lib/utils';
 import { getProjectDomainCategoryLabel } from '@/app/utils/project-domain-categories';
-import {
-  getNumericScoreTier,
-  letterGradeFromOverallPercent,
-  type NumericScoreTierStyle,
-} from '@/app/utils/numeric-score-tier';
+import { letterGradeFromOverallPercent } from '@/app/utils/numeric-score-tier';
+import { Ring } from '@/app/components/ui/metrics';
 import type { ProjectQualitySnapshot } from '@/app/utils/project-quality-score-history';
 import { formatRelativeTime } from '@/app/ade/dashboard/versions/version-history-dag';
 
-function scoreOrbBorderClass(band: NumericScoreTierStyle['band'] | null): string {
-  if (!band) return 'border-gray-300 dark:border-gray-600';
-  if (band === 'excellent') return 'border-emerald-500';
-  if (band === 'good') return 'border-indigo-500';
-  if (band === 'fair') return 'border-amber-500';
-  return 'border-rose-500';
-}
+/**
+ * The hit area around an orb (HIVE-2.6, #5285).
+ *
+ * The orb itself is a `<Ring>`, which owns its size, its tier colour and its own reading of
+ * the score; this is only the button wrapped round it. Before that ticket this card carried a
+ * `scoreOrbBorderClass` of its own — `border-emerald-500 / indigo-500 / amber-500 / rose-500`,
+ * a fourth copy of the same four literals, none of which followed a theme.
+ */
+const ORB_BUTTON =
+  'inline-flex rounded-full transition-colors hover:bg-subtle focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)]';
 
 export interface ProjectsDashboardProjectCardProps {
   project: {
@@ -80,7 +80,6 @@ export function ProjectsDashboardProjectCard({
       : typeof project.qualityScore === 'number'
         ? project.qualityScore
         : null;
-  const scoreTier = qualityValue != null ? getNumericScoreTier(qualityValue) : null;
   const lintLetter = isEmptyProject
     ? null
     : latest != null
@@ -93,9 +92,6 @@ export function ProjectsDashboardProjectCard({
     project.description?.trim() ||
     'No description yet.';
 
-  const orbBase =
-    'mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full border-2 font-mono text-xs font-semibold tabular-nums';
-  const orbNeutral = 'border-gray-300 text-gray-400 dark:border-gray-600';
   const versionsLabel = `${versionsCount} version${versionsCount === 1 ? '' : 's'}`;
 
   return (
@@ -201,22 +197,17 @@ export function ProjectsDashboardProjectCard({
                   {qualityValue != null ? (
                     <button
                       type="button"
-                      className={cn(
-                        orbBase,
-                        scoreOrbBorderClass(scoreTier!.band),
-                        scoreTier!.textClass,
-                        'hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30'
-                      )}
+                      className={cn('mt-1', ORB_BUTTON)}
                       onClick={(e) => {
                         e.stopPropagation();
                         onOpenQualityHistory();
                       }}
                       title="Open quality score history"
                     >
-                      {qualityValue}
+                      <Ring score={qualityValue} label="Quality score" size="sm" />
                     </button>
                   ) : (
-                    <span className={cn(orbBase, orbNeutral)}>—</span>
+                    <Ring score={null} label="Quality score" size="sm" className="mt-1" />
                   )}
                 </div>
                 <div>
@@ -226,35 +217,36 @@ export function ProjectsDashboardProjectCard({
                   {lintLetter ? (
                     <button
                       type="button"
-                      className={cn(
-                        orbBase,
-                        scoreOrbBorderClass(scoreTier?.band ?? null),
-                        scoreTier?.textClass ?? 'text-gray-500 dark:text-gray-400',
-                        'hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30'
-                      )}
+                      className={cn('mt-1', ORB_BUTTON)}
                       onClick={(e) => {
                         e.stopPropagation();
                         onOpenLintReport();
                       }}
                       title="Open lint report"
                     >
-                      {lintLetter}
+                      <Ring
+                        score={qualityValue}
+                        grade={lintLetter}
+                        display="grade"
+                        label="Lint grade"
+                        size="sm"
+                      />
                     </button>
                   ) : (
-                    <span className={cn(orbBase, orbNeutral)}>—</span>
+                    <Ring score={null} label="Lint grade" size="sm" className="mt-1" />
                   )}
                 </div>
                 <div>
                   <p className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Debt
                   </p>
-                  <span
-                    className={cn(orbBase, orbNeutral)}
+                  <Ring
+                    score={null}
+                    label="Technical debt"
+                    size="sm"
+                    className="mt-1"
                     title="Technical debt (not yet computed)"
-                    aria-label="Technical debt not yet computed"
-                  >
-                    —
-                  </span>
+                  />
                 </div>
               </div>
               <p

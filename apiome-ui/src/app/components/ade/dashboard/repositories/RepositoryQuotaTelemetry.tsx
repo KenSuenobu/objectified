@@ -30,6 +30,7 @@ import { Button } from '@/app/components/ui/Button';
 import { GatedState } from '@/app/components/ui/EmptyState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
 import { Sparkline } from '@/app/components/ui/mcp/charts/Sparkline';
+import { Meter } from '@/app/components/ui/metrics';
 import {
   dashboardContentStackClass,
   dashboardMainClass,
@@ -58,14 +59,6 @@ const PRESSURE_PANEL_CLASSES: Record<QuotaPressure, string> = {
   comfortable: 'border-emerald-200 dark:border-emerald-800',
   approaching: 'border-amber-300 dark:border-amber-700',
   exhausted: 'border-red-300 dark:border-red-700',
-};
-
-/** Meter fill per pressure level. */
-const PRESSURE_BAR_CLASSES: Record<QuotaPressure, string> = {
-  unlimited: 'bg-gray-400 dark:bg-gray-500',
-  comfortable: 'bg-emerald-500 dark:bg-emerald-400',
-  approaching: 'bg-amber-500 dark:bg-amber-400',
-  exhausted: 'bg-red-500 dark:bg-red-400',
 };
 
 /** A labelled figure inside the quota summary. */
@@ -128,22 +121,16 @@ function QuotaSummary({ quota }: { quota: RepositoryPollingQuota }) {
 
       {percent === null ? null : (
         <div className="mt-4">
-          <div
-            className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700"
-            role="meter"
-            aria-valuenow={percent}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="Polling budget used this hour"
-          >
-            <div
-              className={cn('h-full rounded-full transition-all', PRESSURE_BAR_CLASSES[pressure])}
-              style={{ width: `${percent}%` }}
-            />
-          </div>
-          <p className="mt-1 text-right text-2xs text-gray-500 dark:text-gray-400">
-            {percent}% of this hour’s budget
-          </p>
+          {/*
+            The bands `quotaPressure` classifies against — 80% approaching, 100% exhausted —
+            are the shared quota bands, so `<Meter>` derives the same tone from the same
+            number and this panel no longer carries a palette of its own (HIVE-2.6, #5285).
+          */}
+          <Meter
+            label="Polling budget used this hour"
+            value={percent}
+            valueLabel={`${percent}% of this hour’s budget`}
+          />
         </div>
       )}
     </section>

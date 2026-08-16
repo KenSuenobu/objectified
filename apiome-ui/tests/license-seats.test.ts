@@ -53,22 +53,32 @@ describe('formatSeatUsage', () => {
   });
 });
 
+// HIVE-2.6 (#5285) moved the palette out: the helper now projects the shared quota bands of
+// `components/ui/metrics/metricTiers.ts`, so its tones are Hive tokens that follow the theme
+// rather than the frozen `bg-emerald-500` / `bg-amber-500` / `bg-red-500` it used to carry.
 describe('seatMeterAppearance', () => {
-  it('is green well below the warning threshold', () => {
-    expect(seatMeterAppearance(3, 10)).toEqual(
-      expect.objectContaining({ percent: 30, barClass: 'bg-emerald-500' }),
-    );
+  it('is quiet well below the warning threshold', () => {
+    expect(seatMeterAppearance(3, 10)).toEqual({
+      percent: 30,
+      tone: 'accent',
+      countClass: 'text-accent-fg',
+    });
   });
 
-  it('warns amber at the warning threshold and red when full', () => {
-    expect(seatMeterAppearance(SEAT_WARNING_PERCENT / 10, 10).barClass).toBe('bg-amber-500');
-    expect(seatMeterAppearance(10, 10).barClass).toBe('bg-red-500');
+  it('warns at the warning threshold and turns danger when full', () => {
+    expect(seatMeterAppearance(SEAT_WARNING_PERCENT / 10, 10).tone).toBe('warn');
+    expect(seatMeterAppearance(10, 10).tone).toBe('danger');
   });
 
   it('clamps overflow to 100% and treats a zero maximum as full', () => {
     expect(seatMeterAppearance(12, 10).percent).toBe(100);
     expect(seatMeterAppearance(0, 0)).toEqual(
-      expect.objectContaining({ percent: 100, barClass: 'bg-red-500' }),
+      expect.objectContaining({ percent: 100, tone: 'danger' }),
     );
+  });
+
+  it('spends no colour on a number nobody needs to read', () => {
+    // Half a quota is not an achievement — `ok` is reserved for "this is finished".
+    expect(seatMeterAppearance(5, 10).tone).not.toBe('ok');
   });
 });

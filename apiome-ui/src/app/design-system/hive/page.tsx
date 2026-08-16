@@ -5,8 +5,8 @@
  *
  * The production counterpart of `docs/mockups/foundations/design-system.html`: a data-free
  * route at `/design-system/hive` that renders the §Buttons, §Forms, §Badges, §Status
- * vocabulary, §Cards, §Tabs, §Segmented, §Avatars, §Tables, §Overlays and §Feedback
- * sections of the mockup with the **real** `components/ui` primitives.
+ * vocabulary, §Cards, §Tabs, §Segmented, §Avatars, §Tables, §Overlays, §Feedback and
+ * §Metrics sections of the mockup with the **real** `components/ui` primitives.
  * Standing beside the mockup it answers the only question that matters about a re-token —
  * does the component now look like the design language? — and it is where a theme, density
  * or font-scale regression shows up first.
@@ -103,6 +103,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/app/components/ui';
+// The metrics set (HIVE-2.6, #5285) is imported by path rather than from the `ui` barrel — see
+// the note in `components/ui/metrics/index.ts` about the MCP chart kit's same-named `Sparkline`.
+import {
+  Meter,
+  Progress,
+  Ring,
+  Sparkline,
+  Stat,
+  StatGrid,
+} from '@/app/components/ui/metrics';
 import { FormatPill } from '@/app/components/ui/catalog/FormatPill';
 import { GradeChip } from '@/app/components/ui/catalog/GradeChip';
 import { DENSITIES, FONT_SCALES } from '@/app/config/preferences';
@@ -210,6 +220,18 @@ function Section({
   );
 }
 
+/**
+ * One ring per band of the HIVE-2.6 score scale, so a reviewer can see all four at once and
+ * check that the boundary cases land where `ringTier` says they do.
+ */
+const RING_SPECIMENS: readonly { score: number | null; band: string; label: string }[] = [
+  { score: 94, band: 'Excellent', label: 'Excellent score' },
+  { score: 84, band: 'Good', label: 'Good score' },
+  { score: 68, band: 'Fair', label: 'Fair score' },
+  { score: 42, band: 'Poor', label: 'Poor score' },
+  { score: null, band: 'Not scored', label: 'Technical debt' },
+];
+
 /** A tinted well the specimens sit in, so their own surface colour is visible. */
 function Demo({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -257,7 +279,7 @@ export default function HiveDesignSystemPage() {
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-fg">
             Hive primitives{' '}
             <Badge variant="honey" size="lg">
-              HIVE-2.1 · 2.2 · 2.3 · 2.4 · 2.5
+              HIVE-2.1 · 2.2 · 2.3 · 2.4 · 2.5 · 2.6
             </Badge>
           </h1>
           <p className="max-w-[72ch] text-sm text-fg-muted">
@@ -865,6 +887,95 @@ export default function HiveDesignSystemPage() {
                 />
               </div>
             </div>
+          </Demo>
+        </Section>
+
+        <Section
+          id="metrics"
+          title="Metrics: stat, ring, sparkline, meter, progress"
+          description="Inline SVG and tokens — no charting dependency. A caller passes a number; the kit picks the band. Rings colour ≥90 ok · 75–89 accent · 60–74 warn · <60 danger; a quota meter warns at 80% and turns danger at its cap."
+        >
+          <StatGrid columns={4}>
+            <Stat
+              label="Projects"
+              icon={<FolderOpen />}
+              value={128}
+              delta={12}
+              footnote="vs last week"
+            />
+            <Stat
+              label="Published versions"
+              icon={<UploadCloud />}
+              value="1,204"
+              delta={0}
+              footnote="no change"
+            />
+            <Stat
+              label="Open findings"
+              icon={<Filter />}
+              value={37}
+              delta={9}
+              deltaPolarity="negative"
+              footnote="since Monday"
+            />
+            <Stat
+              label="Mean quality"
+              icon={<Sparkles />}
+              value={84}
+              unit="/ 100"
+              delta={3}
+              footnote="30-day mean"
+              footnoteEnd="Grade B"
+            />
+          </StatGrid>
+
+          <Demo>
+            {RING_SPECIMENS.map((specimen) => (
+              <div key={specimen.band} className="flex flex-col items-center gap-1.5">
+                <Ring score={specimen.score} label={specimen.label} />
+                <span className="text-2xs font-medium tracking-[var(--track-caps)] uppercase text-fg-muted">
+                  {specimen.band}
+                </span>
+              </div>
+            ))}
+            <div className="flex flex-col items-center gap-1.5">
+              <Ring score={84} label="Lint grade" display="grade" size="lg" />
+              <span className="text-2xs font-medium tracking-[var(--track-caps)] uppercase text-fg-muted">
+                Grade, lg
+              </span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5">
+              <Ring score={91} label="Quality score" size="sm" />
+              <span className="text-2xs font-medium tracking-[var(--track-caps)] uppercase text-fg-muted">
+                Small
+              </span>
+            </div>
+          </Demo>
+
+          <Demo className="!grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Sparkline
+              data={[4, 6, 5, 9, 8, 12, 11, 15, 14, 18]}
+              label="Mock requests, last 30 days"
+              tone="ok"
+            />
+            <Sparkline
+              data={[22, 19, 20, 14, 16, 11, 12, 8, 9, 5]}
+              label="Open findings, last 30 days"
+              tone="danger"
+            />
+          </Demo>
+
+          <Demo className="!flex-col !items-stretch gap-3">
+            <Meter label="Member seats" value={3} max={10} showLabel />
+            <Meter label="Monthly mock calls" value={82} max={100} showLabel />
+            <Meter label="Storage" value={100} max={100} showLabel />
+            <Meter label="Documentation score" value={60} tone="warn" showLabel thin />
+          </Demo>
+
+          <Demo className="!flex-col !items-stretch gap-3">
+            <Progress value={64} label="Importing operations" />
+            <Progress value={38} label="Exporting bundle" tone="honey" striped />
+            <Progress value={100} label="Publish complete" tone="ok" thin />
           </Demo>
         </Section>
       </main>

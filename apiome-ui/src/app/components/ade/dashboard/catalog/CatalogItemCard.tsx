@@ -27,19 +27,20 @@
 
 import type { ReactNode } from 'react';
 import { cn } from '@lib/utils';
-import { getNumericScoreTier, type NumericScoreTierStyle } from '@/app/utils/numeric-score-tier';
+import { Ring } from '@/app/components/ui/metrics';
 import { catalogOrbScores } from '@/app/utils/catalog-card-presentation';
 import type { ProjectQualitySnapshot } from '@/app/utils/project-quality-score-history';
 import { formatRelativeTime } from '@/app/ade/dashboard/versions/version-history-dag';
 
-/** The orb border colour for a quality/lint band (mirrors ProjectsDashboardProjectCard). */
-function scoreOrbBorderClass(band: NumericScoreTierStyle['band'] | null): string {
-  if (!band) return 'border-gray-300 dark:border-gray-600';
-  if (band === 'excellent') return 'border-emerald-500';
-  if (band === 'good') return 'border-indigo-500';
-  if (band === 'fair') return 'border-amber-500';
-  return 'border-rose-500';
-}
+/**
+ * The hit area around an orb (HIVE-2.6, #5285).
+ *
+ * The orb itself is a `<Ring>`, which owns its size and its tier colour. This card and
+ * `ProjectsDashboardProjectCard` each used to carry a `scoreOrbBorderClass` with the same four
+ * literals in it, which is what made "the same score is two different colours" possible.
+ */
+const ORB_BUTTON =
+  'inline-flex rounded-full transition-colors hover:bg-subtle focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)]';
 
 /** The minimal catalog-item shape the card needs (a subset of the page's `CatalogItem`). */
 export interface CatalogItemCardItem {
@@ -108,17 +109,12 @@ export function CatalogItemCard({
   const attentionVisual = !item.enabled || isDeleted;
 
   const { qualityValue, lintLetter } = catalogOrbScores(item, qualityHistory);
-  const scoreTier = qualityValue != null ? getNumericScoreTier(qualityValue) : null;
 
   const versionsCount = typeof item.versionsCount === 'number' ? item.versionsCount : 0;
   const versionsLabel = `${versionsCount} version${versionsCount === 1 ? '' : 's'}`;
 
   const summaryLine = item.metadata?.summary?.trim() || item.description?.trim() || 'No description yet.';
 
-  const orbBase =
-    'inline-flex h-10 w-10 items-center justify-center rounded-full border-2 font-mono text-xs font-semibold tabular-nums';
-  // The neutral (no-value) orb ring/text, shared by an empty Quality/Lint orb and the always-inert Debt orb.
-  const orbNeutral = 'border-gray-300 text-gray-400 dark:border-gray-600';
   // The small caption rendered beneath each orb (MFI-24.5 puts the label below the orb, per the mockup).
   const orbLabel = 'mt-1 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
 
@@ -213,22 +209,17 @@ export function CatalogItemCard({
               {qualityValue != null ? (
                 <button
                   type="button"
-                  className={cn(
-                    orbBase,
-                    scoreOrbBorderClass(scoreTier!.band),
-                    scoreTier!.textClass,
-                    'hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30'
-                  )}
+                  className={ORB_BUTTON}
                   onClick={(e) => {
                     e.stopPropagation();
                     onOpenQualityHistory();
                   }}
                   title="Open quality score history"
                 >
-                  {qualityValue}
+                  <Ring score={qualityValue} label="Quality score" size="sm" />
                 </button>
               ) : (
-                <span className={cn(orbBase, orbNeutral)}>—</span>
+                <Ring score={null} label="Quality score" size="sm" />
               )}
               <p className={orbLabel}>Quality</p>
             </div>
@@ -236,34 +227,29 @@ export function CatalogItemCard({
               {lintLetter ? (
                 <button
                   type="button"
-                  className={cn(
-                    orbBase,
-                    scoreOrbBorderClass(scoreTier?.band ?? null),
-                    scoreTier?.textClass ?? 'text-gray-500 dark:text-gray-400',
-                    'hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30'
-                  )}
+                  className={ORB_BUTTON}
                   onClick={(e) => {
                     e.stopPropagation();
                     onOpenLintReport();
                   }}
                   title="Open lint report"
                 >
-                  {lintLetter}
+                  <Ring
+                    score={qualityValue}
+                    grade={lintLetter}
+                    display="grade"
+                    label="Lint grade"
+                    size="sm"
+                  />
                 </button>
               ) : (
-                <span className={cn(orbBase, orbNeutral)}>—</span>
+                <Ring score={null} label="Lint grade" size="sm" />
               )}
               <p className={orbLabel}>Lint</p>
             </div>
             <div className="text-center">
               {/* Debt orb: always inert — technical debt is not yet computed (no dialog to open). */}
-              <span
-                className={cn(orbBase, orbNeutral)}
-                title="Technical debt (not yet computed)"
-                aria-label="Technical debt not yet computed"
-              >
-                —
-              </span>
+              <Ring score={null} label="Technical debt" size="sm" title="Technical debt (not yet computed)" />
               <p className={orbLabel}>Debt</p>
             </div>
 
