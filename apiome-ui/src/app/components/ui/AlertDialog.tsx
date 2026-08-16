@@ -3,7 +3,17 @@
 import * as React from 'react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { cn } from '../../../../lib/utils';
-import { buttonVariants } from './Button';
+import { buttonVariants, type ButtonProps } from './Button';
+import { dialogContentVariants } from './Dialog';
+
+/**
+ * AlertDialog — the Hive confirm (HIVE-2.1, #5280).
+ *
+ * The same surface as {@link ./Dialog}, sized `sm` by default: a confirm asks one question
+ * and shows two buttons, so DESIGN.md §7 gives it the 440 px width. The full destructive
+ * layout — named object, consequence sentence, type-to-confirm — is HIVE-2.7's ticket; what
+ * lands here is the seam it needs, `AlertDialogAction`'s `variant`.
+ */
 
 const AlertDialog = AlertDialogPrimitive.Root;
 
@@ -18,7 +28,7 @@ const AlertDialogOverlay = React.forwardRef<
   <AlertDialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      'fixed inset-0 z-[10050] bg-black/50 backdrop-blur-sm',
+      'fixed inset-0 z-[10050] bg-overlay backdrop-blur-sm',
       'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
       className
     )}
@@ -27,18 +37,27 @@ const AlertDialogOverlay = React.forwardRef<
 ));
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
+export interface AlertDialogContentProps
+  extends React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content> {
+  /** One of the five DESIGN.md §7 dialog widths. A confirm defaults to `sm` (440 px). */
+  size?: 'sm' | 'default' | 'lg' | 'xl' | 'full';
+}
+
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className, ...props }, ref) => (
+  AlertDialogContentProps
+>(({ className, size = 'sm', ...props }, ref) => (
   <AlertDialogPortal>
     <AlertDialogOverlay />
-    <div className="fixed inset-0 z-[10051] flex items-center justify-center p-4 pointer-events-none">
+    <div className="pointer-events-none fixed inset-0 z-[10051] flex items-center justify-center p-4">
       <AlertDialogPrimitive.Content
         ref={ref}
         className={cn(
-          'pointer-events-auto grid w-full max-w-lg gap-4 border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800',
-          'rounded-xl data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
+          // The shared dialog surface, minus its own fixed centring: this one is centred by
+          // the flex wrapper above, which is what keeps a confirm on top of an open dialog.
+          dialogContentVariants({ size }),
+          'pointer-events-auto static left-auto top-auto translate-x-0 translate-y-0',
+          'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
           className
         )}
         {...props}
@@ -49,13 +68,16 @@ const AlertDialogContent = React.forwardRef<
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 
 const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col space-y-2 text-center sm:text-left', className)} {...props} />
+  <div className={cn('flex flex-col gap-1.5 text-left', className)} {...props} />
 );
 AlertDialogHeader.displayName = 'AlertDialogHeader';
 
 const AlertDialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn('flex flex-col-reverse sm:flex-row sm:justify-end gap-2', className)}
+    className={cn(
+      'flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end',
+      className
+    )}
     {...props}
   />
 );
@@ -67,7 +89,7 @@ const AlertDialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Title
     ref={ref}
-    className={cn('text-lg font-semibold text-gray-900 dark:text-gray-50', className)}
+    className={cn('text-xl font-semibold leading-snug tracking-[-0.01em] text-fg', className)}
     {...props}
   />
 ));
@@ -79,17 +101,27 @@ const AlertDialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Description
     ref={ref}
-    className={cn('text-sm text-gray-600 dark:text-gray-400', className)}
+    className={cn('text-sm text-fg-muted', className)}
     {...props}
   />
 ));
 AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
 
+export interface AlertDialogActionProps
+  extends React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action> {
+  /** Button role. Pass `danger` for a destructive confirm (DESIGN.md §8 "Destructive"). */
+  variant?: ButtonProps['variant'];
+}
+
 const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Action ref={ref} className={cn(buttonVariants(), className)} {...props} />
+  AlertDialogActionProps
+>(({ className, variant, ...props }, ref) => (
+  <AlertDialogPrimitive.Action
+    ref={ref}
+    className={cn(buttonVariants({ variant }), className)}
+    {...props}
+  />
 ));
 AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
 

@@ -15,10 +15,25 @@ export interface RadioGroupItemProps extends React.InputHTMLAttributes<HTMLInput
   label?: React.ReactNode;
 }
 
+/**
+ * RadioGroup — the Hive one-of-many control (HIVE-2.1, #5280).
+ *
+ * Authority: `docs/mockups/assets/hive.css` §9 (`.radio`), `docs/mockups/DESIGN.md` §7.
+ *
+ * The dot is drawn by the browser and tinted with `accent-color`, which is the one way to
+ * get a native radio to follow a theme swap without re-implementing its states. Sizing and
+ * spacing are on the `<input>` itself rather than on `label > input`, so a choice row may
+ * contain a nested field without that field picking up radio chrome.
+ */
 export const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
   ({ className, value, onValueChange, children, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn('space-y-2', className)} {...props}>
+      <div
+        ref={ref}
+        role="radiogroup"
+        className={cn('flex flex-col gap-2', className)}
+        {...props}
+      >
         {React.Children.map(children, (child) => {
           if (React.isValidElement<RadioGroupItemProps>(child)) {
             return React.cloneElement(child, {
@@ -39,7 +54,7 @@ export const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemP
     return (
       <label
         className={cn(
-          'flex items-center gap-2 cursor-pointer',
+          'inline-flex cursor-pointer items-center gap-2 text-sm text-fg',
           props.disabled && 'cursor-not-allowed opacity-50',
           className
         )}
@@ -49,21 +64,14 @@ export const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemP
           type="radio"
           value={value}
           className={cn(
-            'h-4 w-4 rounded-full border border-gray-300 dark:border-gray-600',
-            'text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            'transition-colors duration-200'
+            'size-4 shrink-0 accent-accent',
+            'focus-visible:outline-none disabled:cursor-not-allowed'
           )}
           {...props}
         />
-        {label && (
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            {label}
-          </span>
-        )}
+        {label && <span>{label}</span>}
       </label>
     );
   }
 );
 RadioGroupItem.displayName = 'RadioGroupItem';
-

@@ -4,6 +4,14 @@ import * as React from 'react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { cn } from '../../../../lib/utils';
 
+/**
+ * Tooltip — the Hive ink pill (HIVE-2.1, #5280).
+ *
+ * Authority: `docs/mockups/assets/hive.css` §17 (`.tooltip`), `docs/mockups/DESIGN.md` §7.
+ *
+ * Inverted ink at the 11 px caps step, six pixels off its trigger. It carries a *name*, not
+ * a sentence — anything longer belongs in a hint under the field (DESIGN.md §10).
+ */
 const TooltipProvider = TooltipPrimitive.Provider;
 const Tooltip = TooltipPrimitive.Root;
 const TooltipTrigger = TooltipPrimitive.Trigger;
@@ -11,12 +19,12 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => (
+>(({ className, sideOffset = 6, ...props }, ref) => (
   <TooltipPrimitive.Content
     ref={ref}
     sideOffset={sideOffset}
     className={cn(
-      'z-50 overflow-hidden rounded-md bg-gray-900 dark:bg-gray-100 px-3 py-1.5 text-xs text-white dark:text-gray-900',
+      'z-50 overflow-hidden rounded-sm bg-fg px-2 py-1 text-2xs font-medium text-surface',
       'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
       'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
       className
@@ -27,4 +35,3 @@ const TooltipContent = React.forwardRef<
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
-
