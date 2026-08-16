@@ -1004,14 +1004,34 @@ html[data-rail="collapsed"] {
    row is exactly the frozen metric this ticket replaces, so the wrapper has to
    win. `:where()` keeps the selector at the weight of a bare element, so a table
    that genuinely needs its own row (a nested table, an editor row) still wins with
-   one unlayered rule of its own. HIVE-2.3's `DataTable` inherits this behaviour
-   when it retires the shared class module. */
+   one unlayered rule of its own. `components/ui/DataTable` (HIVE-2.3, #5282)
+   puts the same class on its own card, so the primitive and the pages still on
+   the old class module keep exactly one definition of a row's rhythm between
+   them for the length of the migration. */
 .table-density :where(thead) :where(th) {
   padding-block: var(--table-head-pad-y);
 }
 
 .table-density :where(tbody) :where(td) {
   padding-block: var(--table-cell-pad-y);
+}
+
+/* `DataTable dense` (HIVE-2.3, #5282): a compact row is not a second frozen height, it is
+   the *control* metric — so a dense row is exactly as tall as a button at both densities
+   and all six font scales, and the mockup's 36 px comes out of a token rather than a
+   literal.
+
+   The two derived paddings have to be restated here, not just `--row-h`. A custom property
+   substitutes its own `var()` references at the element where it is **declared**: both
+   `--table-cell-pad-y` and `--table-head-pad-y` are declared at `:root`, so they resolve
+   against the *root's* `--row-h` and inherit down as finished lengths. Re-pointing
+   `--row-h` further down the tree therefore reaches `h-[var(--row-h)]` — read on the cell
+   — but never those two. Without these three lines a dense table measured exactly as tall
+   as a comfortable one, which is what `e2e/hive-data-table.spec.ts` now checks. */
+.table-dense {
+  --row-h: var(--control-h);
+  --table-cell-pad-y: calc((var(--row-h) - var(--fs-sm) * var(--lh-normal)) / 2);
+  --table-head-pad-y: calc(var(--table-cell-pad-y) * 0.6);
 }
 
 /* ---- Identifier face (DESIGN.md §4.1) -----------------------------------

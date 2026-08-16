@@ -30,6 +30,14 @@ export * from './Drawer';
 export * from './Avatar';
 export * from './Kbd';
 
+// The list surface (HIVE-2.3, #5282): one composable table — toolbar, sticky sortable
+// header, selection with a bulk bar, foot with count and pager, and the loading / empty /
+// error states — plus the codec that keeps its filters, sort and page in the address bar.
+// Retires `components/ade/dashboard/dashboardScreenClasses.ts` as each page epic migrates.
+export * from './DataTable';
+export * from './dataTableUrlState';
+export * from './useDataTableUrlState';
+
 // Shared MCP catalog primitives (V2-MCP-24.7)
 export * from './mcp';
 

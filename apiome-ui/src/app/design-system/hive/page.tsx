@@ -5,8 +5,8 @@
  *
  * The production counterpart of `docs/mockups/foundations/design-system.html`: a data-free
  * route at `/design-system/hive` that renders the §Buttons, §Forms, §Badges, §Cards,
- * §Tabs, §Segmented, §Avatars and §Overlays sections of the mockup with the **real**
- * `components/ui` primitives.
+ * §Tabs, §Segmented, §Avatars, §Tables and §Overlays sections of the mockup with the
+ * **real** `components/ui` primitives.
  * Standing beside the mockup it answers the only question that matters about a re-token —
  * does the component now look like the design language? — and it is where a theme, density
  * or font-scale regression shows up first.
@@ -89,6 +89,7 @@ import {
 } from '@/app/components/ui';
 import { DENSITIES, FONT_SCALES } from '@/app/config/preferences';
 import { SYSTEM_THEME_ID, themes } from '@/app/config/themes';
+import { TablesShowcase } from './TablesShowcase';
 
 /**
  * The three preference axes this gallery drives, derived from the same catalogues the
@@ -180,7 +181,7 @@ export default function HiveDesignSystemPage() {
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-fg">
             Hive primitives{' '}
             <Badge variant="honey" size="lg">
-              HIVE-2.1 · 2.2
+              HIVE-2.1 · 2.2 · 2.3
             </Badge>
           </h1>
           <p className="max-w-[72ch] text-sm text-fg-muted">
@@ -531,6 +532,14 @@ export default function HiveDesignSystemPage() {
               </Avatar>
             </AvatarStack>
           </Demo>
+        </Section>
+
+        <Section
+          id="tables"
+          title="Tables"
+          description="Sticky caps header, hover-revealed row actions, selection with a sticky bulk bar, foot with count and paging. Skeleton rows while loading, the empty state inside the card."
+        >
+          <TablesShowcase />
         </Section>
 
         <Section
