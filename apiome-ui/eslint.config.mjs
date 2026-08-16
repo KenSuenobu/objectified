@@ -33,6 +33,18 @@ const eslintConfig = defineConfig([
     plugins: { hive },
     rules: { "hive/no-px-typography": "error" },
   },
+  {
+    /*
+     * The native-dialog backstop (HIVE-2.7, #5286).
+     *
+     * Scoped to the whole of `src` rather than the two design trees: `window.confirm` was
+     * last found in the admin console, which is outside them, and the acceptance criterion
+     * is that the *app* has none left.
+     */
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { hive },
+    rules: { "hive/no-native-dialog": "error" },
+  },
 ]);
 
 export default eslintConfig;

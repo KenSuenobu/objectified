@@ -12,6 +12,8 @@ import {
   RefreshCw,
   Check,
 } from 'lucide-react';
+import { useDialog } from '@/app/components/providers/DialogProvider';
+import { destructiveConfirm } from '@/app/components/dialogs/destructiveConfirm';
 
 // ---------------------------------------------------------------------------
 // Permission-matrix vocabulary (must match the REST guard exactly)
@@ -73,6 +75,7 @@ function cellKey(resource: string, action: string): string {
 }
 
 export default function RolesClient() {
+  const { confirm, prompt } = useDialog();
   const [roles, setRoles] = useState<Role[]>([]);
   const [perms, setPerms] = useState<MyPermissions | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -167,45 +170,64 @@ export default function RolesClient() {
     return cells;
   };
 
+  /**
+   * Create a role from a name typed into the prompt dialog.
+   *
+   * The request runs inside the dialog (`perform`), so a name the server refuses comes back
+   * under the field the reader typed it into rather than as a banner behind a dialog that
+   * has already closed.
+   */
   const handleNewRole = async () => {
-    const name = window.prompt('Name for the new role');
-    if (!name || !name.trim()) return;
-    setSaving(true);
     setError('');
-    try {
-      const role = await accessApi<Role>('roles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), description: '', permissions: [] }),
-      });
-      await loadData();
-      if (role) setSelectedId(role.id);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create role');
-    } finally {
-      setSaving(false);
-    }
+    await prompt({
+      title: 'New role',
+      label: 'Role name',
+      placeholder: 'Release manager',
+      helperText: 'Members see this name when their access is assigned.',
+      confirmLabel: 'Create role',
+      perform: async (name) => {
+        setSaving(true);
+        try {
+          const role = await accessApi<Role>('roles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description: '', permissions: [] }),
+          });
+          await loadData();
+          if (role) setSelectedId(role.id);
+        } finally {
+          setSaving(false);
+        }
+      },
+    });
   };
 
+  /** Copy the selected role's permission grid under a new name. */
   const handleDuplicate = async () => {
     if (!selectedRole) return;
-    const name = window.prompt('Name for the duplicated role', `${selectedRole.name} (copy)`);
-    if (!name || !name.trim()) return;
-    setSaving(true);
+    const source = selectedRole;
     setError('');
-    try {
-      const role = await accessApi<Role>(`roles/${selectedRole.id}/duplicate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim() }),
-      });
-      await loadData();
-      if (role) setSelectedId(role.id);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to duplicate role');
-    } finally {
-      setSaving(false);
-    }
+    await prompt({
+      title: `Duplicate "${source.name}"`,
+      message: 'The copy starts with the same permissions and no members.',
+      label: 'Name for the copy',
+      defaultValue: `${source.name} (copy)`,
+      confirmLabel: 'Duplicate role',
+      perform: async (name) => {
+        setSaving(true);
+        try {
+          const role = await accessApi<Role>(`roles/${source.id}/duplicate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name }),
+          });
+          await loadData();
+          if (role) setSelectedId(role.id);
+        } finally {
+          setSaving(false);
+        }
+      },
+    });
   };
 
   const handleSave = async () => {
@@ -232,11 +254,24 @@ export default function RolesClient() {
 
   const handleDelete = async () => {
     if (!selectedRole || selectedRole.is_builtin) return;
-    if (!window.confirm(`Delete the role "${selectedRole.name}"? This cannot be undone.`)) return;
+    const role = selectedRole;
+    const memberNote =
+      role.member_count > 0
+        ? ` Its ${role.member_count} ${role.member_count === 1 ? 'member' : 'members'} keep their accounts but lose every permission this role granted.`
+        : ' No member currently holds it.';
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Delete',
+        noun: 'role',
+        name: role.name,
+        consequence: `The permission grid for this role is removed.${memberNote}`,
+      })
+    );
+    if (!confirmed) return;
     setSaving(true);
     setError('');
     try {
-      await accessApi(`roles/${selectedRole.id}`, { method: 'DELETE' });
+      await accessApi(`roles/${role.id}`, { method: 'DELETE' });
       setSelectedId(null);
       await loadData();
     } catch (e) {

@@ -33,6 +33,8 @@ import {
   getAllUsers,
   provisionSampleProject,
 } from '../../../../../lib/db/admin-helper';
+import { useDialog } from '@/app/components/providers/DialogProvider';
+import { destructiveConfirm } from '@/app/components/dialogs/destructiveConfirm';
 
 interface Tenant {
   id: string;
@@ -66,6 +68,7 @@ interface User {
 }
 
 export default function TenantManagementClient() {
+  const { confirm } = useDialog();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [tenantUsers, setTenantUsers] = useState<TenantUser[]>([]);
@@ -275,9 +278,20 @@ export default function TenantManagementClient() {
   };
 
   const handleDeleteTenant = async (tenant: Tenant) => {
-    if (!confirm(`Delete tenant "${tenant.name}"? This action cannot be undone.`)) {
-      return;
-    }
+    // DESIGN.md §8 names tenants as a type-to-confirm case outright: this is the largest
+    // blast radius in the admin console, and the row it sits in looks like any other.
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Delete',
+        noun: 'tenant',
+        name: tenant.name,
+        consequence:
+          'Every member loses access, and the projects, versions and API keys belonging to this tenant go with it.',
+        typeToConfirm: true,
+        confirmLabel: 'Delete tenant',
+      })
+    );
+    if (!confirmed) return;
 
     try {
       const result = await deleteTenant(tenant.id);
@@ -323,9 +337,15 @@ export default function TenantManagementClient() {
   const handleRemoveUser = async (user: TenantUser) => {
     if (!selectedTenant) return;
 
-    if (!confirm(`Remove ${user.name} from this tenant?`)) {
-      return;
-    }
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Remove',
+        name: user.name,
+        consequence: `They lose access to "${selectedTenant.name}" immediately. Their account and any other tenant they belong to are untouched.`,
+        confirmLabel: 'Remove from tenant',
+      })
+    );
+    if (!confirmed) return;
 
     try {
       const result = await removeUserFromTenant(selectedTenant.id, user.id);

@@ -15,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../../ui/Dialog';
+import { useDialog } from '../../../providers/DialogProvider';
+import { destructiveConfirm } from '../../../dialogs/destructiveConfirm';
 import {
   mcpCollectionCreateBody,
   mcpCollectionPublicUrl,
@@ -45,6 +47,7 @@ async function fetchCollections(): Promise<{ collections: McpCollection[]; tenan
 export function McpCollectionsPanel({
   selectedEndpointIds = [],
 }: McpCollectionsPanelProps): React.ReactElement {
+  const { confirm, prompt } = useDialog();
   const [collections, setCollections] = React.useState<McpCollection[]>([]);
   const [tenantSlug, setTenantSlug] = React.useState('');
   const [loading, setLoading] = React.useState(true);
@@ -111,26 +114,37 @@ export function McpCollectionsPanel({
     }
   };
 
+  /**
+   * Rename a collection from the prompt dialog.
+   *
+   * The PATCH runs inside the dialog (`perform`), so a name the API refuses is reported
+   * under the field rather than in the panel's banner after the dialog has gone.
+   */
   const handleRename = async (collection: McpCollection) => {
-    const next = window.prompt('Rename collection', collection.name);
-    if (!next || next.trim() === collection.name) return;
     setError(null);
-    try {
-      const res = await fetch(`/api/mcp/collections/${encodeURIComponent(collection.id)}`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: next.trim() }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(typeof data.error === 'string' ? data.error : res.statusText);
-      }
-      toast.success('Collection renamed');
-      await reload();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not rename collection');
-    }
+    await prompt({
+      title: `Rename "${collection.name}"`,
+      label: 'Collection name',
+      defaultValue: collection.name,
+      helperText: 'Shown wherever this collection is published.',
+      confirmLabel: 'Rename collection',
+      validate: (next) =>
+        next === collection.name ? 'That is already the name of this collection.' : null,
+      perform: async (next) => {
+        const res = await fetch(`/api/mcp/collections/${encodeURIComponent(collection.id)}`, {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: next }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(typeof data.error === 'string' ? data.error : res.statusText);
+        }
+        toast.success('Collection renamed');
+        await reload();
+      },
+    });
   };
 
   const handleTogglePublish = async (collection: McpCollection) => {
@@ -153,13 +167,20 @@ export function McpCollectionsPanel({
     }
   };
 
-  const handleDelete = async (collectionId: string) => {
-    if (!window.confirm('Delete this collection? Endpoints are not removed from the catalog.')) {
-      return;
-    }
+  const handleDelete = async (collection: McpCollection) => {
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Delete',
+        noun: 'collection',
+        name: collection.name,
+        consequence:
+          'The collection and its public URL stop working. The endpoints it groups stay in the catalog.',
+      })
+    );
+    if (!confirmed) return;
     setError(null);
     try {
-      const res = await fetch(`/api/mcp/collections/${encodeURIComponent(collectionId)}`, {
+      const res = await fetch(`/api/mcp/collections/${encodeURIComponent(collection.id)}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -305,7 +326,7 @@ export function McpCollectionsPanel({
                       size="sm"
                       className="h-8 text-red-600 hover:text-red-700 dark:text-red-400"
                       title="Delete collection"
-                      onClick={() => void handleDelete(collection.id)}
+                      onClick={() => void handleDelete(collection)}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden />
                       <span className="sr-only">Delete</span>

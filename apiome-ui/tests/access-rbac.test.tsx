@@ -16,6 +16,20 @@ import { jest } from '@jest/globals';
 import RolesClient from '../src/app/ade/dashboard/roles/RolesClient';
 import MembersClient from '../src/app/ade/dashboard/members/MembersClient';
 import AuditClient from '../src/app/ade/dashboard/audit/AuditClient';
+import { DialogProvider } from '../src/app/components/providers/DialogProvider';
+
+/**
+ * Render a client inside the app's dialog provider.
+ *
+ * Roles and Members ask for a confirm through `useDialog()` since HIVE-2.7 (#5286), and the
+ * hook throws outside its provider rather than silently doing nothing — so the harness has
+ * to mount the same thing `app/layout.tsx` does.
+ *
+ * @param ui The component under test.
+ * @returns Whatever `render` returns.
+ */
+const renderWithDialogs = (ui: React.ReactElement) =>
+  render(<DialogProvider>{ui}</DialogProvider>);
 
 const ROLES = [
   {
@@ -112,7 +126,7 @@ afterEach(() => {
 
 describe('RolesClient (#3611)', () => {
   it('renders the role list and a 13x5 permission matrix', async () => {
-    render(<RolesClient />);
+    renderWithDialogs(<RolesClient />);
 
     // Role names appear in the left list.
     expect(await screen.findByText('Owner')).toBeInTheDocument();
@@ -151,7 +165,7 @@ describe('RolesClient (#3611)', () => {
 
 describe('MembersClient (#3611)', () => {
   it('renders a member row and the Coming soon SSO/SCIM cards', async () => {
-    render(<MembersClient />);
+    renderWithDialogs(<MembersClient />);
 
     // A member row.
     expect(await screen.findByText('Dana Okoro')).toBeInTheDocument();
@@ -214,7 +228,7 @@ describe('MembersClient — license/seat alignment (OLO-6.3)', () => {
 
   it('surfaces seat usage proactively with a meter', async () => {
     mockMembersFetch({ used: 2, max: 5 });
-    render(<MembersClient />);
+    renderWithDialogs(<MembersClient />);
 
     expect(await screen.findByText('2 of 5 seats used')).toBeInTheDocument();
     const meter = screen.getByRole('meter', { name: /Member seats used/i });
@@ -227,7 +241,7 @@ describe('MembersClient — license/seat alignment (OLO-6.3)', () => {
 
   it('disables invite and shows upgrade guidance at capacity', async () => {
     mockMembersFetch({ used: 5, max: 5 });
-    render(<MembersClient />);
+    renderWithDialogs(<MembersClient />);
 
     expect(await screen.findByText('5 of 5 seats used')).toBeInTheDocument();
     // The at-capacity guidance is visible before any failed action.
@@ -248,7 +262,7 @@ describe('MembersClient — license/seat alignment (OLO-6.3)', () => {
           }),
       } as Response),
     );
-    render(<MembersClient />);
+    renderWithDialogs(<MembersClient />);
 
     const emailInput = await screen.findByLabelText(/Email address/i);
     fireEvent.change(emailInput, { target: { value: 'new@acme.io' } });
@@ -276,7 +290,7 @@ describe('MembersClient — license/seat alignment (OLO-6.3)', () => {
     // @ts-expect-error - assigning a test double to the global
     global.fetch = fn;
 
-    render(<MembersClient />);
+    renderWithDialogs(<MembersClient />);
 
     expect(await screen.findByText('Dana Okoro')).toBeInTheDocument();
     // No seat indicator when the license read failed.
@@ -286,7 +300,7 @@ describe('MembersClient — license/seat alignment (OLO-6.3)', () => {
 
 describe('AuditClient (#3611)', () => {
   it('renders the filter tabs and an event row', async () => {
-    render(<AuditClient />);
+    renderWithDialogs(<AuditClient />);
 
     // Filter tabs.
     for (const tab of ['All events', 'Role changes', 'Permissions', 'Members', 'Admin overrides']) {

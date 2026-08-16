@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { Alert } from '@/app/components/ui/Alert';
 import { Meter } from '@/app/components/ui/metrics';
+import { useDialog } from '@/app/components/providers/DialogProvider';
+import { destructiveConfirm } from '@/app/components/dialogs/destructiveConfirm';
 import { fetchTenantLicense, type TenantLicenseSeats } from '../tenants/licenseApi';
 import { describeLicenseError, LICENSE_SEATS_EXHAUSTED_CODE } from '../tenants/licenseErrors';
 import {
@@ -71,6 +73,7 @@ const STATUS_BADGE: Record<Member['status'], string> = {
 };
 
 export default function MembersClient() {
+  const { confirm } = useDialog();
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [perms, setPerms] = useState<MyPermissions | null>(null);
@@ -184,9 +187,16 @@ export default function MembersClient() {
   };
 
   const handleOffboard = async (member: Member) => {
-    if (!window.confirm(`Offboard ${member.name || member.email}? They will lose all access to this tenant.`)) {
-      return;
-    }
+    const confirmed = await confirm(
+      destructiveConfirm({
+        action: 'Offboard',
+        name: member.name || member.email,
+        consequence:
+          'They lose all access to this tenant immediately and their seat is returned to the licence. Their account and the work they authored are kept.',
+        confirmLabel: 'Offboard member',
+      })
+    );
+    if (!confirmed) return;
     setBusy(true);
     setError('');
     try {

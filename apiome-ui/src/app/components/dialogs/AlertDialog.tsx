@@ -1,93 +1,108 @@
 'use client';
 
-import React from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
-import { AlertTriangle, Info, CheckCircle, XCircle } from 'lucide-react';
+import * as React from 'react';
+import {
+  AlertDialog as AlertDialogRoot,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/AlertDialog';
+import { cn } from '../../../../lib/utils';
+import { useReturnFocus } from './useReturnFocus';
+import {
+  DIALOG_TONE_ICON,
+  DIALOG_TONE_INK,
+  DIALOG_TONE_TITLE,
+  normalizeDialogTone,
+  type DialogToneInput,
+} from './dialogTone';
 
-export type AlertDialogVariant = 'error' | 'warning' | 'info' | 'success';
+/**
+ * AlertDialog — the Hive message box (HIVE-2.7, #5286).
+ *
+ * The one-button half of the imperative pair: something happened and the reader only has to
+ * acknowledge it. Same surface and same tone vocabulary as {@link ./ConfirmDialog}, so a
+ * failed delete is reported in the red its confirm was drawn in.
+ *
+ * Rebuilt on the HIVE-2.1 `components/ui/AlertDialog` primitives: `role="alertdialog"`,
+ * focus-trapped, and made of theme tokens rather than the `bg-white` / `bg-indigo-600`
+ * literals it used to hard-code.
+ */
 
-interface AlertDialogProps {
+/** The four severities, in either the Hive or the pre-Hive spelling. */
+export type AlertDialogVariant = DialogToneInput;
+
+export interface AlertDialogProps {
   open: boolean;
+  /** Defaults to the tone's own noun — "Error", "Warning", "Information", "Success". */
   title?: string;
+  /** What happened. A string keeps its line breaks. */
   message: string | React.ReactNode;
   variant?: AlertDialogVariant;
   confirmLabel?: string;
   onClose: () => void;
 }
 
+/**
+ * A message box with a single dismissing action.
+ *
+ * @param props See {@link AlertDialogProps}.
+ * @returns The dialog, or nothing when `open` is false.
+ */
 const AlertDialog: React.FC<AlertDialogProps> = ({
   open,
   title,
   message,
-  variant = 'info',
+  variant,
   confirmLabel = 'OK',
   onClose,
 }) => {
-  const getIcon = () => {
-    switch (variant) {
-      case 'error':
-        return <XCircle className="h-6 w-6 text-red-600" />;
-      case 'warning':
-        return <AlertTriangle className="h-6 w-6 text-yellow-600" />;
-      case 'info':
-        return <Info className="h-6 w-6 text-blue-600" />;
-      case 'success':
-        return <CheckCircle className="h-6 w-6 text-green-600" />;
-    }
-  };
-
-  const getTitle = () => {
-    if (title) return title;
-    switch (variant) {
-      case 'error':
-        return 'Error';
-      case 'warning':
-        return 'Warning';
-      case 'info':
-        return 'Information';
-      case 'success':
-        return 'Success';
-    }
-  };
+  const tone = normalizeDialogTone(variant, 'info');
+  const ToneIcon = DIALOG_TONE_ICON[tone];
+  const actionRef = React.useRef<HTMLButtonElement>(null);
+  const returnFocus = useReturnFocus(open);
 
   return (
-    <Dialog.Root open={open} onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[10001]" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[10002] w-full max-w-sm bg-white dark:bg-gray-900 rounded-xl shadow-xl p-0 flex flex-col max-h-[90vh]"
-          onEscapeKeyDown={onClose}
-          onPointerDownOutside={onClose}
-        >
-          <div className="p-6 pb-2">
-            <Dialog.Title className="flex items-center gap-3 text-xl font-semibold text-gray-900 dark:text-gray-100">
-              {getIcon()}
-              <span>{getTitle()}</span>
-            </Dialog.Title>
-          </div>
-          <div className="px-6 py-2 flex-1 overflow-auto">
-            {typeof message === 'string' ? (
-              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                {message}
-              </p>
-            ) : (
-              <div className="text-gray-700 dark:text-gray-300">{message}</div>
-            )}
-          </div>
-          <div className="flex justify-end p-4 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              autoFocus
-            >
-              {confirmLabel}
-            </button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <AlertDialogRoot open={open} onOpenChange={(next) => !next && onClose()}>
+      <AlertDialogContent
+        size="sm"
+        // Radix parks opening focus on the cancel button, and a message box has none — so
+        // without this the reader would be dropped on the content wrapper. The one action
+        // is the safe one here, so it is also the right landing place.
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          actionRef.current?.focus();
+        }}
+        onCloseAutoFocus={returnFocus}
+      >
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2.5">
+            <ToneIcon className={cn('size-5 shrink-0', DIALOG_TONE_INK[tone])} aria-hidden="true" />
+            <span>{title || DIALOG_TONE_TITLE[tone]}</span>
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div>
+              {typeof message === 'string' ? (
+                <p className="whitespace-pre-wrap">{message}</p>
+              ) : (
+                message
+              )}
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          {/* Radix's `Action` is a close button, so pressing it drives `onOpenChange(false)`
+              and `onClose` runs from there — one path, whether the reader clicked, pressed
+              `Esc` or clicked the scrim. */}
+          <AlertDialogAction ref={actionRef} variant="primary">
+            {confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialogRoot>
   );
 };
 

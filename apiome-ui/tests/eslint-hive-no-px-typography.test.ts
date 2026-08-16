@@ -35,7 +35,7 @@ const ruleTester = new RuleTester({
 describe('hive/no-px-typography', () => {
   it('is registered under the plugin name the config uses', () => {
     expect(hive.meta.name).toBe('hive');
-    expect(Object.keys(hive.rules)).toEqual(['no-px-typography']);
+    expect(Object.keys(hive.rules)).toContain('no-px-typography');
   });
 
   // `RuleTester` declares a `describe`/`it` of its own per case, so it runs in the suite
