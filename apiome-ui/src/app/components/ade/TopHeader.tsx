@@ -13,7 +13,7 @@ import PreferencesDrawerHost from './preferences/PreferencesDrawerHost';
 import { openPreferences } from './preferences/preferencesDrawerBus';
 import CreateTenantDialog, { type CreatedTenant } from './CreateTenantDialog';
 import { useTheme } from '../../providers/ThemeProvider';
-import { useDarkMode } from '../../hooks/useDarkMode';
+import { BrandMark } from '../brand';
 import packageJson from '../../../../package.json';
 import {
   getPlatformNavItems,
@@ -137,7 +137,6 @@ function TopHeaderView({
     (session?.user as { user_id?: string })?.user_id ??
     (session?.user as { id?: string })?.id;
   const { currentTheme, isSystemTheme } = useTheme();
-  const isDark = useDarkMode();
   const navItems = getPlatformNavItems(commercialNavItems);
   const profileHref = platformProfilePath();
 
@@ -352,11 +351,7 @@ function TopHeaderView({
        * and the cluster that no longer fits beside it wraps instead.
        */}
       <div className="flex h-10 shrink-0 items-center gap-2">
-        <img
-          src={isDark ? "/Apiome-05.png" : "/Apiome-02.png"}
-          alt="Apiome Logo"
-          className="h-full w-auto object-contain"
-        />
+        <BrandMark variant="wordmark" size={40} priority />
         <button
           onClick={() => setShowWhatsNew(true)}
           className="cursor-pointer rounded-md border border-slate-300 px-2 py-1 text-[11px] font-medium tracking-[0.02em] text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-400"

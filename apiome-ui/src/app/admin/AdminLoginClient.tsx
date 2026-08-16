@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, AlertCircle } from 'lucide-react';
+import { BrandMark } from '@/app/components/brand';
 
 export default function AdminLoginClient() {
   const [password, setPassword] = useState('');
@@ -46,8 +47,8 @@ export default function AdminLoginClient() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8 border border-slate-200 dark:border-gray-700">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600 rounded-full mb-4">
-              <Lock className="w-8 h-8 text-white" />
+            <div className="inline-flex items-center justify-center mb-4">
+              <BrandMark variant="glyph" size={44} />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Super Admin

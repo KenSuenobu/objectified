@@ -177,7 +177,9 @@ describe('top header reflow (DH-3.5 apiome/private-suite#2622)', () => {
 
   it('keeps the logo cluster at its natural width so it cannot be squeezed over the account controls', async () => {
     const header = await renderHeader();
-    const logo = header.querySelector('img[alt="Apiome Logo"]')?.parentElement;
+    // The wordmark is `BrandMark` since HIVE-1.5: one wrapper, named for assistive
+    // technology, with the two theme variants of the artwork stacked inside it.
+    const logo = header.querySelector('.brand-wordmark')?.parentElement;
 
     expect(logo).not.toBeNull();
     expect(logo).toHaveClass('shrink-0');

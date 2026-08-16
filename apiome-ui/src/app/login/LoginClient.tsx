@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Mail, Lock, User, Info, ShieldCheck, Zap, CreditCard, ArrowRight, RotateCcw } from 'lucide-react';
 import { signIn } from '@lib/auth/session-client';
 import { createSignupRequest } from '../../../lib/db/helper';
-import { useDarkMode } from '../hooks/useDarkMode';
+import { BrandMark } from '../components/brand';
 import type { ProviderSummary } from '../../../lib/auth/provider-registry';
 import { getProviderBrand } from '../components/auth/provider-brand';
 import BetaBackground from './BetaBackground';
@@ -84,7 +84,6 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
   const [showCredentials, setShowCredentials] = useState(
     ssoProviders.length === 0 || error === 'CredentialsSignin'
   );
-  const isDark = useDarkMode();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,12 +199,7 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
       <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center gap-16 px-6 py-12 lg:grid lg:grid-cols-[1.05fr_1fr]">
         {/* Brand hero (desktop) */}
         <div className={`${styles.enterSlow} hidden lg:flex flex-col justify-center select-none`}>
-          <img
-            src={isDark ? "/Apiome-05.png" : "/Apiome-02.png"}
-            alt="Apiome Logo"
-            className="mb-10 self-start"
-            style={{ height: "48px", width: "auto", objectFit: "contain" }}
-          />
+          <BrandMark variant="wordmark" size={48} className="mb-10 self-start" priority />
 
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600/80 dark:text-indigo-300/80">
             The API design environment
@@ -253,12 +247,7 @@ const LoginClient: React.FC<LoginClientProps> = ({ error, callbackUrl = '/ade', 
               <div className="mb-8 flex justify-center lg:hidden">
                 <div className="relative">
                   <div className="absolute inset-0 scale-150 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-20 blur-xl" />
-                  <img
-                    src={isDark ? "/Apiome-05.png" : "/Apiome-02.png"}
-                    alt="Apiome Logo"
-                    className="relative"
-                    style={{ height: "52px", width: "auto", objectFit: "contain" }}
-                  />
+                  <BrandMark variant="wordmark" size={52} className="relative" />
                 </div>
               </div>
 

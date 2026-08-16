@@ -274,7 +274,8 @@ stand-in for `lib/platform-nav.ts`).
 | `.code` `--dark --lines` `.diff-add .diff-del` | code & diff | `ui/code/*` |
 | `.icon-tile` `--accent --honey --ok --warn --danger --violet --hex` | leading icons | new |
 | `.kbd` | shortcut chips | new |
-| `.hex-bg .glow-honey .brand-mark` | brand ornament | new |
+| `.hex-bg .glow-honey` | brand ornament | new |
+| `.brand-mark` `.brand-word` `.brand-sub` | the mark itself: bee glyph, wordmark artwork, rail lock-up | `components/brand/BrandMark` (`.bee-glyph`, `.brand-wordmark`, `.brand-lockup`) |
 
 ---
 
