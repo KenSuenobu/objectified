@@ -1,5 +1,5 @@
 /**
- * Side-nav Governance section — Style Guides entry (GOV-2.1, #4433).
+ * Side-nav Govern group — Style guides entry (GOV-2.1, #4433).
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
@@ -46,38 +46,38 @@ beforeEach(() => {
   withTenant();
 });
 
-describe('DashboardSideNav — Governance / Style Guides', () => {
-  it('renders a Governance section with a Style Guides entry', () => {
+describe('DashboardSideNav — Govern / Style guides', () => {
+  it('renders a Govern group with a Style guides entry', () => {
     mockUsePathname.mockReturnValue('/ade/dashboard');
     render(<DashboardSideNav />);
 
-    expect(screen.getByText('Governance')).toBeInTheDocument();
-    const link = screen.getByText('Style Guides').closest('a');
+    expect(screen.getByText('Govern')).toBeInTheDocument();
+    const link = screen.getByText('Style guides').closest('a');
     expect(link).toHaveAttribute('href', STYLE_GUIDES_HREF);
   });
 
-  it('highlights Style Guides on its route', () => {
+  it('highlights Style guides on its route', () => {
     mockUsePathname.mockReturnValue(STYLE_GUIDES_HREF);
     render(<DashboardSideNav />);
 
-    const link = screen.getByText('Style Guides').closest('a');
+    const link = screen.getByText('Style guides').closest('a');
     expect(link?.className).toContain(activeClass);
   });
 
-  it('does not highlight Style Guides on other routes', () => {
+  it('does not highlight Style guides on other routes', () => {
     mockUsePathname.mockReturnValue('/ade/dashboard/projects');
     render(<DashboardSideNav />);
 
-    const link = screen.getByText('Style Guides').closest('a');
+    const link = screen.getByText('Style guides').closest('a');
     expect(link?.className).not.toContain(activeClass);
   });
 
-  it('disables Style Guides without a tenant', () => {
+  it('disables Style guides without a tenant', () => {
     withoutTenant();
     mockUsePathname.mockReturnValue('/ade/dashboard');
     render(<DashboardSideNav />);
 
     // Disabled items render as a div, not a link.
-    expect(screen.getByText('Style Guides').closest('a')).toBeNull();
+    expect(screen.getByText('Style guides').closest('a')).toBeNull();
   });
 });
