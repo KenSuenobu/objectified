@@ -5,7 +5,8 @@
  *
  * The production counterpart of `docs/mockups/foundations/design-system.html`: a data-free
  * route at `/design-system/hive` that renders the §Buttons, §Forms, §Badges, §Cards,
- * §Tabs and §Overlays sections of the mockup with the **real** `components/ui` primitives.
+ * §Tabs, §Segmented, §Avatars and §Overlays sections of the mockup with the **real**
+ * `components/ui` primitives.
  * Standing beside the mockup it answers the only question that matters about a re-token —
  * does the component now look like the design language? — and it is where a theme, density
  * or font-scale regression shows up first.
@@ -18,11 +19,22 @@
  */
 
 import * as React from 'react';
-import { Filter, Plus, Sparkles, Trash2, Upload, UploadCloud } from 'lucide-react';
+import {
+  Filter,
+  LayoutGrid,
+  List,
+  Plus,
+  Sparkles,
+  Trash2,
+  Upload,
+  UploadCloud,
+} from 'lucide-react';
 import {
   Alert,
   AlertDescription,
   AlertTitle,
+  Avatar,
+  AvatarStack,
   Badge,
   Button,
   Card,
@@ -39,10 +51,23 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  Drawer,
+  DrawerBody,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOpenFullPageLink,
+  DrawerTitle,
+  DrawerTrigger,
   FormField,
   Input,
+  Kbd,
   RadioGroup,
   RadioGroupItem,
+  Segmented,
+  SegmentedItem,
   Select,
   SelectContent,
   SelectItem,
@@ -139,6 +164,9 @@ export default function HiveDesignSystemPage() {
   const [checked, setChecked] = React.useState(true);
   const [radio, setRadio] = React.useState('rest');
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [view, setView] = React.useState('cards');
+  const [scope, setScope] = React.useState('mine');
 
   /** Write a preference axis onto `<html>`, the same place the preferences pane writes it. */
   const setAxis = (attribute: string, value: string) => {
@@ -152,7 +180,7 @@ export default function HiveDesignSystemPage() {
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-fg">
             Hive primitives{' '}
             <Badge variant="honey" size="lg">
-              HIVE-2.1
+              HIVE-2.1 · 2.2
             </Badge>
           </h1>
           <p className="max-w-[72ch] text-sm text-fg-muted">
@@ -434,9 +462,81 @@ export default function HiveDesignSystemPage() {
         </Section>
 
         <Section
+          id="segmented"
+          title="Segmented"
+          description="A view switch, not a tab strip: the same content drawn a different way. Radiogroup semantics, arrow-key navigable, selection follows focus."
+        >
+          <Demo>
+            <Segmented value={view} onValueChange={setView} aria-label="View">
+              <SegmentedItem value="cards">
+                <LayoutGrid aria-hidden />
+                Cards
+              </SegmentedItem>
+              <SegmentedItem value="table">
+                <List aria-hidden />
+                Table
+              </SegmentedItem>
+            </Segmented>
+            <Segmented size="sm" value={scope} onValueChange={setScope} aria-label="Scope">
+              <SegmentedItem value="mine">Mine</SegmentedItem>
+              <SegmentedItem value="workspace">Workspace</SegmentedItem>
+              <SegmentedItem value="archived" disabled>
+                Archived
+              </SegmentedItem>
+            </Segmented>
+            <Segmented
+              value={density}
+              onValueChange={(next) => {
+                setDensity(next);
+                setAxis('data-density', next);
+              }}
+              aria-label="Density"
+            >
+              <SegmentedItem value="comfortable">Comfortable</SegmentedItem>
+              <SegmentedItem value="compact">Compact</SegmentedItem>
+            </Segmented>
+          </Demo>
+          <Demo>
+            <span className="text-sm text-fg-muted">Shortcut chips:</span>
+            <Kbd>N</Kbd>
+            <Kbd keys={['⌘', 'K']} />
+            <Kbd keys={['⌘', '⇧', 'P']} />
+            {/* `--fg-subtle` is a large-text/non-text token (see the legibility case in
+                `tests/hive-design-tokens.test.ts`); a 12 px caption uses `--fg-muted`. */}
+            <span className="text-xs text-fg-muted">
+              All four disappear when &ldquo;Show keyboard hints&rdquo; is off.
+            </span>
+          </Demo>
+        </Section>
+
+        <Section
+          id="avatars"
+          title="Avatars"
+          description="People are circles, workspaces are hexagons. The tint is hashed from the id, so one person is one colour everywhere."
+        >
+          <Demo>
+            <Avatar size="xs" name="Ada Lovelace" seed="user_ada" />
+            <Avatar size="sm" name="Grace Hopper" seed="user_grace" />
+            <Avatar name="Linus Torvalds" seed="user_linus" />
+            <Avatar size="lg" name="Margaret Hamilton" seed="user_margaret" />
+            <Avatar size="xl" name="Alan Turing" seed="user_alan" />
+            <Avatar size="lg" shape="hex" tone="brand" name="Acme Corp" />
+            <Avatar shape="hex" tone="honey" name="Guild" />
+            <AvatarStack>
+              <Avatar size="sm" name="Ada Lovelace" seed="user_ada" />
+              <Avatar size="sm" name="Grace Hopper" seed="user_grace" />
+              <Avatar size="sm" name="Linus Torvalds" seed="user_linus" />
+              <Avatar size="sm" tone="neutral">
+                +4
+              </Avatar>
+            </AvatarStack>
+          </Demo>
+        </Section>
+
+        <Section
           id="overlays"
           title="Overlays &amp; banners"
-          description="A 20 px-radius surface on a tinted scrim, at one of five widths; banners tint by severity."
+          description="A 20 px-radius surface on a tinted scrim, at one of five widths; the drawer is the same behaviour as a right-hand sheet; banners tint by severity."
         >
           <Demo>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -463,6 +563,49 @@ export default function HiveDesignSystemPage() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+              <DrawerTrigger asChild>
+                <Button variant="outline">Open drawer</Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>Audit event</DrawerTitle>
+                  <DrawerDescription className="mono">
+                    evt_9c1d · Aug 15, 09:12:44
+                  </DrawerDescription>
+                </DrawerHeader>
+                <DrawerBody className="flex flex-col gap-3 text-sm text-fg">
+                  <div className="flex justify-between gap-4">
+                    <span className="text-fg-muted">Actor</span>
+                    <span className="flex items-center gap-2">
+                      <Avatar size="xs" name="Ada Lovelace" seed="user_ada" />
+                      Ada Lovelace
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-fg-muted">Action</span>
+                    <Badge status="active">role.assign</Badge>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-fg-muted">Target</span>
+                    <span>Grace Hopper → Admin</span>
+                  </div>
+                  <p className="text-xs text-fg-muted">
+                    The list behind the sheet keeps its scroll position and its filters —
+                    that is the whole argument for a drawer.
+                  </p>
+                </DrawerBody>
+                <DrawerFooter>
+                  <DrawerOpenFullPageLink href="#overlays" />
+                  <DrawerClose asChild>
+                    <Button variant="outline">Close</Button>
+                  </DrawerClose>
+                  <Button variant="primary" onClick={() => setDrawerOpen(false)}>
+                    Edit roles
+                  </Button>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
           </Demo>
           <div className="flex flex-col gap-2">
             {(['info', 'ok', 'warn', 'danger', 'honey', 'neutral'] as const).map((tone) => (

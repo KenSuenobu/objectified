@@ -176,10 +176,31 @@ describe('layering contract', () => {
     const literals = [...layer.root.entries()].filter(
       ([name, value]) =>
         // Type, spacing and control metrics are defined here outright; colour never is.
-        !/^--(app-|font-|fs-|lh-|track-|space-|control-|row-h|page-pad|card-pad|nav-item-h|sidenav-w|table-|r-full)/.test(name) &&
+        // `--gradient-*` (HIVE-2.2) is not an exception to that: a gradient is a picture
+        // rather than a colour, and the case below proves every stop inside one is a
+        // token reference.
+        !/^--(app-|font-|fs-|lh-|track-|space-|control-|row-h|page-pad|card-pad|nav-item-h|sidenav-w|table-|r-full|gradient-)/.test(name) &&
         !value.startsWith('var('),
     );
     expect(literals).toEqual([]);
+  });
+
+  it('builds every gradient out of tokens, so a theme swap reaches it', () => {
+    const gradients = [...layer.root.entries()].filter(([name]) => name.startsWith('--gradient-'));
+    expect(gradients.length).toBeGreaterThan(0);
+    for (const [name, value] of gradients) {
+      // Whatever is left after the geometry, the `var()`s and a `color-mix()` white point
+      // must contain no colour of its own — no hex, no `rgb()`, no named hue.
+      const stops = value
+        // Token references, the two function wrappers, the geometry, and the achromatic
+        // end-points a mix is allowed to lighten towards.
+        .replace(/var\(--[a-z0-9-]+\)/g, '')
+        .replace(/linear-gradient\(|color-mix\(in srgb|\)/g, '')
+        .replace(/-?\d+(?:\.\d+)?(?:deg|%)/g, '')
+        .replace(/\b(?:white|black|transparent)\b/g, '')
+        .replace(/[\s,]/g, '');
+      expect([name, stops]).toEqual([name, '']);
+    }
   });
 });
 

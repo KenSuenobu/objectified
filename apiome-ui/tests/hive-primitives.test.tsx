@@ -124,7 +124,10 @@ describe('Button — DESIGN.md §7 vocabulary', () => {
     render(<Button kbd="N">New project</Button>);
     const chip = screen.getByRole('button').querySelector('.kbd');
     expect(chip).toHaveTextContent('N');
-    expect(chip).toHaveAttribute('aria-hidden', 'true');
+    // HIVE-2.2 moved the chip into a `Kbd` group; `aria-hidden` sits on the group, so what
+    // is hidden when the preference turns the chips off is exactly what is hidden from
+    // assistive technology.
+    expect(chip?.closest('[aria-hidden="true"]')).not.toBeNull();
   });
 
   it('still renders a link as the button itself, shortcut included', () => {

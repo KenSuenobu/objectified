@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../../../lib/utils';
+import { Kbd } from './Kbd';
 
 /**
  * Button — the Hive control (HIVE-2.1, #5280).
@@ -132,9 +133,10 @@ export interface ButtonProps
   /**
    * A keyboard shortcut to show at the trailing edge, e.g. `"N"` or `"⌘K"`.
    *
-   * Rendered as a `.kbd` chip, which the "Show keyboard hints" preference (HIVE-1.4) hides
-   * globally. It is `aria-hidden`: the shortcut is an affordance for sighted pointer users,
-   * and the button's own label is what assistive technology should read.
+   * Rendered as a `Kbd` chip (HIVE-2.2), which the "Show keyboard hints" preference
+   * (HIVE-1.4) hides globally. It is `aria-hidden`: the shortcut is an affordance for
+   * sighted pointer users, and the button's own label is what assistive technology should
+   * read.
    */
   kbd?: React.ReactNode;
 }
@@ -142,11 +144,7 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, pill, asChild, kbd, children, ...props }, ref) => {
     const classes = cn(buttonVariants({ variant, size, pill, className }));
-    const shortcut = kbd ? (
-      <span className="kbd ml-1" aria-hidden="true">
-        {kbd}
-      </span>
-    ) : null;
+    const shortcut = kbd ? <Kbd className="ml-1">{kbd}</Kbd> : null;
 
     // asChild: render the single child element as the button (like Radix's Slot),
     // merging the button classes onto it so an <a>/<Link> *is* the styled control —
