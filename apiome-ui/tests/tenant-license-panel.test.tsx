@@ -197,22 +197,23 @@ describe('TenantLicensePanel', () => {
   });
 });
 
+// The palette moved to the shared quota bands in HIVE-2.6 (#5285); see `license-seats.test.ts`.
 describe('seatMeterAppearance', () => {
-  it('is green below the warning band', () => {
+  it('is quiet below the warning band', () => {
     expect(seatMeterAppearance(3, 10)).toEqual(
-      expect.objectContaining({ percent: 30, barClass: 'bg-emerald-500' }),
+      expect.objectContaining({ percent: 30, tone: 'accent' }),
     );
   });
 
-  it('turns amber at 80% and red when full', () => {
-    expect(seatMeterAppearance(8, 10).barClass).toBe('bg-amber-500');
-    expect(seatMeterAppearance(10, 10).barClass).toBe('bg-red-500');
+  it('turns warn at 80% and danger when full', () => {
+    expect(seatMeterAppearance(8, 10).tone).toBe('warn');
+    expect(seatMeterAppearance(10, 10).tone).toBe('danger');
   });
 
   it('clamps over-limit usage to 100% and treats a zero max as full', () => {
     expect(seatMeterAppearance(12, 10).percent).toBe(100);
     expect(seatMeterAppearance(0, 0)).toEqual(
-      expect.objectContaining({ percent: 100, barClass: 'bg-red-500' }),
+      expect.objectContaining({ percent: 100, tone: 'danger' }),
     );
   });
 });

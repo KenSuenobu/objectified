@@ -14,6 +14,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { Alert } from '@/app/components/ui/Alert';
+import { Meter } from '@/app/components/ui/metrics';
 import { fetchTenantLicense, type TenantLicenseSeats } from '../tenants/licenseApi';
 import { describeLicenseError, LICENSE_SEATS_EXHAUSTED_CODE } from '../tenants/licenseErrors';
 import {
@@ -250,19 +251,13 @@ export default function MembersClient() {
                 </p>
               ) : (
                 seatMeter && (
-                  <div
-                    role="meter"
-                    aria-label="Member seats used"
-                    aria-valuemin={0}
-                    aria-valuemax={seats.max}
-                    aria-valuenow={seats.used}
-                    className="h-2.5 w-full rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden"
-                  >
-                    <div
-                      className={`h-full rounded-full transition-all ${seatMeter.barClass}`}
-                      style={{ width: `${seatMeter.percent}%` }}
-                    />
-                  </div>
+                  <Meter
+                    label="Member seats used"
+                    value={seats.used}
+                    max={seats.max}
+                    valueText={formatSeatUsage(seats)}
+                    showValue={false}
+                  />
                 )
               )}
               {atCapacity && (

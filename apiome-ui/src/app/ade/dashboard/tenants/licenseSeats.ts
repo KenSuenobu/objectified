@@ -13,10 +13,23 @@
  * grants unlimited seats (Sponsor tier); those tenants are never at capacity.
  */
 
+import {
+  METER_WARN_PERCENT,
+  METRIC_TONE_INK_CLASS,
+  meterPercent,
+  meterTier,
+  type MetricTone,
+} from '@/app/components/ui/metrics';
 import type { TenantLicenseSeats } from './licenseApi';
 
-/** Seat-usage fraction (0–100) at which the meter switches to the warning tint. */
-export const SEAT_WARNING_PERCENT = 80;
+/**
+ * Seat-usage fraction (0–100) at which the meter switches to the warning tint.
+ *
+ * Re-exported from the shared metrics bands (HIVE-2.6, #5285) rather than restated: the seat
+ * meter's 80 % line and every other quota meter's are the same line, and the two drifting apart
+ * is exactly the kind of per-screen decision that ticket removes.
+ */
+export const SEAT_WARNING_PERCENT = METER_WARN_PERCENT;
 
 /**
  * Whether the license grants unlimited member seats.
@@ -57,34 +70,29 @@ export function formatSeatUsage(seats: TenantLicenseSeats): string {
 }
 
 /**
- * Meter fill + label classes by seat usage.
+ * The seat meter's share, tone and label ink.
+ *
+ * A thin projection of the shared quota bands (HIVE-2.6, #5285) rather than a palette of its
+ * own: before that ticket this function carried `bg-emerald-500` / `bg-amber-500` /
+ * `bg-red-500`, which followed no theme and agreed with nothing else in the product that
+ * measures a quota. The bands, the rounding and the 80 % line now all come from
+ * `components/ui/metrics/metricTiers.ts`.
+ *
+ * The two seat surfaces render the bar with `<Meter>`, which derives the same tone itself — what
+ * they still need from here is the ink for the `"3 of 10 used"` figure they print in their own
+ * headers, so it agrees with the bar beside it.
  *
  * @param used Seats occupied.
- * @param max Seat limit (0 or negative renders as full).
- * @returns Percentage (0–100) plus Tailwind classes for the bar and count.
+ * @param max Seat limit (0 or negative renders as full — an unlimited plan should not draw a
+ *   meter at all; see {@link seatsUnlimited}).
+ * @returns The whole-percent share, the metric tone it falls in, and the token ink class for a
+ *   figure printed in that tone.
  */
 export function seatMeterAppearance(
   used: number,
   max: number,
-): { percent: number; barClass: string; countClass: string } {
-  const percent = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 100;
-  if (percent >= 100) {
-    return {
-      percent,
-      barClass: 'bg-red-500',
-      countClass: 'text-red-600 dark:text-red-400',
-    };
-  }
-  if (percent >= SEAT_WARNING_PERCENT) {
-    return {
-      percent,
-      barClass: 'bg-amber-500',
-      countClass: 'text-amber-600 dark:text-amber-400',
-    };
-  }
-  return {
-    percent,
-    barClass: 'bg-emerald-500',
-    countClass: 'text-gray-700 dark:text-gray-300',
-  };
+): { percent: number; tone: MetricTone; countClass: string } {
+  const percent = meterPercent(used, max);
+  const tone = meterTier(percent);
+  return { percent, tone, countClass: METRIC_TONE_INK_CLASS[tone] };
 }

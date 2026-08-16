@@ -48,6 +48,7 @@ import {
   type TenantLicenseResponse,
 } from './licenseApi';
 import { describeLicenseError, LICENSE_SEATS_EXHAUSTED_CODE } from './licenseErrors';
+import { Meter } from '@/app/components/ui/metrics';
 import { seatMeterAppearance, seatsExhausted } from './licenseSeats';
 
 // Re-exported for existing consumers/tests that import the seat-meter helper
@@ -322,20 +323,14 @@ export default function TenantLicensePanel({
                         </p>
                       )}
                     </div>
-                    {meter && (
-                      <div
-                        role="meter"
-                        aria-label="Member seats used"
-                        aria-valuemin={0}
-                        aria-valuemax={seats?.max ?? 0}
-                        aria-valuenow={seats?.used ?? 0}
-                        className="h-2.5 w-full rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden"
-                      >
-                        <div
-                          className={`h-full rounded-full transition-all ${meter.barClass}`}
-                          style={{ width: `${meter.percent}%` }}
-                        />
-                      </div>
+                    {meter && seats && (
+                      <Meter
+                        label="Member seats used"
+                        value={seats.used}
+                        max={seats.max}
+                        valueText={`${seats.used} of ${seats.max} seats used`}
+                        showValue={false}
+                      />
                     )}
                     {seatsAtCapacity && (
                       <div className="mt-3">
