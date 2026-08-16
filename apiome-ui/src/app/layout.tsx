@@ -8,6 +8,8 @@ import { DialogProvider } from "@/app/components/providers/DialogProvider";
 import { Toaster } from "@/app/components/ui/Toaster";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Theme as RadixTheme } from "@radix-ui/themes";
+import PreferencesScript from "@/app/providers/PreferencesScript";
+import { PreferencesProvider } from "@/app/providers/PreferencesProvider";
 
 export const metadata: Metadata = {
   title: "Apiome",
@@ -29,33 +31,42 @@ export default function RootLayout({
       className={`${interSans.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Device preferences (HIVE-1.3, #5276). Blocking, and first in <head>, so the
+            stored theme and root font size are on <html> before the first paint —
+            otherwise the page paints the defaults and corrects itself after hydration,
+            which is the flash this removes. */}
+        <PreferencesScript />
+      </head>
       <body className="antialiased">
-        <NextThemesProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          storageKey="theme"
-        >
-          {/* Hive design language (HIVE-1.1, #5274): azure accent, warm "sand" grey
-              and the 14 px card radius, so Radix primitives sit on the same
-              palette and geometry as the token layer in globals.css. */}
-          <RadixTheme
-            accentColor="blue"
-            grayColor="sand"
-            panelBackground="solid"
-            radius="large"
-            scaling="100%"
+        <PreferencesProvider>
+          <NextThemesProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            storageKey="theme"
           >
-            <ThemeRegistry>
-              <SessionWrapper>
-                <DialogProvider>
-                  {children}
-                  <Toaster />
-                </DialogProvider>
-              </SessionWrapper>
-            </ThemeRegistry>
-          </RadixTheme>
-        </NextThemesProvider>
+            {/* Hive design language (HIVE-1.1, #5274): azure accent, warm "sand" grey
+                and the 14 px card radius, so Radix primitives sit on the same
+                palette and geometry as the token layer in globals.css. */}
+            <RadixTheme
+              accentColor="blue"
+              grayColor="sand"
+              panelBackground="solid"
+              radius="large"
+              scaling="100%"
+            >
+              <ThemeRegistry>
+                <SessionWrapper>
+                  <DialogProvider>
+                    {children}
+                    <Toaster />
+                  </DialogProvider>
+                </SessionWrapper>
+              </ThemeRegistry>
+            </RadixTheme>
+          </NextThemesProvider>
+        </PreferencesProvider>
       </body>
     </html>
   );
