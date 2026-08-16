@@ -70,6 +70,15 @@
   --color-brand-azure: #1E90E8;
   --color-brand-honey: #F5B301;
   --color-brand-honey-soft: #FFF3C4;
+  /* The bee's own line and body colour (HIVE-1.5). Navy is the mark as drawn; on a dark
+     base the theme block lightens it, because navy on near-black is a 1.4:1 silhouette —
+     the azure comb and honey stripes would float with nothing holding them together. */
+  --color-brand-ink: var(--color-brand-navy);
+  /* `1` on the six dark-based palettes, `0` everywhere else. The one thing about a theme
+     the brand needs to know: which of the two shipped wordmark files to show. Declared as
+     a token so `BrandMark` can swap artwork in CSS — before first paint, on routes that
+     never mount `ThemeProvider` — instead of branching on `dark:` utilities. */
+  --brand-on-dark: 0;
 
   /* ---- Surfaces — warm neutrals ("paper"), never pure grey ------------ */
   --color-canvas: #F6F5F2;
@@ -205,6 +214,7 @@
   --brand-azure: var(--color-brand-azure);
   --brand-honey: var(--color-brand-honey);
   --brand-honey-soft: var(--color-brand-honey-soft);
+  --brand-ink: var(--color-brand-ink);
 
   /* Surfaces */
   --bg-canvas: var(--color-canvas);
@@ -412,6 +422,11 @@ html.dark:not([data-theme]) {
   --color-ink: #EDEBE6;
   --color-ink-hover: #FFFFFF;
   --color-ink-fg: #16150F;
+
+  /* Brand (HIVE-1.5): the bee's line colour takes the palette's primary ink — the
+     highest-contrast ink it has — and the wordmark switches to its dark artwork. */
+  --color-brand-ink: var(--color-ink);
+  --brand-on-dark: 1;
   --color-honey: #F5B301;
   --color-honey-soft: rgba(245, 179, 1, 0.14);
   --color-honey-fg: #F8CB4F;
@@ -474,6 +489,11 @@ html[data-theme="high-contrast"] {
   --color-ink-hover: #FFFFFF;
   --color-ink-fg: #000000;
 
+  /* Brand (HIVE-1.5): the bee's line colour takes the palette's primary ink — the
+     highest-contrast ink it has — and the wordmark switches to its dark artwork. */
+  --color-brand-ink: var(--color-ink);
+  --brand-on-dark: 1;
+
   --color-ok: #4ADE80;
   --color-warn: #FCD34D;
   --color-danger: #FF7B7B;
@@ -509,6 +529,11 @@ html[data-theme="blueprint"] {
   --color-ink: #E3F2FD;
   --color-ink-hover: #FFFFFF;
   --color-ink-fg: #0C1E3A;
+
+  /* Brand (HIVE-1.5): the bee's line colour takes the palette's primary ink — the
+     highest-contrast ink it has — and the wordmark switches to its dark artwork. */
+  --color-brand-ink: var(--color-ink);
+  --brand-on-dark: 1;
 }
 
 html[data-theme="whiteboard"] {
@@ -561,6 +586,11 @@ html[data-theme="solarized"] {
   --color-ink: #EEE8D5;
   --color-ink-hover: #FDF6E3;
   --color-ink-fg: #002B36;
+
+  /* Brand (HIVE-1.5): the bee's line colour takes the palette's primary ink — the
+     highest-contrast ink it has — and the wordmark switches to its dark artwork. */
+  --color-brand-ink: var(--color-ink);
+  --brand-on-dark: 1;
   /* Deviation from hive.css §4, which leaves `--honey-soft` at the light `#FFF3C4`
      here: paired with this theme's own light honey ink that chip reads at ~1.2:1.
      The fill follows the theme honey at the dark palette's alpha instead. */
@@ -597,6 +627,11 @@ html[data-theme="nord"] {
   --color-ink: #ECEFF4;
   --color-ink-hover: #FFFFFF;
   --color-ink-fg: #2E3440;
+
+  /* Brand (HIVE-1.5): the bee's line colour takes the palette's primary ink — the
+     highest-contrast ink it has — and the wordmark switches to its dark artwork. */
+  --color-brand-ink: var(--color-ink);
+  --brand-on-dark: 1;
   /* Deviation from hive.css §4, which leaves `--honey-soft` at the light `#FFF3C4`
      here: paired with this theme's own light honey ink that chip reads at ~1.2:1.
      The fill follows the theme honey at the dark palette's alpha instead. */
@@ -633,6 +668,11 @@ html[data-theme="darcula"] {
   --color-ink: #E8E8E8;
   --color-ink-hover: #FFFFFF;
   --color-ink-fg: #2B2B2B;
+
+  /* Brand (HIVE-1.5): the bee's line colour takes the palette's primary ink — the
+     highest-contrast ink it has — and the wordmark switches to its dark artwork. */
+  --color-brand-ink: var(--color-ink);
+  --brand-on-dark: 1;
   /* Deviation from hive.css §4, which leaves `--honey-soft` at the light `#FFF3C4`
      here: paired with this theme's own light honey ink that chip reads at ~1.2:1.
      The fill follows the theme honey at the dark palette's alpha instead. */
@@ -789,6 +829,139 @@ html[data-mono-ids="off"] .mono {
 
 html[data-kbd-hints="off"] .kbd {
   display: none;
+}
+
+/* ==========================================================================
+   BRAND MARK (HIVE-1.5, #5278)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/DESIGN.md` §2 (the mark is a bee on a honeycomb) and
+   the mockups' `.brand-mark` placeholder, which these rules replace with the
+   real bee.
+
+   The glyph's colour lives here rather than on the SVG, which is what lets one
+   component serve all nine themes: `BeeGlyph` tags every shape with the brand
+   role that paints it and each role resolves to a token below. `--brand-ink` is
+   the only one a theme swaps — navy as the mark is drawn, the palette's own ink
+   on a dark base, where navy would read as a 1.4:1 silhouette.
+
+   `--bee-part` carries the role's colour so one declaration can serve a fill and
+   a stroke: the antennae are stroked, everything else is filled.
+   ========================================================================== */
+
+.bee-glyph {
+  display: block;
+  /* The mark is never the thing that gives way when a header runs out of room. */
+  flex: none;
+}
+
+.bee-glyph__ink {
+  --bee-part: var(--brand-ink);
+}
+
+.bee-glyph__wing {
+  --bee-part: var(--brand-azure);
+  opacity: 0.55;
+}
+
+.bee-glyph__comb {
+  --bee-part: var(--brand-azure);
+}
+
+.bee-glyph__honey {
+  --bee-part: var(--brand-honey);
+}
+
+.bee-glyph__fill {
+  fill: var(--bee-part);
+}
+
+.bee-glyph__stroke {
+  fill: none;
+  stroke: var(--bee-part);
+  /* In viewBox units, and the same number as `BEE_GLYPH_STROKE_WIDTH` — the raster
+     renderer has no stylesheet and writes it inline, so `tests/brand-mark.test.tsx`
+     checks the two agree. A whole pixel at 20 px, so an antenna never half-fades. */
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* One-colour tone, for a tinted surface or ornament: the parts keep their order of
+   emphasis through opacity, so the comb still reads as concentric rings. */
+.bee-glyph--mono .bee-glyph__ink {
+  --bee-part: currentColor;
+  opacity: 1;
+}
+
+.bee-glyph--mono .bee-glyph__comb {
+  --bee-part: currentColor;
+  opacity: 0.45;
+}
+
+.bee-glyph--mono .bee-glyph__honey {
+  --bee-part: currentColor;
+  opacity: 0.7;
+}
+
+.bee-glyph--mono .bee-glyph__wing {
+  --bee-part: currentColor;
+  opacity: 0.25;
+}
+
+/* ---- Wordmark -----------------------------------------------------------
+   Both shipped files are in the DOM and CSS shows one of them, driven by the
+   theme's `--brand-on-dark`. That is deliberate: the choice is then made before
+   first paint and without JavaScript, on `/login` and `/signup` too, where no
+   `ThemeProvider` is mounted and a `dark:` utility only knows about two of the
+   nine palettes. `next/image` serves each at the rendered width, so the copy
+   that stays hidden costs a few kilobytes. */
+.brand-wordmark {
+  display: inline-grid;
+  height: var(--brand-wordmark-h, 32px);
+  /* The intrinsic ratio of `Apiome-02.png` / `Apiome-05.png` (1174 × 398). */
+  aspect-ratio: 1174 / 398;
+}
+
+.brand-wordmark__asset {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brand-wordmark__asset--light {
+  opacity: calc(1 - var(--brand-on-dark));
+}
+
+.brand-wordmark__asset--dark {
+  opacity: var(--brand-on-dark);
+}
+
+/* ---- Lock-up — bee + word, the rail's brand row (DESIGN.md §5.2) -------- */
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--fg);
+}
+
+.brand-lockup__text {
+  display: flex;
+  flex-direction: column;
+  line-height: var(--lh-tight);
+}
+
+.brand-lockup__name {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: var(--track-tight);
+}
+
+.brand-lockup__sub {
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-subtle);
 }
 
 /* Radix UI Dialog animations */

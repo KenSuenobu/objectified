@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { BrandMark } from '../brand';
 import { useAuthSession } from '@lib/auth/session-client';
 import { signOutEverywhere } from '../../../../lib/auth/sign-out-client';
 import { useState } from 'react';
@@ -332,24 +332,7 @@ export default function AdeHome({
       <header className="sticky top-0 z-20 border-b border-zinc-200/70 bg-white/75 backdrop-blur-xl dark:border-zinc-800/70 dark:bg-zinc-950/75">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="relative h-8 w-[108px]">
-              <Image
-                src="/Apiome-02.png"
-                alt="Apiome"
-                width={108}
-                height={32}
-                className="h-8 w-auto object-contain dark:hidden"
-                priority
-              />
-              <Image
-                src="/Apiome-05.png"
-                alt="Apiome"
-                width={108}
-                height={32}
-                className="hidden h-8 w-auto object-contain dark:block"
-                priority
-              />
-            </div>
+            <BrandMark variant="wordmark" size={32} priority />
             <button
               type="button"
               onClick={() => setShowWhatsNew(true)}

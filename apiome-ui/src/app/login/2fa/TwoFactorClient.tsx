@@ -12,7 +12,7 @@ import {
   type TwoFactorMethod,
 } from '@lib/auth/two-factor-callback';
 import { browserNavigate } from '@lib/auth/browser-navigate';
-import { useDarkMode } from '../../hooks/useDarkMode';
+import { BrandMark } from '../../components/brand';
 import BetaBackground from '../BetaBackground';
 import { getAuthErrorCopy } from '../auth-error-copy';
 import styles from '../login.module.css';
@@ -59,7 +59,6 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const isDark = useDarkMode();
   const queryError = getAuthErrorCopy(error);
   const showMethodSwitcher = methods.includes('totp') && methods.includes('otp');
 
@@ -166,12 +165,7 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
               <div className="mb-8 flex justify-center">
                 <div className="relative">
                   <div className="absolute inset-0 scale-150 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-20 blur-xl" />
-                  <img
-                    src={isDark ? '/Apiome-05.png' : '/Apiome-02.png'}
-                    alt="Apiome Logo"
-                    className="relative"
-                    style={{ height: '52px', width: 'auto', objectFit: 'contain' }}
-                  />
+                  <BrandMark variant="wordmark" size={52} className="relative" priority />
                 </div>
               </div>
 
