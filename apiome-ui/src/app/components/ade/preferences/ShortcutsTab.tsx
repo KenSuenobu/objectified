@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Kbd } from '../../ui/Kbd';
 import { SHELL_SHORTCUTS, SURFACE_SHORTCUTS, type ShortcutEntry } from './shortcuts';
 
 /**
@@ -22,7 +23,7 @@ export default function ShortcutsTab() {
       <ShortcutList title="Everywhere" shortcuts={SHELL_SHORTCUTS} />
       <ShortcutList title="Studio canvas" shortcuts={SURFACE_SHORTCUTS} />
       <p className="text-xs text-fg-subtle">
-        On Windows and Linux, <span className="kbd">⌘</span> is <span className="kbd">Ctrl</span>.
+        On Windows and Linux, <Kbd>⌘</Kbd> is <Kbd>Ctrl</Kbd>.
       </p>
     </div>
   );
@@ -53,15 +54,11 @@ function ShortcutList({
           >
             <dt className="text-sm text-fg">{shortcut.description}</dt>
             <dd className="flex shrink-0 items-center gap-1">
-              {/* The chips are decorative: the row already reads "Open preferences,
-                  Command comma" from the visually hidden spelling beside them. */}
-              <span aria-hidden className="flex items-center gap-1">
-                {shortcut.keys.map((key, index) => (
-                  <span key={`${shortcut.id}-${index}`} className="kbd">
-                    {key}
-                  </span>
-                ))}
-              </span>
+              {/* The chips are decorative — `Kbd` hides the group from assistive
+                  technology — so the row reads "Open preferences, ⌘ ," from the visually
+                  hidden spelling beside them, which the keyboard-hints preference leaves
+                  alone. */}
+              <Kbd keys={shortcut.keys} />
               <span className="sr-only">{shortcut.keys.join(' ')}</span>
             </dd>
           </div>

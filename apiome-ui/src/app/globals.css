@@ -292,6 +292,19 @@
   --brand-honey-soft: var(--color-brand-honey-soft);
   --brand-ink: var(--color-brand-ink);
 
+  /* The two brand gradients (hive.css §19 `.avatar--brand` / `.avatar--honey`), used for
+     a workspace mark and for brand ornament. Declared here rather than in `@theme` for
+     the reason `--shadow-focus` gives: Tailwind resolves `var(--color-*)` inside a theme
+     value at build time, which would freeze the honey lift at the light palette instead
+     of following the HIVE-1.2 swap. The lift is mixed from `--honey` rather than stated,
+     so a theme that re-tints honey re-tints the gradient with it. */
+  --gradient-brand: linear-gradient(135deg, var(--brand-azure), var(--brand-navy));
+  --gradient-honey: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--honey) 72%, white),
+    var(--honey)
+  );
+
   /* Surfaces */
   --bg-canvas: var(--color-canvas);
   --bg-rail: var(--color-rail);
@@ -1015,12 +1028,24 @@ html[data-mono-ids="off"] .mono {
   font-family: var(--font-sans);
 }
 
-/* ---- Keyboard hints (DESIGN.md §4.1) ------------------------------------
-   `.kbd` is the shortcut chip on a button, menu row or field. Hiding it is a
-   presentation choice only: the shortcut itself keeps working, and the chip is
-   `aria-hidden` at the component level, so nothing accessible is removed with
-   it. HIVE-2.6 gives the chip its full styling; this is the geometry the
-   preference needs to have something to hide. */
+/* ---- Keyboard hints (DESIGN.md §4.1, hive.css §12) ----------------------
+   `.kbd` is the shortcut chip on a button, menu row or field, and `.kbd-group`
+   is the chord it sits in — `components/ui/Kbd.tsx` renders both. Hiding them
+   is a presentation choice only: the shortcut itself keeps working, and the
+   group is `aria-hidden` at the component level, so nothing accessible is
+   removed with it — a caller that needs the chord spoken writes it beside the
+   group, outside what this rule hides.
+
+   The chip is drawn as a key: an inset hairline plus a 1 px bottom edge, which
+   is the whole of the keycap illusion at 11 px. HIVE-2.2 completed the styling
+   the preference (HIVE-1.4) landed the geometry for. */
+.kbd-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem; /* 2px */
+  vertical-align: middle;
+}
+
 .kbd {
   display: inline-flex;
   align-items: center;
@@ -1028,8 +1053,8 @@ html[data-mono-ids="off"] .mono {
   min-width: 1.5em;
   padding: 0.1em 0.35em;
   border-radius: var(--r-xs);
-  background: var(--bg-inset);
-  box-shadow: 0 0 0 1px var(--border) inset;
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 1px var(--border-strong) inset, 0 1px 0 var(--border-strong);
   color: var(--fg-muted);
   font-family: var(--font-sans);
   font-size: var(--fs-2xs);
@@ -1037,8 +1062,60 @@ html[data-mono-ids="off"] .mono {
   line-height: 1.4;
 }
 
-html[data-kbd-hints="off"] .kbd {
+html[data-kbd-hints="off"] .kbd,
+html[data-kbd-hints="off"] .kbd-group {
   display: none;
+}
+
+/* ---- Avatar silhouette (HIVE-2.2, #5281; hive.css §19) ------------------
+   The hexagon of DESIGN.md §2, for a *workspace* avatar. `clip-path` rather
+   than a mask or an SVG so the shape costs nothing, follows the element's own
+   size at every scale, and still clips a photograph.
+
+   It is CSS rather than a Tailwind arbitrary value because the polygon is a
+   fixed silhouette used in several places, and one shared definition is what
+   keeps every hexagon in the interface the same hexagon. */
+.avatar-hex {
+  border-radius: 0;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+}
+
+/* ---- Drawer motion (HIVE-2.2, #5281; DESIGN.md §3.4) --------------------
+   "Dialogs rise 8 px + fade; drawers slide from the right." The keyframes are
+   here, and not as Tailwind utilities, because the app-wide `*:focus-visible`
+   and the animation utilities above already live unlayered — and because the
+   drawer's duration is the `--dur-slow` token rather than a Tailwind step.
+
+   Reduced motion needs no rule of its own: the `html[data-motion="reduce"]`
+   and `prefers-reduced-motion` blocks above zero every animation duration. */
+@keyframes hive-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hive-drawer-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+
+.hive-drawer[data-state="open"] {
+  animation: hive-drawer-in var(--dur-slow) var(--ease-out);
+}
+
+.hive-drawer[data-state="closed"] {
+  animation: hive-drawer-out var(--dur-base) var(--ease-out);
 }
 
 /* ==========================================================================

@@ -260,7 +260,7 @@ stand-in for `lib/platform-nav.ts`).
 | --- | --- | --- |
 | `.btn` `--primary --accent --ghost --soft --danger --danger-soft --link --sm --lg --icon --pill` | buttons; primary = ink | `components/ui/Button` variants |
 | `.input .select .textarea .input-wrap .field .hint .error` | forms; 36 px controls, inset hairline, azure focus | `Input`, `Select`, `Textarea`, `FormField` |
-| `.check .radio .switch .switch-row .slider .segmented` | choice controls | `Checkbox`, `RadioGroup`, `Switch`, new `Segmented` |
+| `.check .radio .switch .switch-row .slider .segmented` | choice controls | `Checkbox`, `RadioGroup`, `Switch`, `Segmented` |
 | `.tabs .tab .count` `--pills` `.vtabs` | underline tabs with counts | `Tabs` + `tabStyles` |
 | `.badge[data-status] .badge--*` `.fmt--*` `.method--*` `.chip` `.tag` `.dot` | status vocab, format & method pills, filter chips | `Badge`, `ui/catalog/FormatPill`, `ui/mcp/*Pill` |
 | `.card .card__header/body/footer` `--hover --flat --soft --honey --link --selected` | panels | `Card` |
@@ -268,12 +268,12 @@ stand-in for `lib/platform-nav.ts`).
 | `.table-wrap .table-toolbar .table .table-foot .pager .bulk-bar` | data tables: sticky caps header, hover, selection, dense variant, sticky bulk bar | new `DataTable` (replaces `dashboardScreenClasses.ts`) |
 | `.empty` `--inline --dashed` | empty states with hex art, title, desc, CTA | `EmptyState` |
 | `.skeleton .spinner` | loading | `Skeleton`, `Spinner` |
-| `.dialog .drawer .menu .palette .toast .banner .callout .tooltip` | overlays | `Dialog`, new `Drawer`, `DropdownMenu`, `cmdk`, `sonner`, `Alert` |
-| `.avatar` `--hex --brand --a..e` `.avatar-stack` | people & workspaces | new `Avatar` |
+| `.dialog .drawer .menu .palette .toast .banner .callout .tooltip` | overlays | `Dialog`, `Drawer`, `DropdownMenu`, `cmdk`, `sonner`, `Alert` |
+| `.avatar` `--hex --brand --a..e` `.avatar-stack` | people & workspaces | `Avatar`, `AvatarStack` (`.avatar-hex`; the five tints are the `accent`/`violet`/`ok`/`orange`/`rose` role tokens) |
 | `.stepper .step` `.timeline .tl-item` `.tree .tree__item` `.split .panel` | wizards, history, split panels | new |
 | `.code` `--dark --lines` `.diff-add .diff-del` | code & diff | `ui/code/*` |
 | `.icon-tile` `--accent --honey --ok --warn --danger --violet --hex` | leading icons | new |
-| `.kbd` | shortcut chips | new |
+| `.kbd` `.kbd-group` | shortcut chips | `Kbd` |
 | `.hex-bg .glow-honey` | brand ornament | new |
 | `.brand-mark` `.brand-word` `.brand-sub` | the mark itself: bee glyph, wordmark artwork, rail lock-up | `components/brand/BrandMark` (`.bee-glyph`, `.brand-wordmark`, `.brand-lockup`) |
 

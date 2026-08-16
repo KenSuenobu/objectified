@@ -46,7 +46,6 @@ const DEFERRED: Readonly<Record<string, string>> = {
   'LoadingState.tsx': 'HIVE-2.5 — empty / error / skeleton states',
   'Markdown.tsx': 'HIVE-2.x — prose styling travels with the docs surfaces',
   'markdownGithubComponents.tsx': 'HIVE-2.x — prose styling travels with the docs surfaces',
-  'Toaster.tsx': 'HIVE-2.2 — the toast is redesigned with the Drawer/overlay family',
 };
 
 /**
@@ -119,6 +118,14 @@ describe('the sweep — no primitive names a palette colour', () => {
         'Textarea.tsx',
         'Tooltip.tsx',
         'tabStyles.ts',
+        // HIVE-2.2 (#5281): the four new primitives, and the toast HIVE-2.1 handed to the
+        // overlay family. Listed here for the same reason as the rest — a new primitive
+        // that names a palette colour must fail in the ordinary test gate.
+        'Avatar.tsx',
+        'Drawer.tsx',
+        'Kbd.tsx',
+        'Segmented.tsx',
+        'Toaster.tsx',
       ])
     );
   });
