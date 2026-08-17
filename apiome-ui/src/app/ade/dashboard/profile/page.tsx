@@ -1,60 +1,181 @@
 'use client';
 
+/**
+ * Profile — `/ade/dashboard/profile` (HIVE-4.7, #5301).
+ *
+ * Mockup: `docs/mockups/account/profile.html`. Design language: `docs/mockups/DESIGN.md` §5.3
+ * (page header + tab row), §7 (one primary action), §8 (detail page = main column + aside).
+ *
+ * ## What was wrong
+ *
+ * The page drew its own `<header>` and `<main>` inside the shell's `<main>` — a second landmark
+ * nested in the first — and then hand-rolled the rest in named colours: an
+ * `indigo → violet → purple` hero band, an `indigo → violet` avatar under a
+ * `ring-white dark:ring-gray-800`, five `text-indigo-*` / `text-emerald-*` / `text-cyan-*` /
+ * `text-amber-*` card glyphs, and `bg-gray-50/70 dark:bg-gray-900/40` info tiles. None of that
+ * could follow a theme. Beneath the skin, its two neighbours were unreachable: Linked accounts
+ * only through a card footer, Preferences not at all.
+ *
+ * ## What it is now
+ *
+ * `Page` / `PageHeader` / `PageBody` (HIVE-3.5) with the account tab strip — **Profile · Linked
+ * accounts · Preferences** — in the header, an identity hero, and a two-column body: Account
+ * details and Security on the left, Sign-in methods and Session on the right.
+ *
+ * Every capability the page had is here, including all six of `TwoFactorSettings`' nested boxes
+ * and all five dialogs; `tests/two-factor-settings.test.tsx` passes against that file unchanged.
+ *
+ * ## What is new, and where it comes from
+ *
+ * Three additions, each reading data the app already holds rather than a new source:
+ *
+ * - **Sign-in methods lists the reader's actual methods** — `getUserHasPassword` and
+ *   `getLinkedAccountsForUser`, the two calls the Linked accounts page next door already makes.
+ * - **The identity hero and the tenant tile name the workspace** — `loadTenantMembershipContext`,
+ *   the same server action the rail's workspace switcher loads.
+ * - **The session card shows how much of the session is left** — arithmetic on `session.expires`
+ *   against Better Auth's own `SESSION_EXPIRES_IN_SECONDS`.
+ *
+ * Every one of the three fails soft. A REST hiccup in the membership context leaves the workspace
+ * unnamed rather than leaving the page blank, because none of them is what the reader came for.
+ *
+ * ## Why it is still a client component
+ *
+ * The session is the page's subject and `useAuthSession` is a hook; the name edit has to write
+ * back through `update()` so the rail's user menu changes at the same moment; and the copy
+ * confirmations, the dialogs and the two-factor flows are all local state.
+ */
+
+import { useCallback, useEffect, useState } from 'react';
+import { Pencil } from 'lucide-react';
+
 import { useAuthSession } from '@lib/auth/session-client';
-import Link from 'next/link';
-import { User, Mail, Hash, Clock, Building2, Edit2, Key, Shield, LogIn, Copy, Check, Link as LinkIcon } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { loadTenantMembershipContext } from '@lib/auth/tenant-membership-context';
+import type { TenantMembershipRow } from '@lib/auth/tenant-membership-context-mapping';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '../../../components/ui/Dialog';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Label } from '../../../components/ui/Label';
-import { Alert } from '../../../components/ui/Alert';
-import { Badge } from '../../../components/ui/Badge';
-import { LoadingState } from '../../../components/ui/LoadingState';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../../components/ui/Card';
-import { updateUserName, updateUserPassword, getCurrentUserLastLoginAt } from '../../../../../lib/db/helper';
+  getCurrentUserLastLoginAt,
+  getLinkedAccountsForUser,
+  getUserHasPassword,
+  updateUserName,
+  updateUserPassword,
+} from '@lib/db/helper';
+
+import { Alert } from '@/app/components/ui/Alert';
+import { Button } from '@/app/components/ui/Button';
+import { LoadingState } from '@/app/components/ui/LoadingState';
+import { Page, PageBody } from '@/app/components/shell/pageChrome';
+import PageHeader from '@/app/components/shell/PageHeader';
 import {
-  dashboardContentStackClass,
-  dashboardMainClass,
-  dashboardPanelClass,
-} from '@/app/components/ade/dashboard/dashboardScreenClasses';
-import { cn } from '../../../../../lib/utils';
+  AccountDetailsCard,
+  AccountTabs,
+  ChangePasswordDialog,
+  EditNameDialog,
+  IdentityHero,
+  SecurityCard,
+  SessionCard,
+  SignInMethodsCard,
+  buildSignInMethods,
+  type LinkedIdentity,
+  type SignInMethodRow,
+} from '@/app/components/ade/account';
 import { TwoFactorSettings } from './TwoFactorSettings';
 
+/** The `/ade/dashboard` home, which the breadcrumb's first step returns to. */
+const HOME_ROUTE = '/ade/dashboard';
+
+/** What the page learns about the reader's account beyond the session itself. */
+interface ProfileExtras {
+  /** The reader's sign-in methods, password first. */
+  methods: SignInMethodRow[];
+  /** The current workspace's membership row, when the context resolved one. */
+  workspace: TenantMembershipRow | null;
+}
+
+/** The empty extras, used before the loads land and whenever one of them fails. */
+const NO_EXTRAS: ProfileExtras = { methods: [], workspace: null };
+
+/**
+ * Parse a server action's JSON payload without throwing.
+ *
+ * Both actions below already swallow their own database errors and answer with an empty
+ * payload, so the only way this can go wrong is a shape the page does not expect — and a page
+ * that threw on it would replace a working profile with a blank screen.
+ *
+ * @param raw The JSON string the action returned.
+ * @param accepts Whether the parsed value is the shape this caller asked for.
+ * @param fallback What to use when it does not parse, or is not that shape.
+ * @returns The parsed value, or `fallback`.
+ */
+function parsePayload<T>(raw: string, accepts: (value: unknown) => boolean, fallback: T): T {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return accepts(parsed) ? (parsed as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Read a server action's `{ success, error }` envelope.
+ *
+ * `updateUserName` and `updateUserPassword` both answer with a JSON *string*, and both report
+ * failure in the body rather than by throwing.
+ *
+ * @param raw The JSON string the action returned.
+ * @param fallbackError What to say when the action failed without saying why.
+ * @returns `null` on success, or the message to show.
+ */
+function readActionError(raw: string, fallbackError: string): string | null {
+  const response = parsePayload<{ success?: boolean; error?: string }>(
+    raw,
+    (value) => value != null && typeof value === 'object' && !Array.isArray(value),
+    {}
+  );
+  if (response.success) return null;
+  return response.error || fallbackError;
+}
+
+/**
+ * The Profile page.
+ *
+ * @returns The page's header and body, or the loading state while there is no session.
+ */
 const Profile = () => {
   const { data: session, update } = useAuthSession();
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editedName, setEditedName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
 
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [lastLoginAt, setLastLoginAt] = useState<string | null | undefined>(undefined);
-  const [copiedField, setCopiedField] = useState('');
+  const [extras, setExtras] = useState<ProfileExtras>(NO_EXTRAS);
+  const [extrasLoading, setExtrasLoading] = useState(true);
 
+  const user = session?.user as
+    | {
+        user_id?: string;
+        current_tenant_id?: string;
+        name?: string | null;
+        email?: string | null;
+        emailVerified?: boolean;
+        twoFactorEnabled?: boolean;
+      }
+    | undefined;
+  const userId = user?.user_id;
+  const tenantId = user?.current_tenant_id;
+
+  // The last-login lookup is its own effect because it is its own question, asked of the users
+  // table rather than of the account's identities, and it re-runs when the session's user does.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const raw = await getCurrentUserLastLoginAt();
-        const parsed = JSON.parse(raw);
-        if (!cancelled && parsed.success) {
-          setLastLoginAt(parsed.lastLoginAt ?? null);
-        } else if (!cancelled) {
-          setLastLoginAt(null);
-        }
+        const parsed = parsePayload<{ success?: boolean; lastLoginAt?: string | null }>(
+          raw,
+          (value) => value != null && typeof value === 'object',
+          {}
+        );
+        if (!cancelled) setLastLoginAt(parsed.success ? (parsed.lastLoginAt ?? null) : null);
       } catch {
         if (!cancelled) setLastLoginAt(null);
       }
@@ -64,482 +185,187 @@ const Profile = () => {
     };
   }, [session?.user]);
 
-  const handleEditClick = () => {
-    setEditedName(session?.user?.name || '');
-    setErrorMessage('');
-    setShowEditDialog(true);
-  };
+  // The three lookups behind the added panels share one effect and one `finally`, so the
+  // sign-in list and the workspace name appear together rather than one at a time.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
 
-  const handleSaveName = async () => {
-    if (!editedName.trim()) {
-      setErrorMessage('Name cannot be empty');
-      return;
-    }
-    setIsLoading(true);
-    setErrorMessage('');
-    try {
-      const userId = (session?.user as any)?.user_id;
-      const result = await updateUserName(userId, editedName.trim());
-      const response = JSON.parse(result);
-      if (response.success) {
-        await update({
-          ...session,
-          user: { ...session?.user, name: editedName.trim() },
+    (async () => {
+      setExtrasLoading(true);
+      try {
+        const [accountsRaw, passwordRaw, membership] = await Promise.all([
+          getLinkedAccountsForUser(userId),
+          getUserHasPassword(userId),
+          // Fails soft on its own (it falls back to a name-only listing), but a REST outage can
+          // still reject: the workspace stays unnamed rather than taking the page with it.
+          loadTenantMembershipContext().catch(() => null),
+        ]);
+        if (cancelled) return;
+
+        const accounts = parsePayload<LinkedIdentity[]>(accountsRaw, Array.isArray, []);
+        const { hasPassword } = parsePayload<{ hasPassword?: boolean }>(
+          passwordRaw,
+          (value) => value != null && typeof value === 'object',
+          {}
+        );
+
+        setExtras({
+          methods: buildSignInMethods({ hasPassword: Boolean(hasPassword), accounts }),
+          workspace: membership?.tenants.find((row) => row.id === tenantId) ?? null,
         });
-        setShowEditDialog(false);
-      } else {
-        setErrorMessage(response.error || 'Failed to update name');
+      } catch {
+        if (!cancelled) setExtras(NO_EXTRAS);
+      } finally {
+        if (!cancelled) setExtrasLoading(false);
       }
-    } catch (error: any) {
-      setErrorMessage(error.message || 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    })();
 
-  const handlePasswordChangeClick = () => {
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-    setPasswordError('');
-    setShowPasswordDialog(true);
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, tenantId]);
 
-  const handleSavePassword = async () => {
-    if (!currentPassword) {
-      setPasswordError('Please enter your current password');
-      return;
-    }
-    if (!newPassword) {
-      setPasswordError('Please enter a new password');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
-      return;
-    }
-    setIsLoading(true);
-    setPasswordError('');
-    try {
-      const userId = (session?.user as any)?.user_id;
-      const result = await updateUserPassword(userId, currentPassword, newPassword);
-      const response = JSON.parse(result);
-      if (response.success) {
-        setShowPasswordDialog(false);
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+  const handleSaveName = useCallback(
+    async (name: string): Promise<string | null> => {
+      // Unreachable from the UI — the dialogs only exist once a session has rendered the page —
+      // but the id is what the write is scoped by, so it is checked rather than asserted.
+      if (!userId) return 'You are not signed in.';
+      try {
+        const failure = readActionError(await updateUserName(userId, name), 'Failed to update name');
+        if (failure) return failure;
+        // The session carries the name the rail's user menu and every activity row print, so it
+        // is refreshed here rather than left to the next navigation.
+        await update({ ...session, user: { ...session?.user, name } });
+        return null;
+      } catch (error) {
+        return error instanceof Error ? error.message : 'An error occurred';
+      }
+    },
+    [session, update, userId]
+  );
+
+  const handleChangePassword = useCallback(
+    async (current: string, next: string): Promise<string | null> => {
+      if (!userId) return 'You are not signed in.';
+      try {
+        const failure = readActionError(
+          await updateUserPassword(userId, current, next),
+          'Failed to update password'
+        );
+        if (failure) return failure;
         setSuccessMessage('Password changed successfully.');
-      } else {
-        setPasswordError(response.error || 'Failed to update password');
+        return null;
+      } catch (error) {
+        return error instanceof Error ? error.message : 'An error occurred';
       }
-    } catch (error: any) {
-      setPasswordError(error.message || 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCopy = async (field: string, value: string) => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(''), 2000);
-    } catch {
-      // clipboard unavailable — ignore
-    }
-  };
+    },
+    [userId]
+  );
 
   if (!session) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <LoadingState minHeightClassName="min-h-[320px]" message="Loading profile..." />
-      </div>
+      <Page>
+        <PageBody>
+          <LoadingState minHeightClassName="min-h-[20rem]" message="Loading profile..." />
+        </PageBody>
+      </Page>
     );
   }
 
-  const { user, expires } = session;
-  const expiryDate = new Date(expires);
-  const tenantId = (user as any)?.current_tenant_id as string | undefined;
-  const userId = (user as any)?.user_id as string | undefined;
-
-  const initials = (user?.name || user?.email || '?')
-    .split(/[\s@._-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
-
-  const formatLoginDate = (dateString: string) => {
-    const d = new Date(dateString);
-    const datePart = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' });
-    const timePart = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    return `${datePart} ${timePart}`;
-  };
-
-  const CopyButton = ({ field, value }: { field: string; value: string }) => (
-    <button
-      onClick={() => handleCopy(field, value)}
-      className="p-1 rounded-md text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors flex-shrink-0"
-      title={`Copy ${field}`}
-    >
-      {copiedField === field ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-    </button>
-  );
-
-  const InfoTile = ({
-    icon: Icon,
-    label,
-    value,
-    mono,
-    action,
-    className,
-  }: {
-    icon: React.ElementType;
-    label: string;
-    value: React.ReactNode;
-    mono?: boolean;
-    action?: React.ReactNode;
-    className?: string;
-  }) => (
-    <div
-      className={cn(
-        'rounded-lg border border-gray-100 dark:border-gray-700/60 bg-gray-50/70 dark:bg-gray-900/40 p-4',
-        className
-      )}
-    >
-      <div className="flex items-center gap-1.5 mb-1.5 text-gray-400 dark:text-gray-500">
-        <Icon className="h-3.5 w-3.5 text-indigo-400 dark:text-indigo-500" />
-        <span className="text-xs font-medium uppercase tracking-wider">{label}</span>
-      </div>
-      <div className="flex items-center gap-1.5 min-w-0">
-        <div
-          className={
-            mono
-              ? 'text-sm font-mono text-gray-700 dark:text-gray-300 truncate'
-              : 'text-sm font-medium text-gray-900 dark:text-white min-w-0'
-          }
-          title={mono && typeof value === 'string' ? value : undefined}
-        >
-          {value}
-        </div>
-        {action}
-      </div>
-    </div>
-  );
+  const workspaceName = extras.workspace?.name ?? null;
+  const workspaceRole = extras.workspace?.role
+    ? extras.workspace.role.charAt(0).toUpperCase() + extras.workspace.role.slice(1)
+    : null;
 
   return (
-    <>
-      <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <User className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                Profile
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                Manage your account and security settings
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <Page>
+      <PageHeader
+        breadcrumb={[
+          { label: workspaceName ?? 'Home', href: HOME_ROUTE },
+          { label: 'Account' },
+          { label: 'Profile' },
+        ]}
+        title="Profile"
+        description="Your identity, password, two-factor and sign-in methods."
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => setShowEditDialog(true)}
+            data-testid="profile-edit-name-header"
+          >
+            <Pencil aria-hidden />
+            Edit name
+          </Button>
+        }
+        tabs={
+          <AccountTabs
+            current="profile"
+            linkedCount={
+              extrasLoading
+                ? undefined
+                : extras.methods.filter((method) => !method.isPassword).length
+            }
+          />
+        }
+      />
 
-      <main className={dashboardMainClass}>
-        <div className={cn(dashboardContentStackClass, 'max-w-5xl mx-auto')}>
-          {successMessage && (
-            <Alert variant="success" onClose={() => setSuccessMessage('')}>
-              {successMessage}
-            </Alert>
-          )}
+      <PageBody>
+        {successMessage && (
+          <Alert variant="ok" onClose={() => setSuccessMessage('')} data-testid="profile-success">
+            {successMessage}
+          </Alert>
+        )}
 
-          {/* Identity hero */}
-          <Card className={cn(dashboardPanelClass, 'shadow-none overflow-hidden')}>
-            <div className="h-24 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500" />
-            <div className="px-6 pb-6">
-              <div className="flex items-end justify-between gap-4 -mt-10">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 ring-4 ring-white dark:ring-gray-800 shadow-lg shadow-indigo-500/25 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 select-none">
-                  {initials}
-                </div>
-                <Button variant="outline" size="sm" onClick={handleEditClick}>
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Edit name
-                </Button>
-              </div>
-              <div className="mt-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {user?.name || 'Unnamed user'}
-                  </h3>
-                  {tenantId && (
-                    <Badge variant="secondary" className="gap-1.5">
-                      <Building2 className="h-3 w-3" />
-                      Tenant active
-                    </Badge>
-                  )}
-                </div>
-                {user?.email && (
-                  <p className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    <Mail className="h-3.5 w-3.5" />
-                    {user.email}
-                  </p>
-                )}
-              </div>
-            </div>
-          </Card>
+        <IdentityHero
+          name={user?.name}
+          email={user?.email}
+          seed={userId}
+          workspaceName={workspaceName}
+          workspaceRole={workspaceRole}
+          hasWorkspace={Boolean(tenantId)}
+          twoFactorEnabled={Boolean(user?.twoFactorEnabled)}
+        />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Account details */}
-            <Card className={cn(dashboardPanelClass, 'shadow-none lg:col-span-2 self-start')}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-indigo-500" />
-                  Account details
-                </CardTitle>
-                <CardDescription>Your identity and workspace information</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <InfoTile
-                    icon={User}
-                    label="Full name"
-                    value={user?.name || 'Not set'}
-                    action={
-                      <button
-                        onClick={handleEditClick}
-                        className="p-1 rounded-md text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors flex-shrink-0"
-                        title="Edit name"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </button>
-                    }
-                  />
-                  <InfoTile icon={Mail} label="Email" value={user?.email || 'Not set'} />
-                  <InfoTile
-                    icon={Hash}
-                    label="User ID"
-                    value={userId ?? '—'}
-                    mono
-                    action={userId ? <CopyButton field="User ID" value={userId} /> : undefined}
-                  />
-                  {tenantId ? (
-                    <InfoTile
-                      icon={Building2}
-                      label="Current tenant"
-                      value={tenantId}
-                      mono
-                      action={<CopyButton field="Tenant ID" value={tenantId} />}
-                    />
-                  ) : (
-                    <InfoTile icon={Building2} label="Current tenant" value="None selected" />
-                  )}
-                  <InfoTile
-                    icon={LogIn}
-                    label="Last login"
-                    value={
-                      lastLoginAt === undefined
-                        ? '…'
-                        : lastLoginAt
-                          ? formatLoginDate(lastLoginAt)
-                          : '—'
-                    }
-                    className="sm:col-span-2"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+        <div className="acct-grid">
+          <div className="acct-grid__main">
+            <AccountDetailsCard
+              name={user?.name}
+              email={user?.email}
+              emailVerified={user?.emailVerified}
+              userId={userId}
+              tenantId={tenantId}
+              workspaceName={workspaceName}
+              lastLoginAt={lastLoginAt}
+              onEditName={() => setShowEditDialog(true)}
+            />
 
-            <div className="space-y-6">
-              {/* Security */}
-              <Card className={cn(dashboardPanelClass, 'shadow-none')}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-emerald-500" />
-                    Security
-                  </CardTitle>
-                  <CardDescription>Password and account security</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Use a strong, unique password. Change it periodically or if you suspect it has
-                      been compromised.
-                    </p>
-                  </div>
-                  <TwoFactorSettings />
-                </CardContent>
-                <CardFooter>
-                  <Button size="sm" className="w-full" onClick={handlePasswordChangeClick}>
-                    <Key className="h-4 w-4 mr-2" />
-                    Change password
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Sign-in methods — manage linked identity providers (OLO-2.4) */}
-              <Card className={cn(dashboardPanelClass, 'shadow-none')}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <LinkIcon className="h-5 w-5 text-cyan-500" />
-                    Sign-in methods
-                  </CardTitle>
-                  <CardDescription>Linked identity providers</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Link providers like GitHub, GitLab, or Microsoft for single sign-on, and manage
-                    or unlink them at any time.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button asChild size="sm" variant="outline" className="w-full">
-                    <Link href="/ade/dashboard/linked-accounts">
-                      <LinkIcon className="h-4 w-4 mr-2" />
-                      Manage linked accounts
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Session */}
-              <Card className={cn(dashboardPanelClass, 'shadow-none')}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-amber-500" />
-                    Session
-                  </CardTitle>
-                  <CardDescription>Your current sign-in session</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
-                    Expires
-                  </p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {expiryDate.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                    {expiryDate.toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+            <SecurityCard
+              twoFactor={<TwoFactorSettings />}
+              onChangePassword={() => setShowPasswordDialog(true)}
+            />
           </div>
 
-          {/* Edit name dialog */}
-          <Dialog open={showEditDialog} onOpenChange={(open) => !isLoading && setShowEditDialog(open)}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/40">
-                    <Edit2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  Edit name
-                </DialogTitle>
-                <DialogDescription>Update your display name.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full name</Label>
-                  <Input
-                    id="name"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSaveName()}
-                    disabled={isLoading}
-                    placeholder="Your name"
-                    autoFocus
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setShowEditDialog(false)} disabled={isLoading}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSaveName} disabled={isLoading}>
-                  {isLoading ? 'Saving…' : 'Save'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Change password dialog */}
-          <Dialog open={showPasswordDialog} onOpenChange={(open) => !isLoading && setShowPasswordDialog(open)}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
-                    <Key className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  Change password
-                </DialogTitle>
-                <DialogDescription>Enter your current password and choose a new one.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                {passwordError && <Alert variant="error">{passwordError}</Alert>}
-                <Alert variant="info">
-                  <div>
-                    <p className="font-medium mb-2">Password requirements</p>
-                    <ul className="list-disc list-inside text-sm space-y-1 text-gray-600 dark:text-gray-400">
-                      <li>At least 8 characters</li>
-                      <li>One uppercase and one lowercase letter</li>
-                      <li>One number or special character</li>
-                    </ul>
-                  </div>
-                </Alert>
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Current password</Label>
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    disabled={isLoading}
-                    autoFocus
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New password</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm new password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSavePassword()}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setShowPasswordDialog(false)} disabled={isLoading}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSavePassword} disabled={isLoading}>
-                  {isLoading ? 'Updating…' : 'Change password'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <aside className="acct-grid__aside" aria-label="Sign-in methods and session">
+            <SignInMethodsCard methods={extras.methods} loading={extrasLoading} />
+            <SessionCard expires={session.expires} />
+          </aside>
         </div>
-      </main>
-    </>
+
+        <EditNameDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          initialName={user?.name ?? ''}
+          onSubmit={handleSaveName}
+        />
+
+        <ChangePasswordDialog
+          open={showPasswordDialog}
+          onOpenChange={setShowPasswordDialog}
+          onSubmit={handleChangePassword}
+        />
+      </PageBody>
+    </Page>
   );
 };
 
