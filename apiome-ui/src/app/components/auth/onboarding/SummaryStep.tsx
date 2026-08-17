@@ -1,8 +1,15 @@
 'use client';
 
-import { ArrowLeft, BadgeCheck, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Check } from 'lucide-react';
 import { FREE_LICENSE_SUMMARY } from '@lib/auth/free-license';
+import { Alert } from '../../ui/Alert';
+import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
+import { Card } from '../../ui/Card';
+import { Spinner } from '../../ui/Spinner';
+
+/** The chip beside the plan name — the one thing readers most want confirmed here. */
+const NO_PAYMENT_DETAILS = 'No payment details';
 
 /** Inputs and callbacks of the review step. */
 export interface SummaryStepProps {
@@ -21,87 +28,101 @@ export interface SummaryStepProps {
 }
 
 /**
- * Third wizard step (OLO-4.1): review before confirm. Shows the entered
- * organization details and the Free license the tenant will start on
- * ({@link FREE_LICENSE_SUMMARY}) — the acceptance criterion is that the user
- * sees the plan before anything is created.
+ * Third wizard step (OLO-4.1, re-skinned by HIVE-4.4 #5298): review before confirm.
+ *
+ * Authority: `docs/mockups/auth/onboarding.html`, step 3.
+ *
+ * Shows the entered organization details and the Free license the tenant will start
+ * on ({@link FREE_LICENSE_SUMMARY}) — the acceptance criterion is that the user sees
+ * the plan before anything is created. The quotas are drawn as the mockup's three
+ * cells rather than a list of rows, which is what lets the numbers be read at a
+ * glance; they are still the same three entitlements, from the same constant.
+ *
+ * @param props The values, the error and submitting state, and the two callbacks —
+ *   see {@link SummaryStepProps}.
+ * @returns The step's body band and its action band.
  */
 export function SummaryStep({ name, slug, error, submitting, onBack, onConfirm }: SummaryStepProps) {
   return (
-    <div data-testid="onboarding-step-summary">
-      <h1
-        id="first-tenant-onboarding-title"
-        className="text-xl font-bold text-gray-900 dark:text-white"
-      >
-        Review and create
-      </h1>
-      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-        Here&apos;s what will be created. You can change details later in tenant settings.
-      </p>
-
-      <dl className="mt-6 space-y-2 rounded-lg border border-gray-200 p-4 text-left text-sm dark:border-gray-700">
-        <div className="flex justify-between gap-4">
-          <dt className="text-gray-500 dark:text-gray-400">Organization</dt>
-          <dd className="font-medium text-gray-900 dark:text-white">{name}</dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-gray-500 dark:text-gray-400">URL slug</dt>
-          <dd className="font-mono text-gray-900 dark:text-white">{slug}</dd>
-        </div>
-      </dl>
-
-      <section
-        aria-label={`${FREE_LICENSE_SUMMARY.planName} plan summary`}
-        className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 text-left dark:border-indigo-800 dark:bg-indigo-900/20"
-        data-testid="free-license-summary"
-      >
-        <div className="flex items-center gap-2">
-          <BadgeCheck aria-hidden="true" className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-            {FREE_LICENSE_SUMMARY.planName} plan
-          </h2>
-        </div>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          {FREE_LICENSE_SUMMARY.description}
+    <>
+      <div className="wiz-card__body" data-testid="onboarding-step-summary">
+        <h1 id="first-tenant-onboarding-title" className="auth-title">
+          Review and create
+        </h1>
+        <p className="auth-sub mt-1">
+          Here&apos;s what will be created. You can change details later in tenant settings.
         </p>
-        <ul className="mt-3 space-y-1 text-sm text-gray-700 dark:text-gray-300">
-          {FREE_LICENSE_SUMMARY.limits.map((limit) => (
-            <li key={limit.label} className="flex justify-between gap-4">
-              <span>{limit.label}</span>
-              <span className="font-medium">{limit.value}</span>
-            </li>
-          ))}
-          {FREE_LICENSE_SUMMARY.includes.map((item) => (
-            <li key={item} className="flex items-start gap-2">
-              <Check
-                aria-hidden="true"
-                className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
-              />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
 
-      {error && (
-        <div
-          role="alert"
-          className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-left text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+        <dl className="wiz-kv mt-4">
+          <div>
+            <dt>Organization</dt>
+            <dd className="font-medium">{name}</dd>
+          </div>
+          <div>
+            <dt>URL slug</dt>
+            <dd className="mono">{slug}</dd>
+          </div>
+        </dl>
+
+        {/* `role="region"` is what a `<section aria-label>` produced before the card
+            primitive was adopted here — and `aria-label` on a role-less `div` is an axe
+            `aria-prohibited-attr` violation, so the role has to be stated. */}
+        <Card
+          variant="flat"
+          role="region"
+          aria-label={`${FREE_LICENSE_SUMMARY.planName} plan summary`}
+          className="mt-4 p-[var(--card-pad)]"
+          data-testid="free-license-summary"
         >
-          {error}
-        </div>
-      )}
+          <div className="flex flex-wrap items-center gap-2">
+            <BadgeCheck aria-hidden="true" className="size-4 shrink-0 text-ok-fg" />
+            {/* `.wiz-plan-title`, not `text-sm`: an unlayered `h2 { font-size }` in
+                `globals.css` outranks every layered utility. */}
+            <h2 className="wiz-plan-title">{FREE_LICENSE_SUMMARY.planName} plan</h2>
+            <Badge variant="ok" className="ml-auto">
+              {NO_PAYMENT_DETAILS}
+            </Badge>
+          </div>
+          {/* A `div`, not a `p`: the unlayered `p { color: … }` at the foot of `globals.css`
+              outranks every `@layer utilities` colour. */}
+          <div className="mt-1 text-xs text-fg-muted">{FREE_LICENSE_SUMMARY.description}</div>
 
-      <div className="mt-6 flex justify-between gap-3">
+          <dl className="wiz-limits mt-3">
+            {FREE_LICENSE_SUMMARY.limits.map((limit) => (
+              <div key={limit.label}>
+                <dt>{limit.label}</dt>
+                <dd>{limit.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <ul className="mt-3 flex flex-col gap-1">
+            {FREE_LICENSE_SUMMARY.includes.map((item) => (
+              <li key={item} className="flex items-start gap-2 text-xs text-fg-muted">
+                <Check aria-hidden="true" className="mt-px size-3.5 shrink-0 text-ok-fg" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        {error && (
+          <Alert variant="danger" role="alert" className="mt-4" data-testid="onboarding-error">
+            {error}
+          </Alert>
+        )}
+      </div>
+
+      <div className="wiz-card__foot">
         <Button type="button" variant="outline" disabled={submitting} onClick={onBack}>
-          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+          <ArrowLeft aria-hidden="true" />
           Back
         </Button>
-        <Button type="button" disabled={submitting} onClick={onConfirm}>
-          {submitting && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />}
+        <Button type="button" variant="primary" disabled={submitting} onClick={onConfirm}>
+          {submitting && <Spinner size="sm" tone="light" aria-hidden="true" />}
           {submitting ? 'Creating…' : 'Create organization'}
         </Button>
       </div>
-    </div>
+    </>
   );
 }

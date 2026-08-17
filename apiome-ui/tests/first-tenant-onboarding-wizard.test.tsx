@@ -129,7 +129,9 @@ describe('FirstTenantOnboardingWizard: welcome step', () => {
     const labels = screen
       .getAllByRole('button')
       .map((button) => button.textContent?.toLowerCase() ?? '');
-    expect(labels).toHaveLength(3);
+    // The wizard's own three, plus the top row's sign-out (HIVE-4.4): setup, check
+    // again, and two ways out of the account. None of them leaves the wizard behind.
+    expect(labels).toHaveLength(4);
     for (const label of labels) {
       expect(label).not.toMatch(/skip|close|dismiss|cancel/);
     }
@@ -146,11 +148,16 @@ describe('FirstTenantOnboardingWizard: welcome step', () => {
   it('signs the user out back to the login page', () => {
     render(<FirstTenantOnboardingWizard />);
 
-    fireEvent.click(screen.getByRole('button', { name: /sign out/i }));
+    // Two controls do this since HIVE-4.4 — the step's own and the top row's — and
+    // both go through the same handler, so both are exercised.
+    for (const testId of ['onboarding-sign-out', 'onboarding-topbar-sign-out']) {
+      mockSignOutEverywhere.mockClear();
+      fireEvent.click(screen.getByTestId(testId));
 
-    // Logout goes through signOutEverywhere, which clears the session +
-    // last-active-tenant cookies server-side before NextAuth's client signOut.
-    expect(mockSignOutEverywhere).toHaveBeenCalledWith('/login');
+      // Logout goes through signOutEverywhere, which clears the session +
+      // last-active-tenant cookies server-side before NextAuth's client signOut.
+      expect(mockSignOutEverywhere).toHaveBeenCalledWith('/login');
+    }
   });
 });
 
@@ -170,8 +177,11 @@ describe('FirstTenantOnboardingWizard: organization step', () => {
 
     fillOrganizationStep('Acme Corp', 'not a slug!');
 
+    // Matched on the message's own opening rather than the shared tail: the field's
+    // standing hint names the same three characters, and since HIVE-4.4 the hint and
+    // the error are both on screen (the rule and this attempt say different things).
     expect(
-      screen.getByText(/lowercase letters, numbers, and dashes/i)
+      screen.getByText(/must contain only lowercase letters, numbers, and dashes/i)
     ).toBeInTheDocument();
     expect(screen.getByTestId('onboarding-step-organization')).toBeInTheDocument();
   });

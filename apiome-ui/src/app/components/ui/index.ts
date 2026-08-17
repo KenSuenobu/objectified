@@ -36,6 +36,10 @@ export * from './Drawer';
 export * from './Avatar';
 export * from './Kbd';
 
+// The progress row of a multi-step flow (HIVE-4.4, #5298) — ten mockups draw one, and the
+// first-tenant onboarding wizard is the first surface in production to need it.
+export * from './Stepper';
+
 // The list surface (HIVE-2.3, #5282): one composable table — toolbar, sticky sortable
 // header, selection with a bulk bar, foot with count and pager, and the loading / empty /
 // error states — plus the codec that keeps its filters, sort and page in the address bar.

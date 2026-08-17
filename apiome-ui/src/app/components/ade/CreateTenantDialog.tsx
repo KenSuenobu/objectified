@@ -113,6 +113,9 @@ export function CreateTenantDialog({ open, onOpenChange, onCreated }: CreateTena
           </div>
         ) : (
           <OrganizationStep
+            // The dialog supplies its own padding; the wizard's card bands would
+            // double it and draw a hairline across the middle of the sheet.
+            chrome="plain"
             initialName={orgName}
             initialSlug={slug}
             onBack={() => onOpenChange(false)}
