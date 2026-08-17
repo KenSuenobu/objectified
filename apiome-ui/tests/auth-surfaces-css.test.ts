@@ -75,6 +75,12 @@ const AUTH_PRELUDES = [
   '.auth-methods__tab[data-state="active"]',
   '.auth-methods__tab > svg',
   '.auth-code .input-wrap > input',
+  // HIVE-4.3 (#5297) — the slug field and its trailing readout.
+  '.input-wrap > .input-suffix',
+  '.input-wrap:has(> .input-suffix) > :is(input, textarea)',
+  '.auth-slug .input-wrap > input',
+  '.auth-slug-preview',
+  '.auth-slug-preview > b',
 ];
 
 /**
@@ -223,6 +229,8 @@ describe('auth surfaces — quiet text still has to be readable', () => {
     expect(declarationsOf('.auth-trust').get('color')).toBe('var(--fg-muted)');
     expect(declarationsOf('.auth-terms').get('color')).toBe('var(--fg-muted)');
     expect(declarationsOf('.auth-divider').get('color')).toBe('var(--fg-muted)');
+    // The slug preview is the same 12 px quiet line, and takes the same deviation.
+    expect(declarationsOf('.auth-slug-preview').get('color')).toBe('var(--fg-muted)');
   });
 
   it('clears WCAG AA where the mockup’s subtle ink would not', () => {
@@ -350,5 +358,42 @@ describe('auth surfaces — the aurora is gone', () => {
       const source = readFileSync(join(__dirname, '..', 'src', 'app', 'login', file), 'utf8');
       expect(source).not.toMatch(/^import .*\.module\.css';$/m);
     }
+  });
+});
+
+describe('auth surfaces — the slug field (HIVE-4.3)', () => {
+  it('pins the availability chip inside the control, as a readout not a control', () => {
+    const suffix = declarationsOf('.input-wrap > .input-suffix');
+    expect(suffix.get('position')).toBe('absolute');
+    expect(suffix.get('right')).toBe('var(--space-2)');
+    // Same promise as the leading glyph: clicking anywhere in the box focuses the input.
+    expect(suffix.get('pointer-events')).toBe('none');
+  });
+
+  it('reserves the chip’s room only when there is a chip, and in the chip’s own type size', () => {
+    // `:has()` is what makes the gutter conditional — a field with no readout keeps the
+    // primitive's own padding rather than a permanent hole on its right. And the reserve
+    // is stated in `--fs-2xs` (what `Badge` sets) rather than a frozen number, so it grows
+    // with the chip at every font scale instead of letting the value run underneath it.
+    const padding = declarationsOf(
+      '.input-wrap:has(> .input-suffix) > :is(input, textarea)'
+    ).get('padding-right');
+    expect(padding).toBe('calc(var(--space-2) * 2 + var(--fs-2xs) * 9)');
+  });
+
+  it('sets the slug and its preview in the mono face', () => {
+    // The slug is an identifier headed for a URL, not prose. The rule is on the field
+    // wrapper rather than the control for the same reason as `.auth-code`: `AuthField`
+    // owns the control and hands down only its own class.
+    expect(declarationsOf('.auth-slug .input-wrap > input').get('font-family')).toBe(
+      'var(--font-mono)'
+    );
+    expect(declarationsOf('.auth-slug-preview').get('font-family')).toBe('var(--font-mono)');
+  });
+
+  it('gives the slug itself full-strength ink inside the preview', () => {
+    // The preview is a whole URL, but only one segment of it is being decided.
+    expect(declarationsOf('.auth-slug-preview > b').get('color')).toBe('var(--fg)');
+    expect(declarationsOf('.auth-slug-preview').get('overflow-wrap')).toBe('anywhere');
   });
 });

@@ -2,7 +2,7 @@
 
 import crypto from 'crypto';
 import { createUser, deleteUser, clearUserPassword } from '../db/admin-helper';
-import { linkExternalAccount } from '../db/helper';
+import { linkExternalAccount, isTenantSlugTaken } from '../db/helper';
 import { resolveOAuthEmailVerified } from './account-resolution';
 import {
   getOauthSignupPendingById,
@@ -10,11 +10,56 @@ import {
   insertAuthOneTimeCode,
 } from '../db/oauth-signup';
 import { provisionFirstTenantViaRest } from './first-tenant-provisioning';
+import type { SlugAvailabilityResult } from './slug-availability';
 import { generateTenantSlug, validateTenantSlug } from './tenant-slug';
 
 export type CompleteOAuthSignupResult =
   | { success: true; oneTimeCode: string }
   | { success: false; error: string };
+
+/**
+ * Check whether an organization slug is free, for the live chip on the OAuth
+ * sign-up card (HIVE-4.3, #5297).
+ *
+ * The onboarding wizard's probe (`checkTenantSlugAvailability`) cannot serve
+ * this screen: it identifies the caller from their session, and the reader here
+ * has no account yet — every answer would be `unknown`. So this action proves
+ * the caller instead with the pending-signup id they already hold, then asks the
+ * database the same question `createTenant` asks before inserting.
+ *
+ * Misuse safeguards — tenant slugs are otherwise not enumerable by strangers:
+ * - **The pending id gates it.** No live sign-up session, no verdict: an expired
+ *   or unknown id answers `unknown`, which is also what a caller with no id at
+ *   all sees. The id is single-use and hour-lived (`oauth_signup_pending`).
+ * - The slug is shape-validated before it reaches the query, and the query is
+ *   parameterized, so arbitrary strings never reach SQL.
+ * - The answer is one bit — free or not — and never names the tenant holding it.
+ * - Failures degrade to `unknown` rather than throwing: the chip is advisory and
+ *   {@link completeOAuthSignup} re-checks uniqueness when the form is submitted.
+ *
+ * @param pendingId The `oauth_signup_pending` id from the sign-up link's token.
+ * @param slugInput Candidate slug (whitespace/case are normalized here).
+ * @returns The availability verdict; never throws.
+ */
+export async function checkOauthSignupSlugAvailability(
+  pendingId: string,
+  slugInput: string
+): Promise<SlugAvailabilityResult> {
+  const slug = (slugInput ?? '').trim().toLowerCase();
+  const slugError = validateTenantSlug(slug);
+  if (slugError) {
+    return { status: 'invalid', error: slugError };
+  }
+
+  try {
+    const pending = await getOauthSignupPendingById(pendingId);
+    if (!pending) return { status: 'unknown' };
+    return { status: (await isTenantSlugTaken(slug)) ? 'taken' : 'available' };
+  } catch (error) {
+    console.error('[checkOauthSignupSlugAvailability] availability probe failed:', error);
+    return { status: 'unknown' };
+  }
+}
 
 /**
  * Completes OAuth self-signup: creates the user, links the provider, then

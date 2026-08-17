@@ -24,5 +24,14 @@ export default async function OauthSignupPage({
     redirect("/login?error=SignupSessionExpired");
   }
 
-  return <OauthSignupClient token={token} emailHint={maskEmail(pending.email)} />;
+  // The provider id travels as a string, not a component: it is resolved to a label and a
+  // brand glyph on the client (`provider-registry` / `provider-brand`), which is what keeps
+  // this server component's props serializable.
+  return (
+    <OauthSignupClient
+      token={token}
+      emailHint={maskEmail(pending.email)}
+      provider={pending.provider}
+    />
+  );
 }

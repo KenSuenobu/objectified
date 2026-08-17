@@ -1,170 +1,298 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useCallback, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, ArrowRight, BadgeCheck, Building2, Link2, User } from 'lucide-react';
 import { signIn } from '@lib/auth/session-client';
-import { User, Building2, Link2 } from "lucide-react";
-import { completeOAuthSignup } from "../../../../lib/auth/oauth-signup-actions";
+import { BROWSE_APP_URL } from '@lib/app-urls';
+import {
+  checkOauthSignupSlugAvailability,
+  completeOAuthSignup,
+} from '@lib/auth/oauth-signup-actions';
+import { getProviderDescriptor } from '@lib/auth/provider-registry';
+import { generateTenantSlug, validateTenantSlug } from '@lib/auth/tenant-slug';
 import { ICON_SIZE } from '@/app/components/ui/iconSizes';
+import { BrandMark } from '../../components/brand';
+import { AuthShell } from '../../components/auth/AuthShell';
+import { AuthField } from '../../components/auth/AuthField';
+import { BetaBadge } from '../../components/auth/BetaBadge';
+import { SlugField } from '../../components/auth/SlugField';
+import { useSlugAvailability } from '../../components/auth/useSlugAvailability';
+import { getProviderBrand } from '../../components/auth/provider-brand';
+import { Alert } from '../../components/ui/Alert';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
+import { Spinner } from '../../components/ui/Spinner';
 
-function generateSlug(name: string) {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+/** Shown when the reader submits a slug the probe has just found to be taken. */
+const SLUG_TAKEN_ERROR = 'This slug is already taken — please choose another';
+
+/** Shown when `completeOAuthSignup` throws rather than answering. */
+const GENERIC_ERROR = 'Something went wrong. Please try again.';
+
+/**
+ * The host the organization's APIs will be browsable at, without its scheme — the
+ * preview under the slug reads as a URL, and a URL is easier to judge than a word
+ * in a box. Derived from the same `BROWSE_APP_URL` every other link to that app
+ * uses, so a self-hosted deployment previews its own host rather than apiome's.
+ */
+const BROWSE_HOST = `${BROWSE_APP_URL.replace(/^https?:\/\//, '').replace(/\/+$/, '')}/`;
+
+/** An illustrative project under the slug, so the preview reads as a whole path. */
+const PREVIEW_PROJECT = 'payments-api';
+
+interface OauthSignupClientProps {
+  /** The `oauth_signup_pending` id from the sign-up link; the page proved it exists. */
+  token: string;
+  /** The provider's email for this account, already masked by the page. */
+  emailHint: string;
+  /** The provider id the reader arrived from (`github`, `google`, …), if known. */
+  provider?: string;
 }
 
-type Props = {
-  token: string;
-  emailHint: string;
-};
-
-export default function OauthSignupClient({ token, emailHint }: Props) {
-  const [displayName, setDisplayName] = useState("");
-  const [orgName, setOrgName] = useState("");
-  const [slug, setSlug] = useState("");
+/**
+ * The OAuth self-signup completion card (OLO-2.x, re-skinned by HIVE-4.3 #5297).
+ *
+ * Authority: `docs/mockups/auth/signup-oauth.html`, `docs/mockups/DESIGN.md` §2 and §7.
+ *
+ * The flow is unchanged. The page is still token-gated — a missing or expired token
+ * never renders this card, it redirects to `/login?error=SignupSessionExpired` — the
+ * three fields are the same three, the slug still follows the organization name until
+ * it is hand-edited, and submitting still runs `completeOAuthSignup` → a one-time-code
+ * credentials sign-in → `/ade`. The Free-plan sentence is word for word what it was.
+ *
+ * What changed is the skin and one affordance. The gradient glass card of named
+ * indigo/purple/slate is gone, so this screen follows the reader's theme, density and
+ * font-scale preference like the rest of the app; the frame is the shared
+ * `components/auth/AuthShell` in its centred shape, the same one `/login/2fa` uses.
+ * The affordance is the live availability chip on the slug — the mockup's one addition
+ * — which is `components/auth/SlugField`, built here and reused by the onboarding
+ * wizard (HIVE-4.4). It is advisory in both directions: a slug it cannot verify still
+ * submits, because `completeOAuthSignup` re-checks uniqueness server-side either way.
+ *
+ * @param props The pending-signup token, the masked email and the provider id — see
+ *   {@link OauthSignupClientProps}.
+ * @returns The completion card.
+ */
+export default function OauthSignupClient({ token, emailHint, provider }: OauthSignupClientProps) {
+  const [displayName, setDisplayName] = useState('');
+  const [orgName, setOrgName] = useState('');
+  const [slug, setSlug] = useState('');
   const [slugTouched, setSlugTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [slugError, setSlugError] = useState<string | null>(null);
 
-  const onOrgChange = (v: string) => {
-    setOrgName(v);
+  // The probe is gated on the same token that gated the page: the reader has no
+  // account yet, so there is no session for the wizard's probe to identify them by.
+  const probe = useCallback(
+    (candidate: string) => checkOauthSignupSlugAvailability(token, candidate),
+    [token]
+  );
+  const { availability, resolve } = useSlugAvailability(slug, probe);
+
+  /** The shape error for what is in the field right now, shown as the reader types. */
+  const liveSlugError = slug.trim() ? validateTenantSlug(slug.trim()) : null;
+
+  const providerLabel = provider ? getProviderDescriptor(provider)?.label ?? provider : null;
+  const ProviderIcon = provider ? getProviderBrand(provider).Icon : null;
+
+  /**
+   * Update the organization name and, until the slug is hand-edited, its suggestion.
+   *
+   * @param value The new organization name.
+   */
+  const onOrgChange = (value: string) => {
+    setOrgName(value);
     if (!slugTouched) {
-      setSlug(generateSlug(v));
+      setSlug(generateTenantSlug(value));
     }
   };
 
+  /**
+   * Update the slug. A cleared field re-enables the name-derived suggestion, which is
+   * how the reader gets back to the default after trying something of their own.
+   *
+   * @param value The new slug (already lowercased by the field).
+   */
+  const onSlugChange = (value: string) => {
+    setSlug(value);
+    setSlugTouched(value.trim() !== '');
+    setSlugError(null);
+  };
+
+  /**
+   * Create the account: settle the slug's availability, provision, then sign in.
+   *
+   * A slug the probe reports as `taken` stops here with the field marked, because the
+   * server would only reject it a moment later. Anything else — including a verdict
+   * that could not be reached — goes through, and `completeOAuthSignup` has the last
+   * word on uniqueness.
+   *
+   * @param e The form's submit event.
+   */
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSlugError(null);
+
+    // Every field is `required`, so the browser has already refused an empty one; the
+    // shape check below is what catches a slug that is present but could never be one.
+    const candidate = slug.trim().toLowerCase();
+    const shapeError = validateTenantSlug(candidate);
+    if (shapeError) {
+      setSlugError(shapeError);
+      return;
+    }
+
     setBusy(true);
     try {
-      const result = await completeOAuthSignup(token, displayName, orgName, slug);
+      if ((await resolve(candidate)) === 'taken') {
+        setSlugError(SLUG_TAKEN_ERROR);
+        setBusy(false);
+        return;
+      }
+
+      const result = await completeOAuthSignup(token, displayName, orgName, candidate);
       if (!result.success) {
         setError(result.error);
         setBusy(false);
         return;
       }
-      await signIn("credentials", {
+      await signIn('credentials', {
         payload: JSON.stringify({ oneTimeCode: result.oneTimeCode }),
-        callbackUrl: "/ade",
+        callbackUrl: '/ade',
         redirect: true,
       });
     } catch (err) {
       console.error(err);
-      setError("Something went wrong. Please try again.");
+      setError(GENERIC_ERROR);
       setBusy(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/40 flex items-center justify-center p-4">
-      <div className="w-full max-w-md relative z-10">
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl shadow-indigo-500/10 p-8 border border-white/50 dark:bg-slate-900/80 dark:border-slate-700/60 dark:shadow-black/30">
-          <div className="flex justify-center mb-6">
-            <div className="rounded-full bg-indigo-100 dark:bg-indigo-900/40 p-3">
-              <Link2 className="w-8 h-8 text-indigo-600 dark:text-indigo-300" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-slate-100 mb-1">
-            Finish setting up your account
-          </h1>
-          <p className="text-sm text-center text-gray-500 dark:text-slate-400 mb-6">
-            Signed in as <span className="font-medium text-gray-700 dark:text-slate-300">{emailHint}</span>
-          </p>
-          <div className="mb-6 p-4 rounded-xl bg-emerald-50/90 border border-emerald-200 text-emerald-900 text-sm dark:bg-emerald-900/25 dark:border-emerald-800 dark:text-emerald-100">
-            <p className="font-semibold mb-1">Free plan</p>
-            <p>Includes 1 organization, 1 project, and up to 3 versions. You can upgrade anytime.</p>
-          </div>
+    <AuthShell>
+      {/* The mark sits above the card: this page has no brand panel, so it is the only
+          thing naming the product the reader is about to have an account with. */}
+      <div className="auth-brandbar">
+        <BrandMark variant="lockup" size={36} className="auth-brand__lockup" priority />
+        <BetaBadge />
+      </div>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm dark:bg-red-900/30 dark:border-red-800 dark:text-red-200">
-              {error}
-            </div>
+      <Card className="auth-card" data-testid="oauth-signup-card">
+        <span className="auth-icon" aria-hidden="true">
+          <Link2 />
+        </span>
+        <h1 className="auth-title mt-4">Finish setting up your account</h1>
+        {/* A `div`, not a `p`: the unlayered `p { color: … }` at the foot of `globals.css`
+            outranks every `@layer utilities` colour, so the masked email would lose its ink. */}
+        <div className="auth-sub mt-1" data-testid="oauth-signup-identity">
+          Signed in as <span className="mono font-medium text-fg">{emailHint}</span>
+          {providerLabel && ProviderIcon && (
+            <>
+              {' via '}
+              <span className="inline-flex items-center gap-1 align-[-0.1em]">
+                {/* The glyph is hidden from assistive technology: some `react-icons` brand
+                    marks set `role="img"` with no title, which axe reports as serious — and
+                    the provider's name is right beside it either way. */}
+                <span aria-hidden="true" className="inline-flex">
+                  <ProviderIcon size={ICON_SIZE.button} />
+                </span>
+                {providerLabel}
+              </span>
+            </>
           )}
-
-          <form onSubmit={onSubmit} className="space-y-5">
-            <div>
-              <label htmlFor="displayName" className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-slate-300">
-                Your name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User size={ICON_SIZE.dense} className="text-gray-400 dark:text-slate-500" />
-                </div>
-                <input
-                  id="displayName"
-                  name="displayName"
-                  required
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-gray-800 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                  placeholder="Jane Doe"
-                  disabled={busy}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="orgName" className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-slate-300">
-                Organization name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Building2 size={ICON_SIZE.dense} className="text-gray-400 dark:text-slate-500" />
-                </div>
-                <input
-                  id="orgName"
-                  name="orgName"
-                  required
-                  value={orgName}
-                  onChange={(e) => onOrgChange(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-gray-800 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                  placeholder="Acme Design"
-                  disabled={busy}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="slug" className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-slate-300">
-                Organization URL slug
-              </label>
-              <input
-                id="slug"
-                name="slug"
-                required
-                value={slug}
-                onChange={(e) => {
-                  setSlugTouched(true);
-                  setSlug(e.target.value.toLowerCase());
-                }}
-                className="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-gray-800 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                placeholder="acme-design"
-                disabled={busy}
-              />
-              <p className="mt-1 text-xs text-gray-500 dark:text-slate-500">
-                Lowercase letters, numbers, and dashes only. Used in API paths for your organization.
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3.5 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {busy ? "Creating your workspace…" : "Create account"}
-            </button>
-          </form>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6 dark:text-slate-500">
-          <a href="/login" className="text-indigo-500 hover:underline dark:text-indigo-300">
+        <Alert
+          variant="ok"
+          role="note"
+          icon={<BadgeCheck className="mt-px size-4 shrink-0" aria-hidden="true" />}
+          className="mt-5"
+          data-testid="oauth-signup-plan"
+        >
+          <span className="font-semibold">Free plan</span> — Includes 1 organization, 1 project,
+          and up to 3 versions. You can upgrade anytime.
+        </Alert>
+
+        {/* `role="alert"`, so a rejected sign-up interrupts rather than waiting to be found. */}
+        {error && (
+          <Alert variant="danger" role="alert" className="mt-4" data-testid="oauth-signup-error">
+            {error}
+          </Alert>
+        )}
+
+        <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-4">
+          <AuthField
+            id="displayName"
+            label="Your name"
+            icon={<User size={ICON_SIZE.dense} aria-hidden="true" />}
+            name="displayName"
+            autoComplete="name"
+            placeholder="Jane Doe"
+            required
+            disabled={busy}
+            value={displayName}
+            onChange={(event) => setDisplayName(event.target.value)}
+            data-testid="oauth-signup-name"
+          />
+
+          <AuthField
+            id="orgName"
+            label="Organization name"
+            icon={<Building2 size={ICON_SIZE.dense} aria-hidden="true" />}
+            name="orgName"
+            autoComplete="organization"
+            placeholder="Acme Design"
+            required
+            disabled={busy}
+            value={orgName}
+            onChange={(event) => onOrgChange(event.target.value)}
+            data-testid="oauth-signup-org"
+          />
+
+          <SlugField
+            id="slug"
+            name="slug"
+            value={slug}
+            onChange={onSlugChange}
+            availability={availability}
+            error={slugError ?? liveSlugError ?? undefined}
+            placeholder="acme-design"
+            previewBase={BROWSE_HOST}
+            previewSuffix={PREVIEW_PROJECT}
+            required
+            disabled={busy}
+            data-testid="oauth-signup-slug"
+          />
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            className="mt-1 w-full"
+            disabled={busy}
+            data-testid="oauth-signup-submit"
+          >
+            {busy && <Spinner size="sm" tone="light" aria-hidden="true" />}
+            {busy ? 'Creating your workspace…' : 'Create account'}
+            {!busy && <ArrowRight aria-hidden="true" />}
+          </Button>
+        </form>
+
+        <div className="auth-sub mt-6 text-center">
+          <Link href="/login" className="auth-link inline-flex items-center gap-1.5 font-medium">
+            <ArrowLeft className="size-[var(--icon-button)]" aria-hidden="true" />
             Back to sign in
-          </a>
-        </p>
-      </div>
-    </div>
+          </Link>
+        </div>
+      </Card>
+
+      <p className="auth-terms mt-4">
+        The slug follows the organization name until you edit it. This link expires after a short
+        while — if it does, you’ll be sent back to sign in.
+      </p>
+    </AuthShell>
   );
 }
