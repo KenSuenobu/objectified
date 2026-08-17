@@ -52,7 +52,10 @@ export default function AppearanceTab({
   return (
     <div className="flex flex-col gap-6">
       <section aria-labelledby="preferences-theme-heading">
-        <h3 id="preferences-theme-heading" className="text-sm font-semibold text-fg">
+        {/* `t-h4` — DESIGN.md §3.2's 14 px section step. A section title set at the same
+            13 px as the nine card names underneath it stops separating the block from its
+            contents, and the tab reads as one undifferentiated column. */}
+        <h3 id="preferences-theme-heading" className="text-base font-semibold text-fg">
           Theme
         </h3>
         <p className="mb-3 text-xs text-fg-muted">

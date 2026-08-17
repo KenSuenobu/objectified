@@ -71,9 +71,21 @@ export interface ThemeColors {
 export interface Theme {
   /** Stable id, written to `html[data-theme-choice]` and to `localStorage['hive.theme']`. */
   id: string;
-  /** Human-readable label. */
+  /**
+   * Human-readable label, in sentence case.
+   *
+   * Copy is the catalogue in `docs/mockups/assets/hive.js`, which `settings-pane.html` names
+   * as the pane's reference behaviour — so "Follow system", not "Follow System".
+   */
   name: string;
-  /** One-line description shown under the label. */
+  /**
+   * One-line description shown under the label.
+   *
+   * *One line* is the constraint, not a shorthand for "short": the picker is a 3-column grid
+   * in a 520 px drawer (`DESIGN.md` §4.1), so a card is ~150 px wide and a sentence wraps to
+   * three or four lines, leaving every row a different height and the grid unreadable. These
+   * are the catalogue's phrases, all of which fit in one or two.
+   */
   description: string;
   /**
    * The base this theme paints on, or `'system'` for the entry that follows the OS.
@@ -98,8 +110,8 @@ export const DARK_THEME_ID = 'dark';
 export const themes: Theme[] = [
   {
     id: 'system',
-    name: 'Follow System',
-    description: 'Automatically matches your system light/dark preference',
+    name: 'Follow system',
+    description: 'Match the OS light/dark preference',
     appearance: 'system',
     /* Mirrors `light`: the picker draws a dedicated split swatch for this entry, so these
        values are only ever a fallback. */
@@ -126,7 +138,7 @@ export const themes: Theme[] = [
   {
     id: 'light',
     name: 'Light',
-    description: 'Warm paper canvas with a navy primary — the default palette',
+    description: 'Warm paper, navy ink',
     appearance: 'light',
     colors: {
       background: '#F6F5F2',
@@ -151,7 +163,7 @@ export const themes: Theme[] = [
   {
     id: 'dark',
     name: 'Dark',
-    description: 'Easy on the eyes for low-light environments',
+    description: 'Low-glare, warm blacks',
     appearance: 'dark',
     colors: {
       background: '#141311',
@@ -175,8 +187,8 @@ export const themes: Theme[] = [
   },
   {
     id: 'high-contrast',
-    name: 'High Contrast',
-    description: 'Maximum readability with stark contrasts',
+    name: 'High contrast',
+    description: 'Pure black, white lines, WCAG AAA',
     appearance: 'dark',
     colors: {
       background: '#000000',
@@ -201,7 +213,7 @@ export const themes: Theme[] = [
   {
     id: 'blueprint',
     name: 'Blueprint',
-    description: 'Professional blueprint style with deep navy surfaces',
+    description: 'Drafting-table blues',
     appearance: 'dark',
     colors: {
       background: '#0C1E3A',
@@ -226,7 +238,7 @@ export const themes: Theme[] = [
   {
     id: 'whiteboard',
     name: 'Whiteboard',
-    description: 'Minimal and clean like a physical whiteboard',
+    description: 'Neutral, cool light',
     appearance: 'light',
     colors: {
       background: '#FAFAFA',
@@ -251,7 +263,7 @@ export const themes: Theme[] = [
   {
     id: 'solarized',
     name: 'Solarized',
-    description: 'Popular theme with carefully chosen colors',
+    description: 'Ethan Schoonover’s palette',
     appearance: 'dark',
     colors: {
       background: '#002B36',
@@ -276,7 +288,7 @@ export const themes: Theme[] = [
   {
     id: 'nord',
     name: 'Nord',
-    description: 'Arctic, north-bluish color palette',
+    description: 'Arctic, bluish tones',
     appearance: 'dark',
     colors: {
       background: '#2E3440',
@@ -301,7 +313,7 @@ export const themes: Theme[] = [
   {
     id: 'darcula',
     name: 'Darcula',
-    description: 'IntelliJ-inspired dark theme',
+    description: 'IDE-familiar darkness',
     appearance: 'dark',
     colors: {
       background: '#2B2B2B',

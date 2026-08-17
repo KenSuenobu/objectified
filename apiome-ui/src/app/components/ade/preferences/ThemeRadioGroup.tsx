@@ -21,6 +21,11 @@ import {
  * values re-derived from `globals.css` by `tests/theme-catalog.test.ts`, so a card can
  * never advertise a colour the theme does not paint. `system` has no palette of its own
  * and gets the split light/dark preview the mockups use.
+ *
+ * Card chrome follows `.theme-card` / `.theme-prev` in `docs/mockups/assets/hive.js`, which
+ * `settings-pane.html` names as the reference: a 54 px swatch, a 13 px name, an 11 px
+ * caption, and a *ring* rather than a border — selection thickens an inset shadow from 1 px
+ * to 2 px, so picking a theme cannot nudge the other eight cards by a pixel.
  */
 
 /** Keys that move the selection within the group. */
@@ -35,7 +40,9 @@ export interface ThemeRadioGroupProps {
    * What "follow system" currently resolves to, when that is the choice.
    *
    * Omitted while a fixed theme is selected: nothing is following the OS then, and naming
-   * the *active* palette on the `system` card would claim the OS had chosen it.
+   * the *active* palette on the `system` card would claim the OS had chosen it. When it is
+   * given, it takes the `system` card's caption line rather than adding one — see the
+   * `followingSystem` note below.
    */
   systemResolvedName?: string;
   /** Select a theme. Applies immediately. */
@@ -84,10 +91,19 @@ export default function ThemeRadioGroup({
       role="radiogroup"
       aria-label="Theme"
       data-testid="preferences-theme-group"
-      className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+      className="grid grid-cols-2 gap-2.5 sm:grid-cols-3"
     >
       {themes.map((theme, index) => {
         const selected = theme.id === value;
+        /**
+         * Whether this is the `system` card *and* the OS is currently in charge.
+         *
+         * Only then does the caption say which palette is live: the card has one line to
+         * spend, and while the OS is choosing, "which one am I on?" is the live question —
+         * the standing description ("Match the OS light/dark preference") is what the card
+         * offers when it is *not* the choice.
+         */
+        const followingSystem = theme.id === SYSTEM_THEME_ID && Boolean(systemResolvedName);
 
         return (
           <button
@@ -103,22 +119,20 @@ export default function ThemeRadioGroup({
             data-theme-card={theme.id}
             onClick={() => onSelect(theme.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
-            className={`cursor-pointer rounded-md border p-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            className={`cursor-pointer rounded-md bg-surface p-2 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               selected
-                ? 'border-accent ring-1 ring-accent'
-                : 'border-border hover:border-border-strong'
+                ? 'shadow-[inset_0_0_0_2px_var(--accent)]'
+                : 'shadow-[inset_0_0_0_1px_var(--border)] hover:shadow-[inset_0_0_0_1px_var(--border-strong)]'
             }`}
           >
             <ThemePreview theme={theme} />
             <span className="mt-2 block text-sm font-semibold text-fg">{theme.name}</span>
-            <span className="mt-0.5 block text-xs leading-snug text-fg-subtle">
-              {theme.description}
+            {/* Two lines are reserved whether or not the phrase needs them, so every card in
+                the grid is the same height — a row that sizes itself to its longest caption
+                leaves the swatches stepping up and down the pane. */}
+            <span className="mt-0.5 block min-h-[2.75em] text-2xs leading-snug text-fg-subtle">
+              {followingSystem ? `Currently: ${systemResolvedName}` : theme.description}
             </span>
-            {theme.id === SYSTEM_THEME_ID && systemResolvedName && (
-              <span className="mt-1 block text-xs font-medium text-fg-muted">
-                Currently: {systemResolvedName}
-              </span>
-            )}
           </button>
         );
       })}
@@ -144,7 +158,7 @@ function ThemePreview({ theme }: { theme: Theme }) {
     return (
       <span
         aria-hidden
-        className="grid h-12 w-full grid-cols-2 overflow-hidden rounded-sm ring-1 ring-inset ring-border"
+        className="grid h-[3.375rem] w-full grid-cols-2 overflow-hidden rounded-sm ring-1 ring-inset ring-border"
       >
         <span style={{ background: light.colors.background }} />
         <span style={{ background: dark.colors.background }} />
@@ -155,7 +169,7 @@ function ThemePreview({ theme }: { theme: Theme }) {
   return (
     <span
       aria-hidden
-      className="block h-12 w-full overflow-hidden rounded-sm px-2 pt-2 ring-1 ring-inset ring-border"
+      className="block h-[3.375rem] w-full overflow-hidden rounded-sm px-2 pt-2 ring-1 ring-inset ring-border"
       style={{ background: theme.colors.background }}
     >
       <span

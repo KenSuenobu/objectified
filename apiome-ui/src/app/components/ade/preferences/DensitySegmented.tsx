@@ -58,7 +58,7 @@ export default function DensitySegmented({ value, onChange }: DensitySegmentedPr
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-fg">Density</h3>
+      <h3 className="text-base font-semibold text-fg">Density</h3>
       <p className="text-xs text-fg-muted">
         Compact tightens rows, controls and page padding for large screens.
       </p>

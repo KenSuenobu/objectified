@@ -37,7 +37,7 @@ export default function FontScaleSlider({ value, onChange }: FontScaleSliderProp
     <div>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-fg">Font size</h3>
+          <h3 className="text-base font-semibold text-fg">Font size</h3>
           <p className="text-xs text-fg-muted">Scales the whole interface, not just body text.</p>
         </div>
         <span
