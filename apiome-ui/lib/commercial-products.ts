@@ -93,6 +93,9 @@ export function getBuiltinCommercialProducts(): ExternalLinkEntry[] {
       icon: 'Layers',
       accent: 'from-violet-500 to-fuchsia-600',
       glow: 'group-hover:shadow-fuchsia-500/20',
+      // The launcher's identity hue (HIVE-4.5): violet is the design language's
+      // "another product" tone, so a licensed suite never reads as a core surface.
+      tone: 'violet',
       anyFeatureFlags: ['designer', 'paths'],
       external: isAbsoluteHref(suiteHref),
       enabled: true,
@@ -144,6 +147,7 @@ export function getBuiltinCommercialProducts(): ExternalLinkEntry[] {
       icon: 'Workflow',
       accent: 'from-sky-500 to-indigo-600',
       glow: 'group-hover:shadow-sky-500/20',
+      tone: 'violet',
       enabled: false,
       external: false,
       showInNav: true,

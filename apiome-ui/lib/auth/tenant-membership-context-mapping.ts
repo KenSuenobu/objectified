@@ -49,6 +49,43 @@ export interface TenantMembershipRow {
   licenseType?: string | null;
 }
 
+/** The plan tier an unlicensed workspace is treated as, matching the OLO-5.3 enforcement. */
+export const DEFAULT_PLAN_NAME = 'Free';
+
+/** The workspace meta line while the membership context is still in flight. */
+export const LOADING_WORKSPACE_META = 'Loading…';
+
+/** The workspace meta line when there is no active workspace to describe. */
+export const NO_WORKSPACE_META = 'Choose a workspace';
+
+/**
+ * The one-line description of a workspace: `"Owner · Team"`.
+ *
+ * Lives here, beside the row shape, rather than in the switcher that first drew it: the
+ * rail's switcher and the `/ade` launcher's workspace chip (HIVE-4.5, #5299) both print it,
+ * and a launcher that imported the switcher would pull the whole create-workspace dialog
+ * into the first chunk a reader downloads.
+ *
+ * @param row The active membership, if the context has resolved one.
+ * @param loading True while the membership context is still loading.
+ * @returns The meta line, never empty — a row with nothing to say still says something.
+ */
+export function formatWorkspaceMeta(
+  row: TenantMembershipRow | undefined,
+  loading: boolean
+): string {
+  // No `role` means an unenriched row (a legacy name-only context): claiming a plan there
+  // would be a guess, and a wrong plan is worse than no plan.
+  if (row?.role) {
+    const role = row.role.charAt(0).toUpperCase() + row.role.slice(1);
+    return `${role} · ${row.licenseName || DEFAULT_PLAN_NAME}`;
+  }
+  // A reload after a switch keeps describing the workspace it already knows; only a first
+  // load, with nothing to describe yet, says so.
+  if (loading) return LOADING_WORKSPACE_META;
+  return NO_WORKSPACE_META;
+}
+
 /** Whether the caller may create another tenant, with the numbers behind it. */
 export interface CreateTenantGate {
   /** True when `used < max` — mirrors the OLO-5.3 REST guard exactly. */

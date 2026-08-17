@@ -57,8 +57,16 @@ export type SuiteHomeCard = {
   external?: boolean;
   opensNewBrowser?: boolean;
   icon: string;
+  /** @deprecated Pre-Hive gradient pair; the launcher draws `tone` since HIVE-4.5 (#5299). */
   accent: string;
+  /** @deprecated Pre-Hive hover-shadow class. See {@link SuiteHomeCard.accent}. */
   glow: string;
+  /**
+   * Identity hue for the launcher card, named from the shared status vocabulary
+   * (`accent`, `honey`, `violet`, `ok`, `orange`, `rose`, `neutral`, …). Optional and
+   * validated by the host: an unknown value falls back to the commercial tone.
+   */
+  tone?: string;
   featureFlag?: string;
   anyFeatureFlags?: string[];
 };

@@ -2905,8 +2905,13 @@ p {
 
 /* The second line of the headline, in the accent ramp. Falls back to solid
    accent ink wherever `background-clip: text` is not honoured, so the line is
-   never invisible. */
-.auth-display__accent {
+   never invisible.
+
+   Shared with the launcher's own display line (HIVE-4.5, #5299): the two pages
+   set the same headline the same way, and one rule with two preludes is what
+   keeps them from drifting apart. It stays here, where it was first written. */
+.auth-display__accent,
+.launch-display__accent {
   color: var(--accent-fg);
   background: linear-gradient(90deg, var(--accent), var(--accent-fg));
   -webkit-background-clip: text;
@@ -2914,7 +2919,8 @@ p {
 }
 
 @supports (background-clip: text) or (-webkit-background-clip: text) {
-  .auth-display__accent {
+  .auth-display__accent,
+  .launch-display__accent {
     color: transparent;
   }
 }
@@ -3494,6 +3500,634 @@ button.auth-divider:disabled {
 
   .auth-card__logo {
     display: flex;
+  }
+}
+
+/* ==========================================================================
+   LAUNCHER (HIVE-4.5, #5299)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/home/launcher.html`, `docs/mockups/assets/hive.css`
+   §12 (`.card`, `.icon-tile`), §19 (`.hex-bg`, `.hex-grid`), `DESIGN.md` §2
+   (the hexagon is the brand's silhouette; honey is ornament, never meaning).
+
+   `/ade` is the one signed-in route with no rail — it is the page you choose an
+   application *from*, so there is nothing to navigate yet. That makes it the
+   third surface, after the auth pages, whose chrome is the brand itself: the
+   same hex canvas and honey wash, a honeycomb ornament beside the greeting, and
+   a grid of cards each carrying one identity hue.
+
+   What this replaced named colours outright — `bg-zinc-50`, four radial glows in
+   `rgba()`, and a Tailwind gradient pair per card (`from-indigo-500
+   to-violet-600`). Every one of those froze on a single palette. Everything
+   below resolves through the token layer, so the launcher follows the reader's
+   theme, density and font scale like the rest of the app.
+
+   Prefixed `launch-` and kept here rather than in a CSS module for the reason
+   the auth block gives: the ornaments (`.hex-bg`, `.glow-honey`) are shared with
+   those pages, and a module cannot reach them.
+   ========================================================================== */
+
+/* ---- Identity hue -------------------------------------------------------
+   A card or a resource row carries a *tone*, not a colour: the element states
+   `data-tone` and these rules turn it into the three custom properties the rest
+   of the section paints from. Same vocabulary as `ui/statusVocabulary` and the
+   avatar tints (HIVE-2.2), so a hue survives every theme swap, and a tone this
+   app does not know — a commercial host may send one — lands on the neutral
+   default below rather than on no styling at all. */
+.launch-tone {
+  --launch-tone: var(--border-strong);
+  --launch-tone-soft: var(--bg-subtle);
+  --launch-tone-fg: var(--fg-muted);
+}
+
+.launch-tone[data-tone="accent"] {
+  --launch-tone: var(--accent);
+  --launch-tone-soft: var(--accent-soft);
+  --launch-tone-fg: var(--accent-fg);
+}
+
+.launch-tone[data-tone="honey"] {
+  --launch-tone: var(--honey);
+  --launch-tone-soft: var(--honey-soft);
+  --launch-tone-fg: var(--honey-fg);
+}
+
+.launch-tone[data-tone="ok"] {
+  --launch-tone: var(--ok);
+  --launch-tone-soft: var(--ok-soft);
+  --launch-tone-fg: var(--ok-fg);
+}
+
+.launch-tone[data-tone="warn"] {
+  --launch-tone: var(--warn);
+  --launch-tone-soft: var(--warn-soft);
+  --launch-tone-fg: var(--warn-fg);
+}
+
+.launch-tone[data-tone="danger"] {
+  --launch-tone: var(--danger);
+  --launch-tone-soft: var(--danger-soft);
+  --launch-tone-fg: var(--danger-fg);
+}
+
+.launch-tone[data-tone="violet"] {
+  --launch-tone: var(--violet);
+  --launch-tone-soft: var(--violet-soft);
+  --launch-tone-fg: var(--violet-fg);
+}
+
+.launch-tone[data-tone="orange"] {
+  --launch-tone: var(--orange);
+  --launch-tone-soft: var(--orange-soft);
+  --launch-tone-fg: var(--orange-fg);
+}
+
+.launch-tone[data-tone="rose"] {
+  --launch-tone: var(--rose);
+  --launch-tone-soft: var(--rose-soft);
+  --launch-tone-fg: var(--rose-fg);
+}
+
+.launch-tone[data-tone="neutral"] {
+  --launch-tone: var(--neutral);
+  --launch-tone-soft: var(--neutral-soft);
+  --launch-tone-fg: var(--neutral-fg);
+}
+
+/* ---- The page -----------------------------------------------------------
+   `/ade/layout.tsx` hands every route a `h-screen overflow-hidden` box, so the
+   launcher scrolls *inside itself* exactly as `AppShell`'s page column does.
+   `overflow-x: clip` restates the half of `.glow-honey` that matters — the wash
+   is 26 rem across and hangs off the top-right corner — while leaving the
+   vertical axis free to scroll. */
+.launch-shell {
+  --launch-width: 70rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-x: clip;
+  overflow-y: auto;
+  color: var(--fg);
+}
+
+/* Every band of the page is the same column, centred, so the top row, the hero,
+   the grid and the footer share one leading edge at every width. */
+.launch-row {
+  width: 100%;
+  max-width: var(--launch-width);
+  margin-inline: auto;
+  padding-inline: var(--page-pad);
+}
+
+/* ---- The top row --------------------------------------------------------
+   No rail and no page header: the brand, the build, and the three things a
+   reader might want before they have chosen an application. */
+.launch-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-block: var(--space-4);
+}
+
+.launch-top__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline-start: auto;
+}
+
+/* The build badge. `height: auto` with a floor, like every other pill in the
+   app: the string inside is mono and the reader may be at the largest font
+   scale, which a frozen height would clip. */
+.launch-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(var(--control-h) * 0.7);
+  padding: 0 var(--space-2);
+  border-radius: var(--r-full);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.launch-ver:hover {
+  background: var(--bg-subtle);
+  color: var(--fg);
+}
+
+/* Honey, because the dot says "there is a build here", not "something is wrong
+   with it" — DESIGN.md §2 reserves honey for exactly that kind of presence. */
+.launch-ver__dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--honey);
+  flex: none;
+}
+
+/* The account chip: avatar plus first name, the same pairing the rail's user
+   menu shows, so the reader recognises it after they have been inside. */
+.launch-account {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding: 0 var(--space-3) 0 var(--space-1);
+  border-radius: var(--r-full);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+
+.launch-account:hover {
+  background: var(--bg-subtle);
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.launch-account__name {
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- The hero ----------------------------------------------------------- */
+.launch-hero {
+  position: relative;
+  padding-block: var(--space-10) var(--space-8);
+}
+
+/* The honeycomb, with the bee at its centre. Decorative and `pointer-events:
+   none`, so it never intercepts a click meant for the copy it sits beside; it
+   drifts, which the app-wide `data-motion="reduce"` block stills along with
+   every other animation. */
+.launch-comb {
+  position: absolute;
+  right: 0;
+  top: var(--space-5);
+  width: 18.75rem;
+  height: 16.25rem;
+  pointer-events: none;
+  animation: launch-comb-float 8s var(--ease-in-out) infinite;
+}
+
+.launch-comb__bee {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+}
+
+@keyframes launch-comb-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -0.625rem;
+  }
+}
+
+.launch-greet {
+  margin-top: var(--space-4);
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* The `<h1>`. A class rather than a utility: the unlayered `h1 { font-size:
+   clamp(…) }` at the foot of this stylesheet outranks every `@layer utilities`
+   size, so `text-5xl` on an `<h1>` is silently swallowed. Same family as the
+   `p { color }` trap the auth block documents. */
+.launch-display {
+  margin-top: var(--space-1);
+  font-size: var(--fs-5xl);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  line-height: var(--lh-tight);
+  color: var(--fg);
+}
+
+/* And the lede, for the other half of the same trap: `p { color:
+   var(--text-muted) }` is unlayered, so a `text-fg-muted` utility here would be
+   dead ink. */
+.launch-lede {
+  margin-top: var(--space-4);
+  max-width: 56ch;
+  font-size: var(--fs-lg);
+  color: var(--fg-muted);
+}
+
+/* ---- Summary chips ------------------------------------------------------
+   Where the reader is and what they have, each chip a link into the surface
+   that owns it. The hrefs come from the HIVE-3.2 nav model, not from this
+   stylesheet's neighbours in React — see `AdeHome`. */
+.launch-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.launch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(var(--control-h) - 0.5rem);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--r-full);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.launch-chip:hover {
+  background: var(--bg-subtle);
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.launch-chip > svg {
+  width: var(--icon-button);
+  height: var(--icon-button);
+  flex: none;
+}
+
+/* The workspace's own name outranks the role and plan beside it. Muted rather
+   than the mockup's `--fg-subtle`, which measures under WCAG AA at this size —
+   the same deviation HIVE-3.5 and HIVE-4.1 made. */
+.launch-chip__name {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* ---- Section eyebrows --------------------------------------------------- */
+.launch-eyebrow {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* A caps label is a heading here, so it has to be a class for the third time:
+   the unlayered `h2 { font-size: clamp(…) }` would otherwise render the word
+   "Applications" at page-title scale. */
+.launch-caps {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.launch-eyebrow__sub {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* ---- The application grid ----------------------------------------------
+   `auto-fit` rather than the mockup's fixed four columns: the middle of the
+   grid is however many cards the reader is entitled to, which is two on an
+   open-source install and four with a suite licence. `min(…, 100%)` is what
+   keeps a phone free of horizontal scroll. */
+.launch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  gap: var(--space-4);
+}
+
+.launch-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 14.75rem;
+  padding: var(--card-pad);
+  overflow: hidden;
+  text-align: start;
+  color: inherit;
+  text-decoration: none;
+}
+
+.launch-card:hover {
+  text-decoration: none;
+}
+
+/* The identity hairline: the card's tone fading out across the top edge. This
+   is what the pre-Hive gradient tile was for, moved to a 3 px rule so the tone
+   identifies the card without competing with its words. */
+.launch-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--launch-tone),
+    color-mix(in srgb, var(--launch-tone) 20%, transparent)
+  );
+}
+
+/* The corner affordance: → into the app, ↗ out of it, inverted on hover. */
+.launch-card__go {
+  position: absolute;
+  top: var(--card-pad);
+  right: var(--card-pad);
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  color: var(--fg-muted);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.launch-card:hover .launch-card__go {
+  background: var(--fg);
+  color: var(--bg-surface);
+  box-shadow: none;
+}
+
+/* The chip a card that has not shipped carries instead of that affordance, in the
+   same corner so the eye finds one or the other in one place. */
+.launch-card__soon {
+  position: absolute;
+  top: var(--card-pad);
+  right: var(--card-pad);
+}
+
+.launch-card__tag {
+  margin-top: var(--space-4);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.launch-card__name {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  color: var(--fg);
+}
+
+/* Four lines and then an ellipsis, so a long description from a commercial host
+   cannot make one card taller than the rest of its row. */
+.launch-card__desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.launch-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-4);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.launch-card__foot > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* A product that has not shipped. Non-interactive by the element it is rendered
+   as (a `<div>`, never a button or a link — see `AppLaunchCard`); this only
+   says so visually. */
+.launch-card--soon {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---- The subject glyph --------------------------------------------------
+   The hexagon of DESIGN.md §2, read from the shared `--hex-clip` token so the
+   launcher's tiles, the rail's workspace avatar and the empty-state art keep
+   one silhouette between them. */
+.launch-tile {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  clip-path: var(--hex-clip);
+  background: var(--launch-tone-soft);
+  color: var(--launch-tone-fg);
+}
+
+.launch-tile > svg {
+  width: 45%;
+  height: 45%;
+}
+
+.launch-tile--sm {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+/* ---- Resources and the roadmap ------------------------------------------ */
+.launch-lower {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.launch-lower > * {
+  min-width: 0;
+}
+
+/* Side by side once there is room for both — the mockup's own 7:5 split. Below that
+   they stack, which is why the single column is the *default* rather than the
+   exception: a phone gets the simpler rule with no query at all. */
+@media (min-width: 60rem) {
+  .launch-lower {
+    grid-template-columns: 7fr 5fr;
+  }
+}
+
+.launch-panel {
+  padding: calc(var(--card-pad) * 0.9) var(--card-pad);
+}
+
+/* "On the roadmap" is a promise, not an object, so it is drawn as an outline
+   rather than as a surface — hive.css `.empty--dashed`. */
+.launch-panel--dashed {
+  background: transparent;
+  box-shadow: none;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-lg);
+}
+
+.launch-res {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) 0;
+  background: transparent;
+  text-align: start;
+  color: inherit;
+  text-decoration: none;
+}
+
+.launch-res + .launch-res {
+  border-top: 1px solid var(--border);
+}
+
+.launch-res__body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Both lines are `<span>`s — the disabled row is a `<button>`, whose content model
+   forbids a `<div>` — so each has to be told to take a line of its own. */
+.launch-res__title {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.launch-res__sub {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.launch-res:hover:not(:disabled) {
+  text-decoration: none;
+}
+
+.launch-res:hover:not(:disabled) .launch-res__title {
+  color: var(--accent-fg);
+}
+
+.launch-res:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Six cells of the comb, two lit: how much of the roadmap has been built. Pure
+   ornament, and `aria-hidden` in the markup — the panel says the same thing in
+   words directly above it. */
+.launch-hexrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+
+.launch-hexrow > span {
+  width: 1.125rem;
+  height: 1.25rem;
+  background: var(--bg-inset);
+  clip-path: var(--hex-clip);
+}
+
+.launch-hexrow > span.is-on {
+  background: var(--honey);
+}
+
+.launch-hexrow > span.is-accent {
+  background: var(--accent);
+}
+
+/* ---- The footer --------------------------------------------------------- */
+.launch-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding-block: var(--space-6) var(--space-10);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Narrow: the ornament goes ------------------------------------------
+   The comb is absolutely positioned beside the copy, so below the width where
+   the two stop fitting side by side it would sit *on* the headline. 1100 px is
+   the mockup's own breakpoint. */
+@media (max-width: 68.75rem) {
+  .launch-comb {
+    display: none;
   }
 }
 

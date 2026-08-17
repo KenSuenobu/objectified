@@ -17,7 +17,11 @@ import { useAuthSession } from '@lib/auth/session-client';
 import { loadTenantMembershipContext } from '@lib/auth/tenant-membership-context';
 import type { TenantMembershipContextPayload } from '@lib/auth/tenant-membership-context';
 import { persistLastActiveTenant } from '@lib/auth/last-active-tenant-actions';
-import type { TenantMembershipRow } from '@lib/auth/tenant-membership-context-mapping';
+import {
+  formatWorkspaceMeta,
+  DEFAULT_PLAN_NAME,
+  type TenantMembershipRow,
+} from '@lib/auth/tenant-membership-context-mapping';
 import { cn } from '@lib/utils';
 import { RAIL_ITEM_HOVER_CLASS, RailTooltip } from './railChrome';
 import {
@@ -86,20 +90,11 @@ export interface WorkspaceSwitcherProps {
 /** Copy for a signed-in user who has not joined or created a workspace yet. */
 const NO_WORKSPACE = 'No workspace';
 
-/** The row's second line while the membership context is still in flight. */
-const LOADING_META = 'Loading…';
-
-/** The row's second line when there is no active workspace to describe. */
-const NO_WORKSPACE_META = 'Choose a workspace';
-
 /** What the trigger promises, for the reader who cannot see the chevron. */
 const TRIGGER_ACTION = 'Switch workspace';
 
 /** Why a suspended membership cannot be selected. */
 const SUSPENDED_TITLE = 'Your membership in this workspace is suspended';
-
-/** The plan tier an unlicensed workspace is treated as, matching the OLO-5.3 enforcement. */
-const DEFAULT_PLAN_NAME = 'Free';
 
 /** `id` of the popup, so the trigger's `aria-controls` can point at it. */
 const MENU_POPUP_ID = 'rail-workspace-menu';
@@ -135,25 +130,11 @@ const LICENSE_CHIP_CLASS: Readonly<Record<string, string>> = {
 /**
  * The second line of the switcher row: "Owner · Team plan".
  *
- * @param row The active membership, if the context has resolved one.
- * @param loading True while the membership context is still loading.
- * @returns The meta line, never empty — a row with nothing to say still says something.
+ * Re-exported rather than declared: it moved to `lib/auth/tenant-membership-context-mapping`
+ * when the `/ade` launcher's workspace chip (HIVE-4.5, #5299) needed the same wording without
+ * importing this component's whole tree. Every existing caller keeps its import path.
  */
-export function formatWorkspaceMeta(
-  row: WorkspaceRow | undefined,
-  loading: boolean
-): string {
-  // No `role` means an unenriched row (a legacy name-only context): claiming a plan there
-  // would be a guess, and a wrong plan is worse than no plan.
-  if (row?.role) {
-    const role = row.role.charAt(0).toUpperCase() + row.role.slice(1);
-    return `${role} · ${row.licenseName || DEFAULT_PLAN_NAME}`;
-  }
-  // A reload after a switch keeps describing the workspace it already knows; only a first
-  // load, with nothing to describe yet, says so.
-  if (loading) return LOADING_META;
-  return NO_WORKSPACE_META;
-}
+export { formatWorkspaceMeta };
 
 /**
  * Per-membership role badge.
