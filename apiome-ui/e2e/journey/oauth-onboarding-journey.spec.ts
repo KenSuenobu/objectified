@@ -301,12 +301,17 @@ test.describe('OLO journey — login, invariants, onboarding, license, switcher'
 
     await page.goto('/ade/dashboard/members');
     await expect(switcherButton(page)).toContainText(WREN_ORG);
-    await expect(page.getByTestId('members-invite-form')).toBeVisible();
+    await expect(page.getByTestId('members-invite')).toBeVisible();
     await expect(page.getByTestId('member-row')).toHaveCount(1);
 
+    // HIVE-5.2 (#5305): the invite is a dialog behind the header's primary, so each invite is
+    // open → type → send, and the dialog closes itself once the invite lands.
     const invite = async (email: string) => {
+      await page.getByTestId('members-invite').click();
+      await expect(page.getByTestId('members-invite-form')).toBeVisible();
       await page.locator('#inviteEmail').fill(email);
-      await page.getByRole('button', { name: 'Invite member' }).click();
+      await page.getByRole('button', { name: 'Send invite' }).click();
+      await expect(page.getByTestId('members-invite-dialog')).toHaveCount(0);
     };
 
     for (const [index, email] of [RILEY_EMAIL, ...fillers.slice(0, 3)].entries()) {
@@ -315,15 +320,18 @@ test.describe('OLO journey — login, invariants, onboarding, license, switcher'
       await expect(page.getByTestId('members-error')).toHaveCount(0);
     }
 
-    // At the Free-tier limit (Wren + 4 invited = 5/5 seats) the invite form enforces the cap: once the
-    // seat data reaches capacity the email input is disabled and the structured
-    // `license-seats-exhausted` guidance is shown. This is the deterministic form of the OLO-5.3
-    // refusal — the seat count reaches at-capacity before a sixth address can be submitted, so the
-    // refusal is the disabled form + guidance rather than a post-submit error banner. `fillers[3]`
-    // stays a seeded-but-uninvited account (the seat that can no longer be filled).
+    // At the Free-tier limit (Wren + 4 invited = 5/5 seats) the screen enforces the cap: once
+    // the seat data reaches capacity the invite trigger is disabled and the structured
+    // `license-seats-exhausted` guidance is shown on the seat card. This is the deterministic
+    // form of the OLO-5.3 refusal — the seat count reaches at-capacity before a sixth address
+    // can be submitted, so the refusal is the disabled action + guidance rather than a
+    // post-submit error banner. `fillers[3]` stays a seeded-but-uninvited account (the seat
+    // that can no longer be filled).
     await expect(page.getByTestId('member-row')).toHaveCount(5);
-    await expect(page.locator('#inviteEmail')).toBeDisabled();
-    await expect(page.getByText(/member seats.*are in use/i)).toBeVisible();
+    await expect(page.getByTestId('members-invite')).toBeDisabled();
+    await expect(page.getByTestId('member-seats-exhausted')).toContainText(
+      /member seats.*are in use/i,
+    );
   });
 
   test('6. a two-tenant user switches tenants from the header, durably', async ({ page }) => {

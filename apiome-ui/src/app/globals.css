@@ -7014,3 +7014,305 @@ button.auth-divider:disabled {
   color: var(--fg);
   word-break: break-word;
 }
+
+/* ==========================================================================
+   MEMBERS (HIVE-5.2, #5305)
+
+   Authority: `docs/mockups/workspace/members.html` — its page-local `<style>`
+   block is what this replaces, and its **Notes → Keeps (1:1)** list is the
+   ticket's acceptance criteria. Plus `hive.css` §12 (`.card`), §17 (the table)
+   and `DESIGN.md` §5.4, §8.
+
+   Why these live in the stylesheet rather than in the components
+   --------------------------------------------------------------
+   The same three reasons the tenants block above gives. Every rule leans on the
+   density and font-scale tokens; the seat strip, the identity cell and the
+   membership list are real grids that a utility string spells badly; and the
+   quiet lines have to sit *after* the unlayered `h2`/`p` base rules near line
+   2490, which outrank anything in `@layer utilities`.
+
+   The mockup's page-local block froze three things in pixels that must not be
+   frozen: the 150 px role select, the 64 px rows-per-page select and the seat
+   strip's two columns. All three are `rem` here, so they follow all six font
+   scales, and both grids collapse to a single column rather than scrolling the
+   document sideways.
+
+   No hue is named below — every colour is a token, so the surface follows all
+   nine themes. Two measured deviations from the mockup, both the ones HIVE-4.8
+   and 5.1 already made:
+
+   * the mockup fades a suspended row to 85 % and the identity-provider cards to
+     72 %. Opacity dims the words with the mark: measured, `--fg-muted` behind
+     `opacity: .85` is 4.45:1 on paper, under the 4.5:1 AA asks of normal text.
+     The Suspended badge and the Coming soon badge are what say those things,
+     and they say them without dimming anything.
+   * quiet text is `--fg-muted`, not `--fg-subtle`, which measures 3.1:1 against
+     the canvas at these sizes.
+
+   One class is borrowed rather than restated: `.tnt-icon-tile` from the tenants
+   block above. It is the tinted square at the head of a dialog, keyed by
+   `data-tone` from the shared status vocabulary — a general primitive that
+   happens to have been written for HIVE-5.1. A second, `.mbr-`-prefixed copy of
+   it would be six more rules saying the same thing in the same tokens.
+   ========================================================================== */
+
+/* ---- The seat strip (licence) -------------------------------------------
+   The meter and its figure, side by side until the card is too narrow for
+   both. `minmax(0, 1fr)` on the meter half so a long plan name elides rather
+   than pushing the figure off the card. */
+.mbr-seat-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+@media (max-width: 40rem) {
+  .mbr-seat-strip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The figure beside the meter — tabular so the digits do not jitter as seats
+   are taken and returned. Its ink is the metric tone the meter already derives,
+   passed in as a utility class by the component, so the number and the bar
+   cannot disagree. */
+.mbr-seat-figure {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- The identity cell --------------------------------------------------
+   Avatar, then name over address. `min-width: 0` on the text column is what
+   lets a long address elide instead of widening the User column past the
+   table. */
+.mbr-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  /* A ceiling, because a `<td>` in an auto-layout table grows to its content however much
+     `overflow: hidden` the text inside it carries — so without this the ellipsis below never
+     engages and one long address widens the User column instead. 22rem is the measure the
+     tenants table already caps its description column at.
+
+     `max-width`, not `max-inline-size`: the build's CSS transform drops the logical spelling
+     from this rule (measured — it survives in `.mbr-role-select`, which has no `min-width`
+     beside it), and a declaration that never reaches the browser is worse than a physical
+     one. The two are the same thing in every writing mode this app ships. */
+  max-width: 22rem;
+  text-align: start;
+}
+
+.mbr-identity__text {
+  min-width: 0;
+}
+
+.mbr-identity__name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.mbr-identity__sub {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The "(you)" marker beside the viewer's own name. */
+.mbr-identity__self {
+  margin-inline-start: var(--space-1);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* A pending invitation's avatar is an envelope rather than initials: there are
+   no initials to draw for an address nobody has claimed yet, and the mark is
+   half of what makes the row visually distinct. */
+.mbr-invite-mark {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: var(--r-full);
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.mbr-invite-mark > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}
+
+/* The other half: the row itself carries the warn tint, mixed down so it reads
+   as a wash behind ordinary ink rather than as a filled cell. Mixed from the
+   token, so it follows every theme rather than being a second, hand-picked
+   amber. */
+.mbr-row--pending {
+  background: color-mix(in srgb, var(--warn) 6%, transparent);
+}
+
+/* ---- The inline role select ---------------------------------------------
+   A native `<select>`, not the Radix one: the table draws one per row, and a
+   portalled listbox per row is a lot of machinery for a control whose whole job
+   is to pick from six names. It borrows `.hive-control` for its hairline and
+   focus ring, so it is the same control as every other field in the app.
+
+   `rem`, not the mockup's 150px, and `max-inline-size: 100%` so it shrinks
+   inside a narrow column rather than widening the table. */
+.mbr-role-select {
+  inline-size: 9.5rem;
+  max-inline-size: 100%;
+  block-size: var(--control-h-sm);
+  padding-inline: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  color: var(--fg);
+  font-size: var(--fs-xs);
+}
+
+.mbr-role-select:disabled {
+  cursor: not-allowed;
+  color: var(--fg-muted);
+}
+
+/* ---- Row actions --------------------------------------------------------
+   The actions column's cluster. Wraps rather than overflowing, because the
+   pending row's Resend carries a word as well as a glyph. */
+.mbr-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+/* ---- The detail drawer --------------------------------------------------- */
+/* The membership facts, as a two-column description list. `auto` for the term
+   so the labels stay in one column whatever the longest of them is. */
+.mbr-kv {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+  font-size: var(--fs-sm);
+}
+
+.mbr-kv dt {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.mbr-kv dd {
+  min-width: 0;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+/* Below this width the term and its value stack, rather than the value being
+   squeezed into a column narrower than a date. */
+@media (max-width: 30rem) {
+  .mbr-kv {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .mbr-kv dd {
+    margin-block-end: var(--space-2);
+  }
+}
+
+/* A section heading inside the drawer. Stated once so five sections cannot
+   drift into five sizes — the same reason `.tnt-caps` exists above. */
+.mbr-caps {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* One `resource:action` grant. A tag rather than a badge: it names a thing,
+   not a state, so it takes the square corner the design language reserves for
+   identifiers. */
+.mbr-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* One ledger row in the drawer's activity list. The action, then when it
+   happened, with the action free to elide. */
+.mbr-activity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+  align-items: baseline;
+  padding: var(--space-2) 0;
+  font-size: var(--fs-xs);
+}
+
+.mbr-activity + .mbr-activity {
+  border-top: 1px solid var(--border);
+}
+
+.mbr-activity__action {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  color: var(--fg);
+}
+
+.mbr-activity__when {
+  white-space: nowrap;
+  color: var(--fg-muted);
+}
+
+/* ---- Identity provider (coming soon) ------------------------------------
+   Two cards that describe features the product does not have yet. They are
+   quieted by their badge and their disabled button, never by opacity — see the
+   banner above. */
+.mbr-idp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+}
+
+.mbr-idp-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.mbr-idp-card__desc {
+  flex: 1 1 auto;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}

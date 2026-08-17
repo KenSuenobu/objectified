@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.124.0",
+    "version": "1.125.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -56224,6 +56224,106 @@
         }
       }
     },
+    "/v1/access/{tenant_slug}/members/{user_id}/resend-invite": {
+      "post": {
+        "tags": [
+          "access"
+        ],
+        "summary": "Resend Member Invite",
+        "description": "Re-issue a member's outstanding invitation (HIVE-5.2, #5305).\n\nApiome does not mail invitations: :func:`invite_member` requires the invitee to hold an\naccount already, and a ``pending`` membership becomes ``active`` the next time they sign\nin. Re-issuing therefore renews the invitation rather than re-sending a message \u2014 the\nmembership row is re-stamped so the members screen's \"Invited {date}\" reads freshly, and\nthe renewal is recorded in the access ledger as ``member.invite_resent`` so an access\nreview can see who kept an outstanding invitation alive.\n\nGated on ``members:create``, the same permission as issuing the invitation in the first\nplace. Consumes no seat: the pending membership already holds one, so the OLO-5.3\ncapacity guard is deliberately not consulted.\n\n:raises HTTPException: 404 when the user has no membership in the tenant, 409 when their\n    membership is not pending (there is no invitation outstanding to renew).",
+        "operationId": "resend_member_invite_v1_access__tenant_slug__members__user_id__resend_invite_post",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id",
+              "description": "User Id schema."
+            },
+            "description": "Path parameter identifying the user id segment."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Resend Member Inviteauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Resend Member Inviteauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Resend Member Invite Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Resend Member Invite Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for resend member invite.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Resend Member Invite V1 Access  Tenant Slug  Members  User Id  Resend Invite Post",
+                  "description": "Response Resend Member Invite V1 Access  Tenant Slug  Members  User Id  Resend Invite Post schema."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for resend member inviteresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/access/{tenant_slug}/audit": {
       "get": {
         "tags": [
@@ -77134,7 +77234,7 @@
             "type": "string",
             "title": "Operation Uuid",
             "description": "The apiome.path_operation UUID.",
-            "example": "0b9d3f37-10f2-4c4a-bbb0-951f2df5d059"
+            "example": "d1eb82f9-a1dc-47af-a7cc-74c21db8a2bd"
           },
           "method": {
             "type": "string",
@@ -79498,7 +79598,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-15T15:24:58Z"
+            "example": "2026-08-17T23:19:57Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -113955,7 +114055,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-15T15:24:58Z"
+            "example": "2026-08-17T23:19:57Z"
           }
         },
         "additionalProperties": false,
@@ -128649,14 +128749,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-15T15:24:58Z"
+            "example": "2026-08-17T23:19:57Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-15T15:24:58Z"
+            "example": "2026-08-17T23:19:57Z"
           },
           "outcome": {
             "anyOf": [
