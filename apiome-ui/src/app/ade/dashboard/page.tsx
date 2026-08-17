@@ -1,72 +1,120 @@
 'use client';
 
+/**
+ * Home — `/ade/dashboard` (HIVE-4.6, #5300).
+ *
+ * Mockup: `docs/mockups/home/overview.html`. Design language: `docs/mockups/DESIGN.md` §5.3
+ * (page header), §8 (header → stat strip → content), §1 (one obvious next step).
+ *
+ * ## What was wrong
+ *
+ * The page was six stat cards and a Recent Activity list — and the activity list sat in the
+ * left column of a `lg:grid-cols-2`, so on every screen wider than a tablet **the right half of
+ * the page was empty**. A reader arriving at their workspace was told how many versions they
+ * had and given nothing to click.
+ *
+ * ## What it is now
+ *
+ * The same widgets, plus the work. Reading down: a greeting header with the two actions a
+ * reader most often wants, the first-run checklist as the page's one honey card, the six stats,
+ * and then a two-column body whose *both* columns are full — "Pick up where you left off" and
+ * Recent activity on the left, Quick actions / Needs attention / Publishing pulse on the right.
+ *
+ * Nothing here is a new data source. The stats and the activity list are the same two calls,
+ * unchanged; everything added is assembled by `lib/db/dashboard-home.ts` out of columns other
+ * screens already read (`versions.quality_score`, `versions.metadata.sunsetAt`,
+ * `versions.published_at`, `api_keys.expires_at`).
+ *
+ * ## Why the page is still a client component
+ *
+ * Three of its behaviours are the reader's, not the server's: the checklist's dismissal lives in
+ * `localStorage`, the greeting is a function of the reader's own clock (a server-rendered "Good
+ * evening" is wrong for half the world), and the loading skeletons the ticket requires exist
+ * only if the page renders before its data. So the page loads through server actions and keeps
+ * its `isLoading` gate, exactly as it did.
+ *
+ * The three loads run in one `Promise.all` and share one `finally`: the panels appear together
+ * rather than popping in one at a time, which is what a page of skeletons is for.
+ */
+
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Plus, Upload } from 'lucide-react';
 import { useAuthSession } from '@lib/auth/session-client';
-import {
-  Folder,
-  GitBranch,
-  Box,
-  Code,
-  Clock,
-  TrendingUp,
-  LayoutDashboard,
-  CheckCircle2,
-} from 'lucide-react';
-import {
-  dashboardContentStackClass,
-  dashboardMainClass,
-  dashboardPanelClass,
-} from '@/app/components/ade/dashboard/dashboardScreenClasses';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { Badge } from '../../components/ui/Badge';
-import { FirstRunChecklist } from '../../components/ade/dashboard/FirstRunChecklist';
-import { cn } from '../../../../lib/utils';
-import { getDashboardStats, getRecentActivity } from '../../../../lib/db/helper';
 
-interface DashboardStats {
-  total_tenants: number;
-  admin_tenants: number;
-  total_projects: number;
-  created_projects: number;
-  total_versions: number;
-  created_versions: number;
-  published_versions: number;
-  total_classes: number;
-  total_properties: number;
-  total_class_properties: number;
-  last_activity: string | null;
+import { Button } from '@/app/components/ui/Button';
+import { Page, PageBody } from '@/app/components/shell/pageChrome';
+import PageHeader from '@/app/components/shell/PageHeader';
+import { OPEN_ACTIONS, openActionHref } from '@/app/components/shell/openActions';
+import { FirstRunChecklist } from '@/app/components/ade/dashboard/FirstRunChecklist';
+import { ContinueWorking } from '@/app/components/ade/dashboard/home/ContinueWorking';
+import { HomeStatStrip } from '@/app/components/ade/dashboard/home/HomeStatStrip';
+import { NeedsAttention } from '@/app/components/ade/dashboard/home/NeedsAttention';
+import { PublishingPulse } from '@/app/components/ade/dashboard/home/PublishingPulse';
+import { QuickActions } from '@/app/components/ade/dashboard/home/QuickActions';
+import { RecentActivity } from '@/app/components/ade/dashboard/home/RecentActivity';
+import {
+  ACTIVITY_LIMIT,
+  EMPTY_STATS,
+  workspaceSummarySentence,
+  type DashboardStats,
+  type RecentActivityRow,
+} from '@/app/components/ade/dashboard/home/homeModel';
+import { firstNameOf, greetingFor } from '@/app/components/ade/launcher/launcherModel';
+import { emptyDashboardHome, type DashboardHome } from '@lib/db/dashboard-home-model';
+import { getDashboardHomeForSession } from '@lib/db/dashboard-home';
+import { getDashboardStats, getRecentActivity } from '@lib/db/helper';
+
+/** The projects list, which owns both of the header's action dialogs. */
+const PROJECTS_HREF = '/ade/dashboard/projects';
+
+/**
+ * Parse a server action's JSON payload, falling back rather than throwing.
+ *
+ * `getDashboardStats` and `getRecentActivity` both return JSON *strings* and both already swallow
+ * their own database errors by returning an empty payload — so the only way this can go wrong is
+ * a shape the page does not expect, and a page that threw on it would replace a working activity
+ * list with a blank screen.
+ *
+ * The `accepts` predicate is the half that matters: parsing alone is not enough, because valid
+ * JSON of the wrong *shape* fails later and further away. An object where the activity list is
+ * expected would reach `.map` and throw during render.
+ *
+ * @param raw The JSON string the action returned.
+ * @param accepts Whether the parsed value is the shape this caller asked for.
+ * @param fallback What to use when it does not parse, or is not that shape.
+ * @returns The parsed value, or `fallback`.
+ */
+function parsePayload<T>(raw: string, accepts: (value: unknown) => boolean, fallback: T): T {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return accepts(parsed) ? (parsed as T) : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
-interface RecentActivity {
-  type: 'project' | 'version' | 'class' | 'property';
-  id: string;
-  name: string;
-  description: string | null;
-  created_at: string;
-  tenant_name: string;
-  tenant_slug: string;
+/** Whether a parsed payload is a plain object — the shape `getDashboardStats` returns. */
+function isRecord(value: unknown): boolean {
+  return value != null && typeof value === 'object' && !Array.isArray(value);
 }
 
+/**
+ * The Home page.
+ *
+ * @returns The page's header and body.
+ */
 const Dashboard = () => {
   const { data: session } = useAuthSession();
-  const [stats, setStats] = useState<DashboardStats>({
-    total_tenants: 0,
-    admin_tenants: 0,
-    total_projects: 0,
-    created_projects: 0,
-    total_versions: 0,
-    created_versions: 0,
-    published_versions: 0,
-    total_classes: 0,
-    total_properties: 0,
-    total_class_properties: 0,
-    last_activity: null,
-  });
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [stats, setStats] = useState<DashboardStats>(EMPTY_STATS);
+  const [recentActivity, setRecentActivity] = useState<RecentActivityRow[]>([]);
+  const [home, setHome] = useState<DashboardHome>(() => emptyDashboardHome());
   const [isLoading, setIsLoading] = useState(true);
 
-  const userId = (session?.user as { user_id?: string } | undefined)?.user_id;
-  const userName = session?.user?.name || 'User';
+  const user = session?.user as { user_id?: string; current_tenant_id?: string } | undefined;
+  const userId = user?.user_id;
+  const hasTenant = Boolean(user?.current_tenant_id);
+  const firstName = firstNameOf(session?.user?.name);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -74,13 +122,19 @@ const Dashboard = () => {
 
       setIsLoading(true);
       try {
-        const [statsData, activityData] = await Promise.all([
+        const [statsData, activityData, homeData] = await Promise.all([
           getDashboardStats(userId),
-          getRecentActivity(userId, 10)
+          getRecentActivity(userId, ACTIVITY_LIMIT),
+          getDashboardHomeForSession(),
         ]);
 
-        setStats(JSON.parse(statsData));
-        setRecentActivity(JSON.parse(activityData));
+        // A partial statistics object is merged over the zero payload rather than replacing it,
+        // so a column the server stopped sending reads as 0 instead of as `undefined` — which
+        // would render as the text "undefined" in a stat's footnote.
+        const parsedStats = parsePayload<Partial<DashboardStats>>(statsData, isRecord, {});
+        setStats({ ...EMPTY_STATS, ...parsedStats });
+        setRecentActivity(parsePayload<RecentActivityRow[]>(activityData, Array.isArray, []));
+        setHome(homeData);
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {
@@ -91,233 +145,59 @@ const Dashboard = () => {
     loadDashboardData();
   }, [userId]);
 
-  const getActivityIcon = (type: string) => {
-    const iconClass = "h-5 w-5";
-    switch (type) {
-      case 'project':
-        return <Folder className={cn(iconClass, "text-purple-500")} />;
-      case 'version':
-        return <GitBranch className={cn(iconClass, "text-emerald-500")} />;
-      case 'class':
-        return <Box className={cn(iconClass, "text-cyan-500")} />;
-      case 'property':
-        return <Code className={cn(iconClass, "text-amber-500")} />;
-      default:
-        return <Clock className={cn(iconClass, "text-gray-500")} />;
-    }
-  };
-
-  const getActivityLabel = (type: string) => {
-    switch (type) {
-      case 'project': return 'Created project';
-      case 'version': return 'Created version';
-      case 'class': return 'Created class';
-      case 'property': return 'Created property';
-      default: return 'Activity';
-    }
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'just now';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days} day${days !== 1 ? 's' : ''} ago`;
-    const months = Math.floor(days / 30);
-    if (months < 12) return `${months} month${months !== 1 ? 's' : ''} ago`;
-    const years = Math.floor(months / 12);
-    return `${years} year${years !== 1 ? 's' : ''} ago`;
-  };
-
-  const unpublishedVersionCount = Math.max(0, stats.total_versions - stats.published_versions);
-
-  const statsConfig = [
-    {
-      icon: Folder,
-      label: 'Tenants',
-      value: stats.total_tenants,
-      subtitle: `${stats.admin_tenants} admin`,
-      iconColor: 'text-blue-600 dark:text-blue-400',
-    },
-    {
-      icon: Folder,
-      label: 'Projects',
-      value: stats.total_projects,
-      subtitle: `${stats.created_projects} created`,
-      iconColor: 'text-purple-600 dark:text-purple-400',
-    },
-    {
-      icon: GitBranch,
-      label: 'Versions',
-      value: stats.total_versions,
-      subtitle: `${stats.created_versions} created`,
-      iconColor: 'text-emerald-600 dark:text-emerald-400',
-    },
-    {
-      icon: CheckCircle2,
-      label: 'Published',
-      value: stats.published_versions,
-      subtitle: `${unpublishedVersionCount} draft${unpublishedVersionCount === 1 ? '' : 's'}`,
-      iconColor: 'text-green-600 dark:text-green-400',
-    },
-    {
-      icon: Box,
-      label: 'Classes',
-      value: stats.total_classes,
-      subtitle: 'schema definitions',
-      iconColor: 'text-cyan-600 dark:text-cyan-400',
-    },
-    {
-      icon: Code,
-      label: 'Properties',
-      value: stats.total_properties,
-      subtitle: `${stats.total_class_properties} in classes`,
-      iconColor: 'text-amber-600 dark:text-amber-400',
-    },
-  ];
-
   return (
-    <>
-      <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="px-6 py-4">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <LayoutDashboard className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                Dashboard
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                Welcome back, {userName}. Here&apos;s an overview of your schema projects and activity.
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <Page>
+      <PageHeader
+        breadcrumb={
+          home.workspaceName
+            ? [{ label: home.workspaceName, href: '/ade/dashboard' }, { label: 'Home' }]
+            : [{ label: 'Home' }]
+        }
+        title={`${greetingFor()}, ${firstName}`}
+        description={workspaceSummarySentence(stats)}
+        actions={
+          hasTenant ? (
+            <>
+              <Button variant="outline" kbd="I" asChild>
+                <Link href={openActionHref(PROJECTS_HREF, OPEN_ACTIONS.importSpec)}>
+                  <Upload aria-hidden />
+                  Import a spec
+                </Link>
+              </Button>
+              <Button variant="primary" kbd="N" asChild>
+                <Link href={openActionHref(PROJECTS_HREF, OPEN_ACTIONS.newProject)}>
+                  <Plus aria-hidden />
+                  New project
+                </Link>
+              </Button>
+            </>
+          ) : undefined
+        }
+      />
 
-      <main className={dashboardMainClass}>
-        <div className={dashboardContentStackClass}>
-      {/* First-run onboarding checklist (dismissible; completion derived from stats) */}
-      {!isLoading && <FirstRunChecklist stats={stats} />}
+      <PageBody>
+        {/* First-run onboarding checklist (dismissible; completion derived from stats). Gated on
+            the load so the checklist never renders against zeroed counts and shows five
+            incomplete steps to a reader who has finished them all. */}
+        {!isLoading && <FirstRunChecklist stats={stats} />}
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {statsConfig.map((stat) => {
-          const IconComponent = stat.icon;
-          return (
-            <div key={stat.label} className={`${dashboardPanelClass} p-4`}>
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-10 w-10 rounded-xl" />
-                    <Skeleton className="h-8 w-16" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        {stat.value}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {stat.subtitle}
-                      </p>
-                    </div>
-                    <IconComponent className={cn('w-8 h-8 opacity-50', stat.iconColor)} />
-                  </div>
-                )}
-            </div>
-          );
-        })}
-      </div>
+        <HomeStatStrip stats={stats} loading={isLoading} />
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className={`${dashboardPanelClass} overflow-hidden`}>
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                  Recent Activity
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Your latest actions
-                </p>
-              </div>
-            </div>
+        <div className="home-grid">
+          <div className="home-grid__main">
+            <ContinueWorking projects={home.continueProjects} loading={isLoading} />
+            <RecentActivity activity={recentActivity} loading={isLoading} />
           </div>
 
-          <div className="p-4">
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
-                ))}
-              </div>
-            ) : recentActivity.length > 0 ? (
-              <div className="space-y-2">
-                {recentActivity.map((item, index) => (
-                  <div key={item.id}>
-                    <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                      <div className={cn(
-                        "w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0",
-                        item.type === 'project' ? 'bg-purple-100 dark:bg-purple-900/30' :
-                        item.type === 'version' ? 'bg-emerald-100 dark:bg-emerald-900/30' :
-                        item.type === 'class' ? 'bg-cyan-100 dark:bg-cyan-900/30' :
-                        'bg-amber-100 dark:bg-amber-900/30'
-                      )}>
-                        {getActivityIcon(item.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                          {getActivityLabel(item.type)}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                          {item.name}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <Badge variant="default" className="text-2xs px-2 py-0">
-                            {item.tenant_name}
-                          </Badge>
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
-                            {formatTimeAgo(item.created_at)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    {index < recentActivity.length - 1 && (
-                      <div className="mx-3 border-t border-gray-100 dark:border-gray-800" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 px-6">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-1">
-                  No recent activity
-                </h3>
-                <p className="text-sm text-gray-400 dark:text-gray-500">
-                  Start creating projects to see your activity here!
-                </p>
-              </div>
-            )}
-          </div>
+          <aside className="home-grid__aside" aria-label="Workspace shortcuts and health">
+            <QuickActions hasTenant={hasTenant} />
+            <NeedsAttention items={home.attention} loading={isLoading} />
+            <PublishingPulse weeks={home.pulse} loading={isLoading} />
+          </aside>
         </div>
-      </div>
-        </div>
-      </main>
-    </>
+      </PageBody>
+    </Page>
   );
 };
 
 export default Dashboard;
-
