@@ -1,5 +1,15 @@
 import React from 'react';
 
+/**
+ * The tiled "BETA" watermark behind an auth card.
+ *
+ * Only `/login/2fa` still draws it. HIVE-4.1 (#5295) replaced it on `/login` with
+ * `components/auth/BetaBadge` — a honey chip beside the mark, behind the same
+ * `NEXT_PUBLIC_BETA_MODE` flag — because a full-screen rotated watermark competed with the
+ * one decision on the page, named a grey no theme could move, and had to be switched off by
+ * hand before a visual snapshot could be taken. HIVE-4.2 (#5296) re-skins the two-factor
+ * screen and retires this file with it.
+ */
 const BetaBackground: React.FC = () => {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">

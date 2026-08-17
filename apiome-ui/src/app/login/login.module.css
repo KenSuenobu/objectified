@@ -1,92 +1,10 @@
-/* Awwwards-style login treatment — scoped to the login page.
-   Colors come from Tailwind classes in the JSX (light/dark aware via the
-   .dark class, which next-themes drives from the system preference). */
+/* Two leftovers from the pre-Hive login treatment, kept only for the two-factor screen.
+   HIVE-4.1 (#5295) re-skinned `/login` against the token layer and dropped the rest of this
+   module — the aurora blobs, the blueprint grid, the film grain, the headline shimmer and
+   the hero's floating chips, all of which named colours and could not follow a theme.
 
-/* ---------- Aurora blobs ---------- */
-
-.blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(90px);
-  pointer-events: none;
-  will-change: transform;
-}
-
-.blobA {
-  animation: drift-a 26s ease-in-out infinite alternate;
-}
-
-.blobB {
-  animation: drift-b 32s ease-in-out infinite alternate;
-}
-
-.blobC {
-  animation: drift-c 38s ease-in-out infinite alternate;
-}
-
-@keyframes drift-a {
-  from {
-    transform: translate3d(-12%, -8%, 0) scale(1);
-  }
-  to {
-    transform: translate3d(10%, 12%, 0) scale(1.15);
-  }
-}
-
-@keyframes drift-b {
-  from {
-    transform: translate3d(8%, 10%, 0) scale(1.1);
-  }
-  to {
-    transform: translate3d(-10%, -12%, 0) scale(0.95);
-  }
-}
-
-@keyframes drift-c {
-  from {
-    transform: translate3d(-6%, 10%, 0) rotate(0deg) scale(1);
-  }
-  to {
-    transform: translate3d(8%, -8%, 0) rotate(20deg) scale(1.2);
-  }
-}
-
-/* ---------- Blueprint grid overlay ---------- */
-
-.grid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(to right, currentColor 1px, transparent 1px),
-    linear-gradient(to bottom, currentColor 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black 30%, transparent 75%);
-}
-
-/* ---------- Film grain ---------- */
-
-.grain {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.5;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
-}
-
-/* ---------- Gradient shimmer on display text ---------- */
-
-.shimmer {
-  background-size: 200% auto;
-  animation: shimmer-pan 7s linear infinite;
-}
-
-@keyframes shimmer-pan {
-  to {
-    background-position: 200% center;
-  }
-}
+   `login/2fa/TwoFactorClient.tsx` still imports the two classes below. HIVE-4.2 (#5296)
+   re-skins that screen; this file goes with it. Nothing new should import it. */
 
 /* ---------- Shine sweep on interactive surfaces ---------- */
 
@@ -128,34 +46,10 @@
   }
 }
 
-/* ---------- Floating format chips (hero) ---------- */
-
-.float {
-  animation: float-slow 6s ease-in-out infinite;
-}
-
-.floatDelayed {
-  animation: float-slow 7.5s ease-in-out 1.2s infinite;
-}
-
-@keyframes float-slow {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
 /* ---------- Card entrance ---------- */
 
 .enter {
   animation: rise-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.enterSlow {
-  animation: rise-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
 
 @keyframes rise-in {
@@ -172,14 +66,7 @@
 /* ---------- Motion safety ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .blobA,
-  .blobB,
-  .blobC,
-  .shimmer,
-  .float,
-  .floatDelayed,
-  .enter,
-  .enterSlow {
+  .enter {
     animation: none;
   }
 

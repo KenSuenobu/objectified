@@ -87,10 +87,12 @@ describe('LoginClient — landmarks and headings (OLO-3.5)', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Welcome back');
   });
 
-  it('marks the decorative aurora background aria-hidden so it is out of the a11y tree', () => {
+  it('marks the decorative format chips aria-hidden so they are out of the a11y tree', () => {
     const { container } = render(<LoginClient ssoProviders={PROVIDERS} />);
-    // The aurora field is the first child inside the page wrapper.
-    expect(container.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
+    // HIVE-4.1 replaced the aurora field with the hex canvas and the floating format
+    // pills. The canvas is a background image and reaches no-one; the pills are real
+    // elements, so they say so themselves.
+    expect(container.querySelector('.auth-chips')).toHaveAttribute('aria-hidden', 'true');
   });
 });
 
