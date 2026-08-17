@@ -2578,6 +2578,439 @@ p {
   box-shadow: inset 0 0 0 1px var(--border);
 }
 
+/* ---- Leading-icon wrapper (hive.css §9 `.input-wrap`) -------------------
+   A field whose meaning is carried by a glyph inside its own box — the mail
+   icon on an email field, the lock on a password. The wrapper positions the
+   glyph and pushes the control's text clear of it.
+
+   Unlayered for the same reason as everything else here: the padding it has to
+   beat is the primitive's own `px-3`, which lives in `@layer utilities`. The
+   glyph is `pointer-events: none`, so clicking it still focuses the control.
+
+   The reserved space is stated once, as a token expression — one gutter of
+   `--space-3` on each side of a `--icon-dense` glyph — so it follows the font
+   scale with the icon rather than freezing at whatever the icon measured when
+   this was written. */
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrap > svg:first-child {
+  position: absolute;
+  left: var(--space-3);
+  width: var(--icon-dense);
+  height: var(--icon-dense);
+  color: var(--fg-subtle);
+  pointer-events: none;
+}
+
+.input-wrap > :is(input, textarea) {
+  padding-left: calc(var(--space-3) * 2 + var(--icon-dense));
+}
+
+/* ==========================================================================
+   AUTH SURFACES (HIVE-4.1, #5295)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/auth/login.html` (the split layout its four auth
+   mockups share verbatim), `docs/mockups/assets/hive.css` §19 (`.hex-bg`,
+   `.glow-*`), `docs/mockups/DESIGN.md` §2 (hexagon = the faint canvas pattern
+   on auth/launcher pages; honey = brand ornament only).
+
+   These are the *only* pages with no rail, no page header and no tenant — the
+   reader is not in the product yet. So the chrome they do get is the brand:
+   a hex canvas, one honey glow, the bee, and a single card carrying the whole
+   decision. Everything below is a token reference, which is what lets the
+   front door follow the theme, density and font-scale preferences the reader
+   set on their last visit — the aurora blobs and film grain this replaced
+   (`login.module.css`) named colours and could not.
+
+   Scoped with an `auth-` prefix and kept here rather than in a CSS module
+   because HIVE-4.2 / 4.3 / 4.4 draw the same shell: the mockups' own comment
+   is "shared verbatim by the four auth mockups". `components/auth/AuthShell`
+   is the React half.
+   ========================================================================== */
+
+/* ---- Hive ornaments (hive.css §19) --------------------------------------
+   The honeycomb canvas. Two data URIs rather than one tinted by
+   `currentColor`, because a background image cannot read a custom property;
+   the dark one is keyed on `.dark`, which `ThemeProvider` writes for all six
+   dark-based palettes — and which next-themes' blocking script writes on
+   `/login`, where no provider is mounted at all. */
+.hex-bg {
+  background-color: var(--bg-canvas);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='100' viewBox='0 0 56 100'><path d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23000' stroke-opacity='0.045' stroke-width='1'/><path d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%23000' stroke-opacity='0.045' stroke-width='1'/></svg>");
+}
+
+.dark .hex-bg {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='100' viewBox='0 0 56 100'><path d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23fff' stroke-opacity='0.05' stroke-width='1'/><path d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%23fff' stroke-opacity='0.05' stroke-width='1'/></svg>");
+}
+
+/* Two soft washes in the brand colours, clipped to the panel. `overflow: clip`
+   is on the class rather than assumed of the caller so either glow works on
+   its own. Both are `rem`, so they keep their proportion to the type they sit
+   behind at every font scale. */
+.glow-honey,
+.glow-azure {
+  position: relative;
+  overflow: clip;
+}
+
+.glow-honey::before {
+  content: "";
+  position: absolute;
+  width: 26.25rem;
+  height: 26.25rem;
+  right: -7.5rem;
+  top: -10rem;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--honey) 28%, transparent), transparent);
+  pointer-events: none;
+}
+
+.glow-azure::after {
+  content: "";
+  position: absolute;
+  width: 22.5rem;
+  height: 22.5rem;
+  left: -6.25rem;
+  bottom: -10rem;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--brand-azure) 22%, transparent), transparent);
+  pointer-events: none;
+}
+
+/* ---- The split: brand on the left, the decision on the right ------------ */
+.auth-shell {
+  min-height: 100vh;
+}
+
+.auth-split {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  min-height: 100vh;
+}
+
+/* The single-column shape: no brand panel, the card centred on the canvas.
+   `auth-center` is what the 2FA and OAuth sign-up mockups draw. */
+.auth-center {
+  display: flex;
+  min-height: 100vh;
+}
+
+.auth-center > .auth-form {
+  flex: 1;
+}
+
+.auth-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: calc(var(--space-8) * 2) calc(var(--page-pad) * 2);
+  border-right: 1px solid var(--border);
+  /* The panel is decoration around a fixed block of copy; it never scrolls and
+     never hands its width to the card column. */
+  overflow: clip;
+  user-select: none;
+}
+
+.auth-brand__inner {
+  position: relative;
+  max-width: 35rem;
+}
+
+/* The lock-up is the rail's size by default (DESIGN.md §5.2). Here it is the
+   only thing on the page carrying the product's name, so the word is set at
+   display weight beside the bee. */
+.auth-brand__lockup .brand-lockup__name {
+  font-size: var(--fs-2xl);
+}
+
+.auth-eyebrow {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--honey-fg);
+}
+
+.auth-display {
+  font-size: var(--fs-5xl);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  line-height: var(--lh-tight);
+  color: var(--fg);
+}
+
+/* The second line of the headline, in the accent ramp. Falls back to solid
+   accent ink wherever `background-clip: text` is not honoured, so the line is
+   never invisible. */
+.auth-display__accent {
+  color: var(--accent-fg);
+  background: linear-gradient(90deg, var(--accent), var(--accent-fg));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .auth-display__accent {
+    color: transparent;
+  }
+}
+
+.auth-lede {
+  max-width: 46ch;
+  font-size: var(--fs-lg);
+  color: var(--fg-muted);
+}
+
+/* ---- Floating format chips ---------------------------------------------
+   The mockup scatters eight pills at absolute pixel offsets. Here they flow,
+   because the panel has to survive nine themes, three densities and six font
+   scales without a pill leaving the box — the stagger comes from an alternating
+   top margin and a per-chip rotation instead. `translate` is animated rather
+   than `transform` so the drift composes with that rotation rather than
+   cancelling it. Reduced motion needs no rule: the `data-motion="reduce"` and
+   `prefers-reduced-motion` blocks above zero every animation in the app. */
+.auth-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  max-width: 34rem;
+}
+
+.auth-chips > * {
+  box-shadow: var(--shadow-sm);
+  transform: rotate(var(--chip-rot, 0deg));
+  animation: auth-chip-float 6s var(--ease-in-out) infinite;
+  animation-delay: var(--chip-delay, 0s);
+}
+
+.auth-chips > :nth-child(even) {
+  margin-top: var(--space-5);
+}
+
+@keyframes auth-chip-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -0.5rem;
+  }
+}
+
+/* ---- The card column ---------------------------------------------------- */
+.auth-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12) var(--page-pad);
+  /* A grid item's `min-width` is `auto`, so the column would otherwise refuse to
+     shrink below the card's widest unbreakable line — which at the largest font
+     scale is wider than a phone. Zero here, plus the wrapping the two rules below
+     allow, is what keeps a narrow viewport free of horizontal scroll. */
+  min-width: 0;
+}
+
+.auth-form__inner {
+  width: 100%;
+  max-width: 27.5rem;
+}
+
+.auth-card {
+  width: 100%;
+  padding: calc(var(--card-pad) * 1.6);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+}
+
+/* The bee, for the width where the brand panel is gone. One mark per page:
+   the media query below is the only place either copy is turned on. */
+.auth-card__logo {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.auth-title {
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  line-height: var(--lh-tight);
+  color: var(--fg);
+}
+
+.auth-sub {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* ---- Single sign-on ----------------------------------------------------
+   Full-width, label left, and an arrow that only appears under the pointer or
+   the focus ring — the affordance is the row, not the arrow. */
+.auth-sso {
+  width: 100%;
+  justify-content: flex-start;
+  /* `Button` sets `white-space: nowrap` and a fixed height, which is right for a
+     control in a toolbar and wrong for a full-width row whose label is a sentence.
+     A long provider name wraps instead of widening the page, and the row grows to
+     fit — the resting height is unchanged, because one line still measures
+     `--control-h-lg`. */
+  white-space: normal;
+  height: auto;
+  min-height: var(--control-h-lg);
+  padding-block: var(--space-2);
+  text-align: left;
+}
+
+/* The provider mark. It sits in its own `aria-hidden` span because some
+   `react-icons` brand glyphs set `role="img"` with no title, which axe reports
+   as a serious violation — the button's own label is the accessible name.
+
+   It is the rail size (18 px), not the 15 px a glyph inside a button normally
+   gets: here it is doing the identifying, and the row is a `--control-h-lg`
+   one, so it can carry it. The trailing arrow keeps the button default. */
+.auth-sso__mark {
+  display: inline-flex;
+  flex: none;
+}
+
+.auth-sso__mark > svg {
+  width: var(--icon-rail);
+  height: var(--icon-rail);
+}
+
+.auth-sso__arrow {
+  margin-left: auto;
+  opacity: 0;
+  transform: translateX(-0.25rem);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.auth-sso:hover .auth-sso__arrow,
+.auth-sso:focus-visible .auth-sso__arrow {
+  opacity: 0.8;
+  transform: none;
+}
+
+/* The "Connecting…" tile that replaces the provider list during a redirect. */
+.auth-wait {
+  display: grid;
+  place-items: center;
+  gap: var(--space-1);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+/* ---- "or use your email" ------------------------------------------------
+   One class for both spellings: a plain label once the form is open, and a
+   button while it is still collapsed. The rules are unlayered so the button
+   reset in `@layer base` cannot re-inherit its own background over them. */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  background: transparent;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+button.auth-divider {
+  cursor: pointer;
+}
+
+button.auth-divider:hover:not(:disabled) {
+  color: var(--fg);
+}
+
+button.auth-divider:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ---- Trust badges and the terms line ------------------------------------
+   `--fg-muted`, not the mockup's `--fg-subtle`: subtle on canvas measures
+   ~3.2:1, which axe reports as a serious violation at these sizes. Same
+   deviation, same reason, as the breadcrumb ink in HIVE-3.5. */
+.auth-trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.auth-trust > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.auth-trust svg {
+  width: var(--fs-sm);
+  height: var(--fs-sm);
+  color: var(--ok);
+}
+
+.auth-terms {
+  font-size: var(--fs-xs);
+  text-align: center;
+  color: var(--fg-muted);
+}
+
+/* Every link on these pages sits inside a sentence, so two WCAG rules bite at once:
+   1.4.1 (colour is not the only signal — axe's `link-in-text-block`) and 1.4.3
+   (contrast). The underline answers the first. The second is why the ink is
+   `--accent-fg` and not `--accent`: azure measures 4.14:1 on the card and 3.8:1 on
+   the canvas, under the 4.5:1 these 12–13 px links need, while the ink-weight accent
+   clears it on both. Hover thickens the rule rather than lightening the colour,
+   which would give the contrast straight back. */
+.auth-link {
+  color: var(--accent-fg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ---- Narrow: the brand panel folds into the card -----------------------
+   1000 px is the mockup's own breakpoint. Both halves of the swap live in this
+   one block so there is no width at which the page shows two bees, or none. */
+@media (max-width: 1000px) {
+  .auth-split {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-brand {
+    display: none;
+  }
+
+  .auth-card__logo {
+    display: flex;
+  }
+}
+
 /* Layout Animation Styles */
 /* Smooth transitions for node positions during layout changes */
 .layout-animating .react-flow__node {
