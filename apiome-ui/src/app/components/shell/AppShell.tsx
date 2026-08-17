@@ -8,11 +8,13 @@ import { TooltipProvider } from '@/app/components/ui/Tooltip';
 import { ICON_SIZE } from '@/app/components/ui/iconSizes';
 import { PreferencesBoundary, usePreferences } from '@/app/providers/PreferencesProvider';
 import PreferencesDrawerHost from '@/app/components/ade/preferences/PreferencesDrawerHost';
-import { matchesRailShortcut } from '@/app/components/ade/preferences/shortcuts';
+import { RAIL_SHORTCUT, type ShortcutBinding } from '@lib/shortcuts';
+import { useShortcuts } from '@/app/hooks/useShortcuts';
 import { cn } from '@lib/utils';
 import type { ResolvedPlatformNavGroup } from '@lib/platform-nav';
 import CommandPaletteHost from './CommandPaletteHost';
 import RailNav from './RailNav';
+import ShortcutsHost from './ShortcutsHost';
 import { RAIL_ITEM_HOVER_CLASS, RailTooltip } from './railChrome';
 import { useIconRail } from './useIconRail';
 
@@ -124,17 +126,14 @@ function AppShellFrame({
   // `⌘\` (`Ctrl+\`) flips the rail from anywhere in the shell. It writes the *preference*,
   // which is what makes the state survive a reload and a route change without this
   // component owning any state of its own — `DESIGN.md` §5.2 lists the handle, the
-  // shortcut and the Preferences switch as three ways to set one thing.
-  React.useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!matchesRailShortcut(event)) return;
-      event.preventDefault();
-      toggleRail();
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [toggleRail]);
+  // shortcut and the Preferences switch as three ways to set one thing. Registered with the
+  // shared registry (HIVE-3.7), so the `?` sheet lists it while this shell is on screen and
+  // does not while a surface without a rail is.
+  const shortcuts = React.useMemo<readonly ShortcutBinding[]>(
+    () => [{ ...RAIL_SHORTCUT, run: toggleRail }],
+    [toggleRail]
+  );
+  useShortcuts(shortcuts);
 
   const context: RailRegionContext = { iconRail };
 
@@ -228,6 +227,11 @@ function AppShellFrame({
           (HIVE-3.6). It is handed the shell's *resolved* groups — commercial destinations
           included — so `⌘K` and the rail can never disagree about where a reader can go. */}
       {commandPalette && <CommandPaletteHost groups={groups} currentTenantId={currentTenantId} />}
+
+      {/* And the shortcuts sheet, with the jumps and list actions no other component owns
+          (HIVE-3.7). It is handed the same resolved groups, so `G` `P` and the rail row it
+          matches are the same destination with the same gate. */}
+      <ShortcutsHost groups={groups} currentTenantId={currentTenantId} />
     </div>
   );
 }

@@ -1381,6 +1381,123 @@ html[data-rail="collapsed"] {
   margin-left: auto;
 }
 
+/* ---- Shortcut sheet (HIVE-3.7, #5293; DESIGN.md §8) ---------------------
+   `docs/mockups/assets/hive.js` §`#shortcuts`. One `lg` dialog whose body is a
+   grid of scope sections, each a stack of "what it does · what to press".
+
+   Why CSS rather than utilities on the component: the sheet is *generated*,
+   so every row is drawn by one loop and its chrome has to be reachable by
+   class rather than composed per element — the same reason the palette's rows
+   are CSS. Two decisions are load-bearing:
+
+     1. The column count comes from `auto-fit` over a minimum column measure,
+        not from a breakpoint. The sheet grows a column when the reader's font
+        scale and density leave room for one, which is what keeps it two
+        columns at 100% and one column at 125% without a media query per stop —
+        and, with `minmax(min(<measure>, 100%), 1fr)`, without ever forcing the
+        dialog wider than the viewport (roadmap §6: no horizontal scroll).
+     2. `--fg-muted` for the caps headings and the gated row's reason, not
+        `--fg-subtle`. The reason line is the one piece of copy in the sheet a
+        reader most needs to be able to read, and `--fg-subtle` measures
+        2.8–4.0:1 in every theme block (the finding HIVE-3.3, HIVE-3.5 and
+        HIVE-3.6 each landed on). */
+
+.shortcut-sheet {
+  /* The narrowest a section may be before the grid drops to fewer columns.
+     Declared here so the measure has one owner, and in `rem` so it follows the
+     font-size preference along with the type inside it. */
+  --shortcut-col: 15rem;
+}
+
+.shortcut-sheet__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--shortcut-col), 100%), 1fr));
+  gap: var(--space-6) var(--space-8);
+}
+
+.shortcut-sheet__caps {
+  margin-bottom: var(--space-2);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  color: var(--fg-muted);
+}
+
+.shortcut-sheet__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* `align-items: baseline` rather than `center`: a row whose label has wrapped
+   to two lines keeps its chips beside the *first* line, where the eye is. */
+.shortcut-sheet__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: var(--fs-sm);
+}
+
+/* The label may wrap, and a flex item can only shrink below its content once
+   its automatic minimum size is lifted — the same `min-width: 0` rule the page
+   header and the palette both needed. */
+.shortcut-sheet__label {
+  min-width: 0;
+  color: var(--fg);
+}
+
+/* Why a chord cannot be used right now, under the thing it would have done. */
+.shortcut-sheet__reason {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* Chips ride the right edge and never wrap: a chord broken across two lines is
+   not a chord. */
+.shortcut-sheet__keys {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* A row that can be *run* as well as read. Accent ink at the `-fg` step, not
+   `--accent` itself: `--accent` is a fill colour and measures 4.1:1 as ink on
+   the surface, which axe reports as serious. The underline arrives on hover and
+   the focus ring on focus, so the row reads as text until it is reached — the
+   affordance a reference sheet wants, without a wall of blue links. */
+.shortcut-sheet__action {
+  border-radius: var(--r-xs);
+  text-align: left;
+  color: var(--accent-fg);
+  text-underline-offset: 2px;
+}
+
+.shortcut-sheet__action:hover {
+  text-decoration: underline;
+}
+
+.shortcut-sheet__action:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.shortcut-sheet__note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.shortcut-sheet__empty {
+  padding: var(--space-6) 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
 /* ---- Metric utilities (HIVE-1.6, #5279) ---------------------------------
    The density and control tokens above are only worth having if something
    spends them, and a component should spend them by *name* rather than by

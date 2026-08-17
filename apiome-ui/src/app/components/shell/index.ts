@@ -9,6 +9,11 @@
  * `Page` / `PageHeader` / `PageBody` (HIVE-3.5) are what a *page* inside that shell is made
  * of, rather than parts of the shell itself: the page epics (5–9) compose the three instead
  * of hand-rolling a header bar each.
+ *
+ * `ShortcutsHost` (HIVE-3.7) is the third overlay every chrome mounts, beside the
+ * preferences pane and the palette. It draws the `?` sheet and binds the shortcuts no single
+ * component owns; a page contributes its own with `useShortcuts()` from
+ * `src/app/hooks/useShortcuts.ts`.
  */
 export { default as AppShell } from './AppShell';
 export type { AppShellProps, RailRegion, RailRegionContext } from './AppShell';
@@ -69,6 +74,16 @@ export {
   useOpenAction,
 } from './openActions';
 export type { OpenAction } from './openActions';
+export { default as ShortcutSheet, SHORTCUT_SHEET_TITLE } from './ShortcutSheet';
+export type { ShortcutSheetProps } from './ShortcutSheet';
+export { default as ShortcutsHost } from './ShortcutsHost';
+export type { ShortcutsHostProps } from './ShortcutsHost';
+export {
+  isShortcutSheetMounted,
+  openShortcutSheet,
+  registerShortcutSheetHost,
+  subscribeShortcutSheet,
+} from './shortcutSheetBus';
 export { default as UserMenu } from './UserMenu';
 export type { UserMenuProps } from './UserMenu';
 export { default as WorkspaceSwitcher, formatWorkspaceMeta, WORKSPACE_ROLE_TONE } from './WorkspaceSwitcher';

@@ -11,6 +11,7 @@ import { ChevronDown, Check, Plus, Settings2, Shield } from 'lucide-react';
 import WhatsNewDialog from './WhatsNewDialog';
 import PreferencesDrawerHost from './preferences/PreferencesDrawerHost';
 import CommandPaletteHost from '@/app/components/shell/CommandPaletteHost';
+import ShortcutsHost from '@/app/components/shell/ShortcutsHost';
 import { openPreferences } from './preferences/preferencesDrawerBus';
 import CreateTenantDialog, { type CreatedTenant } from './CreateTenantDialog';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -726,6 +727,9 @@ function TopHeaderView({
           only inside the Hive shell. `ConditionalHeader` guarantees the shell's own host
           and this one are never mounted together. */}
       <CommandPaletteHost currentTenantId={currentTenantId} />
+      {/* The shortcuts sheet (HIVE-3.7, #5293) on those same routes, so `?` and the jumps
+          work wherever this header is what a reader has. */}
+      <ShortcutsHost currentTenantId={currentTenantId} />
     </header>
   );
 }

@@ -3,7 +3,12 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { getPlatformNavGroups, type ResolvedPlatformNavGroup } from '@lib/platform-nav';
-import { matchesCommandPaletteShortcut } from '@/app/components/ade/preferences/shortcuts';
+import {
+  PALETTE_SHORTCUT,
+  SEARCH_SHORTCUT,
+  type ShortcutBinding,
+} from '@lib/shortcuts';
+import { useShortcuts } from '@/app/hooks/useShortcuts';
 import CommandPalette from './CommandPalette';
 import {
   registerCommandPaletteHost,
@@ -126,19 +131,19 @@ export default function CommandPaletteHost({
   // Answer `openCommandPalette()` for as long as this host is mounted.
   React.useEffect(() => registerCommandPaletteHost(openPalette), [openPalette]);
 
-  // `⌘K` / `Ctrl+K`, bound on the document so it works wherever focus is — including inside
-  // a filter box, which is the case the palette exists for (`shortcuts.ts`).
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!matchesCommandPaletteShortcut(event)) return;
-      // The browser claims this chord on some platforms; taking it is the whole point.
-      event.preventDefault();
-      openPalette();
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [openPalette]);
+  // `⌘K` / `Ctrl+K` — which works wherever focus is, including inside a filter box, because
+  // that is the case the palette exists for — and `/`, the *search* key of `DESIGN.md` §8.
+  // Both are registered with the shared registry (HIVE-3.7), so they are in the `?` sheet
+  // exactly while a palette is mounted to answer them, and a list page that wants `/` for
+  // its own filter box registers over the top of this one while it is on screen.
+  const shortcuts = React.useMemo<readonly ShortcutBinding[]>(
+    () => [
+      { ...PALETTE_SHORTCUT, run: () => openPalette() },
+      { ...SEARCH_SHORTCUT, run: () => openPalette() },
+    ],
+    [openPalette]
+  );
+  useShortcuts(shortcuts);
 
   /**
    * Act on a chosen row: close, remember, then go.

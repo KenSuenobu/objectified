@@ -7,9 +7,10 @@
  *
  *   1. **`RailSearchTrigger`** — `AppShell` region 3. Renders nothing at all where there is
  *      no palette, which is how the admin console's rail gets no search.
- *   2. **The Shortcuts tab's palette row** — the third entry point named in the roadmap. It
- *      closes the preferences pane before opening the palette, so the reader is never left
- *      with two overlays.
+ *   2. **The shortcut sheet's palette row** — the third entry point named in the roadmap.
+ *      HIVE-3.7 (#5293) moved it from the preferences pane's Shortcuts tab into the
+ *      generated sheet, where the row is a button whenever the binding can run. It closes
+ *      the sheet before opening the palette, so the reader is never left with two overlays.
  *   3. **`useOpenAction`** — the deep link the Actions group navigates on. The dialog opens
  *      once and the parameter is stripped, so a reload never reopens it.
  */
@@ -30,7 +31,9 @@ jest.mock('next/navigation', () => ({
 
 import { TooltipProvider } from '../src/app/components/ui/Tooltip';
 import RailSearchTrigger from '../src/app/components/shell/RailSearchTrigger';
-import ShortcutsTab from '../src/app/components/ade/preferences/ShortcutsTab';
+import ShortcutSheet from '../src/app/components/shell/ShortcutSheet';
+import { PALETTE_SHORTCUT } from '../lib/shortcuts';
+import { registerShortcuts } from '../src/app/hooks/useShortcuts';
 import {
   openCommandPalette,
   registerCommandPaletteHost,
@@ -113,39 +116,34 @@ describe('the rail’s search trigger', () => {
   });
 });
 
-describe('the shortcuts sheet’s palette row', () => {
-  it('is plain text where no palette is mounted, rather than a button that does nothing', () => {
-    render(<ShortcutsTab />);
+describe('the shortcut sheet’s palette row', () => {
+  it('lists nothing at all where no palette is mounted, rather than a chord that does nothing', () => {
+    render(<ShortcutSheet open onOpenChange={() => {}} />);
 
     expect(screen.queryByTestId('shortcut-run-palette')).not.toBeInTheDocument();
-    // The chord is still documented — it works whether or not this pane can launch it.
-    expect(screen.getByTestId('preferences-shortcuts')).toHaveTextContent(
+    expect(screen.getByTestId('shortcut-sheet')).not.toHaveTextContent(
       'Open the command palette'
     );
   });
 
-  it('closes this pane and opens the palette, rather than stacking one on the other', async () => {
+  it('closes the sheet and opens the palette, rather than stacking one on the other', async () => {
     const openPalette = jest.fn();
-    const closePane = jest.fn();
+    const onOpenChange = jest.fn();
     const user = userEvent.setup();
 
-    let unregisterPalette = () => {};
-    let unregisterPane = () => {};
+    // What `CommandPaletteHost` registers, without the host's own dialog in the way.
+    let unregister = () => {};
     act(() => {
-      unregisterPalette = registerCommandPaletteHost(openPalette);
-      unregisterPane = registerPreferencesDrawerHost({ open: jest.fn(), close: closePane });
+      unregister = registerShortcuts([{ ...PALETTE_SHORTCUT, run: () => openPalette() }]);
     });
 
-    render(<ShortcutsTab />);
+    render(<ShortcutSheet open onOpenChange={onOpenChange} />);
     await user.click(screen.getByTestId('shortcut-run-palette'));
 
-    expect(closePane).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(openPalette).toHaveBeenCalledTimes(1);
 
-    act(() => {
-      unregisterPalette();
-      unregisterPane();
-    });
+    act(() => unregister());
   });
 });
 

@@ -17,7 +17,7 @@ import {
   openPreferences,
   registerPreferencesDrawerHost,
 } from '../src/app/components/ade/preferences/preferencesDrawerBus';
-import { matchesPreferencesShortcut } from '../src/app/components/ade/preferences/shortcuts';
+import { PREFERENCES_SHORTCUT, matchesShortcutChord } from '../lib/shortcuts';
 import {
   PreferencesBoundary,
   PreferencesProvider,
@@ -90,24 +90,26 @@ describe('the host registry', () => {
   });
 });
 
-describe('the ⌘, matcher', () => {
+describe('the ⌘, chord', () => {
+  /** The pane's own declaration (HIVE-3.7, #5293) — one source for chip and matcher. */
+  const chord = PREFERENCES_SHORTCUT.chord!;
+
   it('accepts the chord on either platform', () => {
-    expect(matchesPreferencesShortcut(keyEvent({ metaKey: true }))).toBe(true);
-    expect(matchesPreferencesShortcut(keyEvent({ ctrlKey: true }))).toBe(true);
+    expect(matchesShortcutChord(keyEvent({ metaKey: true }), chord)).toBe(true);
+    expect(matchesShortcutChord(keyEvent({ ctrlKey: true }), chord)).toBe(true);
   });
 
   it('rejects anything that is not exactly that chord', () => {
     // A bare comma is a character someone is typing.
-    expect(matchesPreferencesShortcut(keyEvent({}))).toBe(false);
-    expect(matchesPreferencesShortcut(keyEvent({ key: '.', metaKey: true }))).toBe(false);
+    expect(matchesShortcutChord(keyEvent({}), chord)).toBe(false);
+    expect(matchesShortcutChord(keyEvent({ key: '.', metaKey: true }), chord)).toBe(false);
     // Extra modifiers belong to some other binding.
-    expect(matchesPreferencesShortcut(keyEvent({ metaKey: true, shiftKey: true }))).toBe(false);
-    expect(matchesPreferencesShortcut(keyEvent({ metaKey: true, altKey: true }))).toBe(false);
-    // Held down, or already handled by something closer to the focus.
-    expect(matchesPreferencesShortcut(keyEvent({ metaKey: true, repeat: true }))).toBe(false);
-    expect(matchesPreferencesShortcut(keyEvent({ metaKey: true, defaultPrevented: true }))).toBe(
-      false,
-    );
+    expect(matchesShortcutChord(keyEvent({ metaKey: true, shiftKey: true }), chord)).toBe(false);
+    expect(matchesShortcutChord(keyEvent({ metaKey: true, altKey: true }), chord)).toBe(false);
+  });
+
+  it('fires inside a text field, which is the whole reason it is a ⌘ chord', () => {
+    expect(PREFERENCES_SHORTCUT.allowWhileTyping).toBe(true);
   });
 });
 

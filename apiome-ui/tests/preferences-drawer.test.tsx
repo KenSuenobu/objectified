@@ -39,12 +39,13 @@ import { themes } from '../src/app/config/themes';
 import PreferencesDrawerHost from '../src/app/components/ade/preferences/PreferencesDrawerHost';
 import { openPreferences } from '../src/app/components/ade/preferences/preferencesDrawerBus';
 import {
-  SHELL_SHORTCUTS,
+  PALETTE_SHORTCUT,
+  PREFERENCES_SHORTCUT,
+  SHORTCUT_SHEET_SHORTCUT,
+  formatShortcutKeys,
   isTypingTarget,
-  matchesPreferencesShortcut,
-  matchesCommandPaletteShortcut,
-  matchesShortcutsShortcut,
-} from '../src/app/components/ade/preferences/shortcuts';
+  matchesShortcutChord,
+} from '../lib/shortcuts';
 import { TABS } from '../src/app/components/ade/PreferencesDrawer';
 import type { PreferencesTabId } from '../src/app/components/ade/preferences/preferencesDrawerBus';
 import { ThemeProvider } from '../src/app/providers/ThemeProvider';
@@ -169,34 +170,16 @@ describe('reaching the pane', () => {
     );
   });
 
-  it('opens on ? with the shortcuts already showing', async () => {
+  it('leaves ? to the shortcut sheet, which owns that chord since HIVE-3.7', () => {
     renderHost();
 
     act(() => {
       fireEvent.keyDown(document, { key: '?' });
     });
 
-    await screen.findByTestId('preferences-drawer');
-    expect(screen.getByRole('tab', { name: 'Shortcuts' })).toHaveAttribute(
-      'data-state',
-      'active',
-    );
-  });
-
-  it('leaves ? alone while the reader is typing it', () => {
-    renderHost();
-    const field = document.createElement('input');
-    document.body.appendChild(field);
-    field.focus();
-
-    fireEvent.keyDown(field, { key: '?' });
+    // This host binds `⌘,` and nothing else. `?` reaches `ShortcutsHost`, and a pane that
+    // still answered it would open over the sheet the reader asked for.
     expect(screen.queryByTestId('preferences-drawer')).not.toBeInTheDocument();
-
-    // …and modified, where it belongs to the browser rather than to us.
-    fireEvent.keyDown(document, { key: '?', metaKey: true });
-    expect(screen.queryByTestId('preferences-drawer')).not.toBeInTheDocument();
-
-    field.remove();
   });
 
   it('names the same tabs on the bus that the pane renders', () => {
@@ -515,7 +498,7 @@ describe('the other tabs', () => {
     expect(within(panel).queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
-  it('documents only shortcuts that work', async () => {
+  it('documents only shortcuts that are bound right now (HIVE-3.7, #5293)', async () => {
     const user = userEvent.setup();
     renderHost();
     await openPane(user);
@@ -523,57 +506,37 @@ describe('the other tabs', () => {
     await user.click(screen.getByRole('tab', { name: 'Shortcuts' }));
     const panel = screen.getByTestId('preferences-shortcuts');
 
+    // This host registers `⌘,` and this host alone, so that is the row the glance list has.
     expect(panel.querySelector('[data-shortcut="preferences"]')).toHaveTextContent(
       'Open preferences',
     );
-    // The row is not just copy: the matcher it documents accepts that very chord.
-    const documented = SHELL_SHORTCUTS.find((entry) => entry.id === 'preferences')!;
-    expect(documented.keys).toEqual(['⌘', ',']);
+    // The row is not just copy: the chip and the matcher are the same declaration.
+    expect(formatShortcutKeys(PREFERENCES_SHORTCUT)).toEqual(['⌘', ',']);
     expect(
-      matchesPreferencesShortcut({
-        key: ',',
-        metaKey: true,
-        ctrlKey: false,
-        altKey: false,
-        shiftKey: false,
-        repeat: false,
-        defaultPrevented: false,
-      } as KeyboardEvent),
+      matchesShortcutChord(
+        { key: ',', metaKey: true, ctrlKey: false, altKey: false, shiftKey: false },
+        PREFERENCES_SHORTCUT.chord!,
+      ),
     ).toBe(true);
 
-    // …and for the palette's chord (HIVE-3.6, #5292), which this tab also documents.
-    expect(panel.querySelector('[data-shortcut="palette"]')).toHaveTextContent(
-      'Open the command palette',
-    );
-    expect(SHELL_SHORTCUTS.find((entry) => entry.id === 'palette')!.keys).toEqual(['⌘', 'K']);
+    // No palette host is mounted here, so the tab promises no palette — the drift this
+    // ticket removed is a reference that lists a chord nothing is answering.
+    expect(panel.querySelector('[data-shortcut="palette"]')).toBeNull();
+    expect(formatShortcutKeys(PALETTE_SHORTCUT)).toEqual(['⌘', 'K']);
     expect(
-      matchesCommandPaletteShortcut({
-        key: 'k',
-        metaKey: true,
-        ctrlKey: false,
-        altKey: false,
-        shiftKey: false,
-        repeat: false,
-        defaultPrevented: false,
-      } as KeyboardEvent),
+      matchesShortcutChord(
+        { key: 'k', metaKey: true, ctrlKey: false, altKey: false, shiftKey: false },
+        PALETTE_SHORTCUT.chord!,
+      ),
     ).toBe(true);
 
-    // …and the same for the chord this tab is itself reachable by (HIVE-3.4, #5290).
-    expect(panel.querySelector('[data-shortcut="shortcuts"]')).toHaveTextContent(
-      'Show the keyboard shortcuts',
-    );
-    expect(SHELL_SHORTCUTS.find((entry) => entry.id === 'shortcuts')!.keys).toEqual(['?']);
+    // …and the same for the chord the sheet itself is reachable by (HIVE-3.4, #5290).
+    expect(formatShortcutKeys(SHORTCUT_SHEET_SHORTCUT)).toEqual(['?']);
     expect(
-      matchesShortcutsShortcut({
-        key: '?',
-        target: document.body,
-        metaKey: false,
-        ctrlKey: false,
-        altKey: false,
-        shiftKey: true,
-        repeat: false,
-        defaultPrevented: false,
-      } as unknown as KeyboardEvent),
+      matchesShortcutChord(
+        { key: '?', metaKey: false, ctrlKey: false, altKey: false, shiftKey: true },
+        SHORTCUT_SHEET_SHORTCUT.chord!,
+      ),
     ).toBe(true);
   });
 });

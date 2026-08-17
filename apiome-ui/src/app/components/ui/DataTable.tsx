@@ -12,6 +12,8 @@ import {
   X,
 } from 'lucide-react';
 
+import { DATA_TABLE_SHORTCUTS, type ShortcutBinding } from '../../../../lib/shortcuts';
+import { useShortcuts } from '../../hooks/useShortcuts';
 import { cn } from '../../../../lib/utils';
 import { Button, type ButtonProps } from './Button';
 import { Checkbox } from './Checkbox';
@@ -82,6 +84,11 @@ import { nextSortState } from './dataTableUrlState';
  * carried by real checkboxes — the thing assistive technology already knows how to report —
  * rather than by `aria-selected`, which a plain `table` role does not support. Row focus is
  * a roving `tabindex`, so a fifty-row table is one Tab stop and not fifty.
+ *
+ * Those row keys are also *declared* to the shortcut registry (HIVE-3.7, #5293) while the
+ * table is mounted, so the `?` sheet lists them on a page that has a list and does not on a
+ * page that has none. The declaration carries no handler: the keys are answered below, on
+ * the focused `<tr>`, which is the only place they can mean anything.
  */
 
 // ---------------------------------------------------------------------------------------
@@ -370,6 +377,21 @@ function DataTable<Row>({
   const selectable = selectedIds !== undefined;
   const selected = React.useMemo(() => new Set(selectedIds ?? []), [selectedIds]);
   const columnCount = columns.length + (selectable ? 1 : 0);
+
+  // Tell the shortcut registry what this table already answers (HIVE-3.7, #5293), so the `?`
+  // sheet lists the row keys while a list is on screen and does not on a page without one.
+  // These are *declarations*, not bindings: every one is handled below on the focused `<tr>`
+  // itself, which is the only place it can mean anything, and a document-level binding would
+  // be a second handler for keys this component is already answering.
+  const rowShortcuts = React.useMemo<readonly ShortcutBinding[]>(
+    () =>
+      DATA_TABLE_SHORTCUTS.filter(
+        // "Select the focused row" is only true when the caller asked for selection.
+        (shortcut) => selectable || shortcut.id !== 'list-select'
+      ),
+    [selectable]
+  );
+  useShortcuts(rowShortcuts);
 
   /** The rows a select-all may reach — everything the caller has not held back. */
   const selectableRows = React.useMemo(
