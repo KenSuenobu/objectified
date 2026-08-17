@@ -1,23 +1,48 @@
 'use client';
 
 /**
- * Dashboard first-run checklist (#3614): a dismissible panel that guides a new user through the
- * core loop — create a project, add a class from a starter template, cut a version, publish it, and
- * view it in Browse. Step completion is derived from real dashboard stats (see
- * ./firstRunChecklist), and dismissal is persisted in localStorage. Uses only shared dashboard
- * tokens + UI primitives (no hardcoded styling).
+ * Dashboard first-run checklist (#3614; redrawn for Hive by HIVE-4.6, #5300).
+ *
+ * Authority: `docs/mockups/home/overview.html` §"Getting started", whose Notes fix the contract:
+ * "same 5 steps & completion derivation; dismiss persists
+ * `ade.dashboard.firstRunChecklist.dismissed`; hex progress replaces the 'n/m done' badge".
+ *
+ * All three are kept. What changed is the shape and the skin:
+ *
+ * - The panel is the **honey card** — `DESIGN.md` §2 lists the first-run checklist among the four
+ *   places honey is allowed to appear, and this is the one brand moment on an otherwise calm
+ *   page. It replaces a grey `bg-gray-50 dark:bg-gray-900` header bar that named two greys per
+ *   appearance and followed no theme.
+ * - The steps are a **five-column grid of step cards**, not five stacked rows. All five fit on
+ *   one line at the page's width, so the reader sees the whole path at once rather than
+ *   scrolling a list to find out how long it is.
+ * - Exactly one step is marked **Next** — the first incomplete one — and only that step carries a
+ *   button. §1.2 gives a screen one obvious next step; five identical "go here" links is five.
+ *   The steps after it are not links either, and that is honest rather than a loss: a reader
+ *   cannot view a spec in Browse before publishing it, so a link there would be a promise the
+ *   path itself has not reached.
+ * - Once every step is done, the *card* carries the one remaining action — "Open Browse", which
+ *   is what its own copy has always offered — so the finished state is not a dead panel waiting
+ *   to be dismissed.
+ * - Completed steps keep the strike-through they had, and the whole card is quieted rather than
+ *   greyed with a literal colour.
+ *
+ * The Designer-dependent steps are still omitted when no Designer URL is configured, which is
+ * the pre-existing behaviour {@link buildSteps} has always had: those two steps cannot be *done*
+ * from this deployment, so offering them would be a checklist with an unreachable step.
  */
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Circle, Rocket, X, ArrowRight, ExternalLink } from 'lucide-react';
+import { ArrowRight, CircleCheck, Circle, ExternalLink, Rocket, X } from 'lucide-react';
 
-import { dashboardPanelClass } from './dashboardScreenClasses';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
+import { Card } from '../../ui/Card';
 import { cn } from '../../../../../lib/utils';
 import { BROWSE_APP_URL } from '../../../../../lib/app-urls';
 import { getDesignerHomeHref } from '../../../../../lib/external-links';
+import { HexProgress } from './home/HexProgress';
 import {
   type ChecklistSignal,
   type StepId,
@@ -26,35 +51,60 @@ import {
   setDismissed,
 } from './firstRunChecklist';
 
+/** One step of the path to a published, browsable spec. */
 interface StepDef {
   id: StepId;
   label: string;
   hint: string;
   href: string;
+  /**
+   * The button's own words, when this is the Next step.
+   *
+   * Deliberately not the step's `label`: a button repeating the heading directly above it says
+   * the same thing twice to a screen reader working through the card, and names the *state*
+   * ("Publish it") where a button should name the *destination* ("Go to versions").
+   */
+  cta: string;
+  /** True when the step leaves the app, so the button is an `<a>` with an external glyph. */
   external?: boolean;
 }
 
+/** The three steps every deployment can complete. */
 const CORE_STEPS: StepDef[] = [
-  { id: 'version', label: 'Cut a version', hint: 'Snapshot your schema as a version.', href: '/ade/dashboard/versions' },
-  { id: 'publish', label: 'Publish it', hint: 'Publish the version so it becomes browsable.', href: '/ade/dashboard/versions' },
-  { id: 'browse', label: 'View it in Browse', hint: 'See your published spec render publicly.', href: BROWSE_APP_URL, external: true },
+  { id: 'version', label: 'Cut a version', hint: 'Snapshot your schema as a version.', href: '/ade/dashboard/versions', cta: 'Go to versions' },
+  { id: 'publish', label: 'Publish it', hint: 'Publish the version so it becomes browsable.', href: '/ade/dashboard/versions', cta: 'Go to versions' },
+  { id: 'browse', label: 'View it in Browse', hint: 'See your published spec render publicly.', href: BROWSE_APP_URL, cta: 'Open Browse', external: true },
 ];
 
+/**
+ * The steps this deployment can offer.
+ *
+ * @returns The two Designer steps followed by {@link CORE_STEPS} when a Designer URL is
+ *   configured; the core three alone when it is not.
+ */
 function buildSteps(): StepDef[] {
   const designerHref = getDesignerHomeHref();
   const designerSteps: StepDef[] = designerHref
     ? [
-        { id: 'project', label: 'Create your first project', hint: 'Open the Designer to start a project.', href: designerHref },
-        { id: 'class', label: 'Add a class from a starter template', hint: 'Browse the built-in templates to add a class.', href: designerHref },
+        { id: 'project', label: 'Create your first project', hint: 'Open the Designer to start a project.', href: designerHref, cta: 'Open the Designer' },
+        { id: 'class', label: 'Add a class from a starter template', hint: 'Browse the built-in templates to add a class.', href: designerHref, cta: 'Browse templates' },
       ]
     : [];
   return [...designerSteps, ...CORE_STEPS];
 }
 
+/** Props for {@link FirstRunChecklist}. */
 interface FirstRunChecklistProps {
+  /** The dashboard counts completion is derived from. */
   stats: ChecklistSignal;
 }
 
+/**
+ * Draw the checklist.
+ *
+ * @param props See {@link FirstRunChecklistProps}.
+ * @returns The honey card, or `null` once the reader has dismissed it.
+ */
 export function FirstRunChecklist({ stats }: FirstRunChecklistProps) {
   // Lazily read the dismissal flag. Safe because this component is only mounted client-side after
   // the dashboard finishes loading (the parent gates on !isLoading), so it is never server-rendered
@@ -66,7 +116,10 @@ export function FirstRunChecklist({ stats }: FirstRunChecklistProps) {
   const steps = buildSteps();
   const done = deriveCompletion(stats);
   const completed = steps.filter((step) => done[step.id]).length;
-  const finished = steps.every((step) => done[step.id]);
+  const finished = completed === steps.length;
+  // The one step that gets a button. `findIndex` rather than "the first not done" computed twice,
+  // so the card and the grid cannot disagree about which step is next.
+  const nextIndex = steps.findIndex((step) => !done[step.id]);
 
   const handleDismiss = () => {
     setDismissed();
@@ -74,88 +127,92 @@ export function FirstRunChecklist({ stats }: FirstRunChecklistProps) {
   };
 
   return (
-    <section className={cn(dashboardPanelClass, 'overflow-hidden')} aria-label="Getting started checklist">
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Rocket className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-          <div>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-              {finished ? "You're all set" : 'Get started'}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+    <Card variant="honey" className="home-checklist" role="group" aria-labelledby="home-checklist-title">
+      <div className="home-checklist__head">
+        <div className="home-checklist__lede">
+          <span className="home-checklist__mark" aria-hidden>
+            <Rocket />
+          </span>
+          <div className="home-checklist__text">
+            <div className="home-checklist__titlerow">
+              <h2 id="home-checklist-title">
+                {finished ? "You're all set" : 'Get to your first published spec'}
+              </h2>
+              <Badge variant={finished ? 'ok' : 'honey'}>
+                {completed} / {steps.length} done
+              </Badge>
+            </div>
+            <p className="home-checklist__desc">
               {finished
-                ? 'You have published a browsable spec — explore Browse or dismiss this.'
-                : 'Reach a published, browsable spec in a few steps.'}
+                ? 'You have published a browsable spec — explore Browse, or dismiss this.'
+                : 'Reach a published, browsable spec in a few steps. Dismiss anytime.'}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant={finished ? 'success' : 'secondary'} className="text-xs">
-            {completed}/{steps.length} done
-          </Badge>
+        <div className="home-checklist__aside">
+          {finished ? (
+            <Button variant="honey" size="sm" asChild>
+              <a href={BROWSE_APP_URL} target="_blank" rel="noopener noreferrer">
+                Open Browse
+                <ExternalLink aria-hidden />
+              </a>
+            </Button>
+          ) : null}
+          <HexProgress done={completed} total={steps.length} />
           <Button
             variant="ghost"
             size="icon"
             onClick={handleDismiss}
             aria-label="Dismiss getting-started checklist"
           >
-            <X className="h-4 w-4" />
+            <X aria-hidden />
           </Button>
         </div>
       </div>
 
-      <ol className="p-3 sm:p-4 space-y-1">
+      <ol className="home-steps" data-steps={steps.length}>
         {steps.map((step, index) => {
           const isDone = done[step.id];
-          const rowInner = (
-            <div
-              className={cn(
-                'flex items-center gap-3 p-3 rounded-lg transition-colors',
-                'hover:bg-gray-50 dark:hover:bg-gray-800/50',
-              )}
-            >
-              {isDone ? (
-                <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-emerald-500" />
-              ) : (
-                <Circle className="h-5 w-5 flex-shrink-0 text-gray-300 dark:text-gray-600" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p
-                  className={cn(
-                    'text-sm font-medium',
-                    isDone
-                      ? 'text-gray-400 dark:text-gray-500 line-through'
-                      : 'text-gray-800 dark:text-gray-100',
-                  )}
-                >
-                  {index + 1}. {step.label}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{step.hint}</p>
-              </div>
-              {step.external ? (
-                <ExternalLink className="h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
-              ) : (
-                <ArrowRight className="h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
-              )}
-            </div>
-          );
+          const isNext = index === nextIndex;
+          const StepIcon = isDone ? CircleCheck : Circle;
+          const GoIcon = step.external ? ExternalLink : ArrowRight;
 
           return (
-            <li key={step.id}>
-              {step.external ? (
-                <a href={step.href} target="_blank" rel="noopener noreferrer" className="block">
-                  {rowInner}
-                </a>
-              ) : (
-                <Link href={step.href} className="block">
-                  {rowInner}
-                </Link>
-              )}
+            <li
+              key={step.id}
+              className={cn('home-step', isDone && 'home-step--done', isNext && 'home-step--next')}
+              data-step={step.id}
+            >
+              <p className="home-step__title">
+                <StepIcon className="home-step__mark" aria-hidden />
+                <span className="home-step__label">{step.label}</span>
+                {isNext ? (
+                  <Badge variant="honey" className="home-step__badge">
+                    Next
+                  </Badge>
+                ) : null}
+              </p>
+              <p className="home-step__hint">{step.hint}</p>
+              {isNext ? (
+                <Button variant="honey" size="sm" asChild className="home-step__go">
+                  {step.external ? (
+                    <a href={step.href} target="_blank" rel="noopener noreferrer">
+                      {step.cta}
+                      <GoIcon aria-hidden />
+                    </a>
+                  ) : (
+                    <Link href={step.href}>
+                      {step.cta}
+                      <GoIcon aria-hidden />
+                    </Link>
+                  )}
+                </Button>
+              ) : null}
             </li>
           );
         })}
       </ol>
-    </section>
+    </Card>
   );
 }
 

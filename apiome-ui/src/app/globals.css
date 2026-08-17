@@ -4131,6 +4131,767 @@ button.auth-divider:disabled {
   }
 }
 
+/* ==========================================================================
+   HOME — /ade/dashboard (HIVE-4.6, #5300)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/home/overview.html`, `docs/mockups/assets/hive.css`
+   §12 (`.card`, `.icon-tile`, `.list-row`), §16 (`.bars`), §19 (`.hex-grid`),
+   `DESIGN.md` §2 (honey is ornament: the first-run checklist is one of the four
+   places it may appear) and §8 (header → stat strip → content).
+
+   The page this replaced put its Recent Activity list in the left column of a
+   two-column grid and left the right column *empty* at every width above a
+   tablet. `.home-grid` is that grid with both columns filled; everything else
+   here is the skin for what fills it.
+
+   Prefixed `home-` and kept in the stylesheet rather than in a CSS module for
+   the reason the auth and launcher blocks give: these rules lean on the shared
+   ornaments (`--hex-clip`) and on the density and font-scale tokens, and they
+   have to sit *after* the unlayered `h2` / `p` rules near line 2490 — those
+   outrank every `@layer utilities` declaration, so a heading styled with
+   Tailwind utilities alone would silently render at the wrong size.
+
+   No literal colour appears below. Every hue is a token, so Home follows all
+   nine themes, both densities and all six font scales.
+   ========================================================================== */
+
+/* ---- Identity hue -------------------------------------------------------
+   An activity row's tile and an attention row's dot carry a *tone*, not a
+   colour: the element states `data-tone` and these rules turn it into the
+   three custom properties the section paints from. Same vocabulary as
+   `ui/statusVocabulary`, and a tone this app does not know lands on the
+   neutral default rather than on no styling at all. */
+.home-tone {
+  --home-tone: var(--neutral);
+  --home-tone-soft: var(--neutral-soft);
+  --home-tone-fg: var(--neutral-fg);
+}
+
+.home-tone[data-tone="accent"] {
+  --home-tone: var(--accent);
+  --home-tone-soft: var(--accent-soft);
+  --home-tone-fg: var(--accent-fg);
+}
+
+.home-tone[data-tone="honey"] {
+  --home-tone: var(--honey);
+  --home-tone-soft: var(--honey-soft);
+  --home-tone-fg: var(--honey-fg);
+}
+
+.home-tone[data-tone="ok"] {
+  --home-tone: var(--ok);
+  --home-tone-soft: var(--ok-soft);
+  --home-tone-fg: var(--ok-fg);
+}
+
+.home-tone[data-tone="warn"] {
+  --home-tone: var(--warn);
+  --home-tone-soft: var(--warn-soft);
+  --home-tone-fg: var(--warn-fg);
+}
+
+.home-tone[data-tone="danger"] {
+  --home-tone: var(--danger);
+  --home-tone-soft: var(--danger-soft);
+  --home-tone-fg: var(--danger-fg);
+}
+
+.home-tone[data-tone="violet"] {
+  --home-tone: var(--violet);
+  --home-tone-soft: var(--violet-soft);
+  --home-tone-fg: var(--violet-fg);
+}
+
+.home-tone[data-tone="orange"] {
+  --home-tone: var(--orange);
+  --home-tone-soft: var(--orange-soft);
+  --home-tone-fg: var(--orange-fg);
+}
+
+.home-tone[data-tone="rose"] {
+  --home-tone: var(--rose);
+  --home-tone-soft: var(--rose-soft);
+  --home-tone-fg: var(--rose-fg);
+}
+
+/* ---- The body grid ------------------------------------------------------
+   `minmax(0, 1fr)` on the main column, not `1fr`: a grid item's automatic
+   minimum size is its content, so a long unbroken project name or version id
+   in the left column would hold the track open past the viewport and scroll
+   the document sideways — which the ticket's "no horizontal document scroll at
+   ≥1280 px" forbids. The aside is the 340 px `DESIGN.md` §8 gives a detail
+   page's metadata column.
+
+   `align-items: start` so a short aside does not stretch its panels to the
+   height of the activity list beside it. */
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21.25rem;
+  align-items: start;
+  gap: var(--space-6);
+}
+
+.home-grid__main,
+.home-grid__aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+/* Below the width where a 340 px aside stops leaving the main column a usable
+   measure, the two stack. 1100 px is the breakpoint the stat strip and the
+   launcher already use, so the page reflows at one width rather than three. */
+@media (max-width: 68.75rem) {
+  .home-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- Section heading ----------------------------------------------------
+   A heading above content that is not in a card ("Pick up where you left
+   off"), with an optional trailing link to the full list. */
+.home-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.home-section__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.home-section__title h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  line-height: var(--lh-snug);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+/* `--accent-fg`, not `--accent`. The accent proper is a *fill* colour: as 13 px text on the
+   canvas it measures 3.8:1, which is a serious axe finding. `--accent-fg` is the ink chosen to
+   clear AA on the light surfaces (7.1:1 on the canvas), and `e2e/hive-home.spec.ts` measures it
+   in every theme. */
+.home-section__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-sm);
+  color: var(--accent-fg);
+  text-decoration: none;
+  border-radius: var(--radius-xs);
+}
+
+.home-section__link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.home-section__link > svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* ---- Pick up where you left off ----------------------------------------
+   Three cards at the page's width, two below 1100 px (where the aside has just
+   stacked and the main column is full width), one on a phone. `auto-fit` would
+   be shorter but would also stretch a *single* card across the whole column
+   when a workspace has one project, which reads as a banner rather than as one
+   of three. */
+.home-continue {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 68.75rem) {
+  .home-continue {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .home-continue {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The card is the anchor. `cardVariants` supplies surface, radius, elevation
+   and the hover lift; these rules supply its interior. */
+.home-continue__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--card-pad);
+  min-width: 0;
+}
+
+.home-continue__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.home-continue__tenant {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The project's name. A `<span>` rather than a heading: the card is a link, and
+   a heading inside an anchor makes the document outline claim a section that is
+   really one item in a grid of three. */
+.home-continue__name {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.home-continue__meta {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.home-continue__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  min-width: 0;
+}
+
+.home-continue__quality {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.home-continue__quality-label,
+.home-continue__touched {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* ---- Panels -------------------------------------------------------------
+   A card with a title row, a list, and sometimes a footer. `overflow: hidden`
+   so the first and last rows are clipped to the card's radius instead of
+   squaring off its corners. */
+.home-panel {
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* The header is `CardHeader`, whose own `flex-direction: column` is wrong for a
+   title row that carries a count on its right. */
+.home-panel__header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+}
+
+.home-panel__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  /* Grows so a trailing count (`.home-panel__count`, `margin-inline-start: auto`)
+     reaches the card's right edge rather than sitting against the heading. */
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+}
+
+.home-panel__title h2 {
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: var(--lh-snug);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.home-panel__title > svg {
+  width: var(--icon-dense);
+  height: var(--icon-dense);
+  flex: none;
+  color: var(--accent);
+}
+
+.home-panel__note {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.home-panel__count {
+  margin-inline-start: auto;
+}
+
+.home-panel__footer {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Rows ---------------------------------------------------------------
+   One list treatment for both the activity list and the attention list. The
+   hairline is the row's own `border-block-start` on every row but the first,
+   so it cannot get out of step with the row count the way a separator element
+   between siblings does.
+
+   `min-height: var(--row-h)` is the density-aware row metric of DESIGN.md §3.3
+   — 46 px comfortable, 38 px compact — which is also what keeps the link rows
+   at the §9 touch-target size without naming a pixel. */
+.home-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--row-h);
+  padding: var(--space-2) var(--card-pad);
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-rows > :not(:first-child) > .home-row,
+.home-rows > .home-row:not(:first-child) {
+  border-block-start: 1px solid var(--border);
+}
+
+.home-row--link {
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+/* One hover fill across Home, and `--bg-inset` rather than the more obvious
+   `--bg-subtle` for the reason `.home-step--done` gives: these rows carry muted
+   subtitles, and muted-on-subtle fails AA in Solarized. */
+.home-row--link:hover {
+  background: var(--bg-inset);
+}
+
+.home-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.home-row__title {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.home-row__sub {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.home-row__badge {
+  flex: none;
+}
+
+/* The source glyph on an attention row, and the chevron that says the row goes
+   somewhere. Both quiet: the row's text is the message. */
+.home-row__kind,
+.home-row__go {
+  flex: none;
+  width: var(--icon-dense);
+  height: var(--icon-dense);
+  color: var(--fg-faint);
+}
+
+.home-row__kind {
+  color: var(--home-tone-fg);
+}
+
+/* ---- The leading tile ---------------------------------------------------
+   The activity row's hexagon, tinted by its kind. 45 % is the glyph proportion
+   `.launch-tile` uses, so a tile reads the same on Home and on the launcher. */
+.home-tile {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  clip-path: var(--hex-clip);
+  background: var(--home-tone-soft);
+  color: var(--home-tone-fg);
+}
+
+.home-tile > svg {
+  width: 45%;
+  height: 45%;
+}
+
+/* The attention row's dot. Colour is never its only signal — the row's own
+   title states the deadline in words — so a 8 px mark is enough. */
+.home-dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--home-tone);
+}
+
+/* ---- Quick actions -----------------------------------------------------
+   A menu, in the §5.4 sense: 32 px items with an icon and an optional shortcut
+   chip. Padding on the list rather than the items so the first and last rows
+   are inset from the card's edge without a rule per row. */
+.home-menu {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
+}
+
+.home-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.home-menu__item:hover {
+  background: var(--bg-inset);
+  color: var(--fg);
+}
+
+.home-menu__item > svg {
+  width: var(--icon-dense);
+  height: var(--icon-dense);
+  flex: none;
+  color: var(--fg-muted);
+}
+
+.home-menu__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Publishing pulse --------------------------------------------------
+   Twelve bars over a baseline, `align-items: flex-end` so a bar grows upward
+   from it. Heights are set inline as a percentage of the track, which is the
+   one thing about this mark that has to be a style attribute — the value is
+   data, and a class per percentage is 101 classes. */
+.home-pulse {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--card-pad);
+  min-width: 0;
+}
+
+.home-pulse__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.home-pulse__head h2 {
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: var(--lh-snug);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.home-pulse__span {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.home-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.1875rem;
+  height: 4.5rem;
+  padding-block-start: var(--space-1);
+  border-block-end: 1px solid var(--border);
+}
+
+.home-bars__bar {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 1px;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  background: var(--accent-soft);
+}
+
+/* The busiest weeks read as the accent proper; a week with nothing published
+   keeps only the baseline. `[data-count="0"]` rather than a zero height alone
+   so an empty week has no fill to tint. */
+.home-bars__bar:not([data-count="0"]) {
+  background: linear-gradient(to top, var(--accent), var(--accent-soft));
+}
+
+.home-bars__bar[data-count="0"] {
+  background: var(--bg-inset);
+}
+
+.home-pulse__axis {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The total, in words, for a reader who cannot see the bars. Not visually
+   hidden: it is genuinely the useful summary, and the mockup's own bar chart
+   was the only thing carrying it. */
+.home-pulse__total {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- First-run checklist ----------------------------------------------
+   The page's one honey card (DESIGN.md §2). `Card variant="honey"` supplies the
+   wash; these rules supply the head row, the hex progress and the five steps. */
+.home-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--card-pad);
+  min-width: 0;
+}
+
+.home-checklist__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.home-checklist__lede {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* The subject glyph: a honey hexagon, the same silhouette as the tiles. */
+.home-checklist__mark {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  clip-path: var(--hex-clip);
+  background: var(--honey);
+  color: var(--honey-ink);
+}
+
+.home-checklist__mark > svg {
+  width: 45%;
+  height: 45%;
+}
+
+.home-checklist__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.home-checklist__titlerow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.home-checklist__titlerow h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  line-height: var(--lh-snug);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.home-checklist__desc {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+  color: var(--fg-muted);
+}
+
+.home-checklist__aside {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}
+
+/* ---- Hex progress -----------------------------------------------------
+   `hive.css` `.hex-grid`: one cell per step, the done ones filled. Decorative
+   — the "3 / 5 done" badge beside it is the accessible statement — so nothing
+   here has to carry text. */
+.home-hex {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+}
+
+.home-hex__cell {
+  width: 0.75rem;
+  height: 0.875rem;
+  clip-path: var(--hex-clip);
+  background: color-mix(in srgb, var(--honey) 22%, transparent);
+}
+
+.home-hex__cell[data-on="true"] {
+  background: var(--honey);
+}
+
+/* ---- The steps --------------------------------------------------------
+   All five on one line at the page's width, so the reader sees the whole path
+   at once. `auto-fit` with a 11rem floor rather than a fixed five-column track:
+   the checklist shows three steps when no Designer URL is configured, and a
+   five-column grid would leave two empty cells in that case. */
+.home-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  min-width: 0;
+}
+
+/* Done: the card recedes onto the inset fill and its label is struck through.
+   Two choices here, both forced by measurement rather than by taste:
+
+   * Not `opacity`, which is the obvious way to quiet a card and the wrong one —
+     it composites the hint's `--fg-muted` towards the backdrop, and at 0.75 that
+     lands the 12 px line at 3.6:1, a serious axe finding.
+   * `--bg-inset`, not `--bg-subtle`: muted ink on the subtle fill measures
+     4.35:1 in *Solarized*, just under AA, while on the inset fill the worst of
+     the nine themes is 5.0:1. `dashboard-home-css.test.ts` walks every theme. */
+.home-step--done {
+  background: var(--bg-inset);
+  box-shadow: none;
+}
+
+.home-step--done .home-step__label {
+  text-decoration: line-through;
+  color: var(--fg-muted);
+}
+
+/* The one step with a button. A honey ring rather than a fill: the card is
+   already on a honey wash, and a second fill would lose the step in it. */
+.home-step--next {
+  box-shadow: inset 0 0 0 2px var(--honey), var(--shadow-sm);
+}
+
+.home-step__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+}
+
+.home-step__mark {
+  flex: none;
+  width: var(--icon-dense);
+  height: var(--icon-dense);
+  color: var(--fg-faint);
+}
+
+.home-step--done .home-step__mark {
+  color: var(--ok);
+}
+
+.home-step--next .home-step__mark {
+  color: var(--honey-fg);
+}
+
+.home-step__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.home-step__badge {
+  margin-inline-start: auto;
+  flex: none;
+}
+
+.home-step__hint {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+  color: var(--fg-muted);
+}
+
+.home-step__go {
+  margin-block-start: var(--space-2);
+  align-self: flex-start;
+}
+
 /* Layout Animation Styles */
 /* Smooth transitions for node positions during layout changes */
 .layout-animating .react-flow__node {
