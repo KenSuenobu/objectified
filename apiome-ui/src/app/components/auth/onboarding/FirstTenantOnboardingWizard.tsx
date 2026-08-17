@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import { useAuthSession } from '@lib/auth/session-client';
 import { signOutEverywhere } from '@lib/auth/sign-out-client';
-import { Check } from 'lucide-react';
 import { DEFAULT_LOGIN_LANDING } from '@lib/auth/cookie-options';
 import { provisionFirstTenant } from '@lib/auth/first-tenant-actions';
 import {
@@ -13,10 +13,13 @@ import {
   saveOnboardingWizardStep,
 } from '@lib/auth/onboarding-wizard-state-actions';
 import type { WizardFunnelEvent } from '@lib/auth/onboarding-wizard-state';
-import { cn } from '@lib/utils';
+import { BrandMark } from '../../brand';
+import { Button } from '../../ui/Button';
+import { Card } from '../../ui/Card';
+import { Stepper } from '../../ui/Stepper';
+import { AuthShell } from '../AuthShell';
 import {
   FIRST_TENANT_WIZARD_PROGRESS,
-  FIRST_TENANT_WIZARD_STEPS,
   isFirstTenantWizardStep,
   type FirstTenantWizardStep,
 } from './wizard-steps';
@@ -25,10 +28,20 @@ import { OrganizationStep, type OrganizationStepValues } from './OrganizationSte
 import { SummaryStep } from './SummaryStep';
 import { DoneStep } from './DoneStep';
 
+/** The name the progress row is announced by. */
+const PROGRESS_LABEL = 'Setup progress';
+
 /**
- * First-tenant onboarding wizard (OLO-4.1, #4205), mounted by
- * `FirstTenantOnboardingGuard` in place of any /ade route content whenever the
- * authenticated user has zero tenant memberships.
+ * The footnote under the card. It answers the question a four-step form in place of
+ * the whole product provokes: what happens if I close this now?
+ */
+const RESUME_NOTE =
+  'Progress is saved server-side — come back later and the wizard resumes on this step with your values pre-filled.';
+
+/**
+ * First-tenant onboarding wizard (OLO-4.1, #4205; re-skinned by HIVE-4.4, #5298),
+ * mounted by `FirstTenantOnboardingGuard` in place of any /ade route content whenever
+ * the authenticated user has zero tenant memberships.
  *
  * Steps: welcome → organization (name/slug; polished by OLO-4.2) → summary
  * (Free license shown before confirm) → done. The wizard is deliberately not
@@ -47,10 +60,24 @@ import { DoneStep } from './DoneStep';
  * pre-filled. Each forward step also records a funnel event (`reached`, and
  * `completed` at the end) for onboarding metrics. All persistence/telemetry is
  * best-effort and fire-and-forget — it never blocks or breaks navigation.
+ *
+ * ### What HIVE-4.4 changed
+ *
+ * Authority: `docs/mockups/auth/onboarding.html`. Nothing about the flow: the same four
+ * steps, the same strings, the same resume and funnel behaviour. What changed is the
+ * frame. The wizard used to float on a grey page of named greys; it now draws the shared
+ * `AuthShell` — hex canvas, honey wash — with a top row naming who is signed in, and its
+ * bespoke `<ol>` progress header is the shared `ui/Stepper`.
+ *
+ * The card is *not* `role="dialog"`, though the mockup marks it as one: there is nothing
+ * behind it to be modal over. The guard renders this instead of the route, so the wizard
+ * is the page — which is also why it cannot be deep-linked around.
+ *
+ * @returns The wizard, at whichever step the reader is on.
  */
 export function FirstTenantOnboardingWizard() {
   const router = useRouter();
-  const { update } = useAuthSession();
+  const { data: session, update } = useAuthSession();
 
   const [step, setStep] = useState<FirstTenantWizardStep>('welcome');
   const [orgName, setOrgName] = useState('');
@@ -59,6 +86,9 @@ export function FirstTenantOnboardingWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [navigating, setNavigating] = useState(false);
   const [tenant, setTenant] = useState<{ id: string; name: string; slug: string } | null>(null);
+
+  /** The signed-in address, when the session carries one — the top row's orientation. */
+  const email = (session?.user as { email?: string | null } | undefined)?.email ?? null;
 
   // Guards the mount-time hydration so it only runs once (React 18 Strict Mode
   // mounts effects twice in development) and never re-fires as state changes.
@@ -184,95 +214,87 @@ export function FirstTenantOnboardingWizard() {
     }
   };
 
+  /** Signs out everywhere, back to the login page. */
+  const handleSignOut = () => signOutEverywhere('/login');
+
   return (
-    <main
-      className="flex h-full items-center justify-center overflow-y-auto bg-gray-50 p-6 dark:bg-gray-900"
-      data-testid="first-tenant-onboarding-wizard"
+    <AuthShell
+      wide
+      topbar={
+        <>
+          <BrandMark variant="lockup" size={28} priority />
+          <div className="auth-topbar__who">
+            {email && (
+              <span data-testid="onboarding-signed-in-as">
+                Signed in as <span className="font-medium text-fg">{email}</span>
+              </span>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleSignOut}
+              data-testid="onboarding-topbar-sign-out"
+            >
+              <LogOut aria-hidden="true" />
+              Sign out
+            </Button>
+          </div>
+        </>
+      }
     >
       <section
         aria-labelledby="first-tenant-onboarding-title"
-        className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+        data-testid="first-tenant-onboarding-wizard"
       >
-        <WizardProgress currentStep={step} />
-        {step === 'welcome' && (
-          <WelcomeStep
-            onGetStarted={() => advanceTo('organization')}
-            onCheckAgain={() => router.refresh()}
-            onSignOut={() => signOutEverywhere('/login')}
-          />
-        )}
-        {step === 'organization' && (
-          <OrganizationStep
-            initialName={orgName}
-            initialSlug={slug}
-            onBack={() => goBackTo('welcome')}
-            onContinue={handleOrganizationContinue}
-          />
-        )}
-        {step === 'summary' && (
-          <SummaryStep
-            name={orgName}
-            slug={slug}
-            error={submitError}
-            submitting={submitting}
-            onBack={() => goBackTo('organization')}
-            onConfirm={handleConfirm}
-          />
-        )}
-        {step === 'done' && tenant && (
-          <DoneStep
-            tenantName={tenant.name}
-            navigating={navigating}
-            onGoToDashboard={handleGoToDashboard}
-          />
-        )}
+        <Card className="wiz-card">
+          <div className="wiz-card__progress">
+            <Stepper
+              aria-label={PROGRESS_LABEL}
+              fill
+              steps={FIRST_TENANT_WIZARD_PROGRESS}
+              current={step}
+              // The terminal step is past the last one shown, so every marker is done.
+              complete={step === 'done'}
+            />
+          </div>
+          {step === 'welcome' && (
+            <WelcomeStep
+              onGetStarted={() => advanceTo('organization')}
+              onCheckAgain={() => router.refresh()}
+              onSignOut={handleSignOut}
+            />
+          )}
+          {step === 'organization' && (
+            <OrganizationStep
+              initialName={orgName}
+              initialSlug={slug}
+              onBack={() => goBackTo('welcome')}
+              onContinue={handleOrganizationContinue}
+            />
+          )}
+          {step === 'summary' && (
+            <SummaryStep
+              name={orgName}
+              slug={slug}
+              error={submitError}
+              submitting={submitting}
+              onBack={() => goBackTo('organization')}
+              onConfirm={handleConfirm}
+            />
+          )}
+          {step === 'done' && tenant && (
+            <DoneStep
+              tenantName={tenant.name}
+              tenantSlug={tenant.slug}
+              navigating={navigating}
+              onGoToDashboard={handleGoToDashboard}
+            />
+          )}
+        </Card>
       </section>
-    </main>
-  );
-}
 
-/**
- * Numbered progress header over the three setup steps (the terminal `done`
- * step renders every marker as completed).
- *
- * @param currentStep The wizard step currently shown.
- */
-function WizardProgress({ currentStep }: { currentStep: FirstTenantWizardStep }) {
-  const currentIndex = FIRST_TENANT_WIZARD_STEPS.indexOf(currentStep);
-
-  return (
-    <ol aria-label="Setup progress" className="mb-8 flex items-center justify-center gap-2">
-      {FIRST_TENANT_WIZARD_PROGRESS.map(({ step, label }, index) => {
-        const stepIndex = FIRST_TENANT_WIZARD_STEPS.indexOf(step);
-        const isComplete = currentIndex > stepIndex;
-        const isCurrent = currentStep === step;
-        return (
-          <li key={step} aria-current={isCurrent ? 'step' : undefined} className="flex items-center gap-2">
-            {index > 0 && <span aria-hidden="true" className="h-px w-6 bg-gray-300 dark:bg-gray-600" />}
-            <span
-              className={cn(
-                'flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold',
-                isComplete &&
-                  'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
-                isCurrent && 'bg-indigo-600 text-white',
-                !isComplete && !isCurrent &&
-                  'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-              )}
-            >
-              {isComplete ? <Check aria-hidden="true" className="h-3.5 w-3.5" /> : index + 1}
-            </span>
-            <span
-              className={cn(
-                'text-xs font-medium',
-                isCurrent ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
-              )}
-            >
-              {label}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+      <p className="auth-terms mt-4">{RESUME_NOTE}</p>
+    </AuthShell>
   );
 }
 

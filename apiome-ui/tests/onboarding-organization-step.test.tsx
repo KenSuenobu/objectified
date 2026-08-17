@@ -100,8 +100,10 @@ describe('OrganizationStep: live shape validation', () => {
 
     fireEvent.change(slugInput(), { target: { value: 'Not a slug!' } });
 
+    // The message's own opening: the standing hint under the field names the same
+    // three characters, and both lines show at once (HIVE-4.4's `SlugField`).
     expect(
-      screen.getByText(/lowercase letters, numbers, and dashes/i)
+      screen.getByText(/must contain only lowercase letters, numbers, and dashes/i)
     ).toBeInTheDocument();
     expect(mockCheckSlugAvailability).not.toHaveBeenCalled();
   });

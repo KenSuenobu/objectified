@@ -17,14 +17,20 @@ export const FIRST_TENANT_WIZARD_STEPS: readonly FirstTenantWizardStep[] = [
   'done',
 ];
 
-/** Steps shown in the progress header, with their display labels. */
+/**
+ * Steps shown in the progress header, with their display labels.
+ *
+ * Spelled `id` rather than `step` so the rows are `ui/Stepper`'s own `StepperStep`
+ * shape (HIVE-4.4) — the progress row is a shared primitive now, and this is the
+ * list it is handed unchanged.
+ */
 export const FIRST_TENANT_WIZARD_PROGRESS: ReadonlyArray<{
-  step: FirstTenantWizardStep;
+  id: FirstTenantWizardStep;
   label: string;
 }> = [
-  { step: 'welcome', label: 'Welcome' },
-  { step: 'organization', label: 'Organization' },
-  { step: 'summary', label: 'Review' },
+  { id: 'welcome', label: 'Welcome' },
+  { id: 'organization', label: 'Organization' },
+  { id: 'summary', label: 'Review' },
 ];
 
 /**

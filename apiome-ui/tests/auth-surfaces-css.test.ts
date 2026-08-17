@@ -81,6 +81,24 @@ const AUTH_PRELUDES = [
   '.auth-slug .input-wrap > input',
   '.auth-slug-preview',
   '.auth-slug-preview > b',
+  // HIVE-4.4 (#5298) — the first-tenant onboarding wizard.
+  '.auth-topbar',
+  '.auth-topbar__who',
+  '.auth-form__inner--wide',
+  '.wiz-card',
+  '.wiz-card__progress',
+  '.wiz-card__body',
+  '.wiz-card__foot',
+  '.wiz-card__foot--center',
+  '.wiz-kv',
+  '.wiz-kv dt',
+  '.wiz-kv dd',
+  '.wiz-limits',
+  '.wiz-limits > div',
+  '.wiz-limits dt',
+  '.wiz-limits dd',
+  '.wiz-plan-title',
+  '.auth-icon--honey',
 ];
 
 /**
@@ -395,5 +413,107 @@ describe('auth surfaces — the slug field (HIVE-4.3)', () => {
     // The preview is a whole URL, but only one segment of it is being decided.
     expect(declarationsOf('.auth-slug-preview > b').get('color')).toBe('var(--fg)');
     expect(declarationsOf('.auth-slug-preview').get('overflow-wrap')).toBe('anywhere');
+  });
+});
+
+describe('auth surfaces — the onboarding wizard (HIVE-4.4)', () => {
+  it('bands the card so the progress row and the actions stay put', () => {
+    // The body between them changes from step to step; the two rails around it do not.
+    // The card's own padding is zero, so each band owns its inset — a padded card would
+    // inset the hairlines too and they would stop reading as edges.
+    expect(declarationsOf('.wiz-card').get('padding')).toBe('0');
+    expect(declarationsOf('.wiz-card__progress').get('border-bottom')).toBe('1px solid var(--border)');
+    expect(declarationsOf('.wiz-card__foot').get('border-top')).toBe('1px solid var(--border)');
+    // Bands square off against the card's own radius unless it clips them.
+    expect(declarationsOf('.wiz-card').get('overflow')).toBe('clip');
+  });
+
+  it('lets both bands wrap, so the largest font scale never overflows the card', () => {
+    // The welcome step puts three buttons in the action band; at `--font-scale` maximum
+    // they do not fit on one line, and a card is not a place for a horizontal scrollbar.
+    expect(declarationsOf('.wiz-card__foot').get('flex-wrap')).toBe('wrap');
+    expect(declarationsOf('.wiz-card__foot--center').get('justify-content')).toBe('center');
+  });
+
+  it('tints the progress band off the card rather than boxing it in a second border', () => {
+    const progress = declarationsOf('.wiz-card__progress');
+    expect(progress.get('background')).toBe(
+      'color-mix(in srgb, var(--bg-subtle) 55%, var(--bg-surface))'
+    );
+  });
+
+  it('widens the card column for a wizard, and only for a wizard', () => {
+    // The three signed-out cards keep 27.5 rem; `AuthShell`'s `wide` opts into this one.
+    expect(declarationsOf('.auth-form__inner').get('max-width')).toBe('27.5rem');
+    expect(declarationsOf('.auth-form__inner--wide').get('max-width')).toBe('35rem');
+  });
+
+  it('makes the shell share its height with the top row instead of stacking two 100vh', () => {
+    // `:has()` rather than a second shell class: the rule belongs to the *presence* of a
+    // top row, so no caller can add one and forget to say so.
+    const shell = declarationsOf('.auth-shell:has(> .auth-topbar)');
+    expect(shell.get('display')).toBe('flex');
+    expect(shell.get('flex-direction')).toBe('column');
+    expect(shell.get('min-height')).toBe('100vh');
+
+    const centre = declarationsOf('.auth-shell:has(> .auth-topbar) > .auth-center');
+    expect(centre.get('flex')).toBe('1');
+    // The `100vh` the centred layout normally claims has to be given back, or the two
+    // rows add up to more than the viewport and the page scrolls for no content.
+    expect(centre.get('min-height')).toBe('0');
+  });
+
+  it('collapses the review pair and the quota row rather than letting either overflow', () => {
+    // `auto-fit` with a floor: two columns where there is room for two, one where there
+    // is not. No breakpoint to keep in step with the card's width.
+    expect(declarationsOf('.wiz-kv').get('grid-template-columns')).toBe(
+      'repeat(auto-fit, minmax(12rem, 1fr))'
+    );
+    expect(declarationsOf('.wiz-limits').get('grid-template-columns')).toBe(
+      'repeat(auto-fit, minmax(7rem, 1fr))'
+    );
+    // A slug is one unbreakable token; without this it decides the column's width.
+    expect(declarationsOf('.wiz-kv dd').get('overflow-wrap')).toBe('anywhere');
+  });
+
+  it('divides the quota cells with a ring each, not a border showing through the gaps', () => {
+    // `auto-fit` wraps the row at a narrow viewport or a large font scale, and a
+    // gap-based divider paints the last row's unfilled slot in the border colour — a
+    // grey block with nothing in it. A ring per cell has no slot to paint.
+    expect(declarationsOf('.wiz-limits').get('gap')).toBe('0');
+    expect(declarationsOf('.wiz-limits').get('background')).toBe('var(--bg-surface)');
+    expect(declarationsOf('.wiz-limits > div').get('box-shadow')).toBe(
+      'inset 0 0 0 1px var(--border)'
+    );
+    // Label in the DOM, value on top on screen — the only valid order for a `<dl>` pair,
+    // drawn the way a stat tile is read.
+    expect(declarationsOf('.wiz-limits > div').get('flex-direction')).toBe('column-reverse');
+  });
+
+  it('states the plan heading’s size, because an unlayered `h2` outranks `text-sm`', () => {
+    // `h2 { font-size: clamp(…) }` sits unlayered at the foot of `globals.css`, and an
+    // unlayered rule beats every `@layer utilities` one whatever their specificity — so a
+    // card-scale heading has to be a class here. Same family as the `p { color }` trap.
+    const heading = declarationsOf('.wiz-plan-title');
+    expect(heading.get('font-size')).toBe('var(--fs-sm)');
+    expect(heading.get('color')).toBe('var(--fg)');
+
+    // The reason, stated: if the element rule ever loses its size this class is redundant.
+    expect(declarationsOf('h2').get('font-size')).toContain('clamp(');
+  });
+
+  it('gives the welcome tile the honey spelling of the shared hexagon', () => {
+    // DESIGN.md §2: honey is brand presence with no severity attached, which is what a
+    // "let's begin" tile is. The silhouette is still `.auth-icon`'s one `--hex-clip`.
+    const honey = declarationsOf('.auth-icon--honey');
+    expect(honey.get('background')).toBe('var(--honey-soft)');
+    expect(honey.get('color')).toBe('var(--honey-fg)');
+    expect(honey.has('clip-path')).toBe(false);
+  });
+
+  it('keeps the top row’s quiet text above AA, like every other quiet line here', () => {
+    expect(declarationsOf('.auth-topbar__who').get('color')).toBe('var(--fg-muted)');
+    // An address is one long unbreakable token; without this a narrow viewport scrolls.
+    expect(declarationsOf('.auth-topbar__who > span').get('overflow-wrap')).toBe('anywhere');
   });
 });

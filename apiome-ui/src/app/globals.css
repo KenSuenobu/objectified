@@ -2636,6 +2636,114 @@ p {
 }
 
 /* ==========================================================================
+   STEPPER (HIVE-4.4, #5298)
+   --------------------------------------------------------------------------
+   Authority: `docs/mockups/assets/hive.css` §16 (`.stepper`, `.step`,
+   `.step__num`, `.step__line`, `.stepper--fill`).
+
+   The numbered progress row of a multi-step flow, drawn by ten of the mockups.
+   `components/ui/Stepper.tsx` is the React half; it is a shared primitive
+   rather than an auth class because only one of those ten is a signed-out
+   page.
+
+   Two deviations from the mockup, both deliberate:
+
+   1. An upcoming step is `--fg-muted`, not the mockup's `--fg-subtle`, which
+      measures under WCAG AA at `--fs-sm`. Same call as HIVE-3.5's breadcrumbs
+      and HIVE-4.1's terms line; the three states stay apart by their badge.
+   2. The row wraps. Three labels at the largest font scale are wider than a
+      phone, and a progress header is not worth a horizontal scrollbar.
+   ========================================================================== */
+.stepper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  row-gap: var(--space-2);
+}
+
+/* `space-between` plus a growing connector: the row spans its container rather
+   than huddling at the start. `hive.css` `.stepper--fill`. */
+.stepper--fill {
+  justify-content: space-between;
+}
+
+.stepper--fill .step__line {
+  flex: 1;
+  width: auto;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  /* A flex item's `min-width` is `auto`, so a long label would refuse to wrap and
+     push the row past its container. */
+  min-width: 0;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* The badge is a circle whose size follows the type it sits beside, so the row
+   keeps its proportions across all six font scales. `flex: none`, or it would be
+   squeezed into an ellipse by a long label. */
+.step__num {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: calc(var(--fs-sm) * 1.7);
+  height: calc(var(--fs-sm) * 1.7);
+  border-radius: 50%;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 0 0 1.5px var(--border-strong);
+}
+
+/* A percentage rather than an icon token: the tick belongs to the badge, not to
+   the text around it, so it scales with the badge and never outgrows it. */
+.step__num > svg {
+  width: 55%;
+  height: 55%;
+}
+
+/* The app's own solid `ok` (`STATUS_TONE_SOLID_CLASS`), so a finished step agrees with
+   every other finished thing in the interface. The ink measures 4.36:1 on the fill, which
+   is under AA for text and over 1.4.11's 3:1 for a graphic — and this badge only ever
+   carries the tick, never a numeral: `Stepper` speaks the word "Completed" instead. */
+.step.is-done .step__num {
+  background: var(--ok);
+  color: var(--fg-on-accent);
+  box-shadow: none;
+}
+
+.step.is-active {
+  color: var(--fg);
+}
+
+/* Ink on surface — the reader's position is the one thing on the row drawn in
+   full contrast, which is what makes it findable without reading the labels. */
+.step.is-active .step__num {
+  background: var(--fg);
+  color: var(--bg-surface);
+  box-shadow: none;
+}
+
+/* The run between two badges. A hairline, so it is stated in `px` like every
+   other hairline in this stylesheet. */
+.step__line {
+  width: 2.5rem;
+  height: 1.5px;
+  margin: 0 var(--space-2);
+  background: var(--border-strong);
+}
+
+.step__line.is-done {
+  background: var(--ok);
+}
+
+/* ==========================================================================
    AUTH SURFACES (HIVE-4.1, #5295)
    --------------------------------------------------------------------------
    Authority: `docs/mockups/auth/login.html` (the split layout its four auth
@@ -3185,6 +3293,192 @@ button.auth-divider:disabled {
   color: var(--fg);
   font-weight: 500;
 }
+
+/* ---- The first-tenant onboarding wizard (HIVE-4.4, #5298) ---------------
+   Authority: `docs/mockups/auth/onboarding.html`.
+
+   This is the one signed-out-*looking* surface the reader is actually signed in
+   on: `FirstTenantOnboardingGuard` draws it in place of every `/ade` route until
+   the account belongs to a tenant. So it borrows the shell — hex canvas, honey
+   wash, one centred card — and adds a top row naming who is signed in, because
+   without it the page reads as a sign-in screen the reader is stuck on.
+
+   The card is split into three bands rather than the single padded block the
+   other auth cards use: the progress row and the actions have to stay put while
+   the body between them changes from step to step. */
+
+/* The top row. Present only on this surface, so the shell's centred column is
+   told to share the viewport with it rather than each claiming 100vh — which is
+   what the `:has()` pair below does. `AuthShell`'s `topbar` slot renders it. */
+.auth-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--page-pad);
+}
+
+.auth-shell:has(> .auth-topbar) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.auth-shell:has(> .auth-topbar) > .auth-center {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Who is signed in, and how to stop being. Quiet, because it is orientation
+   rather than a decision — but `--fg-muted`, which clears AA, not the mockup's
+   subtle ink. */
+.auth-topbar__who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.auth-topbar__who > span {
+  overflow-wrap: anywhere;
+}
+
+/* A wizard is wider than a sign-in card: it carries a progress row, a two-column
+   review and a plan card. 35rem is the mockup's 560 px. */
+.auth-form__inner--wide {
+  max-width: 35rem;
+}
+
+/* The card. Its own padding is zero — each band below owns its inset. */
+.wiz-card {
+  width: 100%;
+  padding: 0;
+  overflow: clip;
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+}
+
+/* The progress band, tinted a shade off the card so the two read as separate
+   surfaces without a second border. */
+.wiz-card__progress {
+  padding: calc(var(--card-pad) * 0.9) calc(var(--card-pad) * 1.4);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-subtle) 55%, var(--bg-surface));
+}
+
+.wiz-card__body {
+  padding: calc(var(--card-pad) * 1.4);
+}
+
+/* The action band. `flex-wrap`, because the welcome step puts three buttons here
+   and at the largest font scale they do not fit on one line. */
+.wiz-card__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: calc(var(--card-pad) * 0.8) calc(var(--card-pad) * 1.4);
+  border-top: 1px solid var(--border);
+}
+
+/* A single action centres itself rather than sitting at the leading edge — the
+   done step's only control. */
+.wiz-card__foot--center {
+  justify-content: center;
+}
+
+/* The review step's `<dl>`: label above value, two to a row, collapsing to one
+   when there is no room for two. */
+.wiz-kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3) var(--space-5);
+  font-size: var(--fs-sm);
+}
+
+.wiz-kv dt {
+  margin-bottom: 2px;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.wiz-kv dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+/* The plan's quotas, as cells divided by a hairline. Each cell rings itself rather
+   than the grid showing a border colour through its gaps: `auto-fit` wraps the row on
+   a narrow viewport or a large font scale, and a gap-based divider leaves the unfilled
+   slot of the last row painted in the border colour — a grey block with nothing in it.
+   Coincident rings on a shared edge read as the one hairline they draw. */
+.wiz-limits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0;
+  border-radius: var(--r-md);
+  overflow: clip;
+  background: var(--bg-surface);
+}
+
+/* `column-reverse`: the quota reads label-then-value in the DOM, which is the only
+   order a `<dl>` pair is valid in, and value-over-label on screen, which is how a
+   stat tile is read. */
+.wiz-limits > div {
+  display: flex;
+  flex-direction: column-reverse;
+  padding: var(--space-2) var(--space-3);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.wiz-limits dt {
+  margin-top: 2px;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.wiz-limits dd {
+  margin: 0;
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* The plan card's own heading. It has to be a class: the unlayered
+   `h2 { font-size: clamp(…) }` at the foot of this stylesheet outranks every
+   `@layer utilities` size, so `text-sm` on an `<h2>` is silently swallowed and the
+   words "Free plan" render at page-title scale. Same family as the `p { color }`
+   trap HIVE-4.1 documented — and `<h2>` is the right element here, because the step
+   title above it is the `<h1>`. */
+.wiz-plan-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+}
+
+/* The honey spelling of `.auth-icon` — the welcome step's subject glyph. Honey
+   is brand presence with no severity attached (DESIGN.md §2), which is what a
+   "let's begin" tile is; the accent default would read as information. */
+.auth-icon--honey {
+  background: var(--honey-soft);
+  color: var(--honey-fg);
+}
+
 
 /* ---- Narrow: the brand panel folds into the card -----------------------
    1000 px is the mockup's own breakpoint. Both halves of the swap live in this
