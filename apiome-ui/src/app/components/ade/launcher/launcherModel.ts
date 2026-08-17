@@ -26,6 +26,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 
 import { BROWSE_APP_URL } from '@lib/app-urls';
+import { HELP_ROUTE } from '@/app/components/shell/appShellRoutes';
 import { resolveExternalLinkIcon, type ExternalHomeCard } from '@lib/external-links';
 import { STATUS_TONES, type StatusTone } from '@/app/components/ui/statusVocabulary';
 
@@ -146,12 +147,17 @@ const COMMERCIAL_FOOTER_LABEL = 'Commercial';
 /** Learn / connect / extend — the left-hand panel under the grid. */
 export const LAUNCHER_RESOURCES: readonly LauncherResource[] = [
   {
+    // HIVE-4.9 (#5303): this row used to be the YouTube channel, which made the launcher the
+    // only place in the app that answered "where is the help?" — and answered it with videos
+    // alone. The channel is now one card on `/ade/dashboard/help`, beside the written guides,
+    // the shortcut reference and the support details, so the row points at the page that has
+    // all of them rather than duplicating one of them here.
     id: 'help',
-    name: 'Help & tutorials',
-    description: 'Video walkthroughs on YouTube',
-    href: 'https://www.youtube.com/@apiomedev',
+    name: 'Help & docs',
+    description: 'Guides, shortcuts, videos and support',
+    href: HELP_ROUTE,
     enabled: true,
-    external: true,
+    external: false,
     icon: HelpCircle,
     tone: 'rose',
   },

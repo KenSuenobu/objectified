@@ -349,9 +349,12 @@ describe('launcher — resources and the roadmap', () => {
   it('lists help, community and the marketplace', () => {
     renderLauncher();
 
+    // HIVE-4.9 (#5303): the row points at the in-app Help & docs page, which carries the
+    // YouTube channel as one card among the guides — it no longer leaves for the channel
+    // itself, so nothing here opens a new tab.
     const help = screen.getByTestId('launch-resource-help');
-    expect(help).toHaveAttribute('href', 'https://www.youtube.com/@apiomedev');
-    expect(help).toHaveAttribute('target', '_blank');
+    expect(help).toHaveAttribute('href', '/ade/dashboard/help');
+    expect(help).not.toHaveAttribute('target');
 
     for (const id of ['community', 'marketplace']) {
       const row = screen.getByTestId(`launch-resource-${id}`);

@@ -8,6 +8,8 @@
 
 import YAML from 'yaml';
 
+import { buildDocsHref } from './docsLinks';
+
 export interface LintRuleCatalogEntry {
   ruleId: string;
   pack: string;
@@ -26,13 +28,9 @@ export interface LintRuleCatalog {
 /** Default docs page path returned by the REST catalog (GOV-1.2). */
 export const DEFAULT_LINT_RULES_DOCS_PAGE = 'docs/guide/lint-rules.md';
 
-const GITHUB_DOCS_BASE = 'https://github.com/apiome/apiome/blob/main/';
-
 /** Build an external "View rule" href from the catalog's docs page + per-rule anchor. */
 export function buildLintRuleDocsHref(docsPage: string, docsAnchor: string): string {
-  const page = (docsPage || DEFAULT_LINT_RULES_DOCS_PAGE).replace(/^\//, '');
-  const anchor = (docsAnchor || '').trim();
-  return anchor ? `${GITHUB_DOCS_BASE}${page}#${anchor}` : `${GITHUB_DOCS_BASE}${page}`;
+  return buildDocsHref(docsPage || DEFAULT_LINT_RULES_DOCS_PAGE, docsAnchor);
 }
 
 function parseCatalogEntry(raw: unknown): LintRuleCatalogEntry | null {
