@@ -229,6 +229,30 @@ export async function getTenantById(tenantId: string) {
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 
+/**
+ * Whether a tenant slug is already in use (HIVE-4.3, #5297).
+ *
+ * The same question `createTenant` asks before inserting, exposed as a read so
+ * a sign-up form can answer it before the reader presses the button. Soft-deleted
+ * tenants do not hold their slug, matching the uniqueness rule the insert applies.
+ *
+ * Callers are responsible for shape-validating and normalizing the slug first
+ * (`validateTenantSlug`), and for deciding who is allowed to ask — this function
+ * is a plain lookup with no authorization of its own.
+ *
+ * @param slug Candidate slug, already trimmed and lowercased.
+ * @returns True when a live tenant holds this slug.
+ */
+export async function isTenantSlugTaken(slug: string): Promise<boolean> {
+  const normalized = String(slug ?? '').trim().toLowerCase();
+  if (!normalized) return false;
+  const result = await connectionPool.query(
+    'SELECT 1 FROM apiome.tenants WHERE slug = $1 AND deleted_at IS NULL LIMIT 1',
+    [normalized]
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
 export async function getTenantsAdministratedByUser(userId: string) {
   const result = await connectionPool.query(
     `SELECT ta.id, ta.tenant_id, ta.user_id, u.name, u.email

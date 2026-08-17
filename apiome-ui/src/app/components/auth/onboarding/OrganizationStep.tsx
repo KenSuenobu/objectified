@@ -4,13 +4,20 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Info, Loader2, XCircle } from 'lucide-react';
 import { generateTenantSlug, validateTenantSlug } from '@lib/auth/tenant-slug';
 import { checkTenantSlugAvailability } from '@lib/auth/tenant-slug-availability';
+import { SLUG_CHECK_DEBOUNCE_MS } from '@lib/auth/slug-availability';
 import { cn } from '@lib/utils';
 import { Button } from '../../ui/Button';
 import { FormField } from '../../ui/FormField';
 import { Input } from '../../ui/Input';
 
-/** Idle time after the last keystroke before the availability probe fires. */
-export const SLUG_CHECK_DEBOUNCE_MS = 400;
+/**
+ * Idle time after the last keystroke before the availability probe fires.
+ *
+ * Re-exported from the shared slug vocabulary (HIVE-4.3) rather than restated, so this
+ * step and the sign-up card cannot debounce differently. HIVE-4.4 replaces the probe
+ * below with `useSlugAvailability`, which reads the same constant.
+ */
+export { SLUG_CHECK_DEBOUNCE_MS };
 
 /** Values the organization step hands back once valid. */
 export interface OrganizationStepValues {

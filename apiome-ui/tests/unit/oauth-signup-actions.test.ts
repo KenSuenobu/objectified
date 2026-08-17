@@ -15,6 +15,7 @@ const mockGetPending = jest.fn<Promise<unknown>, [string]>();
 const mockDeletePending = jest.fn<Promise<void>, [string]>();
 const mockInsertOneTimeCode = jest.fn<Promise<string>, unknown[]>();
 const mockProvisionViaRest = jest.fn<Promise<unknown>, unknown[]>();
+const mockIsTenantSlugTaken = jest.fn<Promise<boolean>, [string]>();
 
 jest.mock('../../lib/db/admin-helper', () => ({
   createUser: (...args: unknown[]) => mockCreateUser(...args),
@@ -24,6 +25,7 @@ jest.mock('../../lib/db/admin-helper', () => ({
 
 jest.mock('../../lib/db/helper', () => ({
   linkExternalAccount: (...args: unknown[]) => mockLinkExternalAccount(...args),
+  isTenantSlugTaken: (slug: string) => mockIsTenantSlugTaken(slug),
 }));
 
 jest.mock('../../lib/db/oauth-signup', () => ({
@@ -36,7 +38,10 @@ jest.mock('../../lib/auth/first-tenant-provisioning', () => ({
   provisionFirstTenantViaRest: (...args: unknown[]) => mockProvisionViaRest(...args),
 }));
 
-import { completeOAuthSignup } from '../../lib/auth/oauth-signup-actions';
+import {
+  checkOauthSignupSlugAvailability,
+  completeOAuthSignup,
+} from '../../lib/auth/oauth-signup-actions';
 
 const ok = (payload: object) => JSON.stringify({ success: true, ...payload });
 const fail = (error: string) => JSON.stringify({ success: false, error });
@@ -62,6 +67,7 @@ const primeHappyPath = () => {
   mockDeleteUser.mockResolvedValue(ok({}));
   mockDeletePending.mockResolvedValue(undefined);
   mockInsertOneTimeCode.mockResolvedValue('code-1');
+  mockIsTenantSlugTaken.mockResolvedValue(false);
 };
 
 beforeEach(() => {
@@ -136,5 +142,65 @@ describe('completeOAuthSignup', () => {
       error: expect.stringMatching(/expired or invalid/i),
     });
     expect(mockCreateUser).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The live availability probe behind the sign-up card's slug chip (HIVE-4.3, #5297).
+ *
+ * The wizard's probe identifies its caller by session; this reader has no account yet, so
+ * the pending-signup id is what proves them. These cases pin both halves of that: the
+ * verdict when the id is good, and the refusal to answer at all when it is not — a slug
+ * oracle open to strangers is exactly what the gate exists to prevent.
+ */
+describe('checkOauthSignupSlugAvailability', () => {
+  it('reports a free slug as available', async () => {
+    const result = await checkOauthSignupSlugAvailability('pending-1', 'acme-corp');
+
+    expect(result).toEqual({ status: 'available' });
+    expect(mockIsTenantSlugTaken).toHaveBeenCalledWith('acme-corp');
+  });
+
+  it('reports a slug an existing tenant holds as taken', async () => {
+    mockIsTenantSlugTaken.mockResolvedValue(true);
+
+    expect(await checkOauthSignupSlugAvailability('pending-1', 'acme')).toEqual({
+      status: 'taken',
+    });
+  });
+
+  it('normalizes case and whitespace before asking', async () => {
+    await checkOauthSignupSlugAvailability('pending-1', '  Acme-Corp  ');
+
+    expect(mockIsTenantSlugTaken).toHaveBeenCalledWith('acme-corp');
+  });
+
+  it('rejects a mis-shaped slug without touching the database', async () => {
+    const result = await checkOauthSignupSlugAvailability('pending-1', 'not a slug!');
+
+    expect(result.status).toBe('invalid');
+    expect(result.error).toMatch(/lowercase letters, numbers, and dashes/i);
+    expect(mockIsTenantSlugTaken).not.toHaveBeenCalled();
+  });
+
+  it('answers nothing at all without a live sign-up session', async () => {
+    // The gate: an expired or invented token cannot be used to enumerate tenant slugs.
+    // `unknown` is also what a genuine reader sees when their link expires, and it fails
+    // open — the chip goes quiet, the form still submits, and the server has the last word.
+    mockGetPending.mockResolvedValue(null);
+
+    expect(await checkOauthSignupSlugAvailability('nope', 'acme')).toEqual({ status: 'unknown' });
+    expect(mockIsTenantSlugTaken).not.toHaveBeenCalled();
+  });
+
+  it('degrades to unknown when the lookup itself fails', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockIsTenantSlugTaken.mockRejectedValue(new Error('connection refused'));
+
+    expect(await checkOauthSignupSlugAvailability('pending-1', 'acme')).toEqual({
+      status: 'unknown',
+    });
+
+    consoleError.mockRestore();
   });
 });

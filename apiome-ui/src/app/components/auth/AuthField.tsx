@@ -31,6 +31,15 @@ export interface AuthFieldProps extends Omit<React.InputHTMLAttributes<HTMLInput
   /** Optional trailing content on the label row (the "Forgot your password?" link). */
   aside?: React.ReactNode;
   /**
+   * Optional content pinned inside the control's own box, on its trailing edge —
+   * the slug field's availability chip (`hive.css` §9 `.input-suffix`, HIVE-4.3).
+   *
+   * It is a *readout*, not a control: `.input-suffix` takes no pointer events, so the
+   * whole box still focuses the input, and the wrapper reserves the room for it, so the
+   * value never runs underneath.
+   */
+  suffix?: React.ReactNode;
+  /**
    * A standing note under the control — what the field will accept, not what went wrong
    * with it (`hive.css` §9 `.hint`). Stays put while an `error` is showing, because the two
    * say different things: the hint is the rule, the error is this attempt.
@@ -50,11 +59,12 @@ export interface AuthFieldProps extends Omit<React.InputHTMLAttributes<HTMLInput
 /**
  * A labelled auth text field.
  *
- * @param props Label, glyph, optional trailing label content, hint, error/invalid state,
- *   plus every native `<input>` attribute — see {@link AuthFieldProps}.
- * @returns The field: label row, the control with its glyph, and its hint and error lines.
+ * @param props Label, glyph, optional trailing label content, in-box suffix, hint,
+ *   error/invalid state, plus every native `<input>` attribute — see {@link AuthFieldProps}.
+ * @returns The field: label row, the control with its glyph and suffix, and its hint and
+ *   error lines.
  */
-export function AuthField({ id, label, icon, aside, hint, error, invalid, className, ...input }: AuthFieldProps) {
+export function AuthField({ id, label, icon, aside, suffix, hint, error, invalid, className, ...input }: AuthFieldProps) {
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const isInvalid = Boolean(error) || Boolean(invalid);
@@ -73,6 +83,9 @@ export function AuthField({ id, label, icon, aside, hint, error, invalid, classN
       <div className="input-wrap">
         {icon}
         <Input id={id} aria-invalid={isInvalid || undefined} aria-describedby={describedBy} {...input} />
+        {/* A `div`, because the chip it carries is one — a `span` wrapper would be
+            invalid nesting the moment a caller passes a `Badge`. */}
+        {suffix && <div className="input-suffix">{suffix}</div>}
       </div>
       {/* A `div` for the same reason as the error line below. */}
       {hint && (

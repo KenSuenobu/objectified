@@ -2610,6 +2610,31 @@ p {
   padding-left: calc(var(--space-3) * 2 + var(--icon-dense));
 }
 
+/* ---- Trailing readout (hive.css §9 `.input-suffix`) ---------------------
+   A chip pinned inside the control's own box, on the far edge — the slug
+   field's availability verdict, read where the reader is already looking.
+
+   It is a readout, never a control: `pointer-events: none` keeps a click
+   anywhere in the box focusing the input, exactly as the leading glyph does.
+
+   The gutter is reserved only when a suffix is actually present, which is what
+   `:has()` buys — a field with no chip keeps the primitive's own padding rather
+   than a permanent hole on its right. The reserve is stated in the chip's own
+   type size (`--fs-2xs`, what `Badge` sets) times its longest word, so it grows
+   with the chip at every font scale instead of freezing at one. */
+.input-wrap > .input-suffix {
+  position: absolute;
+  right: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  pointer-events: none;
+}
+
+.input-wrap:has(> .input-suffix) > :is(input, textarea) {
+  padding-right: calc(var(--space-2) * 2 + var(--fs-2xs) * 9);
+}
+
 /* ==========================================================================
    AUTH SURFACES (HIVE-4.1, #5295)
    --------------------------------------------------------------------------
@@ -3133,6 +3158,32 @@ button.auth-divider:disabled {
 
 .auth-code .input-wrap > input::placeholder {
   letter-spacing: 0.42em;
+}
+
+/* ---- The organization URL slug (mockup `.input--mono` + `.slug-preview`) --
+   The slug is an identifier that ends up in a URL, not prose, so it is set in
+   the mono face — the same promise `.mono` makes everywhere else in the app.
+   Stated on the field wrapper rather than passed to the control for the same
+   reason as `.auth-code` above: `AuthField` owns the control and hands down
+   only its own class. */
+.auth-slug .input-wrap > input {
+  font-family: var(--font-mono);
+}
+
+/* The URL the reader is choosing, under the field. `--fg-muted`, not the
+   mockup's `--fg-subtle`, which measures ~3.2:1 on the card — the same
+   deviation, for the same reason, as the trust badges above. The slug itself
+   is full-strength ink: it is the part that is actually being decided. */
+.auth-slug-preview {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.auth-slug-preview > b {
+  color: var(--fg);
+  font-weight: 500;
 }
 
 /* ---- Narrow: the brand panel folds into the card -----------------------
