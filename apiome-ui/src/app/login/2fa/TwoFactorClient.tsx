@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, KeyRound, ArrowLeft, Mail } from 'lucide-react';
+import * as TabsPrimitive from '@radix-ui/react-tabs';
+import { ArrowLeft, KeyRound, Mail, RefreshCw, Send, ShieldCheck } from 'lucide-react';
 import { authClient } from '@lib/auth/auth-client';
 import {
   peekTwoFactorMethods,
@@ -13,26 +14,77 @@ import {
 } from '@lib/auth/two-factor-callback';
 import { browserNavigate } from '@lib/auth/browser-navigate';
 import { BrandMark } from '../../components/brand';
-import BetaBackground from '../BetaBackground';
+import { AuthShell } from '../../components/auth/AuthShell';
+import { AuthField } from '../../components/auth/AuthField';
+import { BetaBadge } from '../../components/auth/BetaBadge';
 import { getAuthErrorCopy } from '../auth-error-copy';
-import styles from '../login.module.css';
-import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
-import { cn } from '@lib/utils';
+import { Alert } from '../../components/ui/Alert';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
+import { Spinner } from '../../components/ui/Spinner';
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
 
-const inputClasses =
-  'block w-full pl-11 pr-4 py-3 rounded-2xl outline-none transition-all duration-200 ' +
-  'border border-slate-200/90 bg-white/70 text-slate-800 placeholder-slate-400 ' +
-  'hover:bg-white focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 ' +
-  'dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500 ' +
-  'dark:hover:bg-white/[0.07] dark:focus:bg-white/[0.07] dark:focus:border-indigo-400/60 dark:focus:ring-indigo-400/15';
+/**
+ * How long the code the second factor asks for is. Both Better Auth methods issue six
+ * digits, which is why one field serves both and why submit stays disabled until then.
+ */
+const CODE_LENGTH = 6;
 
-const labelClasses = 'block text-sm font-medium text-slate-700 mb-1.5 dark:text-slate-300';
+/** A complete code: six digits and nothing else. */
+const COMPLETE_CODE = /^\d{6}$/;
 
-const iconWrapClasses = 'absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none';
+/**
+ * Keep only the digits of whatever landed in the box, capped at {@link CODE_LENGTH}.
+ *
+ * Applied on every change rather than on paste alone, so a pasted `"123 456"`, a code
+ * copied with its trailing newline and a mistyped letter all resolve the same way.
+ *
+ * @param raw What the control now holds.
+ * @returns The digits of `raw`, at most six of them.
+ */
+const sanitizeCode = (raw: string): string => raw.replace(/\D/g, '').slice(0, CODE_LENGTH);
 
-const fieldIconClasses =
-  'text-slate-400 group-focus-within:text-indigo-500 transition-colors dark:text-slate-500 dark:group-focus-within:text-indigo-300';
+/** Everything that differs between the two second factors, in one table. */
+interface MethodCopy {
+  /** The tab's label in the method switcher. */
+  tab: string;
+  /** The card's heading for this method. */
+  heading: string;
+  /** The `id` of this method's code box — the label points at it. */
+  fieldId: string;
+  /** The code box's visible name. */
+  fieldLabel: string;
+  /** Shown when submit is pressed with fewer than six digits, before any request. */
+  incomplete: string;
+  /** Shown when the API rejects the code and sends no message of its own. */
+  rejected: string;
+}
 
+const METHOD_COPY: Readonly<Record<TwoFactorMethod, MethodCopy>> = {
+  totp: {
+    tab: 'Authenticator',
+    heading: 'Two-factor authentication',
+    fieldId: 'totp-code',
+    fieldLabel: 'Authentication code',
+    incomplete: 'Enter the 6-digit code from your authenticator app.',
+    rejected: 'That code was not accepted. Check your authenticator app and try again.',
+  },
+  otp: {
+    tab: 'Email code',
+    heading: 'Check your email',
+    fieldId: 'email-otp-code',
+    fieldLabel: 'Email code',
+    incomplete: 'Enter the 6-digit code from your email.',
+    rejected: 'That code was not accepted. Request a new email code and try again.',
+  },
+};
+
+/** The description under the heading — the only line that also depends on progress. */
+const TOTP_DESCRIPTION =
+  'Enter the 6-digit code from Authy, Google Authenticator, or another TOTP app.';
+const OTP_DESCRIPTION_BEFORE_SEND =
+  'We will email a 6-digit code to the address on your account.';
+const OTP_DESCRIPTION_AFTER_SEND = 'Enter the 6-digit code we emailed you.';
 
 interface TwoFactorClientProps {
   /** Validated by the page (resolveCallbackUrl) before being passed in. */
@@ -41,10 +93,28 @@ interface TwoFactorClientProps {
 }
 
 /**
- * Second-factor verification after password sign-in (OLO-9.13 #5014 + OLO-9.50 #5070).
+ * Second-factor verification after password sign-in (OLO-9.13 #5014 + OLO-9.50 #5070,
+ * re-skinned by HIVE-4.2 #5296).
  *
- * Honors `twoFactorMethods` from the challenge: TOTP (`verifyTotp`), email OTP (`sendOtp` /
- * `verifyOtp`), or a switcher when both are offered.
+ * Authority: `docs/mockups/auth/two-factor.html`, `docs/mockups/DESIGN.md` §2 and §7.
+ *
+ * Nothing about the flow moved. It still honours `twoFactorMethods` from the challenge —
+ * TOTP (`verifyTotp`), email OTP (`sendOtp` / `verifyOtp`), or a switcher when both are
+ * offered — still reads and clears the same two `sessionStorage` keys, and still carries
+ * every error string it carried before. What changed is that the screen is now drawn from
+ * the Hive token layer instead of a page-local stylesheet of named colours: the aurora
+ * blobs, the tiled BETA watermark and the glass card are gone, so the second step follows
+ * the reader's theme, density and font-scale preference like the rest of the app.
+ *
+ * The frame is `components/auth/AuthShell` in its centred shape (no brand panel), shared
+ * with `/login` — see the "AUTH SURFACES" section of `globals.css` for the skin.
+ *
+ * The method switcher is a real `role="tablist"`, driven by Radix rather than by hand,
+ * because the two methods are two *panes*: arrow keys move between them and select as they
+ * move, and the group keeps a single Tab stop. The card's own strip is drawn as the
+ * segmented well of DESIGN.md §7 (`.auth-methods`) rather than the app's underline tabs,
+ * which the mockup calls for explicitly — an underline strip inside a 27 rem card reads as
+ * a page's primary sections rather than as one field's choice.
  */
 const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
   callbackUrl = TWO_FACTOR_DEFAULT_CALLBACK,
@@ -59,31 +129,53 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  /**
+   * Whether the code box may still take focus on mount.
+   *
+   * The box is autofocused on arrival, which is what the reader wants: they have the code
+   * in front of them already. It must not happen a second time, though — the switcher
+   * selects as the arrow keys move, so a freshly mounted panel that grabbed focus would
+   * strand the reader in the field they were trying to move past.
+   */
+  const [autoFocusCode, setAutoFocusCode] = useState(true);
+
   const queryError = getAuthErrorCopy(error);
   const showMethodSwitcher = methods.includes('totp') && methods.includes('otp');
+  const copy = METHOD_COPY[activeMethod];
+  const bannerText = localError ?? queryError?.text;
 
+  /** The challenge is spent: drop what was stored for it and leave for the callback. */
   const finishSuccess = () => {
     takeTwoFactorMethods();
     const destination = takeTwoFactorCallbackUrl(callbackUrl);
     browserNavigate(destination);
   };
 
-  const handleTotpSubmit = async (e: React.FormEvent) => {
+  /**
+   * Verify the code in the box with whichever method is showing.
+   *
+   * Both methods answer the same shape, so the only thing that differs is which client
+   * call is made and which sentence is shown when the API rejects the code without one of
+   * its own.
+   *
+   * @param e The form's submit event.
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = code.replace(/\s/g, '');
-    if (!/^\d{6}$/.test(trimmed)) {
-      setLocalError('Enter the 6-digit code from your authenticator app.');
+    const trimmed = sanitizeCode(code);
+    if (!COMPLETE_CODE.test(trimmed)) {
+      setLocalError(copy.incomplete);
       return;
     }
     setIsSubmitting(true);
     setLocalError(null);
     try {
-      const res = await authClient.twoFactor.verifyTotp({ code: trimmed });
+      const res =
+        activeMethod === 'otp'
+          ? await authClient.twoFactor.verifyOtp({ code: trimmed })
+          : await authClient.twoFactor.verifyTotp({ code: trimmed });
       if (res?.error) {
-        setLocalError(
-          res.error.message ||
-            'That code was not accepted. Check your authenticator app and try again.'
-        );
+        setLocalError(res.error.message || copy.rejected);
         setIsSubmitting(false);
         return;
       }
@@ -94,6 +186,7 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
     }
   };
 
+  /** Ask Better Auth to mail a fresh code. Also the "resend" path — same request. */
   const handleSendOtp = async () => {
     setIsSendingOtp(true);
     setLocalError(null);
@@ -111,228 +204,194 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
     }
   };
 
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = code.replace(/\s/g, '');
-    if (!/^\d{6}$/.test(trimmed)) {
-      setLocalError('Enter the 6-digit code from your email.');
-      return;
-    }
-    setIsSubmitting(true);
-    setLocalError(null);
-    try {
-      const res = await authClient.twoFactor.verifyOtp({ code: trimmed });
-      if (res?.error) {
-        setLocalError(
-          res.error.message || 'That code was not accepted. Request a new email code and try again.'
-        );
-        setIsSubmitting(false);
-        return;
-      }
-      finishSuccess();
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Verification failed. Please try again.');
-      setIsSubmitting(false);
-    }
-  };
-
-  const selectMethod = (method: TwoFactorMethod) => {
+  /**
+   * Show a different second factor.
+   *
+   * The half-typed code and any error belong to the method that was showing, so both go:
+   * an authenticator code is not an email code, and the sentence about one would be read
+   * as being about the other.
+   *
+   * @param method The method the reader moved to.
+   */
+  const selectMethod = (method: string) => {
+    if (method !== 'totp' && method !== 'otp') return;
     setActiveMethod(method);
     setCode('');
     setLocalError(null);
+    setAutoFocusCode(false);
   };
 
-  const heading =
-    activeMethod === 'otp' ? 'Check your email' : 'Two-factor authentication';
   const description =
     activeMethod === 'otp'
       ? otpSent
-        ? 'Enter the 6-digit code we emailed you.'
-        : 'We will email a 6-digit code to the address on your account.'
-      : 'Enter the 6-digit code from Authy, Google Authenticator, or another TOTP app.';
+        ? OTP_DESCRIPTION_AFTER_SEND
+        : OTP_DESCRIPTION_BEFORE_SEND
+      : TOTP_DESCRIPTION;
+
+  /**
+   * The card body for one method: the send button (email only), the code box, and submit.
+   *
+   * Written once and called for each method rather than spelled out twice, so the two
+   * paths cannot drift on the parts the ticket requires of both — digits only, six of
+   * them, `one-time-code`, and a submit that stays disabled until the code is complete.
+   *
+   * @param method Which second factor this form verifies.
+   * @returns The form.
+   */
+  const renderForm = (method: TwoFactorMethod) => {
+    const form = METHOD_COPY[method];
+    const isComplete = code.length === CODE_LENGTH;
+
+    return (
+      <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4" noValidate>
+        {method === 'otp' && (
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="w-full"
+            onClick={handleSendOtp}
+            disabled={isSendingOtp || isSubmitting}
+            data-testid="two-factor-send-otp"
+          >
+            {isSendingOtp ? (
+              <Spinner size="sm" aria-hidden="true" />
+            ) : otpSent ? (
+              <RefreshCw aria-hidden="true" />
+            ) : (
+              <Send aria-hidden="true" />
+            )}
+            {isSendingOtp ? 'Sending…' : otpSent ? 'Resend email code' : 'Send email code'}
+          </Button>
+        )}
+
+        <AuthField
+          className="auth-code"
+          id={form.fieldId}
+          label={form.fieldLabel}
+          icon={
+            method === 'otp' ? (
+              <Mail size={ICON_SIZE.dense} aria-hidden="true" />
+            ) : (
+              <KeyRound size={ICON_SIZE.dense} aria-hidden="true" />
+            )
+          }
+          hint={`Digits only · the button enables once ${CODE_LENGTH} digits are entered`}
+          name="code"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          autoFocus={autoFocusCode}
+          maxLength={CODE_LENGTH}
+          pattern="\d{6}"
+          placeholder="000000"
+          value={code}
+          onChange={(e) => setCode(sanitizeCode(e.target.value))}
+          disabled={isSubmitting}
+          invalid={Boolean(localError)}
+          data-testid={method === 'otp' ? 'two-factor-otp-code' : 'two-factor-totp-code'}
+        />
+
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          className="w-full"
+          disabled={isSubmitting || !isComplete}
+          data-testid={method === 'otp' ? 'two-factor-otp-submit' : 'two-factor-submit'}
+        >
+          {isSubmitting && <Spinner size="sm" tone="light" aria-hidden="true" />}
+          {isSubmitting ? 'Verifying…' : 'Verify and continue'}
+        </Button>
+      </form>
+    );
+  };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <BetaBackground />
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-md items-center justify-center px-6 py-12">
-        <div data-testid="two-factor-card" className={`${styles.enter} w-full`}>
-          <div
-            className="rounded-[28px] p-px shadow-2xl shadow-indigo-500/10 dark:shadow-black/50
-              bg-gradient-to-b from-white/90 via-slate-200/70 to-slate-200/40
-              dark:from-white/15 dark:via-white/[0.07] dark:to-transparent"
+    <AuthShell>
+      {/* The mark sits above the card rather than inside it: this page has no brand panel,
+          so it is the only thing naming the product the reader is signing in to. */}
+      <div className="auth-brandbar">
+        <BrandMark variant="lockup" size={36} className="auth-brand__lockup" priority />
+        <BetaBadge />
+      </div>
+
+      <Card data-testid="two-factor-card" className="auth-card">
+        <span className="auth-icon" aria-hidden="true">
+          {activeMethod === 'otp' ? <Mail /> : <ShieldCheck />}
+        </span>
+        <h1 className="auth-title mt-4">{copy.heading}</h1>
+        <p className="auth-sub mt-1">{description}</p>
+
+        {/* One banner for both sources: the local "that is not six digits" sentence and the
+            `?error=` copy the redirect carries. `role="alert"` so a screen reader is
+            interrupted — a rejected code is the reader's next problem, not a note. */}
+        {bannerText && (
+          <Alert
+            variant="danger"
+            role="alert"
+            data-testid="two-factor-error"
+            className="mt-4"
           >
-            <div className="rounded-[27px] bg-white/80 p-8 backdrop-blur-2xl dark:bg-slate-900/70">
-              <div className="mb-8 flex justify-center">
-                <div className="relative">
-                  <div className="absolute inset-0 scale-150 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-20 blur-xl" />
-                  <BrandMark variant="wordmark" size={52} className="relative" priority />
-                </div>
-              </div>
+            {bannerText}
+          </Alert>
+        )}
 
-              <div className="mb-8 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-900/40">
-                  {activeMethod === 'otp' ? (
-                    <Mail className="h-6 w-6 text-indigo-600 dark:text-indigo-300" aria-hidden />
+        {/* The email code has been sent, which nothing else on the card announces: the
+            description changes, and a changed paragraph is not read out. */}
+        {activeMethod === 'otp' && otpSent && !bannerText && (
+          <Alert
+            variant="ok"
+            role="status"
+            aria-live="polite"
+            data-testid="two-factor-otp-sent"
+            className="mt-4"
+          >
+            Email code sent. Check your inbox.
+          </Alert>
+        )}
+
+        {showMethodSwitcher ? (
+          <TabsPrimitive.Root value={activeMethod} onValueChange={selectMethod}>
+            <TabsPrimitive.List
+              className="auth-methods mt-5"
+              aria-label="Verification method"
+              data-testid="two-factor-method-switcher"
+            >
+              {(['totp', 'otp'] as const).map((method) => (
+                <TabsPrimitive.Trigger
+                  key={method}
+                  value={method}
+                  className="auth-methods__tab"
+                  data-testid={`two-factor-method-${method}`}
+                >
+                  {method === 'otp' ? (
+                    <Mail aria-hidden="true" />
                   ) : (
-                    <ShieldCheck className="h-6 w-6 text-indigo-600 dark:text-indigo-300" aria-hidden />
+                    <ShieldCheck aria-hidden="true" />
                   )}
-                </div>
-                <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-                  {heading}
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>
-              </div>
+                  {METHOD_COPY[method].tab}
+                </TabsPrimitive.Trigger>
+              ))}
+            </TabsPrimitive.List>
+            <TabsPrimitive.Content value="totp">{renderForm('totp')}</TabsPrimitive.Content>
+            <TabsPrimitive.Content value="otp">{renderForm('otp')}</TabsPrimitive.Content>
+          </TabsPrimitive.Root>
+        ) : (
+          renderForm(activeMethod)
+        )}
 
-              {showMethodSwitcher && (
-                <div
-                  className={cn(TAB_LIST_CLASS, 'mb-6')}
-                  role="tablist"
-                  aria-label="Verification method"
-                  data-testid="two-factor-method-switcher"
-                >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeMethod === 'totp'}
-                    data-testid="two-factor-method-totp"
-                    className={tabTriggerClass({ active: activeMethod === 'totp' })}
-                    onClick={() => selectMethod('totp')}
-                  >
-                    Authenticator
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeMethod === 'otp'}
-                    data-testid="two-factor-method-otp"
-                    className={tabTriggerClass({ active: activeMethod === 'otp' })}
-                    onClick={() => selectMethod('otp')}
-                  >
-                    Email code
-                  </button>
-                </div>
-              )}
-
-              {(queryError || localError) && (
-                <div
-                  role="alert"
-                  className="mb-6 rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-sm text-rose-800
-                    dark:border-rose-500/30 dark:bg-rose-950/40 dark:text-rose-200"
-                >
-                  {localError ?? queryError?.text}
-                </div>
-              )}
-
-              {activeMethod === 'otp' ? (
-                <form onSubmit={handleOtpSubmit} className="space-y-5" noValidate>
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    disabled={isSendingOtp || isSubmitting}
-                    data-testid="two-factor-send-otp"
-                    className="w-full rounded-2xl border border-slate-200/90 bg-white/70 px-4 py-3 text-sm font-semibold
-                      text-slate-800 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60
-                      dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.07]"
-                  >
-                    {isSendingOtp ? 'Sending…' : otpSent ? 'Resend email code' : 'Send email code'}
-                  </button>
-
-                  <div className="group">
-                    <label htmlFor="email-otp-code" className={labelClasses}>
-                      Email code
-                    </label>
-                    <div className="relative">
-                      <span className={iconWrapClasses}>
-                        <Mail className={`h-5 w-5 ${fieldIconClasses}`} aria-hidden />
-                      </span>
-                      <input
-                        id="email-otp-code"
-                        name="code"
-                        type="text"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        maxLength={6}
-                        pattern="\d{6}"
-                        placeholder="000000"
-                        value={code}
-                        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        className={`${inputClasses} font-mono tracking-[0.35em]`}
-                        disabled={isSubmitting}
-                        aria-invalid={Boolean(localError)}
-                        data-testid="two-factor-otp-code"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || code.length !== 6}
-                    data-testid="two-factor-otp-submit"
-                    className={`${styles.shine} w-full rounded-2xl px-4 py-3.5 font-semibold text-white
-                      bg-gradient-to-r from-indigo-600 to-violet-600
-                      transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/25
-                      disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
-                  >
-                    {isSubmitting ? 'Verifying…' : 'Verify and continue'}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleTotpSubmit} className="space-y-5" noValidate>
-                  <div className="group">
-                    <label htmlFor="totp-code" className={labelClasses}>
-                      Authentication code
-                    </label>
-                    <div className="relative">
-                      <span className={iconWrapClasses}>
-                        <KeyRound className={`h-5 w-5 ${fieldIconClasses}`} aria-hidden />
-                      </span>
-                      <input
-                        id="totp-code"
-                        name="code"
-                        type="text"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        autoFocus
-                        maxLength={6}
-                        pattern="\d{6}"
-                        placeholder="000000"
-                        value={code}
-                        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        className={`${inputClasses} font-mono tracking-[0.35em]`}
-                        disabled={isSubmitting}
-                        aria-invalid={Boolean(localError)}
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || code.length !== 6}
-                    data-testid="two-factor-submit"
-                    className={`${styles.shine} w-full rounded-2xl px-4 py-3.5 font-semibold text-white
-                      bg-gradient-to-r from-indigo-600 to-violet-600
-                      transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/25
-                      disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
-                  >
-                    {isSubmitting ? 'Verifying…' : 'Verify and continue'}
-                  </button>
-                </form>
-              )}
-
-              <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                <Link
-                  href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-                  className="inline-flex items-center gap-1.5 font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-300"
-                >
-                  <ArrowLeft className="h-4 w-4" aria-hidden />
-                  Back to sign in
-                </Link>
-              </p>
-            </div>
-          </div>
+        <div className="auth-sub mt-6 text-center">
+          <Link
+            href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            className="auth-link inline-flex items-center gap-1.5 font-medium"
+          >
+            <ArrowLeft className="size-[var(--icon-button)]" aria-hidden="true" />
+            Back to sign in
+          </Link>
         </div>
-      </main>
-    </div>
+      </Card>
+    </AuthShell>
   );
 };
 

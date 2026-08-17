@@ -22,7 +22,7 @@
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const mockSignIn = jest.fn();
@@ -399,10 +399,12 @@ describe('login page — nothing left that names a colour', () => {
     expect(imports.join('\n')).not.toContain('BetaBackground');
   });
 
-  it('leaves the watermark component in place for the two-factor screen', () => {
-    // HIVE-4.2 (#5296) re-skins `/login/2fa` and retires it; until then deleting it here
-    // would break that page.
+  it('has taken the watermark component with it', () => {
+    // The two-factor screen was the last consumer; HIVE-4.2 (#5296) re-skinned it against
+    // `BetaBadge` and deleted the file, so nothing may reach for it again.
+    expect(existsSync(appFile('login', 'BetaBackground.tsx'))).toBe(false);
+
     const twoFactor = readFileSync(appFile('login', '2fa', 'TwoFactorClient.tsx'), 'utf8');
-    expect(twoFactor).toContain('BetaBackground');
+    expect(twoFactor).not.toContain('BetaBackground');
   });
 });
