@@ -4892,6 +4892,710 @@ button.auth-divider:disabled {
   align-self: flex-start;
 }
 
+/* ==========================================================================
+   ACCOUNT SURFACES (HIVE-4.7, #5301)
+
+   Authority: `docs/mockups/account/profile.html` (and `account/linked-accounts.html`,
+   which shares the tab strip), `docs/mockups/assets/hive.css` §12 (`.card`,
+   `.icon-tile`), §9 (`.field`, `.hint`), §11 (`.badge`), and `DESIGN.md` §5.3
+   (page header + tab row), §8 (main column + 340 px aside).
+
+   Profile is the densest form cluster in the app — an identity hero, five info
+   tiles, six nested two-factor boxes and five dialogs — and before this it was
+   also the most hard-coded: an `indigo → violet → purple` hero band, an
+   `indigo → violet` avatar inside a `ring-white dark:ring-gray-800`, five named
+   card glyphs, `bg-gray-50/70 dark:bg-gray-900/40` tiles and
+   `border-gray-200 dark:border-gray-700` boxes. Sixteen colours, none of which
+   could follow a theme.
+
+   Nothing below names one. Every hue is a token, so the page follows all nine
+   palettes, both densities and all six font scales.
+
+   Prefixed `acct-` and kept in the stylesheet rather than in a CSS module for
+   the reason the auth, launcher and home blocks give: these rules lean on the
+   density and font-scale tokens and on the shared ornaments, and they have to
+   sit *after* the unlayered `h2` / `p` base rules near line 2490 — those
+   outrank every `@layer utilities` declaration, so a heading or a quiet line
+   styled with Tailwind utilities alone would silently render at the wrong size
+   or in the wrong ink.
+
+   Two measured deviations from the mockup, both the ones HIVE-3.5, 4.1, 4.5 and
+   4.6 already made and documented:
+
+     * Quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+       3.1:1 against the canvas at these sizes — under the 4.5:1 WCAG AA asks of
+       normal text. That includes the caps labels, which are small enough that
+       the subtle step is a serious axe finding rather than a style choice.
+     * A tile's well is `--bg-subtle` and a code block's is `--bg-inset`, so the
+       muted ink on them clears AA in Solarized as well as in the light palette.
+   ========================================================================== */
+
+/* ---- The body grid ------------------------------------------------------
+   `minmax(0, 1fr)` on the main column, not `1fr`: a grid item's automatic
+   minimum size is its content, so a long unbroken email address or tenant uuid
+   would hold the track open past the viewport and scroll the document sideways
+   — which the ticket's "no horizontal document scroll at ≥1280 px" forbids.
+   The aside is the 340 px `DESIGN.md` §8 gives a detail page's second column. */
+.acct-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21.25rem;
+  align-items: start;
+  gap: var(--space-6);
+}
+
+.acct-grid__main,
+.acct-grid__aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+/* The same breakpoint Home and the launcher already reflow at, so the app
+   changes shape at one width rather than at three. */
+@media (max-width: 68.75rem) {
+  .acct-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- Card chrome --------------------------------------------------------
+   A title row that carries its note on the same line when there is room and
+   drops it underneath when there is not. */
+.acct-card__header {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.acct-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.acct-card__title > svg {
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+
+.acct-card__note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* One action, spanning the footer — the mockup's `justify-content: stretch`. */
+.acct-card__footer {
+  justify-content: stretch;
+}
+
+/* ---- Identity hero ------------------------------------------------------
+   A brand wash the reader's mark is cut out of. The ring around the avatar is
+   `--bg-surface` because it *is* the card the mark overlaps, so it stays right
+   in every theme instead of being a grey that happens to match one of them. */
+.acct-identity {
+  position: relative;
+  overflow: hidden;
+}
+
+.acct-identity__band {
+  height: 4.5rem;
+  background: linear-gradient(
+    100deg,
+    var(--honey-soft),
+    var(--accent-soft) 60%,
+    var(--bg-surface)
+  );
+}
+
+.acct-identity__row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-block-start: -2.125rem;
+  padding: 0 var(--card-pad) var(--card-pad);
+}
+
+.acct-identity__avatar {
+  box-shadow: 0 0 0 0.25rem var(--bg-surface);
+}
+
+.acct-identity__body {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.acct-identity__name {
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-snug);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.acct-identity__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.acct-identity__email {
+  overflow-wrap: anywhere;
+}
+
+.acct-identity__badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---- Info tiles ---------------------------------------------------------
+   Two columns of labelled facts, with the last one running the full width.
+   Below the width where two tiles stop leaving a usable measure they stack;
+   `grid-column: 1 / -1` keeps the wide tile wide in both states. */
+.acct-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 48rem) {
+  .acct-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* `--bg-inset`, not the `--bg-subtle` the mockup tints an info tile with: the tile's
+   caps label and its secondary id are `--fg-muted`, and muted-on-subtle measures
+   4.35:1 in Solarized — just under AA. The same pair on inset is 5.02:1 at its
+   worst, which is the swap HIVE-4.6 made for the identical reason. */
+.acct-tile {
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+}
+
+.acct-tile--wide {
+  grid-column: 1 / -1;
+}
+
+.acct-tile__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.acct-tile__value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* Whatever sits at the trailing edge — a copy button, a pencil, a badge — is
+   pushed there rather than each of them carrying its own margin. */
+.acct-tile__value > :not(.acct-tile__text) {
+  margin-inline-start: auto;
+}
+
+/* One line, clipped. A long address or a uuid must not widen the tile, and the
+   `title` attribute the component sets is how the whole of it stays readable. */
+.acct-tile__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acct-tile__action {
+  padding-inline: var(--space-1);
+}
+
+.acct-tile__tenant {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.acct-tile__tenant-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acct-tile__tenant-id {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+/* ---- Sections and rows --------------------------------------------------
+   The Security card's body: stacked blocks with a rule between the password
+   guidance and the two-factor cluster. */
+.acct-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.acct-rule {
+  border: 0;
+  border-block-start: 1px solid var(--border);
+}
+
+/* An icon tile leading a row (hive.css §12 `.icon-tile`), tinted by role. The
+   base is the neutral well, so a tile whose modifier is missing still has a
+   shape rather than no styling at all. */
+.acct-glyph {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+}
+
+.acct-glyph > svg {
+  width: var(--icon-dense);
+  height: var(--icon-dense);
+}
+
+.acct-glyph--sm {
+  width: 1.625rem;
+  height: 1.625rem;
+}
+
+.acct-glyph--accent {
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+}
+
+.acct-glyph--ok {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.acct-glyph--warn {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.acct-glyph--danger {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.acct-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.acct-row__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.acct-row__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.acct-row__desc {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+/* ---- Two-factor cluster -------------------------------------------------- */
+.acct-2fa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.acct-caps {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* A `Card variant="soft"` carries `bg-subtle` as a utility; this rule is unlayered and
+   so re-tints it to the inset well for the contrast reason `.acct-tile` gives — the
+   caps heading above the list is `--fg-muted`. */
+.acct-methods {
+  padding: var(--space-3);
+  background: var(--bg-inset);
+}
+
+.acct-methods__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.acct-methods__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.acct-methods__list li > svg {
+  flex-shrink: 0;
+}
+
+/* The three self-service boxes. `auto-fit` rather than a fixed three, because
+   the email-OTP box only exists when SendGrid is configured — the row has to
+   look deliberate at two boxes as well as at three. */
+.acct-mfa {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+}
+
+.acct-mfa__box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.acct-mfa__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.acct-mfa__title > svg {
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+/* The description takes the slack so the box's button sits on the bottom edge
+   however long the sentence above it runs — a row of boxes whose buttons are at
+   three different heights reads as three unrelated panels. */
+.acct-mfa__desc {
+  flex: 1 1 auto;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Sign-in methods ----------------------------------------------------- */
+.acct-prose {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+.acct-empty-line {
+  margin-block-start: var(--space-3);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.acct-signin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+  min-width: 0;
+}
+
+.acct-signin__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.acct-signin__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.acct-signin__name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.acct-signin__sub {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Session ------------------------------------------------------------- */
+.acct-session {
+  min-width: 0;
+}
+
+.acct-session__value {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.acct-session__date {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* The bar and its figure on one line. The figure is a sibling of the meter rather than the
+   meter's own `showValue` span: that span takes the derived tone's `-fg` ink, and the High
+   contrast theme leaves `--warn-fg` at its light-palette value — 3.31:1 on that theme's black
+   surface. Muted ink is 4.86:1 at its worst across all nine. */
+.acct-session__meter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+  min-width: 0;
+}
+
+.acct-session__meter > .hive-meter {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.acct-session__left {
+  flex-shrink: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.acct-session__device {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.acct-session__device > svg {
+  flex-shrink: 0;
+}
+
+/* ---- Dialogs ------------------------------------------------------------
+   A leading role tile beside the title, and — in the two wizards — the shared
+   stepper under both. */
+.acct-dialog__header {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.acct-dialog__header--stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.acct-dialog__lead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.acct-dialog__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.acct-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.acct-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.acct-hint {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.acct-reqs {
+  margin-block-start: var(--space-1);
+  padding-inline-start: var(--space-4);
+  list-style: disc;
+  font-size: var(--fs-xs);
+}
+
+/* A requirement the candidate already satisfies is struck through, so the list
+   reads as a checklist being worked through. Struck rather than *faded*: the
+   mockup quiets a satisfied line with `opacity`, which composites its ink into
+   the tint below it and drops the pair under AA — the measurement HIVE-4.6 made
+   of the same idiom. A rule through the text costs no contrast at all. */
+.acct-reqs li[data-met="true"] {
+  text-decoration: line-through;
+}
+
+.acct-strength {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.acct-strength > .hive-progress {
+  flex: 1 1 auto;
+}
+
+.acct-strength__label {
+  flex-shrink: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+/* ---- Backup codes and enrolment ----------------------------------------- */
+.acct-codes-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.acct-codes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.acct-codes__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* QR beside its fields, stacking on a narrow dialog. `auto` for the code so the
+   square keeps its size and the fields take the slack. */
+.acct-enroll {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
+}
+
+@media (max-width: 34rem) {
+  .acct-enroll {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.acct-enroll__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* The white here is the component's, not this rule's: a QR code is read by a
+   camera and its quiet zone has to stay light in every theme, so the surface is
+   `bg-white` on the element itself. This only draws the frame around it. */
+.acct-qr {
+  display: grid;
+  place-items: center;
+  padding: var(--space-2);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.acct-uri {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  min-width: 0;
+}
+
+.acct-uri > code {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-snug);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Six digits set wide apart, so the reader can check what they typed. */
+.acct-code-input {
+  letter-spacing: 0.3em;
+}
+
 /* Layout Animation Styles */
 /* Smooth transitions for node positions during layout changes */
 .layout-animating .react-flow__node {

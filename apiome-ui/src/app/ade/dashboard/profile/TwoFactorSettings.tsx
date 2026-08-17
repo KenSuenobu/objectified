@@ -1,17 +1,55 @@
 'use client';
 
 /**
- * Profile TOTP settings (OLO-9.13 #5014 + OLO-9.15 #5015 + OLO-9.50 #5070).
+ * Profile TOTP settings (OLO-9.13 #5014 + OLO-9.15 #5015 + OLO-9.50 #5070; re-skinned by
+ * HIVE-4.7, #5301).
  *
  * Password-gated enable (QR + confirm + one-time backup reveal) and disable, plus self-service
  * management when enrolled: remaining backup-code count, password-gated regenerate, forget-this-
  * device (per-browser trust cookie), recovery guidance, and Email OTP availability when SendGrid
  * is configured (server-level OTP — no separate enroll).
+ *
+ * ## What HIVE-4.7 changed, and what it did not
+ *
+ * **Not** the behaviour. Every call, every error string, every busy label and every `data-testid`
+ * is the one `tests/two-factor-settings.test.tsx` already pins, and that suite passes against
+ * this file unchanged — which is the point: this is the most complex form cluster in the app,
+ * and a redesign that quietly altered a 2FA flow would be a security change wearing a
+ * stylesheet's clothes.
+ *
+ * What changed is everything a token can reach. The six nested boxes were
+ * `border-gray-200 dark:border-gray-700` rectangles with `text-emerald-500`, `text-amber-500`,
+ * `text-sky-500` and `text-indigo-500` glyphs, and the three dialogs opened with
+ * `bg-emerald-100 dark:bg-emerald-900/40` tiles — eleven named colours that froze on one
+ * palette. They are icon tiles and hairlines drawn from role tokens now, so the cluster follows
+ * all nine themes.
+ *
+ * Two things are genuinely new, both from the mockup's Adds list: the multi-step dialogs carry
+ * the shared {@link import('@/app/components/ui/Stepper').Stepper} in their headers, so a reader
+ * can see how far through enrolment they are, and the revealed backup codes can be downloaded as
+ * well as copied ({@link import('@/app/components/ade/account/BackupCodes').BackupCodes}).
+ *
+ * One deliberate deviation from `docs/mockups/account/profile.html`: the mockup prints the
+ * two-factor state three times — a badge in the Security card's header, a badge on this row, and
+ * "2FA on" in the identity hero. Two of those are kept (the hero's summary and this row's, which
+ * is the one beside the control that changes it); the card header carries none, because the third
+ * copy says nothing the first two did not.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
-import { ShieldCheck, Copy, Check, KeyRound, MonitorSmartphone, Mail } from 'lucide-react';
+import {
+  Check,
+  Copy,
+  KeyRound,
+  Mail,
+  MonitorSmartphone,
+  RefreshCw,
+  ShieldCheck,
+  ShieldOff,
+  ShieldPlus,
+  X,
+} from 'lucide-react';
 import { authClient } from '@lib/auth/auth-client';
 import { useAuthSession } from '@lib/auth/session-client';
 import {
@@ -33,9 +71,30 @@ import { Input } from '@/app/components/ui/Input';
 import { Label } from '@/app/components/ui/Label';
 import { Alert } from '@/app/components/ui/Alert';
 import { Badge } from '@/app/components/ui/Badge';
+import { Card } from '@/app/components/ui/Card';
+import { Stepper } from '@/app/components/ui/Stepper';
+import { ICON_SIZE } from '@/app/components/ui/iconSizes';
+import { BackupCodes } from '@/app/components/ade/account/BackupCodes';
+import { cn } from '@lib/utils';
 
 type EnrollStep = 'password' | 'qr' | 'backup';
 type RegenStep = 'password' | 'reveal';
+
+/** The enrolment wizard's steps, in order — the header stepper and `step` share this list. */
+const ENROLL_STEPS = [
+  { id: 'password', label: 'Confirm password' },
+  { id: 'qr', label: 'Scan QR code' },
+  { id: 'backup', label: 'Save backup codes' },
+] as const;
+
+/** The regenerate wizard's steps. */
+const REGEN_STEPS = [
+  { id: 'password', label: 'Confirm password' },
+  { id: 'reveal', label: 'Save new codes' },
+] as const;
+
+/** How long the "Copied" confirmation on the otpauth URI stays up, in milliseconds. */
+const COPIED_RESET_MS = 2000;
 
 interface TwoFactorSettingsProps {
   /** Optional class for the outer status block. */
@@ -43,9 +102,11 @@ interface TwoFactorSettingsProps {
 }
 
 /**
- * Status + enable/disable/self-service controls for authenticator (TOTP) 2FA on the Profile Security card.
+ * Status + enable/disable/self-service controls for authenticator (TOTP) 2FA on the Profile
+ * Security card.
  *
  * @param props.className Optional wrapper class.
+ * @returns The two-factor block and its three dialogs.
  */
 export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
   const { data: session, update } = useAuthSession();
@@ -268,160 +329,146 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
     }
   };
 
-  const handleCopyBackupCodes = async () => {
+  const handleCopyUri = async () => {
     try {
-      await navigator.clipboard.writeText(backupCodes.join('\n'));
+      await navigator.clipboard.writeText(totpURI);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), COPIED_RESET_MS);
     } catch {
-      // ignore
+      // Clipboard unavailable — the URI is on screen and the QR is beside it.
     }
   };
 
-  const backupCodesList = (
-    <div className="space-y-3">
-      <ul
-        className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 dark:border-gray-700 p-3 font-mono text-sm"
-        data-testid="two-factor-backup-codes"
-      >
-        {backupCodes.map((c) => (
-          <li key={c}>{c}</li>
-        ))}
-      </ul>
-      <Button type="button" size="sm" variant="outline" className="w-full" onClick={handleCopyBackupCodes}>
-        {copied ? (
-          <>
-            <Check className="h-4 w-4 mr-2" /> Copied
-          </>
-        ) : (
-          <>
-            <Copy className="h-4 w-4 mr-2" /> Copy codes
-          </>
-        )}
-      </Button>
-    </div>
-  );
-
   return (
-    <div className={className} data-testid="two-factor-settings">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" aria-hidden />
+    <div className={cn('acct-2fa', className)} data-testid="two-factor-settings">
+      <div className="acct-row">
+        <span className={enabled ? 'acct-glyph acct-glyph--ok' : 'acct-glyph'} aria-hidden>
+          <ShieldCheck />
+        </span>
+        <div className="acct-row__body">
+          <div className="acct-row__title">
             Authenticator app (TOTP)
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <Badge status={enabled ? 'active' : 'disabled'} data-testid="two-factor-status">
+              {enabled ? 'Enabled' : 'Off'}
+            </Badge>
+          </div>
+          <p className="acct-row__desc">
             Require a code from Authy or Google Authenticator after your password when signing in.
           </p>
         </div>
-        <Badge variant={enabled ? 'success' : 'secondary'} data-testid="two-factor-status">
-          {enabled ? 'Enabled' : 'Off'}
-        </Badge>
+        {enabled && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={openDisable}
+            data-testid="two-factor-disable-open"
+          >
+            <ShieldOff aria-hidden />
+            Disable 2FA
+          </Button>
+        )}
       </div>
 
       {enabled ? (
-        <div className="space-y-4">
-          <div data-testid="two-factor-methods">
-            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Sign-in methods
-            </p>
-            <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-              <li>Authenticator app (TOTP)</li>
+        <>
+          <Card variant="soft" className="acct-methods" data-testid="two-factor-methods">
+            <div className="acct-caps">Sign-in methods</div>
+            <ul className="acct-methods__list">
+              <li>
+                <Check size={ICON_SIZE.dense} className="text-ok" aria-hidden />
+                Authenticator app (TOTP)
+              </li>
               {emailOtpAvailable && (
                 <li data-testid="two-factor-method-email-otp">
+                  <Check size={ICON_SIZE.dense} className="text-ok" aria-hidden />
                   Email OTP — available at sign-in (no separate enrollment)
                 </li>
               )}
             </ul>
-          </div>
+          </Card>
 
-          {emailOtpAvailable && (
-            <div
-              className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2"
-              data-testid="two-factor-email-otp-info"
-            >
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
-                <Mail className="h-4 w-4 text-indigo-500" aria-hidden />
-                Email one-time code
+          <div className="acct-mfa">
+            {emailOtpAvailable && (
+              <div className="acct-mfa__box" data-testid="two-factor-email-otp-info">
+                <div className="acct-mfa__title">
+                  <Mail size={ICON_SIZE.dense} aria-hidden />
+                  Email one-time code
+                </div>
+                <p className="acct-mfa__desc">
+                  After your password, you can request a code emailed to your account address
+                  instead of (or in addition to) using your authenticator app.
+                </p>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                After your password, you can request a code emailed to your account address instead
-                of (or in addition to) using your authenticator app.
+            )}
+
+            <div className="acct-mfa__box">
+              <div className="acct-mfa__title">
+                <KeyRound size={ICON_SIZE.dense} aria-hidden />
+                Backup codes
+              </div>
+              <p className="acct-mfa__desc" data-testid="two-factor-backup-remaining">
+                {statusLoading
+                  ? 'Checking remaining codes…'
+                  : remaining === null
+                    ? 'Remaining count unavailable'
+                    : `${remaining} remaining`}
               </p>
-            </div>
-          )}
-
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
-              <KeyRound className="h-4 w-4 text-amber-500" aria-hidden />
-              Backup codes
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400" data-testid="two-factor-backup-remaining">
-              {statusLoading
-                ? 'Checking remaining codes…'
-                : remaining === null
-                  ? 'Remaining count unavailable'
-                  : `${remaining} remaining`}
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full"
-              onClick={openRegen}
-              data-testid="two-factor-regen-open"
-            >
-              Regenerate backup codes
-            </Button>
-          </div>
-
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
-              <MonitorSmartphone className="h-4 w-4 text-sky-500" aria-hidden />
-              Trusted device
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400" data-testid="two-factor-trusted-status">
-              {statusLoading
-                ? 'Checking this browser…'
-                : trusted
-                  ? 'This browser is trusted (skips 2FA for ~30 days when signing in).'
-                  : 'This browser is not marked as trusted.'}
-            </p>
-            {trusted && (
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full"
-                onClick={handleForgetDevice}
-                disabled={busy}
-                data-testid="two-factor-forget-device"
+                onClick={openRegen}
+                data-testid="two-factor-regen-open"
               >
-                {busy ? 'Working…' : 'Forget this device'}
+                <RefreshCw aria-hidden />
+                Regenerate backup codes
               </Button>
-            )}
+            </div>
+
+            <div className="acct-mfa__box">
+              <div className="acct-mfa__title">
+                <MonitorSmartphone size={ICON_SIZE.dense} aria-hidden />
+                Trusted device
+              </div>
+              <p className="acct-mfa__desc" data-testid="two-factor-trusted-status">
+                {statusLoading
+                  ? 'Checking this browser…'
+                  : trusted
+                    ? 'This browser is trusted (skips 2FA for ~30 days when signing in).'
+                    : 'This browser is not marked as trusted.'}
+              </p>
+              {trusted && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleForgetDevice}
+                  disabled={busy}
+                  data-testid="two-factor-forget-device"
+                >
+                  <X aria-hidden />
+                  {busy ? 'Working…' : 'Forget this device'}
+                </Button>
+              )}
+            </div>
           </div>
 
-          <Alert data-testid="two-factor-recovery-guidance">
-            Store backup codes somewhere safe. If you lose your authenticator, use a backup code at
-            sign-in (when available) or contact an admin. After recovery, regenerate codes so old ones
-            cannot be reused.
+          <Alert variant="info" data-testid="two-factor-recovery-guidance">
+            <span className="font-semibold">Recovery.</span> Store backup codes somewhere safe. If
+            you lose your authenticator, use a backup code at sign-in (when available) or contact
+            an admin. After recovery, regenerate codes so old ones cannot be reused.
           </Alert>
 
           {error && !disableOpen && !regenOpen && !enrollOpen && (
             <Alert variant="error">{error}</Alert>
           )}
-
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full"
-            onClick={openDisable}
-            data-testid="two-factor-disable-open"
-          >
-            Disable 2FA
-          </Button>
-        </div>
+        </>
       ) : (
-        <Button size="sm" className="w-full" onClick={openEnroll} data-testid="two-factor-enable-open">
+        <Button
+          variant="primary"
+          className="w-full"
+          onClick={openEnroll}
+          data-testid="two-factor-enable-open"
+        >
+          <ShieldPlus aria-hidden />
           Enable 2FA
         </Button>
       )}
@@ -438,35 +485,43 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
           }
         }}
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
-                <ShieldCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        <DialogContent size="lg">
+          <DialogHeader className="acct-dialog__header acct-dialog__header--stacked">
+            <div className="acct-dialog__lead">
+              <span className="acct-glyph acct-glyph--ok" aria-hidden>
+                <ShieldPlus />
+              </span>
+              <div className="acct-dialog__heading">
+                <DialogTitle>Enable two-factor authentication</DialogTitle>
+                <DialogDescription>
+                  {step === 'password' &&
+                    'Confirm your password to start enrollment. You will scan a QR code next.'}
+                  {step === 'qr' &&
+                    'Scan this QR with Authy or Google Authenticator, then enter the 6-digit code.'}
+                  {step === 'backup' &&
+                    'Store these one-time codes somewhere safe. You can regenerate a new set later from this page.'}
+                </DialogDescription>
               </div>
-              {step === 'password' && 'Enable two-factor authentication'}
-              {step === 'qr' && 'Scan QR code'}
-              {step === 'backup' && 'Save backup codes'}
-            </DialogTitle>
-            <DialogDescription>
-              {step === 'password' &&
-                'Confirm your password to start enrollment. You will scan a QR code next.'}
-              {step === 'qr' &&
-                'Scan this QR with Authy or Google Authenticator, then enter the 6-digit code.'}
-              {step === 'backup' &&
-                'Store these one-time codes somewhere safe. You can regenerate a new set later from this page.'}
-            </DialogDescription>
+            </div>
+            <Stepper
+              steps={ENROLL_STEPS}
+              current={step}
+              fill
+              aria-label="Enrollment progress"
+              data-testid="two-factor-enroll-stepper"
+            />
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
+          <div className="acct-dialog__body">
             {error && <Alert variant="error">{error}</Alert>}
 
             {step === 'password' && (
-              <div className="space-y-2">
+              <div className="acct-field">
                 <Label htmlFor="tfa-enroll-password">Current password</Label>
                 <Input
                   id="tfa-enroll-password"
                   type="password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={busy}
@@ -478,31 +533,52 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
             )}
 
             {step === 'qr' && (
-              <>
-                <div className="mx-auto rounded-xl bg-white p-4 w-fit" data-testid="two-factor-qr">
+              <div className="acct-enroll">
+                {/* Literally white, and deliberately so: a QR code is read by a camera, and
+                    the quiet zone has to stay light in every theme for it to scan. */}
+                <div className="acct-qr bg-white" data-testid="two-factor-qr">
                   <QRCode value={totpURI} size={180} />
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 break-all font-mono">{totpURI}</p>
-                <div className="space-y-2">
-                  <Label htmlFor="tfa-enroll-code">Authentication code</Label>
-                  <Input
-                    id="tfa-enroll-code"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    maxLength={6}
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    disabled={busy}
-                    className="font-mono tracking-widest"
-                    data-testid="two-factor-enroll-code"
-                    onKeyDown={(e) => e.key === 'Enter' && !busy && handleConfirmTotp()}
-                  />
+                <div className="acct-enroll__fields">
+                  <div className="acct-field">
+                    <div className="acct-caps">Or enter this URI</div>
+                    <div className="acct-uri">
+                      <code className="mono">{totpURI}</code>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopyUri}
+                        aria-label={copied ? 'Copied URI' : 'Copy URI'}
+                        title={copied ? 'Copied URI' : 'Copy URI'}
+                        data-testid="two-factor-copy-uri"
+                      >
+                        {copied ? <Check className="text-ok" aria-hidden /> : <Copy aria-hidden />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="acct-field">
+                    <Label htmlFor="tfa-enroll-code">Authentication code</Label>
+                    <Input
+                      id="tfa-enroll-code"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      placeholder="000000"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      disabled={busy}
+                      className="acct-code-input mono"
+                      data-testid="two-factor-enroll-code"
+                      onKeyDown={(e) => e.key === 'Enter' && !busy && handleConfirmTotp()}
+                    />
+                  </div>
                 </div>
-              </>
+              </div>
             )}
 
-            {step === 'backup' && backupCodesList}
+            {step === 'backup' && <BackupCodes codes={backupCodes} />}
           </div>
 
           <DialogFooter>
@@ -519,12 +595,18 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
               </Button>
             )}
             {step === 'password' && (
-              <Button onClick={handleEnablePassword} disabled={busy} data-testid="two-factor-enroll-continue">
+              <Button
+                variant="primary"
+                onClick={handleEnablePassword}
+                disabled={busy}
+                data-testid="two-factor-enroll-continue"
+              >
                 {busy ? 'Working…' : 'Continue'}
               </Button>
             )}
             {step === 'qr' && (
               <Button
+                variant="primary"
                 onClick={handleConfirmTotp}
                 disabled={busy || code.length !== 6}
                 data-testid="two-factor-enroll-verify"
@@ -534,6 +616,7 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
             )}
             {step === 'backup' && (
               <Button
+                variant="primary"
                 onClick={() => {
                   setEnrollOpen(false);
                   resetEnroll();
@@ -557,52 +640,79 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
           if (!open) resetRegen();
         }}
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/40">
-                <KeyRound className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        <DialogContent size="sm">
+          <DialogHeader className="acct-dialog__header acct-dialog__header--stacked">
+            <div className="acct-dialog__lead">
+              <span className="acct-glyph acct-glyph--warn" aria-hidden>
+                <RefreshCw />
+              </span>
+              <div className="acct-dialog__heading">
+                <DialogTitle>
+                  {regenStep === 'password' ? 'Regenerate backup codes' : 'Save new backup codes'}
+                </DialogTitle>
+                <DialogDescription>
+                  {regenStep === 'password'
+                    ? 'Enter your password. This replaces your existing backup codes immediately.'
+                    : 'Copy these codes now. The previous set is no longer valid.'}
+                </DialogDescription>
               </div>
-              {regenStep === 'password' ? 'Regenerate backup codes' : 'Save new backup codes'}
-            </DialogTitle>
-            <DialogDescription>
-              {regenStep === 'password'
-                ? 'Enter your password. This replaces your existing backup codes immediately.'
-                : 'Copy these codes now. The previous set is no longer valid.'}
-            </DialogDescription>
+            </div>
+            <Stepper
+              steps={REGEN_STEPS}
+              current={regenStep}
+              fill
+              aria-label="Regeneration progress"
+              data-testid="two-factor-regen-stepper"
+            />
           </DialogHeader>
-          <div className="space-y-4 py-2">
+
+          <div className="acct-dialog__body">
             {error && <Alert variant="error">{error}</Alert>}
             {regenStep === 'password' && (
-              <div className="space-y-2">
-                <Label htmlFor="tfa-regen-password">Current password</Label>
-                <Input
-                  id="tfa-regen-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={busy}
-                  autoFocus
-                  data-testid="two-factor-regen-password"
-                  onKeyDown={(e) => e.key === 'Enter' && !busy && handleRegenerate()}
-                />
-              </div>
+              <>
+                <div className="acct-field">
+                  <Label htmlFor="tfa-regen-password">Current password</Label>
+                  <Input
+                    id="tfa-regen-password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={busy}
+                    autoFocus
+                    data-testid="two-factor-regen-password"
+                    onKeyDown={(e) => e.key === 'Enter' && !busy && handleRegenerate()}
+                  />
+                </div>
+                {remaining !== null && (
+                  <Alert variant="warn">
+                    Your {remaining} remaining codes stop working the moment new ones are issued.
+                  </Alert>
+                )}
+              </>
             )}
-            {regenStep === 'reveal' && backupCodesList}
+            {regenStep === 'reveal' && <BackupCodes codes={backupCodes} />}
           </div>
+
           <DialogFooter>
             {regenStep === 'password' && (
               <>
                 <Button variant="outline" onClick={() => setRegenOpen(false)} disabled={busy}>
                   Cancel
                 </Button>
-                <Button onClick={handleRegenerate} disabled={busy} data-testid="two-factor-regen-confirm">
+                <Button
+                  variant="primary"
+                  onClick={handleRegenerate}
+                  disabled={busy}
+                  data-testid="two-factor-regen-confirm"
+                >
                   {busy ? 'Working…' : 'Regenerate'}
                 </Button>
               </>
             )}
             {regenStep === 'reveal' && (
               <Button
+                variant="primary"
                 onClick={() => {
                   setRegenOpen(false);
                   resetRegen();
@@ -628,25 +738,26 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
           }
         }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-900/40">
-                <ShieldCheck className="h-5 w-5 text-rose-600 dark:text-rose-400" />
-              </div>
-              Disable two-factor authentication
-            </DialogTitle>
-            <DialogDescription>
-              Enter your password to turn off authenticator codes on this account.
-            </DialogDescription>
+        <DialogContent size="sm" role="alertdialog">
+          <DialogHeader className="acct-dialog__header">
+            <span className="acct-glyph acct-glyph--danger" aria-hidden>
+              <ShieldOff />
+            </span>
+            <div className="acct-dialog__heading">
+              <DialogTitle>Disable two-factor authentication</DialogTitle>
+              <DialogDescription>
+                Enter your password to turn off authenticator codes on this account.
+              </DialogDescription>
+            </div>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="acct-dialog__body">
             {error && <Alert variant="error">{error}</Alert>}
-            <div className="space-y-2">
+            <div className="acct-field">
               <Label htmlFor="tfa-disable-password">Current password</Label>
               <Input
                 id="tfa-disable-password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={busy}
@@ -655,13 +766,17 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
                 onKeyDown={(e) => e.key === 'Enter' && !busy && handleDisable()}
               />
             </div>
+            <p className="acct-hint">
+              Backup codes and the trusted-device cookie are cleared too. You can re-enable 2FA any
+              time.
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDisableOpen(false)} disabled={busy}>
               Cancel
             </Button>
             <Button
-              variant="destructive"
+              variant="danger"
               onClick={handleDisable}
               disabled={busy}
               data-testid="two-factor-disable-confirm"
