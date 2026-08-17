@@ -27,6 +27,7 @@ import {
 import { cn } from '../../../../lib/utils';
 import PreferencesDrawerHost from './preferences/PreferencesDrawerHost';
 import CommandPaletteHost from '@/app/components/shell/CommandPaletteHost';
+import ShortcutsHost from '@/app/components/shell/ShortcutsHost';
 import { openPreferences } from './preferences/preferencesDrawerBus';
 import WhatsNewDialog from './WhatsNewDialog';
 // The one place the build string is derived (HIVE-3.4, #5290) — the launcher, the top bar
@@ -472,6 +473,13 @@ export default function AdeHome({
       {/* And the command palette (HIVE-3.6, #5292), for the same reason: `⌘K` has to work
           on the launcher too, and this is the only chrome the route draws. */}
       <CommandPaletteHost
+        currentTenantId={
+          (session?.user as { current_tenant_id?: string } | undefined)?.current_tenant_id ?? null
+        }
+      />
+      {/* And the shortcuts sheet (HIVE-3.7, #5293), for the third time and the same reason:
+          `?` has to work on the launcher too. */}
+      <ShortcutsHost
         currentTenantId={
           (session?.user as { current_tenant_id?: string } | undefined)?.current_tenant_id ?? null
         }

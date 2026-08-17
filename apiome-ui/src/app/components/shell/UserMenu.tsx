@@ -23,10 +23,12 @@ import {
 } from '@/app/components/ade/preferences/preferencesDrawerBus';
 import { PLATFORM_USER_MENU_ITEMS } from '@lib/platform-nav';
 import { resolvePlatformNavIcon } from '@lib/platform-nav-icons';
+import { PREFERENCES_SHORTCUT, SHORTCUT_SHEET_SHORTCUT, formatShortcutKeys } from '@lib/shortcuts';
 import { APP_VERSION_BADGE } from '@lib/app-version';
 import { signOutEverywhere } from '@lib/auth/sign-out-client';
 import { cn } from '@lib/utils';
 import { ADMIN_CONSOLE_ROUTE, LAUNCHER_ROUTE } from './appShellRoutes';
+import { openShortcutSheet } from './shortcutSheetBus';
 import { RAIL_ITEM_HOVER_CLASS, RailTooltip } from './railChrome';
 import {
   RAIL_MENU_ABOVE_CLASS,
@@ -45,7 +47,9 @@ import { useWhatsNewUnread } from './whatsNewSeen';
  * offered three rows (View profile, Preferences, Sign out) and a badge; the reader had to
  * *know* that `/admin` existed, that `/ade` was the launcher, that linked accounts had a
  * page, and that the shortcut list was a tab inside preferences. Every one of those is a
- * row here, which is the whole point of the ticket: discovery, not relocation.
+ * row here, which is the whole point of the ticket: discovery, not relocation. Since
+ * HIVE-3.7 (#5293) the shortcuts row opens the generated sheet rather than that tab, and its
+ * chip — like Preferences' — is derived from the registry's own declaration.
  *
  * ### Where the rows come from
  *
@@ -205,6 +209,20 @@ export default function UserMenu({
     [closeMenu]
   );
 
+  /**
+   * Close the menu, then open the shortcuts sheet (HIVE-3.7, #5293).
+   *
+   * The same order and the same reason as {@link handleOpenPreferences}: the sheet gives
+   * focus back to whatever had it, and a menu row about to unmount is not that.
+   *
+   * Falls back to the preferences pane's Shortcuts tab if no sheet host is mounted — the row
+   * should not become a dead end on a surface that has not adopted the shell's overlays.
+   */
+  const handleOpenShortcuts = React.useCallback(() => {
+    closeMenu(true);
+    if (!openShortcutSheet()) openPreferences('shortcuts');
+  }, [closeMenu]);
+
   /** Show the release notes and, in doing so, mark this build's notes as read. */
   const handleOpenWhatsNew = React.useCallback(() => {
     closeMenu(true);
@@ -231,7 +249,7 @@ export default function UserMenu({
           id: 'preferences',
           label: 'Preferences',
           icon: Settings2,
-          kbd: ['⌘', ','],
+          kbd: formatShortcutKeys(PREFERENCES_SHORTCUT),
           onSelect: () => handleOpenPreferences(),
         },
         {
@@ -245,8 +263,8 @@ export default function UserMenu({
           id: 'shortcuts',
           label: 'Keyboard shortcuts',
           icon: Keyboard,
-          kbd: ['?'],
-          onSelect: () => handleOpenPreferences('shortcuts'),
+          kbd: formatShortcutKeys(SHORTCUT_SHEET_SHORTCUT),
+          onSelect: handleOpenShortcuts,
         },
       ],
       [
@@ -261,7 +279,7 @@ export default function UserMenu({
       ],
       [{ id: 'sign-out', label: 'Sign out', icon: LogOut, danger: true, onSelect: handleSignOut }],
     ],
-    [handleOpenPreferences, handleOpenWhatsNew, handleSignOut, unread]
+    [handleOpenPreferences, handleOpenShortcuts, handleOpenWhatsNew, handleSignOut, unread]
   );
 
   /** Every row in the order the arrow keys walk them; the roving index counts through it. */

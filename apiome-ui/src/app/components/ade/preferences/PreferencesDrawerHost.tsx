@@ -3,8 +3,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PreferencesBoundary } from '../../../providers/PreferencesProvider';
 import PreferencesDrawer from '../PreferencesDrawer';
+import { PREFERENCES_SHORTCUT, type ShortcutBinding } from '@lib/shortcuts';
+import { useShortcuts } from '@/app/hooks/useShortcuts';
 import { registerPreferencesDrawerHost, type PreferencesTabId } from './preferencesDrawerBus';
-import { matchesPreferencesShortcut, matchesShortcutsShortcut } from './shortcuts';
 
 /**
  * Mounts the preferences pane and answers requests to open it (HIVE-1.4, #5277).
@@ -25,10 +26,11 @@ import { matchesPreferencesShortcut, matchesShortcutsShortcut } from './shortcut
  * restoration, because the subtree unmounts in the same commit that closes it — and it is
  * returned from an effect, after that unmount, so the drawer's focus trap is gone by then.
  *
- * Two chords are bound here, both documented in `shortcuts.ts`: `⌘,` opens the pane where
- * it last was, and a bare `?` opens it on the Shortcuts tab (HIVE-3.4, #5290 — the rail
- * user menu's "Keyboard shortcuts" row is the same request made with the mouse). HIVE-3.7
- * (#5293) will point `?` at the generated shortcut sheet instead.
+ * One chord is bound here: `⌘,`, the pane's own. It is registered with the shared shortcut
+ * registry (HIVE-3.7, #5293) rather than through a listener of this host's, so it is in the
+ * `?` sheet for exactly as long as this host is mounted to answer it. `?` itself moved to
+ * `ShortcutsHost` with the sheet it now opens; the rail user menu's "Keyboard shortcuts" row
+ * went with it.
  */
 export default function PreferencesDrawerHost() {
   const [open, setOpen] = useState(false);
@@ -68,25 +70,14 @@ export default function PreferencesDrawerHost() {
   );
   useEffect(() => registerPreferencesDrawerHost(controls), [controls]);
 
-  // `⌘,` / `Ctrl+,`, the chord every desktop platform already uses for settings, and `?`
-  // for the shortcuts reference. Bound on the document so they work wherever focus is —
-  // `⌘,` deliberately inside text fields too, `?` deliberately not (`isTypingTarget`).
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (matchesPreferencesShortcut(event)) {
-        event.preventDefault();
-        openDrawer();
-        return;
-      }
-      if (matchesShortcutsShortcut(event)) {
-        event.preventDefault();
-        openDrawer('shortcuts');
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [openDrawer]);
+  // `⌘,` / `Ctrl+,`, the chord every desktop platform already uses for settings. It fires
+  // inside text fields as well — a comma with a command modifier produces no text — which is
+  // declared once, in `lib/shortcuts.ts`, rather than re-decided here.
+  const shortcuts = useMemo<readonly ShortcutBinding[]>(
+    () => [{ ...PREFERENCES_SHORTCUT, run: () => openDrawer() }],
+    [openDrawer]
+  );
+  useShortcuts(shortcuts);
 
   if (!open) return null;
 

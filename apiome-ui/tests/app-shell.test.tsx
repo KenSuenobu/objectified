@@ -90,10 +90,7 @@ import { ThemeProvider } from '../src/app/providers/ThemeProvider';
 import { NAV_COLLAPSED_STORAGE_KEY } from '../src/app/components/shell/navGroupCollapse';
 import { RAIL_ICON_BREAKPOINT_PX } from '../src/app/components/shell/useIconRail';
 import { isPreferencesDrawerMounted } from '../src/app/components/ade/preferences/preferencesDrawerBus';
-import {
-  SHELL_SHORTCUTS,
-  matchesRailShortcut,
-} from '../src/app/components/ade/preferences/shortcuts';
+import { RAIL_SHORTCUT, formatShortcutKeys, matchesShortcutChord } from '../lib/shortcuts';
 import {
   PLATFORM_NAV_GROUPS,
   PLATFORM_USER_MENU_ITEMS,
@@ -598,21 +595,16 @@ describe('AppShell — its regions', () => {
 });
 
 describe('AppShell — the shortcut is documented where readers look for it', () => {
-  it('lists the chord the matcher actually accepts', () => {
-    const documented = SHELL_SHORTCUTS.find((entry) => entry.id === 'rail')!;
-
-    expect(documented.keys).toEqual(['⌘', '\\']);
-    expect(documented.description).toMatch(/sidebar/i);
+  it('prints the chord the matcher actually accepts', () => {
+    // Since HIVE-3.7 (#5293) the chip and the matcher are the *same* declaration, so this
+    // asserts the declaration rather than that two hand-written lists agree.
+    expect(formatShortcutKeys(RAIL_SHORTCUT)).toEqual(['⌘', '\\']);
+    expect(RAIL_SHORTCUT.description).toMatch(/sidebar/i);
     expect(
-      matchesRailShortcut({
-        key: '\\',
-        metaKey: true,
-        ctrlKey: false,
-        altKey: false,
-        shiftKey: false,
-        repeat: false,
-        defaultPrevented: false,
-      } as KeyboardEvent)
+      matchesShortcutChord(
+        { key: '\\', metaKey: true, ctrlKey: false, altKey: false, shiftKey: false },
+        RAIL_SHORTCUT.chord!
+      )
     ).toBe(true);
   });
 });
