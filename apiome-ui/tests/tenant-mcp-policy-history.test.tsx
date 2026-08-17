@@ -68,39 +68,56 @@ afterEach(() => {
 });
 
 describe('TenantMcpPolicyHistory', () => {
-  it('does not fetch until Policy history is expanded', () => {
+  // HIVE-5.1 (#5304): the section no longer collapses itself — the manage drawer's
+  // "Policy history" tab is the disclosure, and it only mounts this on first open. So
+  // mounting *is* the request, and there is no expand button left to press.
+  it('loads on mount, because the tab that mounts it is the disclosure', async () => {
     render(<TenantMcpPolicyHistory />);
-    expect(screen.getByRole('button', { name: /Policy history/i })).toBeInTheDocument();
-    expect(global.fetch).not.toHaveBeenCalled();
+
+    expect(
+      screen.getByRole('heading', { name: /Policy history/i, level: 3 }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText('dana@acme.io')).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalled();
   });
 
-  it('loads history and expands a row to show before/after tool flags', async () => {
+  it('expands a row to show before/after tool flags', async () => {
     render(<TenantMcpPolicyHistory />);
-    fireEvent.click(screen.getByRole('button', { name: /Policy history/i }));
 
     expect(await screen.findByText('dana@acme.io')).toBeInTheDocument();
     expect(screen.getByText(/1 tool flag/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('dana@acme.io'));
+    fireEvent.click(screen.getByRole('button', { name: /Toggle details/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Tool enablement')).toBeInTheDocument();
+      expect(screen.getByText('Tool-flag changes')).toBeInTheDocument();
     });
-    expect(screen.getByText('ping')).toBeInTheDocument();
-    expect(screen.getByText('Default')).toBeInTheDocument();
+    // The diff line names the tool and the flag together, then the two values.
+    expect(screen.getByText('ping · Default')).toBeInTheDocument();
     expect(screen.getByText('on')).toBeInTheDocument();
     expect(screen.getByText('off')).toBeInTheDocument();
   });
 
-  it('refetches when reloadToken changes while expanded', async () => {
+  it('refetches when reloadToken changes', async () => {
     const { rerender } = render(<TenantMcpPolicyHistory reloadToken={0} />);
-    fireEvent.click(screen.getByRole('button', { name: /Policy history/i }));
     await screen.findByText('dana@acme.io');
     const callsAfterOpen = (global.fetch as jest.Mock).mock.calls.length;
 
     rerender(<TenantMcpPolicyHistory reloadToken={1} />);
     await waitFor(() => {
       expect((global.fetch as jest.Mock).mock.calls.length).toBeGreaterThan(callsAfterOpen);
+    });
+  });
+
+  it('offers Refresh without needing to be expanded first', async () => {
+    render(<TenantMcpPolicyHistory />);
+    await screen.findByText('dana@acme.io');
+    const before = (global.fetch as jest.Mock).mock.calls.length;
+
+    fireEvent.click(screen.getByRole('button', { name: /Refresh policy history/i }));
+
+    await waitFor(() => {
+      expect((global.fetch as jest.Mock).mock.calls.length).toBeGreaterThan(before);
     });
   });
 });

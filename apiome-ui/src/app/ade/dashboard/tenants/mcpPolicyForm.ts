@@ -126,6 +126,55 @@ export function hasMcpPolicyChanges(
   return false;
 }
 
+/** How the three per-tool flags read in the unsaved-changes summary. */
+const TOOL_FLAG_SUMMARY_LABELS = {
+  in_ceiling: 'ceiling',
+  default_enabled: 'default',
+  anonymous_enabled: 'anonymous',
+} as const;
+
+/** At most this many changes are named before the summary switches to a count. */
+const SUMMARY_MAX_ITEMS = 2;
+
+/**
+ * Name what the draft would change, for the dirty bar's sub-line (HIVE-5.1, #5304).
+ *
+ * The mockup's sticky bar reads "Unsaved MCP settings changes · lint.waive removed from
+ * ceiling", and the second half is the half that saves a reader from re-reading four toolset
+ * cards to find what they touched. Long edits collapse to a count rather than growing a bar
+ * that pushes the Save button off the end of its own row.
+ *
+ * @param current The draft.
+ * @param baseline The last-loaded policy.
+ * @returns A short phrase, or `''` when the draft matches the baseline.
+ */
+export function summariseMcpPolicyChanges(
+  current: McpPolicyFormState,
+  baseline: McpPolicyFormState,
+): string {
+  const changes: string[] = [];
+
+  if (current.default_mode !== baseline.default_mode) changes.push('default mode');
+  if (current.allow_anonymous_mcp !== baseline.allow_anonymous_mcp) {
+    changes.push(`anonymous calls ${current.allow_anonymous_mcp ? 'on' : 'off'}`);
+  }
+
+  const baselineById = new Map(baseline.tools.map((tool) => [tool.tool_id, tool]));
+  for (const tool of current.tools) {
+    const before = baselineById.get(tool.tool_id);
+    if (!before) continue;
+    for (const flag of ['in_ceiling', 'default_enabled', 'anonymous_enabled'] as const) {
+      if (tool[flag] === before[flag]) continue;
+      const verb = tool[flag] ? 'added to' : 'removed from';
+      changes.push(`${tool.tool_id} ${verb} ${TOOL_FLAG_SUMMARY_LABELS[flag]}`);
+    }
+  }
+
+  if (changes.length === 0) return '';
+  if (changes.length <= SUMMARY_MAX_ITEMS) return changes.join(' · ');
+  return `${changes.length} changes across modes and tool flags`;
+}
+
 /**
  * Update one tool flag. Clearing `in_ceiling` also clears `default_enabled`
  * so the form stays REST-valid.

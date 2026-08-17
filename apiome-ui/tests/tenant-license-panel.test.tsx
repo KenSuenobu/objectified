@@ -65,11 +65,15 @@ function mockFetchFailure(error: unknown) {
   }) as unknown as typeof fetch;
 }
 
-/** Render the panel and expand it (data loads on expand). */
+/**
+ * Render the panel.
+ *
+ * HIVE-5.1 (#5304) removed the panel's own disclosure: inside the manage drawer the
+ * "License & plan" tab is the disclosure, and it only mounts this section on first open. So
+ * mounting is the request to load, and there is no expand click to make.
+ */
 function renderExpanded(props: Partial<React.ComponentProps<typeof TenantLicensePanel>> = {}) {
-  const utils = render(<TenantLicensePanel isCurrentTenant tenantName="Acme" {...props} />);
-  fireEvent.click(screen.getByRole('button', { name: /License & Plan/i }));
-  return utils;
+  return render(<TenantLicensePanel isCurrentTenant tenantName="Acme" {...props} />);
 }
 
 afterEach(() => {
@@ -78,17 +82,20 @@ afterEach(() => {
 });
 
 describe('TenantLicensePanel', () => {
-  it('is collapsed by default and does not fetch until expanded', () => {
-    global.fetch = jest.fn() as unknown as typeof fetch;
+  it('draws its own section heading rather than a second disclosure', () => {
+    mockFetchSuccess(LICENSE);
     render(<TenantLicensePanel isCurrentTenant tenantName="Acme" />);
-    expect(screen.queryByText(/Current plan/i)).not.toBeInTheDocument();
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('heading', { name: /License & plan/i, level: 3 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /^License & plan$/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows the switch-tenant helper instead of fetching for a non-current tenant', () => {
     global.fetch = jest.fn() as unknown as typeof fetch;
     render(<TenantLicensePanel isCurrentTenant={false} tenantName="Acme" />);
-    fireEvent.click(screen.getByRole('button', { name: /License & Plan/i }));
     expect(screen.getByText(/Select Acme as your current tenant/i)).toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
   });

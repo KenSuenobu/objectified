@@ -1,46 +1,51 @@
 'use client';
 
 /**
- * Tenant license panel — OLO-5.5 (#4215).
+ * Tenant license & plan — OLO-5.5 (#4215), redrawn as a drawer section by HIVE-5.1 (#5304).
  *
- * Expandable "License & Plan" section of the tenant administration panel.
- * Loads the OLO-5.4 license surface (`/api/tenants/license`) for the
- * session's current tenant and shows:
+ * Authority: `docs/mockups/workspace/tenants.html` `[data-tab-panel="m-license"]`.
  *
- * - a plan card (name + billing type, or the Free-tier fallback note when the
- *   tenant has no license attachment);
- * - a member seat-usage meter (used vs. max, with a warning tint near the
- *   limit and the OLO-5.3 `license-seats-exhausted` guidance when full);
- * - the effective feature list (license bundle ∪ tenant overrides) with
- *   Preview/source badges;
- * - an upgrade CTA stub — billing checkout is out of scope for this pack
- *   (#3484 territory), so the button only explains that upgrades are coming.
+ * Loads the OLO-5.4 license surface (`/api/tenants/license`) for the session's current
+ * tenant and shows:
  *
- * Read-only: any member holding `billing:view` (every built-in role) can
- * read the same data via REST, so no admin gating is applied here beyond the
- * parent panel's own visibility rules. Errors from the proxy are run through
- * `describeLicenseError` so stable OLO-5.3 codes render as friendly guidance
- * rather than raw API errors.
+ * - a plan card (name + billing type, or the Free-tier fallback note when the tenant has no
+ *   license attachment) with the upgrade CTA;
+ * - a member seat-usage meter (used vs. max, warning tint from 80 %, and the OLO-5.3
+ *   `license-seats-exhausted` guidance when full);
+ * - the stored plan quota limits (#64);
+ * - the effective feature list (license bundle ∪ tenant overrides) with source and
+ *   Preview/Enabled/Disabled pills.
+ *
+ * Read-only: any member holding `billing:view` (every built-in role) can read the same data
+ * via REST, so no admin gating is applied here beyond the drawer's own visibility rules.
+ * Errors from the proxy are run through `describeLicenseError` so stable OLO-5.3 codes render
+ * as friendly guidance rather than raw API errors.
+ *
+ * ### What HIVE-5.1 changed
+ *
+ * The panel no longer collapses itself — inside the manage drawer the "License & plan" tab
+ * is the disclosure, so mounting is the request to load — and every hard-coded
+ * `gray-`/`indigo-`/`emerald-`/`amber-` class is now a design token, so the section follows
+ * all nine themes. The plan-type badge in particular went from three bespoke palettes to
+ * {@link Badge} tones, which is also what makes `paid` the same green here as everywhere
+ * else the app says a thing is on.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import {
   ArrowUpCircle,
   BadgeCheck,
-  ChevronDown,
-  ChevronUp,
-  CreditCard,
   FolderKanban,
   GaugeCircle,
   GitBranch,
-  Loader2,
-  Lock,
   Sparkles,
   Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert } from '@/app/components/ui/Alert';
+import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
+import { LoadingState } from '@/app/components/ui/LoadingState';
 import {
   fetchTenantLicense,
   type TenantLicenseFeature,
@@ -72,12 +77,18 @@ const FEATURE_SOURCE_LABELS: Record<string, string> = {
   'tenant-override': 'Tenant override',
 };
 
-/** Badge styling per plan billing type; unknown types fall back to gray. */
-const PLAN_TYPE_BADGE_CLASSES: Record<string, string> = {
-  free: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
-  paid: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700',
-  sponsor:
-    'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-700',
+/**
+ * Badge tone per plan billing type.
+ *
+ * Tones from the shared vocabulary rather than three hand-built palettes: `paid` is the same
+ * "this is on" green the rest of the app uses, `sponsor` borrows the violet that marks a
+ * privileged role, and an unknown type falls back to neutral rather than to a colour that
+ * would imply something about it.
+ */
+const PLAN_TYPE_BADGE_TONE: Record<string, 'neutral' | 'ok' | 'violet'> = {
+  free: 'neutral',
+  paid: 'ok',
+  sponsor: 'violet',
 };
 
 /**
@@ -106,12 +117,12 @@ function QuotaRow({
   value: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-4 px-4 py-3">
-      <span className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+    <li className="tnt-limit-row">
+      <span className="flex items-center gap-2 text-sm text-fg-muted">
         {icon}
         {label}
       </span>
-      <span className="text-sm font-semibold text-gray-900 dark:text-white">{value}</span>
+      <span className="text-sm font-semibold tabular-nums text-fg">{value}</span>
     </li>
   );
 }
@@ -119,29 +130,29 @@ function QuotaRow({
 /** Stored plan quota limits card: projects / versions / AI (#64). */
 function PlanLimits({ quotas }: { quotas: TenantLicenseQuotas }) {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-          <GaugeCircle className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+    <div className="tnt-card">
+      <div className="tnt-card__header">
+        <p className="flex items-center gap-2 text-sm font-semibold text-fg">
+          <GaugeCircle className="size-[var(--icon-dense)] text-fg-subtle" aria-hidden />
           Plan limits
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        <p className="mt-0.5 text-xs text-fg-muted">
           What your plan allows. Unlimited plans show no cap.
         </p>
       </div>
-      <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+      <ul className="tnt-card__body">
         <QuotaRow
-          icon={<FolderKanban className="h-4 w-4 text-gray-400 dark:text-gray-500" />}
+          icon={<FolderKanban className="size-[var(--icon-dense)] text-fg-subtle" aria-hidden />}
           label="Projects"
           value={formatQuotaLimit(quotas.max_projects)}
         />
         <QuotaRow
-          icon={<GitBranch className="h-4 w-4 text-gray-400 dark:text-gray-500" />}
+          icon={<GitBranch className="size-[var(--icon-dense)] text-fg-subtle" aria-hidden />}
           label="Published versions per project"
           value={formatQuotaLimit(quotas.max_versions)}
         />
         <QuotaRow
-          icon={<Sparkles className="h-4 w-4 text-gray-400 dark:text-gray-500" />}
+          icon={<Sparkles className="size-[var(--icon-dense)] text-fg-subtle" aria-hidden />}
           label="AI assistant requests"
           value={formatQuotaLimit(quotas.max_ai_requests, 'Not included')}
         />
@@ -153,38 +164,24 @@ function PlanLimits({ quotas }: { quotas: TenantLicenseQuotas }) {
 /** One row in the effective feature list. */
 function FeatureRow({ feature }: { feature: TenantLicenseFeature }) {
   return (
-    <li className="flex items-start justify-between gap-4 px-4 py-3">
+    <li className="tnt-feature-row">
       <div className="min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">
-            {feature.label || feature.name}
-          </span>
-          <span className="text-xs font-mono text-gray-400 dark:text-gray-500">{feature.name}</span>
-          {feature.is_preview && (
-            <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
-              Preview
-            </span>
-          )}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-fg">{feature.label || feature.name}</span>
+          <span className="font-mono text-xs text-fg-muted">{feature.name}</span>
+          {feature.is_preview && <Badge variant="accent">Preview</Badge>}
         </div>
         {feature.description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{feature.description}</p>
+          <p className="mt-0.5 text-xs text-fg-muted">{feature.description}</p>
         )}
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <span className="text-xs text-gray-400 dark:text-gray-500">
+      <div className="flex shrink-0 items-center gap-2">
+        <span className="text-xs text-fg-muted">
           {FEATURE_SOURCE_LABELS[feature.source] ?? feature.source}
         </span>
-        {feature.enabled ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Enabled
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
-            <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-            Disabled
-          </span>
-        )}
+        <Badge status={feature.enabled ? 'active' : 'disabled'}>
+          {feature.enabled ? 'Enabled' : 'Disabled'}
+        </Badge>
       </div>
     </li>
   );
@@ -194,7 +191,6 @@ export default function TenantLicensePanel({
   isCurrentTenant,
   tenantName,
 }: TenantLicensePanelProps) {
-  const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [license, setLicense] = useState<TenantLicenseResponse | null>(null);
@@ -217,10 +213,11 @@ export default function TenantLicensePanel({
     }
   }, []);
 
+  // Mounting is the request: the section is only created when its tab is first opened.
   useEffect(() => {
-    if (!isCurrentTenant || !expanded || loadedOnce) return;
+    if (!isCurrentTenant || loadedOnce) return;
     void load();
-  }, [isCurrentTenant, expanded, loadedOnce, load]);
+  }, [isCurrentTenant, loadedOnce, load]);
 
   const handleUpgradeClick = () => {
     toast.info(UPGRADE_STUB_COPY);
@@ -231,99 +228,83 @@ export default function TenantLicensePanel({
   const seatsAtCapacity = Boolean(seats && seatsExhausted(seats));
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="text-base font-semibold flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-          aria-expanded={expanded}
-        >
-          <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30">
-            <CreditCard className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-          </div>
-          License &amp; Plan
-          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
+    <section aria-labelledby="tnt-license-heading" className="space-y-4">
+      <div className="min-w-0">
+        <h3 id="tnt-license-heading" className="tnt-section-title">
+          License &amp; plan
+        </h3>
+        <p className="tnt-section-desc">
+          What this tenant is licensed for. Data is shown for the current tenant only.
+        </p>
       </div>
 
-      {expanded && (
-        <div className="space-y-4">
-          {!isCurrentTenant ? (
-            <div className="flex items-start gap-3 rounded-lg border border-slate-300 bg-slate-100 p-4 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-              <Lock className="mt-0.5 h-5 w-5 flex-shrink-0" aria-hidden />
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Select{tenantName ? ` ${tenantName}` : ' this tenant'} as your current tenant to
-                view its license details.
-              </p>
-            </div>
-          ) : (
+      {!isCurrentTenant ? (
+        <p className="tnt-lock-note">
+          Select{tenantName ? ` ${tenantName}` : ' this tenant'} as your current tenant to view
+          its license details.
+        </p>
+      ) : (
+        <>
+          {error && <Alert variant="error">{error}</Alert>}
+
+          {loading && !license ? (
+            <LoadingState message="Loading license details…" minHeightClassName="min-h-[8rem]" />
+          ) : license ? (
             <>
-              {error && <Alert variant="error">{error}</Alert>}
-
-              {loading && !license ? (
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 py-4">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading license details…
-                </div>
-              ) : license ? (
-                <>
-                  {/* Plan card */}
-                  <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-                    <div className="flex items-center justify-between gap-4 flex-wrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                          <BadgeCheck className="h-5 w-5 text-white" />
+              {/* Plan card */}
+              <div className="tnt-card tnt-card--pad">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="tnt-icon-tile" data-tone="honey">
+                      <BadgeCheck aria-hidden />
+                    </span>
+                    <div>
+                      <p className="tnt-caps">Current plan</p>
+                      {license.plan ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-semibold text-fg">
+                            {license.plan.name}
+                          </span>
+                          <Badge
+                            variant={PLAN_TYPE_BADGE_TONE[license.plan.type] ?? 'neutral'}
+                            className="capitalize"
+                          >
+                            {license.plan.type}
+                          </Badge>
                         </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                            Current plan
-                          </p>
-                          {license.plan ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg font-bold text-gray-900 dark:text-white">
-                                {license.plan.name}
-                              </span>
-                              <span
-                                className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full capitalize ${
-                                  PLAN_TYPE_BADGE_CLASSES[license.plan.type] ??
-                                  PLAN_TYPE_BADGE_CLASSES.free
-                                }`}
-                              >
-                                {license.plan.type}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              No plan attached — Free-tier limits apply
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <Button variant="outline" size="sm" onClick={handleUpgradeClick}>
-                          <ArrowUpCircle className="h-4 w-4" />
-                          Upgrade plan
-                        </Button>
-                        <p className="text-xs text-gray-400 dark:text-gray-500">Coming soon</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Seat usage meter */}
-                  <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                        Member seats
-                      </p>
-                      {meter && seats && (
-                        <p className={`text-sm font-semibold ${meter.countClass}`}>
-                          {seats.used} of {seats.max} used
-                        </p>
+                      ) : (
+                        <span className="text-sm text-fg-muted">
+                          No plan attached — Free-tier limits apply
+                        </span>
                       )}
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleUpgradeClick}>
+                      <ArrowUpCircle aria-hidden />
+                      Upgrade plan
+                    </Button>
+                    <Badge variant="honey">Coming soon</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid items-start gap-4 sm:grid-cols-2">
+                {/* Seat usage meter */}
+                <div className="tnt-card tnt-card--pad">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="flex items-center gap-2 text-sm font-semibold text-fg">
+                      <Users className="size-[var(--icon-dense)] text-fg-subtle" aria-hidden />
+                      Member seats
+                    </p>
                     {meter && seats && (
+                      <p className={`text-xs font-semibold tabular-nums ${meter.countClass}`}>
+                        {seats.used} of {seats.max} used
+                      </p>
+                    )}
+                  </div>
+                  {meter && seats && (
+                    <div className="mt-2">
                       <Meter
                         label="Member seats used"
                         value={seats.used}
@@ -331,47 +312,51 @@ export default function TenantLicensePanel({
                         valueText={`${seats.used} of ${seats.max} seats used`}
                         showValue={false}
                       />
-                    )}
-                    {seatsAtCapacity && (
-                      <div className="mt-3">
-                        <Alert variant="warning">
-                          {describeLicenseError({ code: LICENSE_SEATS_EXHAUSTED_CODE })}
-                        </Alert>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Stored plan quota limits (#64) */}
-                  {license.quotas && <PlanLimits quotas={license.quotas} />}
-
-                  {/* Effective feature list */}
-                  <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Features
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        What your plan includes, with any per-tenant overrides applied.
-                      </p>
                     </div>
-                    {license.features.length === 0 ? (
-                      <p className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
-                        No features are configured for this tenant.
-                      </p>
-                    ) : (
-                      <ul className="divide-y divide-gray-100 dark:divide-gray-700">
-                        {license.features.map((feature) => (
-                          <FeatureRow key={feature.name} feature={feature} />
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </>
-              ) : null}
+                  )}
+                  <p className="mt-2 text-xs text-fg-muted">
+                    Warning tint from 80 % · at 100 % inviting is blocked.
+                  </p>
+                  {seatsAtCapacity && (
+                    <div className="mt-3">
+                      <Alert variant="warning">
+                        {describeLicenseError({ code: LICENSE_SEATS_EXHAUSTED_CODE })}
+                      </Alert>
+                    </div>
+                  )}
+                </div>
+
+                {/* Stored plan quota limits (#64) */}
+                {license.quotas && <PlanLimits quotas={license.quotas} />}
+              </div>
+
+              {/* Effective feature list */}
+              <div className="tnt-card">
+                <div className="tnt-card__header">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-fg">
+                    <Sparkles className="size-[var(--icon-dense)] text-fg-subtle" aria-hidden />
+                    Features
+                  </p>
+                  <p className="mt-0.5 text-xs text-fg-muted">
+                    What your plan includes, with any per-tenant overrides applied.
+                  </p>
+                </div>
+                {license.features.length === 0 ? (
+                  <p className="px-4 py-6 text-center text-sm text-fg-muted">
+                    No features are configured for this tenant.
+                  </p>
+                ) : (
+                  <ul className="tnt-card__body">
+                    {license.features.map((feature) => (
+                      <FeatureRow key={feature.name} feature={feature} />
+                    ))}
+                  </ul>
+                )}
+              </div>
             </>
-          )}
-        </div>
+          ) : null}
+        </>
       )}
-    </div>
+    </section>
   );
 }
