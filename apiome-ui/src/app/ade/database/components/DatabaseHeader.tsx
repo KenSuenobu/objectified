@@ -146,7 +146,13 @@ export default function DatabaseHeader() {
   return (
     <div
       className="bg-gradient-to-r from-white via-slate-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 border-b border-gray-200/80 dark:border-gray-700/80 px-2 py-1.5 shadow-sm"
-      style={{ position: 'fixed', top: 48, left: 0, right: 0, zIndex: 1000 }}
+      /*
+       * In flow, not fixed. The `top: 48` this used to carry cleared the pre-Hive
+       * `TopHeader`, retired in HIVE-3.8 (#5294); the toolbar is now the first row of its
+       * layout's flex column. `position: relative` is kept only to hold the stacking
+       * context its own control popovers are numbered against.
+       */
+      style={{ position: 'relative', zIndex: 1000, flexShrink: 0 }}
     >
       <div className="flex flex-wrap items-center gap-4 w-full">
         <div className="flex items-center gap-2" style={{ position: 'relative', zIndex: 1001 }}>

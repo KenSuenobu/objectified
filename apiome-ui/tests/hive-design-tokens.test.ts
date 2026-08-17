@@ -180,7 +180,7 @@ describe('layering contract', () => {
         // rather than a colour, and the case below proves every stop inside one is a
         // token reference. `--hex-clip` (HIVE-2.5) is a silhouette — six points, no
         // colour — shared so the avatar hexagon and the empty-state art cannot drift.
-        !/^--(app-|font-|fs-|lh-|track-|space-|control-|row-h|page-pad|card-pad|nav-item-h|sidenav-w|table-|r-full|gradient-|hex-clip)/.test(name) &&
+        !/^--(app-|font-|fs-|lh-|track-|space-|control-|row-h|page-pad|card-pad|nav-item-h|table-|r-full|gradient-|hex-clip)/.test(name) &&
         !value.startsWith('var('),
     );
     expect(literals).toEqual([]);

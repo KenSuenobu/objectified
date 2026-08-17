@@ -107,14 +107,7 @@ export {
   toggleCollapsedNavGroup,
   writeCollapsedNavGroups,
 } from './navGroupCollapse';
-export {
-  ADMIN_CONSOLE_ROUTE,
-  APP_SHELL_ROUTE_PREFIXES,
-  HELP_ROUTE,
-  LAUNCHER_ROUTE,
-  isAppShellRoute,
-  suppressesTopHeader,
-} from './appShellRoutes';
+export { ADMIN_CONSOLE_ROUTE, HELP_ROUTE, LAUNCHER_ROUTE } from './appShellRoutes';
 export {
   WHATS_NEW_SEEN_STORAGE_KEY,
   hasUnreadWhatsNew,

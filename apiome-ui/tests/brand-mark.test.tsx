@@ -316,7 +316,7 @@ describe('the mark has exactly one owner', () => {
 
   it('puts the mark on the surfaces the ticket names', () => {
     for (const surface of [
-      join('src', 'app', 'components', 'ade', 'TopHeader.tsx'),
+      join('src', 'app', 'components', 'shell', 'AppShell.tsx'),
       join('src', 'app', 'components', 'ade', 'AdeHome.tsx'),
       join('src', 'app', 'login', 'LoginClient.tsx'),
       join('src', 'app', 'login', '2fa', 'TwoFactorClient.tsx'),

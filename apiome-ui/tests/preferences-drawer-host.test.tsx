@@ -4,8 +4,8 @@
  * `tests/preferences-drawer.test.tsx` drives the pane itself. This suite covers the two
  * pieces that make it reachable from anywhere without a provider every shell has to
  * remember to mount: the host registry, and the shortcut matcher — plus
- * `PreferencesBoundary`, which is what lets the pane be hosted by `TopHeader` in a tree
- * that has no `PreferencesProvider` of its own (the commercial Studio's).
+ * `PreferencesBoundary`, which is what lets the pane be hosted from outside this app, in a
+ * tree that has no `PreferencesProvider` of its own (the commercial Studio's top bar).
  */
 
 import React from 'react';

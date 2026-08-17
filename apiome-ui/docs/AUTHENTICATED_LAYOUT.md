@@ -1,5 +1,10 @@
 # AuthenticatedLayout Component
 
+> **Note (HIVE-3.8, #5294).** The examples below used to render `TopHeader` inside the
+> layout. That chrome is retired: `/ade/**` routes draw the Hive `AppShell` rail, and the
+> `/ade` launcher draws its own. `AuthenticatedLayout` itself is unchanged — it wraps
+> whatever chrome the route owns.
+
 A reusable wrapper component that automatically handles user authentication and session management for protected pages.
 
 ## Features
@@ -19,17 +24,13 @@ Wrap your protected content with both `SessionWrapper` (for NextAuth session pro
 ```tsx
 import SessionWrapper from "@/app/components/auth/SessionWrapper";
 import AuthenticatedLayout from "@/app/components/auth/AuthenticatedLayout";
-import TopHeader from '@/app/components/ade/TopHeader';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
         <SessionWrapper>
-          <AuthenticatedLayout>
-            <TopHeader />
-            {children}
-          </AuthenticatedLayout>
+          <AuthenticatedLayout>{children}</AuthenticatedLayout>
         </SessionWrapper>
       </body>
     </html>
@@ -75,16 +76,16 @@ export default function ProtectedPage() {
 
 - **No Duplication**: Write session checking logic once, reuse everywhere
 - **Consistent UX**: All protected pages have the same authentication flow
-- **Cleaner Components**: Child components (like TopHeader) don't need authentication logic
+- **Cleaner Components**: Child components don't need authentication logic
 - **Type Safe**: Full TypeScript support
 - **Performance**: Only checks authentication once per page load
 
-## Example: TopHeader Component
+## Example: a child component
 
-With `AuthenticatedLayout`, the `TopHeader` component is simplified:
+With `AuthenticatedLayout`, a child that needs the session is simplified:
 
 ```tsx
-const TopHeader = () => {
+const ProfileBadge = () => {
   const { data: session } = useSession(); // Session is guaranteed to exist
   
   // No need for:
@@ -107,7 +108,7 @@ const TopHeader = () => {
 ```
 SessionWrapper (NextAuth Provider)
   └── AuthenticatedLayout (Auth Guard)
-        ├── TopHeader (Uses session)
+        ├── AppShell rail (uses session)
         └── Page Content (Uses session)
 ```
 

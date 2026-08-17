@@ -6,7 +6,8 @@
  *
  * Tailwind v4 auto-detects content from the *building* project's tree. When a
  * sibling app imports this stylesheet (e.g. the private-suite Studio/designer
- * app, which renders apiome-ui's TopHeader/SuiteNavMenu via the `@` alias),
+ * app, which renders apiome-ui's dialogs, overlay hosts and `BrandMark` via the
+ * `@` alias),
  * auto-detection is rooted at that app and never sees apiome-ui, so classes
  * used only by apiome-ui components (e.g. the Designer dropdown's
  * `w-[min(92vw,36rem)]` / `max-h-[min(70vh,26rem)]`) are never emitted and the
@@ -440,12 +441,6 @@
      reads as a rule rather than as a row. */
   --table-cell-pad-y: calc((var(--row-h) - var(--fs-sm) * var(--lh-normal)) / 2);
   --table-head-pad-y: calc(var(--table-cell-pad-y) * 0.6);
-  /* Width of the pre-rail dashboard sidebar (`DashboardSideNav`). It carried a
-     literal 280 px in both a Tailwind class and an inline style, which is the
-     single widest piece of frozen chrome in the app: at the Largest scale its
-     labels grew into the edge while the column did not. Retired together with
-     the component itself when HIVE-3.1 lands the `--rail-w` rail. */
-  --sidenav-w: 17.5rem;      /* 280px */
 
   /* ======================================================================
      Legacy aliases — kept for one release so nothing breaks mid-migration.
@@ -1546,10 +1541,6 @@ html[data-rail="collapsed"] {
 
 @utility min-h-nav-item {
   min-height: var(--nav-item-h);
-}
-
-@utility w-sidenav {
-  width: var(--sidenav-w);
 }
 
 @utility p-page {

@@ -15,10 +15,9 @@ export const metadata: Metadata = {
  *
  * The gradient canvas and the fixed 280 px `DashboardSideNav` this layout used to draw are
  * gone with the shell's arrival; `AppShell` paints the page column from `--bg-canvas`, so
- * the surface follows the theme instead of naming two greys per appearance. `TopHeader` no
- * longer renders on these routes either — `ConditionalHeader` asks
- * `components/shell/appShellRoutes`, which is the one place that knows where the shell is
- * in force.
+ * the surface follows the theme instead of naming two greys per appearance. The 48px
+ * `TopHeader` that used to sit above them both went with HIVE-3.8 (#5294), which retired the
+ * pre-Hive chrome outright — there is no longer a second navigation system to arbitrate.
  */
 export default function RootLayout({
   children,

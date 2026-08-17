@@ -151,7 +151,7 @@ test.describe('Versions screen import (mocked APIs)', () => {
     await expect(importButton).toBeEnabled();
 
     // Placement: project selector → Import → Compare, in document order within the page header.
-    // Filtered by the button itself so this is the Versions header, not the app-shell TopHeader.
+    // Filtered by the button itself so this is the Versions page header, not another on the page.
     const versionsHeader = page.locator('header').filter({ has: importButton });
     const order = await versionsHeader.evaluate((header) => {
       const nodes = Array.from(header.querySelectorAll('[role="combobox"], button'));

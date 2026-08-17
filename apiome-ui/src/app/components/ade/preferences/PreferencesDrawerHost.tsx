@@ -20,7 +20,8 @@ import { registerPreferencesDrawerHost, type PreferencesTabId } from './preferen
  * of the DOM anyway; skipping the subtree as well means a route nobody opens preferences
  * from pays nothing for it — including, in the commercial Studio, a `PreferencesProvider`
  * that shell never asked for. `PreferencesBoundary` supplies that provider when the host
- * tree lacks one, which is what lets `TopHeader` mount this host wherever it renders.
+ * tree lacks one, which is what lets a host outside this app — the commercial Studio's own
+ * top bar — mount this wherever it renders.
  *
  * Focus is returned to the trigger explicitly rather than relying on the dialog's own
  * restoration, because the subtree unmounts in the same commit that closes it — and it is
