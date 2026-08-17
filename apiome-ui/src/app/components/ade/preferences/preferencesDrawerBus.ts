@@ -2,16 +2,16 @@
  * The channel every surface uses to ask for the preferences pane (HIVE-1.4, #5277).
  *
  * The pane is reachable from several places — the rail footer, the rail user menu, the
- * legacy header's profile menu and `⌘,` — which sit in different component trees. Rather
- * than lift the drawer above all of them (a provider each shell would have to remember to
- * mount, including the commercial Studio, which renders `TopHeader` under a layout of its
- * own), a {@link PreferencesDrawerHost} registers itself here and any component anywhere
- * calls {@link openPreferences}.
+ * command palette and `⌘,` — which sit in different component trees. Rather than lift the
+ * drawer above all of them (a provider each shell would have to remember to mount, including
+ * the commercial Studio, which draws its own top bar under a layout of its own), a
+ * {@link PreferencesDrawerHost} registers itself here and any component anywhere calls
+ * {@link openPreferences}.
  *
  * Registration is a stack, and only the most recently mounted host answers. Two hosts are
- * not expected — `ConditionalHeader` renders `TopHeader` on every route except `/ade`,
- * which is exactly where `AdeHome` mounts its own — but if it ever happens, one drawer
- * opens rather than two stacked on top of each other.
+ * not expected — `AppShell` mounts one on every `/ade` route that has a rail, which is all
+ * of them except `/ade`, and that is exactly where `AdeHome` mounts its own — but if it ever
+ * happens, one drawer opens rather than two stacked on top of each other.
  *
  * With no host mounted, {@link openPreferences} is a no-op and reports `false`, so a
  * caller can hide its entry point rather than offer a button that does nothing.

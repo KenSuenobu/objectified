@@ -82,6 +82,23 @@ test.describe('Application Navigation', () => {
       await page.waitForURL(/login/, { timeout: 10000 });
       expect(page.url()).toContain('login');
     });
+
+    // Tools joined the application shell in HIVE-3.8 (#5294). They were reachable before it
+    // too, so this is not new behaviour — it is the check that moving them under `AppShell`
+    // did not change the gate, which is the one thing a chrome swap could plausibly break.
+    test('data browser should redirect to login when not authenticated', async ({ page }) => {
+      await page.goto('/ade/database');
+
+      await page.waitForURL(/login/, { timeout: 10000 });
+      expect(page.url()).toContain('login');
+    });
+
+    test('migration tool should redirect to login when not authenticated', async ({ page }) => {
+      await page.goto('/ade/migration');
+
+      await page.waitForURL(/login/, { timeout: 10000 });
+      expect(page.url()).toContain('login');
+    });
   });
 
   test.describe('Error Handling', () => {

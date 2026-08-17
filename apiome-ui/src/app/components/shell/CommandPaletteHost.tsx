@@ -32,13 +32,13 @@ import { useCommandPaletteRecents } from './commandPaletteRecents';
  *
  * ### Where it is mounted, and why exactly once
  *
- * The same three places `PreferencesDrawerHost` is mounted, which between them cover every
- * `/ade` route with exactly one host on each: `AppShell` (the dashboard), `AdeHome` (the
- * launcher, which draws no header) and `TopHeader` (everything else — Tools and the
- * commercial studio surface). The three are mutually exclusive by construction —
- * `ConditionalHeader` suppresses the header on the launcher and on every shell route — so
- * the acceptance criterion *`⌘K` opens from any `/ade` route* holds without two palettes
- * ever binding the chord at once.
+ * The same two places `PreferencesDrawerHost` is mounted, which between them cover every
+ * `/ade` route with exactly one host on each: `AppShell` (every route with a rail, Tools
+ * included since HIVE-3.8) and `AdeHome` (the launcher, the one route without one). The two
+ * are mutually exclusive by construction — the launcher is not a shell route — so the
+ * acceptance criterion *`⌘K` opens from any `/ade` route* holds without two palettes ever
+ * binding the chord at once. A third mount used to live in `TopHeader`, for the routes the
+ * rail had not reached yet; #5294 retired the header once it had reached all of them.
  *
  * Mounting it in `AppShell` rather than in the `/ade` layout is also what gives the
  * dashboard's palette the *whole* navigation model: the shell has already resolved the
@@ -51,10 +51,10 @@ import { useCommandPaletteRecents } from './commandPaletteRecents';
  * ### What it knows
  *
  * One field: the active workspace. It is passed in rather than read from the session,
- * because every chrome that mounts this already holds it — `AdeAppShell` from its session,
- * `TopHeader` from its own session bridge — and a second `useAuthSession()` here would both
- * duplicate that read and make the palette unmountable by a surface that injects its
- * session rather than providing one.
+ * because every chrome that mounts this already holds it — `AdeAppShell` reads it from the
+ * session — and a second `useAuthSession()` here would both duplicate that read and make the
+ * palette unmountable by a surface that injects its session rather than providing one, which
+ * is what the commercial Studio's shell does.
  *
  * Everything else follows from it: destinations come from the HIVE-3.2 navigation model
  * resolved for that workspace, exactly as the rail resolves them (commercial destinations

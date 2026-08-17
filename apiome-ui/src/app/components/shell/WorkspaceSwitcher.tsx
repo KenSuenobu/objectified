@@ -74,7 +74,7 @@ export interface WorkspaceSwitcherProps {
   iconRail: boolean;
   /**
    * Injectable membership loader. Defaults to the `loadTenantMembershipContext` server
-   * action — the same one `TopHeader` calls, so nothing new is fetched by moving the
+   * action — the same one the pre-Hive header called, so nothing new was fetched by moving the
    * switcher here. Exists so a test (or a host with a prefetched context) can supply rows
    * without a server session.
    */

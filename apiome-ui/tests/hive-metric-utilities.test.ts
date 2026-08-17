@@ -53,7 +53,6 @@ const METRIC_TOKENS = [
   '--page-pad',
   '--card-pad',
   '--nav-item-h',
-  '--sidenav-w',
 ];
 
 /** Utility name → the single token its declaration is expected to spend. */
@@ -66,7 +65,6 @@ const UTILITY_TOKEN: Readonly<Record<string, string>> = {
   'min-h-control': '--control-h',
   'min-h-nav-item': '--nav-item-h',
   'size-control': '--control-h',
-  'w-sidenav': '--sidenav-w',
   'p-page': '--page-pad',
   'p-card': '--card-pad',
 };

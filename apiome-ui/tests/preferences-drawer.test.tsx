@@ -70,8 +70,8 @@ const html = () => document.documentElement;
 /**
  * Render the host with only a `ThemeProvider` above it.
  *
- * Deliberately without a `PreferencesProvider`: that is the tree the commercial Studio
- * gives `TopHeader`, and the pane is supposed to bring its own (`PreferencesBoundary`).
+ * Deliberately without a `PreferencesProvider`: that is the tree the commercial Studio gives
+ * its own top bar, and the pane is supposed to bring its own (`PreferencesBoundary`).
  *
  * @returns The Testing Library result, plus the button that stands in for a trigger.
  */

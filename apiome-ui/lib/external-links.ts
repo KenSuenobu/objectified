@@ -23,7 +23,7 @@ import {
 /** One commercial application surfaced in nav and/or the ADE home grid. */
 export type ExternalLinkEntry = {
   id: string;
-  /** Label in the top platform bar (TopHeader). */
+  /** Label in a cross-product nav menu — today the commercial Studio's top bar. */
   navLabel: string;
   /** Primary title on the home application card. */
   name: string;

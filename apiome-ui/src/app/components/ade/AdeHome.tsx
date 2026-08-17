@@ -467,8 +467,8 @@ export default function AdeHome({
         </div>
       </footer>
 
-      {/* Preferences pane (HIVE-1.4, #5277). `/ade` renders no TopHeader — see
-          `ConditionalHeader` — so the launcher hosts the pane itself. */}
+      {/* Preferences pane (HIVE-1.4, #5277). The launcher is the one `/ade` route with no
+          rail, so it is the one route `AppShell` does not host the pane for. */}
       <PreferencesDrawerHost />
       {/* And the command palette (HIVE-3.6, #5292), for the same reason: `⌘K` has to work
           on the launcher too, and this is the only chrome the route draws. */}

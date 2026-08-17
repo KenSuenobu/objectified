@@ -269,10 +269,10 @@ export function useHasPreferences(): boolean {
  * Guarantee a {@link PreferencesProvider} above `children`, mounting one only if the tree
  * does not already have it.
  *
- * The preferences pane (HIVE-1.4) is rendered by `TopHeader`, which this app mounts under
- * its root layout — where the provider always is — *and* which the commercial Studio
- * mounts under a layout of its own, where it may not be. Rather than make every host
- * remember, the pane brings the provider with it.
+ * The preferences pane (HIVE-1.4) is mounted by this app under its root layout — where the
+ * provider always is — *and* by the commercial Studio's own top bar, under a layout of its
+ * own, where it may not be. Rather than make every host remember, the pane brings the
+ * provider with it.
  *
  * Nesting is harmless when it happens: `localStorage` is the source of truth, the snapshot
  * cache and the change event are module-level, and both instances write the same four

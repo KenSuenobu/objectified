@@ -32,11 +32,11 @@ import { registerShortcutSheetHost } from './shortcutSheetBus';
  *
  * ### Where it is mounted, and why exactly once
  *
- * The three places `PreferencesDrawerHost` and `CommandPaletteHost` are mounted, which
- * between them cover every `/ade` route with exactly one host on each: `AppShell` (the
- * dashboard), `AdeHome` (the launcher) and `TopHeader` (Tools and the commercial studio
- * surface). `ConditionalHeader` makes the three mutually exclusive, which is what makes
- * *"`?` opens the sheet from anywhere"* true without two sheets ever binding the key.
+ * The two places `PreferencesDrawerHost` and `CommandPaletteHost` are mounted, which between
+ * them cover every `/ade` route with exactly one host on each: `AppShell` (every route with a
+ * rail, Tools included since HIVE-3.8) and `AdeHome` (the launcher, the one route without
+ * one). Being a shell route and being the launcher are mutually exclusive, which is what
+ * makes *"`?` opens the sheet from anywhere"* true without two sheets ever binding the key.
  *
  * Unlike the palette, this host has no *off* switch. The admin console's rail is specified
  * with no `⌘K` (`docs/mockups/foundations/shell.html`), because it has no workspace scope to

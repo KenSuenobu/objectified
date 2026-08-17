@@ -84,19 +84,10 @@ describe('no frozen type survives in the swept tree', () => {
     expect(offenders(LITERAL_FONT_SIZE)).toEqual([]);
   });
 
-  it('leaves no inline width shadowing the sidebar width token', () => {
-    // The literal `width: 280` that used to sit on `DashboardSideNav` beside its class was
-    // the widest frozen dimension in the app, and the one the ticket named. Comments are
-    // stripped first: the note explaining the removal names the old value.
-    const sideNav = readFileSync(
-      join(APP_ROOT, 'src/app/components/ade/dashboard/DashboardSideNav.tsx'),
-      'utf8',
-    );
-    const code = sideNav.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
-
-    expect(sideNav).toContain('w-sidenav');
-    expect(code).not.toMatch(/width:\s*280/);
-  });
+  // The companion case here read `DashboardSideNav.tsx` and pinned its `w-sidenav` class
+  // against the literal `width: 280` that used to sit beside it. HIVE-3.8 (#5294) deleted
+  // that component, and `--sidenav-w`/`w-sidenav` with it; `tests/ade-chrome-retired.test.ts`
+  // is what now answers for the token being gone rather than merely unused.
 });
 
 describe('each exemption has exactly one module that owns its numbers', () => {
