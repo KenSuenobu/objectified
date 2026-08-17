@@ -49,7 +49,9 @@ const AUTH_PRELUDES = [
   '.auth-brand__inner',
   '.auth-eyebrow',
   '.auth-display',
-  '.auth-display__accent',
+  // One rule, two preludes: the launcher (HIVE-4.5, #5299) sets the same headline the
+  // same way, and sharing the declaration is what keeps the two from drifting.
+  '.auth-display__accent, .launch-display__accent',
   '.auth-lede',
   '.auth-chips',
   '.auth-form',
@@ -262,7 +264,9 @@ describe('auth surfaces — quiet text still has to be readable', () => {
     // The gradient is painted through the text, but the *declared* colour is solid accent
     // ink and only goes transparent inside an `@supports` guard — so the second line of
     // the headline is never invisible.
-    expect(declarationsOf('.auth-display__accent').get('color')).toBe('var(--accent-fg)');
+    expect(
+      declarationsOf('.auth-display__accent, .launch-display__accent').get('color')
+    ).toBe('var(--accent-fg)');
     expect(ratio('--accent-fg', '--bg-canvas')).toBeGreaterThanOrEqual(3);
   });
 });

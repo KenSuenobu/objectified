@@ -34,8 +34,20 @@ export type ExternalLinkEntry = {
   /** Optional deep link base for post-import "open in editor" flows. */
   editorHref?: string;
   icon: string;
+  /**
+   * @deprecated Pre-Hive Tailwind gradient pair for the home card. The launcher draws a
+   * tone-tinted hexagon since HIVE-4.5 (#5299) and never reads this; it is kept because a
+   * commercial host still supplies it through the suite contract.
+   */
   accent: string;
+  /** @deprecated Pre-Hive hover-shadow class. See {@link ExternalLinkEntry.accent}. */
   glow: string;
+  /**
+   * Identity hue for the home card, named from the shared status vocabulary
+   * (`ui/statusVocabulary`). Optional: a host that declares none gets the commercial
+   * fallback, and an unrecognised value is ignored rather than trusted.
+   */
+  tone?: string;
   enabled?: boolean;
   external?: boolean;
   opensNewBrowser?: boolean;
@@ -125,8 +137,12 @@ export type ExternalHomeCard = {
   opensNewBrowser?: boolean;
   /** Lucide icon name — resolved to a component on the client. */
   icon: string;
+  /** @deprecated See {@link ExternalLinkEntry.accent} — the launcher draws a tone instead. */
   accent: string;
+  /** @deprecated See {@link ExternalLinkEntry.accent}. */
   glow: string;
+  /** Identity hue, from the shared status vocabulary. See {@link ExternalLinkEntry.tone}. */
+  tone?: string;
   featureFlag?: string;
   anyFeatureFlags?: string[];
 };
@@ -195,6 +211,7 @@ function loadLinks(): ExternalLinkEntry[] {
     icon: card.icon,
     accent: card.accent,
     glow: card.glow,
+    tone: card.tone,
     enabled: card.enabled,
     external: card.external,
     opensNewBrowser: card.opensNewBrowser,
@@ -263,6 +280,7 @@ export function getExternalHomeCards(): ExternalHomeCard[] {
       icon: link.icon,
       accent: link.accent,
       glow: link.glow,
+      tone: link.tone,
       featureFlag: link.featureFlag,
       anyFeatureFlags: link.anyFeatureFlags,
     }));
