@@ -2695,12 +2695,38 @@ p {
 /* The single-column shape: no brand panel, the card centred on the canvas.
    `auth-center` is what the 2FA and OAuth sign-up mockups draw. */
 .auth-center {
+  position: relative;
   display: flex;
   min-height: 100vh;
+  /* The wash below is 32.5 rem across and hangs off the top of the page; clipping
+     it here is what keeps it from adding a scrollbar of its own. */
+  overflow: clip;
 }
 
+/* The card column: it takes the whole width, and sits over the wash below,
+   which is painted on their shared parent. */
 .auth-center > .auth-form {
+  position: relative;
+  z-index: 1;
   flex: 1;
+}
+
+/* The honey wash the centred mockups hang above the card (`.auth-center::before`).
+   `.glow-honey` is the panel version of the same ornament and sits top-*right*; this
+   one is centred over a single column, so it is stated rather than reused. Honey,
+   because DESIGN.md §2 reserves it for exactly this — brand presence, no meaning. */
+.auth-center::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: 32.5rem;
+  height: 32.5rem;
+  left: 50%;
+  top: -13.75rem;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--honey) 22%, transparent), transparent);
+  pointer-events: none;
 }
 
 .auth-brand {
@@ -2992,6 +3018,121 @@ button.auth-divider:disabled {
 
 .auth-link:hover {
   text-decoration-thickness: 2px;
+}
+
+/* ---- The mark above a centred card -------------------------------------
+   The centred shape has no brand panel, so the lock-up is the only thing naming
+   the product; the beta chip rides beside it, which is where HIVE-4.1 moved it
+   from the tiled watermark. `.auth-brand__lockup` sets the word — one spelling
+   of "the auth pages set the name at display size", shared with the panel. */
+.auth-brandbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+/* ---- The card's subject glyph (hive.css §12 `.icon-tile--lg --accent --hex`)
+   A hexagon rather than a rounded square: the same six points as the rail brand
+   and the empty-state art, read from the shared `--hex-clip` token so a change
+   to the silhouette reaches all three. `rem`, so it keeps its proportion to the
+   heading under it at every font scale. */
+.auth-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+  clip-path: var(--hex-clip);
+}
+
+.auth-icon > svg {
+  width: 45%;
+  height: 45%;
+}
+
+/* ---- The method switcher (hive.css §13 `.segmented`) --------------------
+   A segmented well with a raised thumb, carrying `role="tablist"` semantics:
+   the two second factors are two *panes*, and the mockup asks for the segmented
+   shape because an underline strip inside a 27 rem card reads as a page's
+   primary sections rather than as one field's choice. `ui/Segmented` is the
+   same look with radiogroup semantics, which is the wrong promise here — it
+   says "the same content, drawn differently".
+
+   The 3 px inset is the primitive's own (`p-0.75`), and the thumb's radius is
+   the well's less that inset, which is what keeps the two concentric however
+   the radius scale is themed. */
+.auth-methods {
+  display: flex;
+  width: 100%;
+  gap: var(--space-1);
+  padding: 3px;
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+}
+
+.auth-methods__tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: calc(var(--control-h) - 0.5rem);
+  padding: var(--space-1) var(--space-3);
+  border-radius: calc(var(--r-md) - 3px);
+  background: transparent;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.auth-methods__tab:hover {
+  color: var(--fg);
+}
+
+/* The thumb — the surface lifted out of the well (DESIGN.md §3.3). */
+.auth-methods__tab[data-state="active"] {
+  background: var(--bg-surface);
+  color: var(--fg);
+  box-shadow: var(--shadow-raised);
+}
+
+.auth-methods__tab > svg {
+  width: var(--icon-button);
+  height: var(--icon-button);
+  flex: none;
+}
+
+/* ---- The 6-digit code box (mockup `.code-input`) ------------------------
+   Six digits set wide apart in the mono face, so the reader can check what they
+   typed against what their authenticator shows without counting. The rules are
+   on the field wrapper rather than the control, because `AuthField` owns the
+   control and passes only its own class down — and the descendant selector is
+   what lets `padding-left` beat `.input-wrap > :is(input, textarea)`.
+
+   `height: auto` with a `min-height`, exactly as `.auth-sso` does it: the type
+   inside is `--fs-2xl`, so a frozen box would clip it at the largest font
+   scale. The leading glyph stays where `.input-wrap` puts it; the digits are
+   centred across the whole box, which is what the mockup draws. */
+.auth-code .input-wrap > input {
+  height: auto;
+  min-height: calc(var(--control-h-lg) * 1.35);
+  padding-block: var(--space-2);
+  padding-left: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xl);
+  letter-spacing: 0.42em;
+  text-align: center;
+}
+
+.auth-code .input-wrap > input::placeholder {
+  letter-spacing: 0.42em;
 }
 
 /* ---- Narrow: the brand panel folds into the card -----------------------

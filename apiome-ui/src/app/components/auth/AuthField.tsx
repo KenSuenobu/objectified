@@ -30,6 +30,12 @@ export interface AuthFieldProps extends Omit<React.InputHTMLAttributes<HTMLInput
   icon: React.ReactNode;
   /** Optional trailing content on the label row (the "Forgot your password?" link). */
   aside?: React.ReactNode;
+  /**
+   * A standing note under the control — what the field will accept, not what went wrong
+   * with it (`hive.css` §9 `.hint`). Stays put while an `error` is showing, because the two
+   * say different things: the hint is the rule, the error is this attempt.
+   */
+  hint?: React.ReactNode;
   /** What went wrong with this field. Reddens the control and prints under it. */
   error?: string;
   /**
@@ -44,13 +50,17 @@ export interface AuthFieldProps extends Omit<React.InputHTMLAttributes<HTMLInput
 /**
  * A labelled auth text field.
  *
- * @param props Label, glyph, optional trailing label content, error/invalid state, plus
- *   every native `<input>` attribute — see {@link AuthFieldProps}.
- * @returns The field: label row, the control with its glyph, and the error line if any.
+ * @param props Label, glyph, optional trailing label content, hint, error/invalid state,
+ *   plus every native `<input>` attribute — see {@link AuthFieldProps}.
+ * @returns The field: label row, the control with its glyph, and its hint and error lines.
  */
-export function AuthField({ id, label, icon, aside, error, invalid, className, ...input }: AuthFieldProps) {
+export function AuthField({ id, label, icon, aside, hint, error, invalid, className, ...input }: AuthFieldProps) {
+  const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const isInvalid = Boolean(error) || Boolean(invalid);
+  // Both lines describe the control, so both are named — hint first, which is the order
+  // they are read in and the order they are printed in.
+  const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined;
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)} data-invalid={isInvalid || undefined}>
@@ -62,8 +72,14 @@ export function AuthField({ id, label, icon, aside, error, invalid, className, .
       </div>
       <div className="input-wrap">
         {icon}
-        <Input id={id} aria-invalid={isInvalid || undefined} aria-describedby={errorId} {...input} />
+        <Input id={id} aria-invalid={isInvalid || undefined} aria-describedby={describedBy} {...input} />
       </div>
+      {/* A `div` for the same reason as the error line below. */}
+      {hint && (
+        <div id={hintId} className="text-xs text-fg-muted">
+          {hint}
+        </div>
+      )}
       {/* A `div`, not a `p`: the unlayered `p { color: … }` rule at the foot of
           `globals.css` outranks every `@layer utilities` colour, so a paragraph here
           would print the error in body ink. */}

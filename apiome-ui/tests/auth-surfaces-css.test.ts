@@ -18,7 +18,7 @@
  *   5. `.input-wrap` reserves its gutter from the icon token rather than a frozen number.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
@@ -64,6 +64,17 @@ const AUTH_PRELUDES = [
   '.auth-divider',
   '.auth-trust',
   '.auth-terms',
+  // HIVE-4.2 (#5296) — the two-factor card.
+  '.auth-center::before',
+  '.auth-brandbar',
+  '.auth-icon',
+  '.auth-icon > svg',
+  '.auth-methods',
+  '.auth-methods__tab',
+  '.auth-methods__tab:hover',
+  '.auth-methods__tab[data-state="active"]',
+  '.auth-methods__tab > svg',
+  '.auth-code .input-wrap > input',
 ];
 
 /**
@@ -255,25 +266,89 @@ describe('auth surfaces — the leading-icon field wrapper', () => {
   });
 });
 
-describe('auth surfaces — the aurora is gone', () => {
-  it('leaves no aurora, grid or grain class behind in the login module', () => {
-    const moduleCss = readFileSync(
-      join(__dirname, '..', 'src', 'app', 'login', 'login.module.css'),
-      'utf8'
-    );
-    for (const retired of ['.blob', '.grain', '.shimmer', '.float', '.grid']) {
-      expect(moduleCss).not.toContain(`${retired} {`);
-    }
+describe('auth surfaces — the two-factor card (HIVE-4.2)', () => {
+  it('centres its honey wash and clips it, so the page gains no scrollbar', () => {
+    // The wash is 32.5 rem across and hangs 13.75 rem above the viewport. `.glow-honey`
+    // is the same ornament for the split layout and sits top-right; this one is centred
+    // over a single column, which is why it is stated rather than reused.
+    const centre = declarationsOf('.auth-center');
+    expect(centre.get('position')).toBe('relative');
+    expect(centre.get('overflow')).toBe('clip');
+
+    const wash = declarationsOf('.auth-center::before');
+    expect(wash.get('background')).toContain('var(--honey)');
+    expect(wash.get('pointer-events')).toBe('none');
+    // The card column has to sit over it, not under it.
+    expect(declarationsOf('.auth-center > .auth-form').get('z-index')).toBe('1');
   });
 
-  it('keeps only the two classes the two-factor screen still imports', () => {
-    // HIVE-4.2 (#5296) re-skins `/login/2fa` and takes this file with it. Until then the
-    // module has exactly one consumer, and this test says which classes it may use.
-    const moduleCss = readFileSync(
-      join(__dirname, '..', 'src', 'app', 'login', 'login.module.css'),
-      'utf8'
+  it('cuts the subject glyph from the shared hexagon, not a second copy of it', () => {
+    // One silhouette for the rail brand, the empty-state art and this tile: a second
+    // spelling of the six points is a copy waiting to drift.
+    const icon = declarationsOf('.auth-icon');
+    expect(icon.get('clip-path')).toBe('var(--hex-clip)');
+    expect(icon.get('background')).toBe('var(--accent-soft)');
+    expect(icon.get('color')).toBe('var(--accent-fg)');
+  });
+
+  it('draws the method switcher as a well with a raised thumb', () => {
+    // `role="tablist"` semantics, segmented looks — the mockup asks for the segmented
+    // shape because an underline strip inside a 27 rem card reads as a page's primary
+    // sections rather than as one field's choice.
+    expect(declarationsOf('.auth-methods').get('background')).toBe('var(--bg-inset)');
+
+    const idle = declarationsOf('.auth-methods__tab');
+    expect(idle.get('color')).toBe('var(--fg-muted)');
+    expect(idle.get('background')).toBe('transparent');
+    // The thumb's radius is the well's less its own 3 px inset, which keeps the two
+    // concentric however the radius scale is themed.
+    expect(idle.get('border-radius')).toBe('calc(var(--r-md) - 3px)');
+
+    const active = declarationsOf('.auth-methods__tab[data-state="active"]');
+    expect(active.get('background')).toBe('var(--bg-surface)');
+    expect(active.get('color')).toBe('var(--fg)');
+    expect(active.get('box-shadow')).toBe('var(--shadow-raised)');
+  });
+
+  it('lets the code box grow with the font scale instead of clipping', () => {
+    // The digits are set at `--fs-2xl`, so a frozen height would clip them at the
+    // largest font scale — same `height: auto` + `min-height` shape as `.auth-sso`.
+    const box = declarationsOf('.auth-code .input-wrap > input');
+    expect(box.get('height')).toBe('auto');
+    expect(box.get('min-height')).toBe('calc(var(--control-h-lg) * 1.35)');
+    expect(box.get('font-size')).toBe('var(--fs-2xl)');
+    expect(box.get('font-family')).toBe('var(--font-mono)');
+    expect(box.get('text-align')).toBe('center');
+    // The digits are centred across the whole box, so the gutter `.input-wrap` reserves
+    // for its glyph is given back. The descendant selector is what wins that: it is one
+    // class more specific than `.input-wrap > :is(input, textarea)`.
+    expect(box.get('padding-left')).toBe('0');
+  });
+
+  it('spaces the placeholder like the value, so the box does not jump on the first key', () => {
+    expect(
+      declarationsOf('.auth-code .input-wrap > input::placeholder').get('letter-spacing')
+    ).toBe('0.42em');
+  });
+});
+
+describe('auth surfaces — the aurora is gone', () => {
+  it('has deleted the page-local stylesheet entirely', () => {
+    // HIVE-4.1 trimmed `login.module.css` to the two classes `/login/2fa` still imported;
+    // HIVE-4.2 (#5296) re-skinned that screen, which was its last consumer. The whole
+    // module — aurora blobs, blueprint grid, film grain, shimmer, shine, entrance — is
+    // gone, and with it the last colour on a signed-out page that no theme could move.
+    expect(existsSync(join(__dirname, '..', 'src', 'app', 'login', 'login.module.css'))).toBe(
+      false
     );
-    const classes = new Set(Array.from(moduleCss.matchAll(/^\.([a-zA-Z][\w-]*)/gm), (m) => m[1]));
-    expect([...classes].sort()).toEqual(['enter', 'shine']);
+  });
+
+  it('leaves no signed-out surface importing a CSS module', () => {
+    // Everything these pages need is in the AUTH SURFACES section above, which is what
+    // lets the four of them share a skin rather than each carrying a copy of one.
+    for (const file of ['LoginClient.tsx', join('2fa', 'TwoFactorClient.tsx')]) {
+      const source = readFileSync(join(__dirname, '..', 'src', 'app', 'login', file), 'utf8');
+      expect(source).not.toMatch(/^import .*\.module\.css';$/m);
+    }
   });
 });

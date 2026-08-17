@@ -1,9 +1,14 @@
 /**
  * Login 2FA step UI tests (OLO-9.13 #5014 + OLO-9.50 #5070).
+ *
+ * The flow contract, which HIVE-4.2 (#5296) re-skinned without moving: both methods, the
+ * switcher, the stored callback, and every error string. `two-factor-hive-redesign.test.tsx`
+ * pins what the screen is now *made of*.
  */
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import TwoFactorClient from '@/app/login/2fa/TwoFactorClient';
 import {
   TWO_FACTOR_CALLBACK_STORAGE_KEY,
@@ -31,11 +36,6 @@ jest.mock('@lib/auth/browser-navigate', () => ({
 
 jest.mock('@/app/hooks/useDarkMode', () => ({
   useDarkMode: () => false,
-}));
-
-jest.mock('@/app/login/BetaBackground', () => ({
-  __esModule: true,
-  default: () => null,
 }));
 
 describe('TwoFactorClient', () => {
@@ -115,16 +115,41 @@ describe('TwoFactorClient', () => {
       TWO_FACTOR_METHODS_STORAGE_KEY,
       JSON.stringify(['totp', 'otp'])
     );
+    const user = userEvent.setup();
 
     render(<TwoFactorClient callbackUrl="/ade" />);
 
     expect(screen.getByTestId('two-factor-method-switcher')).toBeInTheDocument();
     expect(screen.getByTestId('two-factor-submit')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId('two-factor-method-otp'));
+    await user.click(screen.getByTestId('two-factor-method-otp'));
     expect(screen.getByTestId('two-factor-send-otp')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId('two-factor-method-totp'));
+    await user.click(screen.getByTestId('two-factor-method-totp'));
     expect(screen.getByTestId('two-factor-submit')).toBeInTheDocument();
+  });
+
+  it('clears a half-typed code and its error when the method changes', async () => {
+    window.sessionStorage.setItem(
+      TWO_FACTOR_METHODS_STORAGE_KEY,
+      JSON.stringify(['totp', 'otp'])
+    );
+    const user = userEvent.setup();
+
+    render(<TwoFactorClient callbackUrl="/ade" />);
+
+    // An authenticator code is not an email code, and the sentence about one would be
+    // read as being about the other — so both go with the method that owned them.
+    fireEvent.change(screen.getByLabelText(/authentication code/i), { target: { value: '123' } });
+    fireEvent.submit(screen.getByTestId('two-factor-card').querySelector('form')!);
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Enter the 6-digit code from your authenticator app.'
+    );
+
+    await user.click(screen.getByTestId('two-factor-method-otp'));
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByTestId('two-factor-otp-code')).toHaveValue('');
+    expect(mockVerifyTotp).not.toHaveBeenCalled();
   });
 });
