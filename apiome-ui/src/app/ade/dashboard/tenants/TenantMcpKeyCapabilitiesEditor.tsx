@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BadgeCheck, Check, Copy, KeyRound, Loader2, Lock, Plus } from 'lucide-react';
+import { CircleAlert, Check, Copy, KeyRound, Lock, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert } from '@/app/components/ui/Alert';
 import { Button } from '@/app/components/ui/Button';
@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from '@/app/components/ui/Dialog';
 import { EmptyState } from '@/app/components/ui/EmptyState';
+import { Spinner } from '@/app/components/ui/Spinner';
 import { Input } from '@/app/components/ui/Input';
 import { Label } from '@/app/components/ui/Label';
 import { RadioGroup, RadioGroupItem } from '@/app/components/ui/RadioGroup';
@@ -294,9 +295,9 @@ export default function TenantMcpKeyCapabilitiesEditor({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30">
-                <KeyRound className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              </div>
+              <span className="tnt-icon-tile" data-tone="honey">
+                <KeyRound aria-hidden />
+              </span>
               Create MCP API key
             </DialogTitle>
             <DialogDescription>
@@ -331,7 +332,7 @@ export default function TenantMcpKeyCapabilitiesEditor({
             <Button onClick={() => void handleCreateSubmit()} disabled={creating}>
               {creating ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Spinner size="sm" aria-hidden />
                   Creating…
                 </>
               ) : (
@@ -355,9 +356,9 @@ export default function TenantMcpKeyCapabilitiesEditor({
         <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
-                <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
+              <span className="tnt-icon-tile" data-tone="ok">
+                <Check aria-hidden />
+              </span>
               MCP API key created
             </DialogTitle>
           </DialogHeader>
@@ -366,12 +367,12 @@ export default function TenantMcpKeyCapabilitiesEditor({
               <strong>Important:</strong> This is the only time you&apos;ll see this secret.
               Copy it now and store it securely.
             </Alert>
-            <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-950/40">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <div className="rounded-md bg-subtle p-4 shadow-[inset_0_0_0_1px_var(--border)]">
+              <p className="tnt-caps mb-2">
                 Your MCP API key
               </p>
               <div className="flex items-start gap-2">
-                <code className="flex-1 break-all rounded-lg border border-gray-200 bg-white p-3 font-mono text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                <code className="flex-1 break-all rounded-sm bg-surface p-3 font-mono text-sm text-fg shadow-[inset_0_0_0_1px_var(--border)]">
                   {generatedSecret}
                 </code>
                 <Button
@@ -382,9 +383,9 @@ export default function TenantMcpKeyCapabilitiesEditor({
                   aria-label={copiedSecret ? 'Copied' : 'Copy secret'}
                 >
                   {copiedSecret ? (
-                    <Check className="h-4 w-4 text-emerald-600" />
+                    <Check className="size-[var(--icon-dense)] text-ok" />
                   ) : (
-                    <Copy className="h-4 w-4" />
+                    <Copy aria-hidden />
                   )}
                 </Button>
               </div>
@@ -409,8 +410,8 @@ export default function TenantMcpKeyCapabilitiesEditor({
 
   if (keysLoading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 py-2">
-        <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="flex items-center gap-2 py-2 text-sm text-fg-muted">
+        <Spinner size="sm" aria-hidden />
         Loading MCP keys…
       </div>
     );
@@ -422,7 +423,7 @@ export default function TenantMcpKeyCapabilitiesEditor({
 
   if (keys.length === 0) {
     return (
-      <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
+      <div className="border-t border-border pt-4">
         <EmptyState
           variant="compact"
           icon={<KeyRound className="h-8 w-8" />}
@@ -431,7 +432,7 @@ export default function TenantMcpKeyCapabilitiesEditor({
           action={
             isAdmin ? (
               <Button onClick={openCreateModal}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus aria-hidden />
                 Create MCP key
               </Button>
             ) : undefined
@@ -443,20 +444,22 @@ export default function TenantMcpKeyCapabilitiesEditor({
   }
 
   return (
-    <div className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-800">
-      <div className="flex items-center gap-2">
-        <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30">
-          <KeyRound className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
-        </div>
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Per-key capabilities
-        </h3>
+    <div className="space-y-4">
+      {/* The section's heading and its "Inherit vs Custom" sentence belong to the drawer
+          tab that mounts this — `components/ade/tenants/TenantMcpKeysSection` — so that a
+          section reads the same whether its keys have loaded, failed or are absent. */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="flex items-center gap-2 text-sm font-semibold text-fg">
+          <KeyRound className="size-[var(--icon-dense)] text-fg-subtle" aria-hidden />
+          MCP API keys
+        </span>
+        {isAdmin && (
+          <Button variant="outline" size="sm" onClick={openCreateModal}>
+            <Plus aria-hidden />
+            Create MCP key
+          </Button>
+        )}
       </div>
-
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        Effective call access is per MCP API key. Inherit follows tenant defaults;
-        Custom sets an enable-set capped by the ceiling above.
-      </p>
 
       {error && <Alert variant="error">{error}</Alert>}
 
@@ -503,17 +506,17 @@ export default function TenantMcpKeyCapabilitiesEditor({
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <h4 className="text-sm font-semibold text-fg">
               Toolsets
               {form.mode === 'inherit' ? (
-                <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                <span className="ml-2 text-xs font-normal text-fg-muted">
                   (read-only while inheriting)
                 </span>
               ) : null}
             </h4>
 
             {toolsetGroups.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-fg-muted">
                 No MCP tools in the registry catalog.
               </p>
             ) : (
@@ -529,9 +532,9 @@ export default function TenantMcpKeyCapabilitiesEditor({
                     <section
                       key={group.toolset}
                       aria-label={`${group.toolset} key toolset`}
-                      className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+                      className="tnt-card tnt-card--flush overflow-hidden"
                     >
-                      <div className="flex items-center gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                      <div className="flex items-center gap-4 border-b border-border bg-subtle px-4 py-3">
                         <Switch
                           aria-label={`Enable ${group.toolset} for key`}
                           checked={group.enableState === 'all'}
@@ -546,10 +549,10 @@ export default function TenantMcpKeyCapabilitiesEditor({
                           disabled={switchDisabled}
                         />
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                          <div className="text-sm font-semibold text-fg">
                             {titleCaseToolset(group.toolset)}
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                          <div className="text-xs text-fg-muted">
                             {group.enabledUnlockedCount} of {group.unlockedCount} unlocked
                             tools enabled
                             {allLocked ? ' · all tools locked by ceiling' : ''}
@@ -557,12 +560,12 @@ export default function TenantMcpKeyCapabilitiesEditor({
                         </div>
                         {allLocked ? (
                           <Lock
-                            className="h-4 w-4 text-slate-400"
+                            className="size-[var(--icon-dense)] text-fg-subtle"
                             aria-label="Toolset locked by ceiling"
                           />
                         ) : null}
                       </div>
-                      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                      <ul className="divide-y divide-border">
                         {group.tools.map((tool) => {
                           const locked = !tool.in_ceiling;
                           return (
@@ -571,16 +574,16 @@ export default function TenantMcpKeyCapabilitiesEditor({
                               className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center"
                             >
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+                                <div className="flex items-center gap-2 text-sm font-medium text-fg">
                                   {tool.tool_id}
                                   {locked ? (
                                     <Lock
-                                      className="h-3.5 w-3.5 text-slate-400"
+                                      className="size-[var(--icon-button)] text-fg-subtle"
                                       aria-label={`${tool.tool_id} locked by ceiling`}
                                     />
                                   ) : null}
                                 </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                <div className="mt-0.5 text-xs text-fg-muted">
                                   {locked
                                     ? 'Outside tenant ceiling — cannot enable for this key'
                                     : tool.description}
@@ -615,21 +618,21 @@ export default function TenantMcpKeyCapabilitiesEditor({
           </div>
 
           <div
-            className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/40"
+            className="rounded-md bg-subtle px-4 py-3 shadow-[inset_0_0_0_1px_var(--border)]"
             aria-live="polite"
           >
             <div className="flex items-center justify-between gap-2 mb-2">
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <h4 className="text-sm font-semibold text-fg">
                 Effective summary
               </h4>
               {previewLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-gray-400" aria-label="Updating preview" />
+                <Spinner size="xs" label="Updating preview" />
               ) : null}
             </div>
             {previewRows ? (
-              <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+              <div className="space-y-1 text-sm text-fg-muted">
                 <p>
-                  <span className="font-medium text-gray-800 dark:text-gray-200">
+                  <span className="font-medium text-fg">
                     {enabledPreview.length}
                   </span>{' '}
                   tools enabled for calls
@@ -637,7 +640,7 @@ export default function TenantMcpKeyCapabilitiesEditor({
                     <>
                       {' '}
                       ·{' '}
-                      <span className="font-medium text-gray-800 dark:text-gray-200">
+                      <span className="font-medium text-fg">
                         {deniedCount}
                       </span>{' '}
                       denied
@@ -653,7 +656,7 @@ export default function TenantMcpKeyCapabilitiesEditor({
                 )}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-fg-muted">
                 Preview unavailable.
               </p>
             )}
@@ -662,13 +665,13 @@ export default function TenantMcpKeyCapabilitiesEditor({
           {dirty && (
             <div
               role="status"
-              className="sticky bottom-0 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-900/30"
+              className="tnt-dirty-bar"
             >
-              <span className="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-200">
-                <BadgeCheck className="h-4 w-4" aria-hidden />
+              <span className="flex shrink-0 items-center gap-2 font-semibold">
+                <CircleAlert className="size-[var(--icon-dense)] shrink-0" aria-hidden />
                 Unsaved key capability changes
               </span>
-              <div className="flex gap-2">
+              <div className="ml-auto flex shrink-0 gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -678,7 +681,7 @@ export default function TenantMcpKeyCapabilitiesEditor({
                   Discard
                 </Button>
                 <Button onClick={handleSave} disabled={saving} size="sm">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {saving ? <Spinner size="xs" aria-hidden /> : null}
                   {saving ? 'Saving…' : 'Save capabilities'}
                 </Button>
               </div>

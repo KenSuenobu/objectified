@@ -1,6 +1,12 @@
 /**
- * Tenant MCP Settings panel — MTG-4.1 (#4780) / MTG-4.2 (#4781) / MTG-4.4 (#4783)
- * / MTG-4.5 (#4784) / MTG-5.1 (#4785) / MTG-5.2 (#4786).
+ * Tenant MCP settings panel — MTG-4.1 (#4780) / MTG-4.2 (#4781) / MTG-4.4 (#4783)
+ * / MTG-4.5 (#4784) / MTG-5.1 (#4785), redrawn as a drawer section by HIVE-5.1 (#5304).
+ *
+ * The panel no longer collapses itself: inside the manage drawer the "MCP settings" tab is
+ * the disclosure, and it only mounts this section on first open — so mounting is the request
+ * to load, and none of these tests presses an expand button. The per-key editor and the
+ * policy history are siblings now rather than children, which is what the two
+ * `not.toBeInTheDocument()` assertions below hold.
  */
 
 import React from 'react';
@@ -167,7 +173,6 @@ describe('TenantMcpSettingsPanel', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
 
     expect(
       await screen.findByText(/Select Acme as your current tenant/i),
@@ -181,7 +186,6 @@ describe('TenantMcpSettingsPanel', () => {
   it('shows read-only banner and disabled controls for non-admin members', async () => {
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin={false} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
 
     expect(
       await screen.findByText(/Only tenant administrators can change MCP options/i),
@@ -197,10 +201,9 @@ describe('TenantMcpSettingsPanel', () => {
     expect(calls.every((c) => c.method === 'GET')).toBe(true);
   });
 
-  it('loads policy and catalog when expanded for current-tenant admin', async () => {
+  it('loads policy and catalog on mount for a current-tenant admin', async () => {
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
 
     expect(
       await screen.findByText(/tools\/list always returns the full catalog/i),
@@ -227,7 +230,6 @@ describe('TenantMcpSettingsPanel', () => {
     const user = userEvent.setup();
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
     expect(await screen.findByRole('switch', { name: /Enable search toolset/i })).toBeChecked();
 
     await user.click(screen.getByRole('combobox', { name: /Capability profile/i }));
@@ -246,7 +248,6 @@ describe('TenantMcpSettingsPanel', () => {
     const user = userEvent.setup();
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
     expect(await screen.findByRole('switch', { name: /Enable health toolset/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole('combobox', { name: /Capability profile/i }));
@@ -266,7 +267,6 @@ describe('TenantMcpSettingsPanel', () => {
   it('master toolset switch toggles children and save persists via PUT', async () => {
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
     const health = await screen.findByRole('switch', { name: /Enable health toolset/i });
     expect(health).toBeChecked();
 
@@ -297,7 +297,6 @@ describe('TenantMcpSettingsPanel', () => {
     keysPayload = ACTIVE_KEYS;
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
     const health = await screen.findByRole('switch', { name: /Enable health toolset/i });
     fireEvent.click(health);
 
@@ -326,7 +325,6 @@ describe('TenantMcpSettingsPanel', () => {
     confirmDialog.mockResolvedValue(false);
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
     const health = await screen.findByRole('switch', { name: /Enable health toolset/i });
     fireEvent.click(health);
 
@@ -355,7 +353,6 @@ describe('TenantMcpSettingsPanel', () => {
     };
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
     const health = await screen.findByRole('switch', { name: /Enable health toolset/i });
     fireEvent.click(health);
 
@@ -368,7 +365,6 @@ describe('TenantMcpSettingsPanel', () => {
   it('shows individual tools in advanced view', async () => {
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
     expect(await screen.findByRole('switch', { name: /Enable health toolset/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText(/Advanced: individual tools/i));
@@ -384,7 +380,6 @@ describe('TenantMcpSettingsPanel', () => {
   it('shows dirty-state save bar and discards changes', async () => {
     render(<TenantMcpSettingsPanel isCurrentTenant isAdmin />);
 
-    fireEvent.click(screen.getByRole('button', { name: /MCP Settings/i }));
     const anon = await screen.findByRole('switch', { name: /Allow anonymous MCP calls/i });
     fireEvent.click(anon);
 

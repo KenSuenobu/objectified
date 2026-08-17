@@ -1,16 +1,31 @@
 'use client';
 
 /**
- * Tenant MCP policy change history — MTG-5.2 (#4786).
+ * Tenant MCP policy change history — MTG-5.2 (#4786), redrawn as a drawer section by
+ * HIVE-5.1 (#5304).
  *
- * Loads newest-first audit rows from `/api/tenants/mcp-policy/history` and
- * expands a row to show before/after tool enablement (and top-level fields).
+ * Authority: `docs/mockups/workspace/tenants.html` `[data-tab-panel="m-history"]`.
+ *
+ * Loads newest-first audit rows from `/api/tenants/mcp-policy/history` and expands a row to
+ * show the before/after of the policy fields and of each tool flag.
+ *
+ * ### What HIVE-5.1 changed
+ *
+ * The section no longer collapses itself — the "Policy history" tab is the disclosure, so
+ * mounting is the request to load, and Refresh is always reachable instead of appearing only
+ * once the old header was expanded. The diff rows are now the mockup's `.diff-line`: the old
+ * value struck through in the danger ink, an arrow, the new value in the ok ink, both
+ * monospaced. That is a real gain in readability over two grey strings separated by a `→`,
+ * and it costs nothing but tokens.
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronDown, ChevronRight, History, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
 import { Alert } from '@/app/components/ui/Alert';
+import { Avatar } from '@/app/components/ui/Avatar';
 import { Button } from '@/app/components/ui/Button';
+import { LoadingState } from '@/app/components/ui/LoadingState';
+import { Spinner } from '@/app/components/ui/Spinner';
 import {
   fetchMcpPolicyHistory,
   type TenantMcpPolicyChangeEntry,
@@ -26,6 +41,9 @@ export interface TenantMcpPolicyHistoryProps {
   reloadToken?: number;
 }
 
+/** How many entries the audit trail shows. */
+const HISTORY_LIMIT = 50;
+
 function formatWhen(value: string): string {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
@@ -38,75 +56,54 @@ function formatWhen(value: string): string {
   });
 }
 
+/** One `field: before → after` line, in the mockup's struck-through / ok-ink pair. */
+function DiffLine({ field, before, after }: { field: string; before: string; after: string }) {
+  return (
+    <div className="tnt-diff-line">
+      <span className="tnt-diff-line__field">{field}</span>
+      <span className="tnt-diff-line__from">{before}</span>
+      <ArrowRight className="size-[var(--icon-button)] shrink-0 text-fg-subtle" aria-hidden />
+      <span className="tnt-diff-line__to">{after}</span>
+    </div>
+  );
+}
+
 function ChangeDetail({ diff }: { diff: McpPolicySnapshotDiff }) {
   if (diff.topLevel.length === 0 && diff.tools.length === 0) {
     return (
-      <p className="text-xs text-gray-500 dark:text-gray-400 px-4 py-3">
+      <p className="tnt-hist-diff text-xs text-fg-muted">
         No field-level differences in this snapshot pair.
       </p>
     );
   }
 
   return (
-    <div className="space-y-3 border-t border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+    <div className="tnt-hist-diff">
       {diff.topLevel.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-            Policy fields
-          </h4>
-          <ul className="space-y-1.5">
-            {diff.topLevel.map((change) => (
-              <li
-                key={change.field}
-                className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm text-gray-800 dark:text-gray-200"
-              >
-                <span className="font-medium">{change.label}</span>
-                <span className="text-gray-500 dark:text-gray-400">{change.before}</span>
-                <span className="text-gray-400 dark:text-gray-500" aria-hidden>
-                  →
-                </span>
-                <span className="font-medium text-indigo-700 dark:text-indigo-300">
-                  {change.after}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <p className="tnt-caps mb-1">Settings changes</p>
+          {diff.topLevel.map((change) => (
+            <DiffLine
+              key={change.field}
+              field={change.label}
+              before={change.before}
+              after={change.after}
+            />
+          ))}
         </div>
       )}
 
       {diff.tools.length > 0 && (
-        <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-            Tool enablement
-          </h4>
-          <ul className="divide-y divide-slate-200 dark:divide-slate-800 rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 overflow-hidden">
-            {diff.tools.map((change) => (
-              <li
-                key={`${change.tool_id}:${change.flag}`}
-                className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
-              >
-                <div className="min-w-0">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {change.tool_id}
-                  </span>
-                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                    {change.label}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-xs tabular-nums">
-                  <span className="text-gray-500 dark:text-gray-400">
-                    {formatToolFlagValue(change.before)}
-                  </span>
-                  <span className="text-gray-400 dark:text-gray-500" aria-hidden>
-                    →
-                  </span>
-                  <span className="font-medium text-indigo-700 dark:text-indigo-300">
-                    {formatToolFlagValue(change.after)}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
+        <div className={diff.topLevel.length > 0 ? 'mt-2' : undefined}>
+          <p className="tnt-caps mb-1">Tool-flag changes</p>
+          {diff.tools.map((change) => (
+            <DiffLine
+              key={`${change.tool_id}:${change.flag}`}
+              field={`${change.tool_id} · ${change.label}`}
+              before={formatToolFlagValue(change.before)}
+              after={formatToolFlagValue(change.after)}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -119,30 +116,29 @@ function HistoryRow({ change }: { change: TenantMcpPolicyChangeEntry }) {
   const actor = change.actor_label || change.actor_user_id || 'Unknown';
 
   return (
-    <li className="border-b border-slate-100 last:border-b-0 dark:border-slate-800">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-        aria-expanded={open}
-      >
-        <span className="mt-0.5 text-gray-400 dark:text-gray-500" aria-hidden>
-          {open ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
+    <li>
+      <div className="tnt-hist-row">
+        <span className="font-mono text-xs tabular-nums text-fg-muted">
+          {formatWhen(change.created_at)}
         </span>
-        <div className="min-w-0 flex-1 grid gap-1 sm:grid-cols-[minmax(0,11rem)_minmax(0,8rem)_1fr] sm:gap-3">
-          <span className="text-sm text-gray-700 dark:text-gray-300 tabular-nums">
-            {formatWhen(change.created_at)}
-          </span>
-          <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
-            {actor}
-          </span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">{diff.summary}</span>
-        </div>
-      </button>
+        <span className="flex min-w-0 items-center gap-2">
+          <Avatar name={actor} seed={change.actor_user_id ?? actor} size="xs" />
+          <span className="truncate text-sm text-fg">{actor}</span>
+        </span>
+        <span className="min-w-0 truncate text-sm text-fg-muted" title={diff.summary}>
+          {diff.summary}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="px-1.5"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={`Toggle details for the change on ${formatWhen(change.created_at)}`}
+        >
+          {open ? <ChevronDown aria-hidden /> : <ChevronRight aria-hidden />}
+        </Button>
+      </div>
       {open ? <ChangeDetail diff={diff} /> : null}
     </li>
   );
@@ -151,7 +147,6 @@ function HistoryRow({ change }: { change: TenantMcpPolicyChangeEntry }) {
 export default function TenantMcpPolicyHistory({
   reloadToken = 0,
 }: TenantMcpPolicyHistoryProps) {
-  const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [changes, setChanges] = useState<TenantMcpPolicyChangeEntry[]>([]);
@@ -161,7 +156,7 @@ export default function TenantMcpPolicyHistory({
     setLoading(true);
     setError(null);
     try {
-      const body = await fetchMcpPolicyHistory(50);
+      const body = await fetchMcpPolicyHistory(HISTORY_LIMIT);
       setChanges(body.changes ?? []);
       setLoadedOnce(true);
     } catch (err) {
@@ -171,77 +166,57 @@ export default function TenantMcpPolicyHistory({
     }
   }, []);
 
+  // Mounting is the request, and a bumped `reloadToken` is a second one: a policy save is
+  // exactly the event that adds a row to this trail.
   useEffect(() => {
-    if (!expanded) return;
     void load();
-  }, [expanded, reloadToken, load]);
+  }, [reloadToken, load]);
 
   return (
-    <section
-      aria-label="MCP policy history"
-      className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-    >
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
-        <button
+    <section aria-labelledby="tnt-history-heading" className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 id="tnt-history-heading" className="tnt-section-title">
+            Policy history
+          </h3>
+          <p className="tnt-section-desc">
+            Every saved change to MCP settings and key capabilities, newest first.
+          </p>
+        </div>
+        <Button
           type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-          aria-expanded={expanded}
+          variant="outline"
+          size="sm"
+          onClick={() => void load()}
+          disabled={loading}
+          aria-label="Refresh policy history"
         >
-          <History className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
-          Policy history
-          {expanded ? (
-            <ChevronDown className="h-4 w-4" aria-hidden />
-          ) : (
-            <ChevronRight className="h-4 w-4" aria-hidden />
-          )}
-        </button>
-        {expanded ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => void load()}
-            disabled={loading}
-            aria-label="Refresh policy history"
-          >
-            {loading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3.5 w-3.5" />
-            )}
-            Refresh
-          </Button>
-        ) : null}
+          {loading ? <Spinner size="xs" aria-hidden /> : <RefreshCw aria-hidden />}
+          Refresh
+        </Button>
       </div>
 
-      {expanded && (
-        <div>
-          {error ? (
-            <div className="p-4">
-              <Alert variant="error">{error}</Alert>
-            </div>
-          ) : null}
+      {error ? <Alert variant="error">{error}</Alert> : null}
 
-          {loading && !loadedOnce ? (
-            <div className="flex items-center gap-2 px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading policy history…
-            </div>
-          ) : changes.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
-              No policy changes recorded yet. Saving MCP settings will start this audit trail.
-            </p>
-          ) : (
-            <>
-              <div className="hidden sm:grid sm:grid-cols-[minmax(0,11rem)_minmax(0,8rem)_1fr] gap-3 px-4 pl-11 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-slate-100 dark:border-slate-800">
-                <span>When</span>
-                <span>Actor</span>
-                <span>Change</span>
-              </div>
-              <ul>{changes.map((change) => <HistoryRow key={change.id} change={change} />)}</ul>
-            </>
-          )}
+      {loading && !loadedOnce ? (
+        <LoadingState message="Loading policy history…" minHeightClassName="min-h-[8rem]" />
+      ) : changes.length === 0 ? (
+        <p className="py-4 text-sm text-fg-muted">
+          No policy changes recorded yet. Saving MCP settings will start this audit trail.
+        </p>
+      ) : (
+        <div className="tnt-card tnt-card--flush">
+          <div className="tnt-hist-row tnt-hist-row--head tnt-caps" aria-hidden>
+            <span>When</span>
+            <span>Actor</span>
+            <span>Change</span>
+            <span />
+          </div>
+          <ul>
+            {changes.map((change) => (
+              <HistoryRow key={change.id} change={change} />
+            ))}
+          </ul>
         </div>
       )}
     </section>

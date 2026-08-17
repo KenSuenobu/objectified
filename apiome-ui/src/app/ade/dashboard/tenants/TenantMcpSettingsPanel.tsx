@@ -1,34 +1,44 @@
 'use client';
 
 /**
- * Tenant MCP Settings expandable panel — MTG-4.1 (#4780) + MTG-4.2 (#4781)
- * + MTG-4.3 (#4782) per-key capability editor + MTG-4.4 (#4783) non-admin
- * read-only + MTG-4.5 (#4784) disable confirm + MTG-5.1 (#4785) capability
- * presets + MTG-5.2 (#4786) policy change history.
+ * Tenant MCP settings — MTG-4.1 (#4780) + MTG-4.2 (#4781) + MTG-4.4 (#4783) non-admin
+ * read-only + MTG-4.5 (#4784) disable confirm + MTG-5.1 (#4785) capability presets,
+ * redrawn as a drawer section by HIVE-5.1 (#5304).
  *
- * Loads MTG-3.1 policy + MTG-1.1 catalog + MTG-5.1 presets for the session's
- * current tenant. Toolsets use master switches; named packs apply a draft
- * matrix; optional advanced view exposes per-tool flags. MTG-5.2 policy
- * history shows who/when/before-after tool enablement. Non-admins browse
- * the same controls disabled (GuideEditorClient pattern). When this row is
- * not the current tenant, shows a switch-tenant note (proxy is always
- * current-tenant scoped).
+ * Authority: `docs/mockups/workspace/tenants.html` `[data-tab-panel="m-mcp"]`.
+ *
+ * Loads the MTG-3.1 policy, the MTG-1.1 catalog and the MTG-5.1 presets for the session's
+ * current tenant. Toolsets carry a master switch — three-state, because a toolset whose
+ * tools are partly in the ceiling is genuinely neither on nor off — named packs apply a
+ * draft matrix in one click, and an optional advanced view exposes the three per-tool flags.
+ * Non-admins browse the same controls disabled.
+ *
+ * ### What HIVE-5.1 changed
+ *
+ * Three things, none of them behavioural:
+ *
+ *  * **No self-collapse.** The panel used to be a disclosure with its own "MCP Settings"
+ *    header button. Inside the manage drawer the vertical tab *is* the disclosure, and two
+ *    of them nested reads as a bug. The panel now draws its section heading and its content.
+ *  * **No nested children.** It used to render the per-key capability editor and the policy
+ *    history inside itself. The mockup makes all three siblings, so they moved out to
+ *    `components/ade/tenants/TenantMcpKeysSection` and their own tab; `onPolicySaved` is how
+ *    a save still reaches them.
+ *  * **Tokens, not palette classes.** Every `slate-*`/`indigo-*`/`amber-*` class is now a
+ *    design token, so the panel follows all nine themes rather than only the two it was
+ *    hand-tuned for.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  BadgeCheck,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  Lock,
-  Settings2,
-} from 'lucide-react';
+import { CircleAlert, Lock, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert } from '@/app/components/ui/Alert';
+import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { Checkbox } from '@/app/components/ui/Checkbox';
 import { Label } from '@/app/components/ui/Label';
+import { LoadingState } from '@/app/components/ui/LoadingState';
+import { Spinner } from '@/app/components/ui/Spinner';
 import { Switch } from '@/app/components/ui/Switch';
 import {
   Select,
@@ -57,15 +67,15 @@ import {
   MCP_CUSTOM_PRESET_ID,
   patchToolFlag,
   patchToolsetCeiling,
+  summariseMcpPolicyChanges,
   validateMcpPolicyForm,
   type McpPolicyFormState,
+  type ToolsetToggleState,
 } from './mcpPolicyForm';
 import {
   findActiveKeysEffectivelyEnablingTools,
   formatToolsetDisableImpactMessage,
 } from './mcpToolsetDisableImpact';
-import TenantMcpKeyCapabilitiesEditor from './TenantMcpKeyCapabilitiesEditor';
-import TenantMcpPolicyHistory from './TenantMcpPolicyHistory';
 
 export interface TenantMcpSettingsPanelProps {
   /** True when this row is the session's current tenant (loads live policy). */
@@ -74,6 +84,20 @@ export interface TenantMcpSettingsPanelProps {
   isAdmin: boolean;
   /** Tenant display name for the non-current-tenant helper. */
   tenantName?: string;
+  /**
+   * Told whether the draft differs from the saved policy.
+   *
+   * The manage drawer draws the unsaved dot on the MCP tab from this, which is the only way
+   * a reader who has tabbed to Policy history can tell that a draft is still waiting.
+   */
+  onDirtyChange?: (dirty: boolean) => void;
+  /**
+   * Called after the policy is saved.
+   *
+   * The per-key editor and the policy history are siblings now, and both read data this
+   * save invalidates — the ceiling and the audit trail.
+   */
+  onPolicySaved?: () => void;
 }
 
 const LIST_VS_CALL_HELP =
@@ -87,6 +111,15 @@ const MODE_LABELS: Record<TenantDefaultMode, string> = {
   explicit: 'Explicit per-tool flags',
 };
 
+/** The badge a toolset card carries, from its three-state ceiling. */
+const TOOLSET_STATE_BADGE: Readonly<
+  Record<ToolsetToggleState, { label: string; variant: 'ok' | 'warn' | 'outline' }>
+> = {
+  all: { label: 'All in ceiling', variant: 'ok' },
+  mixed: { label: 'Mixed', variant: 'warn' },
+  none: { label: 'Off', variant: 'outline' },
+};
+
 function titleCaseToolset(toolset: string): string {
   if (!toolset) return 'Other';
   return toolset.charAt(0).toUpperCase() + toolset.slice(1);
@@ -96,9 +129,10 @@ export default function TenantMcpSettingsPanel({
   isCurrentTenant,
   isAdmin,
   tenantName,
+  onDirtyChange,
+  onPolicySaved,
 }: TenantMcpSettingsPanelProps) {
   const { confirm: confirmDialog } = useDialog();
-  const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,8 +140,6 @@ export default function TenantMcpSettingsPanel({
   const [baseline, setBaseline] = useState<McpPolicyFormState | null>(null);
   const [loadedOnce, setLoadedOnce] = useState(false);
   const [advanced, setAdvanced] = useState(false);
-  /** Bumped after successful policy save so inherit key previews refresh. */
-  const [policyRevision, setPolicyRevision] = useState(0);
   const [presets, setPresets] = useState<McpCapabilityPresetItem[]>([]);
 
   const readOnly = !isAdmin;
@@ -135,28 +167,29 @@ export default function TenantMcpSettingsPanel({
     }
   }, []);
 
+  // The section only mounts when its tab is first opened, so mounting *is* the request to
+  // load — there is no expanded flag left to wait for.
   useEffect(() => {
-    if (!isCurrentTenant || !expanded || loadedOnce) return;
+    if (!isCurrentTenant || loadedOnce) return;
     void load();
-  }, [isCurrentTenant, expanded, loadedOnce, load]);
+  }, [isCurrentTenant, loadedOnce, load]);
 
   const dirty = form && baseline && !readOnly ? hasMcpPolicyChanges(form, baseline) : false;
+  const changeSummary = useMemo(
+    () => (form && baseline && dirty ? summariseMcpPolicyChanges(form, baseline) : ''),
+    [form, baseline, dirty],
+  );
+
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+
+  // The drawer's dot must not survive the panel: an unmounted draft is a discarded one.
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
+
   const toolsetGroups = useMemo(
     () => (form ? groupToolsByToolset(form.tools) : []),
     [form],
-  );
-  const catalogItems = useMemo(
-    () =>
-      (form?.tools ?? []).map(({ tool_id, description, toolset }) => ({
-        id: tool_id,
-        description,
-        toolset,
-      })),
-    [form],
-  );
-  const ceilingToolIds = useMemo(
-    () => (baseline?.tools ?? []).filter((t) => t.in_ceiling).map((t) => t.tool_id),
-    [baseline],
   );
   const activePresetId = useMemo(
     () => (form ? matchCapabilityPreset(form, presets) : MCP_CUSTOM_PRESET_ID),
@@ -239,7 +272,7 @@ export default function TenantMcpSettingsPanel({
       const next = mcpPolicyFormFromSources(saved, catalogTools);
       setForm(next);
       setBaseline(next);
-      setPolicyRevision((n) => n + 1);
+      onPolicySaved?.();
       toast.success('MCP settings saved');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save MCP settings';
@@ -251,159 +284,151 @@ export default function TenantMcpSettingsPanel({
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="text-base font-semibold flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-          aria-expanded={expanded}
-        >
-          <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30">
-            <Settings2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-          </div>
-          MCP Settings
-          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
+    <section aria-labelledby="tnt-mcp-heading" className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 id="tnt-mcp-heading" className="tnt-section-title">
+            MCP settings
+          </h3>
+          <p className="tnt-section-desc">{LIST_VS_CALL_HELP}</p>
+        </div>
+        {isAdmin && (
+          <Badge variant="outline">
+            <Shield aria-hidden />
+            Admins can edit
+          </Badge>
+        )}
       </div>
 
-      {expanded && (
-        <div className="space-y-4">
-          {!isCurrentTenant ? (
-            <div className="flex items-start gap-3 rounded-lg border border-slate-300 bg-slate-100 p-4 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-              <Lock className="mt-0.5 h-5 w-5 flex-shrink-0" aria-hidden />
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Select{tenantName ? ` ${tenantName}` : ' this tenant'} as your current tenant to
-                view or edit MCP settings.
-              </p>
-            </div>
-          ) : (
+      {!isCurrentTenant ? (
+        <p className="tnt-lock-note">
+          <Lock className="size-[var(--icon-dense)] shrink-0" aria-hidden />
+          Select{tenantName ? ` ${tenantName}` : ' this tenant'} as your current tenant to view
+          or edit MCP settings.
+        </p>
+      ) : (
+        <>
+          {readOnly && (
+            <p className="tnt-lock-note">
+              <Lock className="size-[var(--icon-dense)] shrink-0" aria-hidden />
+              {ADMIN_ONLY_COPY}
+            </p>
+          )}
+
+          {error && <Alert variant="error">{error}</Alert>}
+
+          {loading && !form ? (
+            <LoadingState message="Loading MCP settings…" minHeightClassName="min-h-[8rem]" />
+          ) : form ? (
             <>
-              {readOnly && (
-                <div className="flex items-start gap-3 rounded-lg border border-slate-300 bg-slate-100 p-4 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                  <Lock className="mt-0.5 h-5 w-5 flex-shrink-0" aria-hidden />
-                  <p className="text-sm">{ADMIN_ONLY_COPY}</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="mcp-default-mode">Default mode</Label>
+                  <Select
+                    value={form.default_mode}
+                    onValueChange={(value) =>
+                      setForm((prev) =>
+                        prev ? { ...prev, default_mode: value as TenantDefaultMode } : prev,
+                      )
+                    }
+                    disabled={controlsDisabled}
+                  >
+                    <SelectTrigger id="mcp-default-mode">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(MODE_LABELS) as TenantDefaultMode[]).map((mode) => (
+                        <SelectItem key={mode} value={mode}>
+                          {MODE_LABELS[mode]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
 
-              <p className="text-sm text-gray-500 dark:text-gray-400">{LIST_VS_CALL_HELP}</p>
-
-              {error && <Alert variant="error">{error}</Alert>}
-
-              {loading && !form ? (
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 py-4">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading MCP settings…
-                </div>
-              ) : form ? (
-                <>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="mcp-default-mode">Default mode</Label>
-                      <Select
-                        value={form.default_mode}
-                        onValueChange={(value) =>
-                          setForm((prev) =>
-                            prev
-                              ? { ...prev, default_mode: value as TenantDefaultMode }
-                              : prev,
-                          )
-                        }
-                        disabled={controlsDisabled}
-                      >
-                        <SelectTrigger id="mcp-default-mode">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(Object.keys(MODE_LABELS) as TenantDefaultMode[]).map((mode) => (
-                            <SelectItem key={mode} value={mode}>
-                              {MODE_LABELS[mode]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-end gap-3 pb-1">
-                      <Switch
-                        id="mcp-allow-anonymous"
-                        aria-label="Allow anonymous MCP calls"
-                        checked={form.allow_anonymous_mcp}
-                        onCheckedChange={(checked) =>
-                          setForm((prev) =>
-                            prev ? { ...prev, allow_anonymous_mcp: checked } : prev,
-                          )
-                        }
-                        disabled={controlsDisabled}
-                      />
-                      <Label
-                        htmlFor="mcp-allow-anonymous"
-                        className={readOnly ? undefined : 'cursor-pointer'}
-                      >
-                        Allow anonymous MCP calls
-                      </Label>
-                    </div>
-                  </div>
-
-                  {presets.length > 0 && (
-                    <div className="space-y-2 max-w-md">
-                      <Label htmlFor="mcp-capability-preset">Capability profile</Label>
-                      <Select
-                        value={activePresetId}
-                        onValueChange={handlePresetChange}
-                        disabled={controlsDisabled}
-                      >
-                        <SelectTrigger
-                          id="mcp-capability-preset"
-                          aria-label="Capability profile"
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {presets.map((preset) => (
-                            <SelectItem key={preset.id} value={preset.id}>
-                              {preset.label}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value={MCP_CUSTOM_PRESET_ID}>Custom</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Named packs set toolset ceilings in one click; Custom stays
-                        editable after apply.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Toolsets
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="mcp-advanced-tools"
-                        checked={advanced}
-                        onCheckedChange={(checked) => setAdvanced(checked === true)}
-                        disabled={saving}
-                      />
-                      <Label htmlFor="mcp-advanced-tools" className="cursor-pointer text-sm">
-                        Advanced: individual tools
-                      </Label>
-                    </div>
-                  </div>
-
-                  {toolsetGroups.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 py-2">
-                      No MCP tools in the registry catalog.
+                {presets.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="mcp-capability-preset">Capability profile</Label>
+                    <Select
+                      value={activePresetId}
+                      onValueChange={handlePresetChange}
+                      disabled={controlsDisabled}
+                    >
+                      <SelectTrigger id="mcp-capability-preset" aria-label="Capability profile">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {presets.map((preset) => (
+                          <SelectItem key={preset.id} value={preset.id}>
+                            {preset.label}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value={MCP_CUSTOM_PRESET_ID}>Custom</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-fg-muted">
+                      Named packs set toolset ceilings in one click; Custom stays editable
+                      after apply.
                     </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {toolsetGroups.map((group) => (
-                        <section
-                          key={group.toolset}
-                          aria-label={`${group.toolset} toolset`}
-                          className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-                        >
-                          <div className="flex items-center gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                  </div>
+                )}
+              </div>
+
+              <div className="tnt-switch-row">
+                <div className="min-w-0">
+                  <Label
+                    htmlFor="mcp-allow-anonymous"
+                    className={readOnly ? undefined : 'cursor-pointer'}
+                  >
+                    Allow anonymous MCP calls
+                  </Label>
+                  <p className="text-xs text-fg-muted">
+                    Unauthenticated agents may call tools flagged “Anonymous” below.
+                  </p>
+                </div>
+                <Switch
+                  id="mcp-allow-anonymous"
+                  aria-label="Allow anonymous MCP calls"
+                  checked={form.allow_anonymous_mcp}
+                  onCheckedChange={(checked) =>
+                    setForm((prev) => (prev ? { ...prev, allow_anonymous_mcp: checked } : prev))
+                  }
+                  disabled={controlsDisabled}
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h4 className="text-sm font-semibold text-fg">Toolsets</h4>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="mcp-advanced-tools"
+                    checked={advanced}
+                    onCheckedChange={(checked) => setAdvanced(checked === true)}
+                    disabled={saving}
+                  />
+                  <Label htmlFor="mcp-advanced-tools" className="cursor-pointer text-xs">
+                    Advanced: individual tools
+                  </Label>
+                </div>
+              </div>
+
+              {toolsetGroups.length === 0 ? (
+                <p className="py-2 text-sm text-fg-muted">
+                  No MCP tools in the registry catalog.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {toolsetGroups.map((group) => {
+                    const badge = TOOLSET_STATE_BADGE[group.ceilingState];
+                    return (
+                      <section
+                        key={group.toolset}
+                        aria-label={`${group.toolset} toolset`}
+                        className="tnt-toolset-card"
+                        data-ceiling={group.ceilingState}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-3">
                             <Switch
                               aria-label={`Enable ${group.toolset} toolset`}
                               checked={group.ceilingState === 'all'}
@@ -417,152 +442,122 @@ export default function TenantMcpSettingsPanel({
                               }
                               disabled={controlsDisabled}
                             />
-                            <div className="min-w-0 flex-1">
-                              <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <div className="min-w-0">
+                              <div className="text-sm font-semibold text-fg">
                                 {titleCaseToolset(group.toolset)}
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                              <div className="text-xs text-fg-muted">
                                 {group.inCeilingCount} of {group.tools.length} tools in ceiling
                               </div>
                             </div>
                           </div>
+                          <Badge variant={badge.variant}>{badge.label}</Badge>
+                        </div>
 
-                          {advanced && (
-                            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-                              {group.tools.map((tool) => (
-                                <li
-                                  key={tool.tool_id}
-                                  className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center"
-                                >
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {tool.tool_id}
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                      {tool.description}
-                                    </div>
-                                  </div>
-                                  <div className="flex flex-wrap items-center gap-4">
-                                    <div className="flex items-center gap-2">
-                                      <Switch
-                                        aria-label={`${tool.tool_id} in ceiling`}
-                                        checked={tool.in_ceiling}
-                                        onCheckedChange={(checked) =>
-                                          setForm((prev) =>
-                                            prev
-                                              ? patchToolFlag(
-                                                  prev,
-                                                  tool.tool_id,
-                                                  'in_ceiling',
-                                                  checked,
-                                                )
-                                              : prev,
-                                          )
-                                        }
-                                        disabled={controlsDisabled}
-                                      />
-                                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                                        Ceiling
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Switch
-                                        aria-label={`${tool.tool_id} default enabled`}
-                                        checked={tool.default_enabled}
-                                        onCheckedChange={(checked) =>
-                                          setForm((prev) =>
-                                            prev
-                                              ? patchToolFlag(
-                                                  prev,
-                                                  tool.tool_id,
-                                                  'default_enabled',
-                                                  checked,
-                                                )
-                                              : prev,
-                                          )
-                                        }
-                                        disabled={controlsDisabled || !tool.in_ceiling}
-                                      />
-                                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                                        Default
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Switch
-                                        aria-label={`${tool.tool_id} anonymous enabled`}
-                                        checked={tool.anonymous_enabled}
-                                        onCheckedChange={(checked) =>
-                                          setForm((prev) =>
-                                            prev
-                                              ? patchToolFlag(
-                                                  prev,
-                                                  tool.tool_id,
-                                                  'anonymous_enabled',
-                                                  checked,
-                                                )
-                                              : prev,
-                                          )
-                                        }
-                                        disabled={controlsDisabled}
-                                      />
-                                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                                        Anonymous
-                                      </span>
-                                    </div>
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </section>
-                      ))}
-                    </div>
+                        {advanced && (
+                          <div className="tnt-toolset-tools">
+                            <div className="tnt-tool-row tnt-tool-row--head" aria-hidden>
+                              <span>Tool</span>
+                              <span>In ceiling</span>
+                              <span>Default</span>
+                              <span>Anonymous</span>
+                            </div>
+                            {group.tools.map((tool) => (
+                              <div key={tool.tool_id} className="tnt-tool-row">
+                                <span className="min-w-0">
+                                  <span className="block truncate font-mono text-xs text-fg">
+                                    {tool.tool_id}
+                                  </span>
+                                  <span className="block truncate text-2xs text-fg-muted">
+                                    {tool.description}
+                                  </span>
+                                </span>
+                                <span>
+                                  <Switch
+                                    aria-label={`${tool.tool_id} in ceiling`}
+                                    checked={tool.in_ceiling}
+                                    onCheckedChange={(checked) =>
+                                      setForm((prev) =>
+                                        prev
+                                          ? patchToolFlag(prev, tool.tool_id, 'in_ceiling', checked)
+                                          : prev,
+                                      )
+                                    }
+                                    disabled={controlsDisabled}
+                                  />
+                                </span>
+                                <span title={tool.in_ceiling ? undefined : 'Disabled unless in ceiling'}>
+                                  <Switch
+                                    aria-label={`${tool.tool_id} default enabled`}
+                                    checked={tool.default_enabled}
+                                    onCheckedChange={(checked) =>
+                                      setForm((prev) =>
+                                        prev
+                                          ? patchToolFlag(
+                                              prev,
+                                              tool.tool_id,
+                                              'default_enabled',
+                                              checked,
+                                            )
+                                          : prev,
+                                      )
+                                    }
+                                    disabled={controlsDisabled || !tool.in_ceiling}
+                                  />
+                                </span>
+                                <span>
+                                  <Switch
+                                    aria-label={`${tool.tool_id} anonymous enabled`}
+                                    checked={tool.anonymous_enabled}
+                                    onCheckedChange={(checked) =>
+                                      setForm((prev) =>
+                                        prev
+                                          ? patchToolFlag(
+                                              prev,
+                                              tool.tool_id,
+                                              'anonymous_enabled',
+                                              checked,
+                                            )
+                                          : prev,
+                                      )
+                                    }
+                                    disabled={controlsDisabled}
+                                  />
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    );
+                  })}
+                </div>
+              )}
+
+              {dirty && (
+                <div role="status" className="tnt-dirty-bar">
+                  <CircleAlert className="size-[var(--icon-dense)] shrink-0" aria-hidden />
+                  <span className="shrink-0 font-semibold">Unsaved MCP settings changes</span>
+                  {changeSummary && (
+                    <span className="tnt-dirty-bar__sub" title={changeSummary}>
+                      {changeSummary}
+                    </span>
                   )}
-
-                  {dirty && (
-                    <div
-                      role="status"
-                      className="sticky bottom-0 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-900/30"
-                    >
-                      <span className="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-200">
-                        <BadgeCheck className="h-4 w-4" aria-hidden />
-                        Unsaved MCP settings changes
-                      </span>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleDiscard}
-                          disabled={saving}
-                        >
-                          Discard
-                        </Button>
-                        <Button onClick={handleSave} disabled={saving} size="sm">
-                          {saving ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : null}
-                          {saving ? 'Saving…' : 'Save changes'}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {isAdmin ? (
-                    <TenantMcpKeyCapabilitiesEditor
-                      catalog={catalogItems}
-                      ceilingToolIds={ceilingToolIds}
-                      policyRevision={policyRevision}
-                      isAdmin={isAdmin}
-                    />
-                  ) : null}
-
-                  <TenantMcpPolicyHistory reloadToken={policyRevision} />
-                </>
-              ) : null}
+                  <div className="ml-auto flex shrink-0 gap-2">
+                    <Button variant="outline" size="sm" onClick={handleDiscard} disabled={saving}>
+                      Discard
+                    </Button>
+                    <Button onClick={handleSave} disabled={saving} size="sm">
+                      {saving && <Spinner size="xs" aria-hidden />}
+                      {saving ? 'Saving…' : 'Save changes'}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
-          )}
-        </div>
+          ) : null}
+        </>
       )}
-    </div>
+    </section>
   );
 }

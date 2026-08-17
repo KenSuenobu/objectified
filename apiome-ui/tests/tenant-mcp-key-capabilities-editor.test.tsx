@@ -141,7 +141,7 @@ describe('TenantMcpKeyCapabilitiesEditor', () => {
       />,
     );
 
-    expect(await screen.findByText(/Per-key capabilities/i)).toBeInTheDocument();
+    expect(await screen.findByText(/MCP API keys/i)).toBeInTheDocument();
     expect(await screen.findByLabelText(/Select MCP API key/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Inherit tenant defaults/i)).toBeChecked();
     expect(screen.getByLabelText(/Enable health for key/i)).toBeDisabled();
@@ -156,7 +156,7 @@ describe('TenantMcpKeyCapabilitiesEditor', () => {
       />,
     );
 
-    await screen.findByText(/Per-key capabilities/i);
+    await screen.findByText(/MCP API keys/i);
     fireEvent.click(screen.getByLabelText(/Custom enable-set/i));
 
     expect(screen.getByLabelText(/spec.search enabled for key/i)).toBeDisabled();
@@ -173,7 +173,7 @@ describe('TenantMcpKeyCapabilitiesEditor', () => {
       />,
     );
 
-    await screen.findByText(/Per-key capabilities/i);
+    await screen.findByText(/MCP API keys/i);
 
     fireEvent.click(screen.getByLabelText(/Custom enable-set/i));
     fireEvent.click(screen.getByLabelText(/Enable health for key/i));
@@ -206,7 +206,7 @@ describe('TenantMcpKeyCapabilitiesEditor', () => {
       />,
     );
 
-    await screen.findByText(/Per-key capabilities/i);
+    await screen.findByText(/MCP API keys/i);
     await flushPreview();
 
     const summary = screen.getByText(/Effective summary/i).closest('div')?.parentElement;

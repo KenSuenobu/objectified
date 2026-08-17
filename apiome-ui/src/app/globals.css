@@ -6492,3 +6492,525 @@ button.auth-divider:disabled {
   background: rgb(52 211 153 / 0.18); /* emerald-400 */
 }
 
+
+/* ==========================================================================
+   TENANTS & THE MANAGE DRAWER (HIVE-5.1, #5304)
+
+   Authority: `docs/mockups/workspace/tenants.html` — its page-local `<style>`
+   block is what this replaces, one rule at a time, and its **Notes → Keeps
+   (1:1)** list is the ticket's acceptance criteria. Plus `hive.css` §12
+   (`.card`, `.icon-tile`), §15 (`.drawer`) and `DESIGN.md` §5.4.
+
+   Why these live in the stylesheet rather than in the components
+   --------------------------------------------------------------
+   The same reason the account, launcher, linked-accounts and help blocks give:
+   every rule below leans on the density and font-scale tokens, several of them
+   need a real grid (`grid-template-columns`) that a utility string spells
+   badly, and the quiet lines have to sit *after* the unlayered `h2`/`p` base
+   rules near line 2490 — which outrank anything in `@layer utilities`.
+
+   The mockup's page-local block froze five things in pixels that must not be
+   frozen: the 196 px tab rail, the four-column tool row, the 148 px diff
+   indent, the dirty bar's padding and the history grid. Every one of them is
+   `rem` here, so they follow all six font scales, and the two grids collapse to
+   a single column on a narrow drawer instead of scrolling the document
+   sideways.
+
+   No hue is named below — every colour is a token, so the surface follows all
+   nine themes. The one measured deviation from the mockup is the one HIVE-3.5,
+   4.1, 4.5, 4.7, 4.8 and 4.9 already made: quiet text is `--fg-muted`, not
+   `--fg-subtle`, which measures 3.1:1 against the canvas at these sizes — under
+   the 4.5:1 WCAG AA asks of normal text.
+   ========================================================================== */
+
+/* ---- Section chrome ------------------------------------------------------
+   Every one of the drawer's five sections opens the same way: a title, a line
+   saying what the section is for, and — when the tenant is not the current one
+   — the note that stands in for its content. Stated once so five sections
+   cannot drift into five sizes. */
+.tnt-section-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.tnt-section-desc {
+  margin-top: 0.125rem;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+.tnt-caps {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* The "select this tenant first" note. A quiet inset rather than an empty
+   state: the section is not empty, it is out of scope from here, and the
+   sentence that says so is the whole content.
+
+   Full `--fg` ink, not the `--fg-muted` every other quiet line here uses,
+   for two reasons that point the same way. It is not a quiet line — it is
+   the only thing the section has to say, and it is an instruction. And
+   measured on `--bg-subtle` across the nine themes, `--fg-muted` is 4.35:1
+   in Solarized, under the 4.5:1 AA asks of normal text. */
+.tnt-lock-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg);
+}
+
+/* ---- The leading icon tile (hive.css §12 `.icon-tile`) -------------------
+   A tinted square behind a glyph, at the head of a dialog or a plan card. The
+   tone is an identity from the shared vocabulary, set by `data-tone`, so the
+   fallback pair on the class itself is what an unnamed tile draws. */
+.tnt-icon-tile {
+  --tnt-tone-soft: var(--neutral-soft);
+  --tnt-tone-fg: var(--neutral-fg);
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--r-sm);
+  background: var(--tnt-tone-soft);
+  color: var(--tnt-tone-fg);
+}
+
+.tnt-icon-tile > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}
+
+.tnt-icon-tile[data-tone="accent"] {
+  --tnt-tone-soft: var(--accent-soft);
+  --tnt-tone-fg: var(--accent-fg);
+}
+
+.tnt-icon-tile[data-tone="honey"] {
+  --tnt-tone-soft: var(--honey-soft);
+  --tnt-tone-fg: var(--honey-fg);
+}
+
+.tnt-icon-tile[data-tone="ok"] {
+  --tnt-tone-soft: var(--ok-soft);
+  --tnt-tone-fg: var(--ok-fg);
+}
+
+.tnt-icon-tile[data-tone="warn"] {
+  --tnt-tone-soft: var(--warn-soft);
+  --tnt-tone-fg: var(--warn-fg);
+}
+
+.tnt-icon-tile[data-tone="danger"] {
+  --tnt-tone-soft: var(--danger-soft);
+  --tnt-tone-fg: var(--danger-fg);
+}
+
+.tnt-icon-tile[data-tone="violet"] {
+  --tnt-tone-soft: var(--violet-soft);
+  --tnt-tone-fg: var(--violet-fg);
+}
+
+/* The honeycomb silhouette, from the same clip path the rail's workspace
+   avatars and the launcher's tiles use — one hexagon in the interface. */
+.tnt-icon-tile--hex {
+  border-radius: 0;
+  clip-path: var(--hex-clip);
+}
+
+/* ---- Cards inside the drawer --------------------------------------------
+   A hairline instead of elevation: these are regions of a sheet, not objects
+   floating on a page, and a shadow inside a shadowed surface reads as noise. */
+.tnt-card {
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.tnt-card--pad {
+  padding: var(--space-4);
+}
+
+/* For a card whose own children draw the padding — the history table. */
+.tnt-card--flush {
+  overflow: hidden;
+}
+
+.tnt-card__header {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.tnt-card__body > * + * {
+  border-top: 1px solid var(--border);
+}
+
+/* ---- License & plan ------------------------------------------------------ */
+.tnt-limit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+}
+
+.tnt-feature-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+
+/* The feature row's two halves stack before either is squeezed: a long feature
+   description must never push its Enabled pill off the sheet. A viewport query
+   rather than a container one, because nothing on the path from the drawer to
+   this row declares `container-type` — and a `@container` rule with no
+   container above it never matches at all, which is the quiet way a
+   "responsive" rule turns out to be dead. */
+@media (max-width: 56rem) {
+  .tnt-feature-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ---- MCP settings -------------------------------------------------------- */
+/* A labelled switch on its own line, with the explanation under the label. */
+.tnt-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.tnt-toolset-card {
+  padding: var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* A toolset with nothing in the ceiling is off, and reads as off through a
+   firmer hairline — the outlined treatment its `Off` badge already carries.
+
+   Two things it deliberately is not. The mockup fades the card to 85 %:
+   measured in a browser that drags `--fg-muted` to 4.45:1 on paper, under AA,
+   because opacity dims the words along with the mark (HIVE-4.8 found the same
+   for its coming-soon cards). Tinting the card instead moves the problem
+   rather than solving it — `--fg-muted` on `--bg-subtle` is 4.35:1 in
+   Solarized, still under. A border changes no ink and no backdrop, so it is
+   the one of the three that cannot fail a contrast check. */
+.tnt-toolset-card[data-ceiling="none"] {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.tnt-toolset-tools {
+  margin-top: var(--space-3);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--border);
+}
+
+/* The mockup's four fixed columns, in `rem` so a font-scale bump widens the
+   flag columns with the switches inside them. */
+.tnt-tool-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.75rem 5.25rem 6rem;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  font-size: var(--fs-sm);
+}
+
+.tnt-tool-row + .tnt-tool-row {
+  border-top: 1px solid var(--border);
+}
+
+.tnt-tool-row--head {
+  padding: var(--space-1) 0 var(--space-2);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* Below the four-column width the flags close up under their tool rather than
+   crushing the tool id — the drawer is full-width on a phone. */
+@media (max-width: 48rem) {
+  .tnt-tool-row {
+    grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+    gap: var(--space-3);
+  }
+
+  .tnt-tool-row--head {
+    display: none;
+  }
+}
+
+/* ---- The sticky unsaved bar ---------------------------------------------
+   Sticky to the *bottom* of the scrolling drawer body, so a draft made at the
+   top of a long toolset list is still saveable from the bottom of it. The
+   warn tint is a token pair, and the ring is mixed from the same token rather
+   than being a second, hand-picked amber. */
+.tnt-dirty-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--warn) 30%, transparent),
+    var(--shadow-md);
+  font-size: var(--fs-sm);
+}
+
+/* What changed, elided rather than allowed to wrap the Save button away.
+
+   The mockup sets this line to 85 % opacity. It is already a size step below
+   the label beside it, and the fade took `--warn-fg` on `--warn-soft` from
+   5.6:1 to 4.11:1 — under AA. The size difference is the hierarchy; the fade
+   was only ever the second half of it. */
+.tnt-dirty-bar__sub {
+  min-width: 0;
+  flex: 1 1 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+}
+
+/* ---- Policy history ------------------------------------------------------ */
+.tnt-hist-row {
+  display: grid;
+  grid-template-columns: minmax(0, 8.5rem) minmax(0, 9rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+}
+
+.tnt-hist-row--head {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.tnt-card li + li .tnt-hist-row {
+  border-top: 1px solid var(--border);
+}
+
+/* The diff is indented to the "Change" column so the before/after pairs line
+   up under the summary they expand — `em`, so the indent tracks the type. */
+.tnt-hist-diff {
+  padding: 0 var(--space-4) var(--space-3) calc(var(--space-4) + 2rem);
+  font-size: var(--fs-xs);
+}
+
+.tnt-diff-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) 0.375rem;
+  padding: 0.1875rem 0;
+  font-family: var(--font-mono);
+}
+
+.tnt-diff-line__field {
+  font-family: var(--font-sans);
+  color: var(--fg-muted);
+}
+
+/* The before and after values, tinted rather than merely coloured.
+   ------------------------------------------------------------------------
+   The mockup paints these as bare `--danger-fg` / `--ok-fg` on the panel
+   surface. Measured across the nine themes that is 1.47:1 in Nord and 1.85:1
+   in Darcula — five themes fail WCAG AA outright — because a role's `-fg` is
+   calibrated against its own `-soft` tint, not against a page surface. That is
+   the same measurement HIVE-4.8 made for its guard note, and the same answer:
+   put the ink on the tint it was built for. It costs a little padding and
+   turns each value into `hive.css` §7's `.diff-add` / `.diff-del` chip, which
+   is what a diff is supposed to look like anyway. */
+.tnt-diff-line__from,
+.tnt-diff-line__to {
+  padding-inline: 0.25rem;
+  border-radius: var(--r-xs);
+}
+
+.tnt-diff-line__from {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+  text-decoration: line-through;
+}
+
+.tnt-diff-line__to {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+/* ---- The manage drawer's vertical tabs ----------------------------------
+   A 12 rem rail beside the panel, collapsing to a stacked strip when the sheet
+   itself is narrow. `align-items: start` is what lets the rail be sticky — a
+   stretched grid item has no room to move in. */
+.tnt-manage-grid {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.tnt-manage-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-surface);
+}
+
+.tnt-manage-nav > * {
+  inline-size: 100%;
+  justify-content: flex-start;
+  text-align: start;
+}
+
+/* Both counters sit at the far end of the tab, whatever its label's length. */
+.tnt-tab-count,
+.tnt-tab-dot {
+  margin-inline-start: auto;
+}
+
+.tnt-tab-count {
+  flex-shrink: 0;
+  padding-inline: 0.375rem;
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The unsaved dot. It marks a *draft*, so it is the warn token — the same
+   colour as the sticky bar it points at. */
+.tnt-tab-dot {
+  flex-shrink: 0;
+  inline-size: 0.4375rem;
+  block-size: 0.4375rem;
+  border-radius: var(--r-full);
+  background: var(--warn);
+}
+
+@media (max-width: 56rem) {
+  .tnt-manage-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .tnt-manage-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .tnt-manage-nav > * {
+    inline-size: auto;
+  }
+
+  .tnt-tab-count {
+    margin-inline-start: var(--space-1);
+  }
+}
+
+/* ---- The row overflow menu ----------------------------------------------
+   hive.css §16 `.menu`, as the tenants table's row actions need it. */
+.tnt-menu {
+  z-index: 50;
+  min-inline-size: 12rem;
+  padding: var(--space-1);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border), var(--shadow-lg);
+}
+
+.tnt-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.375rem var(--space-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.tnt-menu__item > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.tnt-menu__item[data-highlighted],
+.tnt-menu__item:hover {
+  background: var(--bg-subtle);
+}
+
+/* A row that states a fact rather than offering an action — "Current tenant",
+   "Manage — admins only". Not a menu item at all, so it is not focusable and
+   does not light up under the pointer. */
+.tnt-menu__item--note {
+  color: var(--fg-muted);
+  cursor: default;
+}
+
+.tnt-menu__item--note:hover {
+  background: transparent;
+}
+
+/* ---- The slug-change confirm's before/after list ------------------------ */
+.tnt-kv {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-1) var(--space-4);
+  font-size: var(--fs-sm);
+}
+
+.tnt-kv dt {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  align-self: center;
+}
+
+.tnt-kv dd {
+  min-width: 0;
+  color: var(--fg);
+  word-break: break-word;
+}
