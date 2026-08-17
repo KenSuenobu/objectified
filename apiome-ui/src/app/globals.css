@@ -5596,6 +5596,284 @@ button.auth-divider:disabled {
   letter-spacing: 0.3em;
 }
 
+/* ==========================================================================
+   LINKED ACCOUNTS (HIVE-4.8, #5302)
+
+   Authority: `docs/mockups/account/linked-accounts.html` — whose own `<style>`
+   block is three page-local helpers (`.provider`, `.provider .pat-row`,
+   `.last-method`) — plus `docs/mockups/assets/hive.css` §12 (`.card`,
+   `.icon-tile`), §17 (`.table-wrap`) and `DESIGN.md` §8 (a list page).
+
+   What this replaced named five colours: `bg-gray-100 dark:bg-gray-700` icon
+   tiles, `border-gray-200 dark:border-gray-700` on the token row,
+   `text-amber-600 dark:text-amber-400` for the last-method note, and a
+   `text-red-600 hover:bg-red-50 hover:text-red-700 dark:…` cluster of four
+   utilities standing in for the one `danger-soft` button role. Nothing below
+   names one: every hue is a token, so the page follows all nine palettes, both
+   densities and all six font scales.
+
+   Prefixed `lnk-` and kept in the stylesheet for the reason the `acct-` block
+   above gives: these rules lean on the density and font-scale tokens, and the
+   section heading and the quiet lines have to sit *after* the unlayered
+   `h2` / `p` base rules near line 2490, which outrank every `@layer utilities`
+   declaration.
+
+   The same two measured deviations from the mockup as the account block:
+   quiet text is `--fg-muted` rather than `--fg-subtle` (which measures 3.1:1
+   against the canvas at these sizes), and a tinted well is `--bg-inset`.
+   ========================================================================== */
+
+/* ---- The Account cell ---------------------------------------------------
+   A provider mark, then the name, the handle and — when this identity is the
+   reader's only way in — the guard note. `min-width: 0` on the body is what
+   lets a long handle be clipped by the cell rather than widening the column. */
+.lnk-account {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.lnk-account__body {
+  min-width: 0;
+}
+
+/* A provider handle is an identifier — `ada-lovelace`, or a 64-character address with no
+   space in it — so it is allowed to break anywhere rather than setting the Account
+   column's intrinsic minimum width from its own length. */
+.lnk-account__handle {
+  overflow-wrap: anywhere;
+}
+
+/* The guard note. Amber says "attention" without saying "broken", and the
+   measure is capped so the sentence wraps into a paragraph instead of holding
+   the Account column open — the mockup's own `max-width: 46ch`.
+
+   The one measured deviation from the mockup on this page: it paints the note as
+   bare `--warn-fg` text on the row, and a role's `-fg` is calibrated against its
+   own `-soft` tint rather than against a page surface. Measured on
+   `--bg-surface`, `--warn-fg` is 1.59:1 in Nord, 2.05:1 in Solarized, 2.40:1 in
+   Blueprint and 3.32:1 in High contrast — four themes in which the sentence the
+   guard depends on would be unreadable, and a serious axe finding in all four.
+   On its own `--warn-soft` it is 5.61:1 in every theme. So the note carries the
+   tint it was calibrated with, which is also what DESIGN.md §7 means by "the
+   tint *is* the severity". `linked-accounts-css.test.ts` holds both ratios. */
+.lnk-last-method {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-block-start: var(--space-2);
+  max-width: 46ch;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--warn-soft);
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-normal);
+  color: var(--warn-fg);
+  white-space: normal;
+}
+
+/* Sized in `em`, not from an icon token: this glyph belongs to an 11 px
+   sentence rather than to a control, so the relationship it has to keep is with
+   the text beside it at all six font scales. */
+.lnk-last-method > svg {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  margin-block-start: 0.2em;
+}
+
+/* A guarded row keeps its actions visible. `DataTable` reveals row actions on
+   hover, which is right for actions that work; an Unlink that is disabled
+   *and* invisible reads as an Unlink that is missing, so the row that carries
+   the guard opts out. The mockup does the same with `style="opacity:1"`. */
+.lnk-row--guarded [data-row-actions] {
+  opacity: 1;
+}
+
+/* ---- Section heading ----------------------------------------------------
+   "Add a provider", with its one-line note on the same baseline when there is
+   room and under it when there is not. */
+.lnk-section-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-end: var(--space-4);
+}
+
+.lnk-section-title__note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The provider grid --------------------------------------------------
+   Two cards abreast, stacking at the width two of them stop leaving a usable
+   measure — the same 48rem the account info tiles reflow at, so the two
+   account surfaces change shape together. `minmax(0, 1fr)` because a card's
+   automatic minimum size is its content, and a long provider name would
+   otherwise hold the track open past the viewport. */
+.lnk-providers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-4);
+}
+
+@media (max-width: 48rem) {
+  .lnk-providers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lnk-provider {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--card-pad);
+}
+
+/* A registry teaser, drawn as unavailable.
+
+   The mockup dims the whole card (`opacity: .55`) and the page this replaced dimmed
+   it by half, and neither can be kept: `opacity` composites every descendant's ink
+   into the surface beneath it, and measured across the nine themes the tagline's
+   `--fg-muted` tops out at 2.34:1 at .55 and 3.65:1 even at .8 — there is no
+   opacity at which a muted line survives AA. Dimming the *words* would make the
+   one card whose only content is an explanation the one card nobody can read.
+
+   So the fade lands on what carries no text — the brand mark — and the card gives
+   up its elevation, which costs no contrast at all. "Unavailable" is still said
+   three times: the faded mark, the "Coming soon" badge, and a Link button that
+   `Button` already draws at `disabled:opacity-50`. `linked-accounts-css.test.ts`
+   holds the measurements. */
+.lnk-provider--soon {
+  box-shadow: none;
+}
+
+.lnk-provider--soon .acct-glyph {
+  opacity: 0.55;
+}
+
+.lnk-provider__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.lnk-provider__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lnk-provider__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.lnk-provider__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.lnk-provider__tagline {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+/* ---- The Personal Access Token row -------------------------------------
+   Under a hairline inside the card, pushed to the card's bottom edge so two
+   cards side by side put their token rows on one line however long their
+   taglines run — the `margin-block-start: auto` the mockup gets for free from
+   its fixed copy. */
+.lnk-pat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-block-start: auto;
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--border);
+  min-width: 0;
+}
+
+/* Spacer of the glyph tile's width, so the row's text lines up with the
+   provider name above it rather than with the tile. */
+.lnk-pat__glyph {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  color: var(--fg-muted);
+}
+
+.lnk-pat__glyph > svg {
+  width: var(--icon-button);
+  height: var(--icon-button);
+}
+
+.lnk-pat__body {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.lnk-pat__label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.lnk-pat__hint {
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+/* The six characters the row does carry. Ink rather than muted, because the
+   mask is the fact the sentence is about. */
+.lnk-pat__mask {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.lnk-pat__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* ---- The token dialog ---------------------------------------------------
+   Its subtitle names the provider and the reader's handle at it, and a handle
+   is an address: 60 characters with no break opportunity, inside a 440 px
+   dialog. Without this the subtitle sets the dialog's intrinsic width and the
+   document scrolls sideways on a phone. */
+.lnk-dialog__subject {
+  overflow-wrap: anywhere;
+}
+
+/* ---- The scopes banner --------------------------------------------------
+   A scope list is an identifier, so it is set in the mono face and allowed to
+   break anywhere: `read_repository` has no break opportunity of its own, and a
+   440 px dialog at the Largest font scale is narrower than the list. */
+.lnk-scopes {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  overflow-wrap: anywhere;
+}
+
 /* Layout Animation Styles */
 /* Smooth transitions for node positions during layout changes */
 .layout-animating .react-flow__node {

@@ -1,9 +1,10 @@
 /**
- * The account surfaces (HIVE-4.7, #5301).
+ * The account surfaces (HIVE-4.7, #5301 · HIVE-4.8, #5302).
  *
- * `/ade/dashboard/profile` composes these; `/ade/dashboard/linked-accounts` shares the tab
- * strip. Everything that can be decided without a DOM lives in `accountModel.ts` and
- * `passwordStrength.ts`, which is why both are unit-tested on their own.
+ * `/ade/dashboard/profile` composes the first group; `/ade/dashboard/linked-accounts` composes
+ * the second and shares the tab strip. Everything that can be decided without a DOM lives in
+ * `accountModel.ts`, `passwordStrength.ts` and `linkedAccountsModel.ts`, which is why all three
+ * are unit-tested on their own.
  */
 export { AccountTabs, LINKED_ACCOUNTS_ROUTE, PROFILE_ROUTE } from './AccountTabs';
 export type { AccountTabId, AccountTabsProps } from './AccountTabs';
@@ -40,3 +41,42 @@ export {
   passwordStrength,
 } from './passwordStrength';
 export type { PasswordRequirement, PasswordStrength } from './passwordStrength';
+
+// ---- Linked accounts (HIVE-4.8, #5302) ----------------------------------------------
+export { LinkedAccountsTable } from './LinkedAccountsTable';
+export type { LinkedAccountsTableProps } from './LinkedAccountsTable';
+export { PatDialog, PAT_REQUIRED_MESSAGE } from './PatDialog';
+export type { PatDialogProps } from './PatDialog';
+export { ProviderCard } from './ProviderCard';
+export type { ProviderCardProps } from './ProviderCard';
+export {
+  LAST_METHOD_NOTE,
+  LAST_METHOD_TOOLTIP,
+  LINKED_ACCOUNTS_PATH,
+  LINK_FAILURE_MESSAGE,
+  LINK_SUCCESS_MESSAGE,
+  PAT_ADD_HINT,
+  PAT_PROVIDERS,
+  PAT_SCOPES,
+  PROVIDER_TAGLINES,
+  accountHandle,
+  buildLinkedAccountRows,
+  buildProviderCards,
+  describeRemainingMethods,
+  isLastSignInMethod,
+  parsePayload,
+  patMask,
+  patScopesFor,
+  providerTagline,
+  readActionError,
+  readLinkOutcome,
+  removePatConfirmOptions,
+  resolveProviderLabel,
+  unlinkConfirmOptions,
+} from './linkedAccountsModel';
+export type {
+  LinkOutcome,
+  LinkedAccount,
+  LinkedAccountRow,
+  ProviderCardModel,
+} from './linkedAccountsModel';
