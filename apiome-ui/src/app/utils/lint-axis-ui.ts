@@ -6,6 +6,8 @@
  * a zero — so "not assessed" never renders as a clean bill of health.
  */
 
+import { buildDocsHref } from './docsLinks';
+
 export interface LintAxisSeverityCounts {
   error: number;
   warning: number;
@@ -44,12 +46,9 @@ export const DEFAULT_ALGORITHM_DOCS_PAGE = 'docs/guide/axis-score.md';
 /** Style-guide / policy docs linked from displayed policy versions (CLX-4.3). */
 export const POLICY_DOCS_PAGE = 'docs/guide/lint-and-quality.md';
 
-const GITHUB_DOCS_BASE = 'https://github.com/apiome/apiome/blob/main/';
-
 /** Build an external docs href for algorithm or policy documentation. */
 export function buildGovernanceDocsHref(docsPage: string | null | undefined): string {
-  const page = (docsPage || DEFAULT_ALGORITHM_DOCS_PAGE).replace(/^\//, '');
-  return `${GITHUB_DOCS_BASE}${page}`;
+  return buildDocsHref(docsPage || DEFAULT_ALGORITHM_DOCS_PAGE);
 }
 
 function asString(value: unknown): string | null {

@@ -5874,6 +5874,449 @@ button.auth-divider:disabled {
   overflow-wrap: anywhere;
 }
 
+/* ==========================================================================
+   HELP & DOCS (HIVE-4.9, #5303)
+
+   Authority: `docs/mockups/foundations/help.html` — a wide search field, a
+   three-column grid of `.card--hover .card--link .card--pad` with tinted
+   hexagons, and a `.grid-4` shortcut strip — plus `docs/mockups/assets/hive.css`
+   §12 (`.card`, `.icon-tile`) and `DESIGN.md` §5.3 (page header + body).
+
+   The page is new rather than a redesign, so nothing below replaces a hard-coded
+   colour; the rule it has to keep is the same one every Hive block keeps. No hue
+   is named here — every one is a token, so the page follows all nine palettes —
+   and no size is frozen in pixels, so it follows both densities and all six font
+   scales.
+
+   Prefixed `help-` and kept in the stylesheet rather than in a CSS module for
+   the reason the account, launcher and linked-accounts blocks give: these rules
+   lean on the density and font-scale tokens, and the headings and quiet lines
+   have to sit *after* the unlayered `h2` / `p` base rules near line 2490, which
+   outrank every `@layer utilities` declaration.
+
+   Three things are borrowed rather than reinvented, because a second spelling of
+   any of them is how two surfaces drift apart:
+
+     * The card surface is `cardVariants()` from `ui/Card` — this block adds the
+       layout inside it and nothing about the skin.
+     * The tone variables follow `.launch-tone`'s shape (`--help-tone-soft` /
+       `--help-tone-fg` set by `data-tone`), so a card's hue is an identity from
+       the shared vocabulary rather than a colour.
+     * The hexagon is `--hex-clip`, the same clip path the launcher's tiles and
+       the rail's avatars use.
+
+   The one measured deviation from the mockup is the one HIVE-3.5, 4.1, 4.5, 4.7
+   and 4.8 already made: quiet text is `--fg-muted`, not `--fg-subtle`, which
+   measures 3.1:1 against the canvas at these sizes — under the 4.5:1 WCAG AA
+   asks of normal text.
+   ========================================================================== */
+
+/* ---- The tone a card carries -------------------------------------------
+   The fallback pair is declared on `.help-card` itself, further down with the
+   card's layout, so a card that names no tone — or names `outline` / `ink`,
+   which have no soft partner — still draws a legible tile rather than an unset
+   custom property. These win over it on specificity rather than on order. */
+.help-card[data-tone="neutral"] {
+  --help-tone-soft: var(--neutral-soft);
+  --help-tone-fg: var(--neutral-fg);
+}
+
+.help-card[data-tone="ok"] {
+  --help-tone-soft: var(--ok-soft);
+  --help-tone-fg: var(--ok-fg);
+}
+
+.help-card[data-tone="warn"] {
+  --help-tone-soft: var(--warn-soft);
+  --help-tone-fg: var(--warn-fg);
+}
+
+.help-card[data-tone="danger"] {
+  --help-tone-soft: var(--danger-soft);
+  --help-tone-fg: var(--danger-fg);
+}
+
+.help-card[data-tone="accent"] {
+  --help-tone-soft: var(--accent-soft);
+  --help-tone-fg: var(--accent-fg);
+}
+
+.help-card[data-tone="honey"] {
+  --help-tone-soft: var(--honey-soft);
+  --help-tone-fg: var(--honey-fg);
+}
+
+.help-card[data-tone="violet"] {
+  --help-tone-soft: var(--violet-soft);
+  --help-tone-fg: var(--violet-fg);
+}
+
+.help-card[data-tone="orange"] {
+  --help-tone-soft: var(--orange-soft);
+  --help-tone-fg: var(--orange-fg);
+}
+
+.help-card[data-tone="rose"] {
+  --help-tone-soft: var(--rose-soft);
+  --help-tone-fg: var(--rose-fg);
+}
+
+/* ---- The guide search ---------------------------------------------------
+   `max-width` in `rem` rather than the mockup's 560 px: the field grows with the
+   font-size preference, so the placeholder is not clipped at the Largest scale. */
+.help-search {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 42rem;
+}
+
+.help-search__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* `pointer-events: none` so the glyph never eats a click meant for the field —
+   the magnifier sits on top of the input's own padding box. */
+.help-search__icon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  color: var(--fg-muted);
+  pointer-events: none;
+}
+
+/* The mockup's `input--lg`. The inline padding leaves room for the glyph at every
+   font scale, because both the gap and the icon are expressed in the same units
+   the scale moves. */
+.help-search__input {
+  height: var(--control-h-lg);
+  padding-inline-start: calc(var(--space-3) + var(--icon-dense) + var(--space-2));
+  font-size: var(--fs-sm);
+}
+
+/* The live region. It is always in the DOM (an inserted region is not announced),
+   so it needs a height of zero while empty rather than a reserved line. */
+.help-search__status {
+  margin: 0;
+  min-height: 0;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+.help-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A result row. `min-width: 0` on the body is what lets a long summary be clipped
+   by the row rather than widening the page — the "no horizontal document scroll"
+   rule, applied where the text is longest. */
+.help-result {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) ease-out;
+}
+
+.help-result:hover {
+  background: var(--bg-subtle);
+  text-decoration: none;
+}
+
+.help-result__body {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.help-result__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+}
+
+.help-result:hover .help-result__title {
+  color: var(--accent-fg);
+}
+
+/* The ↗ that says the row leaves the app. `flex: none` so it is never the part
+   that shrinks when the title is long. */
+.help-result__out {
+  flex: none;
+  color: var(--fg-muted);
+}
+
+.help-result__sub {
+  display: block;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+/* Which table of the guide index the page came from. Hidden below the reflow
+   width, where the row has no room for a second column and the title is the
+   answer the reader came for. */
+.help-result__section {
+  flex: none;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* ---- The card grid ------------------------------------------------------
+   The mockup's `grid-3`, stated as three explicit tracks rather than an
+   `auto-fit` minimum: six cards in three columns is two even rows, and a track
+   count derived from a minimum width would silently become four at 1440 px and
+   leave the last row half empty.
+
+   `minmax(0, 1fr)` and not `1fr`: a grid item's automatic minimum size is its
+   content, so a long unbroken word in a card would hold its track open past the
+   viewport and scroll the document sideways — which the ticket forbids at every
+   width. */
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+/* A card. The surface, its elevation and its hover lift come from
+   `cardVariants()`; this is the column inside it. `width: 100%` and the text
+   alignment are for the two cards that are `<button>`s, which do not inherit
+   either. */
+.help-card {
+  --help-tone-soft: var(--bg-subtle);
+  --help-tone-fg: var(--fg-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--card-pad);
+  font: inherit;
+  text-align: start;
+}
+
+/* A card with nothing behind it yet. `opacity` rather than a grey, so the tone
+   and the ink stay whatever the theme made them. */
+.help-card--soon {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* The subject hexagon, the same clip path and geometry as the launcher's rows. */
+.help-tile {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  clip-path: var(--hex-clip);
+  background: var(--help-tone-soft);
+  color: var(--help-tone-fg);
+}
+
+.help-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+}
+
+.help-card:hover .help-card__title {
+  color: var(--accent-fg);
+}
+
+.help-card--soon:hover .help-card__title {
+  color: var(--fg);
+}
+
+.help-card__badge {
+  flex: none;
+}
+
+.help-card__out {
+  flex: none;
+  color: var(--fg-muted);
+}
+
+.help-card__desc {
+  display: block;
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+/* The support card's two affordances. `margin-block-start: auto` pins them to the
+   bottom of the card, so the row lines up with its neighbours in the grid however
+   long the copy above it runs. */
+.help-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-start: auto;
+  padding-block-start: var(--space-1);
+}
+
+.help-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--accent-fg);
+}
+
+/* ---- The support identifiers -------------------------------------------
+   A tenant id is an identifier, so it is set in the mono face on the inset well
+   the account block uses — `--bg-inset` rather than `--bg-subtle`, which is what
+   keeps the muted ink on it clear of AA in Solarized as well as in the light
+   palette. `overflow-wrap: anywhere` because a uuid has no break opportunity of
+   its own and the card is one column of a grid. */
+.help-support {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+}
+
+.help-support__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.help-support__label {
+  flex: none;
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.help-support__value {
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Shortcuts at a glance ---------------------------------------------- */
+.help-glance {
+  display: flex;
+  flex-direction: column;
+}
+
+.help-glance__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--card-pad);
+  border-block-end: 1px solid var(--border);
+}
+
+.help-glance__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+}
+
+/* The mockup's `grid-4`, reflowing at the same two widths the card grid does so
+   the page changes shape twice rather than four times. */
+.help-glance__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  padding: var(--card-pad);
+}
+
+.help-glance__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.help-glance__label {
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.help-glance__keys {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+  margin: 0;
+}
+
+/* The two widths the rest of the app reflows at, restated here so Help changes
+   shape with Home, the launcher and the account pages rather than on its own.
+   At the first the result rows lose their section column — a row that narrow has
+   room for the title and the summary, which is what the reader came for. */
+@media (max-width: 68.75rem) {
+  .help-result__section {
+    display: none;
+  }
+
+  .help-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .help-glance__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 48rem) {
+  .help-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .help-glance__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Layout Animation Styles */
 /* Smooth transitions for node positions during layout changes */
 .layout-animating .react-flow__node {

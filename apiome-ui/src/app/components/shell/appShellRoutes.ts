@@ -28,8 +28,9 @@ export const ADMIN_CONSOLE_ROUTE = '/admin';
 /**
  * Help & docs, the rail footer's first row (`DESIGN.md` §5.2 region 5).
  *
- * The page itself is **HIVE-4.9 (#5303)** — its acceptance criteria include "the rail's
- * Help & docs link resolves to a real page". Until it lands the row points at a route
- * Next.js answers with the app's not-found page.
+ * The page landed with **HIVE-4.9 (#5303)**: guide search, the six help cards, the shortcut
+ * strip and the support card that prints the tenant id and the build. Two surfaces name this
+ * route — the rail footer and the launcher's Resources panel — which is why the path is
+ * written here rather than in either of them.
  */
 export const HELP_ROUTE = '/ade/dashboard/help';

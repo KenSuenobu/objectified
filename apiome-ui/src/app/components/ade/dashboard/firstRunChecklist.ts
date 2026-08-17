@@ -64,6 +64,25 @@ export function setDismissed(storage: Storage | undefined = safeLocalStorage()):
   }
 }
 
+/**
+ * Forget that the user dismissed the checklist, so Home draws it again (HIVE-4.9, #5303).
+ *
+ * The Help & docs page's *Get started* card is the only caller: "reopens the getting-started
+ * checklist on Home" is what the card promises, and the checklist reads {@link isDismissed}
+ * once, when it mounts — so clearing the flag and then navigating to Home is enough to bring
+ * it back. Removing the key rather than writing `'0'` keeps one spelling of "not dismissed",
+ * which is what {@link isDismissed} tests for.
+ *
+ * @param storage Where the flag lives. Defaults to `localStorage`; a test passes its own.
+ */
+export function clearDismissed(storage: Storage | undefined = safeLocalStorage()): void {
+  try {
+    storage?.removeItem(FIRST_RUN_DISMISS_KEY);
+  } catch {
+    /* ignore quota / unavailable storage */
+  }
+}
+
 /** Return localStorage when present (browser), else undefined (SSR / tests without DOM). */
 function safeLocalStorage(): Storage | undefined {
   return typeof window !== 'undefined' ? window.localStorage : undefined;
