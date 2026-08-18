@@ -8729,3 +8729,729 @@ button.auth-divider:disabled {
   inline-size: var(--icon-dense);
   block-size: var(--icon-dense);
 }
+
+/* ==========================================================================
+   STYLE GUIDES & GOVERNANCE POLICIES  (HIVE-5.6, #5309)
+   --------------------------------------------------------------------------
+   `docs/mockups/govern/style-guides.html`, whose page-local `<style>` block
+   this replaces: the `.fieldset`, the `.policy-grid`, the assignment chips and
+   the `.fingerprint`.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the tenants, members, roles, API-keys and audit
+   blocks above give. Every rule leans on the density and font-scale tokens;
+   the two policy panels are real grids that a utility string spells badly; and
+   the quiet lines and the card titles have to sit *after* the unlayered
+   `h1`–`h4` and `p` base rules near line 2497, which outrank anything in
+   `@layer utilities`.
+
+   The mockup froze five things in pixels that must not be frozen: the 420 px
+   description clamp, the 200 px actions column, the fieldset's 14/16 px
+   padding, the 900 px policy-grid breakpoint and the legend's 6 px gutter.
+   All five are `rem`, a spacing token or a `rem` media query here, so they
+   follow all six font scales, and the two policy grids collapse to a single
+   column rather than scrolling the document sideways.
+
+   No hue is named below — every colour is a token, so the surface follows all
+   nine themes. Two measured deviations from the mockup, both the ones the
+   earlier Epic-5 tickets already made:
+
+   * quiet text is `--fg-muted`, not `--fg-subtle`, which measures about 3.1:1
+     against the canvas at these sizes;
+   * the Delete row-action keeps ordinary ghost-button ink rather than the
+     mockup's inline `color: var(--danger)`. Bare `--danger` as text is the
+     hue, not the ink chosen to be legible on a surface: it measures 3.4:1 in
+     Nord. The confirm it opens is where the danger tone belongs, and that
+     dialog is `variant="danger"` on a solid fill.
+
+   Two classes are borrowed rather than restated: `.tnt-icon-tile` from the
+   tenants block (the tinted square at the head of a row and of every dialog)
+   and `.hive-control` from the primitives block (the native `select`s, for the
+   reason `.mbr-role-select` gives).
+   ========================================================================== */
+
+/* ---- The tab strip ------------------------------------------------------
+   The three governance sections. The glyph and the count are sized from the
+   tokens so they follow the font scale rather than staying 13px marks. */
+.sg-tab-glyph {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+.sg-tab-count {
+  margin-inline-start: var(--space-1);
+}
+
+/* ---- The Name cell ------------------------------------------------------
+   Guide tile, then the name row over the description. `min-width: 0` on the
+   text column is what lets a long description elide instead of widening the
+   column. */
+.sg-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+  /* `max-width`, not `max-inline-size`: the build's CSS transform drops the
+     logical spelling from a rule that also carries `min-width` (measured in
+     HIVE-5.2, restated in 5.4 and 5.5). The two are the same thing in every
+     writing mode this app ships. 26rem is the mockup's 420px clamp, in rem. */
+  max-width: 26rem;
+  text-align: start;
+}
+
+.sg-identity__text {
+  min-width: 0;
+}
+
+/* Name and its badges on one line, wrapping rather than overflowing when the
+   guide is both built-in and the tenant default. */
+.sg-identity__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* The name is a link to the guide's own page. It takes the row's ink rather
+   than the link tint: a table whose first column is entirely blue reads as a
+   list of links, not as a list of guides. The underline on hover is what says
+   it is a link. */
+.sg-identity__link {
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--r-sm);
+}
+
+.sg-identity__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sg-identity__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sg-identity__desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- The other cells ---------------------------------------------------- */
+.sg-rules {
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* The assignment chips: the tenant-default badge, then one per pinned project.
+   Wraps, because a guide pinned to six projects must not widen the table. */
+.sg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  min-width: 0;
+  max-width: 20rem;
+}
+
+.sg-stamp {
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The em dash a guide with no assignments shows. `--fg-muted`, not the
+   mockup's `--fg-faint`, which measures about 2.1:1 on the surface. */
+.sg-empty-cell {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.sg-chip-glyph {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+/* The foot's read-only footnote, beside the count. */
+.sg-foot-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.sg-foot-note > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  margin-block-start: 0.125em;
+}
+
+/* ---- Forms shared by the dialogs and the policy panels ------------------ */
+.sg-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.sg-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.sg-field__hint {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.sg-field__optional {
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+/* A native `select` for the reason `.mbr-role-select` gives: a portalled
+   listbox is a lot of machinery for a control that picks from a handful of
+   names. It borrows `.hive-control` for its hairline and focus ring, so it is
+   the same control as every other field in the app. */
+.sg-select {
+  inline-size: 100%;
+  block-size: var(--control-h);
+  padding-inline: var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+}
+
+.sg-select:disabled {
+  cursor: not-allowed;
+  color: var(--fg-muted);
+}
+
+/* Numeric fields line up digit-for-digit; a score and an hour count are read
+   as numbers, not as words. */
+.sg-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A quiet line — an empty-copy sentence, a footer note. A `p` or a `span`, so
+   the colour is stated here to beat the unlayered `p` base rule. */
+.sg-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.sg-section-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.sg-section-desc {
+  margin-block: var(--space-1) var(--space-3);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* An inline link inside a sentence. Underlined, not merely tinted: a link
+   distinguished by colour alone is an axe `link-in-text-block` violation, and
+   unreadable to anyone who cannot see the tint. */
+.sg-inline-link {
+  color: var(--accent-fg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sg-inline-link:hover {
+  color: var(--accent);
+}
+
+/* The note under the edit dialog's fields. */
+.sg-dialog-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.sg-dialog-note > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  margin-block-start: 0.125em;
+}
+
+/* ---- The assign dialog --------------------------------------------------- */
+.sg-assign-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.sg-default-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+}
+
+.sg-assign-picker {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.sg-assign-picker__select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sg-assign-list {
+  margin-block-start: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+
+.sg-assign-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+
+.sg-assign-row + .sg-assign-row {
+  border-block-start: 1px solid var(--border);
+}
+
+.sg-assign-row__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* The project id, for the reader matching a chip against an API response.
+   Elides rather than wrapping: it is a corroborating detail, not the label. */
+.sg-assign-row__id {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.sg-assign-row__remove {
+  margin-inline-start: auto;
+}
+
+/* ---- The delete confirm -------------------------------------------------- */
+.sg-confirm-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* ---- The quality policy panel -------------------------------------------- */
+.qp-panel,
+.vp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.qp-card-header {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.qp-card-header__lead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.qp-card-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* The card's own heading. An `h3`, so its size is stated here rather than
+   inherited from the unlayered base rules. */
+.qp-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.qp-card-title__glyph {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.qp-card-desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.qp-list-header {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.qp-body,
+.vp-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* The two scopes, side by side above the mockup's 900px breakpoint and stacked
+   below it. `rem`, so the breakpoint follows the font scale rather than
+   splitting a two-column form at the Largest setting. */
+.qp-scopes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 56.25rem) {
+  .qp-scopes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A real `fieldset`/`legend`, which is what groups these controls for a screen
+   reader. The hairline is the card's, not a second border weight. */
+.qp-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.qp-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-2);
+  margin-inline-start: calc(var(--space-2) * -1);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.qp-legend__glyph {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.qp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 34rem) {
+  .qp-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A switch with its own title and explanation, the mockup's `.switch-row`. */
+.qp-switch-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.qp-switch-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.qp-switch-row__title {
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.qp-switch-row__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The read-only per-format overrides, on the recessed ground that says so. */
+.qp-overrides {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+}
+
+.qp-overrides__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.qp-overrides__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.qp-overrides__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--fs-xs);
+}
+
+.qp-overrides__format {
+  color: var(--fg);
+}
+
+/* The override's JSON. Wraps rather than scrolling the card sideways. */
+.qp-overrides__value {
+  min-width: 0;
+  color: var(--fg-muted);
+  word-break: break-word;
+}
+
+/* The two lists under the form. */
+.qp-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+@media (max-width: 56.25rem) {
+  .qp-lists {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.qp-rows {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.qp-rows > li + li {
+  border-block-start: 1px solid var(--border);
+}
+
+.qp-version-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+  padding: var(--space-3) var(--card-pad);
+  font-size: var(--fs-sm);
+}
+
+/* The content fingerprint. Elides rather than wrapping — it is an identifier
+   the reader compares by its first characters, and its `title` carries all of
+   it for anyone who needs the rest. */
+.qp-fingerprint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.qp-version-row__when {
+  margin-inline-start: auto;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.qp-version-row__actor {
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.qp-waiver-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3) var(--card-pad);
+}
+
+.qp-waiver-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.qp-waiver-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.qp-waiver-row__subject {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.qp-waiver-row__reason {
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.qp-waiver-row__meta {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  word-break: break-word;
+}
+
+/* The wait, shaped like the form it is waiting for. */
+.qp-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.qp-skeleton__header {
+  block-size: 3rem;
+}
+
+.qp-skeleton__block {
+  block-size: 12rem;
+}
+
+/* ---- The verification policy panel ---------------------------------------
+   Form on the left, history beside it — the mockup's `.grid-main-aside`. */
+.vp-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 62.5rem) {
+  .vp-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.vp-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.vp-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* Enforcement is one choice, not a column of a grid — half width above the
+   narrow breakpoint, full width below it. */
+.vp-enforcement {
+  max-inline-size: 20rem;
+}
+
+.vp-version-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3) var(--card-pad);
+}
+
+.vp-version-row__label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.vp-version-row__when {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.vp-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.vp-skeleton__block {
+  block-size: 5rem;
+}
+
+.vp-skeleton__row {
+  block-size: 2.5rem;
+}

@@ -1,15 +1,19 @@
 'use client';
 
-/**
- * Governance → Evidence-backed verification policy — ECA-3.1 (#4734)
- *
- * Tenant-level publish/deploy gate over ECA-1.3 evidence and CTG-3.1 whole-spec breaking
- * severity. Lives beside the import/export quality policy. The UI only edits and displays
- * what the REST API returns — it never re-scores evidence.
- */
-
 import { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, RefreshCw, Shield } from 'lucide-react';
+import { History, RefreshCw, Shield } from 'lucide-react';
+
+import { Alert } from '@/app/components/ui/Alert';
+import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/app/components/ui/Card';
+import { Input } from '@/app/components/ui/Input';
+import { Label } from '@/app/components/ui/Label';
+import { Skeleton } from '@/app/components/ui/Skeleton';
+import { Spinner } from '@/app/components/ui/Spinner';
+import { Textarea } from '@/app/components/ui/Textarea';
+import { formatPolicyInstant } from '@/app/components/ade/styleGuides';
+
 import {
   isVerificationPolicyBlocking,
   verificationPolicyApi,
@@ -17,11 +21,29 @@ import {
   type VerificationPolicyVersionList,
 } from './verification-policy-api';
 
-const inputClasses =
-  'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-gray-900 ' +
-  'focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 ' +
-  'dark:border-slate-700 dark:bg-slate-900 dark:text-white';
+/**
+ * Governance → Evidence-backed verification policy — ECA-3.1 (#4734), re-skinned by
+ * HIVE-5.6 (#5309).
+ *
+ * Authority: `docs/mockups/govern/style-guides.html`, its third tab; DESIGN.md §7 and §12.
+ *
+ * Tenant-level publish/deploy gate over ECA-1.3 evidence and CTG-3.1 whole-spec breaking
+ * severity. The UI only edits and displays what the REST API returns — it never re-scores
+ * evidence.
+ *
+ * ### What HIVE-5.6 changed
+ *
+ * The skin and the shape, not the contract. The six fields, their copy, the save gate and
+ * every call are the screen's own. What changed: the form is a `Card` with its history beside
+ * it rather than one long box, the four state pills are `Badge`s from the shared vocabulary
+ * instead of four inline hue palettes, the wait is a shaped skeleton, and a read-only viewer
+ * is told the panel is read-only rather than silently losing the Save button.
+ *
+ * The mockup's `last 8` history cap is kept: a version list is context for the policy above
+ * it, and an unbounded one turns the aside into the page.
+ */
 
+/** The editable policy body — everything a PUT can change. */
 interface PolicyDraft {
   requiredSuiteDigests: string;
   maxEvidenceAgeSeconds: string;
@@ -31,6 +53,10 @@ interface PolicyDraft {
   enforcement: 'advisory' | 'block';
 }
 
+/** How many versions the history aside shows, as the mockup's "last 8" states. */
+const HISTORY_LIMIT = 8;
+
+/** Normalize the API policy into editable draft state. */
 function toDraft(policy: VerificationPolicy): PolicyDraft {
   return {
     requiredSuiteDigests: (policy.requiredSuiteDigests ?? []).join('\n'),
@@ -43,6 +69,7 @@ function toDraft(policy: VerificationPolicy): PolicyDraft {
   };
 }
 
+/** Split the digest textarea into the list the API stores. */
 function parseDigests(value: string): string[] {
   return value
     .split(/[\n,]+/)
@@ -50,12 +77,12 @@ function parseDigests(value: string): string[] {
     .filter((d) => d.length > 0);
 }
 
-function formatInstant(iso: string | null): string {
-  if (!iso) return '—';
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
-}
-
+/**
+ * The verification publish & deploy policy panel.
+ *
+ * @param props.readOnly Whether the viewer may save. A member sees every value and no Save.
+ * @returns The policy form and its version history.
+ */
 export default function VerificationPolicyPanel({ readOnly = false }: { readOnly?: boolean }) {
   const [policy, setPolicy] = useState<VerificationPolicy | null>(null);
   const [draft, setDraft] = useState<PolicyDraft | null>(null);
@@ -89,9 +116,7 @@ export default function VerificationPolicyPanel({ readOnly = false }: { readOnly
   }, [load]);
 
   const dirty =
-    policy && draft
-      ? JSON.stringify(draft) !== JSON.stringify(toDraft(policy))
-      : false;
+    policy && draft ? JSON.stringify(draft) !== JSON.stringify(toDraft(policy)) : false;
 
   const handleSave = async () => {
     if (!draft || readOnly) return;
@@ -133,203 +158,237 @@ export default function VerificationPolicyPanel({ readOnly = false }: { readOnly
     }
   };
 
+  const busy = readOnly || saving;
+
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
-            <Shield className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
-            Verification publish &amp; deploy policy
-          </h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Require recent passing contract evidence (suite digests) and set whole-spec breaking
-            posture before publish or deploy. Decisions cite exact evidence run IDs. Consumer-aware
-            breaking acknowledgment lands with #4479.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={loading}
-          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-900"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden />
-          Refresh
-        </button>
-      </div>
+    <div className="vp-panel" data-testid="verification-policy-panel">
+      {error && <Alert variant="error">{error}</Alert>}
 
-      {error && (
-        <div className="mt-4 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {loading && !draft ? (
-        <p className="mt-4 text-sm text-gray-500">Loading policy…</p>
-      ) : draft && policy ? (
-        <div className="mt-4 space-y-4">
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {policy.isDefault ? (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                Default (advisory)
+      <div className="vp-layout">
+        <Card>
+          <CardHeader className="qp-card-header">
+            <span className="qp-card-header__lead">
+              <span className="tnt-icon-tile" data-tone="violet">
+                <Shield aria-hidden />
               </span>
-            ) : (
-              <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-200">
-                v{policy.versionNumber}
+              <span className="qp-card-header__text">
+                <span className="vp-title-row">
+                  <h3 className="qp-card-title">Verification publish &amp; deploy policy</h3>
+                  {policy &&
+                    (policy.isDefault ? (
+                      <Badge variant="outline" data-testid="verification-policy-default-badge">
+                        Default (advisory)
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" mono data-testid="verification-policy-version-badge">
+                        v{policy.versionNumber}
+                      </Badge>
+                    ))}
+                  {policy && (
+                    <Badge variant={isVerificationPolicyBlocking(policy) ? 'rose' : 'warn'}>
+                      {isVerificationPolicyBlocking(policy) ? 'Blocking' : 'Advisory'}
+                    </Badge>
+                  )}
+                </span>
+                <p className="qp-card-desc">
+                  Require recent passing contract evidence (suite digests) and set whole-spec
+                  breaking posture before publish or deploy. Decisions cite exact evidence run
+                  IDs. Consumer-aware breaking acknowledgment lands with #4479.
+                </p>
               </span>
-            )}
-            {isVerificationPolicyBlocking(policy) ? (
-              <span className="rounded-full bg-rose-50 px-2 py-0.5 font-medium text-rose-700 dark:bg-rose-950 dark:text-rose-200">
-                Blocking
-              </span>
-            ) : (
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-                Advisory
-              </span>
-            )}
-          </div>
-
-          <label className="block space-y-1">
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-              Required suite digests (one per line)
             </span>
-            <textarea
-              className={`${inputClasses} w-full font-mono`}
-              rows={3}
-              disabled={readOnly || saving}
-              value={draft.requiredSuiteDigests}
-              onChange={(e) => setDraft({ ...draft, requiredSuiteDigests: e.target.value })}
-              placeholder="sha256:…"
-            />
-          </label>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Refresh policy"
+              data-testid="verification-policy-refresh"
+              disabled={loading}
+              onClick={() => void load()}
+            >
+              <RefreshCw aria-hidden />
+              Refresh
+            </Button>
+          </CardHeader>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                Max evidence age (seconds)
+          {loading && !draft ? (
+            <CardContent className="vp-skeleton">
+              <span className="sr-only" role="status">
+                Loading policy…
               </span>
-              <input
-                type="number"
-                min={1}
-                className={`${inputClasses} w-full`}
-                disabled={readOnly || saving}
-                value={draft.maxEvidenceAgeSeconds}
-                onChange={(e) => setDraft({ ...draft, maxEvidenceAgeSeconds: e.target.value })}
-                placeholder="No limit"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                Required target network class
-              </span>
-              <select
-                className={`${inputClasses} w-full`}
-                disabled={readOnly || saving}
-                value={draft.requiredTargetNetworkClass}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    requiredTargetNetworkClass: e.target.value as PolicyDraft['requiredTargetNetworkClass'],
-                  })
-                }
-              >
-                <option value="">Any</option>
-                <option value="public">public</option>
-                <option value="private">private</option>
-              </select>
-            </label>
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Purpose</span>
-              <select
-                className={`${inputClasses} w-full`}
-                disabled={readOnly || saving}
-                value={draft.purpose}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    purpose: e.target.value as PolicyDraft['purpose'],
-                  })
-                }
-              >
-                <option value="both">both</option>
-                <option value="publish">publish</option>
-                <option value="deploy">deploy</option>
-              </select>
-            </label>
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                Breaking-change action (whole-spec)
-              </span>
-              <select
-                className={`${inputClasses} w-full`}
-                disabled={readOnly || saving}
-                value={draft.breakingChangeAction}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    breakingChangeAction: e.target.value as PolicyDraft['breakingChangeAction'],
-                  })
-                }
-              >
-                <option value="ignore">ignore</option>
-                <option value="warn">warn</option>
-                <option value="block">block</option>
-              </select>
-            </label>
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                Enforcement
-              </span>
-              <select
-                className={`${inputClasses} w-full`}
-                disabled={readOnly || saving}
-                value={draft.enforcement}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    enforcement: e.target.value as PolicyDraft['enforcement'],
-                  })
-                }
-              >
-                <option value="advisory">advisory</option>
-                <option value="block">block</option>
-              </select>
-            </label>
-          </div>
+              <Skeleton className="vp-skeleton__block" />
+              <Skeleton className="vp-skeleton__row" />
+              <Skeleton className="vp-skeleton__row" />
+            </CardContent>
+          ) : draft && policy ? (
+            <CardContent className="vp-body">
+              <div className="sg-field">
+                <Label htmlFor="vp-digests">Required suite digests (one per line)</Label>
+                <Textarea
+                  id="vp-digests"
+                  className="mono"
+                  rows={3}
+                  disabled={busy}
+                  value={draft.requiredSuiteDigests}
+                  onChange={(e) => setDraft({ ...draft, requiredSuiteDigests: e.target.value })}
+                  placeholder="sha256:…"
+                />
+                <p className="sg-field__hint">
+                  Evidence must match one of these digests to count as passing.
+                </p>
+              </div>
 
-          {!readOnly && (
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => void handleSave()}
+              <div className="qp-grid">
+                <div className="sg-field">
+                  <Label htmlFor="vp-max-age">Max evidence age (seconds)</Label>
+                  <Input
+                    id="vp-max-age"
+                    type="number"
+                    min={1}
+                    className="sg-num"
+                    disabled={busy}
+                    value={draft.maxEvidenceAgeSeconds}
+                    onChange={(e) => setDraft({ ...draft, maxEvidenceAgeSeconds: e.target.value })}
+                    placeholder="No limit"
+                  />
+                  <p className="sg-field__hint">Older evidence is treated as missing.</p>
+                </div>
+                <div className="sg-field">
+                  <Label htmlFor="vp-network">Required target network class</Label>
+                  <select
+                    id="vp-network"
+                    className="hive-control sg-select"
+                    disabled={busy}
+                    value={draft.requiredTargetNetworkClass}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        requiredTargetNetworkClass: e.target
+                          .value as PolicyDraft['requiredTargetNetworkClass'],
+                      })
+                    }
+                  >
+                    <option value="">Any</option>
+                    <option value="public">public</option>
+                    <option value="private">private</option>
+                  </select>
+                </div>
+                <div className="sg-field">
+                  <Label htmlFor="vp-purpose">Purpose</Label>
+                  <select
+                    id="vp-purpose"
+                    className="hive-control sg-select"
+                    disabled={busy}
+                    value={draft.purpose}
+                    onChange={(e) =>
+                      setDraft({ ...draft, purpose: e.target.value as PolicyDraft['purpose'] })
+                    }
+                  >
+                    <option value="both">both</option>
+                    <option value="publish">publish</option>
+                    <option value="deploy">deploy</option>
+                  </select>
+                </div>
+                <div className="sg-field">
+                  <Label htmlFor="vp-breaking">Breaking-change action (whole-spec)</Label>
+                  <select
+                    id="vp-breaking"
+                    className="hive-control sg-select"
+                    disabled={busy}
+                    value={draft.breakingChangeAction}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        breakingChangeAction: e.target
+                          .value as PolicyDraft['breakingChangeAction'],
+                      })
+                    }
+                  >
+                    <option value="ignore">ignore</option>
+                    <option value="warn">warn</option>
+                    <option value="block">block</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="sg-field vp-enforcement">
+                <Label htmlFor="vp-enforcement">Enforcement</Label>
+                <select
+                  id="vp-enforcement"
+                  className="hive-control sg-select"
+                  disabled={busy}
+                  value={draft.enforcement}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      enforcement: e.target.value as PolicyDraft['enforcement'],
+                    })
+                  }
+                >
+                  <option value="advisory">advisory</option>
+                  <option value="block">block</option>
+                </select>
+                <p className="sg-field__hint">
+                  Block refuses the publish/deploy when evidence is missing or stale.
+                </p>
+              </div>
+            </CardContent>
+          ) : null}
+
+          <CardFooter>
+            <span className="sg-quiet">
+              {readOnly
+                ? 'Read-only: only tenant administrators can save a policy version.'
+                : 'Every save creates a new immutable version.'}
+            </span>
+            {!readOnly && (
+              <Button
                 disabled={!dirty || saving}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+                data-testid="verification-policy-save"
+                onClick={() => void handleSave()}
               >
+                {saving ? <Spinner size="sm" aria-hidden /> : null}
                 {saving ? 'Saving…' : 'Save new version'}
-              </button>
-            </div>
-          )}
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
 
-          {versions.length > 0 && (
-            <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Version history
-              </h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
-                {versions.slice(0, 8).map((v) => (
-                  <li key={v.policyVersionId ?? v.versionNumber} className="flex justify-between gap-2">
-                    <span>
-                      v{v.versionNumber} · {v.enforcement} · {v.breakingChangeAction}
+        <aside className="vp-aside">
+          <Card>
+            <CardHeader className="qp-list-header">
+              <span className="qp-card-header__text">
+                <h3 className="qp-card-title">
+                  <History aria-hidden className="qp-card-title__glyph" />
+                  Version history
+                </h3>
+                <p className="qp-card-desc">The last {HISTORY_LIMIT} saved versions.</p>
+              </span>
+            </CardHeader>
+            {versions.length === 0 ? (
+              <CardContent>
+                <p className="sg-quiet">No version has been saved yet.</p>
+              </CardContent>
+            ) : (
+              <ul className="qp-rows" data-testid="verification-policy-versions">
+                {versions.slice(0, HISTORY_LIMIT).map((version) => (
+                  <li
+                    key={version.policyVersionId ?? version.versionNumber}
+                    className="vp-version-row"
+                  >
+                    <span className="vp-version-row__label mono">
+                      v{version.versionNumber} · {version.enforcement} ·{' '}
+                      {version.breakingChangeAction}
                     </span>
-                    <span className="text-xs text-gray-400">{formatInstant(v.createdAt)}</span>
+                    <span className="vp-version-row__when">
+                      {formatPolicyInstant(version.createdAt)}
+                    </span>
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
-        </div>
-      ) : null}
-    </section>
+            )}
+          </Card>
+        </aside>
+      </div>
+    </div>
   );
 }
