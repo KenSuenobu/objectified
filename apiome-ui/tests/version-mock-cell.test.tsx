@@ -187,17 +187,16 @@ describe('VersionMockCell — usage sparkline', () => {
   it('renders the 30-day sparkline from rollup data', () => {
     const series = Array.from({ length: 30 }, (_, i) => i);
     renderCell({ mockEnabled: true, mockBaseUrl: MOCK_URL, usageSeries: series });
+    // The metrics kit names the shape and then describes it (HIVE-2.6): `<label> — <summary>`.
     expect(
-      screen.getByRole('img', { name: 'Mock requests for v1.0.0, last 30 days' })
+      screen.getByRole('img', { name: /^Mock requests for v1\.0\.0, last 30 days — 30 points/ })
     ).toBeInTheDocument();
   });
 
-  it('renders the shared empty state when no usage was recorded', () => {
+  it('says "No requests yet" when no usage was recorded (HIVE-6.2)', () => {
     renderCell({ mockEnabled: true, mockBaseUrl: MOCK_URL, usageSeries: [] });
-    expect(
-      screen.getByRole('img', { name: 'Mock requests for v1.0.0, last 30 days: No data' })
-    ).toBeInTheDocument();
-    expect(screen.getByText('No data')).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /last 30 days/ })).not.toBeInTheDocument();
+    expect(screen.getByText('No requests yet')).toBeInTheDocument();
   });
 
   it('renders no sparkline while usage is still loading', () => {

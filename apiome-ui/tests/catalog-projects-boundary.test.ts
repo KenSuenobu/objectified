@@ -79,8 +79,9 @@ describe('Versions page selector excludes catalog items but keeps deep-links wor
   it('derives publishable-only selector options, appending only a deep-linked selection', () => {
     expect(versionsSrc).toContain('const selectableProjects = useMemo');
     expect(versionsSrc).toContain('projects.filter(isProjectPublishable)');
-    expect(versionsSrc).toContain(
-      'selectableProjects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)',
+    // The options are drawn from `selectableProjects`; the JSX may span lines (HIVE-6.2).
+    expect(versionsSrc).toMatch(
+      /selectableProjects\.map\(\(p\) => \(?\s*<SelectItem key=\{p\.id\} value=\{p\.id\}>\s*\{p\.name\}\s*<\/SelectItem>/,
     );
   });
 

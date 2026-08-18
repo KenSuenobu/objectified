@@ -3,42 +3,25 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthSession } from '@lib/auth/session-client';
-import { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import {
-  Edit2,
-  Trash2,
   Package,
-  AlertCircle,
-  Lock,
-  Unlock,
-  CheckCircle,
-  Eye,
-  Copy,
-  MoreVertical,
-  Network,
-  Snowflake,
-  GitBranch,
   GitMerge,
-  Tag,
   GitFork,
-  Shield,
-  Sun,
+  GitGraph,
   LayoutGrid,
-  Undo2,
   ScrollText,
   ListOrdered,
   GitCompareArrows,
   FileText,
-  ChevronRight,
-  ArrowUp,
-  ArrowDown,
   ArrowUpDown,
-  FileOutput,
   FlaskConical,
   History,
+  ShieldCheck,
   Upload,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -61,14 +44,72 @@ import { Input } from '../../../components/ui/Input';
 import { Label } from '../../../components/ui/Label';
 import { Alert } from '../../../components/ui/Alert';
 import { LoadingState } from '../../../components/ui/LoadingState';
-import { EmptyState } from '../../../components/ui/EmptyState';
+import { EmptyState, GatedState } from '../../../components/ui/EmptyState';
 import { Textarea } from '../../../components/ui/Textarea';
 import { Badge } from '../../../components/ui/Badge';
-import { TAB_LIST_CLASS, tabTriggerClass } from '../../../components/ui/tabStyles';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/Tabs';
+import { Card } from '../../../components/ui/Card';
+import {
+  DataTableFilterChip,
+  DataTableFoot,
+  DataTableToolbar,
+  DataTableToolbarSpacer,
+  type DataTableSortState,
+} from '../../../components/ui/DataTable';
+import { FormatPill } from '../../../components/ui/catalog/FormatPill';
+import { gradeBand } from '../../../components/ui/statusVocabulary';
+import { TAB_COUNT_CLASS, TAB_LIST_CLASS, tabTriggerClass } from '../../../components/ui/tabStyles';
+import PageHeader from '../../../components/shell/PageHeader';
+import { Page, PageBody } from '../../../components/shell/pageChrome';
 import { cn } from '@lib/utils';
-import { VersionLintBadge } from '../../../components/ade/dashboard/VersionLintBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/Select';
+import {
+  DEFAULT_VERSIONS_SORT,
+  EditVersionDialog,
+  GITLIKE_FLAG_TITLE,
+  GitlikeFlag,
+  NewVersionDialog,
+  ProjectFactsCard,
+  PublishVersionDialog,
+  SUNSET_TIMELINE_ROUTE,
+  SpecViewerDialog,
+  SunsetScheduleDialog,
+  VERSION_FACETS,
+  VERSION_FACET_LABELS,
+  VERSION_LIFECYCLES,
+  VERSION_LIFECYCLE_LABEL,
+  VERSION_SORT_OPTIONS,
+  VersionGitlikePanels,
+  VersionsBanners,
+  VersionsTable,
+  VersionsTimelineFilters,
+  compatibilityBanner,
+  deleteVersionConfirm,
+  deprecationBanner,
+  formatVersionDate,
+  freezeSchemaConfirm,
+  gitlikeAffordance,
+  headRevisionBadge,
+  lastPublishedVersion,
+  matchesVersionFacet,
+  newestPublishedSummary,
+  nextVersionsSort,
+  sortVersions,
+  storedQualityBadge,
+  unpublishVersionConfirm,
+  versionFacetCounts,
+  versionsFootLabel,
+  versionsHeadLine,
+  versionsSortFromMenu,
+  versionsSortLabel,
+  whatsNewBanner,
+  type Project,
+  type Version,
+  type VersionBranchRow,
+  type VersionFacet,
+  type VersionRowMenuAction,
+  type VersionTagRow,
+} from '../../../components/ade/versions';
+import type { VersionChangelogSummary } from '@lib/version-changelog';
 import { useDialog } from '../../../components/providers/DialogProvider';
 import {
   deleteVersion,
@@ -79,7 +120,6 @@ import {
 } from '../../../../../lib/db/helper';
 import { coerceProjectMetadataRecord } from '@lib/project-metadata';
 import YAML from 'yaml';
-import { Markdown } from '@/app/components/ui/Markdown';
 import { diffLines, Change } from 'diff';
 import {
   compareSchemas,
@@ -104,7 +144,6 @@ import { generateMigrationGuideMarkdownFromSummary } from '../../../../../lib/mi
 import { downloadMigrationGuidePdf } from '../../../utils/export-migration-guide-pdf';
 import { sanitizeFilenameSegment } from '../../../utils/filename-utils';
 import RelationshipGraphDialog from './RelationshipGraphDialog';
-import VersionLineageSnippet from './VersionLineageSnippet';
 import VersionHistoryGraphPanel from './VersionHistoryGraphPanel';
 import ProjectConversionPanel from './ProjectConversionPanel';
 import ImportDialog from '../../../components/ade/dashboard/ImportDialog';
@@ -141,32 +180,11 @@ import {
   type VersionChangelog,
 } from '@lib/version-changelog';
 import ExportDialog, { type ExportedArtifactSummary } from '../../../components/ade/dashboard/export/ExportDialog';
-import VersionExportPanel from '../../../components/ade/dashboard/export/VersionExportPanel';
 import { recordRecentExport } from '../../../components/ade/dashboard/export/recentExports';
 import { ProjectRelatedArtifactsSection } from '../../../components/ade/dashboard/ProjectRelatedArtifactsSection';
-import {
-  dashboardContentStackClass,
-  dashboardMainClass,
-  dashboardPanelClass,
-  dashboardPanelPaddedClass,
-  dashboardTableWrapClass,
-  dashboardTableTheadClass,
-  dashboardThClass,
-  dashboardThRightClass,
-  dashboardTbodyClass,
-  dashboardTrHoverClass,
-} from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import { FEATURE_GITLIKE } from '@lib/feature-flags';
 import * as ToggleGroup from '@radix-ui/react-toggle-group';
-import {
-  sortVersionsDashboardRows,
-  type VersionsDashboardSortColumn,
-  type VersionsDashboardSortDirection,
-} from '@/app/utils/versions-dashboard-sort';
-import { VersionMockCell, type VersionMockChange } from '../../../components/ade/dashboard/VersionMockCell';
-import { PublishGuideViolationsPanel } from '../../../components/ade/dashboard/PublishGuideViolationsPanel';
-import { BreakingPublishGuardrailPanel } from '../../../components/ade/dashboard/BreakingPublishGuardrailPanel';
-import VerificationPolicyDecisionPanel from '../../../components/ade/dashboard/VerificationPolicyDecisionPanel';
+import type { VersionMockChange } from '../../../components/ade/dashboard/VersionMockCell';
 import {
   guardrailBlocksPublish,
   type BreakingPublishGuardrail,
@@ -174,17 +192,31 @@ import {
 import type { VersionLintReport } from '@/app/utils/version-lint-report';
 import type { VerificationPolicyDecision } from '../style-guides/verification-policy-api';
 import { useMockUsage } from '@/app/hooks/useMockUsage';
-import { mockUsageSeriesKey } from '@/app/utils/mock-usage-series';
-import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
-/** Radix Select cannot use empty string as a value; maps to no successor in metadata. */
-const SUCCESSOR_SELECT_NONE = '__none__';
+/** Where the breadcrumb's first crumb goes. */
+const HOME_ROUTE = '/ade/dashboard';
+
+/** Where the breadcrumb's Projects crumb and the no-projects state go. */
+const PROJECTS_ROUTE = '/ade/dashboard/projects';
+
+/**
+ * How this build treats `FEATURE_GITLIKE` affordances (HIVE-6.2, #5313) — decided once, from
+ * the build constant and `NODE_ENV`; see `gitlikeAffordance` for the four rows.
+ */
+const GITLIKE = gitlikeAffordance();
+
+/**
+ * Whether the environment allows the change-report UI at all. The flag half of the gate is
+ * `FEATURE_GITLIKE`; when only the flag hides it, the tab is drawn inert with its marker.
+ */
+const CHANGE_REPORT_ENV_ALLOWED = process.env.NEXT_PUBLIC_CHANGE_REPORT_UI !== '0';
+
+/** Radix `Select` cannot use the empty string as a value; these stand in for "no filter". */
+const ALL_LIFECYCLES = '__all__';
+const ALL_REVISIONS = '__all__';
 
 const SPEC_JSON_YAML_TOGGLE_ITEM_CLASS =
   'px-3 py-2 text-xs font-semibold rounded-md transition-all duration-200 data-[state=on]:bg-white dark:data-[state=on]:bg-gray-600 data-[state=on]:text-indigo-600 dark:data-[state=on]:text-indigo-400 data-[state=on]:shadow-sm data-[state=off]:text-gray-600 dark:data-[state=off]:text-gray-400 hover:text-gray-900 dark:hover:text-white';
-
-/** The renderings the View Spec dialog offers, in tab order. */
-const SPEC_FORMATS = ['json', 'yaml'] as const;
 
 function SpecJsonYamlToggle({
   value,
@@ -212,18 +244,6 @@ function SpecJsonYamlToggle({
   );
 }
 
-const Editor = dynamic(() => import('@monaco-editor/react'), {
-  ssr: false,
-  loading: () => (
-    <LoadingState
-      className="h-full"
-      minHeightClassName="min-h-0"
-      spinnerSize="md"
-      message="Loading editor..."
-    />
-  ),
-});
-
 const VersionCanvasCompare = dynamic(() => import('./VersionCanvasCompare'), {
   ssr: false,
   loading: () => (
@@ -235,54 +255,6 @@ const VersionCanvasCompare = dynamic(() => import('./VersionCanvasCompare'), {
     />
   ),
 });
-
-// `publishable` is the Project-vs-Catalog boundary (MFI-23.1): `false` for catalog items
-// (OpenAPI-worthy non-OpenAPI imports), which are never publish candidates (MFI-23.8, #4017).
-// Older payloads may omit it; an absent flag is treated as publishable.
-interface Project { id: string; name: string; slug: string; publishable?: boolean; }
-
-interface Version {
-  id: string;
-  project_id: string;
-  creator_id: string;
-  version_id: string;
-  shortMessage: string | null;
-  changelog: string | null;
-  enabled: boolean;
-  published: boolean;
-  deleted_at: string | null;
-  created_at: string;
-  updated_at: string;
-  published_at: string | null;
-  creator_name: string;
-  creator_email: string;
-  parent_version_id?: string | null;
-  merge_parent_version_id?: string | null;
-  forkedFromRevisionId?: string | null;
-  upstreamProjectId?: string | null;
-  forkSourceVersionLabel?: string | null;
-  forkSourceProjectName?: string | null;
-  upstreamProjectName?: string | null;
-  revisionLocked?: boolean;
-  /** Governance lifecycle (#739): stable | beta | deprecated | archived */
-  lifecycle?: string;
-  /** Revision JSON (#507, #748): deprecation, sunsetAt, successorRevisionId, … */
-  metadata?: Record<string, unknown>;
-  /** Optional commit author string (REST: author / commit_author, #2579) */
-  author?: string | null;
-  /** Optional full commit message body (REST: message / commit_message, #2579) */
-  message?: string | null;
-  /** Hosted mock toggle state (#4422, SIM-2.1) */
-  mockEnabled?: boolean;
-  /** Private draft mock flag (#4446, SIM-2.5) */
-  mockPrivate?: boolean;
-  /** Stable mock base URL, set by REST when the mock is enabled (#4422) */
-  mockBaseUrl?: string | null;
-  /** Quality score stored on the version record (#5259); null when the revision is unscored. */
-  qualityScore?: number | null;
-  /** A-F grade stored on the version record (#5259); null when the revision is unscored. */
-  qualityGrade?: string | null;
-}
 
 /** Client-side history timeline filters (#2579) — matches REST list `q` / creator / date range semantics. */
 function revisionMatchesHistoryFilters(
@@ -329,113 +301,6 @@ function formatRevisionTimestampUtc(iso: string | undefined): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
   return d.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
-}
-
-function getVersionActionsMenuMaxPx(): number {
-  return Math.min(window.innerHeight * 0.6, 24 * 16);
-}
-
-/** Fixed dropdown for row actions: stay inside the viewport (flip above or clamp when near the bottom). */
-function computeVersionActionsDropdownPosition(rect: DOMRect): { top?: number; bottom?: number; right: number } {
-  const right = window.innerWidth - rect.right;
-  const gap = 4;
-  const margin = 8;
-  const maxH = getVersionActionsMenuMaxPx();
-  const spaceBelow = window.innerHeight - rect.bottom - gap - margin;
-  const spaceAbove = rect.top - gap - margin;
-
-  const preferBelow = spaceBelow >= maxH || spaceBelow >= spaceAbove;
-
-  if (preferBelow) {
-    let top = rect.bottom + gap;
-    if (top + maxH > window.innerHeight - margin) {
-      top = Math.max(margin, window.innerHeight - margin - maxH);
-    }
-    return { top, right };
-  }
-
-  const topIfAbove = rect.top - gap - maxH;
-  if (topIfAbove < margin) {
-    return { top: margin, right };
-  }
-  return { bottom: window.innerHeight - rect.top + gap, right };
-}
-
-interface VersionBranchRow {
-  id: string;
-  name: string;
-  tip_version_id: string;
-  tip_version_string?: string;
-  created_at?: string;
-  created_by?: string | null;
-  protected?: boolean;
-  /** Project default branch (cannot be deleted). */
-  is_default?: boolean;
-}
-
-function isVersionBranchNonDeletable(b: Pick<VersionBranchRow, 'name' | 'is_default'>): boolean {
-  if (b.is_default) return true;
-  return b.name.trim().toLowerCase() === 'main';
-}
-
-interface VersionTagRow {
-  id: string;
-  name: string;
-  version_id: string;
-  target_version_string?: string;
-  message?: string | null;
-  channel?: string | null;
-  immutable?: boolean;
-  protected?: boolean;
-  created_by?: string | null;
-}
-
-function VersionsSortTh({
-  column,
-  sortColumn,
-  sortDirection,
-  onSortClick,
-  className,
-  testId,
-  ariaLabel,
-  children,
-}: {
-  column: VersionsDashboardSortColumn;
-  sortColumn: VersionsDashboardSortColumn;
-  sortDirection: VersionsDashboardSortDirection;
-  onSortClick: (c: VersionsDashboardSortColumn) => void;
-  className: string;
-  testId: string;
-  ariaLabel: string;
-  children: ReactNode;
-}) {
-  const active = sortColumn === column;
-  return (
-    <th
-      scope="col"
-      className={className}
-      aria-sort={active ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-    >
-      <button
-        type="button"
-        className="inline-flex w-full max-w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs font-medium uppercase tracking-wider text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-        onClick={() => onSortClick(column)}
-        data-testid={testId}
-        aria-label={ariaLabel}
-      >
-        <span className="inline-flex min-w-0 flex-1 items-center gap-1.5 truncate">{children}</span>
-        {active ? (
-          sortDirection === 'asc' ? (
-            <ArrowUp className="h-3.5 w-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
-          ) : (
-            <ArrowDown className="h-3.5 w-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
-          )
-        ) : (
-          <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden />
-        )}
-      </button>
-    </th>
-  );
 }
 
 const Versions = () => {
@@ -513,8 +378,6 @@ const Versions = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   // Dropdown state
-  const [openVersionDropdown, setOpenVersionDropdown] = useState<string | null>(null);
-  const [dropdownPosition, setDropdownPosition] = useState<{ top?: number; bottom?: number; right: number } | null>(null);
 
   const [showOpenApiDialog, setShowOpenApiDialog] = useState(false);
   const [openApiSpec, setOpenApiSpec] = useState<string>('');
@@ -606,10 +469,22 @@ const Versions = () => {
   const [historyAuthorCreatorId, setHistoryAuthorCreatorId] = useState('');
   const [historyDateFrom, setHistoryDateFrom] = useState('');
   const [historyDateTo, setHistoryDateTo] = useState('');
-  const [versionsTableSortColumn, setVersionsTableSortColumn] =
-    useState<VersionsDashboardSortColumn>('created');
-  const [versionsTableSortDirection, setVersionsTableSortDirection] =
-    useState<VersionsDashboardSortDirection>('desc');
+  /** The table's sort, bridged to the timeline's own comparator by `sortVersions` (HIVE-6.2). */
+  const [versionsSort, setVersionsSort] = useState<DataTableSortState>(DEFAULT_VERSIONS_SORT);
+  /** The toolbar's quick chip — All · Drafts · Published (HIVE-6.2). */
+  const [versionFacet, setVersionFacet] = useState<VersionFacet>('all');
+  /**
+   * False until the selected project's first revisions read lands, so the table draws its
+   * skeleton rather than an empty state that a moment later is not (HIVE-6.2). Only the first
+   * read of a project (or a lifecycle change) resets it — a reload after a write draws the
+   * rows it has while the new ones arrive.
+   */
+  const [versionsLoaded, setVersionsLoaded] = useState(false);
+  /**
+   * The project's stored change classifications (`/api/projects/{id}/changelogs`) — what the
+   * compatibility banner reads (HIVE-6.2). The Changes tab reads the same list itself.
+   */
+  const [changelogSummaries, setChangelogSummaries] = useState<VersionChangelogSummary[] | null>(null);
   const [lifecycleFilter, setLifecycleFilter] = useState<string>('');
   const [editLifecycle, setEditLifecycle] = useState<string>('stable');
   const [editDeprecationMessage, setEditDeprecationMessage] = useState('');
@@ -746,9 +621,12 @@ const Versions = () => {
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const isSyncingScroll = useRef(false);
 
-  const currentTenantId = (session?.user as any)?.current_tenant_id;
-  const currentUserId = (session?.user as any)?.user_id;
-  const isAdmin = Boolean((session?.user as any)?.is_tenant_admin);
+  const sessionUser = session?.user as
+    | { current_tenant_id?: string; user_id?: string; is_tenant_admin?: boolean }
+    | undefined;
+  const currentTenantId = sessionUser?.current_tenant_id;
+  const currentUserId = sessionUser?.user_id;
+  const isAdmin = Boolean(sessionUser?.is_tenant_admin);
   const [effectiveIsAdmin, setEffectiveIsAdmin] = useState<boolean>(isAdmin);
 
   useEffect(() => {
@@ -834,7 +712,44 @@ const Versions = () => {
     });
   }, [projects, searchParams]);
 
-  useEffect(() => { if (selectedProjectId) loadVersions(); else setVersions([]); }, [selectedProjectId, lifecycleFilter]);
+  useEffect(() => {
+    if (selectedProjectId) {
+      setVersionsLoaded(false);
+      loadVersions();
+    } else {
+      setVersions([]);
+      setVersionsLoaded(true);
+    }
+  }, [selectedProjectId, lifecycleFilter]);
+
+  /**
+   * The compatibility banner's data (HIVE-6.2): re-read when the project changes and when the
+   * set of published revisions changes — a publish or unpublish — but not on every row edit.
+   */
+  const publishedSignature = useMemo(
+    () => versions.filter((v) => v.published).map((v) => v.id).sort().join('|'),
+    [versions]
+  );
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setChangelogSummaries(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/projects/${encodeURIComponent(selectedProjectId)}/changelogs`)
+      .then((r) => r.json())
+      .then((json: { success?: boolean; changelogs?: VersionChangelogSummary[] }) => {
+        if (cancelled) return;
+        setChangelogSummaries(json?.success && Array.isArray(json.changelogs) ? json.changelogs : null);
+      })
+      .catch(() => {
+        if (!cancelled) setChangelogSummaries(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // `publishedSignature` is the dependency: it says which revisions have a classification.
+  }, [selectedProjectId, publishedSignature]);
 
   useEffect(() => {
     if (!forkTargetProjectId || !showForkDialog) {
@@ -1017,6 +932,8 @@ const Versions = () => {
       console.error('Failed to load versions:', error);
       setVersions([]);
       return false;
+    } finally {
+      setVersionsLoaded(true);
     }
   };
 
@@ -1658,7 +1575,7 @@ const Versions = () => {
     const ver = versions.find((v) => v.id === versionRecordId);
     if (!ver) { await alertDialog({ message: 'Version not found', variant: 'error' }); return; }
     if (ver.creator_id !== currentUserId && !effectiveIsAdmin) { toast.warning('Only owner or admin can unpublish'); return; }
-    const confirmed = await confirmDialog({ title: 'Unpublish Version', message: 'Best practice is to keep it published. Are you sure?', variant: 'danger', confirmLabel: 'Unpublish', cancelLabel: 'Cancel' });
+    const confirmed = await confirmDialog(unpublishVersionConfirm(ver));
     if (!confirmed) return;
     try {
       const res = await fetch(`/api/versions/${versionRecordId}/unpublish`, {
@@ -1681,13 +1598,7 @@ const Versions = () => {
       toast.info('Schema is already frozen for this version.');
       return;
     }
-    const confirmed = await confirmDialog({
-      title: 'Freeze schema',
-      message: 'This will capture the current class schemas for this version into the database so the version can be used in the Database section. Only versions with no schema captured yet can be frozen. Continue?',
-      variant: 'info',
-      confirmLabel: 'Freeze schema',
-      cancelLabel: 'Cancel',
-    });
+    const confirmed = await confirmDialog(freezeSchemaConfirm(version));
     if (!confirmed) return;
     setFreezingSchemaVersionId(version.id);
     try {
@@ -1711,7 +1622,10 @@ const Versions = () => {
   };
 
   const handleDelete = async (versionRecordId: string) => {
-    const confirmed = await confirmDialog({ title: 'Delete Version', message: 'This action cannot be undone.', variant: 'danger', confirmLabel: 'Delete', cancelLabel: 'Cancel' });
+    const target = versions.find((v) => v.id === versionRecordId);
+    const confirmed = await confirmDialog(
+      deleteVersionConfirm(target ?? { version_id: versionRecordId.slice(0, 8) })
+    );
     if (!confirmed) return;
     try {
       const result = await deleteVersion(versionRecordId);
@@ -1724,7 +1638,9 @@ const Versions = () => {
             : response.error || 'Failed to delete';
         await alertDialog({ message: msg, variant: 'error' });
       }
-    } catch (error: any) { await alertDialog({ message: error.message || 'An error occurred', variant: 'error' }); }
+    } catch (error: unknown) {
+      await alertDialog({ message: error instanceof Error && error.message ? error.message : 'An error occurred', variant: 'error' });
+    }
   };
 
   const handleViewOpenApi = async (version: Version) => {
@@ -1737,7 +1653,7 @@ const Versions = () => {
         coerceProjectMetadataRecord((project as { metadata?: unknown })?.metadata)
       );
       setOpenApiSpec(spec);
-    } catch (error) { setOpenApiSpec(JSON.stringify({ openapi: '3.1.0', info: { title: 'Error Loading Spec', version: version.version_id }, components: { schemas: {} } }, null, 2)); }
+    } catch { setOpenApiSpec(JSON.stringify({ openapi: '3.1.0', info: { title: 'Error Loading Spec', version: version.version_id }, components: { schemas: {} } }, null, 2)); }
     finally { setIsLoadingSpec(false); }
   };
 
@@ -1748,8 +1664,8 @@ const Versions = () => {
     setRelationshipGraphClasses(null);
     try {
       const classesResult = await getClassesForVersion(version.id);
-      const classesData = JSON.parse(classesResult);
-      const classesWithProperties = await Promise.all(classesData.map(async (cls: any) => {
+      const classesData = JSON.parse(classesResult) as Array<{ id: string; name: string }>;
+      const classesWithProperties = await Promise.all(classesData.map(async (cls) => {
         const propsResult = await getPropertiesForClass(cls.id);
         return { ...cls, properties: JSON.parse(propsResult) };
       }));
@@ -1886,6 +1802,20 @@ const Versions = () => {
   /** Latest revision by `created_at` in the loaded list — used as “current” for compare (#2580). */
   const headRevisionId = useMemo(() => projectHeadRevisionId(versions), [versions]);
 
+  // ---- what the header and the banners say (HIVE-6.2) — derived, never fetched ----------------
+  const headBadge = useMemo(() => headRevisionBadge(versions, headRevisionId), [versions, headRevisionId]);
+  const headQuality = useMemo(
+    () => storedQualityBadge(versions.find((v) => v.id === headRevisionId)),
+    [versions, headRevisionId]
+  );
+  const headLine = useMemo(() => versionsHeadLine(versions, headRevisionId), [versions, headRevisionId]);
+  const compatBanner = useMemo(
+    () => compatibilityBanner(newestPublishedSummary(changelogSummaries, versions)),
+    [changelogSummaries, versions]
+  );
+  const whatsNew = useMemo(() => whatsNewBanner(versions, headRevisionId), [versions, headRevisionId]);
+  const deprecation = useMemo(() => deprecationBanner(versions), [versions]);
+
   /** Other revisions in the same project (for successor picker — labels are version IDs, values are revision UUIDs). */
   const successorCandidates = useMemo(() => {
     const sv = selectedVersion;
@@ -1894,42 +1824,6 @@ const Versions = () => {
       .filter((v) => v.project_id === sv.project_id && v.id !== sv.id)
       .sort((a, b) => b.version_id.localeCompare(a.version_id, undefined, { numeric: true }));
   }, [versions, selectedVersion]);
-
-  const renderSuccessorRevisionField = (htmlId: string) => {
-    const tid = editSuccessorRevisionId.trim();
-    const orphan = tid && !successorCandidates.some((v) => v.id === tid) ? tid : null;
-    const selectValue = tid ? tid : SUCCESSOR_SELECT_NONE;
-    return (
-      <div className="space-y-2">
-        <Label htmlFor={htmlId}>Successor revision</Label>
-        <Select
-          value={selectValue}
-          onValueChange={(v) => setEditSuccessorRevisionId(v === SUCCESSOR_SELECT_NONE ? '' : v)}
-          disabled={isLoading}
-        >
-          <SelectTrigger id={htmlId} className="w-full">
-            <SelectValue placeholder="Choose a revision" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={SUCCESSOR_SELECT_NONE}>No successor (end of life)</SelectItem>
-            {orphan ? (
-              <SelectItem value={orphan}>Other revision ({orphan.slice(0, 8)}…)</SelectItem>
-            ) : null}
-            {successorCandidates.map((v) => (
-              <SelectItem key={v.id} value={v.id}>
-                v{v.version_id}
-                {v.published ? ' · published' : ''}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Optional. Pick the replacement by version label (stored as the successor revision id), or leave as end of life with no
-          successor.
-        </p>
-      </div>
-    );
-  };
 
   const handleCompareVersions = async () => {
     await runCompareBetween(compareVersion1Id, compareVersion2Id);
@@ -2309,24 +2203,20 @@ const Versions = () => {
   }, [tagFilteredVersions, historySearchQ, historyAuthorCreatorId, historyDateFrom, historyDateTo]);
 
   const tableDisplayVersions = useMemo(
-    () =>
-      sortVersionsDashboardRows(
-        displayVersions,
-        versionsTableSortColumn,
-        versionsTableSortDirection
-      ),
-    [displayVersions, versionsTableSortColumn, versionsTableSortDirection]
+    () => sortVersions(displayVersions, versionsSort),
+    [displayVersions, versionsSort]
   );
 
-  const handleVersionsTableSortClick = useCallback((column: VersionsDashboardSortColumn) => {
-    setVersionsTableSortColumn((prevCol) => {
-      if (prevCol === column) {
-        setVersionsTableSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-        return prevCol;
-      }
-      setVersionsTableSortDirection('asc');
-      return column;
-    });
+  /** The quick chip narrows the sorted rows; its counts come from the rows before it. */
+  const facetCounts = useMemo(() => versionFacetCounts(displayVersions), [displayVersions]);
+  const visibleVersions = useMemo(
+    () => tableDisplayVersions.filter((v) => matchesVersionFacet(v, versionFacet)),
+    [tableDisplayVersions, versionFacet]
+  );
+
+  /** A header click, through the primitive's asc → desc → null cycle, kept to two states. */
+  const handleVersionsSortChange = useCallback((next: DataTableSortState | null) => {
+    setVersionsSort((current) => nextVersionsSort(current, next));
   }, []);
 
   const historyTimelineFiltersActive =
@@ -2376,26 +2266,6 @@ const Versions = () => {
     requestAnimationFrame(() => { isSyncingScroll.current = false; });
   };
 
-  const formatDate = (dateString: string) => {
-    const d = new Date(dateString);
-    const datePart = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' });
-    const timePart = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    return `${datePart} ${timePart}`;
-  };
-
-  const revisionLifecycleBadge = (lc: string | undefined) => {
-    const v = (lc ?? 'stable').toLowerCase();
-    const label =
-      v === 'stable' ? 'Stable' : v === 'beta' ? 'Beta' : v === 'deprecated' ? 'Deprecated' : v === 'archived' ? 'Archived' : 'Stable';
-    const variant =
-      v === 'stable' ? 'success' : v === 'beta' ? 'default' : v === 'deprecated' ? 'warning' : 'secondary';
-    return (
-      <Badge variant={variant} title="Revision lifecycle (#739)">
-        {label}
-      </Badge>
-    );
-  };
-
   const canModify = (version: Version) => version.creator_id === currentUserId || !!effectiveIsAdmin;
 
   const openBranchFromRevisionDialog = useCallback(
@@ -2411,6 +2281,48 @@ const Versions = () => {
     },
     [versions]
   );
+
+  /** The New version dialog's branch-tip pick: the key, and the tip it resolves to. */
+  const handleCopySourceBranchKeyChange = (val: string) => {
+    setCopySourceBranchKey(val);
+    if (val === 'blank') setSourceVersionId('');
+    else if (val.startsWith('branch:')) {
+      const bid = val.slice(7);
+      const br = versionBranches.find((b) => b.id === bid);
+      setSourceVersionId(br?.tip_version_id ?? '');
+    }
+  };
+
+  /** Auto vs manual version id; auto re-derives the preview from the bump strategy. */
+  const handleAutoGenerateChange = (isAuto: boolean) => {
+    setAutoGenerate(isAuto);
+    if (isAuto) setNextAutoVersion(calculateNextVersion(bumpStrategy));
+  };
+
+  /** Patch vs minor; the preview follows. */
+  const handleBumpStrategyChange = (strategy: 'patch' | 'minor') => {
+    setBumpStrategy(strategy);
+    setNextAutoVersion(calculateNextVersion(strategy));
+  };
+
+  /**
+   * A row action, from a hover button or the row menu (HIVE-6.2).
+   *
+   * Two ids are the table's own names for handlers this screen already has; every other id is
+   * a `handleRowAction` case, unchanged.
+   */
+  const handleTableRowAction = (action: VersionRowMenuAction, version: Version) => {
+    switch (action) {
+      case 'compareWithCurrent':
+        void handleCompareWithCurrent(version.id);
+        return;
+      case 'toggleLock':
+        void handleToggleRevisionLock(version, !version.revisionLocked);
+        return;
+      default:
+        void handleRowAction(action, version);
+    }
+  };
 
   const handleRowAction = async (action: string, version: Version) => {
     const isPublished = !!version.published;
@@ -3054,1047 +2966,660 @@ const Versions = () => {
       ? 'timeline'
       : versionsMainTab;
 
+  // ---- the page (HIVE-6.2, #5313) -----------------------------------------------------------
+  //
+  // Everything above this line is the screen as it was: its state, its reads and its writes.
+  // Everything below is the Hive skin — `Page` / `PageHeader` / `PageBody`, the components in
+  // `components/ade/versions`, and the compare / merge / branch / tag / fork / rollback dialogs
+  // that HIVE-6.3 (#5314) will re-skin in their turn.
+
+  const breadcrumb = [
+    { label: 'Home', href: HOME_ROUTE },
+    { label: 'Build' },
+    { label: 'Projects', href: PROJECTS_ROUTE },
+    { label: selectedProject?.name ?? 'Versions' },
+  ];
+
+  const pageDescription = (
+    <>
+      Revisions and releases for this project ·{' '}
+      <Link href={SUNSET_TIMELINE_ROUTE} className="ver-desc-link">
+        Sunset timeline (EOL schedule)
+      </Link>
+    </>
+  );
+
   if (!session) {
     return (
-      <div className="p-6">
-        <LoadingState minHeightClassName="min-h-[220px]" message="Loading versions..." />
-      </div>
+      <Page>
+        <PageHeader breadcrumb={breadcrumb} title="Versions" description={pageDescription} />
+        <PageBody>
+          <LoadingState minHeightClassName="min-h-[13.75rem]" message="Loading versions..." />
+        </PageBody>
+      </Page>
     );
   }
 
   if (!currentTenantId) {
     return (
-      <div className="p-6 max-w-5xl mx-auto">
-        <div className="relative">
-          <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-full blur-3xl opacity-60" />
-          <div className="relative bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl p-8">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/25 flex-shrink-0">
-                <Lock className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-amber-900 dark:text-amber-100 mb-2">No Tenant Selected</h2>
-                <p className="text-amber-800 dark:text-amber-200 mb-4">Please select a tenant before managing versions.</p>
-                <Button asChild><a href="/ade/dashboard/tenants">Go to Tenants</a></Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Page>
+        <PageHeader breadcrumb={breadcrumb} title="Versions" description={pageDescription} />
+        <PageBody>
+          <GatedState description="Versions are scoped to one workspace. Please select a tenant before managing versions." />
+        </PageBody>
+      </Page>
     );
   }
 
   if (projects.length === 0) {
     return (
-      <div className="p-6 max-w-5xl mx-auto">
-        <EmptyState
-          icon={<Package className="h-10 w-10" />}
-          title="No Projects Available"
-          description="Please create a project before managing versions."
-          action={(
-            <Button asChild className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700">
-              <a href="/ade/dashboard/projects">Go to Projects</a>
-            </Button>
-          )}
-        />
-      </div>
+      <Page>
+        <PageHeader breadcrumb={breadcrumb} title="Versions" description={pageDescription} />
+        <PageBody>
+          <EmptyState
+            icon={<Package />}
+            title="No projects yet"
+            description="Create a project before managing versions."
+            data-testid="versions-no-projects"
+            action={
+              <Button asChild>
+                <Link href={PROJECTS_ROUTE}>Go to Projects</Link>
+              </Button>
+            }
+          />
+        </PageBody>
+      </Page>
     );
   }
 
-  return (
-    <>
-      <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <nav
-                className="flex flex-wrap items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-1"
-                aria-label="Breadcrumb"
-              >
-                <Link
-                  href="/ade/dashboard/projects"
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                >
-                  Projects
-                </Link>
-                <ChevronRight className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
-                <span className="text-gray-900 dark:text-white font-medium truncate max-w-[min(100%,14rem)]">
-                  {selectedProject?.name ?? '…'}
-                </span>
-              </nav>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Package className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                Versions
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                Revisions and releases for this project
-              </p>
-              <Link
-                href="/ade/dashboard/versions/sunset-timeline"
-                className="inline-flex items-center gap-1.5 text-sm text-amber-700 dark:text-amber-300 hover:underline mt-2"
-              >
-                <Sun className="h-4 w-4" />
-                Sunset timeline (EOL schedule)
-              </Link>
-            </div>
-            <div className="flex items-center gap-3">
-              <Select value={selectedProjectId} onValueChange={handleSelectedProjectChange}>
-                <SelectTrigger className="w-56"><SelectValue placeholder="Select Project" /></SelectTrigger>
-                <SelectContent>{selectableProjects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-              </Select>
-              {/* Import (#5260): start an import here instead of backtracking to Projects. */}
-              <Button
-                variant="secondary"
-                data-testid="versions-import-button"
-                onClick={() => setShowImportDialog(true)}
-                disabled={!currentUserId}
-                title={
-                  currentUserId
-                    ? 'Import a specification into a new project'
-                    : 'Your session is still resolving — try again in a moment'
-                }
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Import
-              </Button>
-              <Button variant="secondary" onClick={handleCompareDialogOpen} disabled={!selectedProjectId || versions.length < 2}>
-                <Copy className="h-4 w-4 mr-2" />
-                Compare
-              </Button>
-              {FEATURE_GITLIKE && (
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setMergeSourceBranch('');
-                    setMergeTargetBranch('');
-                    setMergePreviewData(null);
-                    setMergeCompat(null);
-                    setShowMergeDialog(true);
-                  }}
-                  disabled={!selectedProjectId || versionBranches.length < 2}
-                  title={versionBranches.length < 2 ? 'Create at least two named branches to merge' : undefined}
-                >
-                  <GitMerge className="h-4 w-4 mr-2" />
-                  Merge branches
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                onClick={handleNewVersionClick}
-                disabled={!selectedProjectId}
-                title="Start a new version (fresh release line, defaults to a minor bump)"
-              >
-                <GitFork className="h-4 w-4 mr-2" />
-                New Version
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+  const publishedCount = versions.filter((v) => v.published).length;
+  const viewingProject = viewingVersion
+    ? projects.find((p) => p.id === viewingVersion.project_id)
+    : undefined;
+  const publishVersion = publishVersionId
+    ? (versions.find((v) => v.id === publishVersionId) ?? null)
+    : null;
+  const lastPublished = lastPublishedVersion(versions);
+  const projectPublishable = isProjectPublishable(selectedProject);
+  const noVersionsYet = versionsLoaded && versions.length === 0 && !lifecycleFilter;
 
-      {FEATURE_GITLIKE && conflict && conflict.projectId === selectedProjectId && selectedProjectId && (
-        <div className="border-b border-amber-200/80 bg-amber-50/50 px-6 py-3 dark:border-amber-800/50 dark:bg-amber-950/25">
-          <div>
-            <ServerAheadPushBanner
-              detail={conflict.message}
-              pullLoading={versionsPullBannerLoading}
-              onPull={handleVersionsPullReconcile}
-              onOpenMerge={handleVersionsOpenMerge}
-            />
-          </div>
-        </div>
-      )}
-
-      <main className={dashboardMainClass}>
-        <div className={dashboardContentStackClass}>
-      {showChangeReportTab || showChangesTab || showConversionTab ? (
-        <div
-          className={`${dashboardPanelClass} px-3 pt-2`}
-          data-testid="versions-main-tab"
+  const headerBadges = (
+    <span className="ver-header__badges">
+      {selectedProject && projectPublishable ? <FormatPill format="openapi" /> : null}
+      {headBadge ? (
+        <Badge status={headBadge.status} dot title={headBadge.title} data-testid="versions-head-badge">
+          {headBadge.label}
+        </Badge>
+      ) : null}
+      {headQuality ? (
+        <Badge
+          variant={gradeBand(headQuality.grade).tone}
+          title="Stored quality score of the head revision (#5259)"
+          data-testid="versions-head-quality"
         >
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 sr-only">Versions main view</span>
-          {/* The card's own bottom border is this strip's tab rule, so the list drops its own. */}
-          <div
-            role="tablist"
-            aria-label="Versions main view"
-            className={cn(TAB_LIST_CLASS, 'border-b-0')}
+          <ShieldCheck aria-hidden />
+          {headQuality.label}
+        </Badge>
+      ) : null}
+    </span>
+  );
+
+  const headerActions = (
+    <>
+      <Select value={selectedProjectId} onValueChange={handleSelectedProjectChange}>
+        <SelectTrigger
+          className="ver-project-select"
+          aria-label="Select project"
+          title="Catalog items are excluded — convert one to OpenAPI to make it publishable"
+          data-testid="versions-project-select"
+        >
+          <SelectValue placeholder="Select Project" />
+        </SelectTrigger>
+        <SelectContent>
+          {selectableProjects.map((p) => (
+            <SelectItem key={p.id} value={p.id}>
+              {p.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {/* Import (#5260): start an import here instead of backtracking to Projects. */}
+      <Button
+        variant="outline"
+        data-testid="versions-import-button"
+        onClick={() => setShowImportDialog(true)}
+        disabled={!currentUserId}
+        title={
+          currentUserId
+            ? 'Import a specification into a new project'
+            : 'Your session is still resolving — try again in a moment'
+        }
+      >
+        <Upload aria-hidden />
+        Import
+      </Button>
+      <Button
+        variant="outline"
+        onClick={handleCompareDialogOpen}
+        disabled={!selectedProjectId || versions.length < 2}
+        title="Compare two revisions (needs at least 2 versions)"
+        data-testid="versions-compare-button"
+      >
+        <GitCompareArrows aria-hidden />
+        Compare
+      </Button>
+      {GITLIKE.visible ? (
+        <span className="ver-header__gitlike">
+          <Button
+            variant="outline"
+            onClick={handleVersionsOpenMerge}
+            disabled={!GITLIKE.enabled || !selectedProjectId || versionBranches.length < 2}
+            title={
+              !GITLIKE.enabled
+                ? GITLIKE_FLAG_TITLE
+                : versionBranches.length < 2
+                  ? 'Create at least two named branches to merge'
+                  : 'Merge branches'
+            }
+            data-testid="versions-merge-button"
           >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={effectiveMainTab === 'timeline'}
-              data-testid="versions-tab-timeline"
-              className={tabTriggerClass({ active: effectiveMainTab === 'timeline' })}
-              onClick={() => setVersionsMainTab('timeline')}
-            >
-              <ScrollText className="h-4 w-4 shrink-0" aria-hidden />
-              Timeline
-            </button>
-            {showChangesTab ? (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={effectiveMainTab === 'changes'}
-                data-testid="versions-tab-changes"
-                className={tabTriggerClass({ active: effectiveMainTab === 'changes' })}
-                onClick={() => setVersionsMainTab('changes')}
-              >
-                <GitCompareArrows className="h-4 w-4 shrink-0" aria-hidden />
-                Changes
-              </button>
-            ) : null}
-            {showChangeReportTab ? (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={effectiveMainTab === 'change-report'}
-                data-testid="versions-tab-change-report"
-                className={tabTriggerClass({ active: effectiveMainTab === 'change-report' })}
-                onClick={() => setVersionsMainTab('change-report')}
-              >
-                <FileText className="h-4 w-4 shrink-0" aria-hidden />
-                Change report
-              </button>
-            ) : null}
-            {showTestBenchTab ? (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={effectiveMainTab === 'test-bench'}
-                data-testid="versions-tab-test-bench"
-                className={tabTriggerClass({ active: effectiveMainTab === 'test-bench' })}
-                onClick={() => setVersionsMainTab('test-bench')}
-              >
-                <FlaskConical className="h-4 w-4 shrink-0" aria-hidden />
-                Test Bench
-                {/* IXH-5.7: appears only when a saved test suite's newest run regressed. */}
-                {selectedProject?.slug ? (
-                  <SuiteRegressionBadge surface="project" artifact={selectedProject.slug} />
-                ) : null}
-              </button>
-            ) : null}
-            {showConversionTab ? (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={effectiveMainTab === 'conversion'}
-                data-testid="versions-tab-conversion"
-                className={tabTriggerClass({ active: effectiveMainTab === 'conversion' })}
-                onClick={() => setVersionsMainTab('conversion')}
-              >
-                <History className="h-4 w-4 shrink-0" aria-hidden />
-                Conversion
-              </button>
-            ) : null}
-          </div>
-        </div>
+            <GitMerge aria-hidden />
+            Merge branches
+          </Button>
+          {GITLIKE.marked ? <GitlikeFlag enabled={GITLIKE.enabled} /> : null}
+        </span>
       ) : null}
+      <Button
+        onClick={handleNewVersionClick}
+        disabled={!selectedProjectId}
+        title="Start a new version (fresh release line, defaults to a minor bump)"
+        data-testid="versions-new-button"
+      >
+        <GitFork aria-hidden />
+        New version
+      </Button>
+    </>
+  );
 
-      {showConversionTab && effectiveMainTab === 'conversion' ? (
-        /* Conversion provenance history (CPDO-3.3, #4803): where this project's revisions came
-           from. Evidence replay lives on the catalog item's Conversions tab. */
-        <div className={`${dashboardPanelPaddedClass}`}>
-          <ProjectConversionPanel
-            rows={conversionHistory.rows}
-            loading={conversionHistory.loading}
-            error={conversionHistory.error}
-            retry={conversionHistory.retry}
-            onSelectVersion={() => setVersionsMainTab('timeline')}
-          />
-        </div>
+  /* A hand-built strip on the shared tab classes rather than `ui/Tabs`: Radix's `Tabs.Root`
+     is one element that would have to wrap the header *and* the body, and `.page` is a flex
+     column whose two children are exactly those two. The ids and copy are the screen's own. */
+  const headerTabs = selectedProjectId ? (
+    <div role="tablist" aria-label="Versions main view" className={TAB_LIST_CLASS} data-testid="versions-main-tab">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={effectiveMainTab === 'timeline'}
+        data-testid="versions-tab-timeline"
+        className={tabTriggerClass({ active: effectiveMainTab === 'timeline' })}
+        onClick={() => setVersionsMainTab('timeline')}
+      >
+        <ScrollText className="ver-tab-glyph" aria-hidden />
+        Timeline
+        <span className={TAB_COUNT_CLASS}>{versions.length}</span>
+      </button>
+      {showChangesTab ? (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={effectiveMainTab === 'changes'}
+          data-testid="versions-tab-changes"
+          className={tabTriggerClass({ active: effectiveMainTab === 'changes' })}
+          onClick={() => setVersionsMainTab('changes')}
+        >
+          <GitCompareArrows className="ver-tab-glyph" aria-hidden />
+          Changes
+          <span className={TAB_COUNT_CLASS}>{publishedCount}</span>
+        </button>
       ) : null}
-
-      {showChangeReportTab && effectiveMainTab === 'change-report' ? (
-        <VersionChangeReportPanel
-          projectId={selectedProjectId}
-          versions={versions}
-          currentUserId={currentUserId}
-          effectiveIsAdmin={!!effectiveIsAdmin}
-        />
+      {showChangeReportTab ? (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={effectiveMainTab === 'change-report'}
+          data-testid="versions-tab-change-report"
+          className={tabTriggerClass({ active: effectiveMainTab === 'change-report' })}
+          onClick={() => setVersionsMainTab('change-report')}
+        >
+          <FileText className="ver-tab-glyph" aria-hidden />
+          Change report
+          {GITLIKE.marked ? <GitlikeFlag enabled /> : null}
+        </button>
+      ) : GITLIKE.visible && !GITLIKE.flagOn && CHANGE_REPORT_ENV_ALLOWED ? (
+        /* Compiled but hidden: the tab is drawn inert with its flag, so the gap is legible. */
+        <button
+          type="button"
+          role="tab"
+          aria-selected={false}
+          disabled
+          title={GITLIKE_FLAG_TITLE}
+          data-testid="versions-tab-change-report"
+          className={tabTriggerClass({ active: false, disabled: true })}
+        >
+          <FileText className="ver-tab-glyph" aria-hidden />
+          Change report
+          <GitlikeFlag />
+        </button>
       ) : null}
-
-      {showChangesTab && effectiveMainTab === 'changes' ? (
-        <VersionChangesPanel
-          projectId={selectedProjectId}
-          versions={versions}
-          onOpenDiff={handleOpenDiffFromChanges}
-        />
+      {showTestBenchTab ? (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={effectiveMainTab === 'test-bench'}
+          data-testid="versions-tab-test-bench"
+          className={tabTriggerClass({ active: effectiveMainTab === 'test-bench' })}
+          onClick={() => setVersionsMainTab('test-bench')}
+        >
+          <FlaskConical className="ver-tab-glyph" aria-hidden />
+          Test bench
+          {/* IXH-5.7: appears only when a saved test suite's newest run regressed. */}
+          {selectedProject?.slug ? (
+            <SuiteRegressionBadge surface="project" artifact={selectedProject.slug} />
+          ) : null}
+        </button>
       ) : null}
-
-      {showTestBenchTab && effectiveMainTab === 'test-bench' && selectedProject?.slug ? (
-        /* Schema Test Bench (IXH-5.3, #5115): validate/generate payloads against this
-           project's schemas, addressed as project/{slug}/{revision-id}/{type}. */
-        <SchemaTestBench
-          key={selectedProject.id}
-          surface="project"
-          artifact={selectedProject.slug}
-          artifactName={selectedProject.name}
-          versionOptions={[
-            { value: 'latest', label: 'Latest revision' },
-            ...versions
-              .filter((v) => !v.deleted_at)
-              .map((v) => ({
-                value: v.id,
-                label: `v${v.version_id} · ${v.id.slice(0, 8)}`,
-              })),
-          ]}
-          tenantId={currentTenantId ?? null}
-          active
-        />
+      {showConversionTab ? (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={effectiveMainTab === 'conversion'}
+          data-testid="versions-tab-conversion"
+          className={tabTriggerClass({ active: effectiveMainTab === 'conversion' })}
+          title="Only when the project was produced by a catalog conversion"
+          onClick={() => setVersionsMainTab('conversion')}
+        >
+          <History className="ver-tab-glyph" aria-hidden />
+          Conversion
+        </button>
       ) : null}
+    </div>
+  ) : undefined;
 
-      {selectedProjectId ? (
-        <ProjectRelatedArtifactsSection projectId={selectedProjectId} />
-      ) : null}
-
-      {FEATURE_GITLIKE && effectiveMainTab === 'timeline' && selectedProjectId && versionTags.length > 0 && (
-        <div className={dashboardPanelPaddedClass}>
-          <div className="flex items-center gap-2 mb-3">
-            <Tag className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Version tags</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
+  const tableToolbar = (
+    <DataTableToolbar>
+      <Select
+        value={lifecycleFilter || ALL_LIFECYCLES}
+        onValueChange={(v) => setLifecycleFilter(v === ALL_LIFECYCLES ? '' : v)}
+      >
+        <SelectTrigger className="ver-toolbar-select" aria-label="Lifecycle filter" data-testid="versions-lifecycle-filter">
+          <SelectValue placeholder="All lifecycles" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL_LIFECYCLES}>All lifecycles</SelectItem>
+          {VERSION_LIFECYCLES.map((lifecycle) => (
+            <SelectItem key={lifecycle} value={lifecycle}>
+              {VERSION_LIFECYCLE_LABEL[lifecycle]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {versionTags.length > 0 ? (
+        <Select
+          value={historyTagFilter || ALL_REVISIONS}
+          onValueChange={(v) => setHistoryTagFilter(v === ALL_REVISIONS ? '' : v)}
+        >
+          <SelectTrigger
+            className="ver-toolbar-select ver-toolbar-select--history"
+            aria-label="History filter"
+            title="Filter revisions reachable from a tag"
+            data-testid="versions-history-filter"
+          >
+            <SelectValue placeholder="All revisions" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_REVISIONS}>All revisions</SelectItem>
             {versionTags.map((tg) => (
-              <div
-                key={tg.id}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-sm bg-amber-50/80 dark:bg-amber-950/20"
-              >
-                <span className="font-mono font-medium text-gray-900 dark:text-white">{tg.name}</span>
-                <span className="text-gray-500 dark:text-gray-400">→ v{tg.target_version_string ?? '?'}</span>
-                {tg.channel && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-                    {tg.channel}
-                  </span>
-                )}
-                {tg.immutable && (
-                  <span title="Immutable" className="text-xs text-amber-700 dark:text-amber-300">
-                    locked
-                  </span>
-                )}
-                {tg.protected && (
-                  <span
-                    title="Protected: only tenant admins can move or delete"
-                    className="inline-flex items-center gap-0.5 text-xs text-indigo-700 dark:text-indigo-300"
-                  >
-                    <Shield className="h-3 w-3" />
-                    protected
-                  </span>
-                )}
-                {effectiveIsAdmin && !tg.immutable && (
-                  <button
-                    type="button"
-                    onClick={() => handleToggleTagProtection(tg.id, !tg.protected)}
-                    className="text-indigo-600 dark:text-indigo-400 hover:underline text-xs"
-                  >
-                    {tg.protected ? 'Unprotect' : 'Protect'}
-                  </button>
-                )}
-                {!tg.immutable && (effectiveIsAdmin || (!tg.protected && tg.created_by === currentUserId)) && (
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteTag(tg.id)}
-                    className="text-red-600 dark:text-red-400 hover:underline text-xs"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
+              <SelectItem key={tg.id} value={tg.id}>
+                Tag {tg.name} → v{tg.target_version_string ?? '?'}
+              </SelectItem>
             ))}
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            Tags are stable names for a schema revision (like Git tags). Use &quot;Tag this revision&quot; on a version row to add one.
-            Immutable tags cannot be moved or deleted; <span className="font-medium">protected</span> tags (tenant admin) add policy so only admins can move or delete.
-            Pair with deprecation and sunset planning as last-known-good pointers.
-          </p>
-        </div>
-      )}
-
-      {FEATURE_GITLIKE && effectiveMainTab === 'timeline' && selectedProjectId && versionBranches.length > 0 && (
-        <div id="ade-named-branches-panel" className={dashboardPanelPaddedClass}>
-          <div className="flex items-center gap-2 mb-3">
-            <GitBranch className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Named branches</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {versionBranches.map((b) => (
-              <div
-                key={b.id}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-sm bg-gray-50 dark:bg-gray-900/50"
-              >
-                <span className="font-mono font-medium text-gray-900 dark:text-white">{b.name}</span>
-                <span className="text-gray-500 dark:text-gray-400">→ v{b.tip_version_string ?? '?'}</span>
-                {b.is_default && (
-                  <span
-                    title="Default branch for this project — cannot be deleted"
-                    className="text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200"
-                  >
-                    default
-                  </span>
-                )}
-                {b.protected && (
-                  <span
-                    title="Protected branch: only tenant admins can delete"
-                    className="inline-flex items-center gap-0.5 text-xs text-indigo-700 dark:text-indigo-300"
-                  >
-                    <Shield className="h-3 w-3" />
-                    protected
-                  </span>
-                )}
-                {effectiveIsAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => handleToggleBranchProtection(b.id, !b.protected)}
-                    className="text-indigo-600 dark:text-indigo-400 hover:underline text-xs"
-                  >
-                    {b.protected ? 'Unprotect' : 'Protect'}
-                  </button>
-                )}
-                {(effectiveIsAdmin || (!b.protected && b.created_by === currentUserId)) &&
-                  !isVersionBranchNonDeletable(b) && (
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteBranch(b.id)}
-                    className="text-red-600 dark:text-red-400 hover:underline text-xs"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            <span className="font-medium text-gray-700 dark:text-gray-300">Branch vs fork:</span> a named branch stays in this project (same version line).
-            A <span className="font-medium">fork</span> copies a revision into a <em>different</em> project for isolated experiments; lineage is stored for audit and merge-back.
-          </p>
-        </div>
-      )}
-
-      {/* Versions List — lifecycle (and related) filters stay visible when filters yield zero rows */}
-      {effectiveMainTab === 'timeline' ? (
-      versions.length === 0 && !lifecycleFilter ? (
-        <EmptyState
-          icon={<Package className="h-10 w-10" />}
-          title="No Versions Yet"
-          description="Get started by creating your first version"
-        />
-      ) : (
-        <>
-          <div className={`mb-4 ${dashboardPanelClass} px-4 py-3 flex flex-wrap items-end gap-3`}>
-            <div className="flex items-center gap-2 min-w-0">
-              <ScrollText className="h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
-              <span className="text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">Timeline</span>
-            </div>
-            <div className="flex flex-col gap-1 min-w-[12rem] flex-1">
-              <Label htmlFor="history-timeline-search" className="text-xs text-gray-500 dark:text-gray-400">
-                Search
-              </Label>
-              <Input
-                id="history-timeline-search"
-                type="search"
-                placeholder="Message, changelog, commit…"
-                value={historySearchQ}
-                onChange={(e) => setHistorySearchQ(e.target.value)}
-                className="w-full min-w-0"
-                autoComplete="off"
-              />
-            </div>
-            <div className="flex flex-col gap-1 w-full sm:w-52">
-              <Label className="text-xs text-gray-500 dark:text-gray-400">Author</Label>
-              <Select
-                value={historyAuthorCreatorId || '__all__'}
-                onValueChange={(v) => setHistoryAuthorCreatorId(v === '__all__' ? '' : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All authors" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All authors</SelectItem>
-                  {historyAuthorOptions.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1 w-full sm:w-40">
-              <Label htmlFor="history-date-from" className="text-xs text-gray-500 dark:text-gray-400">
-                From
-              </Label>
-              <Input
-                id="history-date-from"
-                type="date"
-                value={historyDateFrom}
-                onChange={(e) => setHistoryDateFrom(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex flex-col gap-1 w-full sm:w-40">
-              <Label htmlFor="history-date-to" className="text-xs text-gray-500 dark:text-gray-400">
-                To
-              </Label>
-              <Input
-                id="history-date-to"
-                type="date"
-                value={historyDateTo}
-                onChange={(e) => setHistoryDateTo(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            {historyTimelineFiltersActive ? (
-              <Button type="button" variant="secondary" className="shrink-0" onClick={resetHistoryTimelineFilters}>
-                Reset
-              </Button>
-            ) : null}
-          </div>
-          {FEATURE_GITLIKE && (
-            <div className="mb-6" ref={historyGraphSectionRef}>
-              <VersionHistoryGraphPanel
-                key={versionBranches.map((b) => b.id).sort().join('|') || 'graph-branches'}
-                versions={displayVersions.map((v) => ({
-                  id: v.id,
-                  version_id: v.version_id,
-                  parent_version_id: v.parent_version_id ?? null,
-                  merge_parent_version_id: v.merge_parent_version_id ?? null,
-                  created_at: v.created_at,
-                  shortMessage: v.shortMessage,
-                  commitMessage: v.message ?? null,
-                  authorName: v.author ?? v.creator_name ?? null,
-                  creatorId: v.creator_id ?? null,
-                }))}
-                branches={versionBranches.map((b) => ({
-                  id: b.id,
-                  name: b.name,
-                  tip_version_id: b.tip_version_id,
-                }))}
-                tags={versionTags.map((t) => ({
-                  id: t.id,
-                  name: t.name,
-                  version_id: t.version_id,
-                  immutable: t.immutable,
-                  protected: t.protected,
-                }))}
-                headRevisionId={headRevisionId}
-                windowSize={historyGraphWindowSize}
-                onWindowSizeIncrease={setHistoryGraphWindowSize}
-                onCompareToPrimaryParent={handleHistoryGraphCompareToParent}
-                onViewSpec={handleHistoryGraphViewSpec}
-                onBranchFromRevision={openBranchFromRevisionDialog}
-              />
-            </div>
-          )}
-        <div className={dashboardTableWrapClass}>
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-3 bg-gray-50 dark:bg-gray-900">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Lifecycle filter</span>
-            <Select
-              value={lifecycleFilter || '__all__'}
-              onValueChange={(v) => setLifecycleFilter(v === '__all__' ? '' : v)}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All lifecycles" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All lifecycles</SelectItem>
-                <SelectItem value="stable">Stable</SelectItem>
-                <SelectItem value="beta">Beta</SelectItem>
-                <SelectItem value="deprecated">Deprecated</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {versionTags.length > 0 && (
-            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-3 bg-gray-50 dark:bg-gray-900">
-              <span className="text-sm text-gray-600 dark:text-gray-400">History filter</span>
-              <Select
-                value={historyTagFilter || '__all__'}
-                onValueChange={(v) => setHistoryTagFilter(v === '__all__' ? '' : v)}
-              >
-                <SelectTrigger className="w-56">
-                  <SelectValue placeholder="All revisions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All revisions</SelectItem>
-                  {versionTags.map((tg) => (
-                    <SelectItem key={tg.id} value={tg.id}>
-                      Tag {tg.name} → v{tg.target_version_string ?? '?'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <table className="min-w-full">
-            <thead className={dashboardTableTheadClass}>
-              <tr>
-                <VersionsSortTh
-                  column="version"
-                  sortColumn={versionsTableSortColumn}
-                  sortDirection={versionsTableSortDirection}
-                  onSortClick={handleVersionsTableSortClick}
-                  className={dashboardThClass}
-                  testId="versions-sort-version"
-                  ariaLabel="Sort by version"
-                >
-                  Version
-                </VersionsSortTh>
-                <VersionsSortTh
-                  column="revision"
-                  sortColumn={versionsTableSortColumn}
-                  sortDirection={versionsTableSortDirection}
-                  onSortClick={handleVersionsTableSortClick}
-                  className={dashboardThClass}
-                  testId="versions-sort-revision"
-                  ariaLabel="Sort by revision and changelog"
-                >
-                  Revision / changelog
-                </VersionsSortTh>
-                <VersionsSortTh
-                  column="status"
-                  sortColumn={versionsTableSortColumn}
-                  sortDirection={versionsTableSortDirection}
-                  onSortClick={handleVersionsTableSortClick}
-                  className={dashboardThClass}
-                  testId="versions-sort-status"
-                  ariaLabel="Sort by status"
-                >
-                  Status
-                </VersionsSortTh>
-                <th scope="col" className={dashboardThClass} aria-sort="none">
-                  Mock
-                </th>
-                <VersionsSortTh
-                  column="creator"
-                  sortColumn={versionsTableSortColumn}
-                  sortDirection={versionsTableSortDirection}
-                  onSortClick={handleVersionsTableSortClick}
-                  className={dashboardThClass}
-                  testId="versions-sort-creator"
-                  ariaLabel="Sort by created by"
-                >
-                  Created By
-                </VersionsSortTh>
-                <VersionsSortTh
-                  column="created"
-                  sortColumn={versionsTableSortColumn}
-                  sortDirection={versionsTableSortDirection}
-                  onSortClick={handleVersionsTableSortClick}
-                  className={dashboardThClass}
-                  testId="versions-sort-created"
-                  ariaLabel="Sort by created date"
-                >
-                  Created
-                </VersionsSortTh>
-                <th scope="col" className={dashboardThRightClass} aria-sort="none">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className={dashboardTbodyClass}>
-              {versions.length === 0 && lifecycleFilter ? (
-                <tr key="versions-empty-lifecycle">
-                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-600 dark:text-gray-300">
-                    <p className="mx-auto max-w-md">
-                      No revisions match this lifecycle filter. Choose a different lifecycle or select{' '}
-                      <span className="font-medium">All lifecycles</span> to load every revision again.
-                    </p>
-                    <Button type="button" variant="secondary" className="mt-4" onClick={() => setLifecycleFilter('')}>
-                      Clear lifecycle filter
-                    </Button>
-                  </td>
-                </tr>
-              ) : versions.length > 0 && tagFilteredVersions.length === 0 ? (
-                <tr key="versions-empty-tag">
-                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-600 dark:text-gray-300">
-                    <p className="mx-auto max-w-md">
-                      No revision matches the selected history tag. Clear the tag filter above or pick another tag.
-                    </p>
-                    <Button type="button" variant="secondary" className="mt-4" onClick={() => setHistoryTagFilter('')}>
-                      Clear tag filter
-                    </Button>
-                  </td>
-                </tr>
-              ) : tableDisplayVersions.length === 0 ? (
-                <tr key="versions-empty-timeline">
-                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-600 dark:text-gray-300">
-                    <p className="mx-auto max-w-md">
-                      No revisions match your timeline filters (search, author, or date range). Adjust the filters or
-                      reset them to see the full history again.
-                    </p>
-                    {historyTimelineFiltersActive ? (
-                      <Button type="button" variant="secondary" className="mt-4" onClick={resetHistoryTimelineFilters}>
-                        Reset timeline filters
-                      </Button>
-                    ) : null}
-                  </td>
-                </tr>
-              ) : (
-                tableDisplayVersions.map((version) => (
-                <tr key={version.id} className={dashboardTrHoverClass}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => void handleRowAction('view', version)}
-                        className="text-sm font-bold font-mono text-indigo-600 hover:text-indigo-800 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300"
-                        title="View spec"
-                      >
-                        v{version.version_id}
-                      </button>
-                      {revisionLifecycleBadge(version.lifecycle)}
-                      {version.published && <div title="Published" className="p-1 bg-blue-100 dark:bg-blue-900/30 rounded"><Lock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /></div>}
-                      {version.revisionLocked && (
-                        <div title="Revision locked: non-admins cannot delete" className="p-1 bg-indigo-100 dark:bg-indigo-900/30 rounded">
-                          <Shield className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                        </div>
-                      )}
-                      {(tagsByVersionId.get(version.id) ?? []).map((t) => (
-                        <span
-                          key={t.id}
-                          title={t.message || t.name}
-                          className="text-xs font-mono px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 border border-amber-200 dark:border-amber-800"
-                        >
-                          {t.name}
-                        </span>
-                      ))}
-                      {selectedProjectId && (
-                        <VersionLintBadge
-                          projectId={selectedProjectId}
-                          versionId={version.id}
-                          versionLabel={version.version_id}
-                          storedScore={version.qualityScore}
-                          storedGrade={version.qualityGrade}
-                        />
-                      )}
-                    </div>
-                    {version.forkedFromRevisionId && (
-                      <div className="mt-2 rounded-md border border-violet-200 dark:border-violet-800 bg-violet-50/80 dark:bg-violet-950/30 px-2 py-1.5 text-xs text-violet-900 dark:text-violet-100">
-                        <span className="font-medium">Fork</span>
-                        {' · '}
-                        from v{version.forkSourceVersionLabel ?? '?'}
-                        {version.forkSourceProjectName != null && version.forkSourceProjectName !== ''
-                          ? ` (${version.forkSourceProjectName})`
-                          : ''}
-                        {version.upstreamProjectName != null &&
-                          version.upstreamProjectName !== '' &&
-                          version.upstreamProjectName !== version.forkSourceProjectName && (
-                            <span className="text-violet-700 dark:text-violet-300"> · Upstream project: {version.upstreamProjectName}</span>
-                          )}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 dark:text-white max-w-xs truncate">{version.shortMessage || '—'}</div>
-                    {version.changelog && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs truncate">{version.changelog}</div>}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex gap-2">
-                      {version.published ? (
-                        <Badge variant="success" className="flex items-center gap-1"><CheckCircle className="h-3 w-3" />Published</Badge>
-                      ) : (
-                        <Badge variant="secondary" className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Draft</Badge>
-                      )}
-                      {!version.enabled && <Badge variant="error">Disabled</Badge>}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <VersionMockCell
-                      versionRecordId={version.id}
-                      projectId={version.project_id}
-                      versionLabel={version.version_id}
-                      published={version.published}
-                      mockEnabled={Boolean(version.mockEnabled)}
-                      mockPrivate={Boolean(version.mockPrivate)}
-                      mockBaseUrl={version.mockBaseUrl ?? null}
-                      usageSeries={
-                        mockUsageByVersion === null || !selectedProject?.slug
-                          ? undefined
-                          : mockUsageByVersion.get(mockUsageSeriesKey(selectedProject.slug, version.version_id)) ?? []
-                      }
-                      onMockChanged={(change) => handleVersionMockChanged(version.id, change)}
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">{version.creator_name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{version.creator_email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {formatDate(version.created_at)}
-                    {version.published_at && <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">Published: {formatDate(version.published_at)}</div>}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="relative">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                          setDropdownPosition(
-                            openVersionDropdown === version.id ? null : computeVersionActionsDropdownPosition(rect),
-                          );
-                          setOpenVersionDropdown(openVersionDropdown === version.id ? null : version.id);
-                        }}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-white"
-                        title="Actions"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-
-                      {openVersionDropdown === version.id && dropdownPosition && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenVersionDropdown(null);
-                            }}
-                          />
-                          <div
-                            className="fixed min-w-80 w-max max-w-[min(24rem,calc(100vw-1rem))] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20"
-                            style={{
-                              ...(dropdownPosition.top != null ? { top: `${dropdownPosition.top}px` } : {}),
-                              ...(dropdownPosition.bottom != null ? { bottom: `${dropdownPosition.bottom}px` } : {}),
-                              right: `${dropdownPosition.right}px`,
-                            }}
-                          >
-                            <div className="py-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenVersionDropdown(null);
-                                  handleRowAction('view', version);
-                                }}
-                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                              >
-                                <Eye className="w-4 h-4 text-purple-500" />
-                                View Spec
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenVersionDropdown(null);
-                                  handleRowAction('export', version);
-                                }}
-                                title="Convert this version to another API format (fidelity shown per target)"
-                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                              >
-                                <FileOutput className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />
-                                Export to another format…
-                              </button>
-                              {FEATURE_GITLIKE && (
-                                <button
-                                  type="button"
-                                  disabled={!headRevisionId || version.id === headRevisionId}
-                                  title={
-                                    !headRevisionId
-                                      ? 'No head revision'
-                                      : version.id === headRevisionId
-                                        ? 'This revision is already the current head'
-                                        : 'OpenAPI diff: this revision → latest (current) head'
-                                  }
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenVersionDropdown(null);
-                                    void handleCompareWithCurrent(version.id);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <GitCompareArrows className="w-4 h-4 text-indigo-500 shrink-0" aria-hidden />
-                                  Compare with current
-                                </button>
-                              )}
-                              {FEATURE_GITLIKE && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenVersionDropdown(null);
-                                    handleRowAction('relationshipGraph', version);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                >
-                                  <Network className="w-4 h-4 text-teal-500" />
-                                  Relationship graph
-                                </button>
-                              )}
-                              {FEATURE_GITLIKE && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenVersionDropdown(null);
-                                    handleRowAction('branchFrom', version);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                >
-                                  <GitBranch className="w-4 h-4 text-indigo-500" />
-                                  Branch from here
-                                </button>
-                              )}
-                              {FEATURE_GITLIKE && versionBranches.length > 0 && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenVersionDropdown(null);
-                                    handleRowAction('rollbackBranch', version);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                >
-                                  <Undo2 className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                                  Rollback branch to this revision…
-                                </button>
-                              )}
-                              {FEATURE_GITLIKE && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenVersionDropdown(null);
-                                    handleRowAction('forkToProject', version);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                >
-                                  <GitFork className="w-4 h-4 text-violet-500" />
-                                  Fork to another project…
-                                </button>
-                              )}
-                              {FEATURE_GITLIKE && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenVersionDropdown(null);
-                                    handleRowAction('tagFrom', version);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                >
-                                  <Tag className="w-4 h-4 text-amber-600" />
-                                  Tag this revision
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenVersionDropdown(null);
-                                  handleRowAction('scheduleSunset', version);
-                                }}
-                                disabled={
-                                  (!!version.published && !effectiveIsAdmin) ||
-                                  ((version.lifecycle ?? 'stable') === 'archived' && !effectiveIsAdmin)
-                                }
-                                title={
-                                  version.published && !effectiveIsAdmin
-                                    ? 'Only a tenant admin can set sunset on a published revision'
-                                    : (version.lifecycle ?? 'stable') === 'archived' && !effectiveIsAdmin
-                                      ? 'Archived revisions are read-only'
-                                      : 'Deprecation, sunset instant, and successor revision'
-                                }
-                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <Sun className="w-4 h-4 text-amber-500 shrink-0" aria-hidden />
-                                Schedule sunset (EOL)…
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenVersionDropdown(null);
-                                  handleRowAction('edit', version);
-                                }}
-                                disabled={!!version.published && !effectiveIsAdmin}
-                                title={version.published && !effectiveIsAdmin ? 'Only a tenant admin can edit a published revision' : undefined}
-                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <Edit2 className="w-4 h-4 text-blue-500" />
-                                Edit
-                              </button>
-                              {!version.published ? (
-                                // Catalog items (non-publishable projects, MFI-23.1) are never publish
-                                // candidates (MFI-23.8, #4017): withhold the Publish affordance entirely.
-                                isVersionPublishable(version) ? (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenVersionDropdown(null);
-                                      handleRowAction('publish', version);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                  >
-                                    <Lock className="w-4 h-4 text-green-500" />
-                                    Publish
-                                  </button>
-                                ) : null
-                              ) : (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenVersionDropdown(null);
-                                    handleRowAction('unpublish', version);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                >
-                                  <Unlock className="w-4 h-4 text-orange-500" />
-                                  Unpublish
-                                </button>
-                              )}
-                              {FEATURE_GITLIKE && !hasClassSchemaMap[version.id] && (version.creator_id === currentUserId || effectiveIsAdmin) && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenVersionDropdown(null);
-                                    handleRowAction('freezeSchema', version);
-                                  }}
-                                  disabled={freezingSchemaVersionId === version.id}
-                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Capture class schemas for this version so it can be used in the Database section (only when no schema is frozen yet)"
-                                >
-                                  <Snowflake className="w-4 h-4 text-cyan-500" />
-                                  {freezingSchemaVersionId === version.id ? 'Freezing...' : 'Freeze schema'}
-                                </button>
-                              )}
-                              {FEATURE_GITLIKE && effectiveIsAdmin && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenVersionDropdown(null);
-                                    handleToggleRevisionLock(version, !version.revisionLocked);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                >
-                                  <Shield className="w-4 h-4 text-indigo-500" />
-                                  {version.revisionLocked ? 'Unlock revision (allow delete)' : 'Lock revision (delete policy)'}
-                                </button>
-                              )}
-                              {FEATURE_GITLIKE && (
-                                <>
-                                  <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenVersionDropdown(null);
-                                      handleRowAction('delete', version);
-                                    }}
-                                    disabled={!!version.revisionLocked && !effectiveIsAdmin}
-                                    className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title={version.revisionLocked && !effectiveIsAdmin ? 'Revision is locked; only a tenant admin can delete' : undefined}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        </>
-      )
+          </SelectContent>
+        </Select>
       ) : null}
-        </div>
-      </main>
+      {VERSION_FACETS.map((entry) => (
+        <DataTableFilterChip
+          key={entry}
+          active={versionFacet === entry}
+          count={facetCounts[entry]}
+          data-testid={`versions-facet-${entry}`}
+          onClick={() => setVersionFacet(entry)}
+        >
+          {VERSION_FACET_LABELS[entry]}
+        </DataTableFilterChip>
+      ))}
+      <DataTableToolbarSpacer />
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <Button variant="ghost" size="sm" data-testid="versions-sort-menu">
+            <ArrowUpDown aria-hidden />
+            Sorted by {versionsSortLabel(versionsSort)}
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content className="tnt-menu" sideOffset={4} align="end">
+            {VERSION_SORT_OPTIONS.map((option) => (
+              <DropdownMenu.Item
+                key={option.id}
+                className="tnt-menu__item"
+                data-testid={`versions-sort-${option.id}`}
+                onSelect={() => setVersionsSort((current) => versionsSortFromMenu(current, option.id))}
+              >
+                {option.label}
+                {versionsSort.column === option.id ? (
+                  <span className="ver-sort-mark" aria-hidden>
+                    {versionsSort.direction === 'asc' ? '↑' : '↓'}
+                  </span>
+                ) : null}
+              </DropdownMenu.Item>
+            ))}
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+    </DataTableToolbar>
+  );
+
+  const tableFooter = (
+    <DataTableFoot>
+      <span data-testid="versions-table-foot">
+        {versionsFootLabel(visibleVersions.length, versionsSort, lifecycleFilter)}
+      </span>
+      <span className="ver-foot-side" data-testid="versions-table-foot-head">
+        Head <span className="mono">{headLine.head ?? '—'}</span> · last published{' '}
+        <span className="mono">{headLine.lastPublished ?? '—'}</span>
+      </span>
+    </DataTableFoot>
+  );
+
+  /* The four ways the table can have nothing to draw, each with the way out — lifecycle filter
+     (server-side), tag filter, timeline filters, and the quick chip. Same copy as before. */
+  const tableEmpty =
+    versions.length === 0 && lifecycleFilter ? (
+      <EmptyState
+        variant="compact"
+        surface={false}
+        tone="neutral"
+        title="No revisions match this lifecycle filter"
+        description="Choose a different lifecycle or select All lifecycles to load every revision again."
+        data-testid="versions-empty-lifecycle"
+        action={
+          <Button variant="outline" size="sm" onClick={() => setLifecycleFilter('')}>
+            Clear lifecycle filter
+          </Button>
+        }
+      />
+    ) : versions.length > 0 && tagFilteredVersions.length === 0 ? (
+      <EmptyState
+        variant="compact"
+        surface={false}
+        tone="neutral"
+        title="No revision matches the selected history tag"
+        description="Clear the tag filter above or pick another tag."
+        data-testid="versions-empty-tag"
+        action={
+          <Button variant="outline" size="sm" onClick={() => setHistoryTagFilter('')}>
+            Clear tag filter
+          </Button>
+        }
+      />
+    ) : displayVersions.length === 0 ? (
+      <EmptyState
+        variant="compact"
+        surface={false}
+        tone="neutral"
+        title="No revisions match your timeline filters (search, author, or date range)"
+        description="Adjust the filters or reset them to see the full history again."
+        data-testid="versions-empty-timeline"
+        action={
+          historyTimelineFiltersActive ? (
+            <Button variant="outline" size="sm" onClick={resetHistoryTimelineFilters}>
+              Reset timeline filters
+            </Button>
+          ) : undefined
+        }
+      />
+    ) : (
+      <EmptyState
+        variant="compact"
+        surface={false}
+        tone="neutral"
+        title={versionFacet === 'drafts' ? 'No drafts in this view' : 'No published revisions in this view'}
+        description="Pick another chip above to see the rest of the timeline."
+        data-testid="versions-empty-facet"
+        action={
+          <Button variant="outline" size="sm" onClick={() => setVersionFacet('all')}>
+            Show all
+          </Button>
+        }
+      />
+    );
+
+  return (
+    <Page>
+      <PageHeader
+        className="ver-header"
+        breadcrumb={breadcrumb}
+        title={selectedProject?.name ?? 'Versions'}
+        badge={headerBadges}
+        description={pageDescription}
+        actions={headerActions}
+        tabs={headerTabs}
+      />
+
+      {FEATURE_GITLIKE && conflict && conflict.projectId === selectedProjectId && selectedProjectId ? (
+        <ServerAheadPushBanner
+          bar
+          flagged={GITLIKE.marked}
+          detail={conflict.message}
+          pullLoading={versionsPullBannerLoading}
+          onPull={handleVersionsPullReconcile}
+          onOpenMerge={handleVersionsOpenMerge}
+        />
+      ) : null}
+
+      <PageBody>
+        {showConversionTab && effectiveMainTab === 'conversion' ? (
+          /* Conversion provenance history (CPDO-3.3, #4803): where this project's revisions came
+             from. Evidence replay lives on the catalog item's Conversions tab. */
+          <Card className="ver-panel">
+            <ProjectConversionPanel
+              rows={conversionHistory.rows}
+              loading={conversionHistory.loading}
+              error={conversionHistory.error}
+              retry={conversionHistory.retry}
+              onSelectVersion={() => setVersionsMainTab('timeline')}
+            />
+          </Card>
+        ) : null}
+
+        {showChangeReportTab && effectiveMainTab === 'change-report' ? (
+          <VersionChangeReportPanel
+            projectId={selectedProjectId}
+            versions={versions}
+            currentUserId={currentUserId}
+            effectiveIsAdmin={!!effectiveIsAdmin}
+          />
+        ) : null}
+
+        {showChangesTab && effectiveMainTab === 'changes' ? (
+          <VersionChangesPanel
+            projectId={selectedProjectId}
+            versions={versions}
+            onOpenDiff={handleOpenDiffFromChanges}
+          />
+        ) : null}
+
+        {showTestBenchTab && effectiveMainTab === 'test-bench' && selectedProject?.slug ? (
+          /* Schema Test Bench (IXH-5.3, #5115): validate/generate payloads against this
+             project's schemas, addressed as project/{slug}/{revision-id}/{type}. */
+          <SchemaTestBench
+            key={selectedProject.id}
+            surface="project"
+            artifact={selectedProject.slug}
+            artifactName={selectedProject.name}
+            versionOptions={[
+              { value: 'latest', label: 'Latest revision' },
+              ...versions
+                .filter((v) => !v.deleted_at)
+                .map((v) => ({
+                  value: v.id,
+                  label: `v${v.version_id} · ${v.id.slice(0, 8)}`,
+                })),
+            ]}
+            tenantId={currentTenantId ?? null}
+            active
+          />
+        ) : null}
+
+        {effectiveMainTab === 'timeline' ? (
+          <>
+            <VersionsBanners
+              compatibility={compatBanner}
+              whatsNew={whatsNew}
+              deprecation={deprecation}
+              changesAvailable={showChangesTab}
+              onOpenChanges={() => setVersionsMainTab('changes')}
+            />
+
+            {selectedProjectId ? (
+              <div className="ver-overview">
+                <ProjectRelatedArtifactsSection projectId={selectedProjectId} />
+                {selectedProject ? (
+                  <ProjectFactsCard
+                    project={selectedProject}
+                    headLine={headLine}
+                    headRevisionId={headRevisionId}
+                    lastPublishedAt={
+                      lastPublished?.published_at ? formatVersionDate(lastPublished.published_at) : null
+                    }
+                    publishable={projectPublishable}
+                  />
+                ) : null}
+              </div>
+            ) : null}
+
+            {noVersionsYet ? (
+              <EmptyState
+                icon={<Package />}
+                title="No versions yet"
+                description="Get started by creating your first version — or import a spec into this project."
+                data-testid="versions-empty"
+                action={
+                  <Button onClick={handleNewVersionClick} disabled={!selectedProjectId}>
+                    <GitFork aria-hidden />
+                    New version
+                  </Button>
+                }
+                secondaryAction={
+                  <Button variant="outline" onClick={() => setShowImportDialog(true)} disabled={!currentUserId}>
+                    <Upload aria-hidden />
+                    Import
+                  </Button>
+                }
+              />
+            ) : (
+              <>
+                <VersionsTimelineFilters
+                  query={historySearchQ}
+                  onQueryChange={setHistorySearchQ}
+                  authorId={historyAuthorCreatorId}
+                  onAuthorChange={setHistoryAuthorCreatorId}
+                  authorOptions={historyAuthorOptions}
+                  dateFrom={historyDateFrom}
+                  onDateFromChange={setHistoryDateFrom}
+                  dateTo={historyDateTo}
+                  onDateToChange={setHistoryDateTo}
+                  active={historyTimelineFiltersActive}
+                  onReset={resetHistoryTimelineFilters}
+                />
+
+                {FEATURE_GITLIKE && selectedProjectId ? (
+                  <VersionGitlikePanels
+                    tags={versionTags}
+                    branches={versionBranches}
+                    effectiveIsAdmin={!!effectiveIsAdmin}
+                    currentUserId={currentUserId}
+                    gitlike={GITLIKE}
+                    onToggleTagProtection={(tagId, next) => void handleToggleTagProtection(tagId, next)}
+                    onDeleteTag={(tagId) => void handleDeleteTag(tagId)}
+                    onToggleBranchProtection={(branchId, next) =>
+                      void handleToggleBranchProtection(branchId, next)
+                    }
+                    onDeleteBranch={(branchId) => void handleDeleteBranch(branchId)}
+                  />
+                ) : null}
+
+                {FEATURE_GITLIKE ? (
+                  <Card className="ver-graph-card" ref={historyGraphSectionRef} data-testid="versions-history-graph">
+                    <div className="ver-graph-card__head">
+                      <GitGraph aria-hidden />
+                      <span className="ver-graph-card__title">Revision history graph</span>
+                      {GITLIKE.marked ? <GitlikeFlag enabled /> : null}
+                      <span>Left-to-right lanes, merge parents dashed.</span>
+                    </div>
+                    <VersionHistoryGraphPanel
+                      key={versionBranches.map((b) => b.id).sort().join('|') || 'graph-branches'}
+                      versions={displayVersions.map((v) => ({
+                        id: v.id,
+                        version_id: v.version_id,
+                        parent_version_id: v.parent_version_id ?? null,
+                        merge_parent_version_id: v.merge_parent_version_id ?? null,
+                        created_at: v.created_at,
+                        shortMessage: v.shortMessage,
+                        commitMessage: v.message ?? null,
+                        authorName: v.author ?? v.creator_name ?? null,
+                        creatorId: v.creator_id ?? null,
+                      }))}
+                      branches={versionBranches.map((b) => ({
+                        id: b.id,
+                        name: b.name,
+                        tip_version_id: b.tip_version_id,
+                      }))}
+                      tags={versionTags.map((t) => ({
+                        id: t.id,
+                        name: t.name,
+                        version_id: t.version_id,
+                        immutable: t.immutable,
+                        protected: t.protected,
+                      }))}
+                      headRevisionId={headRevisionId}
+                      windowSize={historyGraphWindowSize}
+                      onWindowSizeIncrease={setHistoryGraphWindowSize}
+                      onCompareToPrimaryParent={handleHistoryGraphCompareToParent}
+                      onViewSpec={handleHistoryGraphViewSpec}
+                      onBranchFromRevision={openBranchFromRevisionDialog}
+                    />
+                  </Card>
+                ) : null}
+
+                <VersionsTable
+                  versions={visibleVersions}
+                  loading={!versionsLoaded}
+                  projectId={selectedProjectId}
+                  projectSlug={selectedProject?.slug}
+                  headRevisionId={headRevisionId}
+                  tagsByVersionId={tagsByVersionId}
+                  hasClassSchemaMap={hasClassSchemaMap}
+                  effectiveIsAdmin={!!effectiveIsAdmin}
+                  currentUserId={currentUserId}
+                  hasBranches={versionBranches.length > 0}
+                  freezingSchemaVersionId={freezingSchemaVersionId}
+                  isVersionPublishable={isVersionPublishable}
+                  gitlike={GITLIKE}
+                  mockUsageByVersion={mockUsageByVersion}
+                  onMockChanged={handleVersionMockChanged}
+                  onRowAction={handleTableRowAction}
+                  sort={versionsSort}
+                  onSortChange={handleVersionsSortChange}
+                  toolbar={tableToolbar}
+                  footer={tableFooter}
+                  empty={tableEmpty}
+                  caption={`Revisions of ${selectedProject?.name ?? 'this project'}`}
+                />
+              </>
+            )}
+          </>
+        ) : null}
+      </PageBody>
 
       {/* Import dialog (#5260): the same importer the Projects screen opens, so both surfaces share
           one intake. `projects` variant = native OpenAPI/Swagger sources; the alternative formats
@@ -4111,685 +3636,165 @@ const Versions = () => {
       )}
 
       {/* New Version dialog — core version workflow; not gated by FEATURE_GITLIKE (merge/tags/etc. still are). */}
-      <Dialog open={showCreateDialog} onOpenChange={(open) => !isLoading && setShowCreateDialog(open)}>
-        <DialogContent
-          className="flex max-h-[min(90vh,56rem)] max-w-xl flex-col gap-4 overflow-hidden"
-          aria-describedby="new-version-dialog-desc"
-        >
-          <DialogHeader className="shrink-0">
-            <DialogTitle>New Version</DialogTitle>
-            <DialogDescription id="new-version-dialog-desc">
-              Start a new schema version for this project. Pick a bump strategy (defaults to minor), then describe the release.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden overscroll-contain py-1 pr-1 [-webkit-overflow-scrolling:touch]">
-            {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
-            {branchListError && (
-              <Alert variant="warning" role="status">
-                {branchListError} Branch names may be missing; you can still pick a revision below if your role allows.
-              </Alert>
-            )}
-            <div className="space-y-2">
-              {versionBranches.length > 1 ? (
-                <>
-                  <Label>Base copy on branch tip</Label>
-                  <p id="create-copy-branch-hint" className="text-xs text-gray-500 dark:text-gray-400">
-                    Multiple branches are defined for this project. Choose which branch tip to copy schema from—like picking which line to extend in git.
-                  </p>
-                  <Select
-                    value={copySourceBranchKey}
-                    onValueChange={(val) => {
-                      setCopySourceBranchKey(val);
-                      if (val === 'blank') setSourceVersionId('');
-                      else if (val.startsWith('branch:')) {
-                        const bid = val.slice(7);
-                        const br = versionBranches.find((b) => b.id === bid);
-                        setSourceVersionId(br?.tip_version_id ?? '');
-                      }
-                    }}
-                    disabled={branchListLoading}
-                  >
-                    <SelectTrigger aria-describedby="create-copy-branch-hint">
-                      <SelectValue placeholder={branchListLoading ? 'Loading branches…' : 'Choose branch tip or blank'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="blank">Create blank version</SelectItem>
-                      {versionBranches.map((b) => (
-                        <SelectItem key={b.id} value={`branch:${b.id}`}>
-                          {b.name} — tip v{b.tip_version_string ?? '?'}
-                          {b.protected ? ' (protected)' : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </>
-              ) : (
-                <>
-                  <Label>Copy from version</Label>
-                  <Select
-                    value={sourceVersionId || '__blank__'}
-                    onValueChange={(val) => {
-                      setSourceVersionId(val === '__blank__' ? '' : val);
-                    }}
-                  >
-                    <SelectTrigger><SelectValue placeholder={versions.length === 0 ? 'No versions available' : 'Create blank version'} /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__blank__">Create blank version</SelectItem>
-                      {versions.map((v) => (
-                        <SelectItem key={v.id} value={v.id}>
-                          {v.published ? '🔒 ' : ''}v{v.version_id} - {v.shortMessage || 'No description'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </>
-              )}
-            </div>
-            {sourceVersionId && (
-              <>
-                <VersionLineageSnippet
-                  sourceVersionId={sourceVersionId}
-                  versions={versions.map((v) => ({
-                    id: v.id,
-                    version_id: v.version_id,
-                    parent_version_id: v.parent_version_id ?? null,
-                    merge_parent_version_id: v.merge_parent_version_id ?? null,
-                  }))}
-                  versionBranches={versionBranches}
-                  explicitBranchName={
-                    versionBranches.length > 1 && copySourceBranchKey.startsWith('branch:')
-                      ? versionBranches.find((b) => b.id === copySourceBranchKey.slice(7))?.name ?? null
-                      : versionBranches.length === 1 && versionBranches[0].tip_version_id === sourceVersionId
-                        ? versionBranches[0].name
-                        : null
-                  }
-                  isLoading={branchListLoading}
-                  permissionDenied={branchPermissionDenied}
-                />
-                <Alert variant="info">Classes and properties will be copied from the selected revision.</Alert>
-                <Alert variant="default" role="note">
-                  <span className="font-medium text-sm">Compatibility</span>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-                    After you create a new version, the service records a parent→head compatibility check in the workflow audit
-                    log. Use <strong>Merge branches</strong> on this page or <strong>Compare versions</strong> to review a
-                    full grouped report between two existing revisions before you integrate.
-                  </p>
-                </Alert>
-              </>
-            )}
-            <div className="space-y-2">
-              <Label>Version Strategy</Label>
-              <Select value={autoGenerate ? 'auto' : 'manual'} onValueChange={(v) => { const isAuto = v === 'auto'; setAutoGenerate(isAuto); if (isAuto) setNextAutoVersion(calculateNextVersion(bumpStrategy)); }}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="auto">Auto-generate version</SelectItem>
-                  <SelectItem value="manual">Manual entry</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {autoGenerate ? (
-              <>
-                <div className="space-y-2">
-                  <Label>Bump Strategy</Label>
-                  <Select value={bumpStrategy} onValueChange={(v) => { const s = v as 'patch' | 'minor'; setBumpStrategy(s); setNextAutoVersion(calculateNextVersion(s)); }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="patch">Patch - {calculateNextVersion('patch')}</SelectItem>
-                      <SelectItem value="minor">Minor - {calculateNextVersion('minor')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Alert variant="info">Version <strong>{nextAutoVersion}</strong> will be created</Alert>
-              </>
-            ) : (
-              <div className="space-y-2">
-                <Label>Version ID</Label>
-                <Input value={versionId} onChange={(e) => setVersionId(e.target.value)} placeholder="e.g., 1.0.0" disabled={isLoading} />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="commit-message">Message *</Label>
-              <Textarea
-                id="commit-message"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                disabled={isLoading}
-                rows={4}
-                placeholder="Describe this revision (required)"
-                aria-invalid={description.length > 0 && !createCommitMessageCheck.ok}
-                className="min-h-[6rem]"
-              />
-              {!createCommitMessageCheck.ok && description.length > 0 && (
-                <p className="text-xs text-red-600 dark:text-red-400" role="alert">
-                  {createCommitMessageCheck.error}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="commit-external-ref">External reference (optional)</Label>
-              <Input
-                id="commit-external-ref"
-                value={commitExternalRef}
-                onChange={(e) => setCommitExternalRef(e.target.value)}
-                disabled={isLoading}
-                placeholder="e.g. LINEAR-42, JIRA-123"
-                aria-invalid={commitExternalRefTrim.length > COMMIT_EXTERNAL_REF_MAX_CHARS}
-              />
-              {commitExternalRefTrim.length > COMMIT_EXTERNAL_REF_MAX_CHARS && (
-                <p className="text-xs text-red-600 dark:text-red-400" role="alert">
-                  External reference must be at most {COMMIT_EXTERNAL_REF_MAX_CHARS} characters
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Changelog (markdown, optional)</Label>
-              <Textarea value={changeLog} onChange={(e) => setChangeLog(e.target.value)} rows={3} disabled={isLoading} placeholder="Release notes, breaking bullets (- breaking: …)" aria-invalid={commitChangelogOverLimit} />
-              {commitChangelogOverLimit && (
-                <p className="text-xs text-red-600 dark:text-red-400" role="alert">
-                  Changelog exceeds {VERSION_NOTES_LIMITS.maxChangelogChars} characters
-                </p>
-              )}
-            </div>
-          </div>
-          <DialogFooter className="shrink-0 border-t border-gray-100 pt-4 dark:border-gray-700">
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)} disabled={isLoading}>Cancel</Button>
-            <Button onClick={handleCreateSubmit} disabled={isLoading || !createCommitFormValid}>
-              {isLoading ? 'Creating…' : 'Create Version'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NewVersionDialog
+        open={showCreateDialog}
+        onOpenChange={(open) => {
+          if (!isLoading) setShowCreateDialog(open);
+        }}
+        busy={isLoading}
+        error={errorMessage}
+        versions={versions}
+        branches={versionBranches}
+        branchListLoading={branchListLoading}
+        branchListError={branchListError}
+        branchPermissionDenied={branchPermissionDenied}
+        copySourceBranchKey={copySourceBranchKey}
+        onCopySourceBranchKeyChange={handleCopySourceBranchKeyChange}
+        sourceVersionId={sourceVersionId}
+        onSourceVersionIdChange={setSourceVersionId}
+        autoGenerate={autoGenerate}
+        onAutoGenerateChange={handleAutoGenerateChange}
+        bumpStrategy={bumpStrategy}
+        onBumpStrategyChange={handleBumpStrategyChange}
+        nextAutoVersion={nextAutoVersion}
+        previewFor={calculateNextVersion}
+        versionId={versionId}
+        onVersionIdChange={setVersionId}
+        message={description}
+        onMessageChange={setDescription}
+        messageError={
+          description.length > 0 && !createCommitMessageCheck.ok ? createCommitMessageCheck.error : null
+        }
+        externalRef={commitExternalRef}
+        onExternalRefChange={setCommitExternalRef}
+        externalRefOverLimit={commitExternalRefTrim.length > COMMIT_EXTERNAL_REF_MAX_CHARS}
+        changelog={changeLog}
+        onChangelogChange={setChangeLog}
+        changelogOverLimit={commitChangelogOverLimit}
+        canSubmit={createCommitFormValid}
+        onSubmit={() => void handleCreateSubmit()}
+        gitlike={GITLIKE}
+      />
 
       {/* Edit Version Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={(open) => !isLoading && setShowEditDialog(open)}>
-        <DialogContent aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Edit Version</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-4">
-            {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
-            {selectedVersion && (selectedVersion.lifecycle ?? 'stable') === 'archived' && effectiveIsAdmin && !editPublishedMetadataOnly && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                This revision is archived (read-only). You can change its lifecycle or use revision lock; notes cannot be edited here.
-              </p>
-            )}
-            {editPublishedMetadataOnly && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Published revision — notes are frozen. As a tenant admin you can update deprecation and sunset metadata only (#748).
-              </p>
-            )}
-            <div className="space-y-2">
-              <Label>Version ID</Label>
-              <Input value={versionId} disabled className="font-mono" />
-            </div>
-            <div className="space-y-2">
-              <Label>Lifecycle</Label>
-              <Select value={editLifecycle} onValueChange={setEditLifecycle} disabled={isLoading}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="stable">Stable</SelectItem>
-                  <SelectItem value="beta">Beta</SelectItem>
-                  <SelectItem value="deprecated">Deprecated</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Semantic governance tag (#739). Setting Deprecated sets revision deprecation (#507) for consumers.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="deprecation-msg">Deprecation message</Label>
-              <Textarea
-                id="deprecation-msg"
-                value={editDeprecationMessage}
-                onChange={(e) => setEditDeprecationMessage(e.target.value)}
-                rows={2}
-                disabled={isLoading}
-                placeholder="Why this revision is deprecated (optional)"
-                className="text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="sunset-local">Sunset (local time → stored as UTC)</Label>
-              <Input
-                id="sunset-local"
-                type="datetime-local"
-                value={editSunsetLocal}
-                onChange={(e) => setEditSunsetLocal(e.target.value)}
-                disabled={isLoading}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Requires lifecycle Deprecated when set. Successor is optional (end of life with no replacement is valid). Cleared
-                if empty.
-              </p>
-            </div>
-            {renderSuccessorRevisionField('successor-rev')}
-            <div className="space-y-2">
-              <Label>Revision note *</Label>
-              <Input
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                disabled={
-                  isLoading ||
-                  editPublishedMetadataOnly ||
-                  ((selectedVersion?.lifecycle ?? 'stable') === 'archived' && effectiveIsAdmin)
-                }
-                autoFocus={
-                  !editPublishedMetadataOnly &&
-                  (((selectedVersion?.lifecycle ?? 'stable') !== 'archived') || !effectiveIsAdmin)
-                }
-                placeholder="Short summary (commit message)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Changelog (markdown)</Label>
-              <Textarea
-                value={changeLog}
-                onChange={(e) => setChangeLog(e.target.value)}
-                rows={4}
-                disabled={
-                  isLoading ||
-                  editPublishedMetadataOnly ||
-                  ((selectedVersion?.lifecycle ?? 'stable') === 'archived' && effectiveIsAdmin)
-                }
-                placeholder="Release notes, breaking bullets (- breaking: …)"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)} disabled={isLoading}>Cancel</Button>
-            <Button onClick={handleEditSubmit} disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Changes'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditVersionDialog
+        open={showEditDialog}
+        onOpenChange={(open) => {
+          if (!isLoading) setShowEditDialog(open);
+        }}
+        busy={isLoading}
+        error={errorMessage}
+        version={selectedVersion}
+        effectiveIsAdmin={!!effectiveIsAdmin}
+        publishedMetadataOnly={editPublishedMetadataOnly}
+        versionId={versionId}
+        lifecycle={editLifecycle}
+        onLifecycleChange={setEditLifecycle}
+        deprecationMessage={editDeprecationMessage}
+        onDeprecationMessageChange={setEditDeprecationMessage}
+        sunsetLocal={editSunsetLocal}
+        onSunsetLocalChange={setEditSunsetLocal}
+        successorRevisionId={editSuccessorRevisionId}
+        onSuccessorRevisionIdChange={setEditSuccessorRevisionId}
+        successorCandidates={successorCandidates}
+        note={description}
+        onNoteChange={setDescription}
+        changelog={changeLog}
+        onChangelogChange={setChangeLog}
+        onSubmit={() => void handleEditSubmit()}
+      />
 
-      <Dialog
+      <SunsetScheduleDialog
         open={showSunsetScheduleDialog}
         onOpenChange={(open) => {
           if (isLoading) return;
           setShowSunsetScheduleDialog(open);
           if (!open) setErrorMessage('');
         }}
-      >
-        <DialogContent className="max-w-lg" aria-describedby="sunset-schedule-desc">
-          <DialogHeader>
-            <DialogTitle>Schedule sunset (EOL)</DialogTitle>
-            <DialogDescription id="sunset-schedule-desc">
-              Set lifecycle to Deprecated, enter a required sunset date and time (stored in UTC), and optionally the successor
-              revision (by version label) consumers should migrate to—or leave no successor for a pure end-of-life. Entries
-              appear on the{' '}
-              <Link
-                href="/ade/dashboard/versions/sunset-timeline"
-                className="text-indigo-600 dark:text-indigo-400 underline underline-offset-2"
-              >
-                sunset timeline
-              </Link>
-              .
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
-            {selectedVersion && editPublishedMetadataOnly && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Published revision — only deprecation and sunset metadata can be changed here.
-              </p>
-            )}
-            {selectedVersion && (
-              <div className="space-y-2">
-                <Label>Revision</Label>
-                <Input value={`v${selectedVersion.version_id}`} readOnly disabled className="font-mono" />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label>Lifecycle</Label>
-              <Select value={editLifecycle} onValueChange={setEditLifecycle} disabled={isLoading}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="stable">Stable</SelectItem>
-                  <SelectItem value="beta">Beta</SelectItem>
-                  <SelectItem value="deprecated">Deprecated</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                A sunset date requires <span className="font-medium">Deprecated</span>.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="sunset-schedule-deprecation-msg">Deprecation message</Label>
-              <Textarea
-                id="sunset-schedule-deprecation-msg"
-                value={editDeprecationMessage}
-                onChange={(e) => setEditDeprecationMessage(e.target.value)}
-                rows={2}
-                disabled={isLoading}
-                placeholder="Why this revision is deprecated (optional)"
-                className="text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="sunset-schedule-local">
-                Sunset date and time <span className="text-red-600 dark:text-red-400">*</span>
-                <span className="sr-only"> (required)</span>
-              </Label>
-              <Input
-                id="sunset-schedule-local"
-                type="datetime-local"
-                value={editSunsetLocal}
-                onChange={(e) => setEditSunsetLocal(e.target.value)}
-                disabled={isLoading}
-                required
-                aria-required
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Required. Local time is converted to UTC for storage. To clear a sunset, use Edit version from the row menu.
-              </p>
-            </div>
-            {renderSuccessorRevisionField('sunset-schedule-successor')}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSunsetScheduleDialog(false)} disabled={isLoading}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSunsetScheduleSubmit}
-              disabled={isLoading || !editSunsetLocal.trim()}
-            >
-              {isLoading ? 'Saving…' : 'Save'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        busy={isLoading}
+        error={errorMessage}
+        version={selectedVersion}
+        publishedMetadataOnly={editPublishedMetadataOnly}
+        lifecycle={editLifecycle}
+        onLifecycleChange={setEditLifecycle}
+        deprecationMessage={editDeprecationMessage}
+        onDeprecationMessageChange={setEditDeprecationMessage}
+        sunsetLocal={editSunsetLocal}
+        onSunsetLocalChange={setEditSunsetLocal}
+        successorRevisionId={editSuccessorRevisionId}
+        onSuccessorRevisionIdChange={setEditSuccessorRevisionId}
+        successorCandidates={successorCandidates}
+        onSubmit={() => void handleSunsetScheduleSubmit()}
+      />
 
       {/* Publish Version Dialog */}
-      <Dialog open={showPublishDialog} onOpenChange={(open) => { setShowPublishDialog(open); if (!open) setPublishVersionId(null); }}>
-        <DialogContent className={changeReportUiEnabled ? 'max-w-2xl max-h-[90vh] overflow-y-auto' : 'max-w-lg'}>
-          <DialogHeader>
-            <DialogTitle>Publish Version</DialogTitle>
-            <DialogDescription>
-              Once published, this version will become read-only. To make any additional edits after publishing, either create a new version, or unpublish this version.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Visibility</Label>
-              <Select value={publishVisibility} onValueChange={(v) => setPublishVisibility(v as 'private' | 'public')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="private">Private</SelectItem>
-                  <SelectItem value="public">Public</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {publishVisibility === 'private' ? 'Access requires an API Key.' : 'OpenAPI Specification will be public without requiring an API Key.'}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Revision note *</Label>
-              <Input
-                value={publishShortMessage}
-                onChange={(e) => setPublishShortMessage(e.target.value)}
-                placeholder="Short summary frozen with this publish"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Changelog (markdown)</Label>
-              <Textarea
-                value={publishChangelog}
-                onChange={(e) => setPublishChangelog(e.target.value)}
-                rows={5}
-                placeholder="Release notes; use - breaking: lines for migration docs"
-                className="font-mono text-sm"
-              />
-            </div>
-            {publishVersionId && (() => {
-              const publishVersion = versions.find((v) => v.id === publishVersionId);
-              if (!publishVersion) return null;
-              return (
-                <>
-                  <PublishGuideViolationsPanel
-                    projectId={publishVersion.project_id}
-                    versionId={publishVersionId}
-                    onReportChange={(report) => setPublishLintReport(report)}
-                  />
-                  <BreakingPublishGuardrailPanel
-                    projectId={publishVersion.project_id}
-                    versionId={publishVersionId}
-                    enabled={showPublishDialog}
-                    onGuardrailChange={(guardrail) => setPublishBreakingGuardrail(guardrail)}
-                  />
-                  <VerificationPolicyDecisionPanel
-                    projectId={publishVersion.project_id}
-                    versionId={publishVersionId}
-                    projectSlug={selectedProject?.slug}
-                    versionSlug={publishVersion.version_id}
-                    enabled={showPublishDialog}
-                    onDecisionChange={setPublishVerificationDecision}
-                  />
-                </>
-              );
-            })()}
-            <div className="space-y-2">
-              <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={publishForce}
-                  onChange={(e) => {
-                    setPublishForce(e.target.checked);
-                    if (!e.target.checked) setPublishForceReason('');
-                  }}
-                  className="mt-0.5 rounded border-gray-300 dark:border-gray-600"
-                />
-                <span>Force publish (ignore validation errors)</span>
-              </label>
-              {publishForce && (
-                <>
-                  <Alert variant="warning" className="text-sm">
-                    Publish prechecks will be bypassed — missing class descriptions, OpenAPI build,
-                    backward-compatibility gates, style-guide error violations, the
-                    breaking-change guardrail, and evidence-backed verification policy are not
-                    enforced.
-                    A reason is required and recorded in the audit trail.
-                  </Alert>
-                  <div className="space-y-2">
-                    <Label htmlFor="publish-force-reason">Force publish reason *</Label>
-                    <Textarea
-                      id="publish-force-reason"
-                      value={publishForceReason}
-                      onChange={(e) => setPublishForceReason(e.target.value)}
-                      rows={3}
-                      placeholder="Why are you bypassing publish gates?"
-                      className="text-sm"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-            {changeReportUiEnabled && (
-              <div className="space-y-3 rounded-lg border border-indigo-200/80 bg-indigo-50/50 p-4 dark:border-indigo-800/60 dark:bg-indigo-950/20">
-                <div>
-                  <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">Publication change report</h3>
-                  <p className="text-xs text-indigo-800/90 dark:text-indigo-200/90 mt-1">
-                    A change report is generated when you publish. Choose what to compare this revision against, then review the draft below.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="publish-cr-baseline-mode">Compare against</Label>
-                  <Select
-                    value={publishChangeReportBaselineMode}
-                    onValueChange={(v) => {
-                      setPublishChangeReportBaselineMode(v as 'auto' | 'initial' | 'manual');
-                      if (v !== 'manual') setPublishManualBaselineRevisionId('');
-                    }}
-                  >
-                    <SelectTrigger id="publish-cr-baseline-mode">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="auto">Automatic (recommended prior published revision)</SelectItem>
-                      <SelectItem value="initial">Initial publication report only (no prior baseline)</SelectItem>
-                      <SelectItem value="manual" disabled={publishManualBaselineOptions.length === 0}>
-                        Choose a published revision…
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {publishManualBaselineOptions.length === 0 && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      No other published revisions in this project — use &quot;Initial publication report only&quot; or Automatic.
-                    </p>
-                  )}
-                </div>
-                {publishChangeReportBaselineMode === 'manual' && publishManualBaselineOptions.length > 0 && (
-                  <div className="space-y-2">
-                    <Label htmlFor="publish-cr-baseline-pick">Published revision</Label>
-                    <Select
-                      value={publishManualBaselineRevisionId}
-                      onValueChange={setPublishManualBaselineRevisionId}
-                    >
-                      <SelectTrigger id="publish-cr-baseline-pick">
-                        <SelectValue placeholder="Select revision…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {publishManualBaselineOptions.map((v) => (
-                          <SelectItem key={v.id} value={v.id}>
-                            v{v.version_id}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => void loadPublishPreview()} disabled={publishPreviewLoading}>
-                    {publishPreviewLoading ? 'Loading preview…' : 'Refresh preview'}
-                  </Button>
-                  {publishPreview && (
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
-                      {publishPreview.initialPublication
-                        ? 'Initial publication report'
-                        : `Diff: ${publishPreview.fromVersionLabel ?? '—'} → ${publishPreview.toVersionLabel ?? '—'}`}
-                    </span>
-                  )}
-                </div>
-                {publishPreviewError && (
-                  <Alert variant="warning" className="text-sm">
-                    {publishPreviewError}
-                  </Alert>
-                )}
-                {publishPreviewLoading && !publishPreview && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Generating preview…</p>
-                )}
-                {publishPreview && (
-                  <div className="max-h-[min(320px,40vh)] overflow-y-auto rounded-md border border-gray-200 bg-white p-3 text-left dark:border-gray-700 dark:bg-gray-900/80">
-                    <Markdown
-                      variant="default"
-                      className="border-b border-gray-100 pb-3 mb-3 dark:border-gray-800"
-                    >
-                      {publishPreview.headerSnapshot || '—'}
-                    </Markdown>
-                    <Markdown
-                      variant="default"
-                      className="border-b border-gray-100 pb-3 mb-3 dark:border-gray-800"
-                    >
-                      {publishPreview.renderedBody || '—'}
-                    </Markdown>
-                    <Markdown variant="default">{publishPreview.footnoteSnapshot || '—'}</Markdown>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowPublishDialog(false); setPublishVersionId(null); }}>Cancel</Button>
-            <Button
-              onClick={handlePublishConfirm}
-              disabled={
-                publishBlockedByGuideErrors ||
-                publishBlockedByVerificationPolicy ||
-                publishBlockedByBreakingGuardrail ||
-                publishForceReasonMissing
+      <PublishVersionDialog
+        open={showPublishDialog}
+        onOpenChange={(open) => {
+          setShowPublishDialog(open);
+          if (!open) setPublishVersionId(null);
+        }}
+        version={publishVersion}
+        projectSlug={selectedProject?.slug}
+        visibility={publishVisibility}
+        onVisibilityChange={setPublishVisibility}
+        note={publishShortMessage}
+        onNoteChange={setPublishShortMessage}
+        changelog={publishChangelog}
+        onChangelogChange={setPublishChangelog}
+        force={publishForce}
+        onForceChange={(next) => {
+          setPublishForce(next);
+          if (!next) setPublishForceReason('');
+        }}
+        forceReason={publishForceReason}
+        onForceReasonChange={setPublishForceReason}
+        onLintReportChange={(report) => setPublishLintReport(report)}
+        onGuardrailChange={(guardrail) => setPublishBreakingGuardrail(guardrail)}
+        onDecisionChange={setPublishVerificationDecision}
+        blockers={{
+          guideErrors: publishBlockedByGuideErrors,
+          verificationPolicy: publishBlockedByVerificationPolicy,
+          breakingGuardrail: publishBlockedByBreakingGuardrail,
+          forceReasonMissing: publishForceReasonMissing,
+        }}
+        recommendedVersion={publishBreakingGuardrail?.recommendedVersion}
+        changeReportEnabled={changeReportUiEnabled}
+        changeReport={
+          changeReportUiEnabled
+            ? {
+                baselineMode: publishChangeReportBaselineMode,
+                onBaselineModeChange: (mode) => {
+                  setPublishChangeReportBaselineMode(mode);
+                  if (mode !== 'manual') setPublishManualBaselineRevisionId('');
+                },
+                manualBaselineRevisionId: publishManualBaselineRevisionId,
+                onManualBaselineRevisionIdChange: setPublishManualBaselineRevisionId,
+                manualBaselineOptions: publishManualBaselineOptions,
+                previewLoading: publishPreviewLoading,
+                previewError: publishPreviewError,
+                preview: publishPreview,
+                onRefreshPreview: () => void loadPublishPreview(),
               }
-            >
-              Publish
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            : undefined
+        }
+        gitlike={GITLIKE}
+        onSubmit={() => void handlePublishConfirm()}
+      />
 
       {/* OpenAPI Viewer Dialog */}
-      <Dialog open={showOpenApiDialog} onOpenChange={setShowOpenApiDialog}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader className="space-y-0">
-            <div className="min-w-0 pr-8">
-              <DialogTitle>OpenAPI 3.1.0 Specification</DialogTitle>
-              {viewingVersion && (
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {projects.find(p => p.id === viewingVersion.project_id)?.name} - v{viewingVersion.version_id}
-                </p>
-              )}
-            </div>
-          </DialogHeader>
-          {/* JSON and YAML are panes of the spec, each with its own editor, so the picker is the
-              app's standard tab strip rather than a segmented pair of buttons. */}
-          <Tabs
-            value={openApiFormat}
-            onValueChange={(next) => { if (next) setOpenApiFormat(next as 'json' | 'yaml'); }}
-          >
-            <TabsList aria-label="Specification format">
-              {SPEC_FORMATS.map((format) => (
-                <TabsTrigger key={format} value={format} data-testid={`spec-format-tab-${format}`}>
-                  {format.toUpperCase()}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            {SPEC_FORMATS.map((format) => (
-              <TabsContent key={format} value={format} className="h-[60vh]">
-                {isLoadingSpec ? (
-                  <LoadingState
-                    className="h-full"
-                    minHeightClassName="min-h-0"
-                    spinnerSize="md"
-                    message="Loading specification..."
-                  />
-                ) : (
-                  <Editor height="100%" language={format} value={format === 'json' ? openApiSpec : YAML.stringify(JSON.parse(openApiSpec || '{}'))} theme="vs-dark" options={{ readOnly: true, minimap: { enabled: true }, fontSize: CODE_EDITOR_FONT_SIZE }} />
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
-          {/* Version-scoped export entry point (MFX-6.5, #3859): the fidelity pre-summary
-              (best-fidelity vs lossy targets for this source) + this version's recent exports,
-              rendered on the version view before the ExportDialog opens. */}
-          {viewingVersion && (
-            <div className="mt-3">
-              <VersionExportPanel
-                artifact={viewingVersion.project_id}
-                version={viewingVersion.id}
-                artifactLabel={projects.find((p) => p.id === viewingVersion.project_id)?.name}
-                active={showOpenApiDialog}
-                refreshToken={recentExportsRefresh}
-              />
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowOpenApiDialog(false)}>Close</Button>
-            <Button onClick={async () => { await navigator.clipboard.writeText(openApiFormat === 'json' ? openApiSpec : YAML.stringify(JSON.parse(openApiSpec))); toast.success('Copied to clipboard!'); }} disabled={isLoadingSpec}>Copy</Button>
-            <Button onClick={() => {
-              const content = openApiFormat === 'json' ? openApiSpec : YAML.stringify(JSON.parse(openApiSpec));
-              const blob = new Blob([content], { type: openApiFormat === 'json' ? 'application/json' : 'text/yaml' });
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement('a'); link.href = url;
-              const project = viewingVersion ? projects.find(p => p.id === viewingVersion.project_id) : null;
-              link.download = `${project?.slug || 'api'}-${viewingVersion?.version_id?.replace(/\./g, '-') || '1-0-0'}-openapi.${openApiFormat === 'json' ? 'json' : 'yaml'}`;
-              document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-            }} disabled={isLoadingSpec}>Download</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SpecViewerDialog
+        open={showOpenApiDialog}
+        onOpenChange={setShowOpenApiDialog}
+        version={viewingVersion}
+        projectName={viewingProject?.name}
+        projectSlug={viewingProject?.slug}
+        spec={openApiSpec}
+        loading={isLoadingSpec}
+        format={openApiFormat}
+        onFormatChange={setOpenApiFormat}
+        recentExportsRefresh={recentExportsRefresh}
+      />
 
       {/* Version-scoped ExportDialog (MFX-6.5, #3859) — the compact quick path, opened from a
           revision's row-menu "Export to another format…" action. (The version view's "Export this
@@ -6296,7 +5301,7 @@ const Versions = () => {
         classesWithProperties={relationshipGraphClasses}
         isLoading={isLoadingRelationshipGraph}
       />
-    </>
+    </Page>
   );
 };
 

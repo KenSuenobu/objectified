@@ -13,12 +13,11 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
+import { badgeVariants } from '../../ui/Badge';
+import { gradeBand } from '../../ui/statusVocabulary';
+import { cn } from '../../../../../lib/utils';
 import { LintReportDialog } from './LintReportDialog';
-import {
-  fetchVersionLintReport,
-  gradeChipClass,
-  type VersionLintReport,
-} from '../../../utils/version-lint-report';
+import { fetchVersionLintReport, type VersionLintReport } from '../../../utils/version-lint-report';
 
 interface VersionLintBadgeProps {
   projectId: string;
@@ -37,11 +36,13 @@ export interface LintHeadline {
   grade: string;
 }
 
-const chipBaseClass =
-  'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500';
-
-const neutralChipClass =
-  'border-gray-200 bg-gray-100 text-gray-500 hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700';
+/**
+ * The chip is a `Badge`-shaped `<button>` (HIVE-6.2, #5313): the tone comes from the shared
+ * A–F bands in `ui/statusVocabulary`, so this B is the same green as the catalog's B, and the
+ * unscored chip is the vocabulary's outline. `ver-lint-badge` (globals.css) adds only the
+ * cursor and the hover lift a button needs and a badge does not.
+ */
+const chipBaseClass = 'ver-lint-badge focus-visible:outline-none';
 
 /**
  * Resolve the chip headline from the stored record values and an optionally fetched report.
@@ -131,7 +132,7 @@ export function VersionLintBadge({
         <button
           type="button"
           onClick={openReport}
-          className={`${chipBaseClass} ${neutralChipClass}`}
+          className={cn(badgeVariants({ variant: 'outline' }), chipBaseClass)}
           title="Not scored yet — click to lint this version"
           data-testid="version-lint-badge-unscored"
         >
@@ -147,11 +148,11 @@ export function VersionLintBadge({
       <button
         type="button"
         onClick={openReport}
-        className={`${chipBaseClass} ${gradeChipClass(headline.grade)} hover:opacity-90`}
+        className={cn(badgeVariants({ variant: gradeBand(headline.grade).tone }), chipBaseClass)}
         title={`Quality score ${headline.score}/100 — open lint report`}
         data-testid="version-lint-badge"
       >
-        <ShieldCheck className="h-3 w-3" aria-hidden />
+        <ShieldCheck aria-hidden />
         {headline.grade} · {headline.score}
       </button>
       {dialog}

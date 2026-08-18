@@ -1,7 +1,18 @@
 'use client';
 
-import { AlertTriangle } from 'lucide-react';
+/**
+ * The server-ahead banner (git-like): the project's head moved after this reader's base.
+ *
+ * Re-skinned by HIVE-6.2 (#5313) to `docs/mockups/build/versions.html`'s
+ * `.banner.banner--warn.banner--bar` — a full-width amber bar under the page header with the
+ * title in weight, the API's detail beside it, and *Pull* / *Open merge* on the trailing edge.
+ * It is `FEATURE_GITLIKE` data, so a non-production build marks it with the honey flag.
+ */
+
+import { CloudAlert, Download, GitMerge } from 'lucide-react';
+import { Alert } from '@/app/components/ui/Alert';
 import { Button } from '@/app/components/ui/Button';
+import { GitlikeFlag } from '@/app/components/ade/versions/GitlikeFlag';
 
 type ServerAheadPushBannerProps = {
   /** Optional API detail (shown under the main line). */
@@ -10,6 +21,10 @@ type ServerAheadPushBannerProps = {
   pullLoading?: boolean;
   onPull: () => void;
   onOpenMerge: () => void;
+  /** Draw the honey `gitlike` flag beside the actions (non-production builds). */
+  flagged?: boolean;
+  /** Draw as a full-width bar under the page header rather than a rounded banner. */
+  bar?: boolean;
 };
 
 export default function ServerAheadPushBanner({
@@ -18,36 +33,39 @@ export default function ServerAheadPushBanner({
   pullLoading,
   onPull,
   onOpenMerge,
+  flagged = false,
+  bar = false,
 }: ServerAheadPushBannerProps) {
   return (
-    <div
+    <Alert
+      variant="warn"
+      bar={bar}
       role="alert"
-      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300/90 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-600/80 dark:bg-amber-950/40 dark:text-amber-50"
+      icon={<CloudAlert className="ver-banner__glyph" aria-hidden />}
+      data-testid="server-ahead-push-banner"
+      actions={
+        <>
+          {flagged ? <GitlikeFlag enabled /> : null}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pullDisabled || pullLoading}
+            onClick={onPull}
+          >
+            <Download aria-hidden />
+            {pullLoading ? 'Pulling…' : 'Pull'}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onOpenMerge}>
+            <GitMerge aria-hidden />
+            Open merge
+          </Button>
+        </>
+      }
     >
-      <div className="flex min-w-0 flex-1 items-start gap-2">
-        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />
-        <span className="min-w-0 leading-snug">
-          <span className="font-medium">Server has new changes.</span> Pull to integrate or open merge.
-          {detail ? (
-            <span className="mt-1 block text-xs opacity-90">{detail}</span>
-          ) : null}
-        </span>
-      </div>
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          disabled={pullDisabled || pullLoading}
-          onClick={onPull}
-          className="border-amber-400/80 bg-white text-amber-950 hover:bg-amber-100 dark:border-amber-600 dark:bg-amber-900/50 dark:text-amber-50 dark:hover:bg-amber-900"
-        >
-          {pullLoading ? 'Pulling…' : 'Pull'}
-        </Button>
-        <Button type="button" variant="default" size="sm" onClick={onOpenMerge}>
-          Open merge
-        </Button>
-      </div>
-    </div>
+      <span className="ver-banner__title">Server is ahead of your last push.</span>{' '}
+      <span className="ver-banner__body">Pull to integrate or open a merge.</span>
+      {detail ? <span className="ver-banner__detail">{detail}</span> : null}
+    </Alert>
   );
 }

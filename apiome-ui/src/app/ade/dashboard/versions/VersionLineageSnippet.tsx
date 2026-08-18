@@ -1,6 +1,16 @@
 'use client';
 
+/**
+ * The branch-context lineage snippet inside the New version dialog.
+ *
+ * Re-skinned by HIVE-6.2 (#5313) to `docs/mockups/build/versions.html`'s branch-context card
+ * (`.card--soft` with the caps *Branch context* label, the branch chip, the mono
+ * `v2.1.0 → v2.2.0 → v2.3.1 (source)` chain and the ASCII graph). What it derives — the chain,
+ * the branch names at the tip, the merge parent — is `./version-lineage`, unchanged.
+ */
+
 import { GitBranch } from 'lucide-react';
+import { Alert } from '@/app/components/ui/Alert';
 import { buildLineageSnippet, branchNamesForTip, type VersionLineageInput } from './version-lineage';
 
 export type VersionLineageSnippetProps = {
@@ -25,20 +35,18 @@ export default function VersionLineageSnippet({
 }: VersionLineageSnippetProps) {
   if (permissionDenied) {
     return (
-      <div
-        role="status"
-        className="rounded-md border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
-      >
-        You do not have access to load branch metadata for this project. You can still create a version if your role allows it.
-      </div>
+      <Alert variant="warning" role="status" className="ver-lineage__note">
+        You do not have access to load branch metadata for this project. You can still create a
+        version if your role allows it.
+      </Alert>
     );
   }
 
   if (isLoading) {
     return (
-      <div role="status" className="text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
+      <p role="status" className="ver-lineage__loading" aria-live="polite">
         Loading revision context…
-      </div>
+      </p>
     );
   }
 
@@ -56,49 +64,42 @@ export default function VersionLineageSnippet({
 
   if (!model) {
     return (
-      <div
-        role="status"
-        className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300"
-      >
+      <Alert variant="neutral" role="status" className="ver-lineage__note">
         Revision lineage could not be resolved (missing parent links in this project).
-      </div>
+      </Alert>
     );
   }
 
   return (
-    <div
-      className="rounded-md border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/30 px-3 py-3 space-y-2"
-      aria-labelledby="create-copy-lineage-heading"
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 id="create-copy-lineage-heading" className="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+    <div className="ver-lineage" aria-labelledby="create-copy-lineage-heading" data-testid="version-lineage-snippet">
+      <div className="ver-lineage__head">
+        <h3 id="create-copy-lineage-heading" className="ver-lineage__label">
           Branch context
         </h3>
-        {branchLabel && (
-          <span className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2 py-0.5 text-xs font-medium text-gray-800 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-            <GitBranch className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        {branchLabel ? (
+          <span className="ver-chip ver-chip--static">
+            <GitBranch aria-hidden />
             <span>{branchLabel}</span>
           </span>
-        )}
+        ) : null}
+        {branchLabel ? <span className="ver-lineage__hint">branches at this tip</span> : null}
       </div>
 
       <p className="sr-only">{model.screenSummary}</p>
 
-      <nav aria-label="Source revision chain" className="text-sm text-gray-800 dark:text-gray-200">
-        <ol className="flex flex-wrap items-center gap-1 list-none p-0 m-0">
+      <nav aria-label="Source revision chain">
+        <ol className="ver-lineage__chain">
           {model.breadcrumbLabels.map((label, i) => (
-            <li key={`${model.revisionIds[i]}-${i}`} className="flex items-center gap-1">
-              {i > 0 && <span className="text-gray-400 select-none" aria-hidden="true">→</span>}
-              <span
-                className={
-                  i === model.breadcrumbLabels.length - 1
-                    ? 'font-semibold text-gray-900 dark:text-gray-50'
-                    : ''
-                }
-              >
+            <li key={`${model.revisionIds[i]}-${i}`} className="ver-lineage__step">
+              {i > 0 ? (
+                <span className="ver-lineage__arrow" aria-hidden="true">
+                  →
+                </span>
+              ) : null}
+              <span className={i === model.breadcrumbLabels.length - 1 ? 'ver-lineage__cur' : undefined}>
                 {label}
                 {i === model.breadcrumbLabels.length - 1 ? (
-                  <span className="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">(source)</span>
+                  <span className="ver-lineage__source"> (source)</span>
                 ) : null}
               </span>
             </li>
@@ -107,19 +108,16 @@ export default function VersionLineageSnippet({
       </nav>
 
       {model.mergeParentLabel ? (
-        <p className="text-xs text-gray-600 dark:text-gray-400 border-l-2 border-gray-300 dark:border-gray-600 pl-2">
-          <span className="font-medium text-gray-800 dark:text-gray-200">Merge:</span> includes {model.mergeParentLabel}
+        <p className="ver-lineage__merge">
+          <span className="ver-lineage__merge-word">Merge:</span> includes {model.mergeParentLabel}
         </p>
       ) : null}
 
-      {model.asciiLines.length > 0 && (
-        <pre
-          className="text-xs leading-relaxed text-gray-700 dark:text-gray-300 font-mono overflow-x-auto border-t border-gray-200 dark:border-gray-700 pt-2 mt-1"
-          aria-hidden="true"
-        >
+      {model.asciiLines.length > 0 ? (
+        <pre className="ver-lineage__ascii mono" aria-hidden="true">
           {model.asciiLines.join('\n')}
         </pre>
-      )}
+      ) : null}
     </div>
   );
 }

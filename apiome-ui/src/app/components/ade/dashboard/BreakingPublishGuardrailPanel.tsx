@@ -9,18 +9,35 @@
  *
  * Silent by design when there is nothing to say (not breaking, correctly majored, initial
  * publication, guardrail off), so a well-formed release sees no friction.
+ *
+ * Re-skinned in place by HIVE-6.2 (#5313) to `docs/mockups/build/versions.html`'s second
+ * publish gate (`.gate` on `--warn-soft`): the titled head with the status badge, the *vX
+ * versus vY* line, the verdict, the recommended version and the *Breaking changes (n)*
+ * disclosure. What it loads, what it reports through `onGuardrailChange` and when it blocks
+ * are unchanged; the status badge takes its tone from the shared vocabulary.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, OctagonAlert } from 'lucide-react';
 import { Alert } from '../../ui/Alert';
+import { Badge } from '../../ui/Badge';
 import { LoadingState } from '../../ui/LoadingState';
+import type { StatusTone } from '../../ui/statusVocabulary';
 import {
   fetchBreakingPublishGuardrail,
-  guardrailStatusBadgeClass,
   guardrailStatusLabel,
   type BreakingPublishGuardrail,
 } from '@/app/utils/breaking-publish-guardrail';
+
+/** The vocabulary tone for each guardrail verdict — the mockup's `Blocked` is danger, a warning warn. */
+const GUARDRAIL_STATUS_TONE: Readonly<Record<string, StatusTone>> = {
+  blocked: 'danger',
+  warning: 'warn',
+  ok: 'ok',
+  'no-baseline': 'accent',
+  disabled: 'outline',
+  unavailable: 'outline',
+};
 
 export interface BreakingPublishGuardrailPanelProps {
   projectId: string;
@@ -92,18 +109,26 @@ export function BreakingPublishGuardrailPanel({
 
   if (loading) {
     return (
-      <LoadingState
-        className="py-4"
-        minHeightClassName="min-h-0"
-        spinnerSize="sm"
-        message="Checking breaking changes…"
-      />
+      <div className="ver-gate" data-testid="breaking-publish-guardrail-loading">
+        <div className="ver-gate__head">
+          <h3 className="ver-gate__title">
+            <OctagonAlert aria-hidden />
+            Breaking changes
+          </h3>
+        </div>
+        <LoadingState
+          className="ver-gate__loading"
+          minHeightClassName="min-h-0"
+          spinnerSize="sm"
+          message="Checking breaking changes…"
+        />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Alert variant="warning" className="text-sm" data-testid="breaking-publish-guardrail-error">
+      <Alert variant="warning" data-testid="breaking-publish-guardrail-error">
         Could not check for breaking changes: {error}
       </Alert>
     );
@@ -115,30 +140,24 @@ export function BreakingPublishGuardrailPanel({
   const changeCount = guardrail.breakingCount;
   const versionLabel = guardrail.toVersion ?? 'this version';
   const baselineLabel = guardrail.fromVersion ?? 'the previous published version';
+  const tone = GUARDRAIL_STATUS_TONE[guardrail.status] ?? 'neutral';
 
   return (
-    <div
-      className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-800/70 dark:bg-amber-950/20"
-      data-testid="breaking-publish-guardrail-panel"
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Breaking changes
-          </h3>
-          <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
-            {versionLabel} versus {baselineLabel}
-          </p>
-        </div>
-        <span
-          className={`rounded-md px-2 py-0.5 text-xs font-medium ${guardrailStatusBadgeClass(guardrail.status)}`}
-          data-testid="breaking-publish-guardrail-status"
-        >
+    <div className="ver-gate ver-gate--warn" data-testid="breaking-publish-guardrail-panel">
+      <div className="ver-gate__head">
+        <h3 className="ver-gate__title">
+          <OctagonAlert aria-hidden />
+          Breaking changes
+        </h3>
+        <Badge variant={tone} data-testid="breaking-publish-guardrail-status">
           {guardrailStatusLabel(guardrail.status)}
-        </span>
+        </Badge>
       </div>
+      <p className="ver-gate__sub">
+        {versionLabel} versus {baselineLabel}
+      </p>
 
-      <Alert variant={guardrail.blocked ? 'error' : 'warning'} className="text-sm">
+      <Alert variant={guardrail.blocked ? 'error' : 'warning'} className="ver-gate__banner">
         {guardrail.message}
         {guardrail.blocked
           ? ' Publishing is blocked by your tenant policy — bump the major version or use force publish with a reason.'
@@ -146,59 +165,43 @@ export function BreakingPublishGuardrailPanel({
       </Alert>
 
       {guardrail.recommendedVersion && (
-        <p className="text-xs text-gray-600 dark:text-gray-400">
+        <p className="ver-gate__note">
           Recommended version:{' '}
-          <span
-            className="font-mono font-medium text-gray-900 dark:text-gray-100"
-            data-testid="breaking-publish-recommended-version"
-          >
+          <span className="ver-gate__em mono" data-testid="breaking-publish-recommended-version">
             {guardrail.recommendedVersion}
           </span>
         </p>
       )}
 
       {listedChanges.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900/60">
+        <div className="ver-gate__disclosure">
           <button
             type="button"
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-gray-800 dark:text-gray-200"
+            className="ver-gate__toggle"
             onClick={() => setChangesExpanded((v) => !v)}
             aria-expanded={changesExpanded}
             data-testid="breaking-publish-changes-toggle"
           >
-            {changesExpanded ? (
-              <ChevronDown className="h-4 w-4 shrink-0" aria-hidden />
-            ) : (
-              <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
-            )}
+            {changesExpanded ? <ChevronDown aria-hidden /> : <ChevronRight aria-hidden />}
             Breaking changes ({changeCount})
           </button>
           {changesExpanded && (
             <>
-              <ul className="max-h-48 space-y-2 overflow-y-auto border-t border-gray-200 px-3 py-2 dark:border-gray-700">
+              <ul className="ver-gate__findings">
                 {listedChanges.map((change) => (
                   <li
                     key={`${change.ruleId}:${change.pointer}`}
-                    className="text-xs text-gray-700 dark:text-gray-300"
+                    className="ver-gate__finding"
                     data-testid="breaking-publish-change"
                   >
-                    <span className="font-mono text-2xs text-rose-700 dark:text-rose-300">
-                      {change.ruleId}
-                    </span>
-                    <span className="mt-0.5 block font-mono text-2xs text-gray-500 dark:text-gray-400">
-                      {change.pointer}
-                    </span>
-                    <span className="mt-0.5 block text-gray-600 dark:text-gray-400">
-                      {change.summary}
-                    </span>
+                    <span className="ver-gate__tag mono">{change.ruleId}</span>
+                    <span className="ver-gate__path mono">{change.pointer}</span>
+                    <span className="ver-gate__message">{change.summary}</span>
                   </li>
                 ))}
               </ul>
               {guardrail.truncated && (
-                <p
-                  className="border-t border-gray-200 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400"
-                  data-testid="breaking-publish-changes-truncated"
-                >
+                <p className="ver-gate__truncated" data-testid="breaking-publish-changes-truncated">
                   Showing {listedChanges.length} of {changeCount} — see the change report for the
                   full list.
                 </p>

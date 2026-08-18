@@ -6,10 +6,18 @@
  * Calls `POST /api/verification-policy/evaluate` and renders the server decision only —
  * never re-scores evidence. Parent uses `onDecisionChange` to disable publish when
  * enforcement is block and the decision failed (unless force-publish is on).
+ *
+ * Re-skinned in place by HIVE-6.2 (#5313) to `docs/mockups/build/versions.html`'s third
+ * publish gate (`.gate`): the titled head with the Passed / Failed badge and the re-evaluate
+ * button, the enforcement and evaluation-id line, the cited runs, then one row per gate.
+ * What it evaluates and what it reports through `onDecisionChange` are unchanged.
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle2, RefreshCw, XCircle } from 'lucide-react';
+import { AlertCircle, BadgeCheck, CheckCircle2, RefreshCw, XCircle } from 'lucide-react';
+import { Alert } from '../../ui/Alert';
+import { Badge } from '../../ui/Badge';
+import { Button } from '../../ui/Button';
 import {
   verificationPolicyApi,
   type VerificationPolicyDecision,
@@ -69,108 +77,103 @@ export default function VerificationPolicyDecisionPanel({
   if (!enabled) return null;
 
   return (
-    <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-900/40">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+    <div className="ver-gate" data-testid="verification-policy-panel">
+      <div className="ver-gate__head">
+        <h3 className="ver-gate__title">
+          <BadgeCheck aria-hidden />
           Verification policy
         </h3>
-        <button
-          type="button"
-          onClick={() => void evaluate()}
-          disabled={loading}
-          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 disabled:opacity-50 dark:hover:text-gray-200"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden />
-          Re-evaluate
-        </button>
+        <span className="ver-gate__badges">
+          {decision ? (
+            decision.passed ? (
+              <Badge status="passed">
+                <CheckCircle2 aria-hidden />
+                Passed
+              </Badge>
+            ) : (
+              <Badge status="failed">
+                <XCircle aria-hidden />
+                Failed
+              </Badge>
+            )
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="px-1.5"
+            onClick={() => void evaluate()}
+            disabled={loading}
+            title="Re-evaluate"
+            aria-label="Re-evaluate"
+          >
+            <RefreshCw className={loading ? 'animate-spin' : undefined} aria-hidden />
+          </Button>
+        </span>
       </div>
 
       {error && (
-        <div className="flex items-start gap-2 text-sm text-rose-700 dark:text-rose-300">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-          <span>{error}</span>
-        </div>
+        <Alert variant="error" icon={<AlertCircle aria-hidden />} className="ver-gate__banner">
+          {error}
+        </Alert>
       )}
 
-      {loading && !decision && (
-        <p className="text-sm text-gray-500">Evaluating evidence-backed policy…</p>
-      )}
+      {loading && !decision && <p className="ver-gate__note">Evaluating evidence-backed policy…</p>}
 
       {decision && (
-        <div className="space-y-2 text-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            {decision.passed ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                Passed
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-800 dark:bg-rose-950 dark:text-rose-200">
-                <XCircle className="h-3.5 w-3.5" aria-hidden />
-                Failed
-              </span>
-            )}
-            <span className="text-xs text-gray-500">
-              enforcement: {decision.enforcement}
-              {decision.skipped ? ' · purpose not covered' : ''}
-            </span>
-          </div>
+        <>
+          <p className="ver-gate__sub">
+            enforcement: {decision.enforcement}
+            {decision.skipped ? ' · purpose not covered' : ''}
+            {decision.evaluationId ? (
+              <>
+                {' · evaluationId: '}
+                <span className="mono">{decision.evaluationId}</span>
+              </>
+            ) : null}
+          </p>
 
-          {decision.evaluationId && (
-            <p className="font-mono text-2xs text-gray-500">
-              evaluationId: {decision.evaluationId}
+          {decision.evidenceRunIds.length > 0 && (
+            <p className="ver-gate__sub">
+              Cited evidence runs:{' '}
+              {decision.evidenceRunIds.map((id, index) => (
+                <span key={id}>
+                  {index > 0 ? ', ' : ''}
+                  <span className="mono">{id}</span>
+                </span>
+              ))}
             </p>
           )}
 
-          {decision.evidenceRunIds.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                Cited evidence runs
-              </p>
-              <ul className="mt-1 space-y-0.5 font-mono text-2xs text-gray-500">
-                {decision.evidenceRunIds.map((id) => (
-                  <li key={id}>{id}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <ul className="space-y-1">
+          <ul className="ver-gate__findings ver-gate__findings--gates">
             {decision.gateResults.map((gate) => (
-              <li
-                key={gate.gate}
-                className="flex items-center justify-between gap-2 rounded border border-slate-200/80 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-950"
-              >
-                <span className="font-mono text-xs">{gate.gate}</span>
-                <span
-                  className={
-                    gate.passed
-                      ? 'text-xs text-emerald-700 dark:text-emerald-300'
-                      : 'text-xs text-rose-700 dark:text-rose-300'
-                  }
-                >
+              <li key={gate.gate} className="ver-gate__gate-row">
+                <span className="mono">{gate.gate}</span>
+                <Badge status={gate.passed ? 'passed' : 'failed'}>
                   {gate.passed ? 'pass' : 'fail'}
                   {gate.action ? ` · ${gate.action}` : ''}
-                </span>
+                </Badge>
               </li>
             ))}
           </ul>
 
           {decision.warnings.length > 0 && (
-            <ul className="space-y-1 text-xs text-amber-800 dark:text-amber-200">
-              {decision.warnings.map((w, i) => (
-                <li key={i}>{String(w.message || JSON.stringify(w))}</li>
-              ))}
-            </ul>
+            <Alert variant="warning" className="ver-gate__banner">
+              <ul className="ver-gate__warnings">
+                {decision.warnings.map((w, i) => (
+                  <li key={i}>{String(w.message || JSON.stringify(w))}</li>
+                ))}
+              </ul>
+            </Alert>
           )}
 
           {!decision.passed && decision.enforcement === 'block' && (
-            <p className="text-xs text-rose-700 dark:text-rose-300">
+            <Alert variant="error" className="ver-gate__banner">
               Policy enforcement is block — resolve failed gates or use force publish with a
               reason.
-            </p>
+            </Alert>
           )}
-        </div>
+        </>
       )}
     </div>
   );

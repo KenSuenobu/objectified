@@ -2,16 +2,23 @@
 
 /**
  * Related artifacts panel for catalog item and project detail (MFI-6.4, #4410).
+ *
+ * Re-skinned in place by HIVE-6.2 (#5313) to `docs/mockups/build/versions.html` §Related
+ * artifacts: a `Card` with a titled header and the *Show all representations* link, one
+ * `.list-row` per artifact (name, format and protocol pills, *Converted* / *Linked*, Unlink on
+ * the trailing edge; a deleted one struck through), and a footer with *Suggest links* and the
+ * dashed suggestion cards. The Catalog item detail mounts the same component, so it gets the
+ * skin too; what it does — link, unlink, suggest — is unchanged.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Link2, Unlink, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@lib/utils';
+import { Button } from '@/app/components/ui/Button';
+import { Card } from '@/app/components/ui/Card';
 import { FormatPill } from '@/app/components/ui/catalog/FormatPill';
 import { ProtocolPill } from '@/app/components/ui/catalog/ProtocolPill';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import {
   allRepresentationsHref,
   linkSourceLabel,
@@ -117,18 +124,16 @@ export function CatalogRelatedArtifactsPanel({
   const hasRelated = related.length > 0;
 
   return (
-    <section
-      className={`${dashboardPanelClass} p-6`}
-      data-testid="catalog-detail-related-artifacts"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+    <Card className="rart" data-testid="catalog-detail-related-artifacts">
+      <div className="rart__header">
+        <h2 className="rart__title">
+          <Link2 aria-hidden />
           Related artifacts
         </h2>
         {identityGroupId ? (
           <Link
             href={allRepresentationsHref(identityGroupId)}
-            className="text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            className="rart__all"
             data-testid="catalog-show-all-representations"
           >
             Show all representations
@@ -137,97 +142,98 @@ export function CatalogRelatedArtifactsPanel({
       </div>
 
       {hasRelated ? (
-        <ul className="mt-3 space-y-2">
+        <ul className="rart__list">
           {related.map((artifact) => (
             <li
               key={artifact.projectId}
-              className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700"
+              className={artifact.deleted ? 'rart__row rart__row--deleted' : 'rart__row'}
             >
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                {artifact.deleted ? (
-                  <span className="font-medium text-gray-500 line-through dark:text-gray-400">
-                    {artifact.name}
-                  </span>
-                ) : (
-                  <Link
-                    href={relatedArtifactHref(artifact)}
-                    className="font-medium text-indigo-700 hover:underline dark:text-indigo-300"
-                  >
-                    {artifact.name}
-                  </Link>
-                )}
-                {artifact.sourceFormat ? <FormatPill format={artifact.sourceFormat} /> : null}
-                {artifact.protocol ? <ProtocolPill protocol={artifact.protocol} /> : null}
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {linkSourceLabel(artifact.linkSource)}
-                </span>
+              <div className="rart__body">
+                <div className="rart__name">
+                  {artifact.deleted ? (
+                    <span className="rart__name-deleted">{artifact.name}</span>
+                  ) : (
+                    <Link href={relatedArtifactHref(artifact)} className="rart__link">
+                      {artifact.name}
+                    </Link>
+                  )}
+                </div>
+                <div className="rart__meta">
+                  {artifact.sourceFormat ? <FormatPill format={artifact.sourceFormat} /> : null}
+                  {artifact.protocol ? <ProtocolPill protocol={artifact.protocol} /> : null}
+                  <span>{artifact.deleted ? 'Deleted' : linkSourceLabel(artifact.linkSource)}</span>
+                </div>
               </div>
               {!readonly ? (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   disabled={busyId === artifact.projectId}
                   onClick={() => void unlinkProject(artifact.projectId)}
-                  className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                   data-testid={`unlink-related-${artifact.projectId}`}
                 >
-                  <Unlink className="h-3.5 w-3.5" aria-hidden />
+                  <Unlink aria-hidden />
                   Unlink
-                </button>
+                </Button>
               ) : null}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+        <p className="rart__empty">
           No linked artifacts yet. Link another format of this API to group representations together.
         </p>
       )}
 
       {!readonly ? (
-        <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-700">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void loadSuggestions()}
-              disabled={loadingSuggestions}
-              className="inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300"
-              data-testid="catalog-load-suggestions"
-            >
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
-              {loadingSuggestions ? 'Loading suggestions…' : 'Suggest links'}
-            </button>
-          </div>
+        <div className="rart__footer">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="rart__suggest"
+            onClick={() => void loadSuggestions()}
+            disabled={loadingSuggestions}
+            data-testid="catalog-load-suggestions"
+          >
+            <Sparkles aria-hidden />
+            {loadingSuggestions ? 'Loading suggestions…' : 'Suggest links'}
+          </Button>
           {suggestions.length > 0 ? (
-            <ul className="mt-3 space-y-2" data-testid="catalog-identity-suggestions">
+            <ul className="rart__suggestions" data-testid="catalog-identity-suggestions">
               {suggestions.map((suggestion) => (
-                <li
-                  key={suggestion.projectId}
-                  className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-gray-200 px-3 py-2 dark:border-gray-700"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-800 dark:text-gray-200">{suggestion.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{suggestion.reason}</p>
+                <li key={suggestion.projectId} className="rart__suggestion">
+                  <div className="rart__body">
+                    <p className="rart__suggestion-name">{suggestion.name}</p>
+                    <p className="rart__suggestion-reason">
+                      {suggestion.reason}
+                      {suggestion.sourceFormat ? (
+                        <>
+                          {' · '}
+                          <FormatPill format={suggestion.sourceFormat} />
+                        </>
+                      ) : null}
+                    </p>
                   </div>
-                  {suggestion.sourceFormat ? <FormatPill format={suggestion.sourceFormat} /> : null}
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     disabled={busyId === suggestion.projectId}
                     onClick={() => void linkProject(suggestion.projectId)}
-                    className={cn(
-                      'inline-flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50',
-                    )}
                     data-testid={`link-suggestion-${suggestion.projectId}`}
                   >
-                    <Link2 className="h-3.5 w-3.5" aria-hidden />
+                    <Link2 aria-hidden />
                     Link
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>
           ) : null}
         </div>
       ) : null}
-    </section>
+    </Card>
   );
 }
 
