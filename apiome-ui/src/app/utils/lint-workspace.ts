@@ -7,7 +7,7 @@
  * (the server re-enforces every rule; the client copy only drives which actions render enabled).
  */
 
-import type { LintDecisionState } from './lint-policy-ui';
+import { LINT_DECISION_STATES, type LintDecisionState } from './lint-decision-vocabulary';
 
 // --- Vocabularies --------------------------------------------------------------------------------
 
@@ -22,14 +22,13 @@ export const WORKSPACE_AXES = [
   'compatibility',
 ] as const;
 export const WORKSPACE_GRADES = ['A', 'B', 'C', 'D', 'F'] as const;
-export const WORKSPACE_STATES: LintDecisionState[] = [
-  'open',
-  'acknowledged',
-  'waiver_requested',
-  'waived',
-  'fixed',
-  'false_positive',
-];
+/**
+ * The decision states the queue can be filtered by — the whole vocabulary, in its own order.
+ *
+ * An alias rather than a second list: the states, their order and their labels are one fact,
+ * and `lint-decision-vocabulary.ts` is where it is stated (HIVE-5.8, #5311).
+ */
+export const WORKSPACE_STATES: readonly LintDecisionState[] = LINT_DECISION_STATES;
 
 export type WorkspaceSort = (typeof WORKSPACE_SORTS)[number];
 

@@ -36,7 +36,17 @@ const DELTA_ICON = {
   flat: Minus,
 } as const;
 
-export interface StatProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface StatProps extends React.HTMLAttributes<HTMLElement> {
+  /**
+   * The element to draw the stat as (default `div`).
+   *
+   * `button` is for a tile that *does* something — the lint workspace's four posture tiles
+   * filter the queue below them (HIVE-5.8, #5311). Wrapping the stat in a button instead
+   * would nest flow content inside one, which the HTML content model does not allow; every
+   * part of a stat is already a `span`, so the element itself is the only thing that has to
+   * change.
+   */
+  as?: 'div' | 'button';
   /** What the figure counts. Sentence case, per DESIGN.md §10. */
   label: string;
   /** A leading glyph for the label. Sized and coloured by the stylesheet, not by the caller. */
@@ -65,8 +75,9 @@ export interface StatProps extends React.HTMLAttributes<HTMLDivElement> {
  * @returns The label / figure / delta / footnote block, as flowing text so a screen reader
  *   reads it in the order it is drawn.
  */
-export const Stat = React.forwardRef<HTMLDivElement, StatProps>(function Stat(
+export const Stat = React.forwardRef<HTMLElement, StatProps>(function Stat(
   {
+    as: Tag = 'div',
     label,
     icon,
     value,
@@ -88,7 +99,13 @@ export const Stat = React.forwardRef<HTMLDivElement, StatProps>(function Stat(
   const DeltaIcon = DELTA_ICON[direction];
 
   return (
-    <div ref={ref} className={cn('hive-stat', className)} {...props}>
+    <Tag
+      ref={ref as React.Ref<never>}
+      // A `button` with no explicit type submits the form it happens to be inside.
+      type={Tag === 'button' ? 'button' : undefined}
+      className={cn('hive-stat', className)}
+      {...props}
+    >
       <span className="hive-stat__label">
         {icon}
         {label}
@@ -113,7 +130,7 @@ export const Stat = React.forwardRef<HTMLDivElement, StatProps>(function Stat(
           {footnoteEnd ? <span>{footnoteEnd}</span> : null}
         </span>
       ) : null}
-    </div>
+    </Tag>
   );
 });
 

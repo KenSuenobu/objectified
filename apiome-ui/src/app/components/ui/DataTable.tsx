@@ -297,6 +297,14 @@ export interface DataTableProps<Row>
   isRowSelectable?: (row: Row) => boolean;
   /** The bulk bar's actions. The bar, its count and its Clear button are provided. */
   bulkActions?: React.ReactNode;
+  /**
+   * What one selected row *is*, for the bulk bar's count sentence — `'finding'`, `'key'`.
+   *
+   * Defaults to `'row'`, which is honest for a list with no better word and wrong for every
+   * list that has one: "2 rows selected" above a queue of lint findings names the table
+   * rather than what is about to be acknowledged.
+   */
+  bulkNoun?: string;
 
   /** Called when a row is clicked, or `↵` is pressed on it. Makes rows look clickable. */
   onRowActivate?: (row: Row) => void;
@@ -361,6 +369,7 @@ function DataTable<Row>({
   onSelectionChange,
   isRowSelectable,
   bulkActions,
+  bulkNoun,
   onRowActivate,
   rowClassName,
   loading,
@@ -726,6 +735,7 @@ function DataTable<Row>({
       {selectable && selected.size > 0 ? (
         <DataTableBulkBar
           count={selected.size}
+          noun={bulkNoun}
           onClear={() => onSelectionChange?.([])}
           actions={bulkActions}
         />

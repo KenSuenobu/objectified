@@ -1,11 +1,18 @@
 'use client';
 
 /**
- * GOV-2.4 violation metadata row: rule id chip, guide name, rationale tooltip, and docs link.
+ * GOV-2.4 violation metadata row: rule id chip, guide name, rationale tooltip, and docs link
+ * (re-skinned onto the shared vocabulary by HIVE-5.8, #5311).
+ *
+ * The severity was `severityBadgeClass` — three `bg-rose-100 / bg-amber-100 / bg-sky-100`
+ * pairs, each doubled for dark mode — and the guide chip an indigo one. Both resolve through
+ * `ui/Badge` now, so a warning is the same amber here as in the workspace queue and the row
+ * follows all nine themes.
  */
 
-import { ExternalLink } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { Badge } from '@/app/components/ui/Badge';
 import {
   Tooltip,
   TooltipContent,
@@ -13,7 +20,6 @@ import {
   TooltipTrigger,
 } from '@/app/components/ui/Tooltip';
 import type { EnrichedLintViolation } from '@/app/utils/lint-violation-display';
-import { severityBadgeClass } from '@/app/utils/version-lint-report';
 
 export interface LintViolationFindingMetaProps {
   finding: EnrichedLintViolation;
@@ -30,19 +36,14 @@ export function LintViolationFindingMeta({
 }: LintViolationFindingMetaProps) {
   return (
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
-      <span
-        className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize ${severityBadgeClass(finding.severity)}`}
-      >
+      <Badge status={finding.severity} className="capitalize">
         {finding.severity}
-      </span>
+      </Badge>
       {!hideRuleChip ? (
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <code
-                data-testid="lint-violation-rule-chip"
-                className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:bg-gray-800 dark:text-gray-300"
-              >
+              <code data-testid="lint-violation-rule-chip" className="lr-rule">
                 {finding.rule}
               </code>
             </TooltipTrigger>
@@ -53,13 +54,13 @@ export function LintViolationFindingMeta({
         </TooltipProvider>
       ) : null}
       {finding.guideName ? (
-        <span
+        <Badge
+          variant="outline"
           data-testid="lint-violation-guide-name"
-          className="rounded bg-indigo-50 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
           title="Style guide that produced this violation"
         >
           {finding.guideName}
-        </span>
+        </Badge>
       ) : null}
       {finding.docsHref ? (
         <a
@@ -67,10 +68,10 @@ export function LintViolationFindingMeta({
           data-testid="lint-violation-view-rule"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+          className="lr-rule-link"
         >
           View rule
-          <ExternalLink className="h-3 w-3" aria-hidden />
+          <ArrowUpRight aria-hidden />
         </a>
       ) : null}
     </div>
@@ -91,16 +92,13 @@ export interface LintViolationRuleGroupHeaderProps {
 export function LintViolationRuleGroupHeader({ group }: LintViolationRuleGroupHeaderProps) {
   return (
     <div
-      className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-2 dark:border-gray-700"
+      className="flex flex-wrap items-center gap-2 border-b border-border pb-2"
       data-testid={`lint-violation-rule-group-${group.ruleId}`}
     >
       <TooltipProvider delayDuration={200}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <code
-              data-testid="lint-violation-rule-chip"
-              className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-            >
+            <code data-testid="lint-violation-rule-chip" className="lr-rule">
               {group.ruleId}
             </code>
           </TooltipTrigger>
@@ -109,16 +107,13 @@ export function LintViolationRuleGroupHeader({ group }: LintViolationRuleGroupHe
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <span className="text-2xs tabular-nums text-gray-500 dark:text-gray-400">
+      <span className="text-2xs tabular-nums text-fg-muted">
         {group.findings.length} violation{group.findings.length === 1 ? '' : 's'}
       </span>
       {group.guideName ? (
-        <span
-          data-testid="lint-violation-guide-name"
-          className="rounded bg-indigo-50 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
-        >
+        <Badge variant="outline" data-testid="lint-violation-guide-name">
           {group.guideName}
-        </span>
+        </Badge>
       ) : null}
       {group.docsHref ? (
         <a
@@ -126,10 +121,10 @@ export function LintViolationRuleGroupHeader({ group }: LintViolationRuleGroupHe
           data-testid="lint-violation-view-rule"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+          className="lr-rule-link"
         >
           View rule
-          <ExternalLink className="h-3 w-3" aria-hidden />
+          <ArrowUpRight aria-hidden />
         </a>
       ) : null}
     </div>

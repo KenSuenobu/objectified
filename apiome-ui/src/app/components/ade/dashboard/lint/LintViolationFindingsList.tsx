@@ -2,6 +2,10 @@
 
 /**
  * GOV-2.4 findings list with group-by-rule toggle (persists per surface).
+ *
+ * Re-tokened by HIVE-5.8 (#5311): the rows, the three quiet lines and the header label were
+ * `text-gray-*` pairs, which is one grey in light mode and one in dark and the same two in
+ * all nine themes. They are `--fg` / `--fg-muted` now.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -57,11 +61,11 @@ function ViolationRow({
     <li className={cn('rounded-lg p-3', rowClassName)} data-testid="lint-violation-row">
       <LintViolationFindingMeta finding={finding} hideRuleChip={hideRuleChip} />
       {finding.path ? (
-        <div className="mt-1 font-mono text-2xs text-gray-500 dark:text-gray-400">
+        <div className="mono mt-1 text-2xs text-fg-muted">
           {renderPath ? renderPath(finding) : finding.path}
         </div>
       ) : null}
-      <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{finding.message}</p>
+      <p className="mt-1 text-sm text-fg">{finding.message}</p>
     </li>
   );
 }
@@ -120,7 +124,7 @@ export function LintViolationFindingsList({
 
   if (findings.length === 0) {
     return (
-      <p className="text-sm text-gray-600 dark:text-gray-300" data-testid="lint-violations-empty">
+      <p className="text-sm text-fg-muted" data-testid="lint-violations-empty">
         {emptyMessage}
       </p>
     );
@@ -128,7 +132,7 @@ export function LintViolationFindingsList({
 
   if (catalogLoading && enriched.length === 0) {
     return (
-      <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="lint-violations-loading">
+      <p className="text-sm text-fg-muted" data-testid="lint-violations-loading">
         Loading rule metadata…
       </p>
     );
@@ -145,10 +149,8 @@ export function LintViolationFindingsList({
     <div className={className} data-testid="lint-violations-list">
       {showHeader ? (
         <div className="mb-3 flex items-center justify-between gap-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Findings
-          </span>
-          <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+          <span className="lw-caps">Findings</span>
+          <label className="flex items-center gap-2 text-xs text-fg-muted">
             <Switch
               checked={groupByRule}
               onCheckedChange={onGroupByRuleChangeHandler}

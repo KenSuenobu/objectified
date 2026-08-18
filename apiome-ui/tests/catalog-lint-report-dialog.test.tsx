@@ -87,8 +87,11 @@ describe('CatalogLintReportDialog', () => {
         'naming.schema-pascal-case',
       ),
     );
-    expect(screen.getByText('C')).toBeInTheDocument();
-    expect(screen.getByText('56', { selector: 'span.font-semibold' })).toBeInTheDocument();
+    // The grade tile and the score, as HIVE-5.8 (#5311) re-skinned them: a band-coloured
+    // letter and a `<strong>` inside `.lr-score`, rather than a `gradeChipClass` span and a
+    // `font-semibold` one.
+    expect(screen.getByTestId('lint-report-grade')).toHaveTextContent('C');
+    expect(screen.getByText('56', { selector: 'strong' })).toBeInTheDocument();
     expect(global.fetch).toHaveBeenCalledWith(
       '/api/catalog/cat-1/lint',
       expect.objectContaining({ method: 'GET' }),
@@ -108,10 +111,13 @@ describe('CatalogLintReportDialog', () => {
     expect(content.className).toContain('h-[90vh]');
     expect(content.className).toContain('max-w-6xl');
     // …and the findings list flexes to consume the remaining height instead of a 50vh cap.
+    // The two states are `.lr-findings` and `.lr-findings--expanded` since HIVE-5.8 (#5311);
+    // `tests/lint-workspace-css.test.ts` pins what each of them declares.
     await waitFor(() =>
-      expect(screen.getByTestId('lint-report-findings-scroll').className).toContain('flex-1'),
+      expect(screen.getByTestId('lint-report-findings-scroll').className).toContain(
+        'lr-findings--expanded',
+      ),
     );
-    expect(screen.getByTestId('lint-report-findings-scroll').className).not.toContain('max-h-[50vh]');
   });
 
   it('shows an error with a retry that re-fetches successfully', async () => {
