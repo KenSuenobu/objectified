@@ -1,26 +1,19 @@
 'use client';
 
-/**
- * Governance → Import & export quality policy — IXH-2.3 (#5098)
- *
- * The tenant-level gate that decides what may enter the catalog and what may leave it. It lives
- * beside the style guides because the two answer the same question at different moments: a guide
- * decides *how* a document is scored, this policy decides *what score is good enough*.
- *
- * Each scope (import / export) carries three independent floors — minimum grade, minimum score,
- * and a severity that must not appear — plus an enforcement mode: `advisory` reports a shortfall
- * without stopping anyone, `block` refuses the operation. Below that sits the override contract:
- * whether a blocked user may proceed by recording a waiver, which roles may, and how long a
- * waiver lives.
- *
- * Saving appends an immutable version (the REST layer rejects a non-admin), so the version list
- * under the form is the change history each verdict names. The active waiver ledger is shown
- * beside it, because a policy without visibility of what has been waived is not governance.
- */
-
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Download, FileSignature, History, ShieldCheck, Upload } from 'lucide-react';
+
+import { Alert } from '@/app/components/ui/Alert';
+import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/app/components/ui/Card';
+import { Input } from '@/app/components/ui/Input';
+import { Label } from '@/app/components/ui/Label';
+import { Skeleton } from '@/app/components/ui/Skeleton';
+import { Spinner } from '@/app/components/ui/Spinner';
 import { Switch } from '@/app/components/ui/Switch';
+import { formatPolicyInstant } from '@/app/components/ade/styleGuides';
+
 import {
   DEFAULT_QUALITY_THRESHOLDS,
   QUALITY_GRADE_OPTIONS,
@@ -34,10 +27,36 @@ import {
   type QualityWaiverList,
 } from './quality-policy-api';
 
-const inputClasses =
-  'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-gray-900 ' +
-  'focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 ' +
-  'dark:border-slate-700 dark:bg-slate-900 dark:text-white';
+/**
+ * Governance → Import & export quality policy — IXH-2.3 (#5098), re-skinned by HIVE-5.6 (#5309).
+ *
+ * Authority: `docs/mockups/govern/style-guides.html`, its second tab; DESIGN.md §7 (fields)
+ * and §12 (cards).
+ *
+ * The tenant-level gate that decides what may enter the catalog and what may leave it. It
+ * lives beside the style guides because the two answer the same question at different
+ * moments: a guide decides *how* a document is scored, this policy decides *what score is
+ * good enough*.
+ *
+ * Each scope (import / export) carries three independent floors — minimum grade, minimum
+ * score, and a severity that must not appear — plus an enforcement mode: `advisory` reports a
+ * shortfall without stopping anyone, `block` refuses the operation. Below that sits the
+ * override contract: whether a blocked user may proceed by recording a waiver, which roles
+ * may, and how long a waiver lives.
+ *
+ * Saving appends an immutable version (the REST layer rejects a non-admin), so the version
+ * list under the form is the change history each verdict names. The active waiver ledger is
+ * shown beside it, because a policy without visibility of what has been waived is not
+ * governance.
+ *
+ * ### What HIVE-5.6 changed
+ *
+ * Only the skin and two states. The fields, their copy, the save gate and every call are the
+ * screen's own; what changed is that the form is a `Card` on tokens rather than eleven
+ * `border-slate-200` boxes with four inline hue palettes, that the wait is a shaped skeleton
+ * rather than a bare spinner, and that a read-only viewer is told the panel is read-only
+ * instead of silently losing the Save button.
+ */
 
 /** The editable policy body — everything a PUT can change. */
 interface PolicyDraft {
@@ -75,13 +94,6 @@ function isDraftDirty(draft: PolicyDraft, baseline: PolicyDraft): boolean {
   return JSON.stringify(draft) !== JSON.stringify(baseline);
 }
 
-/** Format an ISO timestamp for the version and waiver lists. */
-function formatInstant(iso: string | null): string {
-  if (!iso) return '—';
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
-}
-
 /** One scope's editor: the three floors plus the enforcement mode. */
 function ScopeFields({
   scope,
@@ -95,37 +107,30 @@ function ScopeFields({
   onChange: (next: QualityThresholds) => void;
 }) {
   const blocking = isBlockingConfiguration(thresholds);
+  const Glyph = scope === 'import' ? Download : Upload;
   return (
-    <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-      <legend className="flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+    <fieldset className="qp-fieldset">
+      <legend className="qp-legend">
+        <Glyph aria-hidden className="qp-legend__glyph" />
         {scope === 'import' ? 'Import intake' : 'Export delivery'}
-        <span
+        <Badge
+          variant={blocking ? 'rose' : 'neutral'}
           data-testid={`quality-policy-${scope}-mode`}
-          className={
-            blocking
-              ? 'rounded-full bg-rose-100 px-2 py-0.5 text-2xs font-medium normal-case text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
-              : 'rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium normal-case text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-          }
         >
           {blocking ? 'Blocking' : 'Advisory'}
-        </span>
+        </Badge>
       </legend>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <label
-            htmlFor={`${scope}-min-grade`}
-            className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-          >
-            Minimum grade
-          </label>
+      <div className="qp-grid">
+        <div className="sg-field">
+          <Label htmlFor={`${scope}-min-grade`}>Minimum grade</Label>
           <select
             id={`${scope}-min-grade`}
             aria-label={`${scope} minimum grade`}
+            className="hive-control sg-select"
             value={thresholds.minGrade ?? ''}
             disabled={disabled}
             onChange={(e) => onChange({ ...thresholds, minGrade: e.target.value || null })}
-            className={`${inputClasses} w-full`}
           >
             <option value="">No floor</option>
             {QUALITY_GRADE_OPTIONS.map((grade) => (
@@ -136,19 +141,15 @@ function ScopeFields({
           </select>
         </div>
 
-        <div>
-          <label
-            htmlFor={`${scope}-min-score`}
-            className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-          >
-            Minimum score
-          </label>
-          <input
+        <div className="sg-field">
+          <Label htmlFor={`${scope}-min-score`}>Minimum score</Label>
+          <Input
             id={`${scope}-min-score`}
             aria-label={`${scope} minimum score`}
             type="number"
             min={0}
             max={100}
+            className="sg-num"
             value={thresholds.minScore ?? ''}
             disabled={disabled}
             onChange={(e) =>
@@ -157,47 +158,45 @@ function ScopeFields({
                 minScore: e.target.value === '' ? null : Number(e.target.value),
               })
             }
-            className={`${inputClasses} w-full`}
           />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`${scope}-block-severity`}
-            className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-          >
-            Refuse findings at
-          </label>
-          <select
-            id={`${scope}-block-severity`}
-            aria-label={`${scope} blocking severity`}
-            value={thresholds.blockOnSeverity ?? ''}
-            disabled={disabled}
-            onChange={(e) =>
-              onChange({
-                ...thresholds,
-                blockOnSeverity: (e.target.value || null) as QualityThresholds['blockOnSeverity'],
-              })
-            }
-            className={`${inputClasses} w-full`}
-          >
-            <option value="">Not gated</option>
-            {QUALITY_SEVERITY_OPTIONS.map((severity) => (
-              <option key={severity} value={severity}>
-                {severity} or worse
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <label
-          htmlFor={`${scope}-enforcement`}
-          className="text-sm text-gray-900 dark:text-white"
+      <div className="sg-field">
+        <Label htmlFor={`${scope}-block-severity`}>Refuse findings at</Label>
+        <select
+          id={`${scope}-block-severity`}
+          aria-label={`${scope} blocking severity`}
+          className="hive-control sg-select"
+          value={thresholds.blockOnSeverity ?? ''}
+          disabled={disabled}
+          onChange={(e) =>
+            onChange({
+              ...thresholds,
+              blockOnSeverity: (e.target.value || null) as QualityThresholds['blockOnSeverity'],
+            })
+          }
         >
-          Refuse the {scope} when a floor is missed
-        </label>
+          <option value="">Not gated</option>
+          {QUALITY_SEVERITY_OPTIONS.map((severity) => (
+            <option key={severity} value={severity}>
+              {severity} or worse
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="qp-switch-row">
+        <span className="qp-switch-row__text">
+          <Label htmlFor={`${scope}-enforcement`} className="qp-switch-row__title">
+            Refuse the {scope} when a floor is missed
+          </Label>
+          <span className="qp-switch-row__desc">
+            {scope === 'import'
+              ? 'Off keeps the policy advisory: the verdict is recorded but intake proceeds.'
+              : 'Off keeps the policy advisory: the pre-flight verdict warns, delivery proceeds.'}
+          </span>
+        </span>
         <Switch
           id={`${scope}-enforcement`}
           aria-label={`Block ${scope} on policy failure`}
@@ -212,6 +211,12 @@ function ScopeFields({
   );
 }
 
+/**
+ * The import & export quality policy panel.
+ *
+ * @param props.readOnly Whether the viewer may save. A member sees every value and no Save.
+ * @returns The policy form, the version list and the waiver ledger.
+ */
 export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: boolean }) {
   const [policy, setPolicy] = useState<QualityPolicy | null>(null);
   const [baseline, setBaseline] = useState<PolicyDraft | null>(null);
@@ -253,7 +258,7 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
 
   const dirty = useMemo(
     () => (draft && baseline ? isDraftDirty(draft, baseline) : false),
-    [draft, baseline],
+    [draft, baseline]
   );
 
   /** Persist the draft as a new immutable version and refresh from the response. */
@@ -289,9 +294,16 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
   };
 
   if (loading) {
+    // Shaped like the form it is waiting for, rather than a spinner in the middle of an
+    // empty page (DESIGN.md §8).
     return (
-      <div className="flex items-center justify-center py-12" data-testid="quality-policy-loading">
-        <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="qp-skeleton" data-testid="quality-policy-loading">
+        <span className="sr-only" role="status">
+          Loading the quality policy…
+        </span>
+        <Skeleton className="qp-skeleton__header" />
+        <Skeleton className="qp-skeleton__block" />
+        <Skeleton className="qp-skeleton__block" />
       </div>
     );
   }
@@ -299,66 +311,68 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
   const disabled = readOnly || saving;
 
   return (
-    <div className="space-y-6" data-testid="quality-policy-panel">
-      {error && (
-        <div className="flex items-start gap-3 rounded-lg border border-rose-300 bg-rose-50 p-4 text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300">
-          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
+    <div className="qp-panel" data-testid="quality-policy-panel">
+      {error && <Alert variant="error">{error}</Alert>}
 
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
-          <div>
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-              <ShieldCheck className="h-4 w-4 text-indigo-500" aria-hidden />
-              Import &amp; export quality policy
-            </h3>
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              Applied when a document is imported and when an artifact is delivered. Resolution is
-              per-format override → tenant → default.
-            </p>
-          </div>
+      <Card>
+        <CardHeader className="qp-card-header">
+          <span className="qp-card-header__lead">
+            <span className="tnt-icon-tile" data-tone="accent">
+              <ShieldCheck aria-hidden />
+            </span>
+            <span className="qp-card-header__text">
+              {/* `h3` takes its type from the unlayered base rules in `globals.css`, which
+                  outrank every utility class — so it is not given one here. */}
+              <h3 className="qp-card-title">Import &amp; export quality policy</h3>
+              <p className="qp-card-desc">
+                Applied when a document is imported and when an artifact is delivered.
+                Resolution is per-format override → tenant → default.
+              </p>
+            </span>
+          </span>
           {policy?.isDefault ? (
-            <span
-              data-testid="quality-policy-default-badge"
-              className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-            >
+            <Badge variant="outline" data-testid="quality-policy-default-badge">
               Not configured — advisory
-            </span>
+            </Badge>
           ) : (
-            <span
-              data-testid="quality-policy-version-badge"
-              className="whitespace-nowrap rounded-full bg-indigo-100 px-2 py-0.5 text-2xs font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
-            >
+            <Badge variant="outline" mono data-testid="quality-policy-version-badge">
               v{policy?.versionNumber}
-            </span>
+            </Badge>
           )}
-        </div>
+        </CardHeader>
 
         {draft && (
-          <div className="space-y-6 p-4">
-            <ScopeFields
-              scope="import"
-              thresholds={draft.importPolicy}
-              disabled={disabled}
-              onChange={(importPolicy) => setDraft({ ...draft, importPolicy })}
-            />
-            <ScopeFields
-              scope="export"
-              thresholds={draft.exportPolicy}
-              disabled={disabled}
-              onChange={(exportPolicy) => setDraft({ ...draft, exportPolicy })}
-            />
+          <CardContent className="qp-body">
+            <div className="qp-scopes">
+              <ScopeFields
+                scope="import"
+                thresholds={draft.importPolicy}
+                disabled={disabled}
+                onChange={(importPolicy) => setDraft({ ...draft, importPolicy })}
+              />
+              <ScopeFields
+                scope="export"
+                thresholds={draft.exportPolicy}
+                disabled={disabled}
+                onChange={(exportPolicy) => setDraft({ ...draft, exportPolicy })}
+              />
+            </div>
 
-            <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-              <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <fieldset className="qp-fieldset">
+              <legend className="qp-legend">
+                <FileSignature aria-hidden className="qp-legend__glyph" />
                 Overrides
               </legend>
-              <div className="flex items-center justify-between gap-4">
-                <label htmlFor="allow-override" className="text-sm text-gray-900 dark:text-white">
-                  Allow a blocked user to proceed by recording a waiver
-                </label>
+              <div className="qp-switch-row">
+                <span className="qp-switch-row__text">
+                  <Label htmlFor="allow-override" className="qp-switch-row__title">
+                    Allow a blocked user to proceed by recording a waiver
+                  </Label>
+                  <span className="qp-switch-row__desc">
+                    Waivers are accepted risk with a deadline; each one is listed under Active
+                    waivers below.
+                  </span>
+                </span>
                 <Switch
                   id="allow-override"
                   aria-label="Allow overrides"
@@ -367,49 +381,40 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
                   onCheckedChange={(checked) => setDraft({ ...draft, allowOverride: checked })}
                 />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label
-                    htmlFor="override-roles"
-                    className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Roles permitted to waive
-                  </label>
-                  <input
+              <div className="qp-grid">
+                <div className="sg-field">
+                  <Label htmlFor="override-roles">Roles permitted to waive</Label>
+                  <Input
                     id="override-roles"
                     aria-label="Roles permitted to waive"
+                    className="mono"
                     value={draft.overrideRoles}
                     disabled={disabled || !draft.allowOverride}
                     onChange={(e) => setDraft({ ...draft, overrideRoles: e.target.value })}
                     placeholder={ROLE_OPTIONS.join(', ')}
-                    className={`${inputClasses} w-full`}
                   />
-                  <p className="mt-1 text-2xs text-gray-500 dark:text-gray-400">
+                  <p className="sg-field__hint">
                     Comma-separated role slugs ({ROLE_OPTIONS.join(', ')}). Tenant administrators
-                    resolve to <code>owner</code>. An empty list means nobody may waive.
+                    resolve to <code className="mono">owner</code>. An empty list means nobody may
+                    waive.
                   </p>
                 </div>
-                <div>
-                  <label
-                    htmlFor="waiver-ttl"
-                    className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Waiver lifetime (hours)
-                  </label>
-                  <input
+                <div className="sg-field">
+                  <Label htmlFor="waiver-ttl">Waiver lifetime (hours)</Label>
+                  <Input
                     id="waiver-ttl"
                     aria-label="Waiver lifetime in hours"
                     type="number"
                     min={1}
                     max={8760}
+                    className="sg-num"
                     value={draft.waiverTtlHours}
                     disabled={disabled || !draft.allowOverride}
                     onChange={(e) =>
                       setDraft({ ...draft, waiverTtlHours: Number(e.target.value) || 1 })
                     }
-                    className={`${inputClasses} w-full`}
                   />
-                  <p className="mt-1 text-2xs text-gray-500 dark:text-gray-400">
+                  <p className="sg-field__hint">
                     A waiver is honoured until it expires; the waiver-expiry sweep warns before it
                     lapses.
                   </p>
@@ -421,130 +426,151 @@ export default function QualityPolicyPanel({ readOnly = false }: { readOnly?: bo
                 map, and a save carries them forward untouched. They are shown so a surprising
                 verdict whose `source` is `format_override` can be traced to the rule that caused
                 it. Edit them through PUT /api/quality-policy. */}
-            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Per-format overrides
-              </h4>
+            <div className="qp-overrides">
+              <div className="qp-overrides__head">
+                <span className="sg-section-title">Per-format overrides</span>
+                <span className="sg-quiet">read-only · set via the REST policy API</span>
+              </div>
               {Object.keys(policy?.formatOverrides ?? {}).length === 0 ? (
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  None. Every format uses the tenant floors above.
-                </p>
+                <p className="sg-quiet">None. Every format uses the tenant floors above.</p>
               ) : (
-                <ul className="mt-2 space-y-1" data-testid="quality-policy-format-overrides">
+                <ul className="qp-overrides__list" data-testid="quality-policy-format-overrides">
                   {Object.entries(policy?.formatOverrides ?? {}).map(([format, block]) => (
-                    <li key={format} className="text-xs text-gray-700 dark:text-gray-300">
-                      <code className="font-medium">{format}</code>{' '}
-                      <span className="text-gray-500 dark:text-gray-400">
-                        {JSON.stringify(block)}
-                      </span>
+                    <li key={format} className="qp-overrides__row">
+                      <code className="qp-overrides__format mono">{format}</code>
+                      <span className="qp-overrides__value mono">{JSON.stringify(block)}</span>
                     </li>
                   ))}
                 </ul>
               )}
-              <p className="mt-2 text-2xs text-gray-500 dark:text-gray-400">
+              <p className="sg-field__hint">
                 Resolution is format override → tenant → default; the pre-flight verdict names the
                 tier that won.
               </p>
             </div>
-
-            {!readOnly && (
-              <div className="flex justify-end border-t border-slate-100 pt-4 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => void handleSave()}
-                  disabled={saving || !dirty}
-                  data-testid="quality-policy-save"
-                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-                >
-                  {saving ? 'Saving…' : 'Save policy'}
-                </button>
-              </div>
-            )}
-          </div>
+          </CardContent>
         )}
-      </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Policy versions</h3>
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              Immutable snapshots; every verdict names the version it applied.
-            </p>
-          </div>
+        {/* No draft means the read failed, so there is nothing to save and nothing to say
+            about saving — the error alert above is the whole of the panel in that state. */}
+        {draft && (
+        <CardFooter>
+          <span className="sg-quiet">
+            {readOnly
+              ? 'Read-only: only tenant administrators can save a policy version.'
+              : policy?.isDefault
+                ? 'Saving creates the first immutable policy version.'
+                : `Saving creates an immutable policy version; the current one is v${policy?.versionNumber}.`}
+          </span>
+          {!readOnly && (
+            <Button
+              disabled={saving || !dirty}
+              data-testid="quality-policy-save"
+              onClick={() => void handleSave()}
+            >
+              {saving ? <Spinner size="sm" aria-hidden /> : null}
+              {saving ? 'Saving…' : 'Save policy'}
+            </Button>
+          )}
+        </CardFooter>
+        )}
+      </Card>
+
+      <div className="qp-lists">
+        <Card>
+          <CardHeader className="qp-list-header">
+            <span className="qp-card-header__text">
+              <h3 className="qp-card-title">
+                <History aria-hidden className="qp-card-title__glyph" />
+                Policy versions
+              </h3>
+              <p className="qp-card-desc">
+                Immutable snapshots; every verdict names the version it applied.
+              </p>
+            </span>
+          </CardHeader>
           {versions.length === 0 ? (
-            <p className="p-4 text-sm text-gray-500 dark:text-gray-400">
-              No policy has been saved yet.
-            </p>
+            <CardContent>
+              <p className="sg-quiet">No policy has been saved yet.</p>
+            </CardContent>
           ) : (
-            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            <ul className="qp-rows" data-testid="quality-policy-versions">
               {versions.map((version) => (
                 <li
                   key={version.policyVersionId ?? version.versionNumber}
-                  className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-4 py-3 text-sm"
+                  className="qp-version-row"
                 >
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <Badge variant="outline" mono>
                     v{version.versionNumber}
-                  </span>
-                  <code
-                    className="text-xs text-gray-500 dark:text-gray-400"
-                    title={version.contentFingerprint}
-                  >
+                  </Badge>
+                  <code className="qp-fingerprint mono" title={version.contentFingerprint}>
                     {version.contentFingerprint.slice(0, 12)}…
                   </code>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatInstant(version.createdAt)}
+                  <span className="qp-version-row__when">
+                    {formatPolicyInstant(version.createdAt)}
                   </span>
                   {version.actorLabel && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {version.actorLabel}
-                    </span>
+                    <span className="qp-version-row__actor">{version.actorLabel}</span>
                   )}
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Card>
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Active waivers</h3>
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              Accepted risk with a deadline, recorded when someone proceeded against this policy.
-            </p>
-          </div>
+        <Card>
+          <CardHeader className="qp-list-header">
+            <span className="qp-card-header__text">
+              <h3 className="qp-card-title">
+                <FileSignature aria-hidden className="qp-card-title__glyph" />
+                Active waivers
+              </h3>
+              <p className="qp-card-desc">
+                Accepted risk with a deadline, recorded when someone proceeded against this
+                policy.
+              </p>
+            </span>
+            {waivers.length > 0 && <Badge variant="warn">{waivers.length}</Badge>}
+          </CardHeader>
           {waivers.length === 0 ? (
-            <p className="p-4 text-sm text-gray-500 dark:text-gray-400">No active waivers.</p>
+            <CardContent>
+              <p className="sg-quiet">No active waivers.</p>
+            </CardContent>
           ) : (
-            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            <ul className="qp-rows" data-testid="quality-policy-waivers">
               {waivers.map((waiver) => (
-                <li key={waiver.id} className="px-4 py-3 text-sm">
-                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {waiver.subjectLabel || waiver.subjectKey.slice(0, 12)}
-                    </span>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      {waiver.scope}
-                      {waiver.formatKey ? ` · ${waiver.formatKey}` : ''}
-                    </span>
-                    {waiver.grade && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        graded {waiver.grade}
-                        {typeof waiver.score === 'number' ? ` (${waiver.score})` : ''}
+                <li key={waiver.id} className="qp-waiver-row">
+                  <span className="tnt-icon-tile" data-tone="warn">
+                    <FileSignature aria-hidden />
+                  </span>
+                  <span className="qp-waiver-row__text">
+                    <span className="qp-waiver-row__head">
+                      <span className="qp-waiver-row__subject">
+                        {waiver.subjectLabel || waiver.subjectKey.slice(0, 12)}
                       </span>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-300">{waiver.reason}</p>
-                  <p className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
-                    {waiver.actorLabel ?? 'unknown actor'}
-                    {waiver.actorRole ? ` (${waiver.actorRole})` : ''} · expires{' '}
-                    {formatInstant(waiver.expiresAt)}
-                  </p>
+                      <Badge variant="outline">
+                        {waiver.scope}
+                        {waiver.formatKey ? ` · ${waiver.formatKey}` : ''}
+                      </Badge>
+                      {waiver.grade && (
+                        <span className="sg-quiet">
+                          graded {waiver.grade}
+                          {typeof waiver.score === 'number' ? ` (${waiver.score})` : ''}
+                        </span>
+                      )}
+                    </span>
+                    <span className="qp-waiver-row__reason">{waiver.reason}</span>
+                    <span className="qp-waiver-row__meta">
+                      {waiver.actorLabel ?? 'unknown actor'}
+                      {waiver.actorRole ? ` (${waiver.actorRole})` : ''} · expires{' '}
+                      {formatPolicyInstant(waiver.expiresAt)}
+                    </span>
+                  </span>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Card>
       </div>
     </div>
   );

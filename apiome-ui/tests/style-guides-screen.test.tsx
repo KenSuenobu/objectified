@@ -6,21 +6,18 @@
  * rules on, assignments, updated), read-only handling of the built-in guide, admin
  * gating of the mutating controls, and the create / duplicate / assign / delete flows'
  * REST calls.
+ *
+ * This is the **contract** suite: what the screen sends to the REST layer, which HIVE-5.6
+ * (#5309) did not change. What the redesign *did* change — the toolbar, the facet chips, the
+ * delete dialog, the read-only banner — is pinned by `style-guides-hive-redesign.test.tsx`
+ * beside it. The assertions below were updated only where the redesign moved the markup they
+ * reached through.
  */
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { jest } from '@jest/globals';
-
-const mockConfirm = jest.fn<Promise<boolean>, [unknown]>(() => Promise.resolve(true));
-
-jest.mock('@/app/components/providers/DialogProvider', () => ({
-  useDialog: () => ({
-    confirm: (opts: unknown) => mockConfirm(opts),
-    alert: jest.fn(),
-  }),
-}));
 
 import StyleGuidesClient from '../src/app/ade/dashboard/style-guides/StyleGuidesClient';
 
@@ -93,8 +90,6 @@ function mockFetch() {
 beforeEach(() => {
   isAdmin = true;
   calls = [];
-  mockConfirm.mockClear();
-  mockConfirm.mockResolvedValue(true);
   mockFetch();
 });
 
@@ -122,10 +117,10 @@ describe('StyleGuidesClient — list view', () => {
     expect(screen.getByText('Default')).toBeInTheDocument();
     expect(screen.getByText('Tenant default')).toBeInTheDocument();
 
-    // Rules-on counts ("enabled / total") and the custom guide's project chip.
-    expect(screen.getByText('37')).toBeInTheDocument();
-    expect(screen.getByText('9')).toBeInTheDocument();
-    expect(screen.getByText('/ 12')).toBeInTheDocument();
+    // Rules-on counts ("enabled / total") and the custom guide's project chip. One string
+    // per cell since HIVE-5.6 — the two numbers were never independently readable.
+    expect(screen.getByText('37 / 37')).toBeInTheDocument();
+    expect(screen.getByText('9 / 12')).toBeInTheDocument();
     expect(screen.getByText('Payments API')).toBeInTheDocument();
   });
 
@@ -158,9 +153,10 @@ describe('StyleGuidesClient — section tabs', () => {
     render(<StyleGuidesClient />);
     await screen.findByText('Apiome Recommended');
 
+    // HIVE-5.6 puts the guide count on the first tab, so the label is matched by prefix.
     const tabs = screen.getAllByRole('tab').map((t) => t.textContent);
-    expect(tabs).toEqual(['Style guides', 'Import & export policy', 'Verification policy']);
-    expect(screen.getByRole('tab', { name: 'Style guides' })).toHaveAttribute(
+    expect(tabs).toEqual(['Style guides2', 'Import & export policy', 'Verification policy']);
+    expect(screen.getByRole('tab', { name: /^Style guides/ })).toHaveAttribute(
       'aria-selected',
       'true',
     );
@@ -192,7 +188,7 @@ describe('StyleGuidesClient — section tabs', () => {
     expect(await screen.findByText('Verification publish & deploy policy')).toBeInTheDocument();
     expect(screen.queryByRole('table')).toBeNull();
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Style guides' }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Style guides/ }));
     expect(await screen.findByRole('table')).toBeInTheDocument();
     expect(screen.getByText('New guide')).toBeInTheDocument();
   });
@@ -206,7 +202,9 @@ describe('StyleGuidesClient — create & duplicate', () => {
     fireEvent.click(screen.getByText('New guide'));
     expect(await screen.findByText('New style guide')).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'My Guide' } });
+    // The label carries an aria-hidden required marker since HIVE-5.6, so it is matched by
+    // prefix rather than exactly.
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'My Guide' } });
     fireEvent.click(screen.getByText('Create guide'));
 
     await waitFor(() => {
@@ -221,10 +219,12 @@ describe('StyleGuidesClient — create & duplicate', () => {
     await screen.findByText('Apiome Recommended');
 
     fireEvent.click(screen.getByText('Start from Recommended'));
-    expect(await screen.findByText('Duplicate style guide')).toBeInTheDocument();
+    // "Start from Recommended" and "New guide" are one dialog since HIVE-5.6 — the header
+    // says "New style guide" and the rule source is what differs.
+    expect(await screen.findByText('New style guide')).toBeInTheDocument();
 
     // Name and rule source are prefilled from the builtin guide.
-    expect(screen.getByLabelText('Name')).toHaveValue('Apiome Recommended (copy)');
+    expect(screen.getByLabelText(/^Name/)).toHaveValue('Apiome Recommended (copy)');
     expect(screen.getByLabelText('Copy rules from')).toHaveValue('guide-builtin');
 
     fireEvent.click(screen.getByText('Create guide'));
@@ -284,24 +284,34 @@ describe('StyleGuidesClient — assign dialog', () => {
 });
 
 describe('StyleGuidesClient — delete', () => {
+  // HIVE-5.6 (#5309) replaced `useDialog().confirm` with a dialog of the screen's own, so it
+  // can name what the deletion costs and report a refused write beside the button. The
+  // contract asserted here is unchanged: nothing is deleted until it is confirmed.
   it('deletes a custom guide after confirmation', async () => {
     render(<StyleGuidesClient />);
     await screen.findByText('Payments Guide');
 
     fireEvent.click(screen.getByLabelText('Delete Payments Guide'));
+    expect(await screen.findByTestId('style-guide-delete-dialog')).toBeInTheDocument();
+    expect(findMutation('DELETE', '/api/style-guides/guide-custom')).toBeFalsy();
+
+    fireEvent.click(screen.getByTestId('style-guide-delete-submit'));
     await waitFor(() => {
-      expect(mockConfirm).toHaveBeenCalled();
       expect(findMutation('DELETE', '/api/style-guides/guide-custom')).toBeTruthy();
     });
   });
 
-  it('does not delete when the confirmation is declined', async () => {
-    mockConfirm.mockResolvedValue(false);
+  it('does not delete when the confirmation is dismissed', async () => {
     render(<StyleGuidesClient />);
     await screen.findByText('Payments Guide');
 
     fireEvent.click(screen.getByLabelText('Delete Payments Guide'));
-    await waitFor(() => expect(mockConfirm).toHaveBeenCalled());
+    await screen.findByTestId('style-guide-delete-dialog');
+    fireEvent.click(screen.getByText('Cancel'));
+
+    await waitFor(() =>
+      expect(screen.queryByTestId('style-guide-delete-dialog')).not.toBeInTheDocument(),
+    );
     expect(findMutation('DELETE', '/api/style-guides/guide-custom')).toBeFalsy();
   });
 });
