@@ -8900,19 +8900,43 @@ class Database:
             raise
 
     def list_access_audit(
-        self, tenant_id: str, *, action_prefix: Optional[str] = None, limit: int = 200
+        self,
+        tenant_id: str,
+        *,
+        action_prefix: Optional[str] = None,
+        since: Optional[datetime] = None,
+        limit: int = 200,
     ) -> List[Dict[str, Any]]:
-        """Return access-audit rows for a tenant, newest first, optionally filtered by action prefix."""
+        """Return access-audit rows for a tenant, newest first, optionally narrowed.
+
+        The two hash columns are part of the row because the ledger's value as SOC 2 /
+        ISO 27001 evidence is that it is *chained*: a reader who cannot see where an entry
+        sits in the chain has to take the claim on trust (HIVE-5.5, #5308).
+
+        Args:
+            tenant_id: The tenant whose chain to read.
+            action_prefix: Keep only actions starting with this, e.g. ``"role."``.
+            since: Keep only entries written at or after this instant.
+            limit: Row ceiling, clamped to 1–1000.
+
+        Returns:
+            Newest-first rows of ``id``, ``actor_id``, ``actor_label``, ``action``,
+            ``target``, ``source``, ``detail``, ``prev_hash``, ``entry_hash`` and
+            ``created_at``.
+        """
         params: list = [tenant_id]
         where = "tenant_id = %s::uuid"
         if action_prefix:
             where += " AND action LIKE %s"
             params.append(f"{action_prefix}%")
+        if since is not None:
+            where += " AND created_at >= %s"
+            params.append(since)
         params.append(max(1, min(int(limit), 1000)))
         return self.execute_query(
             f"""
             SELECT id::text, actor_id::text, actor_label, action, target, source,
-                   detail, created_at
+                   detail, prev_hash, entry_hash, created_at
             FROM apiome.access_audit
             WHERE {where}
             ORDER BY created_at DESC, id DESC

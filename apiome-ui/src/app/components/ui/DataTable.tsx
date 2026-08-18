@@ -904,7 +904,19 @@ const DataTableFilterChip = React.forwardRef<HTMLButtonElement, DataTableFilterC
     >
       {children}
       {count !== undefined ? (
-        <span className={cn('tabular-nums', active ? 'opacity-70' : 'text-fg-faint')}>{count}</span>
+        // Two contrast findings `hive-audit.spec.ts` caught the first time a page drew
+        // counts on its chips (HIVE-5.5, #5308), both fixed the way the rest of the redesign
+        // fixes them — by not dimming text:
+        //
+        //   • the inactive chip's count was `--fg-faint`, which measures about 2.1:1 on the
+        //     chip's own surface;
+        //   • the active chip's was its ink at 70 % opacity, which drops under AA on the
+        //     inked ground in Nord and Darcula.
+        //
+        // The count now takes `--fg-muted` on a plain chip and the chip's own ink on an
+        // inked one. It still reads as secondary — it follows the label and is a bare
+        // number — without being a fade that a theme can push under the line.
+        <span className={cn('tabular-nums', active || 'text-fg-muted')}>{count}</span>
       ) : null}
     </button>
   )

@@ -1,5 +1,6 @@
 """API tests for the Access & IAM routes (#3611): roles, members, audit, platform override."""
 
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 import pytest
@@ -298,6 +299,45 @@ def test_list_audit_filter_maps_to_prefix():
         assert mdb.list_access_audit.call_args.kwargs["action_prefix"] == "role."
 
 
+def test_list_audit_style_guide_filter_maps_to_governance_prefix():
+    """The sixth category the server has always understood, which the UI exposes in HIVE-5.5."""
+    with patch("app.access_routes.db") as mdb:
+        mdb.list_access_audit.return_value = []
+        client.get("/v1/access/acme/audit?filter=styleGuide")
+        assert mdb.list_access_audit.call_args.kwargs["action_prefix"] == "style_guide."
+
+
+def test_list_audit_since_becomes_an_aware_lower_bound():
+    with patch("app.access_routes.db") as mdb:
+        mdb.list_access_audit.return_value = []
+        r = client.get("/v1/access/acme/audit?since=2026-08-01T00:00:00Z")
+    assert r.status_code == 200
+    since = mdb.list_access_audit.call_args.kwargs["since"]
+    assert since == datetime(2026, 8, 1, tzinfo=timezone.utc)
+
+
+def test_list_audit_naive_since_is_read_as_utc():
+    with patch("app.access_routes.db") as mdb:
+        mdb.list_access_audit.return_value = []
+        client.get("/v1/access/acme/audit?since=2026-08-01T00:00:00")
+    assert mdb.list_access_audit.call_args.kwargs["since"].tzinfo == timezone.utc
+
+
+def test_list_audit_without_since_leaves_the_bound_open():
+    with patch("app.access_routes.db") as mdb:
+        mdb.list_access_audit.return_value = []
+        client.get("/v1/access/acme/audit")
+    assert mdb.list_access_audit.call_args.kwargs["since"] is None
+
+
+def test_list_audit_rejects_an_unparsable_since():
+    """Refused rather than dropped: a silently ignored bound exports more than was asked for."""
+    with patch("app.access_routes.db") as mdb:
+        r = client.get("/v1/access/acme/audit?since=last-tuesday")
+    assert r.status_code == 400
+    mdb.list_access_audit.assert_not_called()
+
+
 def test_export_audit_csv():
     with patch("app.access_routes.db") as mdb:
         mdb.list_access_audit.return_value = [
@@ -314,6 +354,31 @@ def test_export_audit_csv():
     assert r.headers["content-type"].startswith("text/csv")
     assert "role.assigned" in r.text
     assert "when,actor,event,target,source" in r.text
+    # The unnarrowed export is what it always was: the whole ledger, capped at 1000.
+    kwargs = mdb.list_access_audit.call_args.kwargs
+    assert kwargs["action_prefix"] is None
+    assert kwargs["since"] is None
+    assert kwargs["limit"] == 1000
+
+
+def test_export_audit_csv_honours_the_filter_set():
+    """The CSV round-trips what the reader was looking at, not a second wider answer."""
+    with patch("app.access_routes.db") as mdb:
+        mdb.list_access_audit.return_value = []
+        r = client.get(
+            "/v1/access/acme/audit/export?filter=member&since=2026-08-01T00:00:00Z"
+        )
+    assert r.status_code == 200
+    kwargs = mdb.list_access_audit.call_args.kwargs
+    assert kwargs["action_prefix"] == "member."
+    assert kwargs["since"] == datetime(2026, 8, 1, tzinfo=timezone.utc)
+
+
+def test_export_audit_rejects_an_unparsable_since():
+    with patch("app.access_routes.db") as mdb:
+        r = client.get("/v1/access/acme/audit/export?since=yesterday")
+    assert r.status_code == 400
+    mdb.list_access_audit.assert_not_called()
 
 
 def test_permissions_me_admin_sees_everything():
