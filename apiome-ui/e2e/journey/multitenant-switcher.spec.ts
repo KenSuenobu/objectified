@@ -153,17 +153,23 @@ test.describe('OLO-6.4 — multi-tenant switcher & permission divergence', () =>
       await expect(switcherButton(page)).toContainText(name);
     };
 
-    // As OWNER of Aurora Labs, the members page exposes the invite form.
+    // As OWNER of Aurora Labs, the members page offers the invite. Since HIVE-5.2 (#5305) the
+    // invite is a dialog behind the header's primary rather than a card wedged into the page,
+    // so the trigger is what the grant controls and the form is what it opens.
     await activate(OWNER.name);
     await page.goto('/ade/dashboard/members');
     await expect(switcherButton(page)).toContainText(OWNER.name);
+    await expect(page.getByTestId('members-invite')).toBeVisible();
+    await page.getByTestId('members-invite').click();
     await expect(page.getByTestId('members-invite-form')).toBeVisible();
+    await page.keyboard.press('Escape');
 
     // As VIEWER of Cascade Foundation, the very same page hides member management entirely
-    // (the viewer role holds no members:* grants, so the form is absent, not merely disabled).
+    // (the viewer role holds no members:* grants, so the trigger is absent, not merely disabled).
     await activate(VIEWER.name);
     await page.goto('/ade/dashboard/members');
     await expect(switcherButton(page)).toContainText(VIEWER.name);
+    await expect(page.getByTestId('members-invite')).toHaveCount(0);
     await expect(page.getByTestId('members-invite-form')).toHaveCount(0);
   });
 });

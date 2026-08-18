@@ -154,10 +154,9 @@ describe('the native-dialog sweep', () => {
 });
 
 describe('the replacement each screen now reaches', () => {
-  /** The screens #5286 lists as having carried a native dialog. */
+  /** The screens #5286 lists as having carried a native dialog, that still ask through the hook. */
   const MIGRATED = [
     'src/app/ade/dashboard/roles/RolesClient.tsx',
-    'src/app/ade/dashboard/members/MembersClient.tsx',
     'src/app/components/ade/dashboard/mcp/McpCollectionsPanel.tsx',
     'src/app/admin/dashboard/users/UserManagementClient.tsx',
     'src/app/admin/dashboard/tenants/TenantManagementClient.tsx',
@@ -167,6 +166,30 @@ describe('the replacement each screen now reaches', () => {
 
   it.each(MIGRATED)('%s uses useDialog()', (path) => {
     expect(readFileSync(join(APP_ROOT, path), 'utf8')).toContain('useDialog()');
+  });
+
+  /**
+   * Screens that have since gone one better than the shared confirm.
+   *
+   * `useDialog()` is a generic question with a sentence for an answer, and a redesign
+   * sometimes needs the *shape* the mockup draws — an `alertdialog` whose administrator
+   * variant carries a danger banner that counts what removing them would leave, or a
+   * suspend confirm that says the seat is kept. Those cannot be a string, so the screen
+   * owns the dialog instead of borrowing one.
+   *
+   * Listed with the component that replaced the hook, so backing the dialog out without
+   * putting *something* real in its place fails here rather than passing quietly. The
+   * absence of a native dialog is still swept above, for these files as for every other.
+   */
+  const OWN_DIALOGS = [
+    ['src/app/ade/dashboard/members/MembersClient.tsx', 'OffboardMemberDialog'],
+    ['src/app/ade/dashboard/members/MembersClient.tsx', 'SuspendMemberDialog'],
+  ] as const;
+
+  it.each(OWN_DIALOGS)('%s answers through <%s> rather than the shared confirm', (path, component) => {
+    const source = readFileSync(join(APP_ROOT, path), 'utf8');
+    expect(source).toContain(`<${component}`);
+    expect(source).not.toContain('useDialog()');
   });
 
   /** The three irreversible actions the ticket gates behind type-to-confirm. */

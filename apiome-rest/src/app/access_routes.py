@@ -4,7 +4,7 @@ Access & IAM API routes (#3611, RC1-1.1).
 Tenant-scoped endpoints backing the Access UI (``docs/planning/mockups/access/``):
 
 * **Roles & permissions** — list/create/update/delete roles and edit the resource x action matrix.
-* **Members** — list members, invite, assign role, suspend/reinstate, offboard.
+* **Members** — list members, invite, re-issue an invitation, assign role, suspend/reinstate, offboard.
 * **Access audit** — read the append-only, hash-chained access ledger (JSON + CSV export).
 
 Plus a small **platform-admin plane** endpoint (``/v1/platform/access-overrides``) that is separate
@@ -459,6 +459,52 @@ async def update_member(
         )
 
     return {"user_id": user_id, "role_id": request.role_id, "status": request.status}
+
+
+@router.post("/{tenant_slug}/members/{user_id}/resend-invite")
+async def resend_member_invite(
+    tenant_slug: str,
+    user_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> Dict[str, Any]:
+    """Re-issue a member's outstanding invitation (HIVE-5.2, #5305).
+
+    Apiome does not mail invitations: :func:`invite_member` requires the invitee to hold an
+    account already, and a ``pending`` membership becomes ``active`` the next time they sign
+    in. Re-issuing therefore renews the invitation rather than re-sending a message — the
+    membership row is re-stamped so the members screen's "Invited {date}" reads freshly, and
+    the renewal is recorded in the access ledger as ``member.invite_resent`` so an access
+    review can see who kept an outstanding invitation alive.
+
+    Gated on ``members:create``, the same permission as issuing the invitation in the first
+    place. Consumes no seat: the pending membership already holds one, so the OLO-5.3
+    capacity guard is deliberately not consulted.
+
+    :raises HTTPException: 404 when the user has no membership in the tenant, 409 when their
+        membership is not pending (there is no invitation outstanding to renew).
+    """
+    actor_id = enforce_permission(db, auth_data, Resource.MEMBERS, Action.CREATE)
+    tenant_id = auth_data["tenant_id"]
+    if db.touch_pending_membership(tenant_id, user_id):
+        _audit(
+            auth_data,
+            tenant_id=tenant_id,
+            actor_id=actor_id,
+            action="member.invite_resent",
+            target=user_id,
+            detail={"user_id": user_id},
+        )
+        return {"user_id": user_id, "status": "pending"}
+
+    # Nothing was re-stamped: say which of the two reasons it was, because they ask for
+    # different things of the reader — invite them, or stop waiting for them.
+    status = db.get_member_status(tenant_id, user_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail=f"Member not found: {user_id}")
+    raise HTTPException(
+        status_code=409,
+        detail=f"Member {user_id} has no outstanding invitation (status '{status}')",
+    )
 
 
 @router.delete("/{tenant_slug}/members/{user_id}", status_code=204)

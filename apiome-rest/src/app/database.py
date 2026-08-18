@@ -9213,12 +9213,34 @@ class Database:
         return rows[0] if rows else None
 
     def list_members(self, tenant_id: str) -> List[Dict[str, Any]]:
-        """List tenant members with their role, lifecycle status, and admin flag."""
+        """List tenant members with their role, lifecycle status, and admin flag.
+
+        The three columns beyond the membership itself are what the members screen
+        (HIVE-5.2, #5305) prints per row and in its detail drawer, and each is read
+        from a column that already exists rather than being derived:
+
+        * ``joined_at`` — ``tenant_users.created_at`` (V001), when the membership row
+          was first written. Distinct from ``member_since`` (``updated_at``), which
+          moves every time the lifecycle status does, so only ``joined_at`` can honestly
+          head a "Joined" column.
+        * ``last_active`` — ``users.last_login_at`` (V070, #149), the last successful
+          sign-in to the application. ``NULL`` for an account that has never signed in,
+          which is the resting state of a pending invitation.
+        * ``two_factor_enabled`` — the Better Auth ``users."twoFactorEnabled"`` flag
+          (V201, #5005). Quoted because Better Auth owns the column and spells it in
+          camel case.
+
+        :param tenant_id: Canonical UUID string of the tenant.
+        :returns: One row per non-deleted member, ordered by display name.
+        """
         return self.execute_query(
             """
             SELECT u.id::text AS user_id, u.name, u.email,
                    tu.status,
                    tu.updated_at AS member_since,
+                   tu.created_at AS joined_at,
+                   u.last_login_at AS last_active,
+                   COALESCE(u."twoFactorEnabled", FALSE) AS two_factor_enabled,
                    r.id::text AS role_id, r.name AS role_name, r.slug AS role_slug,
                    EXISTS (
                        SELECT 1 FROM apiome.tenant_administrators ta
@@ -9233,6 +9255,34 @@ class Database:
             ORDER BY u.name ASC
             """,
             (tenant_id,),
+        )
+
+    def touch_pending_membership(self, tenant_id: str, user_id: str) -> int:
+        """Re-issue a *pending* invitation by re-stamping its membership row (HIVE-5.2, #5305).
+
+        Apiome invitations are not emailed: the invitee already holds an account and
+        their membership flips to ``active`` the next time they sign in (see
+        :meth:`activate_pending_membership`). "Re-invite", then, is not a message being
+        sent again but the invitation being renewed — the row's ``updated_at`` moves to
+        now, so the members screen's "Invited {date}" reads freshly, and the caller
+        writes the audit entry that records who renewed it.
+
+        Deliberately scoped to ``status = 'pending'`` in SQL rather than by a prior read:
+        the guard and the write are then one statement, so an invitation accepted between
+        the two cannot be quietly un-accepted.
+
+        :param tenant_id: Canonical UUID string of the tenant.
+        :param user_id: The invited member's user id.
+        :returns: ``1`` when a pending membership was re-stamped, ``0`` when the user has
+            no membership in the tenant or their membership is not pending.
+        """
+        return self._modify(
+            """
+            UPDATE apiome.tenant_users
+               SET updated_at = CURRENT_TIMESTAMP
+             WHERE tenant_id = %s::uuid AND user_id = %s::uuid AND status = 'pending'
+            """,
+            (tenant_id, user_id),
         )
 
     def get_tenant_license_seats(self, tenant_id: str) -> Optional[Dict[str, Any]]:

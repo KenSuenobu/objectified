@@ -244,6 +244,40 @@ def test_update_member_rejects_bad_status():
     mdb.set_member_status.assert_not_called()
 
 
+def test_resend_invite_restamps_pending_membership_and_audits():
+    # HIVE-5.2 (#5305): re-issuing renews the pending row and records who renewed it.
+    with patch("app.access_routes.db") as mdb, patch("app.license_capacity.db") as ldb:
+        mdb.touch_pending_membership.return_value = 1
+        r = client.post("/v1/access/acme/members/u-9/resend-invite")
+    assert r.status_code == 200
+    assert r.json() == {"user_id": "u-9", "status": "pending"}
+    mdb.touch_pending_membership.assert_called_once_with(_AUTH["tenant_id"], "u-9")
+    assert mdb.write_access_audit.call_args.kwargs["action"] == "member.invite_resent"
+    # The pending membership already holds its seat, so no capacity check is owed.
+    ldb.count_member_seats_in_use.assert_not_called()
+
+
+def test_resend_invite_404_when_not_a_member():
+    with patch("app.access_routes.db") as mdb:
+        mdb.touch_pending_membership.return_value = 0
+        mdb.get_member_status.return_value = None
+        r = client.post("/v1/access/acme/members/u-nope/resend-invite")
+    assert r.status_code == 404
+    mdb.write_access_audit.assert_not_called()
+
+
+def test_resend_invite_409_when_membership_is_not_pending():
+    # An already-accepted invitation has nothing outstanding to renew, and saying so is
+    # a different message from "no such member".
+    with patch("app.access_routes.db") as mdb:
+        mdb.touch_pending_membership.return_value = 0
+        mdb.get_member_status.return_value = "active"
+        r = client.post("/v1/access/acme/members/u-9/resend-invite")
+    assert r.status_code == 409
+    assert "no outstanding invitation" in r.json()["detail"]
+    mdb.write_access_audit.assert_not_called()
+
+
 def test_offboard_member_ok():
     with patch("app.access_routes.db") as mdb:
         mdb.remove_member.return_value = 1

@@ -13,6 +13,21 @@ import { render, screen, within, findByText, fireEvent, waitFor } from '@testing
 import '@testing-library/jest-dom';
 import { jest } from '@jest/globals';
 
+/**
+ * The members screen reads the session for the viewer's own id (HIVE-5.2, #5305) — that is
+ * what marks their row "(you)" and closes the writes on it. `useAuthSession` throws outside
+ * its provider rather than returning nothing, so the harness stubs the module the way
+ * `tenants-hive-redesign.test.tsx` does.
+ */
+jest.mock('@lib/auth/session-client', () => ({
+  useAuthSession: () => ({
+    data: { user: { user_id: 'viewer-1', email: 'viewer@acme.io', name: 'Viewer' } },
+    status: 'authenticated',
+    update: jest.fn(),
+  }),
+  AuthSessionProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 import RolesClient from '../src/app/ade/dashboard/roles/RolesClient';
 import MembersClient from '../src/app/ade/dashboard/members/MembersClient';
 import AuditClient from '../src/app/ade/dashboard/audit/AuditClient';
@@ -250,7 +265,7 @@ describe('MembersClient — license/seat alignment (OLO-6.3)', () => {
   });
 
   it('renders the seats-exhausted 403 as friendly guidance, not a raw error', async () => {
-    // Not yet at capacity locally, so the form is enabled; the server rejects.
+    // Not yet at capacity locally, so the invite is offered; the server rejects.
     mockMembersFetch({ used: 4, max: 5 }, () =>
       Promise.resolve({
         status: 403,
@@ -264,12 +279,17 @@ describe('MembersClient — license/seat alignment (OLO-6.3)', () => {
     );
     renderWithDialogs(<MembersClient />);
 
+    // HIVE-5.2 (#5305): the invite is a dialog behind the header's primary, not an inline
+    // card, and its failure is shown *in* the dialog rather than in a page banner the
+    // overlay would be covering.
+    fireEvent.click(await screen.findByTestId('members-invite'));
+
     const emailInput = await screen.findByLabelText(/Email address/i);
     fireEvent.change(emailInput, { target: { value: 'new@acme.io' } });
-    fireEvent.click(screen.getByRole('button', { name: /Invite member/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Send invite/i }));
 
-    const banner = await screen.findByTestId('members-error');
-    await waitFor(() => expect(banner).toHaveTextContent(FRIENDLY_EXHAUSTED));
+    const dialog = await screen.findByTestId('members-invite-dialog');
+    await waitFor(() => expect(within(dialog).getByRole('alert')).toHaveTextContent(FRIENDLY_EXHAUSTED));
   });
 
   it('renders the roster even when the license read fails', async () => {

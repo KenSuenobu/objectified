@@ -5,6 +5,28 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.263.0] - 2026-08-17
+
+### Added
+- **Re-issue an outstanding member invitation (#5305)** — `POST /v1/access/{tenant_slug}/members/{user_id}/resend-invite`.
+  Apiome does not mail invitations: an invitee already holds an account and their `pending`
+  membership flips to `active` the next time they sign in. Re-issuing therefore *renews* the
+  invitation rather than re-sending a message — the membership row is re-stamped
+  (`touch_pending_membership`, scoped to `status = 'pending'` in SQL so an invitation accepted
+  in between cannot be un-accepted) and the renewal is written to the access ledger as
+  `member.invite_resent`, which the existing `?filter=member` audit tab already covers.
+  Gated on `members:create`; consumes no seat, because the pending membership already holds
+  one. Answers 404 when the user has no membership in the tenant and 409 when their
+  membership is not pending.
+
+### Changed
+- **`GET /v1/access/{tenant_slug}/members` carries three more facts per member (#5305)** —
+  `joined_at` (`tenant_users.created_at`, when the membership was first written, as distinct
+  from the existing `member_since` = `updated_at`, which moves with every status change),
+  `last_active` (`users.last_login_at`, V070) and `two_factor_enabled` (the Better Auth
+  `users."twoFactorEnabled"` flag, V201). All three read columns that already existed; the
+  response is additive, so existing clients are unaffected.
+
 ## [1.262.0] - 2026-08-15
 
 ### Fixed

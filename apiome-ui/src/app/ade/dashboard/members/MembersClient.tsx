@@ -1,494 +1,484 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import {
-  Users,
-  UserPlus,
-  Shield,
-  Power,
-  RotateCcw,
-  Trash2,
-  AlertCircle,
-  RefreshCw,
-  KeySquare,
-  KeyRound,
-} from 'lucide-react';
+import * as React from 'react';
+import { Shield, UserPlus } from 'lucide-react';
+
+import { useAuthSession } from '@lib/auth/session-client';
+import type { ShortcutBinding } from '@lib/shortcuts';
+import { useShortcuts } from '@/app/hooks/useShortcuts';
+
 import { Alert } from '@/app/components/ui/Alert';
-import { Meter } from '@/app/components/ui/metrics';
-import { useDialog } from '@/app/components/providers/DialogProvider';
-import { destructiveConfirm } from '@/app/components/dialogs/destructiveConfirm';
-import { fetchTenantLicense, type TenantLicenseSeats } from '../tenants/licenseApi';
-import { describeLicenseError, LICENSE_SEATS_EXHAUSTED_CODE } from '../tenants/licenseErrors';
+import { Button } from '@/app/components/ui/Button';
+import PageHeader from '@/app/components/shell/PageHeader';
+import { Page, PageBody } from '@/app/components/shell/pageChrome';
 import {
-  formatSeatUsage,
-  seatMeterAppearance,
-  seatsExhausted,
-  seatsUnlimited,
-} from '../tenants/licenseSeats';
+  fetchAccessAudit,
+  fetchMembers,
+  fetchMyPermissions,
+  fetchRoles,
+  assignMemberRole,
+  inviteMember,
+  offboardMember,
+  resendMemberInvite,
+  setMemberStatus,
+  IdentityProviderCards,
+  InviteMemberDialog,
+  MemberDetailDrawer,
+  MemberSeatsCard,
+  MembersTable,
+  OffboardMemberDialog,
+  SuspendMemberDialog,
+  describeMemberCount,
+  inviteBlockedBySeats,
+  memberCapabilities,
+  nextMemberStatus,
+  summariseMembers,
+  SEATS_EXHAUSTED_TITLE,
+  type AccessAuditRecord,
+  type MemberRecord,
+  type MyPermissions,
+  type RoleRecord,
+} from '@/app/components/ade/members';
+import { fetchTenantLicense } from '../tenants/licenseApi';
+import { describeLicenseError } from '../tenants/licenseErrors';
+import type { TenantLicensePlan, TenantLicenseSeats } from '../tenants/licenseApi';
 
-interface Member {
-  user_id: string;
-  name: string;
-  email: string;
-  status: 'active' | 'pending' | 'suspended';
-  member_since: string;
-  role_id: string;
-  role_name: string;
-  role_slug: string;
-  is_admin: boolean;
+/**
+ * Members — `/ade/dashboard/members` (HIVE-5.2, #5305).
+ *
+ * Authority: `docs/mockups/workspace/members.html`, whose **Notes → Keeps (1:1)** list is this
+ * ticket's acceptance criteria; DESIGN.md §5.3 (page header), §5.4 (drawer), §8 (list).
+ *
+ * ### What this page owns
+ *
+ * The data and the writes, and nothing about how either is drawn. The seat meter is
+ * {@link MemberSeatsCard}, the roster is {@link MembersTable}, one person is
+ * {@link MemberDetailDrawer}, and the three decisions are their own dialogs. What is left here
+ * is what genuinely belongs to a page: one load, five mutations, and which overlay is open.
+ *
+ * ### The three things this rewrite closes
+ *
+ * 1. **Suspending had no confirm.** The power glyph in a row suspended a colleague on the
+ *    first click. It now opens {@link SuspendMemberDialog}, which the mockup calls the
+ *    redesign's convenience and which is really a safety rail.
+ * 2. **A pending invitation looked exactly like a member.** Same avatar, same row, a status
+ *    chip in a colour nothing else used. Invitations are now tinted rows with an envelope
+ *    mark, an "Invited {date}" line, and the two actions that only make sense for them.
+ * 3. **The screen could offboard the viewer.** Nothing stopped an owner removing their own
+ *    membership and losing the workspace. `memberRowActions` now closes every write on the
+ *    viewer's own row, in one place rather than at six call sites.
+ *
+ * ### Errors are the page's, results are the caller's
+ *
+ * Every write returns `string | null` to the dialog that asked for it, so a failure is shown
+ * *in* the dialog, beside the control that caused it, rather than in a banner behind an
+ * overlay the reader cannot see past. The page-level banner is for the load and for the
+ * writes that have no dialog — the inline role select and Resend.
+ */
+
+/** The breadcrumb's first step, and the drawer's link out. */
+const HOME_ROUTE = '/ade/dashboard';
+
+/** Where the Roles page lives — the permissions section's link and the header's secondary. */
+const ROLES_ROUTE = '/ade/dashboard/roles';
+
+/** Where the access audit lives. */
+const AUDIT_ROUTE = '/ade/dashboard/audit';
+
+/** Which overlay, if any, is open over the page. */
+type MemberOverlay = 'none' | 'invite' | 'suspend' | 'offboard';
+
+/**
+ * The page's own `N`.
+ *
+ * The mockup prints a `N` chip on the header's primary, and HIVE-3.7's registry is explicit
+ * that a list page owning a better `N` registers over the shell's generic one for as long as
+ * it is mounted. Declared here rather than in `lib/shortcuts.ts` because it means nothing
+ * anywhere else, and registered only while inviting is actually possible — a chip that
+ * promises a chord which does not fire is the one thing the registry exists to prevent.
+ */
+const INVITE_SHORTCUT_ID = 'members-invite';
+
+/**
+ * Turn a caught write failure into the sentence to show.
+ *
+ * Licence refusals (OLO-5.3) arrive as a stable machine code and are worth friendlier copy
+ * than the server's own message; everything else is shown as the API said it. One reader so
+ * the five call sites cannot each pick a different fallback.
+ *
+ * @param error Whatever was caught.
+ * @param fallback What to say when the failure carried no message.
+ * @returns The sentence.
+ */
+function describeWriteFailure(error: unknown, fallback: string): string {
+  return (
+    describeLicenseError(error) ?? (error instanceof Error ? error.message : fallback)
+  );
 }
 
-interface Role {
-  id: string;
-  slug: string;
-  name: string;
-  is_builtin: boolean;
-}
-
-interface MyPermissions {
-  is_admin: boolean;
-  permissions: string[];
-}
-
-async function accessApi<T>(path: string, init?: RequestInit): Promise<T | null> {
-  const res = await fetch(`/api/access/${path}`, init);
-  if (res.status === 204) return null;
-  const json = await res.json();
-  if (!json.success) {
-    const message = json.error || 'Request failed';
-    // The access proxy surfaces a stable machine code (e.g. the OLO-5.3
-    // `license-seats-exhausted` 403) as a top-level `code`. Keep it in the
-    // thrown message — mirroring licenseApi.readProxyJson — so callers can run
-    // the error through `describeLicenseError` for friendly upgrade guidance.
-    const code = typeof json.code === 'string' ? json.code : undefined;
-    throw new Error(code ? `${message} [${code}]` : message);
-  }
-  return json.data as T;
-}
-
-const STATUS_BADGE: Record<Member['status'], string> = {
-  active: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-  suspended: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
-};
-
+/**
+ * The members page.
+ *
+ * @returns The page header, the seat meter, the roster, the drawer and the three dialogs.
+ */
 export default function MembersClient() {
-  const { confirm } = useDialog();
-  const [members, setMembers] = useState<Member[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [perms, setPerms] = useState<MyPermissions | null>(null);
-  const [seats, setSeats] = useState<TenantLicenseSeats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const { data: session } = useAuthSession();
 
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRoleId, setInviteRoleId] = useState('');
+  const [members, setMembers] = React.useState<MemberRecord[]>([]);
+  const [roles, setRoles] = React.useState<RoleRecord[]>([]);
+  const [perms, setPerms] = React.useState<MyPermissions | null>(null);
+  const [seats, setSeats] = React.useState<TenantLicenseSeats | null>(null);
+  const [plan, setPlan] = React.useState<TenantLicensePlan | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  /**
+   * Why the roster could not be read.
+   *
+   * Kept apart from {@link error} because the two belong in different places. A load failure
+   * leaves the table with nothing to draw, and a table with nothing to draw says "No members
+   * yet" — which is a claim about the workspace, not about the request. It therefore goes
+   * *into* the card, as `DataTable`'s own error state with a retry beside it. A write failure
+   * has a table full of rows behind it and belongs in a banner.
+   */
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [error, setError] = React.useState('');
 
-  const canInvite = !!perms && (perms.is_admin || perms.permissions.includes('members:create'));
-  const canEdit = !!perms && (perms.is_admin || perms.permissions.includes('members:edit'));
-  const canDelete = !!perms && (perms.is_admin || perms.permissions.includes('members:delete'));
+  /** The member a write is running against, so only that row's controls go inert. */
+  const [busyMemberId, setBusyMemberId] = React.useState<string | null>(null);
+  const [overlay, setOverlay] = React.useState<MemberOverlay>('none');
+  /** Who the open overlay is about; independent of the drawer, which can be open behind it. */
+  const [overlayMemberId, setOverlayMemberId] = React.useState<string | null>(null);
+  /** Whose detail drawer is open. An id rather than the record, so a reload refreshes it. */
+  const [openMemberId, setOpenMemberId] = React.useState<string | null>(null);
 
-  const pendingCount = useMemo(() => members.filter((m) => m.status === 'pending').length, [members]);
-  // At-capacity is surfaced proactively so the OLO-5.3 invite 403 never comes as
-  // a surprise; unlimited (Sponsor) plans are never at capacity.
-  const atCapacity = !!seats && seatsExhausted(seats);
-  const seatMeter = seats ? seatMeterAppearance(seats.used, seats.max) : null;
+  const [auditRows, setAuditRows] = React.useState<AccessAuditRecord[] | null>(null);
+  const [auditLoading, setAuditLoading] = React.useState(false);
+  const [auditError, setAuditError] = React.useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  const sessionUser = session?.user as { user_id?: string } | undefined;
+  const viewerId = sessionUser?.user_id ?? null;
+
+  const capabilities = React.useMemo(() => memberCapabilities(perms), [perms]);
+  const summary = React.useMemo(() => summariseMembers(members), [members]);
+  const atCapacity = inviteBlockedBySeats(seats);
+  const canInviteNow = capabilities.canInvite && !atCapacity;
+
+  const inviteShortcuts = React.useMemo<readonly ShortcutBinding[]>(
+    () =>
+      canInviteNow
+        ? [
+            {
+              id: INVITE_SHORTCUT_ID,
+              scope: 'list',
+              description: 'Invite member',
+              chord: { key: 'n' },
+              run: () => setOverlay('invite'),
+            },
+          ]
+        : [],
+    [canInviteNow]
+  );
+  useShortcuts(inviteShortcuts);
+
+  const openMember = React.useMemo(
+    () => members.find((member) => member.user_id === openMemberId) ?? null,
+    [members, openMemberId]
+  );
+  const overlayMember = React.useMemo(
+    () => members.find((member) => member.user_id === overlayMemberId) ?? null,
+    [members, overlayMemberId]
+  );
+
+  // ---- load -----------------------------------------------------------------------------
+
+  const loadData = React.useCallback(async () => {
     setLoading(true);
-    setError('');
+    setLoadError(null);
     try {
       const [membersData, rolesData, permsData, licenseData] = await Promise.all([
-        accessApi<Member[]>('members'),
-        accessApi<Role[]>('roles'),
-        accessApi<MyPermissions>('permissions/me'),
-        // Seat usage is best-effort context for the invite control: a license
-        // read failure must not blank the member roster, so swallow it to null.
+        fetchMembers(),
+        fetchRoles(),
+        fetchMyPermissions(),
+        // Seat usage is best-effort context for the invite control: a licence read failure
+        // must not blank the roster, so it is swallowed to `null` and the card hides itself.
         fetchTenantLicense().catch(() => null),
       ]);
-      setMembers(membersData || []);
-      setRoles(rolesData || []);
+      setMembers(membersData);
+      setRoles(rolesData);
       setPerms(permsData);
       setSeats(licenseData?.seats ?? null);
+      setPlan(licenseData?.plan ?? null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load members');
+      setMembers([]);
+      setLoadError(e instanceof Error ? e.message : 'Failed to load members');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     void loadData();
   }, [loadData]);
 
-  const handleInvite = async (event: FormEvent) => {
-    event.preventDefault();
-    const email = inviteEmail.trim();
-    if (!email) {
-      setError('Please enter an email address');
-      return;
-    }
-    setBusy(true);
-    setError('');
-    try {
-      await accessApi('members', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, ...(inviteRoleId ? { role_id: inviteRoleId } : {}) }),
-      });
-      setInviteEmail('');
-      setInviteRoleId('');
-      await loadData();
-    } catch (e) {
-      // Render the OLO-5.3 seats-exhausted 403 as friendly upgrade guidance
-      // rather than the raw API error; fall back to the message otherwise.
-      const friendly = describeLicenseError(e);
-      setError(friendly ?? (e instanceof Error ? e.message : 'Failed to invite member'));
-    } finally {
-      setBusy(false);
-    }
-  };
+  // The ledger is the drawer's alone, so it is read when the drawer first opens and kept for
+  // the rest of the visit — reading it again for the next member would re-fetch the same
+  // 200 rows to narrow them differently.
+  //
+  // The latch is what makes that safe. Guarding on `auditLoading` instead would deadlock: the
+  // effect sets it, the state change re-runs the effect, the *first* run's cleanup fires and
+  // sets `cancelled`, and the in-flight answer is then thrown away with the flag still true —
+  // a spinner that never stops. `auditWanted` flips once and never again, so this effect runs
+  // exactly once and its cleanup only fires on unmount.
+  const [auditWanted, setAuditWanted] = React.useState(false);
 
-  const handleChangeRole = async (member: Member, roleId: string) => {
-    if (roleId === member.role_id) return;
-    setBusy(true);
-    setError('');
-    try {
-      await accessApi(`members/${member.user_id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role_id: roleId }),
-      });
-      await loadData();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to change role');
-    } finally {
-      setBusy(false);
-    }
-  };
+  React.useEffect(() => {
+    if (openMemberId) setAuditWanted(true);
+  }, [openMemberId]);
 
-  const handleToggleStatus = async (member: Member) => {
-    const nextStatus = member.status === 'suspended' ? 'active' : 'suspended';
-    setBusy(true);
-    setError('');
-    try {
-      await accessApi(`members/${member.user_id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      await loadData();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to update status');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleOffboard = async (member: Member) => {
-    const confirmed = await confirm(
-      destructiveConfirm({
-        action: 'Offboard',
-        name: member.name || member.email,
-        consequence:
-          'They lose all access to this tenant immediately and their seat is returned to the licence. Their account and the work they authored are kept.',
-        confirmLabel: 'Offboard member',
+  React.useEffect(() => {
+    if (!auditWanted) return;
+    let cancelled = false;
+    setAuditLoading(true);
+    setAuditError(null);
+    fetchAccessAudit()
+      .then((rows) => {
+        if (!cancelled) setAuditRows(rows);
       })
-    );
-    if (!confirmed) return;
-    setBusy(true);
-    setError('');
-    try {
-      await accessApi(`members/${member.user_id}`, { method: 'DELETE' });
-      await loadData();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to offboard member');
-    } finally {
-      setBusy(false);
-    }
-  };
+      .catch((e) => {
+        if (!cancelled) {
+          setAuditError(
+            e instanceof Error ? e.message : 'The access ledger could not be read.'
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setAuditLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [auditWanted]);
+
+  // ---- writes ---------------------------------------------------------------------------
+
+  /**
+   * Run one write against one member, then reload.
+   *
+   * Every mutation on this page has the same shape — mark the row busy, call, reload on
+   * success, hand the failure back as a sentence — and stating it once is what keeps the five
+   * of them from drifting into five different error behaviours.
+   *
+   * @param member The member the write is about.
+   * @param fallback What to say if the failure carried no message.
+   * @param write The call.
+   * @returns `null` on success, or the sentence to show.
+   */
+  const runWrite = React.useCallback(
+    async (
+      member: MemberRecord,
+      fallback: string,
+      write: () => Promise<void>
+    ): Promise<string | null> => {
+      setBusyMemberId(member.user_id);
+      try {
+        await write();
+        await loadData();
+        return null;
+      } catch (e) {
+        return describeWriteFailure(e, fallback);
+      } finally {
+        setBusyMemberId(null);
+      }
+    },
+    [loadData]
+  );
+
+  const handleInvite = React.useCallback(
+    async (input: { email: string; roleId: string }): Promise<string | null> => {
+      try {
+        await inviteMember({ email: input.email, roleId: input.roleId || undefined });
+        await loadData();
+        return null;
+      } catch (e) {
+        return describeWriteFailure(e, 'Failed to invite member');
+      }
+    },
+    [loadData]
+  );
+
+  const handleChangeRole = React.useCallback(
+    async (member: MemberRecord, roleId: string) => {
+      if (!roleId || roleId === member.role_id) return;
+      setError('');
+      // The inline select has nowhere to put an error of its own, so this one write reports
+      // to the page banner.
+      const failure = await runWrite(member, 'Failed to change role', () =>
+        assignMemberRole(member.user_id, roleId)
+      );
+      if (failure) setError(failure);
+    },
+    [runWrite]
+  );
+
+  const handleResendInvite = React.useCallback(
+    async (member: MemberRecord) => {
+      setError('');
+      const failure = await runWrite(member, 'Failed to re-issue the invitation', () =>
+        resendMemberInvite(member.user_id)
+      );
+      if (failure) setError(failure);
+    },
+    [runWrite]
+  );
+
+  const handleToggleStatus = React.useCallback(
+    (member: MemberRecord) =>
+      runWrite(member, 'Failed to update status', () =>
+        setMemberStatus(member.user_id, nextMemberStatus(member))
+      ),
+    [runWrite]
+  );
+
+  const handleOffboard = React.useCallback(
+    async (member: MemberRecord) => {
+      const failure = await runWrite(member, 'Failed to offboard member', () =>
+        offboardMember(member.user_id)
+      );
+      // The drawer, if it was open on this person, is now about somebody who is not there.
+      if (!failure && openMemberId === member.user_id) setOpenMemberId(null);
+      return failure;
+    },
+    [openMemberId, runWrite]
+  );
+
+  // ---- overlay helpers ------------------------------------------------------------------
+
+  const openOverlayFor = React.useCallback((next: MemberOverlay, memberId: string) => {
+    setOverlayMemberId(memberId);
+    setOverlay(next);
+  }, []);
+
+  const closeOverlay = React.useCallback(() => setOverlay('none'), []);
 
   return (
-    <>
-      <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="px-6 py-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
-            <Users className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Members &amp; Identity</h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-              {members.length} {members.length === 1 ? 'member' : 'members'}
-              {pendingCount > 0 ? ` · ${pendingCount} pending` : ''}
-            </p>
-          </div>
-        </div>
-      </header>
-
-      <main className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-6 dark:bg-slate-950">
-        <div className="space-y-8">
-          {error && (
-            <div
-              data-testid="members-error"
-              className="p-4 rounded-lg border border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300 flex items-start gap-3"
-            >
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <p className="text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Seat usage — surfaced proactively (OLO-6.3) so the OLO-5.3 invite
-              403 is anticipated, not a surprise. Best-effort: hidden when the
-              license read failed. */}
-          {seats && (
-            <div
-              data-testid="member-seat-usage"
-              className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  Member seats
-                </p>
-                <p className={`text-sm font-semibold ${seatMeter?.countClass ?? ''}`}>
-                  {formatSeatUsage(seats)}
-                </p>
-              </div>
-              {seatsUnlimited(seats) ? (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  This plan includes unlimited member seats.
-                </p>
-              ) : (
-                seatMeter && (
-                  <Meter
-                    label="Member seats used"
-                    value={seats.used}
-                    max={seats.max}
-                    valueText={formatSeatUsage(seats)}
-                    showValue={false}
-                  />
-                )
-              )}
-              {atCapacity && (
-                <div className="mt-3">
-                  <Alert variant="warning">
-                    {describeLicenseError({ code: LICENSE_SEATS_EXHAUSTED_CODE })}
-                  </Alert>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Invite control */}
-          {canInvite && (
-            <form
-              onSubmit={handleInvite}
-              data-testid="members-invite-form"
-              className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 flex flex-col sm:flex-row gap-3 sm:items-end"
-            >
-              <div className="flex-1">
-                <label htmlFor="inviteEmail" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Email address
-                </label>
-                <input
-                  id="inviteEmail"
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="person@example.com"
-                  disabled={busy || atCapacity}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                />
-              </div>
-              <div className="sm:w-56">
-                <label htmlFor="inviteRole" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Role
-                </label>
-                <select
-                  id="inviteRole"
-                  value={inviteRoleId}
-                  onChange={(e) => setInviteRoleId(e.target.value)}
-                  disabled={busy || atCapacity}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  <option value="">Default role</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="submit"
-                disabled={busy || atCapacity}
-                aria-disabled={busy || atCapacity}
-                title={atCapacity ? 'All member seats are in use — upgrade the plan to add more.' : undefined}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    <Page>
+      <PageHeader
+        breadcrumb={[
+          { label: 'Home', href: HOME_ROUTE },
+          { label: 'Workspace' },
+          { label: 'Members' },
+        ]}
+        title="Members"
+        description="Who can sign in to this workspace, and what they may do."
+        actions={
+          <>
+            <span className="text-xs text-fg-muted">{describeMemberCount(summary)}</span>
+            <Button variant="outline" asChild>
+              <a href={ROLES_ROUTE}>
+                <Shield aria-hidden />
+                Roles
+              </a>
+            </Button>
+            {capabilities.canInvite && (
+              <Button
+                kbd={canInviteNow ? 'N' : undefined}
+                data-testid="members-invite"
+                disabled={atCapacity}
+                aria-disabled={atCapacity}
+                title={atCapacity ? SEATS_EXHAUSTED_TITLE : undefined}
+                onClick={() => setOverlay('invite')}
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus aria-hidden />
                 Invite member
-              </button>
-            </form>
-          )}
+              </Button>
+            )}
+          </>
+        }
+      />
 
-          {/* Members table */}
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
-            </div>
-          ) : (
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
-              {members.length === 0 ? (
-                <div className="p-12 text-center">
-                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">No members yet.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/80">
-                      <tr className="text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        <th className="px-6 py-3">User</th>
-                        <th className="px-3 py-3">Role</th>
-                        <th className="px-3 py-3">Status</th>
-                        <th className="px-3 py-3 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                      {members.map((member) => (
-                        <tr
-                          key={member.user_id}
-                          data-testid="member-row"
-                          data-member-email={member.email}
-                          className="hover:bg-slate-50 dark:hover:bg-slate-800"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="font-medium text-gray-900 dark:text-white">{member.name || member.email}</div>
-                            <div className="text-xs text-gray-400 font-mono">{member.email}</div>
-                          </td>
-                          <td className="px-3 py-4">
-                            {canEdit ? (
-                              <select
-                                aria-label={`Role for ${member.name || member.email}`}
-                                value={member.role_id}
-                                onChange={(e) => handleChangeRole(member, e.target.value)}
-                                disabled={busy}
-                                className="px-2 py-1 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                              >
-                                {roles.map((role) => (
-                                  <option key={role.id} value={role.id}>
-                                    {role.name}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                                {member.role_name}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-4">
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[member.status]}`}
-                              >
-                                {member.status}
-                              </span>
-                              {member.is_admin && (
-                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                                  <Shield className="w-3 h-3" />
-                                  Admin
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-3 py-4 text-right">
-                            <div className="flex justify-end gap-1">
-                              {canEdit && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleStatus(member)}
-                                  disabled={busy}
-                                  title={member.status === 'suspended' ? 'Reinstate' : 'Suspend'}
-                                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50"
-                                >
-                                  {member.status === 'suspended' ? (
-                                    <RotateCcw className="w-4 h-4" />
-                                  ) : (
-                                    <Power className="w-4 h-4" />
-                                  )}
-                                </button>
-                              )}
-                              {canDelete && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleOffboard(member)}
-                                  disabled={busy}
-                                  title="Offboard"
-                                  className="p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 disabled:opacity-50"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+      <PageBody>
+        {error && (
+          <Alert
+            variant="error"
+            data-testid="members-error"
+            onClose={() => setError('')}
+            actions={
+              <Button variant="outline" size="sm" onClick={() => void loadData()}>
+                Retry
+              </Button>
+            }
+          >
+            {error}
+          </Alert>
+        )}
 
-          {/* SSO / SCIM — Coming soon (disabled, non-functional) */}
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 opacity-70">
-              <div className="flex items-center gap-2 mb-3">
-                <KeySquare className="w-4 h-4 text-amber-500" />
-                <h3 className="font-semibold text-gray-900 dark:text-white">Single Sign-On (OIDC/SAML)</h3>
-                <span className="ml-auto text-2xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  Coming soon
-                </span>
-              </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Enforce sign-in through your identity provider and map IdP groups to Apiome roles.
-              </p>
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                className="mt-4 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-gray-400 cursor-not-allowed"
-              >
-                Configure SSO
-              </button>
-            </div>
+        <MemberSeatsCard seats={seats} plan={plan} />
 
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 opacity-70">
-              <div className="flex items-center gap-2 mb-3">
-                <KeyRound className="w-4 h-4 text-indigo-500" />
-                <h3 className="font-semibold text-gray-900 dark:text-white">SCIM 2.0 provisioning</h3>
-                <span className="ml-auto text-2xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  Coming soon
-                </span>
-              </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Automatically create, update, and deactivate members from your identity provider.
-              </p>
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                className="mt-4 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-gray-400 cursor-not-allowed"
-              >
-                Enable SCIM
-              </button>
-            </div>
-          </section>
-        </div>
-      </main>
-    </>
+        <MembersTable
+          members={members}
+          roles={roles}
+          capabilities={capabilities}
+          viewerId={viewerId}
+          loading={loading}
+          error={loadError}
+          busyMemberId={busyMemberId}
+          onRetry={() => void loadData()}
+          onOpenMember={(member) => setOpenMemberId(member.user_id)}
+          onChangeRole={(member, roleId) => void handleChangeRole(member, roleId)}
+          onToggleStatus={(member) => openOverlayFor('suspend', member.user_id)}
+          onOffboard={(member) => openOverlayFor('offboard', member.user_id)}
+          onResendInvite={(member) => void handleResendInvite(member)}
+          onInvite={() => setOverlay('invite')}
+          canInviteNow={canInviteNow}
+        />
+
+        <IdentityProviderCards />
+      </PageBody>
+
+      <MemberDetailDrawer
+        member={openMember}
+        onOpenChange={(open) => {
+          if (!open) setOpenMemberId(null);
+        }}
+        roles={roles}
+        capabilities={capabilities}
+        viewerId={viewerId}
+        auditRows={auditRows}
+        auditLoading={auditLoading}
+        auditError={auditError}
+        busy={busyMemberId !== null}
+        onChangeRole={(member, roleId) => void handleChangeRole(member, roleId)}
+        onToggleStatus={(member) => openOverlayFor('suspend', member.user_id)}
+        onOffboard={(member) => openOverlayFor('offboard', member.user_id)}
+        onResendInvite={(member) => void handleResendInvite(member)}
+        rolesHref={ROLES_ROUTE}
+        auditHref={AUDIT_ROUTE}
+      />
+
+      <InviteMemberDialog
+        open={overlay === 'invite'}
+        onOpenChange={(open) => !open && closeOverlay()}
+        roles={roles}
+        seats={seats}
+        atCapacity={atCapacity}
+        onSubmit={handleInvite}
+      />
+
+      <SuspendMemberDialog
+        open={overlay === 'suspend'}
+        onOpenChange={(open) => !open && closeOverlay()}
+        member={overlayMember}
+        tenantName="this workspace"
+        onConfirm={handleToggleStatus}
+      />
+
+      <OffboardMemberDialog
+        open={overlay === 'offboard'}
+        onOpenChange={(open) => !open && closeOverlay()}
+        member={overlayMember}
+        members={members}
+        tenantName="this workspace"
+        onConfirm={handleOffboard}
+      />
+    </Page>
   );
 }
