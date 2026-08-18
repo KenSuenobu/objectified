@@ -1,27 +1,62 @@
 'use client';
 
+/**
+ * The three-step primitive import wizard (restyled by HIVE-6.5, #5316).
+ *
+ * Authority: `docs/mockups/build/primitives.html` §Overlays → *Import primitives (3-step)* —
+ * the source-kind cards, the File / URL / Paste intake, the detected-types and `$ref` panels
+ * with their exact unresolved-refs copy, the review rows with their four classifications, and
+ * the result buckets with the import record id.
+ *
+ * ### What changed
+ *
+ * The parse, the review call, the conflict resolutions and the import request are untouched;
+ * this is the skin. It borrows the `.imp-wizard` frame the catalog's import wizard already uses
+ * (HIVE-6.4, #5315) rather than restating it — the two wizards are the same shape, and the
+ * reason the class exists is that a `dialog--full` whose middle is the only scrolling part is a
+ * four-part contract that should be written once. Its own step row is {@link Stepper}, the
+ * shared component, in place of three hand-tinted `rounded-full` chips.
+ *
+ * What went with the palette: the source picker's `border-indigo-500 bg-indigo-50 ring-1`
+ * selected card, the `border-dashed border-gray-300` drop zone and its `border-indigo-500`
+ * drag state, `text-emerald-600` / `text-amber-600` / `text-red-600` inline status text in
+ * eleven places, a `bg-gray-100 dark:bg-gray-800` schema preview per review row, and Monaco's
+ * `vs-dark`, which was a black box on a paper page in six of the nine themes.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Upload,
-  AlertCircle,
   AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Boxes,
   CheckCircle,
   FileCode,
   FileJson,
-  X,
-  Boxes,
   FileText,
-  ArrowRight,
+  ScanSearch,
+  Upload,
   Wand2,
+  X,
   XCircle,
 } from 'lucide-react';
-import { Button } from '@/app/components/ui/Button';
-import { Label } from '@/app/components/ui/Label';
-import { Input } from '@/app/components/ui/Input';
 import { Alert, AlertTitle } from '@/app/components/ui/Alert';
-import { Badge } from '@/app/components/ui/Badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/app/components/ui/Dialog';
+import { Badge, type BadgeTone } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import { Card } from '@/app/components/ui/Card';
+import { Checkbox } from '@/app/components/ui/Checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/app/components/ui/Dialog';
+import { Input } from '@/app/components/ui/Input';
+import { Label } from '@/app/components/ui/Label';
+import { Stepper, type StepperStep } from '@/app/components/ui/Stepper';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/app/components/ui/Tabs';
+import { useHiveMonacoTheme } from '@/app/components/ui/code/monacoHiveTheme';
 import dynamic from 'next/dynamic';
 import {
   type SourceKind,
@@ -103,13 +138,26 @@ const SOURCE_KIND_CARDS: Array<{ kind: SourceKind; title: string; description: s
   },
 ];
 
-/** Badge variant + label for a review classification. */
-const STATUS_BADGE: Record<ReviewStatus, { variant: 'success' | 'secondary' | 'warning' | 'error'; label: string }> = {
-  new: { variant: 'success', label: 'New' },
-  identical: { variant: 'secondary', label: 'Identical' },
-  conflict: { variant: 'warning', label: 'Conflict' },
-  invalid: { variant: 'error', label: 'Invalid' },
+/**
+ * Badge tone + label for a review classification.
+ *
+ * A conflict is `danger` rather than the amber it used to be: the mockup paints it red, and it
+ * is the one row state that *blocks* — the import cannot proceed until the reader chooses keep,
+ * overwrite or rename. Amber is left to the advisories, which do not.
+ */
+const STATUS_BADGE: Record<ReviewStatus, { variant: BadgeTone; label: string }> = {
+  new: { variant: 'ok', label: 'New' },
+  identical: { variant: 'outline', label: 'Identical' },
+  conflict: { variant: 'danger', label: 'Conflict' },
+  invalid: { variant: 'danger', label: 'Invalid' },
 };
+
+/** The wizard's three steps, as the shared {@link Stepper} draws them. */
+const WIZARD_STEPS: readonly StepperStep[] = [
+  { id: 'source', label: 'Source' },
+  { id: 'review', label: 'Review' },
+  { id: 'result', label: 'Result' },
+];
 
 export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, initialSource }: Props) {
   const [step, setStep] = useState<WizardStep>('source');
@@ -515,19 +563,27 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
   const detectedTypes = useMemo(() => describeDetectedTypes(previewDefinitions), [previewDefinitions]);
   const canReview = Boolean(parsedDoc) || (sourceMethod === 'paste' && schemaText.trim().length > 0);
 
+
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl h-[78vh] min-h-[78vh] flex flex-col overflow-hidden" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5" />
-            Import Primitives
-          </DialogTitle>
+      <DialogContent size="full" className="imp-wizard" aria-describedby={undefined}>
+        <DialogHeader className="imp-wizard__head">
+          <span className="tnt-icon-tile" data-tone="accent" aria-hidden>
+            <Upload />
+          </span>
+          <div className="imp-wizard__heading">
+            <DialogTitle>Import primitives</DialogTitle>
+            <p className="prm-quiet">
+              Review detected types, resolve refs and conflicts, then import.
+            </p>
+          </div>
         </DialogHeader>
 
-        <WizardSteps step={step} />
+        <div className="imp-wizard__steps">
+          <Stepper steps={WIZARD_STEPS} current={step} aria-label="Import progress" />
+        </div>
 
-        <div className="space-y-4 py-4 flex-1 min-h-0 overflow-y-auto">
+        <div className="imp-wizard__body prm-dialog__body">
           {step === 'source' && (
             <SourceStep
               sourceKind={sourceKind}
@@ -591,79 +647,47 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
           {step === 'result' && result && <ResultStep result={result} />}
         </div>
 
-        <DialogFooter>
-          {step === 'source' && (
-            <>
-              <Button variant="secondary" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button onClick={handleReview} disabled={!canReview || reviewing}>
-                {reviewing ? 'Reviewing…' : 'Continue to Review'}
-                {!reviewing && <ArrowRight className="w-4 h-4 ml-2" />}
-              </Button>
-            </>
-          )}
-
-          {step === 'review' && review && (
-            <>
-              <Button variant="secondary" onClick={() => setStep('source')} disabled={importing}>
+        <DialogFooter className="imp-wizard__foot">
+          <span className="imp-wizard__foot-lead">
+            {step === 'review' && review ? (
+              <Button variant="ghost" onClick={() => setStep('source')} disabled={importing}>
+                <ArrowLeft aria-hidden />
                 Back
               </Button>
-              <Button variant="secondary" onClick={onClose} disabled={importing}>
-                Cancel
-              </Button>
-              <Button onClick={handleImport} disabled={importing || selectedNames.size === 0}>
-                {importing ? 'Importing…' : `Import ${selectedNames.size} Selected`}
-              </Button>
-            </>
-          )}
+            ) : null}
+          </span>
+          <span className="imp-wizard__foot-trail">
+            {step === 'source' && (
+              <>
+                <Button variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button onClick={() => void handleReview()} disabled={!canReview || reviewing}>
+                  {reviewing ? 'Reviewing…' : 'Continue to review'}
+                  {!reviewing && <ArrowRight aria-hidden />}
+                </Button>
+              </>
+            )}
 
-          {step === 'result' && (
-            <Button
-              onClick={() => {
-                onComplete();
-              }}
-            >
-              Done
-            </Button>
-          )}
+            {step === 'review' && review && (
+              <>
+                <Button variant="outline" onClick={onClose} disabled={importing}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => void handleImport()}
+                  disabled={importing || selectedNames.size === 0}
+                >
+                  {importing ? 'Importing…' : `Import ${selectedNames.size} selected`}
+                </Button>
+              </>
+            )}
+
+            {step === 'result' && <Button onClick={() => onComplete()}>Done</Button>}
+          </span>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-/** Step indicator across the top of the wizard. */
-function WizardSteps({ step }: { step: WizardStep }) {
-  const steps: Array<{ key: WizardStep; label: string }> = [
-    { key: 'source', label: '1 · Source' },
-    { key: 'review', label: '2 · Review' },
-    { key: 'result', label: '3 · Result' },
-  ];
-  const activeIndex = steps.findIndex((s) => s.key === step);
-
-  return (
-    <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-      {steps.map((s, index) => {
-        const isActive = index === activeIndex;
-        const isDone = index < activeIndex;
-        return (
-          <div
-            key={s.key}
-            className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-              isActive
-                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
-                : isDone
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-gray-400 dark:text-gray-500'
-            }`}
-          >
-            {isDone ? <CheckCircle className="w-4 h-4" /> : null}
-            {s.label}
-          </div>
-        );
-      })}
-    </div>
   );
 }
 
@@ -698,76 +722,63 @@ function DetectedTypesPanel({
   const remaining = types.length - shown.length;
 
   return (
-    <div
-      data-testid="detected-types"
-      className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-50 dark:bg-gray-900/40 px-3 py-2">
-        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+    <Card data-testid="detected-types" className="prm-detected">
+      <div className="prm-detected__head">
+        <span className="prm-detected__title">
+          <ScanSearch aria-hidden />
           Detected {types.length} {sourceKindLabel(sourceKind)} type{types.length === 1 ? '' : 's'}
         </span>
-        <span className="flex items-center gap-2">
+        <span className="prm-detected__counts">
           {/* An advisory is not a verdict: a type can be valid *and* worth a second look, so the
               warning count sits beside the valid/invalid state rather than replacing it. */}
           {warningCount > 0 ? (
-            <span
-              className="text-xs font-medium text-amber-600 dark:text-amber-400"
-              data-testid="detected-warning-count"
-            >
+            <Badge variant="warn" data-testid="detected-warning-count">
               {warningCount} without a declared type
-            </span>
+            </Badge>
           ) : null}
           {invalidCount > 0 ? (
-            <span className="text-xs font-medium text-red-600 dark:text-red-400" data-testid="detected-invalid-count">
+            <Badge variant="danger" data-testid="detected-invalid-count">
               {invalidCount} invalid
-            </span>
+            </Badge>
           ) : (
-            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">All valid</span>
+            <Badge variant="ok">All valid</Badge>
           )}
         </span>
       </div>
-      <ul className="divide-y divide-gray-100 dark:divide-gray-700/60">
+      <ul className="prm-detected__list">
         {shown.map((type) => (
           <li
             key={type.name}
             data-testid={`detected-type-${type.name}`}
             data-valid={String(type.valid)}
-            className="flex items-start gap-2 px-3 py-2"
+            className="prm-detected__row"
           >
             {type.valid ? (
-              <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden />
+              <CheckCircle className="prm-detected__mark prm-detected__mark--ok" aria-hidden />
             ) : (
-              <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" aria-hidden />
+              <XCircle className="prm-detected__mark prm-detected__mark--bad" aria-hidden />
             )}
-            <div className="min-w-0">
-              <span className="font-mono text-sm text-gray-900 dark:text-gray-100 break-all">{type.name}</span>
+            <span className="prm-detected__text">
+              <span className="mono">{type.name}</span>
               <span className="sr-only">{type.valid ? ' — valid' : ' — invalid'}</span>
-              {type.error ? (
-                <p className="text-xs text-red-600 dark:text-red-400 break-words">{type.error}</p>
-              ) : null}
+              {type.error ? <span className="prm-error">{type.error}</span> : null}
               {type.warning ? (
-                <p
-                  className="flex items-start gap-1 text-xs text-amber-600 dark:text-amber-400 break-words"
-                  data-testid={`detected-type-warning-${type.name}`}
-                >
-                  <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+                <span className="prm-caution" data-testid={`detected-type-warning-${type.name}`}>
+                  <AlertTriangle aria-hidden />
                   {type.warning}
-                </p>
+                </span>
               ) : null}
-            </div>
+            </span>
           </li>
         ))}
       </ul>
       {remaining > 0 ? (
-        <p
-          className="border-t border-gray-100 dark:border-gray-700/60 px-3 py-2 text-xs text-gray-500 dark:text-gray-400"
-          data-testid="detected-types-truncated"
-        >
+        <p className="prm-detected__more" data-testid="detected-types-truncated">
           +{remaining} more not listed here — all {types.length} are imported and reviewed.
         </p>
       ) : null}
       <RefResolutionSection resolutions={refResolutions} summary={refSummary} />
-    </div>
+    </Card>
   );
 }
 
@@ -790,53 +801,51 @@ function RefResolutionSection({
   // Nothing to say about a document with no cross-type references at all.
   if (summary.resolved === 0 && summary.unresolved === 0) return null;
 
-  const resolved = resolutions.filter((entry) => entry.status === 'resolved' || entry.status === 'repaired');
+  const resolved = resolutions.filter(
+    (entry) => entry.status === 'resolved' || entry.status === 'repaired'
+  );
   const unresolved = resolutions.filter((entry) => entry.status === 'unresolved');
 
   return (
-    <div
-      data-testid="ref-resolution"
-      className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 space-y-2"
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-gray-700 dark:text-gray-300" data-testid="ref-resolved-summary">
+    <div data-testid="ref-resolution" className="prm-refs">
+      <div className="prm-refs__head">
+        <span className="prm-refs__title" data-testid="ref-resolved-summary">
           Resolved {summary.resolved} $ref{summary.resolved === 1 ? '' : 's'}
         </span>
         {summary.repaired > 0 ? (
-          <span
-            className="rounded bg-amber-50 px-1.5 py-0.5 text-2xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
-            data-testid="ref-repaired-summary"
-          >
+          <Badge variant="warn" data-testid="ref-repaired-summary">
             {summary.repaired} rewritten to resolve
-          </span>
+          </Badge>
         ) : null}
       </div>
 
       {resolved.length > 0 ? (
-        <ul className="space-y-1" data-testid="ref-resolved-list">
-          {resolved.slice(0, REF_LIST_CAP).map((entry) => (
-            <li
-              key={`${entry.typeName}-${entry.ref}`}
-              data-testid={`ref-resolved-${entry.ref}`}
-              data-status={entry.status}
-              className="flex flex-wrap items-baseline gap-x-1.5 text-2xs"
-            >
-              <CheckCircle className="h-3 w-3 shrink-0 translate-y-0.5 text-emerald-500" aria-hidden />
-              <span className="font-mono text-gray-700 dark:text-gray-300 break-all">{entry.ref}</span>
-              <span className="text-gray-400">→</span>
-              <span className="font-mono text-emerald-700 dark:text-emerald-300 break-all">{entry.target}</span>
-              {entry.origin === 'import' ? (
-                <span className="text-gray-500 dark:text-gray-400">(in this import)</span>
-              ) : null}
-              {entry.rewrittenTo ? (
-                <span className="text-amber-700 dark:text-amber-300 break-all">
-                  rewritten to <span className="font-mono">{entry.rewrittenTo}</span>
-                </span>
-              ) : null}
-            </li>
-          ))}
+        <ul className="prm-refs__list" data-testid="ref-resolved-list">
+          {resolved.map((entry, index) =>
+            index < REF_LIST_CAP ? (
+              <li
+                key={`${entry.typeName}-${entry.ref}`}
+                data-testid={`ref-resolved-${entry.ref}`}
+                data-status={entry.status}
+                className="prm-refs__row"
+              >
+                <CheckCircle className="prm-detected__mark prm-detected__mark--ok" aria-hidden />
+                <span className="mono">{entry.ref}</span>
+                <span className="prm-quiet">→</span>
+                <span className="mono prm-refs__target">{entry.target}</span>
+                {entry.origin === 'import' ? (
+                  <span className="prm-quiet">(in this import)</span>
+                ) : null}
+                {entry.rewrittenTo ? (
+                  <span className="prm-caution">
+                    rewritten to <span className="mono">{entry.rewrittenTo}</span>
+                  </span>
+                ) : null}
+              </li>
+            ) : null
+          )}
           {resolved.length > REF_LIST_CAP ? (
-            <li className="text-2xs text-gray-500 dark:text-gray-400" data-testid="ref-resolved-truncated">
+            <li className="prm-quiet" data-testid="ref-resolved-truncated">
               +{resolved.length - REF_LIST_CAP} more resolved
             </li>
           ) : null}
@@ -845,46 +854,40 @@ function RefResolutionSection({
 
       {/* `Alert` renders the variant's own icon, so passing one as a child would show it twice. */}
       {unresolved.length > 0 ? (
-        <Alert variant="warning" data-testid="ref-unresolved">
-          <div className="space-y-1">
-            <AlertTitle className="text-sm">
-              Unresolved $ref{unresolved.length === 1 ? '' : 's'}
-            </AlertTitle>
-            <p className="text-xs">
+        <Alert variant="warn" data-testid="ref-unresolved">
+          <div className="prm-refs__unresolved">
+            <AlertTitle>Unresolved $ref{unresolved.length === 1 ? '' : 's'}</AlertTitle>
+            <p>
               {unresolved.length} $ref{unresolved.length === 1 ? '' : 's'} could not be resolved. The
-              referenced schemas were looked up in the registry and in this document — they either do not
-              exist, or their names did not resolve.
+              referenced schemas were looked up in the registry and in this document — they either do
+              not exist, or their names did not resolve.
             </p>
             {/* Each row is just the ref and where it came from. The per-edge diagnosis said the same
                 thing on every line, so what it means for the import is stated once, under the list. */}
-            <ul className="space-y-0.5">
-              {unresolved.slice(0, REF_LIST_CAP).map((entry) => (
-                <li
-                  key={`${entry.typeName}-${entry.ref}`}
-                  data-testid={`ref-unresolved-${entry.ref}`}
-                  className="text-2xs"
-                >
-                  <span className="font-mono break-all">{entry.ref}</span>
-                  <span className="text-gray-500 dark:text-gray-400"> in </span>
-                  <span className="font-mono">{entry.typeName}</span>
-                </li>
-              ))}
+            <ul>
+              {unresolved.map((entry, index) =>
+                index < REF_LIST_CAP ? (
+                  <li key={`${entry.typeName}-${entry.ref}`} data-testid={`ref-unresolved-${entry.ref}`}>
+                    <span className="mono">{entry.ref}</span> in{' '}
+                    <span className="mono">{entry.typeName}</span>
+                  </li>
+                ) : null
+              )}
               {unresolved.length > REF_LIST_CAP ? (
-                <li className="text-2xs" data-testid="ref-unresolved-truncated">
+                <li data-testid="ref-unresolved-truncated">
                   +{unresolved.length - REF_LIST_CAP} more unresolved
                 </li>
               ) : null}
             </ul>
             {/* The consequence first, then the remedy. */}
-            <p className="text-xs" data-testid="ref-unresolved-consequence">
-              Importing these schemas will leave these references dangling until the schema is found or
-              imported.
+            <p data-testid="ref-unresolved-consequence">
+              Importing these schemas will leave these references dangling until the schema is found
+              or imported.
             </p>
-            <p className="text-xs font-medium" data-testid="ref-unresolved-recommendation">
-              Recommendation: import these refs into the namespace{' '}
-              {/* Explicit weight: the paragraph is already font-medium, so `strong` alone reads
-                  as barely heavier than the sentence around it. */}
-              <strong className="font-bold">before</strong> importing this schema.
+            <p data-testid="ref-unresolved-recommendation">
+              <strong>
+                Recommendation: import these refs into the namespace before importing this schema.
+              </strong>
             </p>
           </div>
         </Alert>
@@ -956,34 +959,30 @@ function SourceStep(props: SourceStepProps) {
   } = props;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <Label className="text-base">Source type</Label>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <>
+      <section className="prm-form-section">
+        <h3 className="prm-form-section__title">Source type</h3>
+        <div className="prm-source-cards">
           {SOURCE_KIND_CARDS.map((card) => {
             const Icon = card.icon;
-            const isActive = sourceKind === card.kind;
             return (
               <button
                 key={card.kind}
                 type="button"
+                className="prm-source-card"
+                aria-pressed={sourceKind === card.kind}
                 onClick={() => onSourceKindChange(card.kind)}
-                className={`text-left rounded-lg border p-4 transition-colors ${
-                  isActive
-                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-1 ring-indigo-500'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
-                }`}
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400'}`} />
-                  <span className="font-medium text-gray-900 dark:text-white">{card.title}</span>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{card.description}</p>
+                <span className="prm-source-card__head">
+                  <Icon aria-hidden />
+                  {card.title}
+                </span>
+                <span className="prm-source-card__desc">{card.description}</span>
               </button>
             );
           })}
         </div>
-      </div>
+      </section>
 
       <SourceMethodInput {...props} />
 
@@ -997,19 +996,19 @@ function SourceStep(props: SourceStepProps) {
       )}
 
       {!hasDocument && parseError && (
-        <Alert variant="error">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant="danger">
           <span>{parseError}</span>
         </Alert>
       )}
 
-      <div className="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-4">
-        <Label className="text-base">Options</Label>
-        <div className="space-y-2">
+      <section className="prm-form-section">
+        <h3 className="prm-form-section__title">Options</h3>
+        <div className="prm-field">
           <Label htmlFor="target-namespace">Target namespace (optional)</Label>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="prm-bound">
             <Input
               id="target-namespace"
+              className="mono"
               placeholder="e.g. acme/v1/types"
               value={targetNamespace}
               onChange={(e) => onTargetNamespaceChange(e.target.value)}
@@ -1019,7 +1018,7 @@ function SourceStep(props: SourceStepProps) {
                 loaded, since there is nothing to read from before then. */}
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               data-testid="extract-target-namespace"
               onClick={onExtractNamespace}
               disabled={!hasDocument}
@@ -1028,59 +1027,57 @@ function SourceStep(props: SourceStepProps) {
                   ? 'Read the namespace from the $id declared in this document'
                   : 'Load a document first'
               }
-              className="shrink-0 gap-1.5"
             >
-              <Wand2 className="h-4 w-4" aria-hidden />
-              Extract from Target
+              <Wand2 aria-hidden />
+              Extract from target
             </Button>
           </div>
           {namespaceNotice ? (
-            <p className="text-xs text-gray-500 dark:text-gray-400" data-testid="target-namespace-notice">
+            <p className="prm-hint" data-testid="target-namespace-notice">
               {namespaceNotice}
             </p>
           ) : null}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
+        </div>
+
+        <div className="prm-checks">
+          <span className="prm-check">
+            <Checkbox
+              id="auto-extract-target-namespace"
               data-testid="auto-extract-target-namespace"
               checked={autoExtractNamespace}
-              onChange={(e) => onAutoExtractNamespaceChange(e.target.checked)}
-              className="w-4 h-4 text-indigo-600 rounded"
+              onCheckedChange={(checked) => onAutoExtractNamespaceChange(checked === true)}
             />
-            <span className="text-sm text-gray-700 dark:text-gray-300">
+            <Label htmlFor="auto-extract-target-namespace">
               Always extract namespace automatically
-            </span>
-          </label>
-        </div>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={mapCoreFormats}
-            onChange={(e) => onMapCoreFormatsChange(e.target.checked)}
-            className="w-4 h-4 text-indigo-600 rounded"
-          />
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            Map recognized formats to core JSON System types ($ref rewrite if absent)
+            </Label>
           </span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={dedupe}
-            onChange={(e) => onDedupeChange(e.target.checked)}
-            className="w-4 h-4 text-indigo-600 rounded"
-          />
-          <span className="text-sm text-gray-700 dark:text-gray-300">Skip definitions identical to an existing type</span>
-        </label>
-      </div>
+          <span className="prm-check">
+            <Checkbox
+              id="map-core-formats"
+              checked={mapCoreFormats}
+              onCheckedChange={(checked) => onMapCoreFormatsChange(checked === true)}
+            />
+            <Label htmlFor="map-core-formats">
+              Map recognized formats to core JSON System types ($ref rewrite if absent)
+            </Label>
+          </span>
+          <span className="prm-check">
+            <Checkbox
+              id="dedupe-identical"
+              checked={dedupe}
+              onCheckedChange={(checked) => onDedupeChange(checked === true)}
+            />
+            <Label htmlFor="dedupe-identical">Skip definitions identical to an existing type</Label>
+          </span>
+        </div>
+      </section>
 
       {reviewError && (
-        <Alert variant="error">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant="danger">
           <span>{reviewError}</span>
         </Alert>
       )}
-    </div>
+    </>
   );
 }
 
@@ -1108,45 +1105,51 @@ function SourceMethodInput(props: SourceStepProps) {
     hasDocument,
     parseError,
   } = props;
+  const monacoTheme = useHiveMonacoTheme();
 
   return (
     <Tabs value={sourceMethod} onValueChange={(v) => onSourceMethodChange(v as SourceMethod)}>
-      <TabsList className="mb-4 w-full">
+      <TabsList className="mb-4">
         <TabsTrigger value="file">
-          <Upload className="w-4 h-4" />
+          <Upload aria-hidden />
           File
         </TabsTrigger>
         <TabsTrigger value="url">
-          <FileCode className="w-4 h-4" />
+          <FileCode aria-hidden />
           URL
         </TabsTrigger>
         <TabsTrigger value="paste">
-          <FileText className="w-4 h-4" />
+          <FileText aria-hidden />
           Paste
         </TabsTrigger>
       </TabsList>
 
       <TabsContent value="file" className="mt-0">
         {!file ? (
+          // A `<label>` over a visually-hidden `<input type="file">`, not a `<button>` wrapping
+          // one: a button with a focusable descendant is `nested-interactive`, a *serious* axe
+          // violation, and the definition of done asks for none. This way the file input is the
+          // control — one tab stop, its own accessible name, the browser's own picker — and the
+          // zone shows the focus ring with `:focus-within`.
           <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${
-              isDragging
-                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500'
-            }`}
+            className="prm-drop"
+            data-dragging={isDragging || undefined}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onDrop={onDrop}
-            onClick={() => fileInputRef.current?.click()}
           >
-            <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
-            <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">Drag &amp; Drop or Click to Select</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Schema or bundle file (.json, .yaml, .yml)</p>
+            <label className="prm-drop__label" htmlFor="primitive-import-file">
+              <Upload className="prm-drop__glyph" aria-hidden />
+              <span className="prm-drop__title">Drag &amp; drop or click to select</span>
+              <span className="prm-drop__hint">Schema or bundle file (.json, .yaml, .yml)</span>
+            </label>
             <input
+              id="primitive-import-file"
               ref={fileInputRef}
               type="file"
               accept=".json,.yaml,.yml"
-              className="hidden"
+              aria-label="Schema or bundle file"
+              className="sr-only"
               onChange={(e) => {
                 const selectedFile = e.target.files?.[0];
                 if (selectedFile) {
@@ -1156,71 +1159,68 @@ function SourceMethodInput(props: SourceStepProps) {
             />
           </div>
         ) : (
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FileJson className="w-8 h-8 text-green-500" />
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{file.name}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" onClick={onClearFile}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            {isLoadingFile && <p className="mt-2 text-sm text-indigo-600 dark:text-indigo-400">Processing file…</p>}
-          </div>
+          <Card className="prm-file">
+            <span className="prm-file__identity">
+              <FileJson className="prm-file__glyph" aria-hidden />
+              <span className="prm-file__text">
+                <span className="prm-file__name">{file.name}</span>
+                <span className="prm-quiet">{(file.size / 1024).toFixed(1)} KB</span>
+              </span>
+            </span>
+            {isLoadingFile ? <span className="prm-quiet">Processing file…</span> : null}
+            <Button variant="ghost" size="sm" onClick={onClearFile} aria-label="Clear file">
+              <X aria-hidden />
+            </Button>
+          </Card>
         )}
       </TabsContent>
 
       <TabsContent value="url" className="mt-0">
-        <div className="space-y-2">
+        <div className="prm-field">
           <Label htmlFor="schema-url">Fetch from URL</Label>
-          <div className="flex gap-2">
+          <div className="prm-bound">
             <Input
               id="schema-url"
               type="url"
               placeholder="https://example.com/schema.json"
               value={urlInput}
               onChange={(e) => onUrlInputChange(e.target.value)}
-              className="flex-1"
               disabled={isLoadingUrl}
             />
             <Button onClick={onUrlFetch} disabled={!urlInput.trim() || isLoadingUrl}>
               {isLoadingUrl ? 'Fetching…' : 'Fetch'}
             </Button>
           </div>
-          {hasDocument && <p className="text-sm text-emerald-600 dark:text-emerald-400">Document fetched.</p>}
+          {hasDocument && <p className="prm-hint">Document fetched.</p>}
         </div>
       </TabsContent>
 
       <TabsContent value="paste" className="mt-0">
-        <div className="space-y-2">
-          <Label>Paste JSON or YAML</Label>
-          <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+        <div className="prm-field">
+          <Label htmlFor="paste-schema">Paste JSON or YAML</Label>
+          <div className="prm-editor" id="paste-schema">
             <MonacoEditor
-              height="320px"
+              height="20rem"
               language="json"
-              theme="vs-dark"
+              theme={monacoTheme.theme}
+              beforeMount={monacoTheme.beforeMount}
               value={schemaText}
               onChange={onSchemaTextChange}
-              options={{ minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: CODE_EDITOR_FONT_SIZE }}
+              options={{
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                fontSize: CODE_EDITOR_FONT_SIZE,
+              }}
             />
           </div>
-          <div className="flex items-center justify-between">
-            {hasDocument ? (
-              <p className="text-sm text-emerald-600 dark:text-emerald-400">Document parsed.</p>
-            ) : (
-              <span />
-            )}
-            <Button variant="secondary" size="sm" onClick={onParsePasted} disabled={!schemaText.trim()}>
+          <div className="prm-editor__bar">
+            {hasDocument ? <p className="prm-hint">Document parsed.</p> : <span />}
+            <Button variant="outline" size="sm" onClick={onParsePasted} disabled={!schemaText.trim()}>
               Parse
             </Button>
           </div>
           {!hasDocument && parseError && (
-            <Alert variant="error">
-              <AlertCircle className="h-4 w-4" />
+            <Alert variant="danger">
               <span>{parseError}</span>
             </Alert>
           )}
@@ -1260,54 +1260,50 @@ function ReviewStep(props: ReviewStepProps) {
   const cautioned = summary.warnings ?? countCautionedTypes(review.types);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="success">{summary.new} new</Badge>
-        <Badge variant="warning">{summary.conflict} conflict</Badge>
+    <>
+      <p className="prm-review__summary">
+        <Badge variant="ok">{summary.new} new</Badge>
+        <Badge variant="danger">{summary.conflict} conflict</Badge>
         {/* Always shown, zero included: a count that only appears when it is non-zero leaves a
-            reader unsure whether the review checks for this at all. The icon (amber is shared with
-            `conflict`) marks which badge is the warnings one; the colour is what carries urgency,
-            so at zero it drops to neutral rather than crying wolf in amber. */}
-        <Badge variant={cautioned > 0 ? 'warning' : 'secondary'} data-testid="review-warning-count">
-          <AlertTriangle className="mr-1 h-3 w-3" aria-hidden />
+            reader unsure whether the review checks for this at all. The icon marks which badge is
+            the warnings one; the colour is what carries urgency, so at zero it drops to neutral
+            rather than crying wolf in amber. */}
+        <Badge variant={cautioned > 0 ? 'warn' : 'neutral'} data-testid="review-warning-count">
+          <AlertTriangle aria-hidden />
           {cautioned} warning{cautioned === 1 ? '' : 's'}
         </Badge>
-        <Badge variant="secondary">{summary.identical} identical</Badge>
-        {summary.invalid > 0 && <Badge variant="error">{summary.invalid} invalid</Badge>}
-        <span className="text-sm text-gray-500 dark:text-gray-400">· {summary.total} total</span>
-      </div>
+        <Badge variant="outline">{summary.identical} identical</Badge>
+        {summary.invalid > 0 && <Badge variant="danger">{summary.invalid} invalid</Badge>}
+        <span className="prm-quiet">· {summary.total} total</span>
+      </p>
 
       {review.warnings.length > 0 && (
-        <Alert variant="warning">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant="warn">
           <span>{review.warnings.join('; ')}</span>
         </Alert>
       )}
 
-      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-        <div className="max-h-[40vh] overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700">
-          {review.types.map((type) => (
-            <ReviewTypeRow
-              key={type.name}
-              type={type}
-              schema={previewDefinitions[type.name]}
-              selected={selectedNames.has(type.name)}
-              resolution={resolutions[type.name]}
-              onToggleSelected={onToggleSelected}
-              onResolutionAction={onResolutionAction}
-              onResolutionNewName={onResolutionNewName}
-            />
-          ))}
-        </div>
+      <div className="prm-review__list">
+        {review.types.map((type) => (
+          <ReviewTypeRow
+            key={type.name}
+            type={type}
+            schema={previewDefinitions[type.name]}
+            selected={selectedNames.has(type.name)}
+            resolution={resolutions[type.name]}
+            onToggleSelected={onToggleSelected}
+            onResolutionAction={onResolutionAction}
+            onResolutionNewName={onResolutionNewName}
+          />
+        ))}
       </div>
 
       {reviewError && (
-        <Alert variant="error">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant="danger">
           <span>{reviewError}</span>
         </Alert>
       )}
-    </div>
+    </>
   );
 }
 
@@ -1323,164 +1319,161 @@ interface ReviewTypeRowProps {
 
 /** One reviewed type: classification, validation, and (for conflicts) resolution controls. */
 function ReviewTypeRow(props: ReviewTypeRowProps) {
-  const { type, schema, selected, resolution, onToggleSelected, onResolutionAction, onResolutionNewName } = props;
+  const {
+    type,
+    schema,
+    selected,
+    resolution,
+    onToggleSelected,
+    onResolutionAction,
+    onResolutionNewName,
+  } = props;
   const badge = STATUS_BADGE[type.status];
   const isInvalid = type.status === 'invalid';
   const category = schema ? determineCategoryFromSchema(schema) : null;
+  const checkboxId = `review-select-${type.name}`;
 
   return (
-    <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-900/50">
-      <div className="flex items-start gap-3">
-        <input
-          type="checkbox"
+    <Card className="prm-review-row" data-status={type.status}>
+      <div className="prm-review-row__head">
+        <Checkbox
+          id={checkboxId}
           checked={selected}
           disabled={isInvalid}
-          onChange={() => onToggleSelected(type.name)}
-          className="mt-1 w-4 h-4 text-indigo-600 rounded disabled:opacity-40"
+          onCheckedChange={() => onToggleSelected(type.name)}
+          aria-label={`Import ${type.name}`}
         />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <FileCode className="w-4 h-4 text-indigo-600" />
-            <span className="font-medium text-gray-900 dark:text-white">{type.name}</span>
-            {category && <span className="text-xs text-gray-500 dark:text-gray-400">({category})</span>}
-            <Badge variant={badge.variant}>{badge.label}</Badge>
-            {type.unresolved_refs.length > 0 && (
-              <Badge variant="warning">
-                {type.unresolved_refs.length} unresolved $ref{type.unresolved_refs.length === 1 ? '' : 's'}
-              </Badge>
-            )}
-          </div>
+        <FileCode className="prm-type-glyph" aria-hidden />
+        <Label htmlFor={checkboxId} className="mono prm-review-row__name">
+          {type.name}
+        </Label>
+        {category && <span className="prm-quiet">({category})</span>}
+        <Badge variant={badge.variant}>{badge.label}</Badge>
+        {type.unresolved_refs.length > 0 && (
+          <Badge variant="warn">
+            {type.unresolved_refs.length} unresolved $ref
+            {type.unresolved_refs.length === 1 ? '' : 's'}
+          </Badge>
+        )}
+      </div>
 
-          {isInvalid && (
-            <div className="text-sm text-red-600 dark:text-red-400 mb-2">
-              {type.error?.error === 'scope_violation'
-                ? 'Scope violation — cannot be imported into this scope.'
-                : 'Not a valid draft 2020-12 schema — cannot be imported.'}
-              {type.validation_errors.length > 0 && (
-                <ul className="list-disc list-inside mt-1">
-                  {type.validation_errors.slice(0, 5).map((err, index) => (
-                    <li key={index}>
-                      {(err.field ? `${err.field}: ` : '') + (err.message || JSON.stringify(err))}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          {/* Advisories, not errors: the type imports either way, so this reads as a caution
-              beside the row rather than blocking its checkbox. */}
-          {(type.warnings ?? []).map((warning) => (
-            <p
-              key={warning}
-              data-testid={`review-type-warning-${type.name}`}
-              className="flex items-start gap-1.5 text-sm text-amber-600 dark:text-amber-400 mb-2"
-            >
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-              {warning}
-            </p>
-          ))}
-
-          {type.status === 'conflict' && (
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">A different type already exists. Resolve:</span>
-              <select
-                value={resolution?.action ?? 'keep'}
-                onChange={(e) => onResolutionAction(type.name, e.target.value as ResolutionAction)}
-                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="keep">Keep existing</option>
-                <option value="overwrite">Overwrite</option>
-                <option value="rename">Import as new name</option>
-              </select>
-              {resolution?.action === 'rename' && (
-                <Input
-                  placeholder="new_name"
-                  value={resolution.new_name ?? ''}
-                  onChange={(e) => onResolutionNewName(type.name, e.target.value)}
-                  className="w-48"
-                />
-              )}
-            </div>
-          )}
-
-          {schema && (
-            <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
-              {JSON.stringify(schema, null, 2)}
-            </pre>
+      {isInvalid && (
+        <div className="prm-review-row__error">
+          <p className="prm-error">
+            {type.error?.error === 'scope_violation'
+              ? 'Scope violation — cannot be imported into this scope.'
+              : 'Not a valid draft 2020-12 schema — cannot be imported.'}
+          </p>
+          {type.validation_errors.length > 0 && (
+            <ul className="prm-review-row__errors">
+              {type.validation_errors.slice(0, 5).map((err, index) => (
+                <li key={index} className="prm-error">
+                  {(err.field ? `${err.field}: ` : '') + (err.message || JSON.stringify(err))}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-      </div>
-    </div>
+      )}
+
+      {/* Advisories, not errors: the type imports either way, so this reads as a caution
+          beside the row rather than blocking its checkbox. */}
+      {(type.warnings ?? []).map((warning) => (
+        <p
+          key={warning}
+          data-testid={`review-type-warning-${type.name}`}
+          className="prm-caution"
+        >
+          <AlertTriangle aria-hidden />
+          {warning}
+        </p>
+      ))}
+
+      {type.status === 'conflict' && (
+        <div className="prm-review-row__resolve">
+          <span className="prm-quiet">A different type already exists. Resolve:</span>
+          <select
+            value={resolution?.action ?? 'keep'}
+            onChange={(e) => onResolutionAction(type.name, e.target.value as ResolutionAction)}
+            aria-label={`Conflict resolution for ${type.name}`}
+            className="hive-control prm-select prm-select--inline"
+          >
+            <option value="keep">Keep existing</option>
+            <option value="overwrite">Overwrite</option>
+            <option value="rename">Import as new name</option>
+          </select>
+          {resolution?.action === 'rename' && (
+            <Input
+              className="mono prm-review-row__rename"
+              placeholder="new_name"
+              aria-label={`New name for ${type.name}`}
+              value={resolution.new_name ?? ''}
+              onChange={(e) => onResolutionNewName(type.name, e.target.value)}
+            />
+          )}
+        </div>
+      )}
+
+      {schema && <pre className="prm-code prm-code--clip">{JSON.stringify(schema, null, 2)}</pre>}
+    </Card>
   );
 }
 
 /** Step 3: the committed outcome, bucketed by what the import did. */
 function ResultStep({ result }: { result: ImportResultSummary }) {
-  const buckets: Array<{ label: string; items: string[]; variant: 'success' | 'warning' | 'secondary' | 'error' }> = [
-    { label: 'Imported', items: result.imported, variant: 'success' },
-    {
-      label: 'Overwritten',
-      items: result.overwritten,
-      variant: 'warning',
-    },
+  const buckets: Array<{ label: string; items: string[]; variant: BadgeTone }> = [
+    { label: 'Imported', items: result.imported, variant: 'ok' },
+    { label: 'Overwritten', items: result.overwritten, variant: 'warn' },
     {
       label: 'Renamed',
       items: result.renamed.map((r) => (typeof r === 'string' ? r : `${r.name} → ${r.new_name ?? ''}`)),
-      variant: 'warning',
+      variant: 'accent',
     },
-    { label: 'Identical (skipped)', items: result.identical, variant: 'secondary' },
+    { label: 'Identical (skipped)', items: result.identical, variant: 'outline' },
     {
       label: 'Skipped',
       items: result.skipped.map((s) => (typeof s === 'string' ? s : `${s.name}${s.reason ? ` — ${s.reason}` : ''}`)),
-      variant: 'secondary',
+      variant: 'neutral',
     },
     {
       label: 'Errors',
       items: result.errors.map((e) => (typeof e === 'string' ? e : `${e.name}${e.error ? ` — ${e.error}` : ''}`)),
-      variant: 'error',
+      variant: 'danger',
     },
   ];
 
   const hasErrors = result.errors.length > 0;
 
   return (
-    <div className="space-y-4">
-      <Alert variant={hasErrors ? 'warning' : 'default'}>
-        {hasErrors ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+    <>
+      <Alert variant={hasErrors ? 'warn' : 'ok'}>
         <span>{describeImportResult(result)}</span>
       </Alert>
 
       {result.warnings.length > 0 && (
-        <Alert variant="warning">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant="warn">
           <span>{result.warnings.join('; ')}</span>
         </Alert>
       )}
 
-      <div className="space-y-3">
+      <div className="prm-result">
         {buckets
           .filter((bucket) => bucket.items.length > 0)
           .map((bucket) => (
-            <div key={bucket.label} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant={bucket.variant}>{bucket.items.length}</Badge>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">{bucket.label}</span>
-              </div>
-              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                {bucket.items.map((item, index) => (
-                  <li key={index} className="font-mono text-xs">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <p key={bucket.label} className="prm-result__row">
+              <Badge variant={bucket.variant}>
+                {bucket.label} {bucket.items.length}
+              </Badge>
+              <span className="mono prm-result__items">{bucket.items.join(' · ')}</span>
+            </p>
           ))}
       </div>
 
       {result.importId && (
-        <p className="text-xs text-gray-400 dark:text-gray-500">Import record: {result.importId}</p>
+        <p className="prm-hint">
+          Import record: <span className="mono">{result.importId}</span>
+        </p>
       )}
-    </div>
+    </>
   );
 }

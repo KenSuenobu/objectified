@@ -52,7 +52,7 @@ describe('PrimitiveImportDialog — Extract from Target', () => {
     renderDialog(REGISTRY_DOC);
 
     expect(screen.getByText('Options')).toBeInTheDocument();
-    expect(extractButton()).toHaveTextContent('Extract from Target');
+    expect(extractButton()).toHaveTextContent('Extract from target');
   });
 
   it('fills the Target namespace from the document’s $id when clicked', () => {

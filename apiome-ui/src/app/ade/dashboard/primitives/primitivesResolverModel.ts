@@ -9,6 +9,8 @@
  * detection (#3458) and already handled throughout so the UI lights up when that lands.
  */
 
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
+
 /** Resolution status of a single dependency edge. */
 export type RefStatus = 'resolved' | 'unresolved' | 'circular';
 
@@ -224,16 +226,26 @@ export function statusLabel(status: RefStatus): string {
   }
 }
 
-/** Tailwind badge classes for a status (emerald / amber / red). */
-export function statusBadgeClass(status: RefStatus): string {
+/**
+ * The tone a status takes, in the shared status vocabulary (HIVE-6.5, #5316).
+ *
+ * Replaces `statusBadgeClass`, which returned four hard-coded Tailwind palette strings
+ * (`bg-emerald-100 text-emerald-700 dark:…`) from TypeScript — colour chosen where no theme
+ * could reach it. A tone is resolved by `ui/statusVocabulary`, so a resolved edge is the same
+ * green here, on the collections panel and in the KPI strip.
+ *
+ * @param status The edge's resolution status.
+ * @returns Its tone.
+ */
+export function refStatusTone(status: RefStatus): StatusTone {
   switch (status) {
     case 'resolved':
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+      return 'ok';
     case 'unresolved':
-      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+      return 'warn';
     case 'circular':
-      return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
+      return 'danger';
     default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300';
+      return 'neutral';
   }
 }

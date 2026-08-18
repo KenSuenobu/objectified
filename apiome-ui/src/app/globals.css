@@ -17197,3 +17197,1638 @@ button.auth-divider:disabled {
   background: var(--bg-subtle);
   color: var(--fg);
 }
+
+/* ==========================================================================
+   PRIMITIVES & TYPES  (HIVE-6.5, #5316)
+   --------------------------------------------------------------------------
+   `docs/mockups/build/primitives.html`, whose page-local `<style>` block this
+   replaces (`.ns-row`, `.cat-pill`, `.micro`, `.refline`, `.step-pill`,
+   `.desc-clamp`) together with every palette class the four panes had grown:
+   two scope pills written three times, two status pills written twice, five
+   `bg-indigo-100` icon tiles, a `bg-gray-900` code sample, three
+   `bg-emerald-50`/`bg-amber-50`/`bg-red-50` resolver tiles, ten
+   `text-indigo-600` checkboxes and seven `border-gray-300 dark:border-gray-600`
+   selects — a little over two hundred named colours across nine files.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The reasons the Epic-5 and Epic-6 blocks above give, and one particular to
+   this screen: **the registry pane is a two-column grid whose right rail
+   collapses under the table, and the collections table is a tree drawn as
+   rows.** Both are real grids with a fold point, which a utility string spells
+   badly and which has to be stated once so the pane and its skeleton agree.
+
+   Deviations from the mockup, and why
+   -----------------------------------
+   1. The KPI strip's *Unresolved $ref* tile is **marked, not washed**. The
+      mockup fills it `--warn-soft`. Outside light and dark the `-soft`/`-fg`
+      pairs are not calibrated against the neutrals, so the tile's own label and
+      foot — `--fg-muted` — would measure about 1.1:1 on it. It takes an inset
+      `--warn` hairline instead (the mark HIVE-6.1 used for a card that needs
+      attention), and only the figure carries the tone's ink, which at
+      `--fs-4xl`/700 is large text where 3:1 is the bar.
+   2. Quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+      about 3.1:1 against the canvas at these sizes. The same deviation
+      HIVE-3.5, 4.1, 6.1 and 6.2 each recorded.
+   3. The `$ref` example is a **light well**, not the mockup's `code--dark`. A
+      dark box on a paper page is a theme the reader did not choose; the well is
+      `--bg-inset` with `--fg` code and `--fg-muted` comments, which clears AA
+      in all nine appearances.
+   4. The `.micro` badges keep their 9.5px in the mockup; here they are
+      `--fs-2xs`, so they follow all six font scales rather than freezing at a
+      size no preference can reach.
+   5. No `-fg` ink is placed on `--bg-surface` and no `--fg` ink on a `-soft`
+      fill. Where the mockup tints a row or a tag, the tint is a `color-mix`
+      wash of the tone into the surface (never more than 14 %); where it inks a
+      word, the word is a `Badge` in its tone's own calibrated pair.
+   6. A group row in the collections table is **not tinted**. `--fg-muted` on
+      `--bg-subtle` measures 4.35:1 in Solarized, and the group row's own
+      sub-line ("2 namespaces · 10 types") is exactly that pairing. Weight, the
+      `group` badge and the chevron mark the row instead.
+   7. Every well that holds quiet text is `--bg-inset`, not the `--bg-subtle`
+      the mockup reaches for: `--fg-muted` clears AA on the first (5.02:1 at
+      worst) and not on the second.
+
+   Every colour below is a token, and every dimension is a token or `rem`, so
+   the screen follows the nine themes, both densities and all six font scales.
+   Two classes are borrowed rather than restated: `.tnt-icon-tile` from the
+   tenants block (the tile at the head of each dialog) and the `.imp-wizard*`
+   frame from the import wizard (HIVE-6.4) — the primitive import dialog is the
+   same four-part `dialog--full` and should not drift from it.
+   ========================================================================== */
+
+/* ---- Shared quiet type --------------------------------------------------
+   The three weights of secondary text the screen repeats: a muted line, a
+   figure, and the em-dash a cell prints when it has nothing to say. Stated
+   here rather than as utilities because they have to outrank the unlayered
+   `p` base rule near line 2497. */
+.prm-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prm-num {
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.prm-faint {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prm-hint {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* An inline error or caution. Both are `--fg` with a coloured glyph rather
+   than coloured text: `--danger-fg` measures 1.47:1 on the surface in Nord and
+   `--warn` reaches only 2.82:1 in Solarized. Neither hue is load-bearing —
+   both glyphs are `aria-hidden` beside a sentence that states the problem, so
+   the colour is emphasis and the words are the message. */
+.prm-error {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.prm-caution {
+  display: flex;
+  gap: var(--space-1);
+  align-items: flex-start;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.prm-caution > svg {
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+  color: var(--warn);
+}
+
+/* The required-field star. The asterisk itself is the mark — `--danger`
+   measures 2.46:1 on the surface in Nord — so the shape carries it and the
+   colour only emphasises. */
+.prm-req {
+  color: var(--danger);
+}
+
+/* A control mid-flight. Honours the reduce-motion preference, which is why it
+   is a rule here rather than Tailwind's `animate-spin`. */
+.prm-spin {
+  animation: prm-spin 900ms linear infinite;
+}
+
+@keyframes prm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+html[data-motion='reduce'] .prm-spin {
+  animation: none;
+}
+
+/* ---- The registry pane's two columns ------------------------------------
+   Table then rail, side by side above the fold point and stacked below it.
+   `minmax(0, …)` on the first track is what stops a long namespace path from
+   holding the column open and pushing the rail off the page. */
+.prm-registry-grid {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 68.75rem) {
+  .prm-registry-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+/* Panels stacked down a tab, at the page body's own rhythm. */
+.prm-panels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ---- KPI strip ---------------------------------------------------------- */
+
+/* The tile that wants acting on. An inset hairline in the tone, not a wash —
+   see deviation 1 in the banner above. */
+.prm-kpi--alert {
+  box-shadow: inset 0 0 0 1px var(--warn);
+  cursor: pointer;
+}
+
+.prm-kpi--alert:hover {
+  background: var(--bg-subtle);
+}
+
+.prm-kpi-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) * 1.5);
+  padding: calc(var(--card-pad) * 0.8) var(--card-pad);
+}
+
+.prm-kpi-skeleton__label {
+  block-size: var(--fs-xs);
+  inline-size: 60%;
+}
+
+.prm-kpi-skeleton__value {
+  block-size: var(--fs-4xl);
+  inline-size: 3.5rem;
+}
+
+.prm-kpi-skeleton__foot {
+  block-size: var(--fs-xs);
+  inline-size: 80%;
+}
+
+/* ---- A panel's own head (inside a table toolbar) ------------------------ */
+.prm-panel-head {
+  display: flex;
+  min-inline-size: 0;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.prm-panel-head > svg {
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.prm-panel-head__text {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+}
+
+.prm-panel-head__title {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prm-panel-head__title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.prm-panel-head__sub {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The right rail ----------------------------------------------------- */
+.prm-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.prm-rail__card {
+  padding: var(--card-pad);
+}
+
+/* A card whose own children carry the padding — the activity list runs edge
+   to edge under its header. */
+.prm-rail__card--flush {
+  padding: 0;
+}
+
+.prm-rail__head {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prm-rail__head > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.prm-rail__desc {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The rail's two links.
+
+   `--accent` measures 4.14:1 on the surface at 12px, under AA for normal text —
+   axe catches it in the light, Solarized and Darcula themes. `--accent-fg` is
+   the ink calibrated to be *read*: 7.00:1 at worst across the nine. Same
+   deviation, same reason, as the `$ref` links in the resolver's table. */
+.prm-rail__link {
+  margin-block-start: var(--space-2);
+  padding-inline: 0;
+  color: var(--accent-fg);
+}
+
+.prm-rail__activity-head {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.prm-rail__title {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-sm);
+}
+
+.prm-rail__title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.prm-rail__aside {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.prm-rail__state {
+  padding: var(--card-pad);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The worked `$ref` example ------------------------------------------
+   A light well rather than the mockup's dark block — deviation 3. */
+.prm-code {
+  display: flex;
+  flex-direction: column;
+  margin-block-start: var(--space-2);
+  padding: var(--space-3);
+  overflow-x: auto;
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  line-height: 1.6;
+  white-space: pre;
+}
+
+.prm-code__comment {
+  color: var(--fg-muted);
+}
+
+.prm-code--tall {
+  max-block-size: 14rem;
+  overflow-y: auto;
+}
+
+.prm-code--clip {
+  max-block-size: 7rem;
+  overflow-y: auto;
+}
+
+/* ---- Recent activity ---------------------------------------------------- */
+.prm-activity {
+  display: flex;
+  flex-direction: column;
+}
+
+.prm-activity__row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-2) var(--card-pad);
+  border-block-start: 1px solid var(--border);
+}
+
+.prm-activity__row:first-child {
+  border-block-start: 0;
+}
+
+.prm-activity__dot {
+  flex-shrink: 0;
+  margin-block-start: 0.375rem;
+  inline-size: 0.375rem;
+  block-size: 0.375rem;
+  border-radius: var(--r-full);
+}
+
+.prm-activity__text {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+}
+
+.prm-activity__title {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.prm-activity__sub {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Namespace rows ----------------------------------------------------- */
+.prm-ns-identity {
+  display: flex;
+  min-inline-size: 0;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.prm-ns-identity__text {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+}
+
+.prm-ns-identity__line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-ns-glyph {
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+/* A namespace types use that nothing registered.
+
+   The glyph is decoration: `--warn` measures 2.82:1 on the surface in
+   Solarized, so it cannot be the thing that says "unregistered". The
+   `unregistered` badge beside it says that, on its own calibrated
+   `--warn-soft`/`--warn-fg` pair, and the row's sub-line says it in words. */
+.prm-ns-glyph--warn {
+  color: var(--warn);
+}
+
+.prm-ns-path {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+/* The chevron on a group row. Square, and small enough to sit inside the row
+   metric at every density. */
+.prm-ns-chevron {
+  inline-size: var(--control-h-sm);
+  padding: 0;
+}
+
+/* A group header, and the members drawn beneath it.
+
+   The mockup tints the header row. A tint here would put the row's own sub-line
+   — `--fg-muted` — on a ground between `--bg-surface` and `--bg-subtle`, and
+   `--fg-muted` on `--bg-subtle` measures 4.35:1 in Solarized, under AA. The
+   header is marked by its `group` badge, its chevron and the weight of its
+   path instead, none of which cost the sub-line any contrast.
+
+   The indent is one glyph plus its gap, so a member lines up under its
+   parent's name rather than under its chevron. */
+.prm-ns-row--group .prm-ns-path {
+  font-weight: 600;
+}
+
+.prm-ns-row--nested > td:first-child {
+  padding-inline-start: calc(var(--space-3) + var(--icon-dense) + var(--space-2));
+}
+
+/* The tiny uppercase marker beside a path — `group`, `root`, `imported`,
+   `unregistered`, `cross-scope`. `--fs-2xs` rather than the mockup's 9.5px so
+   it follows the font-size preference (deviation 4). */
+.prm-micro {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.prm-micro--warn {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+/* ---- The types table ---------------------------------------------------- */
+.prm-types__toolbar {
+  row-gap: var(--space-2);
+}
+
+.prm-types__category {
+  inline-size: 9.5rem;
+  block-size: var(--control-h-sm);
+}
+
+.prm-types__switch {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  white-space: nowrap;
+}
+
+.prm-types__switch label {
+  cursor: pointer;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prm-type-name {
+  display: inline-flex;
+  min-inline-size: 0;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-type-glyph {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.prm-type-link {
+  min-inline-size: 0;
+  border-radius: var(--r-xs);
+  color: inherit;
+  text-decoration: none;
+}
+
+.prm-type-link:hover {
+  text-decoration: underline;
+}
+
+/* The JSON-Schema kind of a type. A neutral inset chip rather than the
+   mockup's accent fill: it is an identity, not a state, and the row already
+   spends its one colour on System / Tenant. */
+.prm-cat {
+  display: inline-flex;
+  align-items: center;
+  block-size: 1.25rem;
+  padding-inline: var(--space-2);
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  color: var(--fg);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+}
+
+/* Three lines then an ellipsis, with the full text on the row's `title`. */
+.prm-desc {
+  display: -webkit-box;
+  max-inline-size: 22rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Namespaces & scopes ------------------------------------------------ */
+.prm-explainers {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 48rem) {
+  .prm-explainers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The two scope cards. The mockup fills each with its tone; a wash of the tone
+   into the surface keeps the body text on a ground `--fg-muted` can be read
+   against in every theme (deviation 5). */
+.prm-explainer {
+  padding: var(--card-pad);
+}
+
+.prm-explainer[data-tone='ok'] {
+  background: color-mix(in srgb, var(--ok) 6%, var(--bg-surface));
+}
+
+.prm-explainer[data-tone='violet'] {
+  background: color-mix(in srgb, var(--violet) 6%, var(--bg-surface));
+}
+
+.prm-explainer__title {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prm-explainer[data-tone='ok'] .prm-explainer__title > svg {
+  color: var(--ok);
+}
+
+.prm-explainer[data-tone='violet'] .prm-explainer__title > svg {
+  color: var(--violet);
+}
+
+.prm-explainer__title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}
+
+.prm-explainer__body {
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.prm-explainer__uri {
+  margin-block-start: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+  font-size: var(--fs-2xs);
+  overflow-wrap: anywhere;
+}
+
+/* The ★ on the tenant's default namespace, and the padlock on a governed one.
+   Both are a glyph plus a word; neither tints the word. */
+.prm-default {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.prm-default > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  fill: currentcolor;
+  color: var(--honey);
+}
+
+.prm-lock {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.prm-lock > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+/* ---- Governance cards --------------------------------------------------- */
+.prm-governance {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 62rem) {
+  .prm-governance {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.prm-gov-card {
+  padding: var(--card-pad);
+}
+
+.prm-gov-card__title {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prm-gov-card__title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.prm-gov-card__desc {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prm-gov-card__note {
+  margin-block-start: var(--space-4);
+}
+
+.prm-precedence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+.prm-precedence__step {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.prm-precedence__text {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+}
+
+.prm-precedence__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prm-precedence__body {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The rank pill. The most specific scope is the one that wins, so rank 1 is
+   the ink-filled chip and the other two are inset — the mockup's `is-active`
+   distinction, expressed as data rather than as a class the caller picks. */
+.prm-step-pill {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.prm-step-pill[data-rank='1'] {
+  background: var(--fg);
+  color: var(--bg-surface);
+}
+
+/* The promote-to-core example: one tag, an arrow, the tag it would become. */
+.prm-promote {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin-block-start: var(--space-4);
+}
+
+.prm-promote > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  color: var(--fg-muted);
+}
+
+.prm-promote__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin-block-start: var(--space-4);
+}
+
+.prm-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  color: var(--fg);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+/* Where the type would land. A wash of `--ok`, not the `-soft` fill: the tag's
+   ink is `--fg`, which is not calibrated against a soft ground. */
+.prm-tag--core {
+  background: color-mix(in srgb, var(--ok) 14%, var(--bg-surface));
+}
+
+/* ---- Resolver ----------------------------------------------------------- */
+.prm-resolver-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-end;
+  padding: var(--card-pad);
+}
+
+.prm-resolver-controls__field {
+  display: flex;
+  min-inline-size: 13rem;
+  flex: 1 1 13rem;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.prm-resolver-go {
+  flex-shrink: 0;
+}
+
+.prm-resolver-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin-inline-start: auto;
+}
+
+/* A value the reader may copy but not change. */
+.prm-readonly {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  block-size: var(--control-h);
+  padding-inline: var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+  font-size: var(--fs-xs);
+}
+
+.prm-readonly > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+}
+
+.prm-readonly__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prm-graph {
+  padding: var(--card-pad);
+}
+
+/* The edge list. One line per `$ref`, scrolling sideways inside its own well
+   rather than taking the page with it. */
+.prm-graph__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-block-start: var(--space-3);
+  padding: var(--space-3);
+  overflow-x: auto;
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  font-size: var(--fs-xs);
+}
+
+.prm-refline {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  white-space: nowrap;
+}
+
+.prm-refline > svg {
+  flex-shrink: 0;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  color: var(--fg-muted);
+}
+
+/* A cross-scope edge (tenant → core) — the one thing the graph highlights. */
+.prm-refline[data-cross-scope='true'] > svg {
+  color: var(--ok);
+}
+
+.prm-refline__source {
+  color: var(--fg);
+}
+
+.prm-ref-source {
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.prm-ref-target {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+/* A link into a type's details. Dotted until hover, so a table of them does
+   not read as a wall of underlines. */
+.prm-ref-link {
+  border-radius: var(--r-xs);
+  color: var(--accent-fg);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.125rem;
+}
+
+.prm-ref-link:hover {
+  text-decoration-style: solid;
+}
+
+/* ---- Settings ----------------------------------------------------------- */
+.prm-settings {
+  display: flex;
+  max-inline-size: 57.5rem;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.prm-settings-card {
+  padding: var(--card-pad);
+}
+
+.prm-settings-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prm-settings-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-block-start: var(--space-4);
+}
+
+/* Two fields stacked inside one half of a two-column row — the depth and the
+   circular-ref policy beside the allowlist. The same rhythm as a card body,
+   without claiming to be one. */
+.prm-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.prm-settings-card__desc {
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prm-settings-card__error {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.prm-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--card-pad);
+}
+
+/* A setting and its switch, on one row with a hairline above it. */
+.prm-switch-row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+
+.prm-switch-row:first-child {
+  border-block-start: 0;
+  padding-block-start: 0;
+}
+
+.prm-switch-row__text {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+}
+
+.prm-switch-row__title {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.prm-switch-row__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Fields, grids and choice controls ---------------------------------- */
+.prm-field {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.prm-field__legend {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.prm-grid-2 {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.prm-grid-4 {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 40rem) {
+  .prm-grid-2,
+  .prm-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 62rem) {
+  .prm-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* A control with a verb beside it — a bound with its Exclusive box, a field
+   with its Extract button. Wraps rather than squeezing the input. */
+.prm-bound {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-bound > input {
+  min-inline-size: 8rem;
+  flex: 1 1 8rem;
+}
+
+.prm-check {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-check label {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* A checkbox standing in for a field, so it sits on the baseline of the input
+   beside it rather than at the top of its cell. */
+.prm-check--field {
+  align-self: end;
+  block-size: var(--control-h);
+}
+
+.prm-checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.prm-formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+  border: 0;
+  padding: 0;
+}
+
+.prm-formats > legend {
+  inline-size: 100%;
+  margin-block-end: var(--space-1);
+}
+
+/* A native select, in the Hive control chrome. Native rather than Radix
+   wherever the list is short and the value is a plain enum: the platform
+   control is keyboard- and screen-reader-correct on every device without a
+   portal, which is what a settings form wants. */
+.prm-select {
+  inline-size: 100%;
+  block-size: var(--control-h);
+  padding-inline: var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+}
+
+.prm-select:disabled {
+  cursor: not-allowed;
+  color: var(--fg-muted);
+}
+
+.prm-select--inline {
+  inline-size: auto;
+  min-inline-size: 11rem;
+  block-size: var(--control-h-sm);
+}
+
+/* ---- Dialogs ------------------------------------------------------------ */
+.prm-dialog__head {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding-inline-end: var(--space-8);
+}
+
+.prm-dialog__heading {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.prm-dialog__body {
+  display: flex;
+  min-block-size: 0;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* The editor dialog is tall by design — a form and a live preview. Its middle
+   is the only part that scrolls, which is a contract between the frame, the
+   tab strip, the body and the footer. */
+.prm-dialog--tall {
+  max-block-size: calc(100vh - 3rem);
+}
+
+.prm-dialog__tabs {
+  flex-shrink: 0;
+}
+
+.prm-dialog__body--scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-inline-end: var(--space-2);
+}
+
+.prm-dialog__grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 40rem) {
+  .prm-dialog__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.prm-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--border);
+}
+
+.prm-form-section:first-child {
+  padding-block-start: 0;
+  border-block-start: 0;
+}
+
+.prm-form-section__title {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* ---- Chip inputs (enum values, examples) -------------------------------- */
+.prm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-chips__input {
+  inline-size: 11rem;
+  flex: 1 1 11rem;
+}
+
+.prm-chip {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  block-size: var(--control-h-sm);
+  padding-inline: var(--space-2);
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  color: var(--fg);
+  font-size: var(--fs-xs);
+}
+
+.prm-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-full);
+  color: var(--fg-muted);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.prm-chip__remove:hover {
+  color: var(--fg);
+}
+
+.prm-chip__remove > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+/* ---- The JSON editor ---------------------------------------------------- */
+.prm-editor {
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.prm-editor__bar {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ---- Import wizard: source step ----------------------------------------- */
+.prm-source-cards {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+/* A source-kind card. Selection is `aria-pressed`, so the state the reader
+   sees and the state assistive technology hears are the same attribute. */
+.prm-source-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  text-align: start;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.prm-source-card:hover {
+  background: var(--bg-subtle);
+}
+
+.prm-source-card[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-surface));
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.prm-source-card__head {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prm-source-card__head > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.prm-source-card[aria-pressed='true'] .prm-source-card__head > svg {
+  color: var(--accent);
+}
+
+.prm-source-card__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The drop zone: a frame around a `<label>` and the visually-hidden file input
+   it names. Not a `<button>` wrapping the input — a button with a focusable
+   descendant is axe's `nested-interactive`, and the input is the control that
+   actually opens the picker. The frame is what shows the focus ring, because
+   the thing being focused is clipped. */
+.prm-drop {
+  display: flex;
+  inline-size: 100%;
+  flex-direction: column;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  text-align: center;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.prm-drop:hover,
+.prm-drop[data-dragging] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-surface));
+}
+
+.prm-drop:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
+}
+
+.prm-drop__label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-8) var(--space-4);
+  cursor: pointer;
+}
+
+.prm-drop__glyph {
+  inline-size: 2rem;
+  block-size: 2rem;
+  color: var(--fg-muted);
+}
+
+.prm-drop__title {
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.prm-drop__hint {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prm-file {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+}
+
+.prm-file__identity {
+  display: flex;
+  min-inline-size: 0;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.prm-file__glyph {
+  flex-shrink: 0;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  color: var(--ok);
+}
+
+.prm-file__text {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+}
+
+.prm-file__name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Import wizard: detected types and refs ----------------------------- */
+.prm-detected {
+  overflow: hidden;
+  padding: 0;
+}
+
+.prm-detected__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.prm-detected__title {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prm-detected__title > svg {
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+  color: var(--fg-muted);
+}
+
+.prm-detected__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-detected__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.prm-detected__row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-2) var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+
+.prm-detected__row:first-child {
+  border-block-start: 0;
+}
+
+.prm-detected__mark {
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+}
+
+.prm-detected__mark--ok {
+  color: var(--ok);
+}
+
+.prm-detected__mark--bad {
+  color: var(--danger);
+}
+
+.prm-detected__text {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.prm-detected__more {
+  padding: var(--space-2) var(--space-3);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prm-refs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+
+.prm-refs__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-refs__title {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prm-refs__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.prm-refs__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+
+.prm-refs__target {
+  color: var(--fg);
+}
+
+.prm-refs__unresolved {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+}
+
+.prm-refs__unresolved ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  font-size: var(--fs-2xs);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Import wizard: review and result ----------------------------------- */
+.prm-review__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-review__list {
+  display: flex;
+  max-block-size: 60vh;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+}
+
+.prm-review-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+/* A row that blocks the import is marked, not filled — the same reasoning as
+   the KPI tile: its own body text has to stay readable on it. */
+.prm-review-row[data-status='conflict'] {
+  box-shadow: inset 0 0 0 1px var(--danger);
+}
+
+.prm-review-row[data-status='invalid'] {
+  background: color-mix(in srgb, var(--danger) 5%, var(--bg-surface));
+}
+
+.prm-review-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-review-row__name {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.prm-review-row__error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.prm-review-row__errors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-inline-start: var(--space-4);
+  list-style: disc;
+}
+
+.prm-review-row__resolve {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prm-review-row__rename {
+  inline-size: 11rem;
+}
+
+.prm-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.prm-result__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-xs);
+}
+
+.prm-result__items {
+  min-inline-size: 0;
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}

@@ -10,7 +10,7 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import PrimitivesResolverView from '../src/app/ade/dashboard/primitives/PrimitivesResolverView';
+import ResolverPanel from '../src/app/components/ade/primitives/ResolverPanel';
 
 const RESOLVE_RESPONSE = {
   total_primitives: 3,
@@ -91,12 +91,12 @@ function mockResolve(payload: unknown = RESOLVE_RESPONSE) {
   });
 }
 
-describe('PrimitivesResolverView', () => {
+describe('ResolverPanel', () => {
   afterEach(() => jest.restoreAllMocks());
 
   it('resolves on mount and renders summary chips, graph, and the resolution table', async () => {
     global.fetch = mockResolve() as unknown as typeof fetch;
-    render(<PrimitivesResolverView />);
+    render(<ResolverPanel />);
 
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: 'Reference resolution' })).toBeInTheDocument()
@@ -107,9 +107,11 @@ describe('PrimitivesResolverView', () => {
 
     // Summary chips: 2 resolved · 1 unresolved · 1 circular.
     const summary = screen.getByRole('region', { name: 'Resolution summary' });
-    expect(within(summary).getByText('Resolved').previousSibling).toHaveTextContent('2');
-    expect(within(summary).getByText('Unresolved').previousSibling).toHaveTextContent('1');
-    expect(within(summary).getByText('Circular').previousSibling).toHaveTextContent('1');
+    expect(within(summary).getByTestId('resolver-summary-resolved')).toHaveTextContent('Resolved 2');
+    expect(within(summary).getByTestId('resolver-summary-unresolved')).toHaveTextContent(
+      'Unresolved 1'
+    );
+    expect(within(summary).getByTestId('resolver-summary-circular')).toHaveTextContent('Circular 1');
 
     // Resolution table shows source types and the three statuses.
     const table = screen.getByRole('table');
@@ -132,10 +134,11 @@ describe('PrimitivesResolverView', () => {
 
   it('filters the table by status', async () => {
     global.fetch = mockResolve() as unknown as typeof fetch;
-    render(<PrimitivesResolverView />);
+    render(<ResolverPanel />);
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole('button', { name: 'Unresolved' }));
+    // The status filter is a `Segmented`, whose options are radios rather than buttons.
+    fireEvent.click(screen.getByRole('radio', { name: 'Unresolved' }));
 
     const table = screen.getByRole('table');
     expect(within(table).getByText('tenant/acme/v1/payments/charge')).toBeInTheDocument();
@@ -146,7 +149,7 @@ describe('PrimitivesResolverView', () => {
   it('re-resolves on button click and announces how many primitives were updated', async () => {
     global.fetch = mockResolve() as unknown as typeof fetch;
     const onMessage = jest.fn();
-    render(<PrimitivesResolverView onMessage={onMessage} />);
+    render(<ResolverPanel onMessage={onMessage} />);
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /Re-resolve/i }));
@@ -159,7 +162,7 @@ describe('PrimitivesResolverView', () => {
 
   it('shows an empty state when no primitive carries a $ref', async () => {
     global.fetch = mockResolve({ ...RESOLVE_RESPONSE, primitives: [] }) as unknown as typeof fetch;
-    render(<PrimitivesResolverView />);
+    render(<ResolverPanel />);
 
     await waitFor(() =>
       expect(screen.getByText(/No references to resolve/i)).toBeInTheDocument()
@@ -173,18 +176,18 @@ describe('PrimitivesResolverView', () => {
       json: async () => ({ success: false, error: 'Tenant not found' }),
     }) as unknown as typeof fetch;
     const onMessage = jest.fn();
-    render(<PrimitivesResolverView onMessage={onMessage} />);
+    render(<ResolverPanel onMessage={onMessage} />);
 
     await waitFor(() => expect(onMessage).toHaveBeenCalledWith('error', 'Tenant not found'));
   });
 });
 
-describe('PrimitivesResolverView — opening a resolved target', () => {
+describe('ResolverPanel — opening a resolved target', () => {
   afterEach(() => jest.restoreAllMocks());
 
   async function renderResolved() {
     global.fetch = mockResolve() as unknown as typeof fetch;
-    render(<PrimitivesResolverView />);
+    render(<ResolverPanel />);
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument());
   }
 
@@ -238,7 +241,8 @@ describe('PrimitivesResolverView — opening a resolved target', () => {
   it('drops the links along with the rows when a filter excludes them', async () => {
     await renderResolved();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Unresolved' }));
+    // The status filter is a `Segmented`, whose options are radios rather than buttons.
+    fireEvent.click(screen.getByRole('radio', { name: 'Unresolved' }));
 
     expect(screen.queryByTestId('table-target-link-p-date:0')).not.toBeInTheDocument();
     expect(screen.queryByTestId('graph-target-link-p-date:0')).not.toBeInTheDocument();

@@ -1,22 +1,42 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { FolderTree } from 'lucide-react';
-import { Button } from '@/app/components/ui/Button';
-import { Input } from '@/app/components/ui/Input';
-import { Textarea } from '@/app/components/ui/Textarea';
-import { Switch } from '@/app/components/ui/Switch';
-import { FormField } from '@/app/components/ui/FormField';
+/**
+ * Create / edit dialog for tenant type-registry namespaces (#3471, restyled by HIVE-6.5, #5316).
+ *
+ * Authority: `docs/mockups/build/primitives.html` §Overlays → *New / edit namespace* — the
+ * detected-namespace picker, the immutable path, the derived base URI and version root, the
+ * description, the Default-namespace switch and the validation banner.
+ *
+ * Posts to `/api/types/namespaces` (create) or `/api/types/namespaces/{id}` (edit), which proxy
+ * the Namespace CRUD API (#3451). System-core namespaces never reach this dialog — they are
+ * read-only — so the form always targets a tenant-owned namespace.
+ *
+ * ### What changed in the redesign
+ *
+ * The head gained the mockup's tinted icon tile, and the detected-namespace picker lost the
+ * `border-slate-300 bg-white dark:bg-slate-800` it was hand-painted with. It stays a **native**
+ * `<select>` rather than becoming a Radix one: it is a rarely-used shortcut whose whole value is
+ * that it works the first time, and the platform control is the one that always does — on a
+ * phone, under a screen reader, and in the jsdom suite that pins it.
+ */
+
+import * as React from 'react';
+import { FolderPlus } from 'lucide-react';
+
 import { Alert } from '@/app/components/ui/Alert';
+import { Button } from '@/app/components/ui/Button';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/app/components/ui/Dialog';
-import type { TypeNamespaceCollection } from './primitivesRegistryTypes';
+import { FormField } from '@/app/components/ui/FormField';
+import { Input } from '@/app/components/ui/Input';
+import { Switch } from '@/app/components/ui/Switch';
+import { Textarea } from '@/app/components/ui/Textarea';
 import {
   buildCreateRequestBody,
   buildUpdateRequestBody,
@@ -27,27 +47,29 @@ import {
   validateNamespaceForm,
   type DetectedNamespace,
   type NamespaceFormData,
-} from './namespaceModel';
+} from '@/app/ade/dashboard/primitives/namespaceModel';
+import type { TypeNamespaceCollection } from '@/app/ade/dashboard/primitives/primitivesRegistryTypes';
 
-interface Props {
-  /** The namespace being edited, or ``null`` to create a new tenant namespace. */
+export interface NamespaceEditorDialogProps {
+  /** The namespace being edited, or `null` to create a new tenant namespace. */
   namespace: TypeNamespaceCollection | null;
   /**
    * Namespaces types already use that have no registry row, offered as a picker when creating.
    * Defaults to empty so callers that have nothing to detect need not pass it.
    */
-  detectedNamespaces?: DetectedNamespace[];
+  detectedNamespaces?: readonly DetectedNamespace[];
+  /** Dismiss without saving. */
   onClose: () => void;
+  /** The write landed — the caller reloads and closes. */
   onSaved: () => void;
+  /** Report an outcome through the screen's toaster. */
   onMessage: (type: 'success' | 'error', message: string) => void;
 }
 
 /**
- * Create / edit dialog for tenant type-registry namespaces (#3471).
+ * Render the dialog. See {@link NamespaceEditorDialogProps}.
  *
- * Posts to ``/api/types/namespaces`` (create) or ``/api/types/namespaces/{id}`` (edit), which
- * proxy the Namespace CRUD API (#3451). System-core namespaces never reach this dialog — they
- * are read-only — so the form always targets a tenant-owned namespace.
+ * @returns The create / edit form.
  */
 export default function NamespaceEditorDialog({
   namespace,
@@ -55,14 +77,14 @@ export default function NamespaceEditorDialog({
   onClose,
   onSaved,
   onMessage,
-}: Props) {
+}: NamespaceEditorDialogProps) {
   const isEdit = namespace !== null;
-  const [form, setForm] = useState<NamespaceFormData>(() =>
+  const [form, setForm] = React.useState<NamespaceFormData>(() =>
     namespace ? formFromNamespace(namespace) : emptyNamespaceForm()
   );
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
 
-  const errors = useMemo(() => validateNamespaceForm(form, isEdit), [form, isEdit]);
+  const errors = React.useMemo(() => validateNamespaceForm(form, isEdit), [form, isEdit]);
   const hasErrors = Object.keys(errors).length > 0;
 
   // Show the API-derived defaults as placeholder hints so the user knows what blank fields become.
@@ -107,20 +129,22 @@ export default function NamespaceEditorDialog({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-lg" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FolderTree className="w-5 h-5 text-indigo-500" />
-            {isEdit ? 'Edit namespace' : 'New namespace'}
-          </DialogTitle>
-          <DialogDescription>
-            {isEdit
-              ? 'Update the base URI, version root, description, or default flag. The namespace path is immutable.'
-              : 'Create a tenant namespace. The path is reserved under your tenant; system-core (std/*) namespaces are platform-governed.'}
-          </DialogDescription>
+      <DialogContent className="prm-dialog" aria-describedby={undefined}>
+        <DialogHeader className="prm-dialog__head">
+          <span className="tnt-icon-tile" data-tone="accent" aria-hidden>
+            <FolderPlus />
+          </span>
+          <div className="prm-dialog__heading">
+            <DialogTitle>{isEdit ? 'Edit namespace' : 'New namespace'}</DialogTitle>
+            <DialogDescription>
+              {isEdit
+                ? 'Update the base URI, version root, description, or default flag. The namespace path is immutable.'
+                : 'Create a tenant namespace. The path is reserved under your tenant; system-core (std/*) namespaces are platform-governed.'}
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="prm-dialog__body">
           {/* Types can already sit in a namespace nobody registered — most often after an import,
               which writes the namespace onto the type without creating a collection row. Offering
               those paths here turns "my imported namespace is missing" into one selection. */}
@@ -136,12 +160,13 @@ export default function NamespaceEditorDialog({
                 onChange={(e) => {
                   if (e.target.value) update('namespace', e.target.value);
                 }}
-                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-mono text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                className="hive-control prm-select mono"
               >
                 <option value="">Select a detected namespace…</option>
                 {detectedNamespaces.map((detected) => (
                   <option key={detected.namespace} value={detected.namespace}>
-                    {detected.namespace} ({detected.typeCount} type{detected.typeCount === 1 ? '' : 's'})
+                    {detected.namespace} ({detected.typeCount} type
+                    {detected.typeCount === 1 ? '' : 's'})
                   </option>
                 ))}
               </select>
@@ -162,39 +187,41 @@ export default function NamespaceEditorDialog({
               value={form.namespace}
               onChange={(e) => update('namespace', e.target.value)}
               placeholder="tenant/acme/v1/types"
-              className="font-mono"
+              className="mono"
               disabled={isEdit}
               aria-label="Namespace path"
             />
           </FormField>
 
-          <FormField
-            label="Base URI"
-            error={errors.baseUri}
-            helperText="Leave blank to derive from the namespace path."
-          >
-            <Input
-              value={form.baseUri}
-              onChange={(e) => update('baseUri', e.target.value)}
-              placeholder={baseUriPlaceholder}
-              className="font-mono"
-              aria-label="Base URI"
-            />
-          </FormField>
+          <div className="prm-dialog__grid">
+            <FormField
+              label="Base URI"
+              error={errors.baseUri}
+              helperText="Leave blank to derive from the namespace path."
+            >
+              <Input
+                value={form.baseUri}
+                onChange={(e) => update('baseUri', e.target.value)}
+                placeholder={baseUriPlaceholder}
+                className="mono"
+                aria-label="Base URI"
+              />
+            </FormField>
 
-          <FormField
-            label="Version root"
-            error={errors.versionRoot}
-            helperText="Leave blank to derive from the path's vN segment."
-          >
-            <Input
-              value={form.versionRoot}
-              onChange={(e) => update('versionRoot', e.target.value)}
-              placeholder={versionRootPlaceholder}
-              className="font-mono"
-              aria-label="Version root"
-            />
-          </FormField>
+            <FormField
+              label="Version root"
+              error={errors.versionRoot}
+              helperText="Leave blank to derive from the path's vN segment."
+            >
+              <Input
+                value={form.versionRoot}
+                onChange={(e) => update('versionRoot', e.target.value)}
+                placeholder={versionRootPlaceholder}
+                className="mono"
+                aria-label="Version root"
+              />
+            </FormField>
+          </div>
 
           <FormField label="Description">
             <Textarea
@@ -206,13 +233,13 @@ export default function NamespaceEditorDialog({
             />
           </FormField>
 
-          <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2.5">
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Default namespace</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="prm-switch-row">
+            <span className="prm-switch-row__text">
+              <span className="prm-switch-row__title">Default namespace</span>
+              <span className="prm-switch-row__desc">
                 New tenant types land here unless another is chosen.
-              </p>
-            </div>
+              </span>
+            </span>
             <Switch
               checked={form.isDefault}
               onCheckedChange={(checked) => update('isDefault', checked)}
@@ -229,7 +256,7 @@ export default function NamespaceEditorDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={onClose} disabled={submitting}>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={hasErrors || submitting}>

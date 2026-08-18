@@ -9,7 +9,7 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import PrimitivesSettingsView from '../src/app/ade/dashboard/primitives/PrimitivesSettingsView';
+import RegistrySettingsPanel from '../src/app/components/ade/primitives/RegistrySettingsPanel';
 import { DEFAULT_SETTINGS } from '../src/app/ade/dashboard/primitives/primitivesSettingsModel';
 
 const DEFAULTS_RESPONSE = { ...DEFAULT_SETTINGS, is_default: true };
@@ -59,13 +59,13 @@ function mockFetch({
   return { fetchMock, put };
 }
 
-describe('PrimitivesSettingsView', () => {
+describe('RegistrySettingsPanel', () => {
   afterEach(() => jest.restoreAllMocks());
 
   it('loads settings + health, shows the defaults banner and Connected status', async () => {
     const { fetchMock } = mockFetch();
     global.fetch = fetchMock as unknown as typeof fetch;
-    render(<PrimitivesSettingsView />);
+    render(<RegistrySettingsPanel />);
 
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: 'Registry storage' })).toBeInTheDocument()
@@ -83,7 +83,7 @@ describe('PrimitivesSettingsView', () => {
     const { fetchMock, put } = mockFetch();
     global.fetch = fetchMock as unknown as typeof fetch;
     const onMessage = jest.fn();
-    render(<PrimitivesSettingsView onMessage={onMessage} />);
+    render(<RegistrySettingsPanel onMessage={onMessage} />);
 
     await waitFor(() => expect(screen.getByLabelText('Default draft')).toBeInTheDocument());
 
@@ -101,17 +101,17 @@ describe('PrimitivesSettingsView', () => {
     );
   });
 
-  it('toggles the remote allowlist enable/disable state with the remote-$ref checkbox', async () => {
+  it('toggles the remote allowlist enable/disable state with the remote-$ref switch', async () => {
     const { fetchMock } = mockFetch();
     global.fetch = fetchMock as unknown as typeof fetch;
-    render(<PrimitivesSettingsView />);
+    render(<RegistrySettingsPanel />);
 
     await waitFor(() => expect(screen.getByLabelText('Remote host allowlist')).toBeInTheDocument());
 
     const allowlist = screen.getByLabelText('Remote host allowlist') as HTMLTextAreaElement;
     expect(allowlist).toBeDisabled(); // allow_remote_refs defaults to false
 
-    fireEvent.click(screen.getByRole('checkbox', { name: /Allow remote \$ref/i }));
+    fireEvent.click(screen.getByRole('switch', { name: /Allow remote \$ref/i }));
     expect(allowlist).toBeEnabled();
   });
 
@@ -119,7 +119,7 @@ describe('PrimitivesSettingsView', () => {
     const saved = { ...DEFAULT_SETTINGS, default_draft: 'draft-07', is_default: false };
     const { fetchMock } = mockFetch({ settings: saved });
     global.fetch = fetchMock as unknown as typeof fetch;
-    render(<PrimitivesSettingsView />);
+    render(<RegistrySettingsPanel />);
 
     await waitFor(() =>
       expect((screen.getByLabelText('Default draft') as HTMLSelectElement).value).toBe('draft-07')
@@ -140,7 +140,7 @@ describe('PrimitivesSettingsView', () => {
     });
     global.fetch = fetchMock as unknown as typeof fetch;
     const onMessage = jest.fn();
-    render(<PrimitivesSettingsView onMessage={onMessage} />);
+    render(<RegistrySettingsPanel onMessage={onMessage} />);
 
     await waitFor(() => expect(onMessage).toHaveBeenCalledWith('error', 'No tenant'));
   });
@@ -150,7 +150,7 @@ describe('PrimitivesSettingsView', () => {
       health: { status: 'unhealthy', connection: 'disconnected', storage_present: false, error: 'boom' },
     });
     global.fetch = fetchMock as unknown as typeof fetch;
-    render(<PrimitivesSettingsView />);
+    render(<RegistrySettingsPanel />);
 
     await waitFor(() => expect(screen.getByText('Unavailable')).toBeInTheDocument());
     expect(screen.getByText('boom')).toBeInTheDocument();

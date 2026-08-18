@@ -11,7 +11,7 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import PrimitivesNamespaceCollections from '../src/app/ade/dashboard/primitives/PrimitivesNamespaceCollections';
+import TypeCollectionsPanel from '../src/app/components/ade/primitives/TypeCollectionsPanel';
 import type { TypeNamespaceCollection } from '../src/app/ade/dashboard/primitives/primitivesRegistryTypes';
 
 const REGISTERED: TypeNamespaceCollection[] = [
@@ -40,17 +40,54 @@ const MANY: TypeNamespaceCollection[] = [
 ];
 
 /**
- * The name line of each body row's Namespace cell, top to bottom — the first paragraph only, so the
+ * The name line of each body row's Namespace cell, top to bottom — the path only, so the
  * description line underneath it does not become part of the compared order.
  */
 function renderedNamespaceOrder(): string[] {
   const rows = screen.getAllByRole('row').slice(1); // drop the header row
   return rows.map(
-    (row) => within(row).getAllByRole('cell')[0].querySelector('p')?.textContent ?? ''
+    (row) => within(row).getAllByRole('cell')[0].querySelector('.prm-ns-path')?.textContent ?? ''
   );
 }
 
-function renderPanel(overrides: Partial<React.ComponentProps<typeof PrimitivesNamespaceCollections>> = {}) {
+/**
+ * One `<tr>`, by the row id `DataTable` stamps on it.
+ *
+ * The panel is a `DataTable` now, so a row is identified by `data-row-id` rather than by a
+ * `data-testid` the panel used to put on the `<tr>` itself; the ids are the same strings the
+ * panel's own row model uses.
+ */
+function dataRow(id: string): HTMLTableRowElement | null {
+  return document.querySelector(`tr[data-row-id="${id}"]`);
+}
+
+/** Header label per sortable column of the collections table. */
+const COLLECTION_HEADER: Record<string, string> = {
+  namespace: 'Namespace',
+  scope: 'Scope',
+  types: 'Types',
+  draft: 'Draft',
+  status: 'Status',
+};
+
+/** One column's `<th>`. */
+function sortHeader(column: string): HTMLTableCellElement {
+  return screen.getByRole('columnheader', {
+    name: new RegExp(`^${COLLECTION_HEADER[column]}$`, 'i'),
+  }) as HTMLTableCellElement;
+}
+
+/** The sort button inside that header. */
+function sortControl(column: string): HTMLButtonElement {
+  return within(sortHeader(column)).getByRole('button') as HTMLButtonElement;
+}
+
+/** The panel's foot, which carries every count in one sentence. */
+function footText(): string {
+  return screen.getByTestId('namespace-collections-foot').textContent ?? '';
+}
+
+function renderPanel(overrides: Partial<React.ComponentProps<typeof TypeCollectionsPanel>> = {}) {
   const props = {
     namespaces: REGISTERED,
     unresolvedByNamespace: {},
@@ -62,14 +99,14 @@ function renderPanel(overrides: Partial<React.ComponentProps<typeof PrimitivesNa
     loading: false,
     ...overrides,
   };
-  return { props, ...render(<PrimitivesNamespaceCollections {...props} />) };
+  return { props, ...render(<TypeCollectionsPanel {...props} />) };
 }
 
 describe('Type collections — unassigned namespaces', () => {
   it('shows a row for types that have no namespace, with the count', () => {
     renderPanel();
 
-    const row = screen.getByTestId('unassigned-namespaces-row');
+    const row = dataRow('unassigned')!;
     expect(within(row).getByText('Unassigned namespaces')).toBeInTheDocument();
     expect(row).toHaveTextContent('38');
   });
@@ -77,7 +114,7 @@ describe('Type collections — unassigned namespaces', () => {
   it('selects the unassigned group when its row is clicked', () => {
     const { props } = renderPanel();
 
-    fireEvent.click(screen.getByTestId('unassigned-namespaces-row'));
+    fireEvent.click(dataRow('unassigned')!);
 
     // The empty string is the sentinel the type filter matches null/blank namespaces with.
     expect(props.onNamespaceSelect).toHaveBeenCalledWith('');
@@ -85,12 +122,12 @@ describe('Type collections — unassigned namespaces', () => {
 
   it('hides the row when every type has a namespace', () => {
     renderPanel({ unassignedCount: 0 });
-    expect(screen.queryByTestId('unassigned-namespaces-row')).not.toBeInTheDocument();
+    expect(dataRow('unassigned')).not.toBeInTheDocument();
   });
 
   it('counts the unassigned types in the footer', () => {
     renderPanel();
-    expect(screen.getByTestId('unassigned-type-count')).toHaveTextContent('38 unassigned');
+    expect(footText()).toContain('38 unassigned');
   });
 });
 
@@ -98,7 +135,7 @@ describe('Type collections — unregistered namespaces', () => {
   it('lists a namespace that types use but that has no collection row', () => {
     renderPanel();
 
-    const row = screen.getByTestId('detected-namespace-self/v1/schemas/api/schemas');
+    const row = dataRow('detected-self/v1/schemas/api/schemas')!;
     expect(row).toHaveTextContent('self/v1/schemas/api/schemas');
     expect(row).toHaveTextContent('unregistered');
     expect(row).toHaveTextContent('1');
@@ -107,14 +144,14 @@ describe('Type collections — unregistered namespaces', () => {
   it('selects the namespace when its row is clicked', () => {
     const { props } = renderPanel();
 
-    fireEvent.click(screen.getByTestId('detected-namespace-self/v1/schemas/api/schemas'));
+    fireEvent.click(dataRow('detected-self/v1/schemas/api/schemas')!);
 
     expect(props.onNamespaceSelect).toHaveBeenCalledWith('self/v1/schemas/api/schemas');
   });
 
   it('counts the unregistered namespaces in the footer', () => {
     renderPanel();
-    expect(screen.getByTestId('detected-namespace-count')).toHaveTextContent('1 unregistered');
+    expect(footText()).toContain('1 unregistered');
   });
 });
 
@@ -122,8 +159,8 @@ describe('Type collections — interaction with the scope filters', () => {
   it('hides both extra rows under a scope filter, since neither has a scope', () => {
     renderPanel({ scopeFilter: 'system' });
 
-    expect(screen.queryByTestId('unassigned-namespaces-row')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('detected-namespace-self/v1/schemas/api/schemas')).not.toBeInTheDocument();
+    expect(dataRow('unassigned')).not.toBeInTheDocument();
+    expect(dataRow('detected-self/v1/schemas/api/schemas')).not.toBeInTheDocument();
     // The registered system namespace still shows.
     expect(screen.getByText('std/v0/types')).toBeInTheDocument();
   });
@@ -132,7 +169,7 @@ describe('Type collections — interaction with the scope filters', () => {
     // Previously the panel short-circuited to "No namespace collections match this filter".
     renderPanel({ namespaces: [], detectedNamespaces: [], unassignedCount: 4 });
 
-    expect(screen.getByTestId('unassigned-namespaces-row')).toBeInTheDocument();
+    expect(dataRow('unassigned')!).toBeInTheDocument();
     expect(screen.queryByText(/no namespace collections match/i)).not.toBeInTheDocument();
   });
 
@@ -161,7 +198,7 @@ describe('Type collections — column sorting', () => {
       'tenant/v1/billing',
     ]);
     for (const column of ['namespace', 'scope', 'types', 'draft', 'status']) {
-      expect(screen.getByTestId(`namespace-collections-sort-${column}`)).toBeInTheDocument();
+      expect(sortControl(column)).toBeInTheDocument();
     }
     // Nothing is sorted yet, so no header claims a direction.
     for (const header of screen.getAllByRole('columnheader')) {
@@ -171,7 +208,7 @@ describe('Type collections — column sorting', () => {
 
   it('sorts by namespace ascending on the first click and descending on the second', () => {
     renderSortable();
-    const header = screen.getByTestId('namespace-collections-sort-namespace');
+    const header = sortControl('namespace');
 
     fireEvent.click(header);
     expect(renderedNamespaceOrder()).toEqual([
@@ -192,7 +229,7 @@ describe('Type collections — column sorting', () => {
 
   it('sorts the type count numerically in both directions', () => {
     renderSortable();
-    const header = screen.getByTestId('namespace-collections-sort-types');
+    const header = sortControl('types');
 
     fireEvent.click(header);
     expect(renderedNamespaceOrder()).toEqual([
@@ -212,10 +249,10 @@ describe('Type collections — column sorting', () => {
   it('sorts by scope, system before tenant', () => {
     renderSortable();
 
-    fireEvent.click(screen.getByTestId('namespace-collections-sort-scope'));
+    fireEvent.click(sortControl('scope'));
     expect(renderedNamespaceOrder()[0]).toBe('std/v0/primitives');
 
-    fireEvent.click(screen.getByTestId('namespace-collections-sort-scope'));
+    fireEvent.click(sortControl('scope'));
     expect(renderedNamespaceOrder()[2]).toBe('std/v0/primitives');
   });
 
@@ -228,10 +265,10 @@ describe('Type collections — column sorting', () => {
     });
     fireEvent.click(screen.getByTestId('namespace-group-toggle'));
 
-    fireEvent.click(screen.getByTestId('namespace-collections-sort-status'));
+    fireEvent.click(sortControl('status'));
     expect(renderedNamespaceOrder()[2]).toBe('tenant/v1/orders');
 
-    fireEvent.click(screen.getByTestId('namespace-collections-sort-status'));
+    fireEvent.click(sortControl('status'));
     expect(renderedNamespaceOrder()[0]).toBe('tenant/v1/orders');
   });
 
@@ -240,8 +277,8 @@ describe('Type collections — column sorting', () => {
     renderPanel({ namespaces: MANY, detectedNamespaces: DETECTED, unassignedCount: 38 });
     fireEvent.click(screen.getByTestId('namespace-group-toggle'));
 
-    fireEvent.click(screen.getByTestId('namespace-collections-sort-types'));
-    fireEvent.click(screen.getByTestId('namespace-collections-sort-types'));
+    fireEvent.click(sortControl('types'));
+    fireEvent.click(sortControl('types'));
 
     const order = renderedNamespaceOrder();
     // 38 unassigned outranks every collection except the 40-type one.
@@ -254,7 +291,7 @@ describe('Type collections — column sorting', () => {
   it('keeps a row clickable while sorted', () => {
     const { props } = renderSortable();
 
-    fireEvent.click(screen.getByTestId('namespace-collections-sort-namespace'));
+    fireEvent.click(sortControl('namespace'));
     fireEvent.click(screen.getAllByRole('row')[1]);
 
     expect(props.onNamespaceSelect).toHaveBeenCalledWith('std/v0/primitives');
@@ -271,7 +308,7 @@ describe('Type collections — grouping by parent namespace', () => {
   ];
 
   function renderGrouped(
-    overrides: Partial<React.ComponentProps<typeof PrimitivesNamespaceCollections>> = {}
+    overrides: Partial<React.ComponentProps<typeof TypeCollectionsPanel>> = {}
   ) {
     return renderPanel({
       namespaces: FAMILY,
@@ -284,7 +321,7 @@ describe('Type collections — grouping by parent namespace', () => {
   it('collapses namespaces that share a parent into one row, aggregating the counts', () => {
     renderGrouped();
 
-    const group = screen.getByTestId('namespace-group-tenant/v1');
+    const group = dataRow('group-tenant/v1')!;
     expect(group).toHaveTextContent('tenant/v1');
     expect(group).toHaveTextContent('2 namespaces · 10 types');
     // Collapsed by default: the members are folded away behind the group row.
@@ -296,7 +333,7 @@ describe('Type collections — grouping by parent namespace', () => {
     renderGrouped();
 
     expect(screen.getByText('std/v0/types')).toBeInTheDocument();
-    expect(screen.queryByTestId('namespace-group-std/v0')).not.toBeInTheDocument();
+    expect(dataRow('group-std/v0')).not.toBeInTheDocument();
   });
 
   it('expands and collapses the group from its chevron', () => {
@@ -327,7 +364,7 @@ describe('Type collections — grouping by parent namespace', () => {
   it('selects the whole family when the group row is clicked', () => {
     const { props } = renderGrouped();
 
-    fireEvent.click(screen.getByTestId('namespace-group-tenant/v1'));
+    fireEvent.click(dataRow('group-tenant/v1')!);
 
     expect(props.onNamespaceSelect).toHaveBeenCalledWith('tenant/v1', { includeDescendants: true });
   });
@@ -367,18 +404,18 @@ describe('Type collections — grouping by parent namespace', () => {
       ],
     });
 
-    expect(screen.getByTestId('namespace-group-tenant/v1')).toHaveTextContent('Mixed');
+    expect(dataRow('group-tenant/v1')!).toHaveTextContent('Mixed');
   });
 
   it('sums unresolved refs across the family onto the group row', () => {
     renderGrouped({ unresolvedByNamespace: { 'tenant/v1/orders': 2, 'tenant/v1/billing': 3 } });
 
-    expect(screen.getByTestId('namespace-group-tenant/v1')).toHaveTextContent('5 unresolved');
+    expect(dataRow('group-tenant/v1')!).toHaveTextContent('5 unresolved');
   });
 
   it('counts the groups in the footer', () => {
     renderGrouped();
-    expect(screen.getByTestId('namespace-group-count')).toHaveTextContent('1 group');
+    expect(footText()).toContain('1 group');
   });
 
   it('flattens back to one row per namespace when grouping is switched off', () => {
@@ -386,10 +423,10 @@ describe('Type collections — grouping by parent namespace', () => {
 
     fireEvent.click(screen.getByTestId('namespace-group-toggle'));
 
-    expect(screen.queryByTestId('namespace-group-tenant/v1')).not.toBeInTheDocument();
+    expect(dataRow('group-tenant/v1')).not.toBeInTheDocument();
     expect(screen.getByText('tenant/v1/orders')).toBeInTheDocument();
     expect(screen.getByText('tenant/v1/billing')).toBeInTheDocument();
-    expect(screen.queryByTestId('namespace-group-count')).not.toBeInTheDocument();
+    expect(footText()).not.toContain('group');
   });
 
   it('groups unregistered namespaces with each other, and never the unassigned bucket', () => {
@@ -402,23 +439,23 @@ describe('Type collections — grouping by parent namespace', () => {
       unassignedCount: 38,
     });
 
-    expect(screen.getByTestId('namespace-group-self/v1/schemas')).toHaveTextContent(
+    expect(dataRow('group-self/v1/schemas')!).toHaveTextContent(
       '2 namespaces · 3 types'
     );
     // The unassigned row sits on no path, so it stays a top-level row of its own.
-    expect(screen.getByTestId('unassigned-namespaces-row')).toBeInTheDocument();
+    expect(dataRow('unassigned')!).toBeInTheDocument();
   });
 
   it('sorts group rows by their aggregate against ungrouped rows', () => {
     renderGrouped();
 
     // The tenant/v1 family totals 10 types; the lone std/v0/types row has 9.
-    fireEvent.click(screen.getByTestId('namespace-collections-sort-types'));
+    fireEvent.click(sortControl('types'));
     let bodyRows = screen.getAllByRole('row').slice(1);
     expect(bodyRows[0]).toHaveTextContent('std/v0/types');
     expect(bodyRows[1]).toHaveTextContent('tenant/v1');
 
-    fireEvent.click(screen.getByTestId('namespace-collections-sort-types'));
+    fireEvent.click(sortControl('types'));
     bodyRows = screen.getAllByRole('row').slice(1);
     expect(bodyRows[0]).toHaveTextContent('tenant/v1');
     expect(bodyRows[1]).toHaveTextContent('std/v0/types');
