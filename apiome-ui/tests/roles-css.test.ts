@@ -153,11 +153,24 @@ function paint(name: string, appearance: unknown, backdrop: Rgb): Rgb {
   return compositeOver(resolveThemeToken(name, tokens, appearance as never), backdrop);
 }
 
-/** The roles block, from its banner to the end of the stylesheet. */
+/**
+ * The roles block, from its banner to the start of whatever section follows it.
+ *
+ * Bounded rather than run to the end of the file: `globals.css` grows one section per
+ * redesign ticket, and a slice that ended at EOF made every assertion below a claim about
+ * every *later* section too — HIVE-5.4's `.akey-row--expired [data-row-actions] { opacity: 1 }`
+ * is a deliberate un-fade of a row's actions, and it failed the "no opacity" rule this block
+ * states about its own permission cells.
+ */
 const ROLE_SECTION = (() => {
   const start = css.indexOf('ROLES (HIVE-5.3, #5306)');
   if (start < 0) throw new Error('globals.css has no roles section');
-  return css.slice(start);
+  // Every section opens with the same `/* ===…` banner rule; the first one after this
+  // section's own opening line is where the next section begins.
+  const bannerStart = css.lastIndexOf('/* =', start);
+  const next = css.indexOf('/* =', start);
+  const end = next < 0 ? css.length : next;
+  return css.slice(bannerStart < 0 ? start : bannerStart, end);
 })();
 
 /** The same block with its comments removed. */
