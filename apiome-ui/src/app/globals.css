@@ -9455,3 +9455,664 @@ button.auth-divider:disabled {
 .vp-skeleton__row {
   block-size: 2.5rem;
 }
+
+/* ==========================================================================
+   STYLE GUIDE DETAIL  (HIVE-5.7, #5310)
+   --------------------------------------------------------------------------
+   `docs/mockups/govern/style-guide-detail.html`, whose page-local `<style>`
+   block this replaces: the `.rule-row` grid, the `.rule-group__head` strip,
+   the `.save-bar`, the `.editor` column with its status line, and the
+   `.finding` rows.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 blocks above give. Every rule leans on
+   the density and font-scale tokens; the rule row and the two-pane editor are
+   real grids that a utility string spells badly; and the card titles and the
+   quiet lines have to sit *after* the unlayered `h1`–`h4` and `p` base rules
+   near line 2497, which outrank anything in `@layer utilities`.
+
+   The mockup froze six things in pixels that must not be frozen: the 34/132 px
+   rule-row columns, the 340 px search box, the 32rem *minimum* on the editor
+   pane, the 420 px editor height, the save bar's 16 px offset and the finding
+   glyph's 15 px. All six are a `rem`, a spacing token or a `minmax(0, …)`
+   track here, so they follow the font-scale preference.
+
+   The three `@media` queries are `rem` too, but for a different reason worth
+   being exact about: `rem` inside a media query resolves against the *initial*
+   root font size — the reader's own browser setting — not against the
+   `data-font-scale` percentage, which is set on `html` and therefore comes
+   later. So a `rem` query follows the browser preference a `px` query ignores;
+   what follows `data-font-scale` is everything inside the query.
+
+   The editor's tracks matter most of all. `minmax(32rem, 1.2fr)`, as the
+   mockup writes it, is a 640 px floor per pane at the Largest scale — 1280 px
+   of track inside a 1120 px viewport, which is a horizontally scrolling
+   document. `minmax(0, …)` lets the panes shrink instead;
+   `e2e/hive-style-guide-detail.spec.ts` measures exactly that case.
+
+   No hue is named below — every colour is a token, so the surface follows all
+   nine themes. Three measured deviations from the mockup, the first two of
+   them the ones the earlier Epic-5 tickets already made:
+
+   * quiet text is `--fg-muted`, not `--fg-subtle`, which measures about 3.1:1
+     against the canvas at these sizes;
+   * a switched-off rule keeps full-strength ink rather than the mockup's
+     `opacity: .55` on its id and rationale. A row that can be read is worth
+     more than a row that looks off, and the switch beside it already says so;
+     the *rationale* takes `--fg-muted`, which is a designed pair.
+   * the save bar's ink is `--warn-fg` on `--warn-soft` — the designed pair —
+     rather than the mockup's `--warn-fg` over a `--warn`-tinted inset shadow,
+     which composites differently in each theme.
+
+   Three classes are borrowed rather than restated: `.sg-select`, `.sg-quiet`
+   and `.sg-field` from the style-guides block above (the native `select`s, the
+   quiet lines and the label/control stack), plus `.tnt-icon-tile` from the
+   tenants block and `.hive-control` from the primitives block.
+   ========================================================================== */
+
+/* ---- The panel a tab draws into ----------------------------------------
+   One column, the page's own gap. The save bar is the last child, so it
+   sticks to the bottom of this box rather than to the viewport — which is
+   what makes it disappear with the tab it belongs to. */
+.gd-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* ---- The rule catalog ---------------------------------------------------- */
+.gd-catalog {
+  overflow: hidden;
+}
+
+/* The category filter sits between a 16rem search box and a chip; it takes
+   its own width rather than `.sg-select`'s 100 %, which would eat the row. */
+.gd-category-select {
+  inline-size: 12rem;
+  block-size: var(--control-h-sm);
+  font-size: var(--fs-xs);
+}
+
+.gd-chip-glyph {
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+  flex-shrink: 0;
+}
+
+/* A category's heading strip: the name, and how much of the category is on. */
+.gd-rule-group__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--card-pad);
+  background: var(--bg-subtle);
+  border-block-end: 1px solid var(--border);
+}
+
+.gd-rule-group + .gd-rule-group .gd-rule-group__head {
+  border-block-start: 1px solid var(--border);
+}
+
+/* Both take full-strength ink rather than `--fg-muted`, which is the one
+   measured deviation from the mockup this block makes on its own account:
+   `--fg-muted` on `--bg-subtle` is 4.35:1 in Solarized — under AA, and the
+   same pair HIVE-5.4 measured and 5.6 avoided. The hierarchy is carried by
+   size, caps and weight instead of by a fade. */
+.gd-rule-group__name {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.gd-rule-group__count {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* The row: switch, the rule and its badges, the severity select. The middle
+   track is `minmax(0, 1fr)` so a long rationale elides instead of widening
+   the card. */
+.gd-rule-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 9.5rem;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--card-pad);
+}
+
+.gd-rule-row + .gd-rule-row {
+  border-block-start: 1px solid var(--border);
+}
+
+.gd-rule-row:hover {
+  background: color-mix(in srgb, var(--fg) 3%, transparent);
+}
+
+.gd-rule-row__text {
+  min-width: 0;
+}
+
+.gd-rule-row__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.gd-rule-id {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* A rule the guide has switched off. The mockup fades the whole row to 55 %
+   opacity; this drops the id to the secondary ink instead — a designed pair
+   that clears AA on the card in all nine themes, where a fade clears it in
+   none. The rationale beside it is already `--fg-muted`, so an off row reads
+   as one quiet block without becoming unreadable. */
+.gd-rule-row[data-off] .gd-rule-id {
+  color: var(--fg-muted);
+}
+
+/* The rationale. One line, elided — it is the *reason* for the rule, and the
+   reader who wants all of it opens the docs anchor. */
+.gd-rule-row__why {
+  margin-block-start: var(--space-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.gd-severity-select {
+  block-size: var(--control-h-sm);
+  font-size: var(--fs-xs);
+}
+
+/* Narrow: the severity select drops under the rule it belongs to rather than
+   squeezing the id into two characters. */
+@media (max-width: 44rem) {
+  .gd-rule-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .gd-severity-select {
+    grid-column: 2;
+    inline-size: 9.5rem;
+  }
+}
+
+/* ---- The unsaved bar ----------------------------------------------------
+   Sticky to the bottom of its panel, centred, and only as wide as its
+   contents. `--warn-soft` with `--warn-fg` on it is the designed pair; the
+   hairline is the same hue mixed down, which is the one place `color-mix` is
+   used here. */
+.gd-save-bar {
+  position: sticky;
+  inset-block-end: var(--space-4);
+  z-index: 15;
+  align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  max-inline-size: 100%;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border-radius: var(--r-lg);
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+  box-shadow: var(--shadow-lg), inset 0 0 0 1px color-mix(in srgb, var(--warn) 30%, transparent);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.gd-save-bar__glyph {
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+  flex-shrink: 0;
+}
+
+.gd-save-bar__label {
+  min-width: 0;
+}
+
+/* ---- The custom-rules pane ----------------------------------------------
+   Two panes, both `minmax(0, …)`: the mockup's 32rem minimum on the editor
+   would hold the row open at 1280 px with the rail expanded and scroll the
+   document sideways, which DESIGN.md §5 forbids. */
+.gd-editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: stretch;
+  min-width: 0;
+}
+
+@media (max-width: 68rem) {
+  .gd-editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.gd-editor-card,
+.gd-preview-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.gd-editor-head {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.gd-editor-head__text {
+  min-width: 0;
+}
+
+.gd-editor-head__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* A card's own title, as an `h3` — stated here to beat the unlayered `h3`
+   base rule, which outranks every utility class. */
+.gd-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  color: var(--fg);
+}
+
+.gd-card-title__glyph {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+/* The server's complaint runs the full width of the card, flush with the
+   editor under it. */
+.gd-editor-banner {
+  border-radius: 0;
+}
+
+/* The editor itself. A `rem` minimum, so the pane grows with the font scale
+   instead of clipping four lines of 20 px type into a 420 px box. */
+.gd-editor {
+  flex: 1 1 auto;
+  min-block-size: 26rem;
+  min-width: 0;
+  background: var(--bg-inset);
+}
+
+/* The status line under the code — a mono strip, the way an editor's is. */
+.gd-editor-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-block-start: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.gd-editor-status__spacer {
+  flex: 1 1 auto;
+}
+
+/* ---- The dry-run pane ---------------------------------------------------- */
+.gd-preview-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.gd-preview-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 30rem) {
+  .gd-preview-picker {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.gd-preview-run {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The pane's own copy — before the first run, and after a clean one. */
+.gd-preview-hint {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.gd-findings {
+  min-width: 0;
+}
+
+.gd-findings__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+}
+
+.gd-findings__title {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.gd-findings__counts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.gd-findings__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gd-finding {
+  min-width: 0;
+}
+
+/* A finding is a button because clicking it moves the editor's cursor to the
+   rule that produced it — an action, and one a keyboard must be able to take. */
+.gd-finding__button {
+  display: flex;
+  inline-size: 100%;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  text-align: start;
+  min-width: 0;
+}
+
+/* The same 3 % wash `.gd-rule-row:hover` uses, rather than `--bg-subtle`:
+   the row's own quiet text is `--fg-muted`, and that pair drops under AA in
+   Solarized. A wash of the palette's own ink barely moves the backdrop. */
+.gd-finding__button:hover {
+  background: color-mix(in srgb, var(--fg) 3%, transparent);
+}
+
+.gd-finding__glyph {
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+  flex-shrink: 0;
+  margin-block-start: 0.125em;
+  color: var(--fg-muted);
+}
+
+.gd-finding__button[data-severity="error"] .gd-finding__glyph {
+  color: var(--danger);
+}
+
+.gd-finding__button[data-severity="warning"] .gd-finding__glyph {
+  color: var(--warn);
+}
+
+.gd-finding__button[data-severity="info"] .gd-finding__glyph {
+  color: var(--accent);
+}
+
+.gd-finding__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.gd-finding__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.gd-finding__rule {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* The path into the *linted document*. Elides: it is a corroborating detail,
+   and a JSON pointer six segments deep would otherwise set the pane's width. */
+.gd-finding__path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.gd-finding__message {
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* The rules that could not run at all, inside the banner that says so. */
+.gd-aborted {
+  margin-block-start: var(--space-1);
+  padding-inline-start: var(--space-4);
+  list-style: disc;
+  font-size: var(--fs-xs);
+}
+
+/* ---- The policy tab ------------------------------------------------------ */
+.gd-policy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+  max-inline-size: 58rem;
+}
+
+.gd-card-header {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.gd-card-header__lead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.gd-card-header__text {
+  min-width: 0;
+}
+
+.gd-policy-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.gd-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 46rem) {
+  .gd-policy-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A `legend` takes the label's type, so a fieldset and a field read the same. */
+.gd-legend {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.gd-coverage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  min-block-size: var(--control-h);
+}
+
+.gd-coverage__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.gd-coverage__label {
+  text-transform: capitalize;
+}
+
+.gd-policy-select {
+  max-inline-size: 22rem;
+}
+
+.gd-switch-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+
+.gd-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  min-width: 0;
+}
+
+.gd-switch-row + .gd-switch-row {
+  border-block-start: 1px solid var(--border);
+}
+
+.gd-switch-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.gd-switch-row__title {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.gd-switch-row__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Policy versions ----------------------------------------------------- */
+.gd-version-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.gd-version-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--card-pad);
+  min-width: 0;
+}
+
+.gd-version-row + .gd-version-row {
+  border-block-start: 1px solid var(--border);
+}
+
+.gd-fingerprint {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.gd-version-row__when {
+  margin-inline-start: auto;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.gd-version-row__actor {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Waiting ------------------------------------------------------------
+   Shaped like the thing being waited for, rather than a spinner in the middle
+   of an empty page (DESIGN.md §8). */
+.gd-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--card-pad);
+}
+
+.gd-skeleton__row {
+  block-size: var(--row-h);
+  inline-size: 100%;
+}
+
+.gd-skeleton__editor {
+  block-size: 26rem;
+  inline-size: 100%;
+  border-radius: var(--r-lg);
+}
+
+.gd-skeleton__block {
+  block-size: 14rem;
+  inline-size: 100%;
+  border-radius: var(--r-lg);
+}

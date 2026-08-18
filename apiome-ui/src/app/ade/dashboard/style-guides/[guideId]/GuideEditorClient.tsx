@@ -1,488 +1,305 @@
 'use client';
 
-/**
- * Guide editor — rule catalog tab (GOV-2.2, #4434) and custom rules tab (GOV-2.3, #4435)
- *
- * Lets tenant admins tailor a style guide's built-in rules — the most common governance
- * action after GOV-2.1 gave them the guides themselves:
- *  - Every GOV-1.2 registry rule, grouped by category, with its rationale and default
- *    severity (one `GET /api/style-guides/{id}/rules` payload — registry merged with the
- *    guide's `style_guide_rules` state server-side).
- *  - Per-rule enable switch and severity select (error / warning / info).
- *  - Search + category filter and a live enabled-rule count.
- *  - Dirty-state save bar: edits stay local until Save PUTs the full rule set back;
- *    Discard reverts; leaving the page with unsaved changes warns first.
- *
- * The built-in "Apiome Recommended" guide and non-admin sessions render read-only —
- * the REST layer enforces both; the UI disables the controls and explains why.
- */
-
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  AlertCircle,
-  ArrowLeft,
-  BadgeCheck,
-  BookOpenCheck,
-  Lock,
-  RefreshCw,
-  Search,
-} from 'lucide-react';
-import { Switch } from '@/app/components/ui/Switch';
-import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
-import { cn } from '@lib/utils';
+import { ArrowLeft, BookX, FileCode2, ListChecks, ShieldCheck } from 'lucide-react';
+
+import { Alert } from '@/app/components/ui/Alert';
+import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import { EmptyState } from '@/app/components/ui/EmptyState';
+import { TAB_COUNT_CLASS, TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
+import PageHeader from '@/app/components/shell/PageHeader';
+import { Page, PageBody } from '@/app/components/shell/pageChrome';
 import { useDialog } from '@/app/components/providers/DialogProvider';
 import { useUnsavedChangesPrompt } from '@/app/hooks/useUnsavedChangesPrompt';
+import { cn } from '@lib/utils';
+
 import {
-  fetchMyPermissions,
-  styleGuidesApi,
-  type GuideRule,
-  type GuideRulesView,
-  type RuleSeverity,
-} from '../api';
-import CustomRulesTab from './CustomRulesTab';
-import PolicyTab from './PolicyTab';
+  CustomRulesTab,
+  PolicyTab,
+  RuleCatalogTab,
+  discardWarningSentence,
+  guideReadOnlyReason,
+  useCustomRules,
+  useGuidePolicy,
+  useRuleCatalog,
+} from '@/app/components/ade/styleGuides/guideDetail';
 
-type GuideEditorTab = 'catalog' | 'custom' | 'policy';
+import { fetchMyPermissions } from '../api';
 
-/** The editable half of a rule row — what the save bar diffs and the PUT persists. */
-interface RuleState {
-  enabled: boolean;
-  severity: RuleSeverity;
-}
+/**
+ * Style guide detail — `/ade/dashboard/style-guides/[guideId]` (HIVE-5.7, #5310).
+ *
+ * Authority: `docs/mockups/govern/style-guide-detail.html`, whose **Notes → Keeps (1:1)**
+ * list is this ticket's acceptance criteria; DESIGN.md §5.3 (page header), §7 (dialogs).
+ *
+ * ### What this page owns
+ *
+ * The guide's identity, which tab is showing, who the viewer is — and, crucially, **all
+ * three drafts**. How each tab is drawn is its own component; what each tab loads and edits
+ * is a hook in `guideDetail/guideEditorState.ts` called from here.
+ *
+ * That last point is the ticket's fourth acceptance criterion and the fix for its problem
+ * statement. In the screen this replaces each tab was a component that fetched on mount and
+ * held its own draft, so switching tabs unmounted it and discarded the draft silently — the
+ * "dirty state is easy to lose". Hoisting the state means a draft outlives its panel, while
+ * the `active` flag on two of the hooks means an unopened tab still fetches nothing.
+ *
+ * ### Leaving with unsaved work
+ *
+ * Two guards, because there are two ways to leave. `useUnsavedChangesPrompt` covers what
+ * leaves the document — a reload, a close, an external link — with the browser's own
+ * prompt, which is the only thing that can stop those. The back arrow is an in-app route
+ * change, which `beforeunload` never sees, so it asks first through the shared confirm
+ * (HIVE-2.7) with the mockup's own copy. Both count all three tabs: a reader with edits on
+ * the catalog and in the YAML is about to lose both, and a warning that mentioned one of
+ * them would be worse than none.
+ *
+ * ### One permissions read for the page
+ *
+ * `is_admin` gates the catalog, the custom rules and the policy alike, and the screen this
+ * replaces fetched it twice — once in the page and once in the custom-rules tab. It is read
+ * here, once, and handed down.
+ */
 
-/** Severity options offered by the per-rule select. */
-const SEVERITIES: { value: RuleSeverity; label: string }[] = [
-  { value: 'error', label: 'Error' },
-  { value: 'warning', label: 'Warning' },
-  { value: 'info', label: 'Info' },
+/** Where the back arrow and the not-found state go. */
+const LIST_ROUTE = '/ade/dashboard/style-guides';
+
+/** The page's three sections, one per tab. */
+type GuideTab = 'catalog' | 'custom' | 'policy';
+
+/** The tabs, in the order the mockup shows them. */
+const SECTIONS: ReadonlyArray<{
+  id: GuideTab;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: 'catalog', label: 'Rule catalog', icon: ListChecks },
+  { id: 'custom', label: 'Custom rules', icon: FileCode2 },
+  { id: 'policy', label: 'Policy', icon: ShieldCheck },
 ];
 
-const inputClasses =
-  'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-gray-900 ' +
-  'focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white';
-
-/** Map rule id -> editable state from a rules payload (the dirty-diff baseline shape). */
-function toStateMap(rules: GuideRule[]): Record<string, RuleState> {
-  const map: Record<string, RuleState> = {};
-  for (const rule of rules) {
-    map[rule.ruleId] = { enabled: rule.enabled, severity: rule.severity };
-  }
-  return map;
-}
-
-/** Severity badge colors, keyed by severity (shared by the default-severity chip). */
-const severityBadgeClasses: Record<RuleSeverity, string> = {
-  error: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
-  warning: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-  info: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
-};
-
+/**
+ * The style-guide detail page.
+ *
+ * @param props.guideId The guide this route is for.
+ * @returns The header with its three tabs, the panel that is showing, and its overlays.
+ */
 export default function GuideEditorClient({ guideId }: { guideId: string }) {
   const router = useRouter();
   const { confirm } = useDialog();
 
-  const [view, setView] = useState<GuideRulesView | null>(null);
-  const [draft, setDraft] = useState<Record<string, RuleState>>({});
-  const [baseline, setBaseline] = useState<Record<string, RuleState>>({});
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('all');
-  const [activeTab, setActiveTab] = useState<GuideEditorTab>('catalog');
-
-  const readOnly = !isAdmin || view?.source === 'builtin';
-
-  const loadData = useCallback(async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const [rulesView, perms] = await Promise.all([
-        styleGuidesApi<GuideRulesView>(`${guideId}/rules`),
-        fetchMyPermissions(),
-      ]);
-      if (rulesView) {
-        setView(rulesView);
-        const state = toStateMap(rulesView.rules);
-        setBaseline(state);
-        setDraft(state);
-      }
-      setIsAdmin(!!perms?.is_admin);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load the style guide');
-    } finally {
-      setLoading(false);
-    }
-  }, [guideId]);
-
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
-
-  // The rule ids whose draft state differs from the saved baseline.
-  const dirtyIds = useMemo(
-    () =>
-      Object.keys(draft).filter(
-        (id) =>
-          draft[id].enabled !== baseline[id]?.enabled ||
-          draft[id].severity !== baseline[id]?.severity,
-      ),
-    [draft, baseline],
+  const [tab, setTab] = React.useState<GuideTab>('catalog');
+  /**
+   * Which panels have been opened at least once.
+   *
+   * A panel is mounted from its first visit onwards and never unmounted again, which is
+   * what keeps a Monaco instance, its scroll position and its markers alive across a tab
+   * switch. Tracked here rather than inferred from "has this tab's data arrived" so a tab
+   * whose *read failed* also keeps whatever the reader typed into it.
+   */
+  const [opened, setOpened] = React.useState<ReadonlySet<GuideTab>>(
+    () => new Set<GuideTab>(['catalog'])
   );
-  const dirty = dirtyIds.length > 0;
+  const [isAdmin, setIsAdmin] = React.useState(false);
 
-  // Warn on tab close / hard navigation while changes are unsaved (in-app back navigation
-  // goes through handleBack below, which asks via the dialog provider instead).
+  const openTab = React.useCallback((next: GuideTab) => {
+    setTab(next);
+    setOpened((prev) => (prev.has(next) ? prev : new Set([...prev, next])));
+  }, []);
+
+  const catalog = useRuleCatalog(guideId);
+  const custom = useCustomRules(guideId, tab === 'custom');
+  const policy = useGuidePolicy(guideId, tab === 'policy');
+
+  React.useEffect(() => {
+    let cancelled = false;
+    // A refused permissions read means "not an administrator", which is the safe reading:
+    // every control it gates would have its write refused by the REST layer anyway.
+    void fetchMyPermissions().then((permissions) => {
+      if (!cancelled) setIsAdmin(Boolean(permissions?.is_admin));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const readOnlyReason = guideReadOnlyReason(catalog.view?.source, isAdmin);
+  const readOnly = readOnlyReason !== null;
+
+  const unsavedSentence = discardWarningSentence(
+    catalog.modifiedIds.length,
+    custom.dirty || policy.dirty
+  );
+  const dirty = unsavedSentence !== null;
+
   useUnsavedChangesPrompt(dirty);
 
-  const enabledCount = useMemo(
-    () => Object.values(draft).filter((s) => s.enabled).length,
-    [draft],
-  );
-
-  const categories = useMemo(
-    () => Array.from(new Set((view?.rules ?? []).map((r) => r.category))).sort(),
-    [view],
-  );
-
-  // Search matches rule id, rationale, or category; the category filter narrows on top.
-  const visibleRules = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return (view?.rules ?? []).filter((rule) => {
-      if (category !== 'all' && rule.category !== category) return false;
-      if (!term) return true;
-      return (
-        rule.ruleId.toLowerCase().includes(term) ||
-        rule.rationale.toLowerCase().includes(term) ||
-        rule.category.toLowerCase().includes(term)
-      );
-    });
-  }, [view, search, category]);
-
-  /** Visible rules grouped by category, categories sorted, rules already sorted by id. */
-  const groupedRules = useMemo(() => {
-    const groups = new Map<string, GuideRule[]>();
-    for (const rule of visibleRules) {
-      const list = groups.get(rule.category) ?? [];
-      list.push(rule);
-      groups.set(rule.category, list);
-    }
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [visibleRules]);
-
-  const setRuleState = (ruleId: string, patch: Partial<RuleState>) => {
-    setDraft((prev) => ({ ...prev, [ruleId]: { ...prev[ruleId], ...patch } }));
-  };
-
-  const handleDiscard = () => setDraft(baseline);
-
-  const handleSave = async () => {
-    if (!view) return;
-    setSaving(true);
-    setError('');
-    try {
-      const payload = {
-        rules: view.rules.map((rule) => ({
-          ruleId: rule.ruleId,
-          enabled: draft[rule.ruleId].enabled,
-          severity: draft[rule.ruleId].severity,
-        })),
-      };
-      const saved = await styleGuidesApi<GuideRulesView>(`${guideId}/rules`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (saved) {
-        setView(saved);
-        const state = toStateMap(saved.rules);
-        setBaseline(state);
-        setDraft(state);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save rule changes');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   /** In-app back navigation: confirm first when changes would be lost. */
-  const handleBack = async () => {
-    if (dirty) {
+  const handleBack = React.useCallback(async () => {
+    if (unsavedSentence) {
       const leave = await confirm({
         title: 'Discard unsaved changes?',
-        message:
-          `You have unsaved changes to ${dirtyIds.length} rule${dirtyIds.length === 1 ? '' : 's'}. ` +
-          'Leaving this page discards them.',
+        message: unsavedSentence,
+        variant: 'warning',
         confirmLabel: 'Discard and leave',
+        cancelLabel: 'Keep editing',
       });
       if (!leave) return;
     }
-    router.push('/ade/dashboard/style-guides');
-  };
+    router.push(LIST_ROUTE);
+  }, [confirm, router, unsavedSentence]);
+
+  const notFound = !catalog.loading && !catalog.view;
 
   return (
-    <>
-      <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="px-6 pt-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+    <Page>
+      <PageHeader
+        breadcrumb={[
+          { label: 'Home', href: '/ade/dashboard' },
+          { label: 'Govern' },
+          { label: 'Style guides', href: LIST_ROUTE },
+          { label: catalog.view?.guideName ?? 'Style guide' },
+        ]}
+        leading={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Back to style guides"
+            data-testid="guide-back"
+            onClick={() => void handleBack()}
+          >
+            <ArrowLeft aria-hidden />
+          </Button>
+        }
+        title={catalog.view?.guideName ?? 'Style guide'}
+        truncateTitle
+        badge={
+          catalog.view?.source === 'builtin' ? <Badge variant="neutral">Built-in</Badge> : undefined
+        }
+        description="Tailor which built-in rules apply and how severely they score."
+        actions={
+          catalog.view ? (
+            <Badge variant="outline" size="lg" data-testid="guide-enabled-count">
+              {catalog.enabled} of {catalog.view.count} rules enabled
+            </Badge>
+          ) : undefined
+        }
+        tabs={
+          /* A hand-built strip on the shared classes rather than `ui/Tabs`, for the reason
+             the guides list records: `Tabs.Root` is a single element that would have to wrap
+             the header *and* the body, and `.page` is a flex column whose two children are
+             exactly those two. The roles, the selected state and the panel association are
+             all stated below. */
+          <div role="tablist" aria-label="Style guide sections" className={TAB_LIST_CLASS}>
+            {SECTIONS.map((section) => (
               <button
+                key={section.id}
                 type="button"
-                onClick={handleBack}
-                aria-label="Back to style guides"
-                className="rounded-lg border border-slate-200 p-2 text-gray-500 hover:bg-slate-100 dark:border-slate-700 dark:text-gray-400 dark:hover:bg-slate-800"
+                role="tab"
+                id={`guide-tab-${section.id}`}
+                aria-selected={tab === section.id}
+                aria-controls={`guide-panel-${section.id}`}
+                data-testid={`guide-tab-${section.id}`}
+                className={tabTriggerClass({ active: tab === section.id })}
+                onClick={() => openTab(section.id)}
               >
-                <ArrowLeft className="h-4 w-4" />
+                <section.icon aria-hidden className="sg-tab-glyph" />
+                {section.label}
+                {section.id === 'catalog' && catalog.view && (
+                  <span className={cn(TAB_COUNT_CLASS, 'sg-tab-count')}>
+                    {catalog.view.count}
+                  </span>
+                )}
+                {section.id === 'custom' && custom.view && (
+                  <span className={cn(TAB_COUNT_CLASS, 'sg-tab-count')}>
+                    {custom.view.ruleCount}
+                  </span>
+                )}
               </button>
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600">
-                <BookOpenCheck className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {view?.guideName ?? 'Style guide'}
-                  </h2>
-                  {view?.source === 'builtin' && (
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      Built-in
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Tailor which built-in rules apply and how severely they score
-                </p>
-              </div>
-            </div>
-            {view && (
-              <span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                {enabledCount} of {view.count} rules enabled
-              </span>
-            )}
+            ))}
           </div>
-          {/* Tab strip: rule catalog (GOV-2.2) and custom rules (GOV-2.3). */}
-          <nav role="tablist" aria-label="Guide editor tabs" className={cn(TAB_LIST_CLASS, 'mt-4')}>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'catalog'}
-              onClick={() => setActiveTab('catalog')}
-              className={tabTriggerClass({ active: activeTab === 'catalog' })}
-            >
-              Rule catalog
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'custom'}
-              onClick={() => setActiveTab('custom')}
-              className={tabTriggerClass({ active: activeTab === 'custom' })}
-            >
-              Custom rules
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'policy'}
-              onClick={() => setActiveTab('policy')}
-              className={tabTriggerClass({ active: activeTab === 'policy' })}
-            >
-              Policy
-            </button>
-          </nav>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-6 dark:bg-slate-950">
-        {activeTab === 'custom' ? (
-          <CustomRulesTab guideId={guideId} />
-        ) : activeTab === 'policy' ? (
-          <PolicyTab guideId={guideId} readOnly={readOnly} />
+      <PageBody>
+        {notFound ? (
+          <EmptyState
+            icon={<BookX aria-hidden />}
+            title="Style guide not found."
+            description="It may have been deleted, or the link belongs to another workspace."
+            action={
+              <Button onClick={() => router.push(LIST_ROUTE)} data-testid="guide-not-found-back">
+                <ArrowLeft aria-hidden />
+                Back to style guides
+              </Button>
+            }
+            data-testid="guide-not-found"
+          />
         ) : (
           <>
-        {error && (
-          <div className="mb-6 flex items-start gap-3 rounded-lg border border-rose-300 bg-rose-50 p-4 text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300">
-            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
-            <p className="text-sm">{error}</p>
-          </div>
-        )}
-
-        {view && readOnly && (
-          <div className="mb-6 flex items-start gap-3 rounded-lg border border-slate-300 bg-slate-100 p-4 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-            <Lock className="mt-0.5 h-5 w-5 flex-shrink-0" />
-            <p className="text-sm">
-              {view.source === 'builtin'
-                ? 'The built-in “Apiome Recommended” guide is read-only. Duplicate it from the Style Guides list to customize its rules.'
-                : 'Only tenant administrators can change style guide rules. You can browse the catalog.'}
-            </p>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
-          </div>
-        ) : !view ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
-            <BookOpenCheck className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">Style guide not found.</p>
-            <Link
-              href="/ade/dashboard/style-guides"
-              className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-            >
-              Back to style guides
-            </Link>
-          </div>
-        ) : (
-          <>
-            <div className="mb-4 flex flex-wrap items-center gap-3">
-              <div className="relative min-w-64 flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="search"
-                  aria-label="Search rules"
-                  placeholder="Search rules by id, rationale, or category…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className={`${inputClasses} w-full pl-9`}
-                />
-              </div>
-              <select
-                aria-label="Filter by category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className={inputClasses}
+            {/* A failed *read* leaves the page with nothing to draw and is reported above
+                the tabs; a failed *write* is reported by the tab that attempted it. */}
+            {catalog.error && !catalog.view && (
+              <Alert
+                variant="error"
+                actions={
+                  <Button size="sm" variant="outline" onClick={catalog.reload}>
+                    Retry
+                  </Button>
+                }
+                data-testid="guide-load-error"
               >
-                <option value="all">All categories</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                {catalog.error}
+              </Alert>
+            )}
+
+            <div
+              role="tabpanel"
+              id="guide-panel-catalog"
+              aria-labelledby="guide-tab-catalog"
+              data-testid="guide-panel-catalog"
+              hidden={tab !== 'catalog'}
+            >
+              {catalog.error && catalog.view && (
+                <Alert variant="error" onClose={catalog.clearError} data-testid="guide-save-error">
+                  {catalog.error}
+                </Alert>
+              )}
+              <RuleCatalogTab state={catalog} readOnlyReason={readOnlyReason} />
             </div>
 
-            {groupedRules.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No rules match your search.
-                </p>
+            {/* The two lazy panels are mounted only once their tab has been opened, and stay
+                mounted after that — which is what keeps a Monaco instance and its draft
+                alive across a tab switch. `hidden` is what takes them out of the
+                accessibility tree while another tab is showing. */}
+            {opened.has('custom') ? (
+              <div
+                role="tabpanel"
+                id="guide-panel-custom"
+                aria-labelledby="guide-tab-custom"
+                data-testid="guide-panel-custom"
+                hidden={tab !== 'custom'}
+              >
+                <CustomRulesTab state={custom} readOnlyReason={readOnlyReason} />
               </div>
-            ) : (
-              <div className="space-y-6 pb-24">
-                {groupedRules.map(([cat, rules]) => (
-                  <section
-                    key={cat}
-                    aria-label={`${cat} rules`}
-                    className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-                  >
-                    <h3 className="border-b border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:border-slate-800 dark:bg-slate-950/50 dark:text-gray-400">
-                      {cat}
-                      <span className="ml-2 font-normal normal-case tracking-normal text-gray-400">
-                        {rules.filter((r) => draft[r.ruleId]?.enabled).length} of {rules.length} on
-                      </span>
-                    </h3>
-                    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {rules.map((rule) => {
-                        const state = draft[rule.ruleId];
-                        const changed =
-                          state.enabled !== baseline[rule.ruleId]?.enabled ||
-                          state.severity !== baseline[rule.ruleId]?.severity;
-                        return (
-                          <li key={rule.ruleId} className="flex items-center gap-4 px-4 py-3">
-                            <Switch
-                              aria-label={`Enable ${rule.ruleId}`}
-                              checked={state.enabled}
-                              disabled={readOnly || saving}
-                              onCheckedChange={(checked) =>
-                                setRuleState(rule.ruleId, { enabled: checked })
-                              }
-                            />
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <code className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {rule.ruleId}
-                                </code>
-                                <span
-                                  className={`rounded-full px-2 py-0.5 text-2xs font-medium ${severityBadgeClasses[rule.defaultSeverity]}`}
-                                >
-                                  default: {rule.defaultSeverity}
-                                </span>
-                                {changed && (
-                                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-2xs font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                                    modified
-                                  </span>
-                                )}
-                              </div>
-                              <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
-                                {rule.rationale}
-                              </p>
-                            </div>
-                            <select
-                              aria-label={`Severity for ${rule.ruleId}`}
-                              value={state.severity}
-                              disabled={readOnly || saving || !state.enabled}
-                              onChange={(e) =>
-                                setRuleState(rule.ruleId, {
-                                  severity: e.target.value as RuleSeverity,
-                                })
-                              }
-                              className={`${inputClasses} shrink-0 disabled:opacity-50`}
-                            >
-                              {SEVERITIES.map((s) => (
-                                <option key={s.value} value={s.value}>
-                                  {s.label}
-                                </option>
-                              ))}
-                            </select>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </section>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-          </>
-        )}
-      </main>
+            ) : null}
 
-      {/* Dirty-state save bar: fixed above the content while unsaved catalog changes exist. */}
-      {activeTab === 'catalog' && dirty && (
-        <div
-          role="status"
-          className="sticky bottom-0 flex items-center justify-between gap-4 border-t border-amber-300 bg-amber-50 px-6 py-3 dark:border-amber-700 dark:bg-amber-900/30"
-        >
-          <span className="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-200">
-            <BadgeCheck className="h-4 w-4" />
-            {dirtyIds.length} unsaved rule change{dirtyIds.length === 1 ? '' : 's'}
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleDiscard}
-              disabled={saving}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-gray-700 hover:bg-white disabled:opacity-50 dark:border-slate-600 dark:text-gray-200 dark:hover:bg-slate-800"
-            >
-              Discard
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {saving ? 'Saving…' : 'Save changes'}
-            </button>
-          </div>
-        </div>
-      )}
-    </>
+            {opened.has('policy') ? (
+              <div
+                role="tabpanel"
+                id="guide-panel-policy"
+                aria-labelledby="guide-tab-policy"
+                data-testid="guide-panel-policy"
+                hidden={tab !== 'policy'}
+              >
+                <PolicyTab state={policy} readOnly={readOnly} />
+              </div>
+            ) : null}
+          </>
+        )}
+      </PageBody>
+    </Page>
   );
 }
