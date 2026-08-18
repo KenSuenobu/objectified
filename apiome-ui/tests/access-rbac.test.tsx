@@ -327,12 +327,15 @@ describe('MembersClient — license/seat alignment (OLO-6.3)', () => {
 });
 
 describe('AuditClient (#3611)', () => {
-  it('renders the filter tabs and an event row', async () => {
+  it('renders the filter chips and an event row', async () => {
     renderWithDialogs(<AuditClient />);
 
-    // Filter tabs.
-    for (const tab of ['All events', 'Role changes', 'Permissions', 'Members', 'Admin overrides']) {
-      expect(screen.getByRole('button', { name: tab })).toBeInTheDocument();
+    // The five original filter chips. HIVE-5.5 (#5308) put a count after each label, so the
+    // accessible name is now "<label> <count>" — matched by prefix rather than exactly.
+    for (const chip of ['All events', 'Role changes', 'Permissions', 'Members', 'Admin overrides']) {
+      expect(
+        await screen.findByRole('button', { name: new RegExp(`^${chip}`) })
+      ).toBeInTheDocument();
     }
 
     // An event row resolves after the async fetch.

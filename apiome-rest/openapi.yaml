@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.125.0
+  version: 1.126.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -40957,7 +40957,17 @@ paths:
         (style-guide governance: create / edit / assign, GOV-1.6). An unknown value
         is treated
 
-        as `all`.'
+        as `all`.
+
+
+        `since` is an optional ISO 8601 lower bound on `created_at` — what the UI''s
+        date range
+
+        sends, and what its CSV export sends back so the two agree (HIVE-5.5, #5308).
+
+
+        Each row carries `prev_hash` and `entry_hash`, its position in the tenant''s
+        hash chain.'
       operationId: list_audit_v1_access__tenant_slug__audit_get
       parameters:
       - name: tenant_slug
@@ -40977,6 +40987,18 @@ paths:
           title: Filter
           description: Filter schema.
         description: 'Query parameter: filter.'
+      - name: since
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Auditsince schema.
+          - type: 'null'
+            description: List Auditsince schema.
+          title: Since
+          description: Since schema.
+        description: 'Query parameter: since.'
       - name: limit
         in: query
         required: false
@@ -41038,8 +41060,17 @@ paths:
       tags:
       - access
       summary: Export Audit
-      description: Export the tenant's access-audit ledger as CSV (SOC 2 / ISO 27001
+      description: 'Export the tenant''s access-audit ledger as CSV (SOC 2 / ISO 27001
         access-review evidence).
+
+
+        Takes the same `filter` and `since` narrowing as the list endpoint, so the
+        CSV holds the
+
+        rows the reader was looking at rather than a second, wider answer. Omitting
+        both exports
+
+        the whole ledger, which is what every caller before HIVE-5.5 (#5308) got.'
       operationId: export_audit_v1_access__tenant_slug__audit_export_get
       parameters:
       - name: tenant_slug
@@ -41050,6 +41081,27 @@ paths:
           title: Tenant Slug
           description: Tenant Slug schema.
         description: URL-safe tenant slug that scopes the request.
+      - name: filter
+        in: query
+        required: false
+        schema:
+          type: string
+          default: all
+          title: Filter
+          description: Filter schema.
+        description: 'Query parameter: filter.'
+      - name: since
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Export Auditsince schema.
+          - type: 'null'
+            description: Export Auditsince schema.
+          title: Since
+          description: Since schema.
+        description: 'Query parameter: since.'
       - name: authorization
         in: header
         required: false
@@ -56905,7 +56957,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: d1eb82f9-a1dc-47af-a7cc-74c21db8a2bd
+          example: d37557be-0f3b-41ee-b158-49e5f678f7cd
         method:
           type: string
           title: Method
@@ -58897,7 +58949,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-17T23:19:57Z'
+          example: '2026-08-18T02:25:16Z'
         envelope:
           additionalProperties: true
           type: object
@@ -86175,7 +86227,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-17T23:19:57Z'
+          example: '2026-08-18T02:25:16Z'
       additionalProperties: false
       type: object
       required:
@@ -97589,13 +97641,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-17T23:19:57Z'
+          example: '2026-08-18T02:25:16Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-17T23:19:57Z'
+          example: '2026-08-18T02:25:16Z'
         outcome:
           anyOf:
           - type: string

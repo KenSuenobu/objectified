@@ -8307,3 +8307,425 @@ button.auth-divider:disabled {
   box-shadow: var(--shadow-sm);
   padding: var(--space-6);
 }
+
+/* ==========================================================================
+   ACCESS AUDIT  (HIVE-5.5, #5308)
+   --------------------------------------------------------------------------
+   `docs/mockups/workspace/audit.html`, whose page-local `<style>` block this
+   replaces: the event badges coloured by action prefix, the hash lines and the
+   two-column chain.
+
+   What is *not* here, and why
+   ---------------------------
+   The mockup's `.ev--role` … `.ev--other` rules are gone rather than ported.
+   Every one of them was a hue named twice — `background: var(--orange-soft);
+   color: var(--orange-fg)` — which is precisely what `Badge`'s tone variants
+   already are. The families map to tones in `auditModel.AUDIT_FAMILY_TONE`, one
+   line of data each, so an event family is the same colour here as it is on
+   every other surface and follows all nine themes without a rule in this file.
+
+   Why the rest lives in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the tenants, members, roles and API-keys blocks above
+   give. Every rule leans on the density and font-scale tokens; the chain, the
+   before → after pair and the key/value list are real grids that a utility
+   string spells badly; and the quiet lines have to sit *after* the unlayered
+   `p` base rule near line 2511, which outranks anything in `@layer utilities`.
+
+   The mockup froze five things in pixels that must not be frozen: the 190 px
+   When column, the 240 px search field, the 150 px range select, the chain's
+   16 px gutter and the drawer's 6/10 px gaps. All five are `rem` or a spacing
+   token here, so they follow all six font scales, and the hash strings wrap
+   inside their own box rather than scrolling the document sideways.
+
+   No hue is named below — every colour is a token. Two measured deviations from
+   the mockup, both the ones HIVE-4.8, 5.1, 5.2 and 5.4 already made:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+     about 3.1:1 against the canvas at these sizes;
+   * the hash strings keep ordinary ink on a recessed ground rather than being
+     faded, because dimming text is the one way to mark a region that can fail a
+     contrast check — and these are the characters an auditor compares by eye.
+
+   One class is borrowed rather than restated: `.tnt-icon-tile` from the tenants
+   block above — the tinted square at the head of the drawer's Target card,
+   keyed by `data-tone` from the shared status vocabulary.
+   ========================================================================== */
+
+/* ---- The table ----------------------------------------------------------
+   The When column: one line, mono, and lined up digit-for-digit so a column of
+   timestamps reads as a column rather than as ragged text. */
+.aud-when {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The Actor cell: the avatar, then the label it belongs to. `min-width: 0` on
+   the row is what lets a long email elide instead of widening the column. */
+.aud-actor {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  /* `max-width`, not `max-inline-size`: the build's CSS transform drops the
+     logical spelling from a rule that also carries `min-width` (measured in
+     HIVE-5.2, restated in 5.4). The two are the same thing in every writing
+     mode this app ships. */
+  max-width: 16rem;
+}
+
+.aud-actor__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+/* The Target cell: the subject, over the first two facts its `detail` carried. */
+.aud-target {
+  min-width: 0;
+  max-width: 26rem;
+}
+
+.aud-target__main {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.aud-target__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The glyph on a category chip. Sized from the icon token so it grows with the
+   font scale rather than staying a 12px mark beside 18px text. */
+.aud-chip-glyph {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+/* The date range. A native `select` for the reason `.mbr-role-select` gives:
+   a portalled listbox is a lot of machinery for a control that picks from five
+   names. It borrows `.hive-control` for its hairline and focus ring, so it is
+   the same control as every other field in the app.
+
+   `rem`, not the mockup's 150px, and `max-inline-size: 100%` so it shrinks in a
+   narrow toolbar rather than pushing the chips off the row. */
+.aud-range {
+  inline-size: 10.5rem;
+  max-inline-size: 100%;
+  block-size: var(--control-h-sm);
+  padding-inline: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  color: var(--fg);
+  font-size: var(--fs-xs);
+}
+
+/* The foot's sentence. It carries the range label, the ordering and — when the
+   read was capped — the sentence saying so, which is why it may wrap. */
+.aud-foot-count {
+  min-width: 0;
+}
+
+/* ---- The compliance footnote --------------------------------------------
+   The lock line under the table. A `p`, so its colour has to be stated here to
+   beat the unlayered `p { color: var(--text-muted) }` base rule. */
+.aud-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.aud-note > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  margin-block-start: 0.125em;
+}
+
+/* ---- The drawer ---------------------------------------------------------- */
+/* A section heading inside the sheet. Stated once so six sections cannot drift
+   into six sizes — the same reason `.mbr-caps` and `.tnt-caps` exist above. */
+.aud-caps {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* The header's title row: the family badge, then the entry's id. Wraps rather
+   than eliding, because an id the reader cannot read in full is an id they
+   cannot search a server log for. */
+.aud-drawer-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.aud-drawer-id {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+  word-break: break-all;
+}
+
+.aud-drawer-when {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The plain-English sentence. A tinted rail rather than a filled callout: it
+   restates the row the reader just clicked, so it should read as a caption on
+   the sheet rather than compete with the sections under it. */
+.aud-callout {
+  border-inline-start: 2px solid var(--accent);
+  padding-inline-start: var(--space-3);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* Actor and Target, drawn as the same card so the two read as a pair. */
+.aud-party {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.aud-party__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.aud-party__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.aud-party__meta {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  word-break: break-word;
+}
+
+/* The before → after pair a matrix edit or a role change records. Wraps, so a
+   long list of permission keys stacks instead of widening the sheet. */
+.aud-change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.aud-change__before,
+.aud-change__after {
+  padding: 0.0625rem var(--space-2);
+  border-radius: var(--r-sm);
+  word-break: break-word;
+}
+
+.aud-change__before {
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+}
+
+.aud-change__after {
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+}
+
+.aud-change__arrow {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+/* The recorded `detail`, as a two-column description list. `auto` for the term
+   so the keys stay in one column whatever the longest of them is. */
+.aud-kv {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  align-items: start;
+  font-size: var(--fs-sm);
+}
+
+.aud-kv dt {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  word-break: break-all;
+}
+
+.aud-kv dd {
+  min-width: 0;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+/* Below this width the key and its value stack, rather than the value being
+   squeezed into a column narrower than a hash. */
+@media (max-width: 30rem) {
+  .aud-kv {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .aud-kv dd {
+    margin-block-end: var(--space-2);
+  }
+}
+
+/* A line that says what was *not* recorded. A `p`, so its colour is stated
+   here to beat the unlayered `p` base rule. */
+.aud-quiet {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* ---- The hash chain ------------------------------------------------------
+   Two rows, each a label over the hash it names. The hashes sit on the recessed
+   ground rather than being faded: these are the characters an auditor compares
+   against a server-side digest, so they keep ordinary ink. */
+.aud-chain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.aud-chain__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+}
+
+.aud-chain__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.aud-hash {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg);
+  /* The whole 64-character digest, wrapped — never clipped and never scrolled
+     sideways. A hash the reader can only see half of is one they cannot check. */
+  word-break: break-all;
+}
+
+/* What was established about the link, in the tone of the answer.
+
+   A toned verdict takes its own `-soft` ground rather than tinting bare text on
+   the sheet: `--ok-fg` and `--danger-fg` are chosen to clear AA *on their own
+   soft fill*, and as loose text on `--bg-surface` they measure 3.4:1 (ok) and
+   2.9:1 (danger) in Nord — which is the serious axe `color-contrast` finding
+   `hive-audit.spec.ts` caught, and the same trap HIVE-5.4 measured on the
+   expired-key date. The untoned verdict keeps `--fg-muted`, which is AA on the
+   surface, and carries the same padding so the three read as one control.
+
+   A `p`, so every colour here has to be stated rather than inherited — the bare
+   `p` rule near line 2511 is unlayered. */
+.aud-chain__note {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  background: transparent;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.aud-chain__note > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}
+
+.aud-chain__note[data-tone="ok"] {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.aud-chain__note[data-tone="danger"] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+/* ---- The JSON block ------------------------------------------------------ */
+.aud-json-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+}
+
+/* The payload verbatim. It scrolls *inside its own box* in both directions, so
+   a deep `detail` can never take the document sideways with it (DESIGN.md §5),
+   and it is capped in `rem` rather than in lines so the cap follows the font
+   scale. Nothing here truncates the text — the box moves, the payload does not
+   shrink, which is the ticket's "without truncation". */
+.aud-json {
+  max-block-size: 24rem;
+  overflow: auto;
+  padding: var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  color: var(--fg);
+  font-size: var(--fs-2xs);
+  line-height: 1.55;
+  tab-size: 2;
+  white-space: pre;
+}
+
+/* ---- The drawer's footer ------------------------------------------------- */
+.aud-readonly {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-end: auto;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.aud-readonly > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}

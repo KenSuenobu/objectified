@@ -20,6 +20,7 @@ recorded in ``apiome.access_audit``.
 import csv
 import io
 import re
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -545,10 +546,41 @@ _AUDIT_FILTERS = {
 }
 
 
+def _parse_audit_since(since: Optional[str]) -> Optional[datetime]:
+    """Parse the `since` query parameter into an aware instant.
+
+    Rejected rather than ignored, unlike an unknown `filter`: a filter the server does not
+    know widens the answer to "everything", which is visibly wrong to the reader, whereas a
+    date it silently dropped returns *more* history than was asked for while the UI still
+    says the range was applied — the one failure mode an evidence export must not have.
+
+    Args:
+        since: An ISO 8601 instant, with `Z` or an offset. `None` means no lower bound.
+
+    Returns:
+        The instant, or `None` when no bound was given. A value with no timezone is read
+        as UTC, which is what the ledger stores.
+
+    Raises:
+        HTTPException: 400 when the value is not ISO 8601.
+    """
+    if since is None or since == "":
+        return None
+    try:
+        parsed = datetime.fromisoformat(since.replace("Z", "+00:00"))
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid 'since' value '{since}'; expected an ISO 8601 instant",
+        ) from None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
 @router.get("/{tenant_slug}/audit")
 async def list_audit(
     tenant_slug: str,
     filter: str = Query("all"),
+    since: Optional[str] = Query(None),
     limit: int = Query(200, ge=1, le=1000),
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> List[Dict[str, Any]]:
@@ -557,20 +589,42 @@ async def list_audit(
     Categories are `all`, `role`, `permission`, `member`, `admin` and `styleGuide`
     (style-guide governance: create / edit / assign, GOV-1.6). An unknown value is treated
     as `all`.
+
+    `since` is an optional ISO 8601 lower bound on `created_at` — what the UI's date range
+    sends, and what its CSV export sends back so the two agree (HIVE-5.5, #5308).
+
+    Each row carries `prev_hash` and `entry_hash`, its position in the tenant's hash chain.
     """
     enforce_permission(db, auth_data, Resource.MEMBERS, Action.VIEW)
     prefix = _AUDIT_FILTERS.get(filter, None)
-    return db.list_access_audit(auth_data["tenant_id"], action_prefix=prefix, limit=limit)
+    return db.list_access_audit(
+        auth_data["tenant_id"],
+        action_prefix=prefix,
+        since=_parse_audit_since(since),
+        limit=limit,
+    )
 
 
 @router.get("/{tenant_slug}/audit/export")
 async def export_audit(
     tenant_slug: str,
+    filter: str = Query("all"),
+    since: Optional[str] = Query(None),
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> StreamingResponse:
-    """Export the tenant's access-audit ledger as CSV (SOC 2 / ISO 27001 access-review evidence)."""
+    """Export the tenant's access-audit ledger as CSV (SOC 2 / ISO 27001 access-review evidence).
+
+    Takes the same `filter` and `since` narrowing as the list endpoint, so the CSV holds the
+    rows the reader was looking at rather than a second, wider answer. Omitting both exports
+    the whole ledger, which is what every caller before HIVE-5.5 (#5308) got.
+    """
     enforce_permission(db, auth_data, Resource.MEMBERS, Action.VIEW)
-    rows = db.list_access_audit(auth_data["tenant_id"], limit=1000)
+    rows = db.list_access_audit(
+        auth_data["tenant_id"],
+        action_prefix=_AUDIT_FILTERS.get(filter, None),
+        since=_parse_audit_since(since),
+        limit=1000,
+    )
 
     buffer = io.StringIO()
     writer = csv.writer(buffer)
