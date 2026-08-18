@@ -231,6 +231,12 @@ export const STATUS_TONE: Readonly<Record<string, StatusTone>> = {
   // ---- Keys / members ------------------------------------------------------
   active: 'ok',
   revoked: 'danger',
+  // Soft delete (HIVE-6.1, #5312). The same tone as `revoked`, and for the same reason: the
+  // record still exists, but nothing may use it. `build/projects.html` paints it `--warn` on
+  // the card and `--danger` in the table; one word cannot be two colours, and danger is the
+  // one the rest of this table already spends on "withdrawn". The card's amber frame is
+  // untouched — that marks the *Needs attention* facet, which disabled projects share.
+  deleted: 'danger',
   disabled: 'outline',
   suspended: 'warn',
   invited: 'accent',

@@ -45,6 +45,17 @@ export interface DestructiveConfirmSpec {
   typeToConfirm?: boolean;
   /** Override the button label when `${action} ${noun}` is not the verb phrase you want. */
   confirmLabel?: string;
+  /**
+   * The phrase the gate asks for, when it is not the object's display name.
+   *
+   * Projects are the case §8 names and the case a display name serves badly: two projects
+   * may share a name, and only one may hold a slug. The Projects screen therefore gates its
+   * permanent delete on the slug it prints on the very card the click came from, so the gate
+   * cannot be passed for the wrong project by a reader looking at the right one.
+   *
+   * Ignored unless {@link DestructiveConfirmSpec.typeToConfirm} is set.
+   */
+  confirmPhrase?: string;
 }
 
 /** The options a destructive confirm passes to `useDialog().confirm`. */
@@ -72,8 +83,12 @@ export type DestructiveConfirmOptions = Pick<
  * // → button:  Delete role
  */
 export function destructiveConfirm(spec: DestructiveConfirmSpec): DestructiveConfirmOptions {
-  const { action, noun, name, consequence, typeToConfirm, confirmLabel } = spec;
+  const { action, noun, name, consequence, typeToConfirm, confirmLabel, confirmPhrase } = spec;
   const subject = noun ? `${noun} "${name}"` : `"${name}"`;
+  // The name is the default phrase, so every existing gate is unchanged; a caller that has a
+  // better-behaved identifier says so. An empty override is no override — an ungated dialog
+  // is never what a typo in the caller should produce.
+  const phrase = confirmPhrase?.trim() || name;
 
   return {
     title: `${action} ${subject}?`,
@@ -84,6 +99,6 @@ export function destructiveConfirm(spec: DestructiveConfirmSpec): DestructiveCon
     variant: 'danger',
     confirmLabel: confirmLabel ?? (noun ? `${action} ${noun}` : action),
     cancelLabel: 'Cancel',
-    typeToConfirm: typeToConfirm ? name : undefined,
+    typeToConfirm: typeToConfirm ? phrase : undefined,
   };
 }
