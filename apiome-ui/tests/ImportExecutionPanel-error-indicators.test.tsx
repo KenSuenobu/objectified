@@ -1,22 +1,25 @@
 /**
  * Unit tests for Import Execution Panel error indicators (#731) and skipped items (#732)
  *
- * #731: Red for failures with details (Failures section, Live Progress, Import Log)
- * #732: Gray for intentionally skipped items (SKIP_PROPERTY, SKIP_CHILDREN)
+ * #731: failures read as failures (Failures section, Live Progress, Import Log)
+ * #732: intentionally skipped items (SKIP_PROPERTY, SKIP_CHILDREN) read as quiet, not as warnings
  *
- * Helpers: getErrorEvents, formatEventContext, row/log class names, shouldShowFailuresSection, isSkippedEvent
+ * Helpers: getErrorEvents, formatEventContext, importEventLevel, shouldShowFailuresSection,
+ * isSkippedEvent.
+ *
+ * HIVE-6.4 (#5315) replaced the two class-string helpers with {@link importEventLevel}: the
+ * severity is now carried as `data-level` and painted by `globals.css` §IMPORT WIZARD, so what
+ * belongs here is the *mapping* and what belongs in `import-wizard-css.test.ts` is the colour.
  */
 
 import { describe, test, expect } from '@jest/globals';
 import {
   getErrorEvents,
   formatEventContext,
-  getLiveProgressRowClasses,
-  getImportLogLineClasses,
+  importEventLevel,
   isSkippedEvent,
   shouldShowFailuresSection,
   type ImportEventLike,
-  type LogLevel,
 } from '../lib/import-execution-error-indicators';
 
 describe('Import Execution Panel - Error Indicators (#731)', () => {
@@ -65,45 +68,16 @@ describe('Import Execution Panel - Error Indicators (#731)', () => {
     });
   });
 
-  describe('getLiveProgressRowClasses', () => {
-    test('returns red border and background for error', () => {
-      const classes = getLiveProgressRowClasses('error');
-      expect(classes).toContain('border-red-300');
-      expect(classes).toContain('bg-red-50');
-      expect(classes).toContain('dark:border-red-700');
-      expect(classes).toContain('dark:bg-red-950/30');
+  describe('importEventLevel', () => {
+    test('maps a bare level straight through', () => {
+      expect(importEventLevel('error')).toBe('error');
+      expect(importEventLevel('warn')).toBe('warn');
+      expect(importEventLevel('info')).toBe('info');
     });
 
-    test('returns amber/yellow for warn', () => {
-      const classes = getLiveProgressRowClasses('warn');
-      expect(classes).toContain('border-yellow-200');
-      expect(classes).toContain('bg-amber-50');
-    });
-
-    test('returns gray for info', () => {
-      const classes = getLiveProgressRowClasses('info');
-      expect(classes).toContain('border-gray-100');
-      expect(classes).toContain('bg-gray-50');
-    });
-  });
-
-  describe('getImportLogLineClasses', () => {
-    test('returns red background and left border for error', () => {
-      const classes = getImportLogLineClasses('error');
-      expect(classes).toContain('bg-red-100');
-      expect(classes).toContain('border-l-2');
-      expect(classes).toContain('border-red-500');
-    });
-
-    test('returns amber for warn', () => {
-      const classes = getImportLogLineClasses('warn');
-      expect(classes).toContain('bg-amber-50');
-    });
-
-    test('returns minimal classes for info (no highlight)', () => {
-      const classes = getImportLogLineClasses('info');
-      expect(classes).not.toContain('border-red');
-      expect(classes).not.toContain('bg-red');
+    test('an ordinary event keeps its own level', () => {
+      const ev: ImportEventLike = { id: '1', ts: 0, level: 'error', code: 'CLASS_FAILED', message: 'Fail' };
+      expect(importEventLevel(ev)).toBe('error');
     });
   });
 
@@ -132,61 +106,29 @@ describe('Import Execution Panel - Error Indicators (#731)', () => {
       expect(getErrorEvents(events)).toHaveLength(0);
     });
 
-    test('getLiveProgressRowClasses returns gray styling for skipped event', () => {
+    test('a skipped event is drawn at its own level, not as a warning', () => {
       const ev: ImportEventLike = { id: '1', ts: 0, level: 'warn', code: 'SKIP_PROPERTY', message: 'Skipping property' };
-      const classes = getLiveProgressRowClasses(ev);
-      expect(classes).toContain('bg-gray-100');
-      expect(classes).toContain('dark:bg-gray-800');
-      expect(classes).not.toContain('bg-amber-50');
-      expect(classes).not.toContain('bg-red-50');
+      expect(importEventLevel(ev)).toBe('skipped');
     });
 
-    test('getLiveProgressRowClasses returns gray border for skipped event', () => {
+    test('both skip codes read as skipped', () => {
       const ev: ImportEventLike = { id: '1', ts: 0, level: 'warn', code: 'SKIP_CHILDREN', message: 'Also skipping' };
-      const classes = getLiveProgressRowClasses(ev);
-      expect(classes).toContain('border-gray-200');
-      expect(classes).toContain('dark:border-gray-600');
+      expect(importEventLevel(ev)).toBe('skipped');
     });
 
-    test('getImportLogLineClasses returns gray styling for skipped event', () => {
-      const ev: ImportEventLike = { id: '1', ts: 0, level: 'warn', code: 'SKIP_CHILDREN', message: 'Also skipping' };
-      const classes = getImportLogLineClasses(ev);
-      expect(classes).toContain('text-gray-500');
-      expect(classes).toContain('bg-gray-100');
-      expect(classes).not.toContain('bg-amber-50');
-      expect(classes).not.toContain('border-red');
+    test('a bare level string can never be skipped — only a code makes a skip deliberate', () => {
+      expect(importEventLevel('warn')).toBe('warn');
+      expect(importEventLevel('info')).toBe('info');
     });
 
-    test('getImportLogLineClasses includes dark mode gray text for skipped event', () => {
-      const ev: ImportEventLike = { id: '1', ts: 0, level: 'warn', code: 'SKIP_PROPERTY', message: 'Skip' };
-      const classes = getImportLogLineClasses(ev);
-      expect(classes).toContain('dark:text-gray-400');
-    });
-
-    test('backward compatibility: passing level string never returns skipped styling', () => {
-      expect(getLiveProgressRowClasses('warn')).not.toContain('dark:bg-gray-800');
-      expect(getLiveProgressRowClasses('warn')).toContain('bg-amber-50');
-      expect(getImportLogLineClasses('info')).not.toContain('text-gray-500');
-    });
-
-    test('mixed events: skipped gets gray, error gets red, info gets default', () => {
+    test('mixed events: skipped, error and info each keep their own severity', () => {
       const skipped: ImportEventLike = { id: 's', ts: 1, level: 'warn', code: 'SKIP_PROPERTY', message: 'Skip' };
       const error: ImportEventLike = { id: 'e', ts: 2, level: 'error', code: 'CLASS_FAILED', message: 'Fail' };
       const info: ImportEventLike = { id: 'i', ts: 3, level: 'info', code: 'CLASS_CREATED', message: 'Ok' };
 
-      const rowSkipped = getLiveProgressRowClasses(skipped);
-      const rowError = getLiveProgressRowClasses(error);
-      const rowInfo = getLiveProgressRowClasses(info);
-
-      expect(rowSkipped).toContain('bg-gray-100');
-      expect(rowError).toContain('bg-red-50');
-      expect(rowInfo).toContain('bg-gray-50');
-      expect(rowSkipped).not.toContain('bg-red-50');
-
-      const lineSkipped = getImportLogLineClasses(skipped);
-      const lineError = getImportLogLineClasses(error);
-      expect(lineSkipped).toContain('text-gray-500');
-      expect(lineError).toContain('border-red-500');
+      expect(importEventLevel(skipped)).toBe('skipped');
+      expect(importEventLevel(error)).toBe('error');
+      expect(importEventLevel(info)).toBe('info');
     });
   });
 

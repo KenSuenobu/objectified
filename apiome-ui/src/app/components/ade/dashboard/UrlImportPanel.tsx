@@ -151,12 +151,12 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
 
       {/* URL Input */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="block text-sm font-medium text-fg">
           Specification URL
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Globe className="h-5 w-5 text-gray-400" />
+            <Globe className="h-5 w-5 text-fg-faint" />
           </div>
           <input
             type="url"
@@ -165,19 +165,19 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
             placeholder="https://api.example.com/openapi.yaml"
             className={`block w-full pl-10 pr-4 py-3 text-sm rounded-lg border ${
               urlError
-                ? 'border-red-500 dark:border-red-400 focus:ring-red-500 focus:border-red-500'
-                : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500'
-            } bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+                ? 'border-danger focus:ring-danger focus:border-danger'
+                : 'border-border-strong focus:ring-accent focus:border-accent'
+            } bg-surface text-fg placeholder:text-fg-faint`}
           />
         </div>
         {urlError && (
-          <p className="text-sm text-red-600 dark:text-red-400">{urlError}</p>
+          <p className="text-sm text-danger">{urlError}</p>
         )}
       </div>
 
       {/* Authentication Section */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="rounded-xl border border-border p-4 space-y-4">
+        <div className="flex items-center gap-2 text-sm font-medium text-fg">
           <Link2 className="h-4 w-4" />
           Authentication (optional)
         </div>
@@ -192,9 +192,9 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
                 value={type}
                 checked={authType === type}
                 onChange={(e) => setAuthType(e.target.value as AuthType)}
-                className="text-indigo-600 focus:ring-indigo-500"
+                className="text-accent focus:ring-accent"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-sm text-fg">
                 {type === 'none' ? 'None' :
                  type === 'bearer' ? 'Bearer Token' :
                  type === 'apiKey' ? 'API Key' : 'Basic Auth'}
@@ -206,7 +206,7 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
         {/* Bearer Token Input */}
         {authType === 'bearer' && (
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="block text-sm font-medium text-fg">
               Token
             </label>
             <div className="relative">
@@ -215,7 +215,7 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 placeholder="Enter your bearer token"
-                className="block w-full pr-10 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="block w-full pr-10 py-2 text-sm rounded-lg border border-border-strong bg-surface text-fg"
               />
               <button
                 type="button"
@@ -223,9 +223,9 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
                 {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
+                  <EyeOff className="h-4 w-4 text-fg-faint" />
                 ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
+                  <Eye className="h-4 w-4 text-fg-faint" />
                 )}
               </button>
             </div>
@@ -236,7 +236,7 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
         {authType === 'apiKey' && (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-fg">
                 Header Name
               </label>
               <input
@@ -244,11 +244,11 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
                 value={apiKeyHeader}
                 onChange={(e) => setApiKeyHeader(e.target.value)}
                 placeholder="X-API-Key"
-                className="block w-full py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="block w-full py-2 text-sm rounded-lg border border-border-strong bg-surface text-fg"
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-fg">
                 API Key
               </label>
               <div className="relative">
@@ -257,7 +257,7 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   placeholder="Enter your API key"
-                  className="block w-full pr-10 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="block w-full pr-10 py-2 text-sm rounded-lg border border-border-strong bg-surface text-fg"
                 />
                 <button
                   type="button"
@@ -265,9 +265,9 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4 text-fg-faint" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4 text-fg-faint" />
                   )}
                 </button>
               </div>
@@ -279,7 +279,7 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
         {authType === 'basic' && (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-fg">
                 Username
               </label>
               <input
@@ -287,11 +287,11 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Username"
-                className="block w-full py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="block w-full py-2 text-sm rounded-lg border border-border-strong bg-surface text-fg"
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-fg">
                 Password
               </label>
               <div className="relative">
@@ -300,7 +300,7 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="block w-full pr-10 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="block w-full pr-10 py-2 text-sm rounded-lg border border-border-strong bg-surface text-fg"
                 />
                 <button
                   type="button"
@@ -308,9 +308,9 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4 text-fg-faint" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4 text-fg-faint" />
                   )}
                 </button>
               </div>
@@ -325,9 +325,9 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
               type="checkbox"
               checked={saveCredentials}
               onChange={(e) => setSaveCredentials(e.target.checked)}
-              className="rounded text-indigo-600 focus:ring-indigo-500"
+              className="rounded text-accent focus:ring-accent"
             />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-fg-muted">
               Save credentials for future imports
             </span>
           </label>
@@ -335,8 +335,8 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
       </div>
 
       {/* URL Options */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
-        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="rounded-xl border border-border p-4 space-y-3">
+        <div className="text-sm font-medium text-fg">
           URL Options
         </div>
 
@@ -346,9 +346,9 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
               type="checkbox"
               checked={followRedirects}
               onChange={(e) => setFollowRedirects(e.target.checked)}
-              className="rounded text-indigo-600 focus:ring-indigo-500"
+              className="rounded text-accent focus:ring-accent"
             />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-fg-muted">
               Follow redirects
             </span>
           </label>
@@ -358,9 +358,9 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
               type="checkbox"
               checked={resolveExternalRefs}
               onChange={(e) => setResolveExternalRefs(e.target.checked)}
-              className="rounded text-indigo-600 focus:ring-indigo-500"
+              className="rounded text-accent focus:ring-accent"
             />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-fg-muted">
               Resolve external $ref URLs
             </span>
           </label>
@@ -370,9 +370,9 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
               type="checkbox"
               checked={cacheFetched}
               onChange={(e) => setCacheFetched(e.target.checked)}
-              className="rounded text-indigo-600 focus:ring-indigo-500"
+              className="rounded text-accent focus:ring-accent"
             />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-fg-muted">
               Cache fetched content
             </span>
           </label>
@@ -381,14 +381,14 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
 
       {/* Fetch Result */}
       {fetchResult && !fetchResult.success && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+        <div className="rounded-lg bg-danger-soft p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
             <div>
-              <div className="font-medium text-red-900 dark:text-red-200">
+              <div className="font-medium text-danger">
                 Failed to Fetch Specification
               </div>
-              <div className="text-sm text-red-700 dark:text-red-300 mt-1">
+              <div className="text-sm text-danger mt-1">
                 {fetchResult.error}
                 {fetchResult.statusCode && ` (HTTP ${fetchResult.statusCode})`}
               </div>
@@ -399,9 +399,9 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
 
       {/* Fetched Metadata Preview */}
       {fetchResult?.success && fileMetadata && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <FileCode className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <h3 className="text-lg font-semibold text-fg mb-4 flex items-center gap-2">
+            <FileCode className="h-5 w-5 text-accent" />
             Specification Preview
           </h3>
 
@@ -411,30 +411,30 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
               {/* Format */}
               <div className={`rounded-lg p-4 border ${
                 fileMetadata.formatSupported 
-                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-                  : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                  ? 'bg-ok-soft border-ok' 
+                  : 'bg-warn-soft border-warn'
               }`}>
                 <div className="flex items-center gap-2 mb-2">
                   {fileMetadata.formatSupported ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <CheckCircle2 className="h-5 w-5 text-ok" />
                   ) : (
-                    <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    <AlertTriangle className="h-5 w-5 text-warn" />
                   )}
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                     Detected Format
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                <div className="text-sm font-semibold text-fg">
                   {fileMetadata.formatDisplayName}
                 </div>
               </div>
 
               {/* Version */}
-              <div className="rounded-lg p-4 border bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-700">
-                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+              <div className="rounded-lg p-4 border bg-subtle border-border">
+                <div className="text-xs font-medium text-fg-muted uppercase tracking-wider mb-2">
                   Version
                 </div>
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                <div className="text-sm font-semibold text-fg">
                   {fileMetadata.specVersion || fileMetadata.version || 'N/A'}
                 </div>
               </div>
@@ -442,20 +442,20 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
               {/* Syntax */}
               <div className={`rounded-lg p-4 border ${
                 fileMetadata.syntaxValid 
-                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-                  : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                  ? 'bg-ok-soft border-ok' 
+                  : 'bg-danger-soft border-danger'
               }`}>
                 <div className="flex items-center gap-2 mb-2">
                   {fileMetadata.syntaxValid ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <CheckCircle2 className="h-5 w-5 text-ok" />
                   ) : (
-                    <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    <AlertTriangle className="h-5 w-5 text-danger" />
                   )}
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                     Syntax
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                <div className="text-sm font-semibold text-fg">
                   {fileMetadata.syntaxValid ? `Valid ${fileMetadata.syntax.toUpperCase()}` : 'Invalid'}
                 </div>
               </div>
@@ -463,11 +463,11 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
 
             {/* Title */}
             {fileMetadata.title && (
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <div className="pt-4 border-t border-border">
+                <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                   Title
                 </span>
-                <div className="text-base font-semibold text-gray-900 dark:text-white mt-1">
+                <div className="text-base font-semibold text-fg mt-1">
                   {fileMetadata.title}
                 </div>
               </div>
@@ -475,11 +475,11 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
 
             {/* Description */}
             {fileMetadata.description && (
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <div className="pt-4 border-t border-border">
+                <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                   Description
                 </span>
-                <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 leading-relaxed line-clamp-3">
+                <div className="text-sm text-fg mt-1 leading-relaxed line-clamp-3">
                   {fileMetadata.description}
                 </div>
               </div>
@@ -490,14 +490,14 @@ const UrlImportPanel = forwardRef<UrlImportPanelHandle, UrlImportPanelProps>(fun
 
       {/* Help text for next steps */}
       {urlTested && fetchResult?.success && fileMetadata?.formatSupported && (
-        <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+        <div className="p-4 rounded-lg bg-ok-soft">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <CheckCircle2 className="h-5 w-5 text-ok" />
             <div>
-              <div className="font-medium text-green-900 dark:text-green-200">
+              <div className="font-medium text-ok-fg">
                 URL verified successfully
               </div>
-              <div className="text-sm text-green-700 dark:text-green-300 mt-1">
+              <div className="text-sm text-ok mt-1">
                 Use the button in the dialog footer to continue to analysis.
               </div>
             </div>

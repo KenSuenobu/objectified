@@ -7,11 +7,18 @@
  * endpoint URL, transport, an optional display name, and an auth scheme with its secret fields. The
  * dialog owns the form state (so its footer "Discover" button can read it) — this panel is a
  * controlled view that reports edits through `onChange`.
+ *
+ * Re-skinned by HIVE-6.4 (#5315). The hero's indigo→white→violet gradient is gone — DESIGN.md §2
+ * keeps a brand wash for brand moments, and registering a server is not one — and its three
+ * stages now share `.imp-stage` with the discovery panel they predict, so the reader meets the
+ * same three marks twice rather than two different drawings of the same three steps.
  */
 
 import { CheckCircle2, GaugeCircle, Network, Plug, ScanSearch, ShieldCheck } from 'lucide-react';
+import { Card, cardVariants } from '../../../components/ui/Card';
+import { FormField } from '../../../components/ui/FormField';
 import { Input } from '../../../components/ui/Input';
-import { Label } from '../../../components/ui/Label';
+import { cn } from '@lib/utils';
 import {
   Select,
   SelectContent,
@@ -31,9 +38,6 @@ export interface McpImportPanelProps {
   form: McpImportForm;
   onChange: (form: McpImportForm) => void;
 }
-
-const fieldLabelClass = 'mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300';
-const helpTextClass = 'mt-1 text-xs text-gray-500 dark:text-gray-400';
 
 /** What happens after "Discover" — shown in the hero so the flow is predictable up front. */
 const IMPORT_STEPS: ReadonlyArray<{ icon: typeof Plug; label: string }> = [
@@ -68,39 +72,41 @@ export default function McpImportPanel({ form, onChange }: McpImportPanelProps) 
   return (
     <div className="flex flex-col gap-6">
       {/* Hero: what this source does, and the three stages the import runs through. */}
-      <div className="overflow-hidden rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:border-indigo-800 dark:from-indigo-950/40 dark:via-gray-900 dark:to-violet-950/30">
+      <Card variant="flat" className="overflow-hidden">
         <div className="flex items-start gap-3 p-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500 text-white shadow-sm">
-            <Network className="h-5 w-5" aria-hidden />
-          </div>
+          <span className="tnt-icon-tile" data-tone="accent" aria-hidden>
+            <Network />
+          </span>
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">Add an MCP server</h3>
-            <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
+            <h3 className="font-semibold text-fg">Add an MCP server</h3>
+            <p className="mt-0.5 text-sm text-fg-muted">
               Point us at a Model Context Protocol endpoint. We&apos;ll connect, discover its tools,
               resources, and prompts, lint the surface for quality, and catalog it as
               version&nbsp;1 with an A–F grade.
             </p>
           </div>
         </div>
-        <ol className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-indigo-100 px-4 py-2.5 dark:border-indigo-900/60">
+        <ol className="imp-stages">
           {IMPORT_STEPS.map((step, index) => (
-            <li key={step.label} className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-2xs font-semibold text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">
+            <li key={step.label} className="imp-stage">
+              <span className="imp-stage__num" aria-hidden>
                 {index + 1}
               </span>
-              <step.icon className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
+              <step.icon className="size-3.5 text-accent" aria-hidden />
               {step.label}
             </li>
           ))}
         </ol>
-      </div>
+      </Card>
 
       {/* Connection ------------------------------------------------------------------------ */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <Label htmlFor="mcp-endpoint-url" className={fieldLabelClass}>
-            Endpoint URL <span className="text-red-500">*</span>
-          </Label>
+        <FormField
+          label="Endpoint URL"
+          htmlFor="mcp-endpoint-url"
+          required
+          helperText="The MCP server's connection URL."
+        >
           <Input
             id="mcp-endpoint-url"
             type="text"
@@ -109,13 +115,13 @@ export default function McpImportPanel({ form, onChange }: McpImportPanelProps) 
             value={form.endpointUrl}
             onChange={(e) => set('endpointUrl', e.target.value)}
           />
-          <p className={helpTextClass}>The MCP server&apos;s connection URL.</p>
-        </div>
+        </FormField>
 
-        <div>
-          <Label htmlFor="mcp-name" className={fieldLabelClass}>
-            Display name
-          </Label>
+        <FormField
+          label="Display name"
+          htmlFor="mcp-name"
+          helperText="Optional — leave blank to use the host name."
+        >
           <Input
             id="mcp-name"
             type="text"
@@ -123,13 +129,12 @@ export default function McpImportPanel({ form, onChange }: McpImportPanelProps) 
             value={form.name}
             onChange={(e) => set('name', e.target.value)}
           />
-          <p className={helpTextClass}>Optional — leave blank to use the host name.</p>
-        </div>
+        </FormField>
       </div>
 
       {/* Transport as selectable cards, so each option can explain itself. */}
-      <div>
-        <div className={fieldLabelClass}>Transport</div>
+      <div className="flex flex-col gap-1.5">
+        <div className="text-sm font-medium text-fg">Transport</div>
         <div role="radiogroup" aria-label="Transport" className="grid grid-cols-1 gap-3 md:grid-cols-3">
           {MCP_TRANSPORT_OPTIONS.map((opt) => {
             const selected = form.transport === opt.value;
@@ -140,22 +145,19 @@ export default function McpImportPanel({ form, onChange }: McpImportPanelProps) 
                 role="radio"
                 aria-checked={selected}
                 onClick={() => set('transport', opt.value)}
-                className={`relative rounded-lg border p-3 text-left transition-colors ${
-                  selected
-                    ? 'border-indigo-500 bg-indigo-50/60 ring-1 ring-indigo-500 dark:border-indigo-500 dark:bg-indigo-950/30'
-                    : 'border-gray-200 bg-white hover:border-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-indigo-700'
-                }`}
+                className={cn(
+                  cardVariants({ variant: 'flat', hover: !selected, selected }),
+                  'relative p-3 text-left'
+                )}
               >
                 {selected ? (
                   <CheckCircle2
-                    className="absolute right-2.5 top-2.5 h-4 w-4 text-indigo-500"
+                    className="absolute end-2.5 top-2.5 size-[var(--icon-dense)] text-accent"
                     aria-hidden
                   />
                 ) : null}
-                <div className="pr-6 text-sm font-medium text-gray-900 dark:text-white">
-                  {opt.label}
-                </div>
-                <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                <div className="pe-6 text-sm font-medium text-fg">{opt.label}</div>
+                <p className="mt-1 text-xs leading-relaxed text-fg-muted">
                   {TRANSPORT_DESCRIPTIONS[opt.value]}
                 </p>
               </button>
@@ -165,17 +167,18 @@ export default function McpImportPanel({ form, onChange }: McpImportPanelProps) 
       </div>
 
       {/* Authentication ---------------------------------------------------------------------- */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5 dark:border-gray-700 dark:bg-gray-900/40">
-          <ShieldCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Authentication</h4>
+      <Card variant="flat" className="overflow-hidden">
+        <div className="flex items-center gap-2 border-b border-border bg-subtle px-4 py-2.5">
+          <ShieldCheck className="size-[var(--icon-dense)] text-accent" aria-hidden />
+          <h4 className="text-sm font-semibold text-fg">Authentication</h4>
         </div>
 
         <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
-          <div>
-            <Label htmlFor="mcp-auth-type" className={fieldLabelClass}>
-              Auth type
-            </Label>
+          <FormField
+            label="Auth type"
+            htmlFor="mcp-auth-type"
+            helperText={AUTH_DESCRIPTIONS[form.authType]}
+          >
             <Select value={form.authType} onValueChange={(v) => set('authType', v as McpAuthType)}>
               <SelectTrigger id="mcp-auth-type">
                 <SelectValue placeholder="Select auth type" />
@@ -188,14 +191,10 @@ export default function McpImportPanel({ form, onChange }: McpImportPanelProps) 
                 ))}
               </SelectContent>
             </Select>
-            <p className={helpTextClass}>{AUTH_DESCRIPTIONS[form.authType]}</p>
-          </div>
+          </FormField>
 
           {showHeaderName && (
-            <div>
-              <Label htmlFor="mcp-header-name" className={fieldLabelClass}>
-                Header name <span className="text-red-500">*</span>
-              </Label>
+            <FormField label="Header name" htmlFor="mcp-header-name" required>
               <Input
                 id="mcp-header-name"
                 type="text"
@@ -203,14 +202,17 @@ export default function McpImportPanel({ form, onChange }: McpImportPanelProps) 
                 value={form.authHeaderName}
                 onChange={(e) => set('authHeaderName', e.target.value)}
               />
-            </div>
+            </FormField>
           )}
 
           {showToken && (
-            <div className={showHeaderName ? 'md:col-span-2' : ''}>
-              <Label htmlFor="mcp-auth-token" className={fieldLabelClass}>
-                {tokenLabel} <span className="text-red-500">*</span>
-              </Label>
+            <FormField
+              label={tokenLabel}
+              htmlFor="mcp-auth-token"
+              required
+              helperText="Stored encrypted; it is never shown again after you save it."
+              className={showHeaderName ? 'md:col-span-2' : undefined}
+            >
               <Input
                 id="mcp-auth-token"
                 type="password"
@@ -219,13 +221,10 @@ export default function McpImportPanel({ form, onChange }: McpImportPanelProps) 
                 value={form.authToken}
                 onChange={(e) => set('authToken', e.target.value)}
               />
-              <p className={helpTextClass}>
-                Stored encrypted; it is never shown again after you save it.
-              </p>
-            </div>
+            </FormField>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

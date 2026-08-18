@@ -7,13 +7,14 @@ import { extractFileMetadata, FileMetadataPreview } from '../../../utils/openapi
 import dynamic from 'next/dynamic';
 import { TAB_LIST_CLASS, tabTriggerClass } from '../../ui/tabStyles';
 import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
+import { SpecMetaTiles } from '../import/SpecMetaTiles';
 
 // Dynamic import for Monaco Editor to avoid SSR issues
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
   loading: () => (
-    <div className="h-[300px] flex items-center justify-center bg-gray-900 rounded-lg">
-      <div className="text-gray-400">Loading editor...</div>
+    <div className="h-[300px] flex items-center justify-center bg-inset rounded-lg">
+      <div className="text-fg-faint">Loading editor...</div>
     </div>
   ),
 });
@@ -217,14 +218,14 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
       </div>
 
       {/* Instructions */}
-      <div className="bg-indigo-50 dark:bg-indigo-950/30 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800">
+      <div className="bg-accent-soft rounded-lg p-4 border border-accent">
         <div className="flex items-start gap-3">
-          <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+          <FileText className="h-5 w-5 text-accent shrink-0 mt-0.5" />
           <div>
-            <div className="font-medium text-indigo-900 dark:text-indigo-200">
+            <div className="font-medium text-accent-fg">
               Paste Your Specification
             </div>
-            <div className="text-sm text-indigo-700 dark:text-indigo-300 mt-1">
+            <div className="text-sm text-accent mt-1">
               Paste JSON or YAML content directly into the editor below. The format will be auto-detected with syntax highlighting.
             </div>
           </div>
@@ -246,7 +247,7 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
             <Button
               variant="outline"
               onClick={handleClear}
-              className="flex items-center gap-2 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+              className="flex items-center gap-2 text-danger hover:bg-danger-soft"
             >
               <Trash2 className="h-4 w-4" />
               Clear
@@ -256,8 +257,8 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
         {detectedSyntax !== 'unknown' && (
           <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
             detectedSyntax === 'json' 
-              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
-              : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+              ? 'bg-accent-soft text-accent-fg' 
+              : 'bg-ok-soft text-ok-fg'
           }`}>
             {detectedSyntax.toUpperCase()} Detected
           </span>
@@ -266,10 +267,10 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
 
       {/* Monaco Editor */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="block text-sm font-medium text-fg">
           Specification Content
         </label>
-        <div className="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+        <div className="rounded-lg overflow-hidden border border-border-strong">
           <Editor
             height="300px"
             language={getEditorLanguage()}
@@ -302,7 +303,7 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
             }}
           />
         </div>
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-between text-xs text-fg-muted">
           <span>{content.length.toLocaleString()} characters</span>
           <span>{content.split('\n').length.toLocaleString()} lines</span>
         </div>
@@ -310,14 +311,14 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
 
       {/* Parse Error */}
       {parseError && (
-        <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+        <div className="p-4 rounded-lg bg-danger-soft">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
             <div>
-              <div className="font-medium text-red-900 dark:text-red-200">
+              <div className="font-medium text-danger">
                 Parse Error
               </div>
-              <div className="text-sm text-red-700 dark:text-red-300 mt-1">
+              <div className="text-sm text-danger mt-1">
                 {parseError}
               </div>
             </div>
@@ -327,29 +328,29 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
 
       {/* Metadata Preview */}
       {content && fileMetadata && !parseError && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <FileCode className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <h3 className="text-lg font-semibold text-fg mb-4 flex items-center gap-2">
+            <FileCode className="h-5 w-5 text-accent" />
             Content Preview
           </h3>
 
           {isAnalyzing ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
-              <span className="ml-3 text-gray-600 dark:text-gray-400">Analyzing content...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+              <span className="ml-3 text-fg-muted">Analyzing content...</span>
             </div>
           ) : (
             <div className="space-y-4">
               {/* Unsupported Format Warning */}
               {!fileMetadata.formatSupported && fileMetadata.format !== 'unknown' && (
-                <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                <div className="p-4 rounded-lg bg-warn-soft">
                   <div className="flex items-start gap-3">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <AlertTriangle className="h-5 w-5 text-warn shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-medium text-amber-900 dark:text-amber-200">
+                      <div className="font-medium text-warn">
                         Format Not Available for Import
                       </div>
-                      <div className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                      <div className="text-sm text-warn mt-1">
                         The detected format <span className="font-semibold">{fileMetadata.formatDisplayName}</span> is not yet supported for import.
                         Currently supported formats: OpenAPI 3.x, Swagger 2.x, JSON Schema, Arazzo, RAML, AsyncAPI, GraphQL, Protobuf, Thrift, Avro, and Postman.
                       </div>
@@ -358,58 +359,17 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
                 </div>
               )}
 
-              {/* Metadata Grid */}
-              <div className="grid grid-cols-3 gap-4">
-                {/* Format */}
-                <div className={`rounded-lg p-4 border ${fileMetadata.formatSupported ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    {fileMetadata.formatSupported ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    ) : (
-                      <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                    )}
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Detected Format
-                    </span>
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {fileMetadata.formatDisplayName}
-                  </div>
-                </div>
-
-                {/* Spec Version */}
-                <div className="rounded-lg p-4 border bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Version
-                    </span>
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {fileMetadata.specVersion || fileMetadata.version || 'N/A'}
-                  </div>
-                </div>
-
-                {/* Syntax */}
-                <div className="rounded-lg p-4 border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Syntax
-                    </span>
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                    Valid {fileMetadata.syntax.toUpperCase()}
-                  </div>
-                </div>
-              </div>
+              {/* Format · Version · Syntax — the wizard's own tiles (HIVE-6.4, #5315), so the
+                  same three facts read the same way on File, URL, Clipboard and Git. */}
+              <SpecMetaTiles metadata={fileMetadata} />
 
               {/* Title */}
               {fileMetadata.title && (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <div className="pt-4 border-t border-border">
+                  <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                     Title
                   </span>
-                  <div className="text-base font-semibold text-gray-900 dark:text-white mt-1">
+                  <div className="text-base font-semibold text-fg mt-1">
                     {fileMetadata.title}
                   </div>
                 </div>
@@ -417,11 +377,11 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
 
               {/* Description */}
               {fileMetadata.description && (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <div className="pt-4 border-t border-border">
+                  <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                     Description
                   </span>
-                  <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 leading-relaxed line-clamp-3">
+                  <div className="text-sm text-fg mt-1 leading-relaxed line-clamp-3">
                     {fileMetadata.description}
                   </div>
                 </div>
@@ -433,14 +393,14 @@ export const ClipboardImportPanel: React.FC<ClipboardImportPanelProps> = ({
 
       {/* Ready indicator */}
       {isReadyForImport && (
-        <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+        <div className="p-4 rounded-lg bg-ok-soft">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-            <div className="font-medium text-green-900 dark:text-green-200">
+            <CheckCircle2 className="h-5 w-5 text-ok" />
+            <div className="font-medium text-ok-fg">
               Ready for Import
             </div>
           </div>
-          <div className="text-sm text-green-700 dark:text-green-300 mt-1 ml-8">
+          <div className="text-sm text-ok mt-1 ml-8">
             Click &quot;Analyze&quot; to proceed with the import.
           </div>
         </div>

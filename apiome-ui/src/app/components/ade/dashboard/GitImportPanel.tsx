@@ -10,7 +10,6 @@ import {
   Loader2,
   Globe,
   AlertTriangle,
-  CheckCircle2,
   FileCode,
   Bookmark,
   BookmarkPlus,
@@ -38,6 +37,7 @@ import {
 } from '../../../utils/git-import-recent-specs';
 import { Button } from '../../../components/ui/Button';
 import { ICON_SIZE } from '@/app/components/ui/iconSizes';
+import { SpecMetaTiles } from '../import/SpecMetaTiles';
 
 interface GitImportPanelProps {
   userId: string;
@@ -666,28 +666,28 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
   if (isLoadingAccounts) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-        <span className="ml-3 text-gray-600 dark:text-gray-400">Loading linked accounts...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        <span className="ml-3 text-fg-muted">Loading linked accounts...</span>
       </div>
     );
   }
 
   if (linkedAccounts.length === 0) {
     return (
-      <div className="p-6 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+      <div className="p-6 rounded-lg bg-warn-soft">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <AlertTriangle className="h-5 w-5 text-warn shrink-0 mt-0.5" />
           <div>
-            <div className="font-medium text-amber-900 dark:text-amber-200">
+            <div className="font-medium text-warn">
               No Linked Accounts Found
             </div>
-            <div className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+            <div className="text-sm text-warn mt-1">
               Please link a GitHub or GitLab account from the{' '}
               <a
                 href="/ade/dashboard/linked-accounts"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:text-amber-900 dark:hover:text-amber-100"
+                className="underline hover:text-warn-fg"
               >
                 Linked Accounts
               </a>{' '}
@@ -703,31 +703,31 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
     <div className="flex flex-col flex-1 min-h-0 gap-4">
       {/* Error Message */}
       {errorMessage && (
-        <div className="flex-shrink-0 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+        <div className="flex-shrink-0 p-4 rounded-lg bg-danger-soft">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-            <div className="text-sm text-red-700 dark:text-red-300">{errorMessage}</div>
+            <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
+            <div className="text-sm text-danger">{errorMessage}</div>
           </div>
         </div>
       )}
 
       {savedRepos.length > 0 && (
-        <div className="flex-shrink-0 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4">
-          <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-            <Bookmark className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
+        <div className="flex-shrink-0 rounded-lg border border-border bg-surface/50 p-4">
+          <div className="flex items-center gap-2 text-xs font-medium text-fg-muted uppercase tracking-wider">
+            <Bookmark className="h-4 w-4 text-accent" aria-hidden />
             Saved for re-import
           </div>
           <ul className="mt-3 space-y-2">
             {savedRepos.map((b) => (
               <li
                 key={b.id}
-                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-3 py-2"
+                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-border bg-subtle px-3 py-2"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  <div className="text-sm font-medium text-fg truncate">
                     {b.repoFullName}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <div className="text-xs text-fg-muted truncate">
                     {b.refKind === 'tag' ? `Tag ${b.refName}` : `Branch ${b.refName}`}
                     {b.specPath ? ` · ${b.specPath}` : ''}
                   </div>
@@ -747,7 +747,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                     type="button"
                     onClick={() => handleRemoveSaved(b.id)}
                     disabled={isLoading}
-                    className="p-2 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                    className="p-2 rounded-lg border border-border text-fg-muted hover:bg-inset disabled:opacity-50"
                     aria-label={`Remove saved repository ${b.repoFullName}`}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -756,36 +756,36 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-xs text-fg-muted">
             Stored in this browser on this device. Use the same linked account to open a saved entry.
           </p>
         </div>
       )}
 
       {selectedAccount && selectedRepo && (
-        <div className="flex-shrink-0 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/30 px-4 py-3">
+        <div className="flex-shrink-0 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap rounded-lg border border-accent bg-accent-soft/80 px-4 py-3">
           <Button
             type="button"
             variant="outline"
             onClick={handleSaveBookmark}
             disabled={isLoading}
-            className="shrink-0 border-indigo-300 dark:border-indigo-700"
+            className="shrink-0"
           >
             <BookmarkPlus className="h-4 w-4 mr-2" aria-hidden />
             Save for later
           </Button>
-          <p className="text-xs text-indigo-900/90 dark:text-indigo-200/90 sm:flex-1 sm:min-w-0">
+          <p className="text-xs text-accent-fg/90 sm:flex-1 sm:min-w-0">
             Saves the linked account, repository, branch or tag, and optional spec path so you can return here to re-import or open a PR branch later.
           </p>
         </div>
       )}
 
       {selectedAccount?.provider?.toLowerCase() === 'github' && (
-        <div className="flex-shrink-0 space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-4">
+        <div className="flex-shrink-0 space-y-3 rounded-lg border border-border bg-subtle p-4">
           <div>
             <label
               htmlFor="git-import-repo-url"
-              className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              className="text-xs font-medium text-fg-muted uppercase tracking-wider"
             >
               Repository URL
             </label>
@@ -797,7 +797,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                 onChange={(e) => setRepoUrlInput(e.target.value)}
                 placeholder="https://github.com/org/repo or org/repo"
                 disabled={isLoading}
-                className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+                className="flex-1 min-w-0 px-3 py-2 text-sm border border-border rounded-lg bg-surface text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50"
               />
               <Button
                 type="button"
@@ -809,18 +809,18 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                 Load repository
               </Button>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-fg-muted mt-1">
               Paste a GitHub URL or <span className="font-mono">owner/repo</span>, then load to browse that repository at the branch or tag you choose below.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-fg-muted">
             <span>Need access to private repos?</span>
             <a
               href="/ade/dashboard/linked-accounts"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-800 dark:hover:text-indigo-300"
+              className="text-accent underline hover:text-accent-fg"
             >
               Linked accounts
             </a>
@@ -832,7 +832,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                 <div>
                   <label
                     htmlFor="git-import-branch"
-                    className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    className="text-xs font-medium text-fg-muted uppercase tracking-wider"
                   >
                     Branch
                   </label>
@@ -841,7 +841,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                     value={selectedTag ? '' : selectedBranch}
                     onChange={(e) => handleBranchSelectChange(e.target.value)}
                     disabled={isLoading || !!selectedTag}
-                    className="mt-1 w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-60"
+                    className="mt-1 w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface text-fg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-60"
                   >
                     {selectedTag ? (
                       <option value="">—</option>
@@ -861,7 +861,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                 <div>
                   <label
                     htmlFor="git-import-tag"
-                    className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    className="text-xs font-medium text-fg-muted uppercase tracking-wider"
                   >
                     Tag
                   </label>
@@ -870,7 +870,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                     value={selectedTag}
                     onChange={(e) => handleTagSelectChange(e.target.value)}
                     disabled={isLoading}
-                    className="mt-1 w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="mt-1 w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface text-fg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   >
                     <option value="">(none)</option>
                     {tagNames.map((t) => (
@@ -885,7 +885,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
               <div>
                 <label
                   htmlFor="git-import-spec-path"
-                  className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  className="text-xs font-medium text-fg-muted uppercase tracking-wider"
                 >
                   Spec path
                 </label>
@@ -897,7 +897,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                     onChange={(e) => setSpecPathInput(e.target.value)}
                     placeholder="specs/openapi.yaml"
                     disabled={isLoading}
-                    className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+                    className="flex-1 min-w-0 px-3 py-2 text-sm border border-border rounded-lg bg-surface text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50"
                   />
                   <Button
                     type="button"
@@ -909,7 +909,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                     Open file
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-fg-muted mt-1">
                   Optional: type a path and open, or pick a file in the browser — the path updates when you select a file.
                 </p>
               </div>
@@ -919,11 +919,11 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
       )}
 
       {/* Three-Column Browser - fills remaining form height */}
-      <div className="flex flex-1 min-h-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+      <div className="flex flex-1 min-h-0 border border-border rounded-lg overflow-hidden bg-surface">
         {/* Column 1: Accounts */}
-        <div className="w-1/3 min-w-[200px] max-w-[300px] border-r border-gray-200 dark:border-gray-700 flex flex-col min-h-0">
-          <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex-shrink-0">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+        <div className="w-1/3 min-w-[200px] max-w-[300px] border-r border-border flex flex-col min-h-0">
+          <div className="px-3 py-2 border-b border-border bg-subtle flex-shrink-0">
+            <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
               Accounts
             </span>
           </div>
@@ -936,20 +936,20 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                   key={account.id}
                   onClick={() => !isLoading && handleSelectAccount(account)}
                   disabled={isLoading}
-                  className={`w-full px-3 py-2 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 transition-colors ${
+                  className={`w-full px-3 py-2 flex items-center gap-2 border-b border-border transition-colors ${
                     isSelected
-                      ? 'bg-indigo-600 text-white'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
+                      ? 'bg-accent text-fg-on-accent'
+                      : 'hover:bg-subtle text-fg'
                   } ${isLoading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 >
-                  <span className={`flex-shrink-0 ${isSelected ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <span className={`flex-shrink-0 ${isSelected ? 'text-fg-on-accent' : 'text-fg-muted'}`}>
                     {getProviderIcon(account.provider)}
                   </span>
                   <div className="flex-1 min-w-0 text-left">
-                    <div className={`text-sm font-medium truncate ${isSelected ? 'text-white' : 'text-gray-900 dark:text-gray-100'}`}>
+                    <div className={`text-sm font-medium truncate ${isSelected ? 'text-fg-on-accent' : 'text-fg'}`}>
                       {account.provider.charAt(0).toUpperCase() + account.provider.slice(1)}
                     </div>
-                    <div className={`text-xs truncate ${isSelected ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <div className={`text-xs truncate ${isSelected ? 'text-fg-on-accent' : 'text-fg-muted'}`}>
                       {account.provider_username || account.provider_email}
                     </div>
                   </div>
@@ -960,10 +960,10 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
         </div>
 
         {/* Column 2: Repositories */}
-        <div className="w-1/3 min-w-[200px] max-w-[300px] border-r border-gray-200 dark:border-gray-700 flex flex-col min-h-0">
-          <div className="px-2 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex-shrink-0 space-y-2">
+        <div className="w-1/3 min-w-[200px] max-w-[300px] border-r border-border flex flex-col min-h-0">
+          <div className="px-2 py-2 border-b border-border bg-subtle flex-shrink-0 space-y-2">
             <div className="flex items-center justify-between gap-1">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider shrink-0">
+              <span className="text-xs font-medium text-fg-muted uppercase tracking-wider shrink-0">
                 Repositories
               </span>
               {selectedAccount ? (
@@ -1005,7 +1005,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
               ) : null}
             </div>
             {repositoryListTab === 'history' && selectedAccount ? (
-              <p className="text-2xs leading-snug text-gray-500 dark:text-gray-400">
+              <p className="text-2xs leading-snug text-fg-muted">
                 {selectedRepo
                   ? 'Specs you opened from this repository on this device.'
                   : 'Specs you opened from any repository for this account on this device.'}
@@ -1015,15 +1015,15 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
 
           {/* Search Box */}
           {repositoryListTab === 'all' && selectedAccount && repositories.length > 0 && (
-            <div className="p-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="p-2 border-b border-border flex-shrink-0">
               <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-faint" />
                 <input
                   type="text"
                   placeholder="Search repositories..."
                   value={repoSearchQuery}
                   onChange={(e) => setRepoSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-border rounded bg-surface text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 />
               </div>
             </div>
@@ -1032,15 +1032,15 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
           <div className="flex-1 overflow-y-auto min-h-0">
             {!selectedAccount ? (
               <div className="flex items-center justify-center h-full p-4">
-                <span className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <span className="text-sm text-fg-muted text-center">
                   Select an account
                 </span>
               </div>
             ) : repositoryListTab === 'history' ? (
               historyListEntries.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-                  <History className="h-8 w-8 text-gray-300 dark:text-gray-600 mb-2" aria-hidden />
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <History className="h-8 w-8 text-fg-faint mb-2" aria-hidden />
+                  <span className="text-sm text-fg-muted">
                     {selectedRepo
                       ? 'No recent imports for this repository yet. Open a spec from the file column to list it here.'
                       : 'No recent imports yet. Open a spec from a repository, then return here to re-open it quickly.'}
@@ -1055,17 +1055,17 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                       type="button"
                       onClick={() => !isLoading && void handleOpenRecentFromHistory(entry)}
                       disabled={isLoading}
-                      className={`w-full px-3 py-2 border-b border-gray-100 dark:border-gray-700 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100 ${
+                      className={`w-full px-3 py-2 border-b border-border text-left transition-colors hover:bg-subtle text-fg ${
                         isLoading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
                       }`}
                     >
                       {showRepo ? (
-                        <div className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 truncate">
+                        <div className="text-xs font-semibold text-accent truncate">
                           {entry.repoFullName}
                         </div>
                       ) : null}
                       <div className="text-sm font-medium truncate">{entry.specPath}</div>
-                      <div className="text-2xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                      <div className="text-2xs text-fg-muted mt-0.5 truncate">
                         {entry.refKind === 'tag' ? `Tag ${entry.refName}` : `Branch ${entry.refName}`}
                         <span className="mx-1">·</span>
                         {formatRecentOpenedAt(entry.openedAt)}
@@ -1076,17 +1076,17 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
               )
             ) : isLoading && repositories.length === 0 ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-accent" />
               </div>
             ) : repositories.length === 0 ? (
               <div className="flex items-center justify-center h-full p-4">
-                <span className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <span className="text-sm text-fg-muted text-center">
                   No repositories found
                 </span>
               </div>
             ) : filteredRepos.length === 0 ? (
               <div className="flex items-center justify-center h-full p-4">
-                <span className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <span className="text-sm text-fg-muted text-center">
                   No repositories match &quot;{repoSearchQuery}&quot;
                 </span>
               </div>
@@ -1098,22 +1098,22 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                     key={repo.id}
                     onClick={() => !isLoading && handleSelectRepo(repo)}
                     disabled={isLoading}
-                    className={`w-full px-3 py-2 border-b border-gray-100 dark:border-gray-700 text-left transition-colors ${
+                    className={`w-full px-3 py-2 border-b border-border text-left transition-colors ${
                       isSelected
-                        ? 'bg-indigo-600 text-white'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
+                        ? 'bg-accent text-fg-on-accent'
+                        : 'hover:bg-subtle text-fg'
                     } ${isLoading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <div className="flex items-center gap-1">
-                      <span className={`text-sm font-medium flex-1 truncate ${isSelected ? 'text-white' : ''}`}>
+                      <span className={`text-sm font-medium flex-1 truncate ${isSelected ? 'text-fg-on-accent' : ''}`}>
                         {repo.name}
                       </span>
                       {repo.private && (
-                        <Lock className={`h-3 w-3 flex-shrink-0 ${isSelected ? 'text-indigo-100' : 'text-gray-400'}`} />
+                        <Lock className={`h-3 w-3 flex-shrink-0 ${isSelected ? 'text-fg-on-accent' : 'text-fg-faint'}`} />
                       )}
                     </div>
                     {repo.description && (
-                      <div className={`text-xs truncate mt-0.5 ${isSelected ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <div className={`text-xs truncate mt-0.5 ${isSelected ? 'text-fg-on-accent' : 'text-fg-muted'}`}>
                         {repo.description}
                       </div>
                     )}
@@ -1126,26 +1126,26 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
 
         {/* Column 3: Files */}
         <div className="flex-1 min-w-[200px] flex flex-col min-h-0">
-          <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex-shrink-0">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="px-3 py-2 border-b border-border bg-subtle flex-shrink-0">
+            <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
               Files
             </span>
           </div>
 
           {/* Path breadcrumb */}
           {currentPath && (
-            <div className="px-3 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 flex items-center gap-2 flex-shrink-0">
+            <div className="px-3 py-1.5 border-b border-border bg-subtle flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => {
                   const parentPath = currentPath.split('/').slice(0, -1).join('/');
                   handleNavigateToPath(parentPath);
                 }}
                 disabled={isLoading}
-                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                className="p-1 rounded hover:bg-inset transition-colors"
               >
-                <ArrowLeft className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ArrowLeft className="h-4 w-4 text-fg-muted" />
               </button>
-              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              <span className="text-xs text-fg-muted truncate">
                 /{currentPath}
               </span>
             </div>
@@ -1154,18 +1154,18 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
           <div className="flex-1 overflow-y-auto min-h-0">
             {!selectedRepo ? (
               <div className="flex items-center justify-center h-full p-4">
-                <span className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <span className="text-sm text-fg-muted text-center">
                   Select a repository
                 </span>
               </div>
             ) : isLoading ? (
               <div className="flex flex-col items-center justify-center py-8 gap-2">
-                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-                <span className="text-sm text-gray-500 dark:text-gray-400">Loading...</span>
+                <Loader2 className="h-6 w-6 animate-spin text-accent" />
+                <span className="text-sm text-fg-muted">Loading...</span>
               </div>
             ) : repoFiles.length === 0 ? (
               <div className="flex items-center justify-center h-full p-4">
-                <span className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <span className="text-sm text-fg-muted text-center">
                   No files found
                 </span>
               </div>
@@ -1179,12 +1179,12 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                       handleNavigateToPath(parentPath);
                     }}
                     disabled={isLoading}
-                    className={`w-full px-3 py-2 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                    className={`w-full px-3 py-2 border-b border-border flex items-center gap-2 text-left transition-colors hover:bg-subtle ${
                       isLoading ? 'cursor-not-allowed' : 'cursor-pointer'
                     }`}
                   >
-                    <ArrowLeft className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                    <span className="text-sm text-gray-900 dark:text-gray-100 font-medium">
+                    <ArrowLeft className="h-4 w-4 text-fg-faint flex-shrink-0" />
+                    <span className="text-sm text-fg font-medium">
                       ..
                     </span>
                   </button>
@@ -1204,16 +1204,16 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                     key={idx}
                     onClick={() => !isLoading && handleSelectFile(file)}
                     disabled={isLoading}
-                    className={`w-full px-3 py-2 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                    className={`w-full px-3 py-2 border-b border-border flex items-center gap-2 text-left transition-colors hover:bg-subtle ${
                       isLoading ? 'cursor-not-allowed' : 'cursor-pointer'
                     }`}
                   >
                     {file.type === 'dir' ? (
-                      <FolderOpen className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <FolderOpen className="h-4 w-4 text-fg-faint flex-shrink-0" />
                     ) : (
-                      <File className={`h-4 w-4 flex-shrink-0 ${isOpenAPIFile ? 'text-green-500' : 'text-gray-400'}`} />
+                      <File className={`h-4 w-4 flex-shrink-0 ${isOpenAPIFile ? 'text-ok' : 'text-fg-faint'}`} />
                     )}
-                    <span className="text-sm text-gray-900 dark:text-gray-100 truncate">
+                    <span className="text-sm text-fg truncate">
                       {file.name}
                     </span>
                   </button>
@@ -1227,23 +1227,23 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
 
       {/* File Metadata Preview */}
       {fetchedContent && fileMetadata && (
-        <div className="flex-shrink-0 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <FileCode className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+        <div className="flex-shrink-0 bg-surface rounded-xl border border-border p-6">
+          <h3 className="text-lg font-semibold text-fg mb-4 flex items-center gap-2">
+            <FileCode className="h-5 w-5 text-accent" />
             File Preview: {fetchedFilename}
           </h3>
 
           <div className="space-y-4">
             {/* Unsupported Format Warning */}
             {!fileMetadata.formatSupported && fileMetadata.format !== 'unknown' && (
-              <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+              <div className="p-4 rounded-lg bg-warn-soft">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <AlertTriangle className="h-5 w-5 text-warn shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-medium text-amber-900 dark:text-amber-200">
+                    <div className="font-medium text-warn">
                       Format Not Available for Import
                     </div>
-                    <div className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                    <div className="text-sm text-warn mt-1">
                       The detected format <span className="font-semibold">{fileMetadata.formatDisplayName}</span> is not yet supported for import.
                       Currently supported formats: OpenAPI 3.x, Swagger 2.x, JSON Schema, Arazzo, RAML, AsyncAPI, GraphQL, Protobuf, Thrift, Avro, and Postman.
                     </div>
@@ -1254,14 +1254,14 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
 
             {/* Parse Error */}
             {!fileMetadata.syntaxValid && (
-              <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+              <div className="p-4 rounded-lg bg-danger-soft">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                  <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-medium text-red-900 dark:text-red-200">
+                    <div className="font-medium text-danger">
                       File Parse Error
                     </div>
-                    <div className="text-sm text-red-700 dark:text-red-300 mt-1">
+                    <div className="text-sm text-danger mt-1">
                       {fileMetadata.parseError || 'Unable to parse file content'}
                     </div>
                   </div>
@@ -1269,62 +1269,17 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
               </div>
             )}
 
-            {/* Metadata Grid */}
-            <div className="grid grid-cols-3 gap-4">
-              {/* Format */}
-              <div className={`rounded-lg p-4 border ${fileMetadata.formatSupported ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  {fileMetadata.formatSupported ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  ) : (
-                    <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                  )}
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Detected Format
-                  </span>
-                </div>
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {fileMetadata.formatDisplayName}
-                </div>
-              </div>
-
-              {/* Spec Version */}
-              <div className="rounded-lg p-4 border bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Version
-                  </span>
-                </div>
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {fileMetadata.specVersion || fileMetadata.version || 'N/A'}
-                </div>
-              </div>
-
-              {/* Syntax */}
-              <div className={`rounded-lg p-4 border ${fileMetadata.syntaxValid ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  {fileMetadata.syntaxValid ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  ) : (
-                    <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                  )}
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Syntax
-                  </span>
-                </div>
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {fileMetadata.syntaxValid ? `Valid ${fileMetadata.syntax.toUpperCase()}` : 'Invalid'}
-                </div>
-              </div>
-            </div>
+            {/* Format · Version · Syntax — the wizard's own tiles (HIVE-6.4, #5315), so the
+                same three facts read the same way on File, URL, Clipboard and Git. */}
+            <SpecMetaTiles metadata={fileMetadata} />
 
             {/* Title */}
             {fileMetadata.title && (
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <div className="pt-4 border-t border-border">
+                <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                   Title
                 </span>
-                <div className="text-base font-semibold text-gray-900 dark:text-white mt-1">
+                <div className="text-base font-semibold text-fg mt-1">
                   {fileMetadata.title}
                 </div>
               </div>
@@ -1332,11 +1287,11 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
 
             {/* Description */}
             {fileMetadata.description && (
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <div className="pt-4 border-t border-border">
+                <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                   Description
                 </span>
-                <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 leading-relaxed line-clamp-3">
+                <div className="text-sm text-fg mt-1 leading-relaxed line-clamp-3">
                   {fileMetadata.description}
                 </div>
               </div>

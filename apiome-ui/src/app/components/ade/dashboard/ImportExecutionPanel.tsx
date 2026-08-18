@@ -1,11 +1,26 @@
 'use client';
 
+/**
+ * The Import step (HIVE-6.4, #5315).
+ *
+ * Authority: `docs/mockups/build/import-wizard.html` §Step 4 — a state badge, a striped
+ * progress bar with its primary line and ETA, the per-state actions, a live checklist, the
+ * import log, and the technical summary behind a disclosure.
+ *
+ * The redesign changed the skin and nothing else: the poll, the commit/rollback/retry calls,
+ * the completion callback and the eight job states are as they were. What moved out is the
+ * *reading* of a state — which badge, which tone, whether the job is still moving and what the
+ * one sentence under the bar says — into `importJobPresentation`, so all eight can be asserted
+ * without a running job.
+ */
+
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as Progress from '@radix-ui/react-progress';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
+import { Card, cardVariants } from '../../../components/ui/Card';
+import { Alert } from '../../../components/ui/Alert';
+import { Progress } from '../../../components/ui/metrics/Progress';
 import {
-  AlertCircle,
   AlertTriangle,
   CheckCircle2,
   Circle,
@@ -19,8 +34,7 @@ import { cancelImport, getImportStatus, commitImport, rollbackImport, retryImpor
 import {
   getErrorEvents,
   formatEventContext,
-  getLiveProgressRowClasses,
-  getImportLogLineClasses,
+  importEventLevel,
   isSkippedEvent,
 } from '../../../../../lib/import-execution-error-indicators';
 import {
@@ -28,6 +42,7 @@ import {
   formatProgressPrimaryLine,
   estimateSecondsRemaining,
 } from '../../../../../lib/import-execution-live-rows';
+import { importJobPresentation, type ImportJobState } from '../import/importWizardModel';
 
 interface ImportExecutionPanelProps {
   jobId: string;
@@ -65,7 +80,7 @@ interface ProgressInfo {
   currentItem?: string;
 }
 
-type JobState = 'queued' | 'running' | 'pending-approval' | 'committing' | 'completed' | 'failed' | 'canceled' | 'rolled-back';
+type JobState = ImportJobState;
 
 const IMPORT_LOG_PREVIEW_COUNT = 8;
 
@@ -79,6 +94,15 @@ function formatEtaLine(seconds: number | null): string | null {
   const m = Math.max(1, Math.round(seconds / 60));
   return m === 1 ? 'Estimated time remaining: about 1 minute' : `Estimated time remaining: about ${m} minutes`;
 }
+
+/** What a checklist row's state looks like: its glyph and the words beside the schema name. */
+const CHECKLIST_NOTE: Readonly<Record<string, string>> = {
+  success: 'Imported successfully',
+  warning: 'Imported with warnings',
+  error: 'Failed',
+  importing: 'Importing…',
+  pending: 'Pending',
+};
 
 export default function ImportExecutionPanel({
   jobId,
@@ -105,15 +129,14 @@ export default function ImportExecutionPanel({
     [selectedSchemas, events, progress, state]
   );
 
+  const presentation = importJobPresentation(state);
   const primaryLine = formatProgressPrimaryLine(progress, state);
   const etaSeconds = estimateSecondsRemaining(
     percent,
     importStartedAtMs.current != null ? Date.now() - importStartedAtMs.current : 0
   );
   const etaLine =
-    ['running', 'queued', 'committing'].includes(state) && percent > 0 && percent < 100
-      ? formatEtaLine(etaSeconds)
-      : null;
+    presentation.active && percent > 0 && percent < 100 ? formatEtaLine(etaSeconds) : null;
 
   useEffect(() => {
     completionNotifiedRef.current = false;
@@ -138,7 +161,7 @@ export default function ImportExecutionPanel({
         setSummary(status.summary || null);
         setTransactionPending((status as { transactionPending?: boolean }).transactionPending || false);
 
-        if (['completed', 'failed', 'canceled', 'rolled-back', 'pending-approval'].includes(status.state)) {
+        if (importJobPresentation(status.state).terminal) {
           if (timer) clearInterval(timer);
           if (!completionNotifiedRef.current && onComplete) {
             completionNotifiedRef.current = true;
@@ -219,23 +242,23 @@ export default function ImportExecutionPanel({
   };
 
   const levelIcon = (lvl: LogLevel) => {
-    if (lvl === 'error') return <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" aria-hidden />;
-    if (lvl === 'warn') return <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" aria-hidden />;
-    return <Info className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />;
+    if (lvl === 'error') return <XCircle className="size-[var(--icon-dense)] shrink-0 text-danger" aria-hidden />;
+    if (lvl === 'warn') return <AlertTriangle className="size-[var(--icon-dense)] shrink-0 text-warn" aria-hidden />;
+    return <Info className="size-[var(--icon-dense)] shrink-0 text-accent" aria-hidden />;
   };
 
   const checklistIcon = (status: (typeof liveRows)[0]['status']) => {
     switch (status) {
       case 'success':
-        return <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />;
+        return <CheckCircle2 className="size-[var(--icon-dense)] shrink-0 text-ok" aria-hidden />;
       case 'warning':
-        return <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />;
+        return <AlertTriangle className="size-[var(--icon-dense)] shrink-0 text-warn" aria-hidden />;
       case 'error':
-        return <XCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden />;
+        return <XCircle className="size-[var(--icon-dense)] shrink-0 text-danger" aria-hidden />;
       case 'importing':
-        return <Loader2 className="h-4 w-4 shrink-0 animate-spin text-indigo-600 dark:text-indigo-400" aria-hidden />;
+        return <Loader2 className="size-[var(--icon-dense)] shrink-0 animate-spin text-accent" aria-hidden />;
       default:
-        return <Circle className="h-4 w-4 shrink-0 text-gray-300 dark:text-gray-600" aria-hidden />;
+        return <Circle className="size-[var(--icon-dense)] shrink-0 text-fg-faint" aria-hidden />;
     }
   };
 
@@ -244,77 +267,52 @@ export default function ImportExecutionPanel({
   const logOverflow = events.length > IMPORT_LOG_PREVIEW_COUNT;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {errorEvents.length > 0 && (
-        <div
-          className="rounded-xl border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/40 p-6"
-          role="alert"
-          aria-label="Import failures"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0" aria-hidden />
-            <h3 className="text-lg font-semibold text-red-800 dark:text-red-200">
-              Failures ({errorEvents.length})
-            </h3>
+        <Card variant="flat" className="p-[var(--card-pad)]" role="alert" aria-label="Import failures">
+          <div className="mb-3 flex items-center gap-2">
+            <XCircle className="size-[var(--icon-dense)] shrink-0 text-danger" aria-hidden />
+            <h3 className="text-base font-semibold text-fg">Failures ({errorEvents.length})</h3>
           </div>
-          <ul className="space-y-3 max-h-72 overflow-y-auto">
+          <ul className="flex max-h-72 flex-col gap-2 overflow-y-auto">
             {errorEvents.map((ev) => (
-              <li
-                key={ev.id}
-                className="rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-gray-900/60 p-3"
-              >
-                <div className="flex items-start gap-2">
-                  <XCircle className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" aria-hidden />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-red-600 dark:text-red-400 font-medium">{ev.code}</div>
-                    <div className="text-sm text-red-900 dark:text-red-100 mt-0.5">{ev.message}</div>
-                    {ev.context != null && (
-                      <pre className="mt-2 text-xs text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-900 rounded p-2 overflow-auto max-h-32 border border-red-100 dark:border-red-900/50">
-                        {formatEventContext(ev.context)}
-                      </pre>
-                    )}
-                  </div>
+              <li key={ev.id} className="imp-row" data-level="error">
+                <XCircle className="mt-0.5 size-[var(--icon-dense)] shrink-0 text-danger" aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-2xs font-medium text-fg-muted">{ev.code}</div>
+                  <div className="mt-0.5 text-sm text-fg">{ev.message}</div>
+                  {ev.context != null && (
+                    <pre className="imp-log__context">{formatEventContext(ev.context)}</pre>
+                  )}
                 </div>
               </li>
             ))}
           </ul>
-        </div>
+        </Card>
       )}
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Import Progress</h3>
-          <Badge
-            variant={
-              state === 'completed'
-                ? 'success'
-                : state === 'failed'
-                  ? 'error'
-                  : state === 'canceled' || state === 'rolled-back'
-                    ? 'secondary'
-                    : state === 'pending-approval'
-                      ? 'warning'
-                      : 'default'
-            }
-          >
-            {state === 'pending-approval' ? 'PENDING APPROVAL' : state.toUpperCase().replace(/-/g, ' ')}
-          </Badge>
+      <Card className="p-[var(--card-pad)]">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h3 className="text-base font-semibold text-fg">Import progress</h3>
+          <Badge status={presentation.status}>{presentation.label}</Badge>
         </div>
 
-        <div className="flex items-center gap-4 mb-3">
-          <Progress.Root className="relative h-3 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700" value={percent}>
-            <Progress.Indicator
-              className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-transform duration-300 ease-out"
-              style={{ transform: `translateX(-${100 - (percent || 0)}%)` }}
-            />
-          </Progress.Root>
-          <span className="text-2xl font-semibold tabular-nums text-gray-900 dark:text-white shrink-0">{percent}%</span>
+        <div className="mb-3 flex items-center gap-4">
+          <Progress
+            className="flex-1"
+            value={percent}
+            tone={presentation.progressTone}
+            striped={presentation.active}
+            label="Import progress"
+          />
+          <span className="shrink-0 text-2xl font-semibold tabular-nums text-fg">{percent}%</span>
         </div>
 
-        <p className="text-sm text-gray-700 dark:text-gray-300">{primaryLine}</p>
-        {etaLine && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{etaLine}</p>}
+        <p className="text-sm text-fg">{primaryLine}</p>
+        <p className="mt-1 text-xs text-fg-muted">{presentation.note}</p>
+        {etaLine && <p className="mt-1 text-xs text-fg-muted">{etaLine}</p>}
         {progress && progress.total > 0 && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="mt-1 text-xs text-fg-muted">
             Step {progress.completed} of {progress.total}
           </p>
         )}
@@ -322,137 +320,101 @@ export default function ImportExecutionPanel({
         <div className="mt-4 flex flex-wrap gap-2">
           {state === 'pending-approval' ? (
             <>
-              <Button
-                onClick={onAccept}
-                disabled={isCommitting || isRollingBack}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <CheckCircle2 className="h-4 w-4 mr-1" />
-                {isCommitting ? 'Committing...' : 'Accept & Commit'}
+              <Button variant="success" onClick={onAccept} disabled={isCommitting || isRollingBack}>
+                <CheckCircle2 aria-hidden />
+                {isCommitting ? 'Committing...' : 'Accept & commit'}
               </Button>
-              <Button
-                variant="outline"
-                onClick={onReject}
-                disabled={isCommitting || isRollingBack}
-                className="text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20"
-              >
-                <XCircle className="h-4 w-4 mr-1" />
-                {isRollingBack ? 'Rolling Back...' : 'Reject & Rollback'}
+              <Button variant="danger-soft" onClick={onReject} disabled={isCommitting || isRollingBack}>
+                <XCircle aria-hidden />
+                {isRollingBack ? 'Rolling back...' : 'Reject & rollback'}
               </Button>
             </>
           ) : state === 'failed' || state === 'canceled' ? (
             <>
               {onRetry && (
-                <Button
-                  onClick={onRetryClick}
-                  disabled={isRetrying}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  <RotateCw className={`h-4 w-4 mr-1 ${isRetrying ? 'animate-spin' : ''}`} />
-                  {isRetrying ? 'Starting retry...' : 'Retry Import'}
+                <Button variant="primary" onClick={onRetryClick} disabled={isRetrying}>
+                  <RotateCw className={isRetrying ? 'animate-spin' : undefined} aria-hidden />
+                  {isRetrying ? 'Starting retry...' : 'Retry import'}
                 </Button>
               )}
               <Button variant="outline" onClick={onCancel} disabled={isRetrying}>
                 Cancel import
               </Button>
             </>
-          ) : (state === 'queued' || state === 'running' || state === 'committing') ? (
+          ) : presentation.active ? (
             <Button variant="outline" onClick={onCancel}>
-              <MinusCircle className="h-4 w-4 mr-1" />
-              Cancel Import
+              <MinusCircle aria-hidden />
+              Cancel import
             </Button>
           ) : null}
         </div>
 
         {state === 'completed' && summary?.['dryRun'] === true && (
-          <div className="mt-4 p-3 rounded-lg bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800">
-            <div className="flex items-center gap-2 text-sky-800 dark:text-sky-200">
-              <Info className="h-4 w-4" />
-              <span className="text-sm font-medium">Dry run complete. No changes were saved.</span>
-            </div>
-            <p className="text-xs text-sky-700 dark:text-sky-300 mt-1 ml-6">
-              Review the summary below. Uncheck &quot;Dry run (preview only)&quot; and run again to import for real.
-            </p>
-          </div>
+          <Alert variant="info" className="mt-4">
+            <span className="font-semibold">Dry run complete. No changes were saved.</span> Review the
+            summary below. Uncheck &quot;Dry run (preview only)&quot; and run again to import for real.
+          </Alert>
         )}
 
         {state === 'completed' && summary?.['incrementalMode'] === true && summary?.['dryRun'] !== true && (
-          <div className="mt-4 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
-            <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
-              <CheckCircle2 className="h-4 w-4" />
-              <span className="text-sm font-medium">Incremental import complete.</span>
-            </div>
-            <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1 ml-6">
-              Successful classes were saved; failed classes were skipped. You can open the project in Canvas or close this dialog.
-            </p>
-          </div>
+          <Alert variant="ok" className="mt-4">
+            <span className="font-semibold">Incremental import complete.</span> Successful classes
+            were saved; failed classes were skipped. You can open the project in Canvas or close this
+            dialog.
+          </Alert>
         )}
 
         {transactionPending && state === 'pending-approval' && (
-          <div className="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">Transaction pending — changes will only be saved if you accept.</span>
-            </div>
-            <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 ml-6">
-              Closing this dialog or rejecting will rollback all changes.
-            </p>
-          </div>
+          <Alert variant="warn" className="mt-4">
+            <span className="font-semibold">
+              Transaction pending — changes will only be saved if you accept.
+            </span>{' '}
+            Closing this dialog or rejecting will roll back all changes.
+          </Alert>
         )}
-      </div>
+      </Card>
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Live Progress</h3>
+      <Card className="p-[var(--card-pad)]">
+        <h3 className="mb-3 text-base font-semibold text-fg">Live progress</h3>
         {liveRows.length > 0 ? (
-          <ul className="max-h-80 overflow-y-auto space-y-2 pr-1" aria-label="Per-schema import status">
+          <ul className="flex max-h-80 flex-col gap-2 overflow-y-auto pr-1" aria-label="Per-schema import status">
             {liveRows.map((row) => (
               <li key={row.id} className="flex items-start gap-2 text-sm">
                 {checklistIcon(row.status)}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{row.label}</span>
-                    <span className="text-gray-600 dark:text-gray-400">
-                      {row.status === 'success' && 'Imported successfully'}
-                      {row.status === 'warning' && 'Imported with warnings'}
-                      {row.status === 'error' && 'Failed'}
-                      {row.status === 'importing' && 'Importing…'}
-                      {row.status === 'pending' && 'Pending'}
-                    </span>
+                    <span className="font-medium text-fg">{row.label}</span>
+                    <span className="text-fg-muted">{CHECKLIST_NOTE[row.status]}</span>
                   </div>
-                  {row.detail && (
-                    <p className="mt-1 text-xs text-amber-800 dark:text-amber-200 border-l-2 border-amber-300 dark:border-amber-700 pl-2">
-                      {row.detail}
-                    </p>
-                  )}
+                  {row.detail && <p className="imp-row__note">{row.detail}</p>}
                 </div>
               </li>
             ))}
           </ul>
         ) : (
-          <div className="max-h-80 overflow-y-auto space-y-2">
+          <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
             {events.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">Waiting for import events…</p>
+              <p className="text-sm text-fg-muted">Waiting for import events…</p>
             ) : (
               events
                 .slice()
                 .reverse()
                 .slice(0, 20)
                 .map((ev) => (
-                  <div key={ev.id} className={getLiveProgressRowClasses(ev)}>
+                  <div key={ev.id} className="imp-row" data-level={importEventLevel(ev)}>
                     {isSkippedEvent(ev) ? (
-                      <MinusCircle className="h-4 w-4 text-gray-500 dark:text-gray-400 shrink-0" aria-label="Intentionally skipped" />
+                      <MinusCircle
+                        className="size-[var(--icon-dense)] shrink-0 text-fg-muted"
+                        aria-label="Intentionally skipped"
+                      />
                     ) : (
                       levelIcon(ev.level)
                     )}
-                    <div className="flex-1 min-w-0">
-                      <div
-                        className={`text-xs ${isSkippedEvent(ev) ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
-                      >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-mono text-2xs text-fg-muted">
                         {new Date(ev.ts).toLocaleTimeString()} • {ev.code}
                       </div>
-                      <div
-                        className={`text-sm ${ev.level === 'error' ? 'text-red-900 dark:text-red-100 font-medium' : isSkippedEvent(ev) ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-gray-100'}`}
-                      >
+                      <div className={`text-sm ${ev.level === 'error' ? 'font-medium text-fg' : 'text-fg'}`}>
                         {ev.message}
                       </div>
                     </div>
@@ -461,59 +423,39 @@ export default function ImportExecutionPanel({
             )}
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Import Log</h3>
-        <div className="max-h-72 overflow-y-auto space-y-1 font-mono text-xs">
+      <Card className="p-[var(--card-pad)]">
+        <h3 className="mb-3 text-base font-semibold text-fg">Import log</h3>
+        <div className="imp-log">
           {logShown.map((ev) => (
-            <div key={ev.id} className={getImportLogLineClasses(ev)}>
-              <span
-                className={`mr-2 font-semibold ${isSkippedEvent(ev) ? 'text-gray-500 dark:text-gray-400' : ev.level === 'error' ? 'text-red-600 dark:text-red-400' : ev.level === 'warn' ? 'text-yellow-600 dark:text-yellow-400' : 'text-indigo-600 dark:text-indigo-400'}`}
-              >
+            <div key={ev.id} className="imp-log__line" data-level={importEventLevel(ev)}>
+              <span className="imp-log__level">
                 {isSkippedEvent(ev) ? '[SKIPPED]' : `[${ev.level.toUpperCase()}]`}
               </span>
-              <span className="text-gray-500 dark:text-gray-500 mr-2">{new Date(ev.ts).toLocaleTimeString()}</span>
-              <span
-                className={
-                  isSkippedEvent(ev)
-                    ? 'text-gray-500 dark:text-gray-400'
-                    : ev.level === 'error'
-                      ? 'text-red-900 dark:text-red-100'
-                      : 'text-gray-800 dark:text-gray-200'
-                }
-              >
-                {ev.message}
-              </span>
+              <span className="imp-log__time">{new Date(ev.ts).toLocaleTimeString()}</span>
+              <span>{ev.message}</span>
               {ev.level === 'error' && ev.context != null && (
-                <pre className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-900 rounded p-2 overflow-auto max-h-20 border border-red-200 dark:border-red-800">
-                  {formatEventContext(ev.context)}
-                </pre>
+                <pre className="imp-log__context">{formatEventContext(ev.context)}</pre>
               )}
             </div>
           ))}
         </div>
         {logOverflow && (
-          <button
-            type="button"
-            onClick={() => setLogExpanded((e) => !e)}
-            className="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-          >
+          <Button variant="link" size="sm" className="mt-2" onClick={() => setLogExpanded((e) => !e)}>
             {logExpanded ? 'Show less' : 'Show more…'}
-          </button>
+          </Button>
         )}
-      </div>
+      </Card>
 
       {summary && (
-        <details className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm group">
-          <summary className="cursor-pointer text-base font-semibold text-gray-900 dark:text-white list-none flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0" />
-            Import Summary
-            <span className="text-sm font-normal text-gray-500 dark:text-gray-400">(technical details)</span>
-          </summary>
-          <pre className="mt-3 text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 rounded p-3 overflow-auto max-h-64">
-            {JSON.stringify(summary, null, 2)}
-          </pre>
+        <details className={cardVariants({ className: 'p-[var(--card-pad)]' })}>
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-base font-semibold text-fg">
+              <CheckCircle2 className="size-[var(--icon-dense)] shrink-0 text-ok" aria-hidden />
+              Import summary
+              <span className="text-sm font-normal text-fg-muted">(technical details)</span>
+            </summary>
+            <pre className="imp-log mt-3">{JSON.stringify(summary, null, 2)}</pre>
         </details>
       )}
     </div>

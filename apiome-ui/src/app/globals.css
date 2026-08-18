@@ -16600,3 +16600,600 @@ button.auth-divider:disabled {
   box-shadow: inset 0 0 0 1px var(--border);
   overflow: hidden;
 }
+
+/* ==========================================================================
+   IMPORT WIZARD  (HIVE-6.4, #5315)
+   --------------------------------------------------------------------------
+   `docs/mockups/build/import-wizard.html` — the Source → Analyze → Preview →
+   Import → Done flow that Projects, Versions, the Catalog and the MCP servers
+   list all open. This block replaces the mockup's page-local `<style>`
+   (`.wiz`, `.wiz-card`, `.wiz-steps`, `.src-card`, `.drop`, `.tile`,
+   `.stage`, `.schema-row`, `.log`, `.grade-gauge`, `.kv-mini`, `.bubble`)
+   and, in the app, the gradient source picker and the eight hand-tinted
+   status boxes that grew around it.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same reasons the Epic-5 and Epic-6 blocks give — a shape repeated
+   across a dozen files belongs in one place, and a `data-` driven state is
+   cheaper to read here than as a ternary in JSX — plus one particular to this
+   ticket: **the wizard is a `dialog--full` whose middle is the only part that
+   scrolls.** That is a four-part grid contract between `DialogContent`, the
+   head, the body and the footer; expressing it as utilities on each of the
+   four would let any one of them silently break the other three.
+
+   Deviations from the mockup, and why
+   -----------------------------------
+   1. `.wiz-card` is a page-level card in the mockup (its "Adds" makes the
+      wizard resumable and deep-linkable). It stays a dialog here: every one
+      of the five entry points opens it over its list, and turning it into a
+      route is a change to navigation, not to the skin. The mockup's own
+      chrome — the icon-tile head, the centred stepper, the tinted footer — is
+      adopted as-is, so the two read the same.
+   2. The mockup's `.src-card` is `120px`-tall and its `.drop` is padded in
+      `px`. Both are `rem`/token here so the grid follows all six font scales.
+   3. `.grade-gauge` keeps its `conic-gradient`, but the sweep is a custom
+      property set from the component rather than an inline `background`, so
+      the ring's colours stay in the stylesheet where the theme can reach
+      them.
+   4. No `-fg` ink is placed on `--bg-surface` and no `--fg` ink on a `-soft`
+      fill: outside the light and dark themes those pairs are not calibrated
+      for each other (the note HIVE-6.2 recorded). Where the mockup tints a
+      row, the tint is a `color-mix` wash of the tone into the surface.
+   ========================================================================== */
+
+/* --- The dialog frame ---------------------------------------------------- */
+
+/*
+   `DialogContent` is a padded, gapped grid. The wizard is a four-row column
+   whose middle scrolls, so the frame is restated here rather than fought with
+   utilities: `min-block-size: 0` on the body is what actually lets it shrink
+   below its content and scroll, and it only works if every ancestor in the
+   column agrees to be a flex column too.
+*/
+.imp-wizard {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.imp-wizard__head {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  padding: var(--space-5) var(--space-6) var(--space-3);
+  padding-inline-end: var(--space-10);
+}
+
+.imp-wizard__heading {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* The head's trailing controls sit on the same baseline as the title, and
+   wrap under it rather than crowding the corner dismiss button. */
+.imp-wizard__head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+.imp-wizard__steps {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  padding: var(--space-2) var(--space-6) var(--space-4);
+  border-block-end: 1px solid var(--border);
+}
+
+.imp-wizard__body {
+  display: flex;
+  min-block-size: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-6);
+}
+
+.imp-wizard__foot {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-block-start: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-subtle) 60%, var(--bg-surface));
+}
+
+.imp-wizard__foot-lead,
+.imp-wizard__foot-trail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.imp-wizard__foot-trail {
+  margin-inline-start: auto;
+}
+
+/* --- Source cards -------------------------------------------------------- */
+
+/*
+   The Source step's heading is an `<h2>` — it names a section of the dialog —
+   and the document's own unlayered `h2` rule sets a `clamp()` font-size that
+   outranks any utility. So the size is stated here, unlayered too, rather than
+   demoting the element to a `<div>` and losing the outline.
+*/
+.imp-heading {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.4;
+  color: var(--fg);
+}
+
+
+/*
+   `auto-fit` rather than a fixed column count: the grid is data-driven, so it
+   holds seven cards on Projects, five on the Catalog and however many more a
+   registry adds — and it has to collapse to one column at the Largest font
+   scale without a media query per count.
+*/
+.imp-cards {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.imp-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  text-align: start;
+  cursor: pointer;
+}
+
+.imp-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.imp-card__text {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.imp-card__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.imp-card__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* --- The File drop zone -------------------------------------------------- */
+
+.imp-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-5);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--r-lg);
+  background: var(--bg-canvas);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), background var(--dur-fast);
+}
+
+.imp-drop:hover {
+  border-color: var(--accent);
+}
+
+/*
+   The over state is the mockup's `.drop.is-over`. It is a wash rather than
+   `--accent-soft`: the zone's own text is `--fg`, and `--fg` on a `-soft`
+   fill is one of the two pairings that are not calibrated outside light and
+   dark.
+*/
+.imp-drop--over {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-canvas));
+}
+
+.imp-drop__glyph {
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: var(--r-md);
+}
+
+.imp-drop__glyph > svg {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+}
+
+/* The browse affordance reads as the primary button it replaces — it cannot
+   *be* one, because the whole zone is the label that opens the picker. */
+.imp-drop__browse {
+  display: inline-flex;
+  align-items: center;
+  block-size: var(--control-h-sm);
+  padding-inline: var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--ink);
+  color: var(--ink-fg);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+/* --- Preview tiles ------------------------------------------------------- */
+
+.imp-tiles {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.imp-tile {
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.imp-tile__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.imp-tile__value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.imp-tile__value > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+/* --- The import log and the live checklist ------------------------------- */
+
+/*
+   One monospace well, with the severity carried by `data-level` rather than
+   by a class string built in TypeScript. That is what lets the same three
+   tones serve the log line, its context block and the checklist row without
+   any of them naming a colour.
+*/
+.imp-log {
+  max-block-size: 18rem;
+  overflow: auto;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  line-height: 1.7;
+}
+
+/*
+   A log line is *not* washed, and this is measured rather than preferred: the
+   well is already `--bg-inset`, and tinting a line on top of it moved the
+   ground under the quiet `[LEVEL]`, timestamp and context text far enough that
+   all three fell under AA at 11 px (2.5:1 for the warn prefix). So the
+   severity is carried by a rule down the leading edge — which survives a
+   high-contrast theme and a reader who cannot separate two washes — and by the
+   `[LEVEL]` word itself, which spells the level out.
+*/
+.imp-log__line {
+  display: block;
+  margin-inline: calc(var(--space-2) * -1);
+  padding: 0 var(--space-2);
+  border-inline-start: 2px solid transparent;
+  border-radius: var(--r-xs);
+  color: var(--fg-muted);
+}
+
+.imp-log__line[data-level="error"] {
+  border-inline-start-color: var(--danger);
+  color: var(--fg);
+}
+
+.imp-log__line[data-level="warn"] {
+  border-inline-start-color: var(--warn);
+  color: var(--fg);
+}
+
+.imp-log__line[data-level="skipped"] {
+  border-inline-start-color: var(--border-strong);
+  color: var(--fg-muted);
+}
+
+/*
+   The prefix is a chip, not tinted text — and that is a measurement rather
+   than a preference. On the inset well the saturated hues measure 2.5–3.4:1 at
+   11 px, and the `-fg` steps measure 1.95–2.7:1 in the five dark-based themes,
+   because they are calibrated against their own `-soft` fill rather than
+   against a neutral ground. Giving the prefix that fill restores the pair the
+   token layer *did* calibrate: it measures 5.6:1 or better in all nine.
+*/
+.imp-log__level {
+  display: inline-block;
+  margin-inline-end: var(--space-2);
+  padding-inline: var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--accent-soft);
+  font-weight: 600;
+  color: var(--accent-fg);
+}
+
+.imp-log__line[data-level="error"] .imp-log__level {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.imp-log__line[data-level="warn"] .imp-log__level {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.imp-log__line[data-level="skipped"] .imp-log__level {
+  background: var(--neutral-soft);
+  color: var(--neutral-fg);
+}
+
+.imp-log__time {
+  margin-inline-end: var(--space-2);
+  color: var(--fg-muted);
+}
+
+.imp-log__context {
+  margin-block-start: var(--space-2);
+  max-block-size: 8rem;
+  overflow: auto;
+  padding: var(--space-2);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  color: var(--fg-muted);
+  white-space: pre-wrap;
+}
+
+/* A live-progress row: the same three tones, on a full-width surface row. */
+.imp-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.imp-row[data-level="error"] {
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+.imp-row[data-level="warn"] {
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 30%, transparent);
+}
+
+.imp-row[data-level="skipped"] {
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+}
+
+/* The note a checklist row hangs under itself when a schema imported with
+   warnings — indented by its own rule rather than by a margin, so it reads as
+   belonging to the row above it. */
+.imp-row__note {
+  margin-block-start: var(--space-1);
+  padding-inline-start: var(--space-2);
+  border-inline-start: 2px solid var(--warn);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* --- Stage rail (the MCP hero's three stages) ---------------------------- */
+
+.imp-stages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-block-start: 1px solid var(--border);
+  list-style: none;
+}
+
+.imp-stage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.imp-stage__num {
+  display: grid;
+  place-items: center;
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+/*
+   The done/failed badges take the calibrated `-soft` / `-fg` pair rather than
+   the mockup's white-on-solid: there is no "ink on a solid semantic fill"
+   token in the system, and inventing one would be a colour the nine themes
+   never agreed on.
+*/
+.imp-stage[data-state="done"] .imp-stage__num {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.imp-stage[data-state="active"] .imp-stage__num {
+  background: var(--fg);
+  color: var(--bg-surface);
+}
+
+.imp-stage[data-state="failed"] .imp-stage__num {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+/* --- Native controls the wizard keeps ------------------------------------ */
+
+/*
+   Two of the wizard's controls stay native `<select>` / `<input type=checkbox>`
+   rather than moving to the Radix primitives: both belong to the shared
+   `ImportOptionsForm`, which the repository-file import flow renders too, and
+   both surfaces are driven by suites that read `displayValue` and fire a
+   `change`. Restyling them is a restyle; replacing them would have been a
+   migration of two flows and their tests, which this ticket is not. (The
+   form's two *text* fields had no such constraint and are the shared `Input`.)
+
+   `accent-color` is the one way to have the browser's own tick follow a theme
+   swap without re-implementing every state of the control.
+*/
+.imp-select {
+  inline-size: 100%;
+  block-size: var(--control-h);
+  padding-inline: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+}
+
+.imp-select:disabled {
+  cursor: not-allowed;
+  color: var(--fg-muted);
+}
+
+.imp-check {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  accent-color: var(--accent);
+}
+
+/* --- Small key/value list ------------------------------------------------ */
+
+.imp-kv {
+  display: grid;
+  gap: var(--space-1) var(--space-3);
+  grid-template-columns: max-content minmax(0, 1fr);
+  margin: 0;
+  font-size: var(--fs-2xs);
+}
+
+.imp-kv > dt {
+  color: var(--fg-muted);
+}
+
+.imp-kv > dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+/* --- Schema rows (the Preview list) -------------------------------------- */
+
+.imp-schema-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+  min-block-size: var(--control-h);
+  padding-inline: var(--space-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  text-align: start;
+  cursor: pointer;
+}
+
+.imp-schema-row:hover {
+  background: var(--bg-subtle);
+}
+
+/* The row carries its own selection rather than `aria-selected`: it holds a
+   checkbox, and a `role="option"` may not. */
+.imp-schema-row[data-selected] {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.imp-schema-row__meta {
+  margin-inline-start: auto;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* --- The AI chat transcript ---------------------------------------------- */
+
+.imp-chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.imp-bubble {
+  max-inline-size: 78%;
+  padding: var(--space-3);
+  border-radius: var(--r-lg);
+  font-size: var(--fs-sm);
+}
+
+/*
+   The reader's own turn is a wash of the accent rather than `--accent-soft`
+   with `--accent-fg` on it: the bubble holds arbitrary markdown, whose ink is
+   `--fg`, and `--fg` on `-soft` is the pairing that is not calibrated outside
+   light and dark.
+*/
+.imp-bubble--user {
+  align-self: flex-end;
+  border-end-end-radius: var(--r-xs);
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-surface));
+  color: var(--fg);
+}
+
+.imp-bubble--ai {
+  align-self: flex-start;
+  border-end-start-radius: var(--r-xs);
+  background: var(--bg-subtle);
+  color: var(--fg);
+}

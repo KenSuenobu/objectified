@@ -70,12 +70,20 @@ export interface DialogContentProps
     VariantProps<typeof dialogContentVariants> {
   /** Show the corner dismiss button (default `true`). */
   showCloseButton?: boolean;
+  /**
+   * What the corner dismiss button is called.
+   *
+   * Default `Close`. A dialog where closing *costs* something says so here — the import
+   * wizard's "Close (rolls back a running job)" — which is the only warning a reader gets
+   * before pressing it. Matches `DrawerContent`'s prop of the same name.
+   */
+  closeLabel?: string;
 }
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, size, showCloseButton = true, ...props }, ref) => (
+>(({ className, children, size, showCloseButton = true, closeLabel = 'Close', ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -85,9 +93,12 @@ const DialogContent = React.forwardRef<
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm p-1 text-fg-subtle transition-colors hover:bg-subtle hover:text-fg focus-visible:outline-none disabled:pointer-events-none">
+        <DialogPrimitive.Close
+          title={closeLabel}
+          className="absolute right-4 top-4 rounded-sm p-1 text-fg-subtle transition-colors hover:bg-subtle hover:text-fg focus-visible:outline-none disabled:pointer-events-none"
+        >
           <X className="size-4" aria-hidden="true" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{closeLabel}</span>
         </DialogPrimitive.Close>
       )}
     </DialogPrimitive.Content>
