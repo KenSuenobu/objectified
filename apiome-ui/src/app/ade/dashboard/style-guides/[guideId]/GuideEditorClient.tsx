@@ -33,6 +33,7 @@ import { Switch } from '@/app/components/ui/Switch';
 import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
 import { cn } from '@lib/utils';
 import { useDialog } from '@/app/components/providers/DialogProvider';
+import { useUnsavedChangesPrompt } from '@/app/hooks/useUnsavedChangesPrompt';
 import {
   fetchMyPermissions,
   styleGuidesApi,
@@ -136,15 +137,7 @@ export default function GuideEditorClient({ guideId }: { guideId: string }) {
 
   // Warn on tab close / hard navigation while changes are unsaved (in-app back navigation
   // goes through handleBack below, which asks via the dialog provider instead).
-  useEffect(() => {
-    if (!dirty) return;
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [dirty]);
+  useUnsavedChangesPrompt(dirty);
 
   const enabledCount = useMemo(
     () => Object.values(draft).filter((s) => s.enabled).length,

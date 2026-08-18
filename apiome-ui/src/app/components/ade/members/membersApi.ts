@@ -3,48 +3,24 @@
  *
  * `/api/access/*` forwards to apiome-rest `/v1/access/{tenantSlug}/*`, resolving the tenant
  * from the session server-side, and answers in a `{success, data | error, code?}` envelope.
- * The screen this replaces unwrapped that envelope with a `fetch` written inline in the
+ * The screen this replaced unwrapped that envelope with a `fetch` written inline in the
  * component, which meant the one thing the envelope carries that matters — the stable
  * machine `code` on a licence refusal — was preserved by a comment rather than by a type.
  *
- * Here the unwrapping happens once, the code is kept in the thrown message the way
- * {@link ../../../ade/dashboard/tenants/licenseApi} keeps it (so `describeLicenseError` can
- * still recognise it), and each endpoint is a named function whose return type is the record
+ * The unwrapping itself now lives in {@link ../access/accessApi}, shared with the Roles
+ * screen (HIVE-5.3, #5306), together with the two reads both screens make. What is left here
+ * is what is genuinely the members surface's: one read of the roster and the five writes
+ * against it, each a named function whose return type is the record
  * {@link ./membersModel} works in.
  */
 
-import type {
-  AccessAuditRecord,
-  MemberRecord,
-  MemberStatus,
-  MyPermissions,
-  RoleRecord,
-} from './membersModel';
+import { accessApi, JSON_HEADERS } from '../access/accessApi';
+import type { AccessAuditRecord, MemberRecord, MemberStatus } from './membersModel';
 
-/**
- * Call the access proxy and unwrap its envelope.
- *
- * @param path The path under `/api/access/`, already encoded.
- * @param init Fetch options; a JSON body must be stringified by the caller.
- * @returns The `data` payload, or `null` for a 204.
- * @throws Error whose message ends in `[code]` when the proxy reported a stable machine code
- *   (e.g. the OLO-5.3 `license-seats-exhausted` 403), so callers can run it through
- *   `describeLicenseError` for friendly upgrade guidance.
- */
-async function accessApi<T>(path: string, init?: RequestInit): Promise<T | null> {
-  const res = await fetch(`/api/access/${path}`, init);
-  if (res.status === 204) return null;
-  const json = await res.json();
-  if (!json.success) {
-    const message = json.error || 'Request failed';
-    const code = typeof json.code === 'string' ? json.code : undefined;
-    throw new Error(code ? `${message} [${code}]` : message);
-  }
-  return json.data as T;
-}
-
-/** JSON request headers, stated once rather than at each of the four write call sites. */
-const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
+// The roles list and the viewer's own grants are read by both access screens, so they are
+// declared once in the shared module and re-exported here — every members call site imports
+// them from the barrel, and which module they are declared in is not its concern.
+export { fetchRoles, fetchMyPermissions } from '../access/accessApi';
 
 /**
  * Read the tenant's members.
@@ -53,24 +29,6 @@ const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
  */
 export async function fetchMembers(): Promise<MemberRecord[]> {
   return (await accessApi<MemberRecord[]>('members')) ?? [];
-}
-
-/**
- * Read the tenant's roles, with the permission grid each one grants.
- *
- * @returns Every role, built-in first.
- */
-export async function fetchRoles(): Promise<RoleRecord[]> {
-  return (await accessApi<RoleRecord[]>('roles')) ?? [];
-}
-
-/**
- * Read the viewer's own effective permissions, which drive the screen's gates.
- *
- * @returns The `permissions/me` payload.
- */
-export async function fetchMyPermissions(): Promise<MyPermissions | null> {
-  return accessApi<MyPermissions>('permissions/me');
 }
 
 /**
