@@ -7736,3 +7736,574 @@ button.auth-divider:disabled {
   block-size: var(--icon-dense);
   flex-shrink: 0;
 }
+
+/* ==========================================================================
+   API KEYS  (HIVE-5.4, #5307)
+   --------------------------------------------------------------------------
+   `docs/mockups/workspace/api-keys.html`, whose page-local block this replaces:
+   the row tints, the scope preset cards and the secret box.
+
+   Why these live in the stylesheet rather than in the components
+   --------------------------------------------------------------
+   The same three reasons the tenants, members and roles blocks above give.
+   Every rule leans on the density and font-scale tokens; the scope cards, the
+   secret box and the two reference cards are real grids that a utility string
+   spells badly; and the quiet lines have to sit *after* the unlayered `h2`/`p`
+   base rules near line 2490, which outrank anything in `@layer utilities`.
+
+   The mockup froze four things in pixels that must not be frozen: the 280 px
+   description clamp, the 240 px expiry field, the secret box's padding and the
+   scope card's 10 px gutters. All four are `rem` or a spacing token here, so
+   they follow all six font scales, and the reference grid collapses to a single
+   column rather than scrolling the document sideways.
+
+   No hue is named below — every colour is a token, so the surface follows all
+   nine themes. Two measured deviations from the mockup, both the ones HIVE-4.8,
+   5.1 and 5.2 already made:
+
+   * the mockup fades a disabled row's ink to `--fg-muted`. Rows are tinted here
+     and the ink is left alone: dimming text is the one way of marking a row
+     that can fail a contrast check, and the Disabled badge already says it.
+   * quiet text is `--fg-muted`, not `--fg-subtle`, which measures 3.1:1 against
+     the canvas at these sizes.
+
+   One class is borrowed rather than restated: `.tnt-icon-tile` from the tenants
+   block above — the tinted square at the head of a dialog and in the Name cell,
+   keyed by `data-tone` from the shared status vocabulary.
+   ========================================================================== */
+
+/* ---- The Name cell ------------------------------------------------------
+   Key tile, then name over description. `min-width: 0` on the text column is
+   what lets a long description elide instead of widening the column. */
+.akey-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+  /* `max-width`, not `max-inline-size`: the build's CSS transform drops the
+     logical spelling from a rule that also carries `min-width` (measured in
+     HIVE-5.2), and a declaration that never reaches the browser is worse than
+     a physical one. 22rem is the measure the tenants and members tables cap
+     their first column at. */
+  max-width: 22rem;
+  text-align: start;
+}
+
+.akey-identity__text {
+  min-width: 0;
+}
+
+.akey-identity__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The mockup's `.clamp-2`: two lines of description, then an ellipsis. Line
+   height rather than a pixel height, so the clamp follows the font scale. */
+.akey-identity__desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+}
+
+/* ---- The Prefix cell ----------------------------------------------------
+   The mono chip and its copy button. The button keeps its own hit area rather
+   than being folded into the chip: copying is a distinct action, and a chip
+   that is entirely a button reads as one that navigates. */
+.akey-prefix {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+.akey-prefix__value {
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  color: var(--fg);
+  font-size: var(--fs-xs);
+  /* Selectable: the copy button is the fast path, this is the one that still
+     works when the clipboard API is refused. */
+  user-select: all;
+}
+
+.akey-prefix-copy {
+  padding-inline: var(--space-1);
+}
+
+/* ---- The Scopes cell ----------------------------------------------------
+   One badge per scope, wrapping rather than widening the column. */
+.akey-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* `*` is drawn as the words "Full access" rather than as a badge: a `*` badge
+   beside two others would read as a key holding three scopes, and `*` is
+   exactly the scope that stands alone. */
+.akey-scopes__full {
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* ---- The three timestamp columns ---------------------------------------- */
+.akey-stamp {
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* An expiry that has passed. Three channels — a ground, an ink and a weight —
+   so the column is readable in the monochrome themes and to a reader who cannot
+   separate red from grey.
+
+   The ground is not decoration. The mockup draws this as bare red text on the
+   red-tinted row, and measured in a browser that is 1.40:1 in Nord, 1.88:1 in
+   Solarized and 2.90:1 in high-contrast: `--danger-fg` is the ink calibrated for
+   `--danger-soft`, not for a 6 % wash of `--danger`. On its own soft ground it is
+   5.82:1 in every one of the nine appearances. */
+.akey-stamp--past {
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  font-weight: 600;
+  color: var(--danger-fg);
+}
+
+/* ---- The Enabled cell --------------------------------------------------- */
+.akey-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.akey-toggle__label {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Row grounds --------------------------------------------------------
+   Both from tokens, so they follow every theme rather than being two
+   hand-picked washes. Neither dims the ink: they change the backdrop, which is
+   the one of the two that cannot fail a contrast check.
+
+   Expired is a 6 % wash of `--danger` — the mockup's tint, measured: ordinary
+   ink stays above 5.5:1 on it and quiet ink above 4.8:1 in all nine
+   appearances.
+
+   Disabled is `--bg-inset`, the design language's own recessed ground, rather
+   than the mockup's 2.5 % wash of `--fg`. Any wash of the foreground *reduces*
+   the contrast of the muted ink that three of this table's columns are drawn
+   in, and Solarized has none to spare: `--fg-muted` is already 4.86:1 on the
+   surface there, so a 4 % wash takes it to 4.40:1 — under AA. On `--bg-inset`
+   it is 5.02:1 at worst, and the recessed ground says "set aside" more plainly
+   than a wash that has to be light enough to be safe. */
+.akey-row--expired {
+  background: color-mix(in srgb, var(--danger) 6%, transparent);
+}
+
+.akey-row--disabled {
+  background: var(--bg-inset);
+}
+
+/* An expired row keeps its Delete visible. `DataTable` reveals row actions on
+   hover, which is right for the actions every row has; deleting the dead key is
+   what the banner at the top of the page asks the reader to do, and an action
+   you cannot see reads as one that is not offered. */
+.akey-row--expired [data-row-actions] {
+  opacity: 1;
+}
+
+/* ---- The table foot's scope legend --------------------------------------
+   Wraps under the count on a narrow card rather than pushing it off. */
+.akey-foot-legend {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25em;
+  color: var(--fg-muted);
+}
+
+/* ---- The create dialog -------------------------------------------------- */
+.akey-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+}
+
+/* One field of the create dialog — its label, its control and its hint. */
+.akey-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.akey-field__hint {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The scope group's own label. A `<span>` rather than a `<legend>`, because the
+   group beneath it is a `role="radiogroup"` and a `<fieldset>` around one nests a
+   group inside a group — which assistive technology announces twice. */
+.akey-scope-legend {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  /* The same tracking `ui/Label` composes, so the group's label and the three field
+     labels beside it are one typeface at one setting. */
+  letter-spacing: 0.01em;
+  color: var(--fg);
+}
+
+.akey-scope-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* One preset. The hairline is an inset shadow rather than a border so the
+   checked state can thicken it without moving the card's contents by a pixel. */
+.akey-scope-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  cursor: pointer;
+}
+
+.akey-scope-card:hover {
+  background: var(--bg-subtle);
+}
+
+/* The focus target is the radio, which is 16px in the corner of a card the reader is
+   actually aiming at — so the *card* shows the ring. Same 2px/2px as the shared
+   `:focus-visible` treatment near line 1480; the two px here are the ring itself, which is a
+   device measure and must not grow with the font scale. */
+.akey-scope-card:has(.akey-scope-radio:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.akey-scope-card[data-checked] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  background: var(--accent-soft);
+}
+
+/* On the checked card the ground is `--accent-soft`, and `--fg-muted` on it measures 3.86:1
+   in Solarized — a serious finding for a 12px hint. `--accent-fg` is the ink the shared
+   vocabulary calibrated *for* this tint, so the chosen card re-inks both its lines with it
+   rather than keeping the neutral pair that was chosen for the surface. */
+.akey-scope-card[data-checked] .akey-scope-title, .akey-scope-card[data-checked] .akey-scope-hint {
+  color: var(--accent-fg);
+}
+
+/* And the scope badges take the surface as their ground once the card is chosen.
+   A `--accent-soft` badge on a `--accent-soft` card is the same tint twice, and
+   measured in a browser its `--accent-fg` ink is 4.10:1 in Nord and 4.47:1 in
+   Darcula — under the 4.5:1 AA asks of 11px text. Lifting the badge back onto the
+   surface is 7:1 at worst, and reads as a chip on a tinted card rather than as a
+   smudge in it. */
+.akey-scope-card[data-checked] .akey-scope-badge {
+  background: var(--bg-surface);
+}
+
+.akey-scope-card:has(.akey-scope-radio:disabled) {
+  cursor: not-allowed;
+}
+
+/* The native radio, tinted with `accent-color` — the one way to have the
+   browser's own dot follow a theme swap without re-implementing its states. */
+.akey-scope-radio {
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  accent-color: var(--accent);
+}
+
+.akey-scope-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-inline-size: 0;
+}
+
+.akey-scope-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.akey-scope-hint {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The mockup's 240 px expiry field, in `rem` and with a ceiling rather than a
+   width, so it shrinks inside a narrow dialog instead of overflowing it. */
+.akey-expiry-field {
+  max-inline-size: 15rem;
+}
+
+/* The footer's left-hand note. `auto` margin rather than `justify-content`,
+   because `DialogFooter` already ends its row and the note is the exception. */
+.akey-dialog-note {
+  margin-inline-end: auto;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The reveal-once secret --------------------------------------------- */
+.akey-secret-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+}
+
+.akey-secret-label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* The box the key itself sits in. Inset ground rather than a tinted one: the
+   warning above it is already amber, and a second tint would compete with the
+   one thing on this screen the reader has to act on. */
+.akey-secret {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+}
+
+/* Wraps rather than scrolls: a key the reader has to scroll sideways to read
+   is a key they cannot select by eye, and this is the only time they see it. */
+.akey-secret__value {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  word-break: break-all;
+  color: var(--fg);
+  user-select: all;
+}
+
+.akey-secret__copy {
+  flex-shrink: 0;
+}
+
+.akey-secret-note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The two confirms --------------------------------------------------- */
+.akey-confirm-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+}
+
+/* The key both dialogs are about, named and prefixed. Wraps, because a name
+   and a prefix side by side is wider than a small dialog at the largest font
+   scale. */
+.akey-confirm-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-sm);
+  /* `--bg-inset`, not `--bg-subtle`: the prefix beside the name is `--fg-muted`,
+     and that pairing measures 4.35:1 on `--bg-subtle` in Solarized. */
+  background: var(--bg-inset);
+}
+
+.akey-confirm-identity__name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.akey-confirm-identity__prefix {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The two reference cards -------------------------------------------
+   Side by side while both fit, stacked below that — a `curl` line and a
+   three-row table are both unreadable in half a phone. */
+.akey-reference {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 60rem) {
+  .akey-reference {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.akey-ref-card {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.akey-ref-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: 1px solid var(--border);
+}
+
+/* An `h2` inside a card, which the unlayered base rule near line 2490 would
+   otherwise draw at page-heading size. */
+.akey-ref-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.akey-ref-card__title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.akey-ref-card__note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.akey-ref-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  padding: var(--space-4);
+}
+
+/* The scope table draws its own cell padding, so its body has none. */
+.akey-ref-card__body--flush {
+  padding: 0;
+}
+
+.akey-ref-card__desc {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The example request ------------------------------------------------
+   The `<pre>` scrolls inside its own box; the document never does. */
+.akey-code-wrap {
+  position: relative;
+  min-inline-size: 0;
+}
+
+.akey-code {
+  margin: 0;
+  padding: var(--space-3);
+  /* Room for the copy button, which floats over the top-right corner. */
+  padding-inline-end: 6rem;
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  color: var(--fg);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.akey-code-copy {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+}
+
+/* ---- The scope reference table ------------------------------------------ */
+.akey-scope-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-xs);
+}
+
+.akey-scope-table th {
+  padding: var(--space-2) var(--space-4);
+  border-block-end: 1px solid var(--border);
+  /* The surface, as `DataTable`'s own caps header takes it — `--bg-subtle` under
+     `--fg-muted` measures 4.35:1 in Solarized, and these labels are 11px. The
+     hairline is what separates the header, not a band of colour. */
+  background: var(--bg-surface);
+  text-align: start;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.akey-scope-table td {
+  padding: var(--space-2) var(--space-4);
+  border-block-end: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.akey-scope-table tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+.akey-scope-table__allows {
+  color: var(--fg-muted);
+}
+
+.akey-scope-table__count {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- The no-workspace state ---------------------------------------------
+   The gated `.empty` the mockup draws, in a card of its own so it reads as a
+   panel rather than as loose text on the canvas. */
+.akey-gate {
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+}

@@ -192,6 +192,15 @@ describe('the replacement each screen now reaches', () => {
     ['src/app/ade/dashboard/roles/RolesClient.tsx', 'DuplicateRoleDialog'],
     ['src/app/ade/dashboard/roles/RolesClient.tsx', 'DeleteRoleDialog'],
     ['src/app/ade/dashboard/roles/RolesClient.tsx', 'UnsavedChangesDialog'],
+    // HIVE-5.4 (#5307). The API keys screen left the shared confirm because a sentence
+    // cannot show the twelve-character prefix that identifies the key in monospace, and
+    // because a `confirm` has nowhere to report a refused write — the old handlers logged to
+    // the console and left the row unchanged. The third, `ApiKeySecretDialog`, is not a
+    // confirm at all: it is the one-time reveal, and it refuses Escape and the scrim so the
+    // plaintext key cannot be dropped by a mis-click.
+    ['src/app/ade/dashboard/api-keys/ApiKeysClient.tsx', 'DisableApiKeyDialog'],
+    ['src/app/ade/dashboard/api-keys/ApiKeysClient.tsx', 'DeleteApiKeyDialog'],
+    ['src/app/ade/dashboard/api-keys/ApiKeysClient.tsx', 'ApiKeySecretDialog'],
   ] as const;
 
   it.each(OWN_DIALOGS)('%s answers through <%s> rather than the shared confirm', (path, component) => {
