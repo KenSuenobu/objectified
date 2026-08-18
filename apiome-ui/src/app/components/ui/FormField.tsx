@@ -13,6 +13,16 @@ export interface FormFieldProps {
   error?: string;
   /** Show the required marker beside the label. */
   required?: boolean;
+  /**
+   * The `id` of the control this field labels.
+   *
+   * A `<label>` with neither `for` nor the control nested inside it names nothing — axe's
+   * `label` rule reports the control as unnamed, and clicking the text does not focus it.
+   * The field cannot work the id out for itself: its child may be the control, or a wrapper
+   * holding the control and a button beside it (HIVE-6.1's URL fields are exactly that), and
+   * pointing `for` at a `<div>` is worse than pointing it nowhere. So the caller states it.
+   */
+  htmlFor?: string;
   className?: string;
   children: React.ReactNode;
 }
@@ -29,7 +39,7 @@ export interface FormFieldProps {
  * attribute itself is left alone.
  */
 export const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
-  ({ label, helperText, error, required, className, children }, ref) => {
+  ({ label, helperText, error, required, htmlFor, className, children }, ref) => {
     const invalid = Boolean(error);
 
     // Mark the control rather than the wrapper: `aria-invalid` belongs on the thing the
@@ -48,7 +58,7 @@ export const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
     return (
       <div ref={ref} data-invalid={invalid || undefined} className={cn('flex flex-col gap-1.5', className)}>
         {label && (
-          <label className="text-sm font-medium tracking-[0.01em] text-fg">
+          <label htmlFor={htmlFor} className="text-sm font-medium tracking-[0.01em] text-fg">
             {label}
             {required && (
               <span className="ml-0.5 text-danger" aria-hidden="true">

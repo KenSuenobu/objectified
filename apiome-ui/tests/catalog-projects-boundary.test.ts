@@ -17,7 +17,17 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const APP = path.resolve(__dirname, '..', 'src', 'app');
-const projectsSrc = fs.readFileSync(path.join(APP, 'ade', 'dashboard', 'projects', 'page.tsx'), 'utf8');
+// HIVE-6.1 (#5312) split the Projects screen: `page.tsx` is now a thin server component, the
+// read lives in `ProjectsClient.tsx`, and the row shape lives in the screen's model. The
+// boundary rule is unchanged — this only follows it to where it is now stated.
+const projectsSrc = fs.readFileSync(
+  path.join(APP, 'ade', 'dashboard', 'projects', 'ProjectsClient.tsx'),
+  'utf8',
+);
+const projectsModelSrc = fs.readFileSync(
+  path.join(APP, 'components', 'ade', 'projects', 'projectsModel.ts'),
+  'utf8',
+);
 const versionsSrc = fs.readFileSync(path.join(APP, 'ade', 'dashboard', 'versions', 'page.tsx'), 'utf8');
 const catalogSrc = fs.readFileSync(path.join(APP, 'ade', 'dashboard', 'catalog', 'page.tsx'), 'utf8');
 const detailSrc = fs.readFileSync(
@@ -57,7 +67,7 @@ describe('Projects page excludes catalog items (#4587)', () => {
   });
 
   it('carries the publishable flag on its Project shape', () => {
-    expect(projectsSrc).toMatch(/publishable\?: boolean/);
+    expect(projectsModelSrc).toMatch(/publishable\?: boolean/);
   });
 });
 

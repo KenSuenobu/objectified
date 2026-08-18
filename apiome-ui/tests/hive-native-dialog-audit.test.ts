@@ -209,24 +209,40 @@ describe('the replacement each screen now reaches', () => {
     expect(source).not.toContain('useDialog()');
   });
 
-  /** The three irreversible actions the ticket gates behind type-to-confirm. */
+  /**
+   * The three irreversible actions the ticket gates behind type-to-confirm.
+   *
+   * The project gate moved in HIVE-6.1 (#5312): the screen's 1,731-line `page.tsx` became a
+   * thin server component, and the confirm it used to compose inline is now a pure function
+   * in `projectsModel`, which is where the ticket's "permanent requires typing the slug" is
+   * actually decided — and where it can be unit-tested rather than only grepped for.
+   */
   const GATED = [
-    ['src/app/ade/dashboard/projects/page.tsx', 'handlePermanentDelete'],
+    ['src/app/components/ade/projects/projectsModel.ts', 'permanentDeleteProjectConfirm'],
     ['src/app/admin/dashboard/tenants/TenantManagementClient.tsx', 'handleDeleteTenant'],
     ['src/app/admin/dashboard/users/UserManagementClient.tsx', 'handleDeleteUser'],
   ] as const;
 
   it.each(GATED)('%s gates %s on typing the object name', (path, handler) => {
     const source = readFileSync(join(APP_ROOT, path), 'utf8');
-    const body = source.slice(source.indexOf(`const ${handler} =`));
-    expect(body.slice(0, body.indexOf('};'))).toContain('typeToConfirm: true');
+    // A `const x = …` arrow in a component, or an `export function x(…)` in a pure module.
+    const declaration = new RegExp(`(?:const|function)\\s+${handler}\\b`);
+    const start = source.search(declaration);
+    expect(start).toBeGreaterThan(-1);
+    const body = source.slice(start);
+    expect(body.slice(0, body.indexOf('\n}'))).toContain('typeToConfirm: true');
   });
 
   it('no longer asks anyone to type DELETE "mentally"', () => {
     // The pre-Hive permanent-project delete shipped two identical confirms, the second of
     // which asked the reader to imagine typing the word. That is the thing a real gate
     // replaces, so its return would mean the gate had been backed out.
-    const source = readFileSync(join(APP_ROOT, 'src/app/ade/dashboard/projects/page.tsx'), 'utf8');
+    const source = [
+      'src/app/ade/dashboard/projects/ProjectsClient.tsx',
+      'src/app/components/ade/projects/projectsModel.ts',
+    ]
+      .map((path) => readFileSync(join(APP_ROOT, path), 'utf8'))
+      .join('\n');
     expect(source).not.toContain('mentally');
     expect(source).not.toContain('doubleConfirmed');
   });

@@ -11180,3 +11180,985 @@ button.auth-divider:disabled {
   block-size: var(--fs-2xs);
   flex-shrink: 0;
 }
+
+/* ==========================================================================
+   PROJECTS  (HIVE-6.1, #5312)
+   --------------------------------------------------------------------------
+   `docs/mockups/build/projects.html`, whose page-local `<style>` block this
+   replaces (`.proj-card`, `.proj-scores`, `.proj-score`) together with the
+   inline `style=` attributes its cards, its deleted-card footer, its portfolio
+   chart and its create dialog carry.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 blocks above give. Every rule leans on the
+   density and font-scale tokens; the card, the two-column project form and the
+   card grid are real grids that a utility string spells badly; and the quiet
+   lines and the section titles have to sit *after* the unlayered `h1`–`h4` and
+   `p` base rules near line 2497, which outrank anything in `@layer utilities`.
+
+   The mockup froze nine things in pixels that must not be frozen: the 280px
+   filter field, the 240px template select, the 40px summary block, the 220px
+   new-project tile, the 72×28 sparkline, the 140/160px chart areas, the 14px
+   orb gap, the 16/18px card padding and the 8px score gap. All are `rem`, a
+   token or an `aspect-ratio` here, so they follow all six font scales.
+
+   No hue is named below — every colour is a token, so the surface follows all
+   nine themes. Where a *band* or a *tone* decides the colour it is not here at
+   all: the status pill takes its tone from `ui/statusVocabulary.ts` (which this
+   ticket teaches the word `deleted`), and the rings, the sparkline and the
+   portfolio line take theirs from `ui/metrics/metricTiers.ts`. Three measured
+   deviations from the mockup, two of them ones the Epic-5 tickets already made:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+     about 3.1:1 against the canvas at these sizes;
+   * a card that needs attention is marked by an inset `--warn` hairline and a
+     tinted footer, *not* by the mockup's `opacity:.9`. Fading a card fades its
+     text with it, and an amber card's text is the text most likely to be read;
+   * the `Deleted` pill is `--danger` in both views. The mockup paints it
+     `--warn` on the card and `--danger` in the table; one word cannot be two
+     colours, and the amber the card loses is what the frame already says.
+
+   Two classes are borrowed rather than restated: `.tnt-icon-tile` from the
+   tenants block (the tinted square at the head of each dialog and on the
+   template row) and `.tnt-menu` for the card's and the row's overflow menus.
+   ========================================================================== */
+
+/* ---- Shared quiet type --------------------------------------------------
+   The muted lines every part of the screen draws — a cell that has nothing in
+   it, the "Empty project" note, a card's identifier line. */
+.prj-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prj-num {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.prj-stamp {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* A menu row that destroys something.
+   The mockup's `.menu__item.is-danger` inks the label red at rest. Measured,
+   no red in the token layer can do that: `--danger-fg` is calibrated against
+   `--danger-soft` and lands at 1.47:1 on the surface in Nord, and the
+   saturated `--danger` reaches only 2.46:1 there — both under AA as 13px text.
+   So the row reads as an ordinary row until it is the one under the pointer or
+   the keyboard, and then it takes the designed soft/ink pair, which clears AA
+   in all nine themes. The words are what say what it does at rest, which
+   DESIGN.md §9 prefers to colour alone anyway. */
+.prj-menu__item--danger[data-highlighted],
+.prj-menu__item--danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.prj-menu__item--danger[data-highlighted] > svg,
+.prj-menu__item--danger:hover > svg {
+  color: currentColor;
+}
+
+/* The direction mark beside the sort menu's current column. Pushed to the far
+   end so eight rows of different label lengths still line their marks up. */
+.prj-sort-mark {
+  margin-inline-start: auto;
+  padding-inline-start: var(--space-4);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The header's Show-deleted switch and its label, as one control. */
+.prj-deleted-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-end: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.prj-deleted-switch label {
+  cursor: pointer;
+}
+
+/* ---- The cards view -----------------------------------------------------
+   The panel is the same `.card` the table draws into, so switching views does
+   not change the shape of the page — only what is inside it. */
+.prj-cards-panel {
+  overflow: hidden;
+}
+
+.prj-cards-panel__empty {
+  padding: var(--space-4);
+}
+
+/* `auto-fit` at a `rem` minimum rather than the mockup's fixed `grid-3`: a card
+   whose minimum is stated in `rem` keeps three columns at the default font
+   scale and drops to two and then one as the scale grows, which is what stops
+   the Largest scale pushing a horizontal scrollbar onto the document.
+   18rem, measured: the content column beside the 16.5rem rail is about 984px
+   at a 1280px viewport, which fits three 317px cards — the mockup's three —
+   and only two at 20rem. */
+.prj-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+@media (max-width: 30rem) {
+  .prj-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.prj-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border), var(--shadow-sm);
+  transition:
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.prj-card:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px var(--border-strong), var(--shadow-md);
+}
+
+/* A project that cannot be used — disabled, or soft-deleted. The frame carries
+   it, so the card's own text keeps full contrast. */
+.prj-card[data-lifecycle="disabled"],
+.prj-card[data-lifecycle="deleted"] {
+  box-shadow: inset 0 0 0 1px var(--warn), var(--shadow-sm);
+}
+
+/* The placeholder card the grid draws while the first read is in flight —
+   `DataTable` skeletons the table, and the two waits should look alike. */
+.prj-card--skeleton {
+  min-block-size: 15rem;
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.prj-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  padding-block-end: var(--space-3);
+}
+
+.prj-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.prj-card__identity {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.prj-card__title-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.prj-card__name {
+  min-inline-size: 0;
+  overflow: hidden;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The stretched link: one tab stop, one accessible name, the whole card as its
+   hit area. Everything that has to stay clickable is `.prj-card__above`. */
+.prj-card__link {
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.prj-card__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.prj-card__link:hover {
+  color: var(--accent-fg);
+}
+
+/* The focus ring belongs to the card, not to the two words inside it: the whole
+   card is what the link activates. */
+.prj-card__link:focus-visible::after {
+  box-shadow: var(--shadow-focus);
+}
+
+.prj-card__id {
+  margin-block-start: 0.125rem;
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Two lines, always the same height, so a grid of cards keeps its rhythm
+   whether a project has a summary or not. */
+.prj-card__summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-block-size: calc(var(--fs-sm) * var(--lh-normal) * 2);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.prj-card__meter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-start: auto;
+}
+
+.prj-card__scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.prj-card__versions {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* Above the stretched link, so the orbs, the menu and the recovery buttons are
+   reachable by pointer as well as by keyboard. */
+.prj-card__above {
+  position: relative;
+  z-index: 1;
+}
+
+.prj-card__actions {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+  z-index: 1;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.prj-card:hover .prj-card__actions,
+.prj-card:focus-within .prj-card__actions {
+  opacity: 1;
+}
+
+/* Never hidden from the keyboard: `opacity` keeps the button in the tab order
+   and its name in the accessibility tree, which `display:none` would not. */
+@media (hover: none) {
+  .prj-card__actions {
+    opacity: 1;
+  }
+}
+
+.prj-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-block-start: 1px solid var(--border);
+  border-end-start-radius: var(--r-lg);
+  border-end-end-radius: var(--r-lg);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The amber footer of a card that needs attention — the ground the mockup gives
+   the two recovery verbs, and the pair those inks were chosen for. */
+.prj-card[data-lifecycle="deleted"] .prj-card__footer {
+  justify-content: flex-start;
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+  border-block-start-color: var(--warn);
+}
+
+.prj-card__creator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.prj-card__creator-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- The three orbs ------------------------------------------------------
+   Ring then word, side by side, as `.proj-score` draws them. An orb with a
+   dialog behind it is a button; one with nothing behind it is a `span`, which
+   is why the hover ground is on the modifier rather than on the base. */
+.prj-orb {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  margin: calc(var(--space-1) * -1);
+  border-radius: var(--r-sm);
+  background: transparent;
+}
+
+.prj-orb__label {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.prj-orb--action {
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.prj-orb--action:hover {
+  background: var(--bg-subtle);
+}
+
+.prj-orb--action:hover .prj-orb__label {
+  color: var(--fg);
+}
+
+/* ---- The New project tile ------------------------------------------------ */
+.prj-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-block-size: 14rem;
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--r-lg);
+  background: transparent;
+  /* The dashed edge of the mockup's `.empty--dashed`, as a real border rather
+     than an inset shadow: a shadow cannot be dashed, and this tile is the one
+     card in the grid that has to read as an outline rather than as an object. */
+  border: 1px dashed var(--border-strong);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.prj-tile:hover {
+  background: var(--bg-subtle);
+  border-color: var(--accent);
+}
+
+.prj-tile__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prj-tile__desc {
+  max-inline-size: 24ch;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Table cells ---------------------------------------------------------- */
+.prj-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.prj-identity__text {
+  display: block;
+  min-inline-size: 0;
+}
+
+.prj-identity__line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.prj-identity__link {
+  min-inline-size: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.prj-identity__link:hover {
+  color: var(--accent-fg);
+}
+
+/* `rem`, not the mockup's 280px: the ceiling has to grow with the type or the
+   Largest scale clips a description mid-word. On the block inside the cell
+   rather than on the `<td>` — an auto-layout table ignores a cell's
+   `max-width` outright, which HIVE-5.8 measured at 533px against a 400px
+   clamp. */
+.prj-desc {
+  max-inline-size: 22rem;
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prj-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.prj-creator {
+  display: block;
+  min-inline-size: 0;
+}
+
+.prj-col-glyph {
+  display: inline-block;
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  margin-inline-end: var(--space-1);
+  vertical-align: -0.125em;
+}
+
+/* A deleted row does not open, so it must not offer the pointer that says it
+   would. `DataTable` sets `cursor: pointer` on every row of a table that has an
+   activate handler; this is the row-level opt-out. */
+.prj-row--deleted {
+  cursor: default;
+}
+
+/* The Undelete glyph, in the mockup's `--ok`.
+   A button whose only content is an icon: the mark is what has to be visible,
+   and WCAG 1.4.11 asks 3:1 of it rather than the 4.5:1 a word needs. `--ok`
+   measures 3.15:1 at its worst (Darcula) and the button's accessible name
+   carries the meaning either way. */
+.prj-restore {
+  color: var(--ok);
+}
+
+/* ---- The Quality trend cell ---------------------------------------------- */
+.prj-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  margin: calc(var(--space-1) * -1);
+  border-radius: var(--r-sm);
+  background: transparent;
+}
+
+.prj-trend--action {
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.prj-trend--action:hover {
+  background: var(--bg-subtle);
+}
+
+/* 4.5rem rather than the mockup's 72px, and the height follows from the kit's
+   own 5:1 `aspect-ratio` rather than being stated a second time here. */
+.prj-trend__spark {
+  inline-size: 4.5rem;
+  flex-shrink: 0;
+}
+
+.prj-trend__value {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.prj-trend__grade {
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* ---- The portfolio trend card -------------------------------------------- */
+.prj-portfolio__header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.prj-portfolio__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.prj-portfolio__title > svg {
+  inline-size: var(--icon-rail);
+  block-size: var(--icon-rail);
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.prj-portfolio__note {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* The plot is `aspect-ratio`, not a fixed height: the SVG has
+   `preserveAspectRatio="none"`, so a height in `px` would squash the curve at
+   one viewport and stretch it at another. */
+.prj-portfolio__chart {
+  inline-size: 100%;
+  aspect-ratio: 800 / 140;
+  min-block-size: 7rem;
+}
+
+.prj-portfolio__chart > svg {
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+}
+
+.prj-portfolio__grid line {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.prj-portfolio__ticks text {
+  fill: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Line, area and dot all paint from `currentColor`, which the component sets
+   once from the metric tone — so the chart is the same green as the ring on the
+   card below it, in every one of the nine themes. */
+.prj-portfolio__line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.prj-portfolio__area {
+  fill: color-mix(in srgb, currentColor 12%, transparent);
+  stroke: none;
+}
+
+.prj-portfolio__dot {
+  fill: currentColor;
+  vector-effect: non-scaling-stroke;
+}
+
+.prj-portfolio__axis {
+  display: flex;
+  justify-content: space-between;
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The project form, shared by both dialogs ---------------------------- */
+/* A hairline card on the surface, not the mockup's tinted `.card--soft`:
+   `--fg-muted` on `--bg-subtle` measures 4.35:1 in Solarized, and the two
+   lines under this row's title are exactly that pair. Same finding HIVE-5.6
+   recorded for its read-only banner. */
+.prj-template {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.prj-template__text {
+  flex: 1 1 16rem;
+  min-inline-size: 0;
+}
+
+.prj-template__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prj-template__desc,
+.prj-template__hint {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prj-template__hint {
+  margin-block-start: var(--space-1);
+}
+
+.prj-template__select {
+  inline-size: 15rem;
+  max-inline-size: 100%;
+}
+
+/* Two columns with a real gap, so the form collapses to one without leaving a
+   hairline running down the middle of it — which is what `divide-x` did. */
+.prj-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.prj-form__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.prj-form__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.prj-form__title-aside {
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.prj-form__pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-3);
+}
+
+.prj-form__url {
+  display: flex;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.prj-form__url > input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+/* ---- The two dialogs ----------------------------------------------------- */
+.prj-dialog {
+  max-block-size: calc(100vh - 3rem);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+
+.prj-dialog__header {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.prj-dialog__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.prj-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-block-size: 0;
+  overflow-y: auto;
+  /* Room for a focus ring on the first and last controls, which an overflow
+     container would otherwise clip. */
+  padding: 0.1875rem;
+  margin: -0.1875rem;
+}
+
+.prj-dialog__body--chat {
+  min-block-size: 22rem;
+}
+
+.prj-chat {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
+.prj-dialog__footer {
+  align-items: center;
+}
+
+.prj-dialog__footnote {
+  margin-inline-end: auto;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.prj-tab-glyph {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+/* The triangle on the Needs-attention chip. Sized from the chip's own type, not
+   from the icon metrics: it sits inside a 12px label and has to shrink with it. */
+.prj-chip-glyph {
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  flex-shrink: 0;
+}
+
+.prj-edit-stats {
+  flex-shrink: 0;
+}
+
+/* ---- The scores dialog --------------------------------------------------- */
+/* The width is `DialogContent size="lg"`, not a second ceiling here: two
+   declarations of the same measurement are two things that can disagree. */
+.pqh-dialog {
+  max-block-size: calc(100vh - 3rem);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+.pqh-dialog__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.pqh-dialog__body {
+  min-block-size: 0;
+  overflow-y: auto;
+}
+
+.pqh-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.pqh-lede {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* Surface plus a hairline, for the reason `.prj-template` gives: the axis
+   labels under this chart and its `<text>` ticks are `--fg-muted`. */
+.pqh-chart {
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.pqh-chart__svg {
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 700 / 160;
+}
+
+.pqh-chart__grid line {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.pqh-chart__ticks text {
+  fill: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pqh-chart__line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.pqh-chart__area {
+  fill: color-mix(in srgb, currentColor 12%, transparent);
+  stroke: none;
+}
+
+.pqh-chart__dot {
+  fill: var(--bg-surface);
+  stroke: currentColor;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.pqh-chart__axis {
+  display: flex;
+  justify-content: space-between;
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.pqh-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.pqh-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+/* Muted caps on the *surface*, which is where `DataTable`'s own header puts
+   them — the same pair, so the two tables of the product read alike, and the
+   one ground `--fg-muted` clears AA on in every theme. */
+.pqh-table th {
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border-block-end: 1px solid var(--border);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  text-align: start;
+}
+
+.pqh-table td {
+  padding: var(--space-2) var(--space-3);
+  border-block-start: 1px solid var(--border);
+  color: var(--fg);
+}
+
+.pqh-score {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pqh-headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.pqh-headline__grade {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.pqh-headline__note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.pqh-categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-3);
+}
+
+.pqh-category {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+}
+
+.pqh-category__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.pqh-category__value {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.pqh-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pqh-finding {
+  padding: var(--space-3);
+}
+
+.pqh-finding__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pqh-finding__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.pqh-finding__note {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.pqh-finding__path {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
