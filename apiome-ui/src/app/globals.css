@@ -7342,3 +7342,397 @@ button.auth-divider:disabled {
   line-height: var(--lh-normal);
   color: var(--fg-muted);
 }
+
+/* ==========================================================================
+   ROLES (HIVE-5.3, #5306)
+
+   Authority: `docs/mockups/workspace/roles.html` — its page-local `<style>`
+   block is what this replaces, and its **Notes → Keeps (1:1)** list is the
+   ticket's acceptance criteria. Plus `hive.css` §12 (`.card`), §17 (the table)
+   and `DESIGN.md` §7, §8.
+
+   Why these live in the stylesheet rather than in the components
+   --------------------------------------------------------------
+   The three reasons the tenants and members blocks above give, and one more
+   that is this screen's own. The matrix is a 6-column grid whose cells are
+   *states* — a utility string cannot spell `[aria-pressed="mixed"]`, and a
+   toggle whose three states are three conditional class strings in TSX is a
+   toggle whose states drift apart. Here they are three selectors on one class,
+   so a cell cannot be granted-looking without being granted.
+
+   The mockup's page-local block freezes four measurements in pixels that must
+   not be frozen: the 92 px matrix columns, the 42 px cell rows, the 24 px
+   toggle and its 14 px glyph. All four are `rem` or a token here, so they
+   follow all six font scales and both densities.
+
+   Two classes are borrowed rather than restated, the way the members block
+   borrows one: `.tnt-icon-tile` (the tinted square at the head of a dialog and
+   beside a role's name) and `.tnt-lock-note` (the quiet inset that says why
+   something cannot be changed). Both were written for HIVE-5.1 and neither is
+   about tenants; a `.rol-`-prefixed copy would be the same tokens under a
+   second name.
+
+   The one measured deviation is stated where it is made, at `.rol-perm`.
+   ========================================================================== */
+
+/* ---- The two panes ------------------------------------------------------
+   The role list beside the editor, collapsing to one column when the editor
+   would be narrower than its own matrix. `minmax(0, 1fr)` on the editor track
+   is what keeps a 6-column table inside the pane instead of widening the page:
+   without it the track's automatic minimum is the table's intrinsic width and
+   the document scrolls sideways. */
+.rol-panes {
+  display: grid;
+  grid-template-columns: 16.5rem minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 60rem) {
+  .rol-panes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- The role list ------------------------------------------------------ */
+.rol-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One role. A whole-row button rather than a link: choosing a role changes
+   what the editor beside it is about, not where the reader is. */
+.rol-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  text-align: start;
+  color: var(--fg);
+  transition:
+    background var(--dur-fast),
+    box-shadow var(--dur-fast);
+}
+
+.rol-item:hover {
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+/* The chosen role. `aria-current` rather than a class, so the state a screen
+   reader is told is the same state the stylesheet draws — they cannot fall out
+   of step because there is only one of them. */
+.rol-item[aria-current="true"] {
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-raised);
+}
+
+.rol-item[aria-current="true"] .tnt-icon-tile {
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+}
+
+.rol-item__text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.rol-item__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+/* A long custom role name elides rather than pushing the member count out of
+   the pane. */
+.rol-item__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rol-item__sub {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* How many members hold it. Tabular so the column of numbers does not jitter,
+   and `--fg-muted` rather than `--fg-subtle`, which measures 3.1:1 here. */
+.rol-item__count {
+  margin-inline-start: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The unsaved mark beside a role's name in the list — the same honey the
+   editor's Unsaved badge uses, so the two read as one state. */
+.rol-dot {
+  inline-size: 0.4375rem;
+  block-size: 0.4375rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--honey);
+}
+
+/* ---- The name field -----------------------------------------------------
+   An input that looks like the heading it edits until it is touched: no chrome
+   at rest, a dashed rule on hover, the accent underline on focus. A built-in
+   role renders an `h2` here instead, because its name is not editable at all
+   and an input that refuses every keystroke is worse than text. */
+.rol-name-edit {
+  inline-size: 100%;
+  min-width: 0;
+  padding: 0 0.125rem;
+  border: 0;
+  border-block-end: 1.5px dashed transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg);
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.rol-name-edit:hover {
+  border-block-end-color: var(--border-strong);
+}
+
+.rol-name-edit:focus {
+  outline: none;
+  box-shadow: none;
+  border-block-end-color: var(--accent);
+}
+
+/* A built-in role's name, drawn as the heading it is rather than as a field
+   that refuses every keystroke. The size is a rule and not a `text-xl`
+   utility because the unlayered `h2` base rule near line 2500 outranks
+   `@layer utilities` — the trap HIVE-4.4 hit — so a utility here would be
+   silently swallowed and the name would render at the browser's `h2` size. */
+.rol-name-static {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+/* ---- The permission matrix ---------------------------------------------- */
+
+/* The scroller. The matrix is the one table in the app that can genuinely not
+   be narrowed — thirteen labelled rows and five fixed columns — so when the
+   viewport cannot hold it, *this* scrolls and the document does not. */
+.rol-matrix-wrap {
+  overflow-x: auto;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.rol-matrix {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+/* Each action column is one toggle wide plus air, stated in `rem` so the five
+   of them grow with the font scale instead of crowding. */
+.rol-matrix thead th:not(:first-child),
+.rol-matrix tbody td {
+  inline-size: 5.75rem;
+  text-align: center;
+}
+
+/* The column headings. Scoped to `thead`, because the resource cell is a
+   `th scope="row"` too — it names its row for a screen reader, and it must not
+   inherit the small caps that naming a column earns. */
+.rol-matrix thead th {
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid var(--border);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.rol-matrix thead th:first-child,
+.rol-matrix tbody th {
+  text-align: start;
+  padding-inline-start: var(--space-4);
+}
+
+.rol-matrix tbody th,
+.rol-matrix tbody td {
+  block-size: var(--row-h);
+  padding: 0 var(--space-3);
+  border-block-end: 1px solid var(--border);
+  font-weight: 400;
+}
+
+.rol-matrix tbody tr:last-child th,
+.rol-matrix tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+.rol-matrix tbody tr:hover th,
+.rol-matrix tbody tr:hover td {
+  background: color-mix(in srgb, var(--fg) 2.5%, transparent);
+}
+
+/* The column heading's glyph, beside its word. */
+.rol-matrix thead th > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.rol-matrix thead th > span > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}
+
+/* The resource cell: the row's toggle, then its label over its guard key. */
+.rol-res {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.rol-res__name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* The guard key the cell grants against. The family comes from `.mono`, which
+   the reader can turn off in Preferences — this is an identifier, so it obeys
+   that choice rather than overriding it. */
+.rol-res__key {
+  display: block;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The permission cell ------------------------------------------------
+   Four states on one class, keyed off the `aria-pressed` the button already
+   has to carry: granted (`true`), partial (`mixed`, reachable only on a row
+   toggle — a single cell cannot be partly granted), denied (`false`) and
+   locked (`:disabled`).
+
+   Measured deviation, stated rather than hidden: the granted fill is the
+   mockup's `--ok` with `--fg-on-accent` ink, which is 4.36:1 in the light
+   theme but 1.74:1 in high-contrast and about 2:1 in dark and nord. The check
+   glyph is therefore **not** the state's only carrier — the fill itself is
+   4.4:1 or better against `--bg-surface` in all nine themes, and `aria-pressed`
+   carries it for anyone not looking at either. Repainting the glyph per theme
+   would need a second ink token that nothing else in the interface has, and
+   dropping the green would make this the one place in the app where "granted"
+   is not the ok tone.
+
+   Locked is drawn with an inset ground and faint ink rather than `opacity`,
+   for the reason the members block gives: a fade dims the surrounding text
+   with the control. */
+.rol-perm {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1.5px var(--border-strong);
+  color: transparent;
+  vertical-align: middle;
+  transition:
+    background var(--dur-fast),
+    box-shadow var(--dur-fast),
+    color var(--dur-fast);
+}
+
+.rol-perm > svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  stroke-width: 2.5;
+}
+
+.rol-perm:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1.5px var(--fg-subtle);
+}
+
+.rol-perm[aria-pressed="true"] {
+  background: var(--ok);
+  box-shadow: none;
+  color: var(--fg-on-accent);
+}
+
+.rol-perm[aria-pressed="true"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ok) 88%, black);
+  box-shadow: none;
+}
+
+.rol-perm[aria-pressed="mixed"] {
+  background: var(--ok-soft);
+  box-shadow: inset 0 0 0 1.5px var(--ok);
+  color: var(--ok-fg);
+}
+
+.rol-perm:disabled {
+  cursor: not-allowed;
+  background: var(--bg-inset);
+  box-shadow: inset 0 0 0 1.5px var(--border);
+  color: transparent;
+}
+
+.rol-perm[aria-pressed="true"]:disabled {
+  background: var(--ok-soft);
+  box-shadow: inset 0 0 0 1.5px var(--ok);
+  color: var(--ok-fg);
+}
+
+/* ---- The sticky save bar ------------------------------------------------
+   Sits at the bottom of the editor pane while the draft is dirty. `sticky`
+   rather than `fixed`: the page body is the scroller, and a fixed bar would
+   float over the rail as well as over the matrix. */
+.rol-save-bar {
+  position: sticky;
+  inset-block-end: var(--space-4);
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--r-lg);
+  background: var(--fg);
+  color: var(--bg-surface);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--fs-sm);
+}
+
+.rol-save-bar__count {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-end: auto;
+  font-weight: 500;
+}
+
+.rol-save-bar__count > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}

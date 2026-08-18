@@ -156,7 +156,6 @@ describe('the native-dialog sweep', () => {
 describe('the replacement each screen now reaches', () => {
   /** The screens #5286 lists as having carried a native dialog, that still ask through the hook. */
   const MIGRATED = [
-    'src/app/ade/dashboard/roles/RolesClient.tsx',
     'src/app/components/ade/dashboard/mcp/McpCollectionsPanel.tsx',
     'src/app/admin/dashboard/users/UserManagementClient.tsx',
     'src/app/admin/dashboard/tenants/TenantManagementClient.tsx',
@@ -184,6 +183,15 @@ describe('the replacement each screen now reaches', () => {
   const OWN_DIALOGS = [
     ['src/app/ade/dashboard/members/MembersClient.tsx', 'OffboardMemberDialog'],
     ['src/app/ade/dashboard/members/MembersClient.tsx', 'SuspendMemberDialog'],
+    // HIVE-5.3 (#5306). The roles screen left the shared hook for the same reason: a
+    // `prompt` holds one text field, and New role needs a second control ("Copy permissions
+    // from"); a `confirm` holds a sentence, and Delete names the people whose access
+    // changes. The fourth, `UnsavedChangesDialog`, has three ways out rather than two — the
+    // shared confirm cannot offer "save and continue" as well as "discard".
+    ['src/app/ade/dashboard/roles/RolesClient.tsx', 'NewRoleDialog'],
+    ['src/app/ade/dashboard/roles/RolesClient.tsx', 'DuplicateRoleDialog'],
+    ['src/app/ade/dashboard/roles/RolesClient.tsx', 'DeleteRoleDialog'],
+    ['src/app/ade/dashboard/roles/RolesClient.tsx', 'UnsavedChangesDialog'],
   ] as const;
 
   it.each(OWN_DIALOGS)('%s answers through <%s> rather than the shared confirm', (path, component) => {

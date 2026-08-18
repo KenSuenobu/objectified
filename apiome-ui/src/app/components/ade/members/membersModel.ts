@@ -16,6 +16,7 @@
  * decisions.
  */
 
+import type { MyPermissions, RoleRecord } from '../access/accessApi';
 import type { TenantLicenseSeats } from '@/app/ade/dashboard/tenants/licenseApi';
 import { seatsExhausted } from '@/app/ade/dashboard/tenants/licenseSeats';
 
@@ -61,28 +62,10 @@ export interface MemberRecord {
   is_admin: boolean;
 }
 
-/** One `resource:action` cell of a role's permission grid. */
-export interface RolePermissionCell {
-  resource: string;
-  action: string;
-}
-
-/** A role as `GET /api/access/roles` returns it. */
-export interface RoleRecord {
-  id: string;
-  slug: string;
-  name: string;
-  description?: string | null;
-  is_builtin: boolean;
-  member_count?: number;
-  permissions?: readonly RolePermissionCell[];
-}
-
-/** The viewer's own effective permissions, from `GET /api/access/permissions/me`. */
-export interface MyPermissions {
-  is_admin: boolean;
-  permissions: readonly string[];
-}
+// A role and the viewer's own grants are the Roles screen's records as much as this one's
+// (HIVE-5.3, #5306), so they are declared beside the reads that return them and re-exported
+// here — every members call site keeps importing them from this module.
+export type { MyPermissions, RolePermissionCell, RoleRecord } from '../access/accessApi';
 
 /** One row of the access ledger, as `GET /api/access/audit` returns it. */
 export interface AccessAuditRecord {

@@ -38,6 +38,7 @@ import {
   YAML_ERROR_MARKER_SEVERITY,
 } from '../customRuleYamlMarkers';
 import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
+import { useUnsavedChangesPrompt } from '@/app/hooks/useUnsavedChangesPrompt';
 
 const CUSTOM_RULES_MODEL_URI = 'inmemory://model/custom-rules.yaml';
 const VALIDATION_MARKER_OWNER = 'apiome-custom-rules-validation';
@@ -175,15 +176,7 @@ export default function CustomRulesTab({ guideId }: { guideId: string }) {
     };
   }, [projectId]);
 
-  useEffect(() => {
-    if (!dirty) return;
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [dirty]);
+  useUnsavedChangesPrompt(dirty);
 
   const handleEditorMount = useCallback(
     (ed: editor.IStandaloneCodeEditor, monaco: Monaco) => {
