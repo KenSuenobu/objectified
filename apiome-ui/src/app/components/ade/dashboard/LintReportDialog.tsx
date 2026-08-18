@@ -1,7 +1,8 @@
 'use client';
 
 /**
- * Presentational dialog for a server-computed lint report (#3609, MFI-23.10).
+ * Presentational dialog for a server-computed lint report (#3609, MFI-23.10; re-skinned
+ * HIVE-5.8, #5311).
  *
  * Extracted from {@link VersionLintBadge} so the per-version badge and the Catalog card/detail lint
  * orbs render the *identical* report surface (score + A-F grade, severity counts, optional
@@ -11,6 +12,10 @@
  * authoritative values computed by apiome-rest — this component never recomputes them.
  */
 
+import { AlertCircle, ShieldCheck } from 'lucide-react';
+import { Alert } from '../../ui/Alert';
+import { Badge } from '../../ui/Badge';
+import { Button } from '../../ui/Button';
 import {
   Dialog,
   DialogContent,
@@ -18,12 +23,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from '../../ui/Dialog';
-import {
-  gradeChipClass,
-  severityBadgeClass,
-  sortLintFindings,
-  type VersionLintReport,
-} from '../../../utils/version-lint-report';
+import { LoadingState } from '../../ui/LoadingState';
+import { gradeBand } from '../../ui/statusVocabulary';
+import { sortLintFindings, type VersionLintReport } from '../../../utils/version-lint-report';
 import { catalogDisplayLintScore } from '../../../utils/catalog-lint-panel';
 import type { LintViolationDisplayView } from '../../../utils/lint-violation-display-preferences';
 import {
@@ -104,102 +106,88 @@ export function LintReportDialog({
         </DialogHeader>
 
         {loading ? (
-          <p
-            className="py-8 text-center text-sm text-gray-500 dark:text-gray-400"
-            data-testid="lint-report-loading"
-          >
-            Loading lint report…
-          </p>
+          <LoadingState message="Loading lint report…" data-testid="lint-report-loading" />
         ) : error || !report ? (
-          <div
-            className="flex flex-col items-center gap-3 py-8 text-center"
+          <Alert
+            variant="error"
             data-testid="lint-report-error"
+            icon={<AlertCircle className="mt-px size-4 shrink-0" aria-hidden />}
+            actions={
+              onRetry ? (
+                <Button variant="outline" size="sm" onClick={onRetry}>
+                  Retry
+                </Button>
+              ) : undefined
+            }
           >
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {error || 'Lint report unavailable.'}
-            </p>
-            {onRetry ? (
-              <button
-                type="button"
-                onClick={onRetry}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-              >
-                Retry
-              </button>
-            ) : null}
-          </div>
+            <span>
+              <strong>Lint report unavailable.</strong> {error || 'The report could not be read.'}
+            </span>
+          </Alert>
         ) : (
           /* `contents` keeps the compact layout exactly as before (children stay direct grid
              items); expanded turns this wrapper into the 1fr grid row as a flex column. */
           <div className={expanded ? 'flex min-h-0 flex-col' : 'contents'}>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="lr-headline">
               <span
-                className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-lg font-bold ${gradeChipClass(
-                  displayLint!.grade,
-                )}`}
+                data-testid="lint-report-grade"
+                className={`lr-grade ${gradeBand(displayLint!.grade).solidClass}`}
               >
                 {displayLint!.grade}
               </span>
-              <span className="text-sm text-gray-600 dark:text-gray-300">
-                Score <span className="font-semibold">{displayLint!.score}</span>/100
-              </span>
-              <span className="flex items-center gap-2 text-xs">
-                <span className={`rounded px-1.5 py-0.5 ${severityBadgeClass('error')}`}>
-                  {severity.error ?? 0} error
-                </span>
-                <span className={`rounded px-1.5 py-0.5 ${severityBadgeClass('warning')}`}>
-                  {severity.warning ?? 0} warning
-                </span>
-                <span className={`rounded px-1.5 py-0.5 ${severityBadgeClass('info')}`}>
-                  {severity.info ?? 0} info
-                </span>
-              </span>
-              {report.guideName ? (
-                <span
-                  data-testid="lint-report-guide-name"
-                  className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200"
-                >
-                  Guide: {report.guideName}
-                </span>
-              ) : null}
-              {report.compatibilityOverall && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  Compatibility vs base: {report.compatibilityOverall}
-                </span>
-              )}
+              <div className="lr-headline__text">
+                <p className="lr-score">
+                  Score <strong>{displayLint!.score}</strong>
+                  <span className="lr-score__max">/100</span>
+                </p>
+                <div className="lr-headline__marks">
+                  <Badge status="error">{severity.error ?? 0} error</Badge>
+                  <Badge status="warning">{severity.warning ?? 0} warning</Badge>
+                  <Badge status="info">{severity.info ?? 0} info</Badge>
+                  {report.guideName ? (
+                    <Badge variant="outline" data-testid="lint-report-guide-name">
+                      <ShieldCheck aria-hidden />
+                      Guide: {report.guideName}
+                    </Badge>
+                  ) : null}
+                  {report.compatibilityOverall && (
+                    <Badge variant="outline">
+                      Compatibility vs base: {report.compatibilityOverall}
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
 
             {preferCapturedScore &&
             displayLint?.usesCaptured &&
             report.scoreIsStale &&
             (report.score !== displayLint.score || report.grade !== displayLint.grade) ? (
-              <p
-                className="mt-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-300"
+              <Alert
+                variant="neutral"
+                className="mt-2"
                 data-testid="lint-report-live-recompute-note"
               >
                 Converted OpenAPI lint of this item scores {report.grade} · {report.score}/100. The
                 score above is the one captured when the source was imported.
-              </p>
+              </Alert>
             ) : null}
 
             {!preferCapturedScore && report.scoreIsStale && (
-              <p
-                className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                data-testid="version-lint-stale-note"
-              >
+              <Alert variant="warn" className="mt-2" data-testid="version-lint-stale-note">
                 The stored quality score
                 {report.capturedGrade && report.capturedScore != null
                   ? ` (${report.capturedGrade} · ${report.capturedScore})`
                   : ''}{' '}
                 is out of date — this report was recomputed from the current revision.
-              </p>
+              </Alert>
             )}
 
             <div
               className={
                 expanded
-                  ? 'mt-3 min-h-0 flex-1 overflow-y-auto rounded-lg border border-gray-200 p-4 dark:border-gray-700'
-                  : 'mt-3 max-h-[50vh] overflow-y-auto rounded-lg border border-gray-200 p-4 dark:border-gray-700'
+                  ? 'lr-findings lr-findings--expanded'
+                  : 'lr-findings'
               }
               data-testid="lint-report-findings-scroll"
             >

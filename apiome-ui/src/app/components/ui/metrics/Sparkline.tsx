@@ -25,9 +25,13 @@ import * as React from 'react';
 import { cn } from '@lib/utils';
 // `chartGeometry` is React-free, DOM-free coordinate maths with its own unit tests
 // (`tests/mcp-charts-geometry.test.ts`). It lives under `ui/mcp/charts/` because that kit was
-// written first, not because it is MCP-specific — re-deriving `sparklinePoints` here would be a
+// written first, not because it is MCP-specific — re-deriving `trendLinePoints` here would be a
 // second definition of the same six lines, and the ticket's point is that there is one kit.
-import { pointsToPath, sparklinePoints } from '../mcp/charts/chartGeometry';
+import {
+  pointsToPath,
+  pointsToSegments,
+  trendLinePoints,
+} from '../mcp/charts/chartGeometry';
 import { METRIC_TONE_MARK_CLASS, type MetricTone } from './metricTiers';
 
 /** The plotting box. 5:1, matching the `aspect-ratio` `.hive-sparkline` is drawn at. */
@@ -45,8 +49,15 @@ const PAD = 2;
 
 export interface SparklineProps
   extends Omit<React.SVGAttributes<SVGSVGElement>, 'children' | 'role'> {
-  /** The series, oldest first. Non-finite entries plot as 0. */
-  data: readonly number[];
+  /**
+   * The series, oldest first.
+   *
+   * An entry may be `null` — a **gap**, which the line breaks across rather than plotting as
+   * `0`. "Nobody imported an AsyncAPI document that day" and "everything scored zero that day"
+   * are different facts, and a sparkline that draws them the same way reports a collapse that
+   * did not happen. Non-finite numbers are gaps for the same reason.
+   */
+  data: readonly (number | null)[];
   /**
    * What the series is — the accessible name (`"Mock requests, last 30 days"`). Required: a
    * shape with no name tells a screen-reader user nothing at all.
@@ -74,13 +85,9 @@ export const Sparkline = React.forwardRef<SVGSVGElement, SparklineProps>(functio
   { data, label, tone = 'accent', area = true, domainMax, className, ...props },
   ref,
 ) {
-  const points = sparklinePoints(data, W, H, PAD, domainMax);
-  const line = pointsToPath(points);
-  const areaPath =
-    area && points.length > 1
-      ? `${line} L ${points[points.length - 1].x.toFixed(2)} ${H} L ${points[0].x.toFixed(2)} ${H} Z`
-      : '';
-
+  // One path per run of consecutive real values. A series with no gaps is one run, which is
+  // the same single `<path>` this drew before gaps were a thing.
+  const segments = pointsToSegments(trendLinePoints(data, W, H, PAD, domainMax));
   const summary = describeSeries(data);
 
   return (
@@ -95,11 +102,33 @@ export const Sparkline = React.forwardRef<SVGSVGElement, SparklineProps>(functio
       {...props}
     >
       <title>{`${label} — ${summary}`}</title>
-      {areaPath ? <path className="hive-sparkline__area" d={areaPath} /> : null}
-      {points.length > 1 ? <path className="hive-sparkline__line" d={line} /> : null}
-      {points.length === 1 ? (
-        <circle className="hive-sparkline__point" cx={points[0].x} cy={points[0].y} r={1.75} />
-      ) : null}
+      {segments.map((run, index) => {
+        const line = pointsToPath(run);
+        // A lone real value between two gaps has no line to draw and no area under it: it is a
+        // dot, so that a single day's measurement is still visible rather than being nothing.
+        if (run.length === 1) {
+          return (
+            <circle
+              key={`point-${index}`}
+              className="hive-sparkline__point"
+              cx={run[0].x}
+              cy={run[0].y}
+              r={1.75}
+            />
+          );
+        }
+        return (
+          <React.Fragment key={`run-${index}`}>
+            {area ? (
+              <path
+                className="hive-sparkline__area"
+                d={`${line} L ${run[run.length - 1].x.toFixed(2)} ${H} L ${run[0].x.toFixed(2)} ${H} Z`}
+              />
+            ) : null}
+            <path className="hive-sparkline__line" d={line} />
+          </React.Fragment>
+        );
+      })}
     </svg>
   );
 });
@@ -111,8 +140,10 @@ export const Sparkline = React.forwardRef<SVGSVGElement, SparklineProps>(functio
  * @returns `"no data"` for an empty series, otherwise the count, the latest value and the range —
  *   which is what a sighted reader takes from the shape, in the order they take it.
  */
-function describeSeries(data: readonly number[]): string {
-  const finite = data.filter((value) => Number.isFinite(value));
+function describeSeries(data: readonly (number | null)[]): string {
+  const finite = data.filter(
+    (value): value is number => typeof value === 'number' && Number.isFinite(value)
+  );
   if (finite.length === 0) return 'no data';
   const latest = finite[finite.length - 1];
   const high = Math.max(...finite);

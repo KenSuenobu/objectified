@@ -1,11 +1,14 @@
 /**
- * Unit tests for the pure lint-workspace utilities (CLX-4.1, #4859):
+ * Unit tests for the pure lint-workspace utilities (CLX-4.1, #4859; IXH-2.7, #5102):
  * URL <-> filter round-trips, saved-view blob shape, bulk/undo request builders, the
- * client-side transition matrix, waiver expiry, and defensive payload coercion.
+ * client-side transition matrix, waiver expiry, and defensive payload coercion — including
+ * the quality-rank series, whose coercion moved here from the panel's own suite when
+ * HIVE-5.8 (#5311) rebuilt the panel.
  */
 
 import {
   EMPTY_WORKSPACE_FILTERS,
+  adapterAttributionShare,
   activeFilterCount,
   allowedDecisionTransitions,
   buildBulkRequest,
@@ -18,8 +21,10 @@ import {
   lintWorkspaceSummaryFromPayload,
   lintWorkspaceTrendsFromPayload,
   parseWorkspaceFilters,
+  qualityRankSeriesFromPayload,
   savedViewToFilters,
   selectionKey,
+  type QualityRankFormat,
   type WorkspaceFilters,
 } from '../src/app/utils/lint-workspace';
 
@@ -214,5 +219,142 @@ describe('selectionKey', () => {
   it('is stable across fingerprint + project scope', () => {
     expect(selectionKey({ sourceFingerprint: 'f1', projectId: 'p1' })).toBe('f1|p1');
     expect(selectionKey({ sourceFingerprint: 'f1', projectId: null })).toBe('f1|');
+  });
+});
+
+// --- Quality-rank telemetry (IXH-2.7, #5102) ---------------------------------------------------
+
+/**
+ * One (scope, format) rank group.
+ *
+ * @param overrides Fields to change.
+ * @returns The group.
+ */
+function formatEntry(overrides: Partial<QualityRankFormat> = {}): QualityRankFormat {
+  return {
+    scope: 'import',
+    formatKey: 'openapi-3.1',
+    adapterKeys: ['openapi'],
+    styleGuideVersions: ['guide-a'],
+    observations: 6,
+    gradeDistribution: { A: 1, B: 3, C: 1, D: 0, F: 1, ungraded: 0 },
+    averageScore: 78,
+    averageReadiness: null,
+    latestScore: 74,
+    latestGrade: 'C',
+    scoreDelta: -6,
+    outcomes: { pass: 4, warn: 1, block: 1 },
+    blockedCount: 1,
+    bestRank: null,
+    adapterFindingCount: 3,
+    specFindingCount: 9,
+    declaredParserLimits: 2,
+    attribution: { adapter: { 'unsupported-construct': 3 }, spec: { naming: 9 } },
+    points: [
+      {
+        date: '2026-08-01',
+        observations: 3,
+        averageScore: 82,
+        averageReadiness: null,
+        gradeDistribution: { A: 1, B: 2 },
+      },
+      {
+        date: '2026-08-02',
+        observations: 3,
+        averageScore: 74,
+        averageReadiness: null,
+        gradeDistribution: { C: 1, F: 1, B: 1 },
+      },
+    ],
+    ...overrides,
+  };
+}
+
+// --- Payload coercion -------------------------------------------------------------------------
+
+describe('qualityRankSeriesFromPayload', () => {
+  it('coerces the enveloped response into the series shape', () => {
+    const parsed = qualityRankSeriesFromPayload({
+      success: true,
+      days: 7,
+      windowStart: '2026-07-27',
+      windowEnd: '2026-08-02',
+      observationCount: 2,
+      truncated: true,
+      formatLimit: 24,
+      stages: { preflight: 2, committed: 0 },
+      outcomes: { pass: 2 },
+      formats: [
+        {
+          scope: 'export',
+          formatKey: 'grpc',
+          adapterKeys: ['grpc'],
+          styleGuideVersions: ['g1', 'g2'],
+          observations: 2,
+          gradeDistribution: { B: 2 },
+          averageScore: 80,
+          averageReadiness: 91,
+          latestScore: 80,
+          latestGrade: 'B',
+          scoreDelta: 0,
+          outcomes: { pass: 2 },
+          blockedCount: 0,
+          bestRank: 1,
+          adapterFindingCount: 0,
+          specFindingCount: 4,
+          declaredParserLimits: 2,
+          attribution: { adapter: {}, spec: { naming: 4 } },
+          points: [
+            { date: '2026-08-02', observations: 2, averageScore: 80, averageReadiness: 91 },
+          ],
+        },
+      ],
+    });
+
+    expect(parsed.days).toBe(7);
+    expect(parsed.truncated).toBe(true);
+    expect(parsed.formats).toHaveLength(1);
+    expect(parsed.formats[0].bestRank).toBe(1);
+    expect(parsed.formats[0].styleGuideVersions).toEqual(['g1', 'g2']);
+    expect(parsed.formats[0].attribution.spec).toEqual({ naming: 4 });
+    expect(parsed.formats[0].points[0].gradeDistribution).toEqual({});
+  });
+
+  it('keeps a missing average as a gap rather than turning it into zero', () => {
+    const parsed = qualityRankSeriesFromPayload({
+      formats: [
+        {
+          formatKey: 'thrift',
+          averageScore: null,
+          points: [{ date: '2026-08-02', observations: 0, averageScore: null }],
+        },
+      ],
+    });
+    expect(parsed.formats[0].averageScore).toBeNull();
+    expect(parsed.formats[0].points[0].averageScore).toBeNull();
+    expect(parsed.formats[0].points[0].observations).toBe(0);
+  });
+
+  it('degrades a malformed payload instead of throwing', () => {
+    const parsed = qualityRankSeriesFromPayload({ formats: 'nope', stages: 7 });
+    expect(parsed.formats).toEqual([]);
+    expect(parsed.stages).toEqual({});
+    expect(parsed.observationCount).toBe(0);
+  });
+});
+
+// --- Attribution share ------------------------------------------------------------------------
+
+describe('adapterAttributionShare', () => {
+  it('reports the adapter percentage of the finding split', () => {
+    expect(adapterAttributionShare(formatEntry())).toBe(25);
+  });
+
+  it('is null when nothing was found, because a share of nothing is not zero percent', () => {
+    expect(
+      adapterAttributionShare(
+        formatEntry({ adapterFindingCount: 0, specFindingCount: 0 }),
+      ),
+    ).toBeNull();
   });
 });

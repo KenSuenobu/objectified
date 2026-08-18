@@ -213,6 +213,21 @@ export const STATUS_TONE: Readonly<Record<string, StatusTone>> = {
   info: 'accent',
   hint: 'accent',
 
+  // ---- Lint decision states (CLX-1.3; adopted by HIVE-5.8, #5311) -----------
+  // The waiver state machine the lint workspace triages findings through. `open` is listed
+  // rather than left to the fallback because it is the *start* of that machine, not a string
+  // the vocabulary has not been told about — and a reader of this table should see all six
+  // steps together. The tones are the ones `govern/lint-posture.html` paints: a decision
+  // nobody has taken is neutral, one somebody has read is accent, a request is orange, a
+  // granted waiver is warn (accepted risk, not a pass), a fix is ok, and a false positive is
+  // violet — the same tone `private` takes, for the same reason: a judgement, not a level.
+  open: 'neutral',
+  acknowledged: 'accent',
+  waiver_requested: 'orange',
+  waived: 'warn',
+  fixed: 'ok',
+  false_positive: 'violet',
+
   // ---- Keys / members ------------------------------------------------------
   active: 'ok',
   revoked: 'danger',

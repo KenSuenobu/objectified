@@ -10116,3 +10116,1067 @@ button.auth-divider:disabled {
   inline-size: 100%;
   border-radius: var(--r-lg);
 }
+
+/* ==========================================================================
+   LINT POSTURE WORKSPACE  (HIVE-5.8, #5311)
+   --------------------------------------------------------------------------
+   `docs/mockups/govern/lint-posture.html`, whose page-local `<style>` block
+   this replaces: the `.tile-btn`, the `.facets` strip, the `.url-line`, the
+   `.clamp-2` message, the `.split-bar`, the `.bars` histogram, the `.grade-chip`
+   and the bulk bar's owner field.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 blocks above give. Every rule leans on
+   the density and font-scale tokens; the drawer's key/value list, the rank
+   card's four regions and the grade histogram are real grids that a utility
+   string spells badly; and the quiet lines and the section titles have to sit
+   *after* the unlayered `h1`–`h4` and `p` base rules near line 2497, which
+   outrank anything in `@layer utilities`.
+
+   The mockup froze eleven things in pixels that must not be frozen: the 400px
+   Finding column, the 300px search field, the 120/150px selects, the 180px
+   owner field, the 48px grade chip, the 44px rank bars, the 8px split bar, the
+   16px drawer arrows, the 12px url-line glyphs and the 740px bulk-bar clamp.
+   All are `rem` or a token here, so they follow all six font scales.
+
+   No hue is named below — every colour is a token, so the surface follows all
+   nine themes. Where a *band* or a *tone* decides the colour it is not here at
+   all: the grade tiles take `GRADE_BANDS[…].solidClass` and the badges take
+   their status tone, both from `ui/statusVocabulary.ts`, so a B is the same
+   green here as on the catalog table. Three measured deviations from the
+   mockup, two of them the ones the earlier Epic-5 tickets already made:
+
+   * quiet text is `--fg-muted`, not `--fg-subtle`, which measures about 3.1:1
+     against the canvas at these sizes;
+   * the "New" pill is the honey `new` marker of DESIGN.md §3.1 rather than the
+     mockup's red. A red pill beside a red `Error` severity badge in the same
+     cell reads as a second severity, and honey is what the vocabulary already
+     spends on "this is new";
+   * the facet dot takes the chip's own ink while the chip is pressed. On the
+     inked chip a saturated `--neutral` swatch measures under 2:1, and the dot
+     is a *repeat* of the label beside it rather than the signal itself.
+
+   Two classes are borrowed rather than restated: `.tnt-icon-tile` from the
+   tenants block (the tinted square at the head of each dialog) and
+   `.hive-control` from the primitives block (the native `select`s, for the
+   reason `.mbr-role-select` gives).
+   ========================================================================== */
+
+/* ---- Shared quiet type --------------------------------------------------
+   The caps section label and the muted line, used by all six components of the
+   workspace — and `.lw-caps` also by the shared `LintViolationFindingsList`
+   header, which is the same 11px caps label and had spelled it as a
+   `text-gray-500 dark:text-gray-400` utility string. */
+.lw-caps {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.lw-caps__aside {
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.lw-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  min-width: 0;
+}
+
+.lw-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.lw-tab-glyph {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+/* ---- The posture summary ------------------------------------------------ */
+.lw-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* A stat that filters the queue below it. It carries no background of its own:
+   `.hive-stat-grid > *` paints the cell, and a base rule here would win over
+   that rule and freeze the surface. Only the hover state is declared, whose
+   two-class specificity beats the grid's one. */
+.lw-tile {
+  text-align: start;
+  inline-size: 100%;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.lw-tile:hover {
+  background: var(--bg-subtle);
+}
+
+/* The trailing callout on a tile ("Needs attention"). A chip on its tone's own
+   soft ground rather than bare tinted text: the `-fg` inks are calibrated to
+   clear AA on their *soft fill*, and as loose 12px copy on the surface
+   `--danger-fg` measures 3.06:1 in High contrast. */
+.lw-tile__callout {
+  padding-inline: var(--space-1);
+  border-radius: var(--r-xs);
+  font-weight: 600;
+}
+
+.lw-tile-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) * 1.5);
+  padding: calc(var(--card-pad) * 0.8) var(--card-pad);
+}
+
+.lw-tile-skeleton__label {
+  block-size: var(--fs-xs);
+  inline-size: 60%;
+}
+
+.lw-tile-skeleton__value {
+  block-size: var(--fs-4xl);
+  inline-size: 3.5rem;
+}
+
+.lw-tile-skeleton__foot {
+  block-size: var(--fs-xs);
+  inline-size: 80%;
+}
+
+/* Grades on the left, axes on the right; one column below the fold-point.
+
+   The breakpoint is `rem`, as the audit and style-guide sections state theirs.
+   A length in a *media query* is resolved against the browser's initial font
+   size rather than against `html { font-size }`, so `em` and `rem` are the same
+   thing here and neither follows the in-app font-size preference — what that
+   preference reaches is everything *inside* the grid, all of which is `rem`.
+   What a `rem` query does buy over a `px` one is the reader who has enlarged
+   type in their browser: their fold comes earlier, which is the point. */
+.lw-bands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+  padding: var(--card-pad);
+}
+
+@media (max-width: 60rem) {
+  .lw-bands {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lw-bands__skeleton {
+  block-size: 2.5rem;
+  inline-size: 100%;
+}
+
+.lw-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+.lw-grade-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The letter tile. Its fill is the band's own `solidClass`, so nothing about
+   colour is stated here — only the square it is painted in. */
+.lw-grade-chip__letter {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lw-grade-chip__count {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* ---- Saved views -------------------------------------------------------- */
+.lw-views {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lw-view-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  block-size: var(--control-h-sm);
+  padding-inline: var(--space-2);
+  border-radius: var(--r-full);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+  max-inline-size: 100%;
+}
+
+/* The view you are actually looking at. Before this every chip was identical,
+   so a reader who applied a view and then flipped one facet had no way to see
+   they had left it. */
+.lw-view-chip.is-current {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--accent-fg);
+}
+
+.lw-view-chip__apply {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+
+.lw-view-chip__apply:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lw-view-chip__pinned {
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  flex-shrink: 0;
+  color: var(--honey-fg);
+}
+
+.lw-view-chip__action {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  border-radius: var(--r-full);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.lw-view-chip__action:hover {
+  background: var(--bg-inset);
+  color: var(--fg);
+}
+
+.lw-view-chip__action > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+/* Pushed to the trailing edge on a wide row, and simply the last line on a
+   narrow one — a `margin-inline-start: auto` that wrapping resolves by itself. */
+.lw-views__note {
+  margin-inline-start: auto;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Dialog forms ------------------------------------------------------- */
+.lw-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.lw-form__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 34rem) {
+  .lw-form__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lw-check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* What the view is actually saving, in the words the address bar uses. It
+   wraps rather than scrolls — the whole point is to read it before naming it. */
+.lw-query {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---- The queue toolbar -------------------------------------------------- */
+.lw-toolbar-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.lw-select {
+  inline-size: 9rem;
+  max-inline-size: 100%;
+  block-size: var(--control-h-sm);
+  padding-inline: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  color: var(--fg);
+  font-size: var(--fs-xs);
+}
+
+/* ---- The facet strip ---------------------------------------------------- */
+.lw-facets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid var(--border);
+}
+
+.lw-facet-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.lw-facet-group > .lw-caps {
+  margin-inline-end: var(--space-1);
+}
+
+.lw-facet-dot {
+  inline-size: 0.4375rem;
+  block-size: 0.4375rem;
+  flex-shrink: 0;
+  border-radius: var(--r-full);
+}
+
+.lw-facet-dot[data-tone='danger'] {
+  background: var(--danger);
+}
+
+.lw-facet-dot[data-tone='warn'] {
+  background: var(--warn);
+}
+
+.lw-facet-dot[data-tone='accent'] {
+  background: var(--accent);
+}
+
+.lw-facet-dot[data-tone='ok'] {
+  background: var(--ok);
+}
+
+.lw-facet-dot[data-tone='orange'] {
+  background: var(--orange);
+}
+
+.lw-facet-dot[data-tone='violet'] {
+  background: var(--violet);
+}
+
+.lw-facet-dot[data-tone='neutral'] {
+  background: var(--neutral);
+}
+
+.lw-facet-dot[data-tone='honey'] {
+  background: var(--honey);
+}
+
+.lw-facet-dot[data-tone='outline'] {
+  background: var(--fg-subtle);
+}
+
+/* On the pressed chip the ground is `--fg`, and a saturated swatch on it is
+   both illegible and redundant — the label beside it already says which facet
+   this is. It becomes the chip's own ink. */
+.lw-facet-chip[aria-pressed='true'] .lw-facet-dot {
+  background: currentColor;
+}
+
+/* ---- The shareable-URL line -------------------------------------------- */
+.lw-url {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid var(--border);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.lw-url > svg {
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  flex-shrink: 0;
+}
+
+.lw-url__path {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lw-url__query {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.lw-url__note {
+  margin-inline-start: auto;
+}
+
+/* ---- Queue cells -------------------------------------------------------- */
+/* The Finding column is the widest thing in the row and the only one allowed to
+   be: 25rem is the mockup's 400px clamp, in `rem`.
+
+   The ceiling is on the block *inside* the cell, not on the `<td>`. An
+   auto-layout table computes its columns from their content and ignores a
+   cell's `max-width` outright — measured at 533px against a 400px clamp before
+   this moved (`e2e/hive-lint-workspace.spec.ts`). Constraining the block is
+   what actually bounds the column, and it is also what gives the message and
+   the path something to clamp and elide against.
+
+   `max-width`, not `max-inline-size`: the build's CSS transform drops the
+   logical spelling from a rule that also carries `min-width` (measured in
+   HIVE-5.2, restated in 5.4 and 5.5). */
+.lw-finding {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  max-width: 25rem;
+  padding-block: var(--space-2);
+}
+
+.lw-finding__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.lw-finding__rule {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Two lines of the message, then an ellipsis; the drawer has the rest. */
+.lw-finding__message {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: normal;
+}
+
+.lw-finding__path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.lw-subject {
+  min-width: 0;
+}
+
+.lw-subject__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+.lw-subject__ungraded {
+  color: var(--fg-muted);
+}
+
+/* The square grade tile in a row. Its fill is the band's `solidClass`. */
+.lw-grade-sq {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  border-radius: var(--r-xs);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lw-axis {
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.lw-source {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* ---- The bulk bar's own two controls ------------------------------------ */
+/* The bar is inverted (`bg-fg text-surface`), so its rule and its field are
+   drawn from the bar's *text* colour rather than from a fixed white — which is
+   what makes them read the same on the six dark palettes as on the three
+   light ones. */
+.lw-bulk-rule {
+  inline-size: 1px;
+  block-size: 1.25rem;
+  flex-shrink: 0;
+  background: color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.lw-bulk-owner {
+  inline-size: 11rem;
+  max-inline-size: 100%;
+  block-size: var(--control-h-sm);
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 30%, transparent);
+  color: inherit;
+  font-size: var(--fs-xs);
+}
+
+.lw-bulk-owner::placeholder {
+  color: color-mix(in srgb, currentColor 70%, transparent);
+}
+
+/* ---- The finding drawer ------------------------------------------------- */
+.lw-drawer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.lw-drawer-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lw-drawer-desc {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.lw-drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.lw-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* Label column then value column, the label sized from the type scale so it
+   holds one word at every font scale rather than a frozen 120px. */
+.lw-kv {
+  display: grid;
+  grid-template-columns: minmax(0, 9em) minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  margin-block: var(--space-2);
+}
+
+.lw-kv dt {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.lw-kv dd {
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A 64-character digest wraps inside its own cell. It is never elided and
+   never dimmed: these are the characters an auditor compares by eye. */
+.lw-fingerprint {
+  overflow-wrap: anywhere;
+}
+
+.lw-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--accent-fg);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lw-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lw-link > svg {
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  flex-shrink: 0;
+}
+
+/* The remediation trail. The marker takes the tone of the state the entry
+   moved *to*, which is the same tone that state's badge takes in the queue. */
+.lw-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block-start: var(--space-2);
+  padding-inline-start: var(--space-4);
+  border-inline-start: 1px solid var(--border);
+}
+
+.lw-timeline__item {
+  position: relative;
+}
+
+.lw-timeline__item::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: calc(var(--space-4) * -1 - 0.1875rem);
+  inset-block-start: 0.375rem;
+  inline-size: 0.4375rem;
+  block-size: 0.4375rem;
+  border-radius: var(--r-full);
+  background: var(--neutral);
+}
+
+.lw-timeline__item[data-tone='ok']::before {
+  background: var(--ok);
+}
+
+.lw-timeline__item[data-tone='warn']::before {
+  background: var(--warn);
+}
+
+.lw-timeline__item[data-tone='danger']::before {
+  background: var(--danger);
+}
+
+.lw-timeline__item[data-tone='orange']::before {
+  background: var(--orange);
+}
+
+.lw-timeline__item[data-tone='violet']::before {
+  background: var(--violet);
+}
+
+.lw-timeline__item[data-tone='accent']::before {
+  background: var(--accent);
+}
+
+.lw-timeline__title {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.lw-timeline__why {
+  margin-inline-start: var(--space-2);
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+.lw-timeline__meta {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.lw-history-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+.lw-history-skeleton__row {
+  block-size: 2.25rem;
+  inline-size: 100%;
+}
+
+/* ---- Cards shared by both analysis tabs --------------------------------- */
+.lw-card-head {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.lw-card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.lw-card-title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.lw-card-title__window {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.lw-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* The explanatory note under a trends card, and the same shape wherever a
+   panel has to say why it is drawn the way it is. */
+.lw-note {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Trends ------------------------------------------------------------- */
+.lw-trends {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 64rem) {
+  .lw-trends {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lw-series {
+  min-width: 0;
+}
+
+.lw-series__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.lw-series__label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.lw-series__total {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.lw-series__chart {
+  inline-size: 100%;
+  margin-block-start: var(--space-2);
+}
+
+/* ---- Quality ranks ------------------------------------------------------ */
+.lw-ranks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.lw-ranks__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.lw-ranks__title {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  color: var(--fg);
+}
+
+.lw-ranks__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
+  gap: var(--space-4);
+}
+
+.lw-rank {
+  min-width: 0;
+}
+
+.lw-rank__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.lw-rank__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.lw-mini-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+  min-width: 0;
+}
+
+.lw-mini-stat__label {
+  display: block;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.lw-mini-stat__value {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.lw-rank__charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.lw-rank__spark {
+  inline-size: 100%;
+  margin-block-start: var(--space-1);
+}
+
+.lw-rank__attribution-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-end: var(--space-1);
+}
+
+/* The grade histogram. Six columns of equal width whose fills are the band
+   colours, so the shape and the vocabulary agree; a bucket with no grades in
+   it keeps its column and draws no fill, which is what makes "no F at all"
+   visible rather than absent. */
+.lw-bars {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: var(--space-1);
+  block-size: 2.75rem;
+  margin-block-start: var(--space-1);
+  padding: 2px;
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+}
+
+.lw-bars__col {
+  display: flex;
+  align-items: flex-end;
+  block-size: 100%;
+  min-width: 0;
+}
+
+.lw-bars__fill {
+  inline-size: 100%;
+  min-block-size: 2px;
+  border-radius: var(--r-xs);
+}
+
+.lw-bars__axis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-1);
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+/* Adapter versus specification, as one bar. Violet is the adapter — apiome's
+   own intake — and azure the document, which is the pairing the mockup uses
+   and the one the sentence under it names in the same order. */
+.lw-split {
+  display: flex;
+  block-size: 0.5rem;
+  overflow: hidden;
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+}
+
+.lw-split__adapter {
+  background: var(--violet);
+}
+
+.lw-split__spec {
+  background: var(--accent);
+}
+
+/* ---- The shared lint report dialog --------------------------------------
+   `LintReportDialog` is opened from four surfaces — the version badge, the
+   two catalog lint orbs and, since this ticket, the finding drawer — so its
+   chrome is here rather than in the workspace block above. What it replaces:
+   a `gradeChipClass` tile, three `severityBadgeClass` pills, an indigo guide
+   chip, two bordered grey/amber notes and a `border-gray-200` scroll box. */
+.lr-headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The mockup's 48px letter tile, in `rem`. Its fill is the band's own
+   `solidClass`, so no colour is named here. */
+.lr-grade {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: var(--r-md);
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  letter-spacing: var(--track-tight);
+  line-height: 1;
+}
+
+.lr-headline__text {
+  min-width: 0;
+}
+
+.lr-headline__marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-1);
+}
+
+.lr-score {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.lr-score__max {
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* The findings list scrolls inside its own box so a hundred-finding report
+   never scrolls the dialog's header off the top. */
+.lr-findings {
+  margin-block-start: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 0 0 1px var(--border);
+  max-block-size: 50vh;
+  overflow-y: auto;
+}
+
+.lr-findings--expanded {
+  max-block-size: none;
+  min-block-size: 0;
+  flex: 1 1 auto;
+}
+
+/* A rule id, as an identifier rather than as a badge — it is the thing a
+   reader copies into a style guide. */
+.lr-rule {
+  padding: 0.0625rem var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg);
+}
+
+.lr-rule-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--accent-fg);
+}
+
+.lr-rule-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lr-rule-link > svg {
+  inline-size: var(--fs-2xs);
+  block-size: var(--fs-2xs);
+  flex-shrink: 0;
+}
