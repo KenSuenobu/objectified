@@ -170,14 +170,14 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
       </div>
 
       {/* Info Banner */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+      <div className="bg-accent-soft rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <Cloud className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+          <Cloud className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+            <h4 className="text-sm font-medium text-accent-fg mb-1">
               Import from SwaggerHub
             </h4>
-            <p className="text-xs text-blue-700 dark:text-blue-300">
+            <p className="text-xs text-accent">
               Import OpenAPI specifications from SwaggerHub. Public APIs can be accessed without authentication.
               Private APIs require an API key from your SwaggerHub account settings.
             </p>
@@ -185,7 +185,7 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
               href="https://support.smartbear.com/swaggerhub/docs/en/faq.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline mt-2"
+              className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-2"
             >
               Learn how to get an API key
               <ExternalLink className="h-3 w-3" />
@@ -198,8 +198,8 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Owner/Organization */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Owner / Organization <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-fg">
+            Owner / Organization <span className="text-danger">*</span>
           </label>
           <input
             type="text"
@@ -208,22 +208,22 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
             placeholder="e.g., myorg"
             className={`block w-full px-4 py-3 text-sm rounded-lg border ${
               ownerError
-                ? 'border-red-500 dark:border-red-400'
-                : 'border-gray-300 dark:border-gray-600'
-            } bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400`}
+                ? 'border-danger'
+                : 'border-border-strong'
+            } bg-surface text-fg placeholder:text-fg-faint`}
           />
           {ownerError && (
-            <p className="text-sm text-red-600 dark:text-red-400">{ownerError}</p>
+            <p className="text-sm text-danger">{ownerError}</p>
           )}
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-fg-muted">
             The owner or organization name in SwaggerHub
           </p>
         </div>
 
         {/* API Name */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            API Name <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-fg">
+            API Name <span className="text-danger">*</span>
           </label>
           <input
             type="text"
@@ -232,14 +232,14 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
             placeholder="e.g., petstore"
             className={`block w-full px-4 py-3 text-sm rounded-lg border ${
               apiNameError
-                ? 'border-red-500 dark:border-red-400'
-                : 'border-gray-300 dark:border-gray-600'
-            } bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400`}
+                ? 'border-danger'
+                : 'border-border-strong'
+            } bg-surface text-fg placeholder:text-fg-faint`}
           />
           {apiNameError && (
-            <p className="text-sm text-red-600 dark:text-red-400">{apiNameError}</p>
+            <p className="text-sm text-danger">{apiNameError}</p>
           )}
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-fg-muted">
             The API name as it appears in SwaggerHub
           </p>
         </div>
@@ -252,16 +252,16 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
             type="checkbox"
             checked={useLatestVersion}
             onChange={(e) => setUseLatestVersion(e.target.checked)}
-            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            className="rounded border-border-strong text-accent focus:ring-accent"
           />
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium text-fg">
             Use latest version
           </span>
         </label>
 
         {!useLatestVersion && (
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="block text-sm font-medium text-fg">
               Specific Version
             </label>
             <input
@@ -271,14 +271,14 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
               placeholder="e.g., 1.0.0"
               className={`block w-full px-4 py-3 text-sm rounded-lg border ${
                 versionError
-                  ? 'border-red-500 dark:border-red-400'
-                  : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400`}
+                  ? 'border-danger'
+                  : 'border-border-strong'
+              } bg-surface text-fg placeholder:text-fg-faint`}
             />
             {versionError && (
-              <p className="text-sm text-red-600 dark:text-red-400">{versionError}</p>
+              <p className="text-sm text-danger">{versionError}</p>
             )}
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-fg-muted">
               Leave blank to fetch the latest version
             </p>
           </div>
@@ -286,8 +286,8 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
       </div>
 
       {/* API Key (Optional) */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="rounded-xl border border-border p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-fg">
           <Cloud className="h-4 w-4" />
           API Key (for private APIs)
         </div>
@@ -299,7 +299,7 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Enter your SwaggerHub API key"
-              className="block w-full pr-10 px-4 py-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400"
+              className="block w-full pr-10 px-4 py-3 text-sm rounded-lg border border-border-strong bg-surface text-fg placeholder:text-fg-faint"
             />
             <button
               type="button"
@@ -307,13 +307,13 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
               className="absolute inset-y-0 right-0 pr-3 flex items-center"
             >
               {showApiKey ? (
-                <EyeOff className="h-4 w-4 text-gray-400" />
+                <EyeOff className="h-4 w-4 text-fg-faint" />
               ) : (
-                <Eye className="h-4 w-4 text-gray-400" />
+                <Eye className="h-4 w-4 text-fg-faint" />
               )}
             </button>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-fg-muted">
             Optional. Only required for accessing private APIs.
           </p>
         </div>
@@ -344,34 +344,34 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
       {fetchResult && (
         <div className={`rounded-xl border p-4 ${
           fetchResult.success
-            ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
-            : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
+            ? 'border-ok bg-ok-soft'
+            : 'border-danger bg-danger-soft'
         }`}>
           <div className="flex items-start gap-3">
             {fetchResult.success ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+              <CheckCircle2 className="h-5 w-5 text-ok flex-shrink-0 mt-0.5" />
             ) : (
-              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
             )}
             <div className="flex-1 min-w-0">
               <h4 className={`text-sm font-medium mb-1 ${
                 fetchResult.success
-                  ? 'text-green-900 dark:text-green-100'
-                  : 'text-red-900 dark:text-red-100'
+                  ? 'text-ok-fg'
+                  : 'text-danger'
               }`}>
                 {fetchResult.success ? 'Successfully fetched specification' : 'Failed to fetch specification'}
               </h4>
               <p className={`text-xs ${
                 fetchResult.success
-                  ? 'text-green-700 dark:text-green-300'
-                  : 'text-red-700 dark:text-red-300'
+                  ? 'text-ok'
+                  : 'text-danger'
               }`}>
                 {fetchResult.success
                   ? `Fetched ${fetchResult.filename} (Version: ${fetchResult.version})`
                   : fetchResult.error}
               </p>
               {fetchResult.isPrivate && (
-                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+                <p className="text-xs text-warn mt-2">
                   💡 This appears to be a private API. Make sure you have the correct API key.
                 </p>
               )}
@@ -382,8 +382,8 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
 
       {/* Metadata Preview */}
       {specTested && fileMetadata && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3 bg-white dark:bg-gray-800">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="rounded-xl border border-border p-4 space-y-3 bg-surface">
+          <div className="flex items-center gap-2 text-sm font-medium text-fg">
             <FileCode className="h-4 w-4" />
             Specification Preview
           </div>
@@ -391,10 +391,10 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
           {/* Title */}
           {fileMetadata.title && (
             <div>
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                 Title
               </span>
-              <div className="text-sm text-gray-900 dark:text-white font-medium mt-1">
+              <div className="text-sm text-fg font-medium mt-1">
                 {fileMetadata.title}
               </div>
             </div>
@@ -402,31 +402,31 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
 
           {/* Description */}
           {fileMetadata.description && (
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <div className="pt-4 border-t border-border">
+              <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                 Description
               </span>
-              <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 leading-relaxed line-clamp-3">
+              <div className="text-sm text-fg mt-1 leading-relaxed line-clamp-3">
                 {fileMetadata.description}
               </div>
             </div>
           )}
 
           {/* Format Info */}
-          <div className="pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-4">
+          <div className="pt-4 border-t border-border grid grid-cols-2 gap-4">
             <div>
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                 Format
               </span>
-              <div className="text-sm text-gray-900 dark:text-white mt-1">
+              <div className="text-sm text-fg mt-1">
                 {fileMetadata.format?.toUpperCase() || 'Unknown'}
               </div>
             </div>
             <div>
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                 Version
               </span>
-              <div className="text-sm text-gray-900 dark:text-white mt-1">
+              <div className="text-sm text-fg mt-1">
                 {fileMetadata.version || 'Unknown'}
               </div>
             </div>

@@ -222,12 +222,12 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
               if (!inline && language === 'json') {
                 // JSON code blocks get special styling
                 return (
-                  <div className="my-2 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
-                    <div className="bg-gray-800 dark:bg-gray-900 px-3 py-1.5 border-b border-gray-700">
-                      <span className="text-xs font-mono text-gray-300">JSON</span>
+                  <div className="my-2 rounded-lg overflow-hidden border border-border-strong">
+                    <div className="bg-inset px-3 py-1.5 border-b border-border">
+                      <span className="text-xs font-mono text-fg-faint">JSON</span>
                     </div>
-                    <pre className="bg-gray-900 dark:bg-black p-4 overflow-x-auto m-0">
-                      <code className="text-sm font-mono text-green-400 dark:text-green-300" {...props}>
+                    <pre className="bg-inset p-4 overflow-x-auto m-0">
+                      <code className="text-sm font-mono text-ok" {...props}>
                         {children}
                       </code>
                     </pre>
@@ -236,14 +236,14 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
               } else if (!inline) {
                 // Other code blocks
                 return (
-                  <div className="my-2 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                  <div className="my-2 rounded-lg overflow-hidden border border-border-strong">
                     {language && (
-                      <div className="bg-gray-800 dark:bg-gray-900 px-3 py-1.5 border-b border-gray-700">
-                        <span className="text-xs font-mono text-gray-300">{language}</span>
+                      <div className="bg-inset px-3 py-1.5 border-b border-border">
+                        <span className="text-xs font-mono text-fg-faint">{language}</span>
                       </div>
                     )}
-                    <pre className="bg-gray-900 dark:bg-black p-4 overflow-x-auto m-0">
-                      <code className="text-sm font-mono text-gray-100" {...props}>
+                    <pre className="bg-inset p-4 overflow-x-auto m-0">
+                      <code className="text-sm font-mono text-fg" {...props}>
                         {children}
                       </code>
                     </pre>
@@ -253,7 +253,7 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
                 // Inline code
                 return (
                   <code
-                    className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-mono"
+                    className="px-1.5 py-0.5 rounded bg-inset text-fg text-sm font-mono"
                     {...props}
                   >
                     {children}
@@ -291,27 +291,27 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                className="text-accent hover:underline"
               >
                 {children}
               </a>
             ),
             // Customize blockquotes
             blockquote: ({ children }) => (
-              <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-2">
+              <blockquote className="border-l-4 border-border-strong pl-4 italic my-2">
                 {children}
               </blockquote>
             ),
             // Customize tables
             table: ({ children }) => (
               <div className="overflow-x-auto my-2">
-                <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+                <table className="min-w-full divide-y divide-border">
                   {children}
                 </table>
               </div>
             ),
             thead: ({ children }) => (
-              <thead className="bg-gray-100 dark:bg-gray-800">{children}</thead>
+              <thead className="bg-inset">{children}</thead>
             ),
             th: ({ children }) => (
               <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">
@@ -323,7 +323,7 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
             ),
             // Customize horizontal rules
             hr: () => (
-              <hr className="my-4 border-gray-300 dark:border-gray-600" />
+              <hr className="my-4 border-border-strong" />
             ),
           }}
           fallback={null}
@@ -331,7 +331,7 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
           {content}
         </Markdown>
         {isStreaming && (
-          <span className="inline-block w-2 h-4 ml-1 bg-gray-900 dark:bg-white animate-pulse align-middle" />
+          <span className="inline-block w-2 h-4 ml-1 bg-fg animate-pulse align-middle" />
         )}
       </div>
     );
@@ -356,16 +356,16 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
     <div className={`flex flex-col min-h-0 ${embedded ? 'h-full' : ''} ${className ?? ''}`}>
         {/* Header */}
         {!embedded && (
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg">
-              <Sparkles className="h-5 w-5 text-white" />
+            <div className="p-2 bg-accent rounded-lg">
+              <Sparkles className="h-5 w-5 text-fg-on-accent" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+              <DialogTitle className="text-xl font-bold text-fg">
                 Design with AI
               </DialogTitle>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-fg-muted mt-1">
                 Generate OpenAPI specifications using natural language
               </p>
             </div>
@@ -374,13 +374,13 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
         )}
 
         {/* Model Selection */}
-        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-3 bg-subtle border-b border-border">
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-fg">
               Model:
             </label>
             <Select.Root value={selectedModel} onValueChange={setSelectedModel} disabled={isLoadingModels || isLoading}>
-              <Select.Trigger className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+              <Select.Trigger className="flex items-center gap-2 px-3 py-1.5 text-sm bg-surface border border-border-strong rounded-lg hover:bg-subtle transition-colors">
                 <Select.Value placeholder={isLoadingModels ? 'Loading models...' : 'Select a model'} />
                 <Select.Icon>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -389,13 +389,13 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
                 </Select.Icon>
               </Select.Trigger>
               <Select.Portal>
-                <Select.Content className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1 z-[10000]">
+                <Select.Content className="bg-surface rounded-lg shadow-lg border border-border p-1 z-[10000]">
                   <Select.Viewport>
                     {models.map(model => (
                       <Select.Item
                         key={model.name}
                         value={model.name}
-                        className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 rounded-md outline-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="px-3 py-2 text-sm text-fg rounded-md outline-none cursor-pointer hover:bg-inset"
                       >
                         <Select.ItemText>{model.name}</Select.ItemText>
                       </Select.Item>
@@ -408,7 +408,7 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
             {messages.length > 0 && (
               <button
                 onClick={handleReset}
-                className="ml-auto px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="ms-auto px-3 py-1.5 text-sm text-fg-muted transition-colors hover:text-fg"
               >
                 Reset Conversation
               </button>
@@ -416,36 +416,36 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
           </div>
         </div>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Messages Area — the wizard's own transcript column (`globals.css` §IMPORT WIZARD). */}
+        <div className="imp-chat flex-1 overflow-y-auto p-6">
           {messages.length === 0 && !streamingContent && (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 mb-4 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center">
-                <Bot className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              <div className="w-16 h-16 mb-4 bg-accent-soft rounded-2xl flex items-center justify-center">
+                <Bot className="h-8 w-8 text-accent-fg" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg font-semibold text-fg mb-2">
                 Start a Conversation
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
+              <p className="text-sm text-fg-muted max-w-md">
                 Describe the API you want to create, and I'll generate an OpenAPI 3.1.0 specification for you.
                 You can refine it through conversation.
               </p>
               <div className="mt-6 grid grid-cols-1 gap-2 w-full max-w-lg">
                 <button
                   onClick={() => setInput('Create a REST API for a simple blog with posts and comments')}
-                  className="px-4 py-3 text-sm text-left text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
+                  className="px-4 py-3 text-sm text-left text-fg bg-subtle hover:bg-inset rounded-lg transition-colors border border-border"
                 >
                   💬 Create a blog API with posts and comments
                 </button>
                 <button
                   onClick={() => setInput('Generate an e-commerce API with products, orders, and customers')}
-                  className="px-4 py-3 text-sm text-left text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
+                  className="px-4 py-3 text-sm text-left text-fg bg-subtle hover:bg-inset rounded-lg transition-colors border border-border"
                 >
                   🛒 E-commerce API with products and orders
                 </button>
                 <button
                   onClick={() => setInput('Build a user management API with authentication')}
-                  className="px-4 py-3 text-sm text-left text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
+                  className="px-4 py-3 text-sm text-left text-fg bg-subtle hover:bg-inset rounded-lg transition-colors border border-border"
                 >
                   🔐 User management with authentication
                 </button>
@@ -462,17 +462,15 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
                 className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {message.role === 'assistant' && (
-                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
-                    <Bot className="h-5 w-5 text-white" />
+                  <div className="flex-shrink-0 w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                    <Bot className="h-5 w-5 text-fg-on-accent" />
                   </div>
                 )}
 
                 <div className={`flex flex-col max-w-[80%] ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <div
-                    className={`px-4 py-3 rounded-lg ${
-                      message.role === 'user'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                    className={`imp-bubble ${
+                      message.role === 'user' ? 'imp-bubble--user' : 'imp-bubble--ai'
                     }`}
                   >
                     <div className="text-sm">
@@ -483,7 +481,7 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
                   {message.role === 'assistant' && hasJsonSpec && (
                     <button
                       onClick={() => handleImport(message.content)}
-                      className="mt-2 flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                      className="mt-2 flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-soft rounded-lg transition-colors"
                     >
                       <Download className="h-4 w-4" />
                       Import This Spec
@@ -492,8 +490,8 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
                 </div>
 
                 {message.role === 'user' && (
-                  <div className="flex-shrink-0 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-white" />
+                  <div className="flex-shrink-0 w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                    <User className="h-5 w-5 text-fg-on-accent" />
                   </div>
                 )}
               </div>
@@ -503,18 +501,18 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
           {/* Thinking indicator */}
           {isLoading && !streamingContent && (
             <div className="flex gap-3 justify-start">
-              <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
-                <Bot className="h-5 w-5 text-white" />
+              <div className="flex-shrink-0 w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                <Bot className="h-5 w-5 text-fg-on-accent" />
               </div>
               <div className="flex flex-col max-w-[80%]">
-                <div className="px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white">
+                <div className="px-4 py-3 rounded-lg bg-inset text-fg">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="w-2 h-2 bg-fg-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-fg-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-fg-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Thinking...</span>
+                    <span className="text-sm text-fg-muted">Thinking...</span>
                   </div>
                 </div>
               </div>
@@ -524,11 +522,11 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
           {/* Streaming message */}
           {streamingContent && (
             <div className="flex gap-3 justify-start">
-              <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
-                <Bot className="h-5 w-5 text-white" />
+              <div className="flex-shrink-0 w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                <Bot className="h-5 w-5 text-fg-on-accent" />
               </div>
               <div className="flex flex-col max-w-[80%]">
-                <div className="px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white">
+                <div className="px-4 py-3 rounded-lg bg-inset text-fg">
                   <div className="text-sm">
                     {renderMessageContent(streamingContent, true)}
                   </div>
@@ -541,7 +539,7 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
+        <div className="border-t border-border p-4 bg-surface">
           <div className="flex gap-2 items-center">
             {onBack && (
               <Button type="button" variant="outline" onClick={onBack} className="shrink-0">
@@ -555,12 +553,12 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
               onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
               placeholder="Describe your API or ask for changes..."
               disabled={isLoading || !selectedModel}
-              className="flex-1 min-w-0 px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 min-w-0 px-4 py-2 text-sm border border-border-strong rounded-lg bg-surface text-fg placeholder:text-fg-faint focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <Button
               onClick={handleSendMessage}
               disabled={isLoading || !input.trim() || !selectedModel}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-ink hover:bg-[color-mix(in_srgb,var(--ink)_88%,black)] text-ink-fg rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -570,7 +568,7 @@ export const LLMChatPanel = forwardRef<{ abort: () => void } | null, LLMChatPane
               Send
             </Button>
           </div>
-          <p className="mt-2 mb-0 text-xs text-gray-500 dark:text-gray-400 text-center">
+          <p className="mt-2 mb-0 text-xs text-fg-muted text-center">
             AI can make mistakes — please review before importing.
           </p>
         </div>

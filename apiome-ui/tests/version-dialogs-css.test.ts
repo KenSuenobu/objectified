@@ -70,11 +70,12 @@ const BASE_TYPE_RULE_LINE = (() => {
 })();
 
 /**
- * The HIVE-6.3 block, from its banner to the end of the file.
+ * The HIVE-6.3 block, from its banner to the start of whatever section follows it.
  *
- * It is the last section, so there is no "next banner" to stop at — but the slice still starts
- * at the banner rather than at the first rule, so a section added *after* this one will make
- * the bound explicit rather than silently widening every assertion below.
+ * It was the last section when this was written, and the slice started at the banner rather
+ * than at the first rule precisely so that a section added *after* it would make the bound
+ * explicit rather than silently widening every assertion below. HIVE-6.4 (#5315) is that
+ * section, so {@link SECTION_END_LINE} now closes the block.
  */
 const SECTION = (() => {
   const start = css.indexOf('VERSION DIALOGS & SUPPORTING PANELS  (HIVE-6.3, #5314)');
@@ -91,6 +92,12 @@ const SECTION_CODE = SECTION.replace(/\/\*[\s\S]*?\*\//g, '');
 const SECTION_START_LINE = css.slice(0, css.indexOf(SECTION)).split('\n').length;
 
 /**
+ * The 1-based line the *next* section's banner starts on, or one past the file when this is
+ * still the last block. Rules from there on belong to a later ticket's suite, not to this one.
+ */
+const SECTION_END_LINE = SECTION_START_LINE + SECTION.split('\n').length;
+
+/**
  * Every top-level rule that lives inside the block.
  *
  * Selected by *line*, not by substring: `body {` is a substring of
@@ -98,7 +105,10 @@ const SECTION_START_LINE = css.slice(0, css.indexOf(SECTION)).split('\n').length
  * into every assertion below.
  */
 const SECTION_RULES: CssRule[] = rules.filter(
-  (rule) => rule.line >= SECTION_START_LINE && !rule.prelude.startsWith('@media')
+  (rule) =>
+    rule.line >= SECTION_START_LINE &&
+    rule.line < SECTION_END_LINE &&
+    !rule.prelude.startsWith('@media')
 );
 
 /** A rule of the block, by prelude. */

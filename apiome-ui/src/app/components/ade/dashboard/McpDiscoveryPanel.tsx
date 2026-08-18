@@ -9,10 +9,15 @@
  * version id, or the failure) back to the dialog. On success it also fetches the freshly scored
  * version's lint report and shows the A–F grade with its MUST/SHOULD tallies, so the quality verdict
  * lands right in the import flow.
+ *
+ * Re-skinned by HIVE-6.4 (#5315): the tracker is `globals.css` §IMPORT WIZARD's `.imp-stage`,
+ * whose state travels as `data-state` rather than as one of four hard-coded fills, and the hero
+ * glyph takes the `.tnt-icon-tile` tones the rest of the wizard uses.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, CheckCircle2, Loader2, Network, XCircle } from 'lucide-react';
+import { Card } from '../../ui/Card';
 import { GradeGlyph } from '../../ui/mcp/GradeGlyph';
 import { FindingSeverity } from '../../ui/mcp/FindingSeverity';
 import {
@@ -65,41 +70,39 @@ function stageStatuses(state: string | undefined | null, failed: boolean): Stage
 
 const STAGE_LABELS = ['Connect', 'Discover capabilities', 'Lint & grade'] as const;
 
-/** One node in the three-stage tracker. */
+/**
+ * One node in the three-stage tracker.
+ *
+ * The badge is decoration — the word beside it and the visually-hidden state note are what a
+ * screen reader hears — so it is `aria-hidden` and the status travels as `data-state` for the
+ * stylesheet to paint.
+ *
+ * @param props The stage's label and where the run has got to.
+ * @returns The stage row.
+ */
 function StageNode({ label, status }: { label: string; status: StageStatus }) {
   return (
-    <li className="flex items-center gap-2">
-      <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-          status === 'done'
-            ? 'bg-emerald-500 text-white'
-            : status === 'active'
-              ? 'bg-indigo-500 text-white'
-              : status === 'failed'
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-        }`}
-      >
+    <li className="imp-stage" data-state={status}>
+      <span className="imp-stage__num" aria-hidden>
         {status === 'done' ? (
-          <Check className="h-3.5 w-3.5" aria-hidden />
+          <Check className="size-3" />
         ) : status === 'active' ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+          <Loader2 className="size-3 animate-spin" />
         ) : status === 'failed' ? (
-          <XCircle className="h-3.5 w-3.5" aria-hidden />
+          <XCircle className="size-3" />
         ) : (
-          <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
+          <span className="size-1.5 rounded-full bg-current" />
         )}
       </span>
-      <span
-        className={`text-xs font-medium ${
-          status === 'pending'
-            ? 'text-gray-400 dark:text-gray-500'
+      {label}
+      <span className="sr-only">
+        {status === 'done'
+          ? 'Completed'
+          : status === 'active'
+            ? 'In progress'
             : status === 'failed'
-              ? 'text-red-600 dark:text-red-400'
-              : 'text-gray-700 dark:text-gray-200'
-        }`}
-      >
-        {label}
+              ? 'Failed'
+              : 'Not started'}
       </span>
     </li>
   );
@@ -200,47 +203,33 @@ export default function McpDiscoveryPanel({
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5 py-10 text-center">
-      <div
-        className={`flex h-16 w-16 items-center justify-center rounded-2xl ${
-          terminal
-            ? succeeded
-              ? 'bg-green-500 text-white'
-              : 'bg-red-500 text-white'
-            : 'bg-indigo-500 text-white'
-        }`}
+      <span
+        className="tnt-icon-tile imp-drop__glyph"
+        data-tone={terminal ? (succeeded ? 'ok' : 'danger') : 'accent'}
+        aria-hidden
       >
-        {!terminal ? (
-          <Loader2 className="h-8 w-8 animate-spin" aria-hidden />
-        ) : succeeded ? (
-          <CheckCircle2 className="h-8 w-8" aria-hidden />
-        ) : (
-          <XCircle className="h-8 w-8" aria-hidden />
-        )}
-      </div>
+        {!terminal ? <Loader2 className="animate-spin" /> : succeeded ? <CheckCircle2 /> : <XCircle />}
+      </span>
 
       <div>
-        <h3 className="flex items-center justify-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-          <Network className="h-4 w-4 text-indigo-500" aria-hidden />
+        <h3 className="flex items-center justify-center gap-2 text-lg font-semibold text-fg">
+          <Network className="size-[var(--icon-dense)] text-accent" aria-hidden />
           {endpointName}
         </h3>
         <p
-          className={`mt-1 text-sm ${
-            terminal && !succeeded
-              ? 'text-red-600 dark:text-red-400'
-              : 'text-gray-600 dark:text-gray-400'
-          }`}
+          className={`mt-1 text-sm ${terminal && !succeeded ? 'text-danger' : 'text-fg-muted'}`}
           aria-live="polite"
         >
           {error ? error : discoveryStatusLabel(state)}
         </p>
         {summary && (
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400" aria-live="polite">
+          <p className="mt-1 text-xs text-fg-muted" aria-live="polite">
             {summary}
           </p>
         )}
       </div>
 
-      <ol className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="Import stages">
+      <ol className="imp-stages justify-center" aria-label="Import stages">
         {STAGE_LABELS.map((label, index) => (
           <StageNode key={label} label={label} status={stages[index]} />
         ))}
@@ -248,10 +237,10 @@ export default function McpDiscoveryPanel({
 
       {/* The freshly scored version's grade, so the quality verdict lands right in the import. */}
       {succeeded && lint ? (
-        <div className="flex flex-wrap items-center justify-center gap-4 rounded-xl border border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
+        <Card variant="flat" className="flex flex-wrap items-center justify-center gap-4 px-5 py-4">
           <GradeGlyph variant="gauge" size="sm" grade={lint.grade} score={lint.score} showScore={false} />
           <div className="text-left">
-            <div className="text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="text-sm font-semibold text-fg">
               Quality grade: {lint.grade} · {lint.score}/100
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -259,15 +248,15 @@ export default function McpDiscoveryPanel({
               <FindingSeverity tier="should" count={lintCounts?.should ?? 0} />
               <FindingSeverity tier="advisory" count={lintCounts?.advisory ?? 0} />
             </div>
-            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1.5 text-xs text-fg-muted">
               The full report is on the endpoint&apos;s Lint &amp; Score tab.
             </p>
           </div>
-        </div>
+        </Card>
       ) : null}
 
       {!terminal && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-fg-muted">
           This can take a few moments while we connect and list capabilities.
         </p>
       )}

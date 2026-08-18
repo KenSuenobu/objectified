@@ -1,9 +1,22 @@
 'use client';
 
+/**
+ * The Analyze step (HIVE-6.4, #5315).
+ *
+ * Authority: `docs/mockups/build/import-wizard.html` §Analysis result — Specification
+ * information, Format detection, Feature compatibility, Specification analysis, Quality score
+ * with its five category cards, and the Errors / Warnings lists.
+ *
+ * Every section it had is still here; what changed is that none of them names a colour any
+ * more. The panel used to carry a five-entry `categoryAccent` table (indigo, violet, blue,
+ * emerald, amber — one hue per category, meaning nothing), four gradient metric tiles, ten
+ * tinted status boxes and a gradient-headed dialog. Colour is now spent only where it says
+ * something: the score bands (through `ringTier`, the same bands the catalog and the MCP lint
+ * report read) and the error/warning severities.
+ */
+
 import { useState } from 'react';
-import { CheckCircle2, AlertCircle, XCircle, FileCode, AlertTriangle, X, ChevronRight, Info } from 'lucide-react';
-import * as Progress from '@radix-ui/react-progress';
-import * as Dialog from '@radix-ui/react-dialog';
+import { CheckCircle2, AlertCircle, XCircle, FileCode, AlertTriangle, ChevronRight, Info } from 'lucide-react';
 import {
   AnalysisResult,
   QualityIssue,
@@ -11,6 +24,20 @@ import {
   UnsupportedFeature
 } from '../../../utils/openapi-analyzer';
 import { getNumericScoreTier, NUMERIC_SCORE_TIER_LEGEND } from '../../../utils/numeric-score-tier';
+import { Alert } from '../../../components/ui/Alert';
+import { Badge } from '../../../components/ui/Badge';
+import { Card } from '../../../components/ui/Card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/Dialog';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { Progress } from '../../../components/ui/metrics/Progress';
+import { Ring } from '../../../components/ui/metrics/Ring';
+import { METRIC_TONE_INK_CLASS, ringTier } from '../../../components/ui/metrics/metricTiers';
 
 interface AnalysisPanelProps {
   fileName: string;
@@ -54,705 +81,488 @@ const categoryDescriptions: Record<QualityScoreCategoryId, { title: string; desc
   }
 };
 
-const categoryAccent: Record<QualityScoreCategoryId, { hover: string; issue: string; gradient: string }> = {
-  designQuality: {
-    hover: 'hover:border-indigo-300 dark:hover:border-indigo-600',
-    issue: 'text-indigo-600 dark:text-indigo-400',
-    gradient: 'from-indigo-500 to-indigo-600'
-  },
-  documentation: {
-    hover: 'hover:border-violet-300 dark:hover:border-violet-600',
-    issue: 'text-violet-600 dark:text-violet-400',
-    gradient: 'from-violet-500 to-violet-600'
-  },
-  apiBestPractices: {
-    hover: 'hover:border-blue-300 dark:hover:border-blue-600',
-    issue: 'text-blue-600 dark:text-blue-400',
-    gradient: 'from-blue-500 to-blue-600'
-  },
-  security: {
-    hover: 'hover:border-emerald-300 dark:hover:border-emerald-600',
-    issue: 'text-emerald-600 dark:text-emerald-400',
-    gradient: 'from-emerald-500 to-emerald-600'
-  },
-  performance: {
-    hover: 'hover:border-amber-300 dark:hover:border-amber-600',
-    issue: 'text-amber-600 dark:text-amber-400',
-    gradient: 'from-amber-500 to-amber-600'
-  }
+/** The issue severities, in the shared vocabulary's words. */
+const SEVERITY_STATUS: Readonly<Record<string, string>> = {
+  high: 'error',
+  medium: 'warning',
+  low: 'info',
 };
+
+/** A section label — 11 px caps, `--fg-muted`, per DESIGN.md §3.2. */
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <span className="imp-tile__label">{children}</span>;
+}
 
 export function AnalysisPanel({ fileName, analysis }: AnalysisPanelProps) {
   const [selectedCategory, setSelectedCategory] = useState<QualityScoreCategoryId | null>(null);
 
   const overallTier = getNumericScoreTier(analysis.qualityScore.overall);
+  const overallTone = ringTier(analysis.qualityScore.overall).tone;
   const categories = analysis.qualityScore.categories;
 
   const getIssuesForCategory = (category: QualityScoreCategoryId): QualityIssue[] => {
     return (analysis.qualityScore.issues || []).filter((issue) => issue.category === category);
   };
 
-  // Get severity color
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'high': return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20';
-      case 'medium': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20';
-      case 'low': return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20';
-      default: return 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20';
-    }
-  };
-
-  const getCategoryGradient = (category: QualityScoreCategoryId) =>
-    categoryAccent[category]?.gradient ?? 'from-gray-500 to-gray-600';
+  const info = analysis.document?.info;
 
   return (
-    <div className="space-y-6">
-      {/* File Name */}
-      <div className="flex items-center gap-2 text-gray-900 dark:text-white">
-        <FileCode className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center gap-2 text-fg">
+        <FileCode className="size-[var(--icon-dense)] text-accent" aria-hidden />
         <span className="font-semibold">{fileName}</span>
       </div>
 
-      {/* Specification Information */}
-      {analysis.document?.info && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Specification Information
-          </h3>
-          <div className="space-y-3">
-            {(analysis.document.info.title || analysis.document.info.version) && (
-              <div className="flex items-start justify-between gap-4">
-                {analysis.document.info.title && (
+      {info && (
+        <Card className="p-[var(--card-pad)]">
+          <h3 className="mb-3 text-base font-semibold text-fg">Specification information</h3>
+          <div className="flex flex-col gap-3">
+            {(info.title || info.version) && (
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                {info.title && (
                   <div>
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Title
-                    </span>
-                    <div className="text-sm font-medium text-gray-900 dark:text-white mt-1">
-                      {analysis.document.info.title}
-                    </div>
+                    <FieldLabel>Title</FieldLabel>
+                    <div className="mt-1 text-sm font-medium text-fg">{info.title}</div>
                   </div>
                 )}
-                {analysis.document.info.version && (
-                  <div className="text-right">
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Version
-                    </span>
-                    <div className="text-sm font-medium text-gray-900 dark:text-white mt-1">
-                      <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded">
-                        {analysis.document.info.version}
-                      </span>
+                {info.version && (
+                  <div>
+                    <FieldLabel>Version</FieldLabel>
+                    <div className="mt-1">
+                      <Badge variant="accent" mono>
+                        {info.version}
+                      </Badge>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {analysis.document.info.description && (
+            {info.description && (
               <div>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Description
-                </span>
-                <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 leading-relaxed">
-                  {analysis.document.info.description}
-                </div>
+                <FieldLabel>Description</FieldLabel>
+                <div className="mt-1 text-sm leading-relaxed text-fg-muted">{info.description}</div>
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              {analysis.document.info.contact && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {info.contact && (
                 <div>
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Contact
-                  </span>
-                  <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                    {analysis.document.info.contact.name && (
-                      <div>{analysis.document.info.contact.name}</div>
-                    )}
-                    {analysis.document.info.contact.email && (
-                      <div className="text-indigo-600 dark:text-indigo-400">
-                        {analysis.document.info.contact.email}
-                      </div>
-                    )}
-                    {analysis.document.info.contact.url && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {analysis.document.info.contact.url}
-                      </div>
-                    )}
+                  <FieldLabel>Contact</FieldLabel>
+                  <div className="mt-1 text-sm text-fg-muted">
+                    {info.contact.name && <div>{info.contact.name}</div>}
+                    {info.contact.email && <div className="text-accent">{info.contact.email}</div>}
+                    {info.contact.url && <div className="truncate text-xs">{info.contact.url}</div>}
                   </div>
                 </div>
               )}
 
-              {analysis.document.info.license && (
+              {info.license && (
                 <div>
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    License
-                  </span>
-                  <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                    {analysis.document.info.license.name}
-                    {analysis.document.info.license.url && (
-                      <div className="text-xs text-indigo-600 dark:text-indigo-400 truncate">
-                        {analysis.document.info.license.url}
-                      </div>
-                    )}
+                  <FieldLabel>License</FieldLabel>
+                  <div className="mt-1 text-sm text-fg-muted">
+                    {info.license.name}
+                    {info.license.url && <div className="truncate text-xs text-accent">{info.license.url}</div>}
                   </div>
                 </div>
               )}
             </div>
 
-            {analysis.document.info.termsOfService && (
+            {info.termsOfService && (
               <div>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Terms of Service
-                </span>
-                <div className="text-sm text-indigo-600 dark:text-indigo-400 mt-1 truncate">
-                  {analysis.document.info.termsOfService}
-                </div>
+                <FieldLabel>Terms of service</FieldLabel>
+                <div className="mt-1 truncate text-sm text-accent">{info.termsOfService}</div>
               </div>
             )}
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Format Detection */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Format Detection
-        </h3>
+      <Card className="p-[var(--card-pad)]">
+        <h3 className="mb-3 text-base font-semibold text-fg">Format detection</h3>
 
-        {/* Unsupported Format Warning */}
         {!analysis.formatSupported && analysis.format !== 'unknown' && (
-          <div className="mb-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-medium text-amber-900 dark:text-amber-200">
-                  Format Not Available for Import
-                </div>
-                <div className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                  The detected format <span className="font-semibold">{analysis.formatDisplayName}</span> is not yet supported for import.
-                  Currently supported formats: OpenAPI 3.x, Swagger 2.x, JSON Schema, Arazzo, RAML, AsyncAPI, GraphQL, Protobuf, Thrift, Avro, and Postman.
-                </div>
-              </div>
-            </div>
-          </div>
+          <Alert variant="warn" className="mb-4">
+            <span className="font-semibold">Format not available for import</span> — the detected
+            format {analysis.formatDisplayName} is not yet supported for import. Currently supported
+            formats: OpenAPI 3.x, Swagger 2.x, JSON Schema, Arazzo, RAML, AsyncAPI, GraphQL,
+            Protobuf, Thrift, Avro, and Postman.
+          </Alert>
         )}
 
-        {/* File Metadata Summary */}
-        <div className="mb-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Detected Format
-              </span>
-              <div className="text-sm font-semibold text-gray-900 dark:text-white mt-1 flex items-center gap-2">
-                {analysis.formatDisplayName}
-                {analysis.formatSupported ? (
-                  <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">
-                    Supported
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded">
-                    Not Supported
-                  </span>
-                )}
-              </div>
-            </div>
-            <div>
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Spec Version
-              </span>
-              <div className="text-sm font-semibold text-gray-900 dark:text-white mt-1">
-                {analysis.version !== 'unknown' ? analysis.version : 'N/A'}
-              </div>
-            </div>
-          </div>
-          {analysis.document?.info?.description && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Description
-              </span>
-              <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 leading-relaxed">
-                {analysis.document.info.description}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          {/* Format Card */}
-          <div className={`rounded-lg p-4 border ${analysis.formatSupported ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'}`}>
-            <div className="flex items-center gap-2 mb-2">
+        <div className="imp-tiles">
+          <div className="imp-tile">
+            <div className="imp-tile__label">Format</div>
+            <div className="imp-tile__value">
               {analysis.formatSupported ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <CheckCircle2 className="text-ok" aria-hidden />
               ) : (
-                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <AlertTriangle className="text-warn" aria-hidden />
               )}
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Format
-              </span>
+              <span>{analysis.formatDisplayName}</span>
             </div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
-              {analysis.formatDisplayName}
+            <div className="mt-2">
+              <Badge status={analysis.formatSupported ? 'completed' : 'degraded'}>
+                {analysis.formatSupported ? 'Supported' : 'Not supported'}
+              </Badge>
             </div>
           </div>
 
-          {/* Syntax Card */}
-          <div className={`rounded-lg p-4 border ${analysis.syntaxValid ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
-            <div className="flex items-center gap-2 mb-2">
+          <div className="imp-tile">
+            <div className="imp-tile__label">Syntax</div>
+            <div className="imp-tile__value">
               {analysis.syntaxValid ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <CheckCircle2 className="text-ok" aria-hidden />
               ) : (
-                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <XCircle className="text-danger" aria-hidden />
               )}
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Syntax
-              </span>
-            </div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
-              Valid {analysis.syntax.toUpperCase()}
+              <span>{analysis.syntaxValid ? `Valid ${analysis.syntax.toUpperCase()}` : 'Invalid'}</span>
             </div>
           </div>
 
-          {/* Schema Card */}
-          <div className={`rounded-lg p-4 border ${analysis.schemaValid ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
-            <div className="flex items-center gap-2 mb-2">
+          <div className="imp-tile">
+            <div className="imp-tile__label">Schema</div>
+            <div className="imp-tile__value">
               {analysis.schemaValid ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <CheckCircle2 className="text-ok" aria-hidden />
               ) : (
-                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <XCircle className="text-danger" aria-hidden />
               )}
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Schema
-              </span>
+              <span>{analysis.schemaValid ? 'Valid' : 'Invalid'}</span>
             </div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
-              {analysis.schemaValid ? 'Valid' : 'Invalid'}
+          </div>
+
+          <div className="imp-tile">
+            <div className="imp-tile__label">Spec version</div>
+            <div className="imp-tile__value">
+              <span>{analysis.version !== 'unknown' ? analysis.version : 'N/A'}</span>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Feature compatibility – unsupported features (#573), deprecated constructs (#575) */}
       {analysis.unsupportedFeatures && analysis.unsupportedFeatures.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-amber-200 dark:border-amber-800 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        <Card className="p-[var(--card-pad)]">
+          <h3 className="mb-2 flex items-center gap-2 text-base font-semibold text-fg">
+            <AlertTriangle className="size-[var(--icon-dense)] text-warn" aria-hidden />
             Feature compatibility
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            The following features in your specification are not or only partially supported by the import, or use deprecated constructs. Deprecated items are flagged; others will be skipped or simplified during import.
+          <p className="mb-4 text-sm text-fg-muted">
+            The following features in your specification are not or only partially supported by the
+            import, or use deprecated constructs. Deprecated items are flagged; others will be
+            skipped or simplified during import.
           </p>
-          <ul className="space-y-3">
+          <ul className="flex flex-col gap-2">
             {analysis.unsupportedFeatures.map((feature: UnsupportedFeature) => (
               <li
                 key={feature.id}
-                className={`flex items-start gap-3 p-3 rounded-lg border ${
-                  feature.severity === 'warning'
-                    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-                    : 'bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-700'
-                }`}
+                className="imp-row"
+                data-level={feature.severity === 'warning' ? 'warn' : undefined}
               >
                 {feature.severity === 'warning' ? (
-                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className="mt-0.5 size-[var(--icon-dense)] shrink-0 text-warn" aria-hidden />
                 ) : (
-                  <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                  <Info className="mt-0.5 size-[var(--icon-dense)] shrink-0 text-accent" aria-hidden />
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2 flex-wrap">
+                  <div className="flex flex-wrap items-center gap-2 font-medium text-fg">
                     {feature.label}
-                    {feature.id.startsWith('deprecated-') && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200">
-                        Deprecated
-                      </span>
-                    )}
+                    {feature.id.startsWith('deprecated-') && <Badge status="deprecated">Deprecated</Badge>}
                     {feature.count != null && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                      <Badge variant="neutral">
                         {feature.count} {feature.count === 1 ? 'use' : 'uses'}
-                      </span>
+                      </Badge>
                     )}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {feature.description}
-                  </div>
+                  <div className="mt-1 text-sm text-fg-muted">{feature.description}</div>
                   {feature.id === 'custom-extensions' && analysis.metrics.customExtensions.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {[...analysis.metrics.customExtensions].sort().map((ext) => (
-                        <span
-                          key={ext}
-                          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200"
-                        >
+                        <Badge key={ext} variant="neutral" mono>
                           {ext}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   )}
-                  {feature.path && (
-                    <div className="text-xs text-gray-500 dark:text-gray-500 mt-1 font-mono">
-                      {feature.path}
-                    </div>
-                  )}
+                  {feature.path && <div className="mt-1 font-mono text-xs text-fg-muted">{feature.path}</div>}
                 </div>
               </li>
             ))}
           </ul>
-        </div>
+        </Card>
       )}
 
-      {/* Specification Analysis */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Specification Analysis
-        </h3>
+      <Card className="p-[var(--card-pad)]">
+        <h3 className="mb-3 text-base font-semibold text-fg">Specification analysis</h3>
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 rounded-lg p-4 text-center border border-indigo-200 dark:border-indigo-800">
-            <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-              {analysis.metrics.schemaCount}
+        <div className="imp-tiles mb-5">
+          {[
+            { label: 'Schemas', value: analysis.metrics.schemaCount },
+            { label: 'Properties', value: analysis.metrics.propertyCount },
+            { label: 'References', value: analysis.metrics.referenceCount },
+            { label: 'Paths', value: analysis.metrics.pathCount },
+          ].map((metric) => (
+            <div key={metric.label} className="imp-tile text-center">
+              <div className="text-3xl font-bold tabular-nums text-fg">{metric.value}</div>
+              <div className="imp-tile__label mt-1">{metric.label}</div>
             </div>
-            <div className="text-xs text-indigo-700 dark:text-indigo-300 mt-1 font-medium">
-              Schemas
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4 text-center border border-purple-200 dark:border-purple-800">
-            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-              {analysis.metrics.propertyCount}
-            </div>
-            <div className="text-xs text-purple-700 dark:text-purple-300 mt-1 font-medium">
-              Properties
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-800">
-            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-              {analysis.metrics.referenceCount}
-            </div>
-            <div className="text-xs text-blue-700 dark:text-blue-300 mt-1 font-medium">
-              References
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 rounded-lg p-4 text-center border border-teal-200 dark:border-teal-800">
-            <div className="text-3xl font-bold text-teal-600 dark:text-teal-400">
-              {analysis.metrics.pathCount}
-            </div>
-            <div className="text-xs text-teal-700 dark:text-teal-300 mt-1 font-medium">
-              Paths
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Additional Info */}
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-400">External References:</span>
-            <span className="font-medium text-gray-900 dark:text-white">
+        <dl className="flex flex-col gap-2 text-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-border py-2">
+            <dt className="text-fg-muted">External references</dt>
+            <dd className="font-medium text-fg">
               {analysis.metrics.externalReferences.length > 0
                 ? `${analysis.metrics.externalReferences.length} URLs detected`
                 : 'None'}
-            </span>
+            </dd>
           </div>
-          <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-400">Circular References:</span>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-3 border-b border-border py-2">
+            <dt className="text-fg-muted">Circular references</dt>
+            <dd className="flex items-center gap-2 font-medium text-fg">
               {analysis.metrics.circularReferences.length === 0 ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <span className="font-medium text-gray-900 dark:text-white">None detected</span>
+                  <CheckCircle2 className="size-[var(--icon-dense)] text-ok" aria-hidden />
+                  None detected
                 </>
               ) : (
                 <>
-                  <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {analysis.metrics.circularReferences.length} detected
-                  </span>
+                  <AlertCircle className="size-[var(--icon-dense)] text-warn" aria-hidden />
+                  {analysis.metrics.circularReferences.length} detected
                 </>
               )}
-            </div>
+            </dd>
           </div>
           {analysis.metrics.customExtensions.length > 0 && (
-            <div className="py-2 border-b border-gray-100 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-gray-600 dark:text-gray-400">Custom Extensions (x-):</span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {analysis.metrics.customExtensions.length} total
-                </span>
+            <div className="border-b border-border py-2">
+              <div className="mb-1.5 flex items-center justify-between gap-3">
+                <dt className="text-fg-muted">Custom extensions (x-)</dt>
+                <dd className="font-medium text-fg">{analysis.metrics.customExtensions.length} total</dd>
               </div>
-              <div className="flex flex-wrap gap-1.5 mt-1">
+              <dd className="mt-1 flex flex-wrap gap-1.5">
                 {[...analysis.metrics.customExtensions].sort().map((ext) => (
-                  <span
-                    key={ext}
-                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
-                  >
+                  <Badge key={ext} variant="neutral" mono>
                     {ext}
-                  </span>
+                  </Badge>
                 ))}
-              </div>
+              </dd>
             </div>
           )}
           {(analysis.metrics.compositionSchemas.allOf > 0 ||
             analysis.metrics.compositionSchemas.oneOf > 0 ||
             analysis.metrics.compositionSchemas.anyOf > 0) && (
-            <div className="flex items-center justify-between py-2">
-              <span className="text-gray-600 dark:text-gray-400">Schema Composition:</span>
-              <div className="flex items-center gap-3">
-                {analysis.metrics.compositionSchemas.allOf > 0 && (
-                  <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded font-medium">
-                    allOf: {analysis.metrics.compositionSchemas.allOf}
-                  </span>
-                )}
-                {analysis.metrics.compositionSchemas.oneOf > 0 && (
-                  <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded font-medium">
-                    oneOf: {analysis.metrics.compositionSchemas.oneOf}
-                  </span>
-                )}
-                {analysis.metrics.compositionSchemas.anyOf > 0 && (
-                  <span className="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded font-medium">
-                    anyOf: {analysis.metrics.compositionSchemas.anyOf}
-                  </span>
-                )}
-              </div>
+            <div className="flex items-center justify-between gap-3 py-2">
+              <dt className="text-fg-muted">Schema composition</dt>
+              <dd className="flex flex-wrap items-center gap-2">
+                {(['allOf', 'oneOf', 'anyOf'] as const)
+                  .filter((key) => analysis.metrics.compositionSchemas[key] > 0)
+                  .map((key) => (
+                    <Badge key={key} variant="accent" mono>
+                      {key}: {analysis.metrics.compositionSchemas[key]}
+                    </Badge>
+                  ))}
+              </dd>
             </div>
           )}
-        </div>
-      </div>
+        </dl>
+      </Card>
 
-      {/* Quality Score */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Quality Score
-        </h3>
+      <Card className="p-[var(--card-pad)]">
+        <h3 className="mb-3 text-base font-semibold text-fg">Quality score</h3>
 
-        {/* Overall score + letter grade (colors follow numeric bands #248) */}
-        <div className="flex items-center justify-between mb-4 p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-4">
-            <div className={`text-6xl font-bold ${overallTier.textClass}`} title={`${overallTier.shortLabel} (${overallTier.rangeLabel})`}>
-              {analysis.qualityScore.grade}
+        {/* The headline: one ring, the letter it carries, and what the band means (#248). */}
+        <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg bg-subtle p-5">
+          <Ring
+            score={analysis.qualityScore.overall}
+            grade={analysis.qualityScore.grade}
+            display="grade"
+            size="lg"
+            label="Quality score"
+          />
+          <div className="min-w-0 flex-1">
+            <div className={`text-lg font-semibold ${METRIC_TONE_INK_CLASS[overallTone]}`}>
+              {overallTier.shortLabel} — {overallTier.detailLabel}
             </div>
-            <div>
-              <div className={`text-lg font-semibold ${overallTier.textClass}`}>
-                {overallTier.shortLabel} — {overallTier.detailLabel}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Based on specification analysis · {overallTier.rangeLabel}
-              </div>
+            <div className="text-sm text-fg-muted">
+              Based on specification analysis · {overallTier.rangeLabel}
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-3xl font-bold ${overallTier.textClass} tabular-nums`}>
+            <div className={`text-3xl font-bold tabular-nums ${METRIC_TONE_INK_CLASS[overallTone]}`}>
               {analysis.qualityScore.overall}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">/ 100 pts</div>
+            <div className="text-xs tabular-nums text-fg-muted">/ 100 pts</div>
           </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Weighted score by category (Design Quality 30, Documentation 20, API Best Practices 25, Security 15,
-          Performance 10).
+
+        <p className="mb-4 text-sm text-fg-muted">
+          Weighted score by category (Design Quality 30, Documentation 20, API Best Practices 25,
+          Security 15, Performance 10).
         </p>
-        <div className="mb-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40 px-3 py-2">
-          <div className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-            Score guide
-          </div>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-700 dark:text-gray-300">
-            {NUMERIC_SCORE_TIER_LEGEND.map((row) => (
-              <li key={row.band} className="flex items-start gap-2">
-                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${row.barSolidClass}`} aria-hidden />
-                <span>
-                  <span className="font-medium tabular-nums">{row.rangeLabel}:</span>{' '}
-                  {row.shortLabel} — {row.detailLabel}
-                </span>
-              </li>
-            ))}
+
+        <div className="mb-5 rounded-md bg-subtle px-3 py-2">
+          <div className="imp-tile__label mb-2">Score guide</div>
+          <ul className="grid gap-x-4 gap-y-1.5 text-xs text-fg-muted sm:grid-cols-2">
+            {NUMERIC_SCORE_TIER_LEGEND.map((row) => {
+              const tone = ringTier(row.band === 'poor' ? 0 : row.band === 'fair' ? 60 : row.band === 'good' ? 75 : 95).tone;
+              return (
+                <li key={row.band} className="flex items-start gap-2">
+                  <span
+                    className={`mt-1.5 size-2 shrink-0 rounded-full bg-current ${METRIC_TONE_INK_CLASS[tone]}`}
+                    aria-hidden
+                  />
+                  <span>
+                    <span className="font-medium tabular-nums text-fg">{row.rangeLabel}:</span>{' '}
+                    {row.shortLabel} — {row.detailLabel}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
-        {/* Quality Metrics — weighted categories (#247) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {CATEGORY_ORDER.map((id) => {
             const cat = categories[id];
-            const accent = categoryAccent[id];
             const pct = cat.percent;
+            const tone = ringTier(pct).tone;
             const issueCount = getIssuesForCategory(id).length;
             return (
-              <div
+              <button
                 key={id}
+                type="button"
                 onClick={() => setSelectedCategory(id)}
-                className={`relative bg-gray-50 dark:bg-gray-900/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-pointer ${accent.hover} hover:shadow-md transition-all group`}
+                className="group flex flex-col gap-2 rounded-md bg-subtle p-3 text-left transition-shadow hover:shadow-md"
               >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider leading-tight">
-                    {cat.label}
-                  </span>
-                  <div className="text-right shrink-0">
-                    <div className={`text-sm font-bold tabular-nums ${getNumericScoreTier(pct).textClass}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="imp-tile__label leading-tight">{cat.label}</span>
+                  <span className="shrink-0 text-right">
+                    <span className={`block text-sm font-bold tabular-nums ${METRIC_TONE_INK_CLASS[tone]}`}>
                       {cat.points}/{cat.maxPoints}
-                    </div>
-                    <div className="text-2xs text-gray-500 dark:text-gray-400 tabular-nums">{pct}%</div>
-                  </div>
+                    </span>
+                    <span className="block text-2xs tabular-nums text-fg-muted">{pct}%</span>
+                  </span>
                 </div>
-                <Progress.Root
-                  className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
-                  value={pct}
-                >
-                  <Progress.Indicator
-                    className={`h-full bg-gradient-to-r ${getNumericScoreTier(pct).progressGradientClass} transition-transform duration-300`}
-                    style={{ transform: `translateX(-${100 - pct}%)` }}
-                  />
-                </Progress.Root>
-                <div className="flex items-center justify-between mt-2 gap-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{cat.description}</span>
+                <Progress value={pct} tone={tone} thin label={`${cat.label} score`} />
+                <span className="flex items-center justify-between gap-2">
+                  <span className="line-clamp-2 text-xs text-fg-muted">{cat.description}</span>
                   {issueCount > 0 && (
-                    <span
-                      className={`text-xs shrink-0 flex items-center gap-1 group-hover:underline ${accent.issue}`}
-                    >
-                      {issueCount} issues <ChevronRight className="h-3 w-3" />
+                    <span className="flex shrink-0 items-center gap-1 text-xs text-accent group-hover:underline">
+                      {issueCount} issues <ChevronRight className="size-3" aria-hidden />
                     </span>
                   )}
-                </div>
-              </div>
+                </span>
+              </button>
             );
           })}
         </div>
 
-        {/* Quality Issues Detail Dialog */}
-        <Dialog.Root open={selectedCategory !== null} onOpenChange={(open) => !open && setSelectedCategory(null)}>
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
-            <Dialog.Content
-              aria-describedby={undefined}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-[10001] w-full max-w-2xl max-h-[80vh] overflow-hidden"
-            >
-              {selectedCategory && (
-                <>
-                  <div className={`p-6 bg-gradient-to-r ${getCategoryGradient(selectedCategory)} text-white`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Dialog.Title className="text-xl font-bold">
-                          {categoryDescriptions[selectedCategory].title}
-                        </Dialog.Title>
-                        <Dialog.Description className="text-white/80 mt-1 text-sm">
-                          {categoryDescriptions[selectedCategory].description}
-                        </Dialog.Description>
-                      </div>
-                      <Dialog.Close asChild>
-                        <button className="p-2 rounded-lg hover:bg-white/20 transition-colors">
-                          <X className="h-5 w-5" />
-                        </button>
-                      </Dialog.Close>
-                    </div>
-                  </div>
+        {/* Quality issues detail dialog */}
+        <Dialog open={selectedCategory !== null} onOpenChange={(open) => !open && setSelectedCategory(null)}>
+          <DialogContent size="lg">
+            {selectedCategory && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{categoryDescriptions[selectedCategory].title}</DialogTitle>
+                  <DialogDescription>
+                    {categoryDescriptions[selectedCategory].description}
+                  </DialogDescription>
+                </DialogHeader>
 
-                  <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      These are the suggested improvements
-                    </h4>
-
-                    {getIssuesForCategory(selectedCategory).length === 0 ? (
-                      <div className="flex items-center justify-center py-12 text-center">
-                        <div>
-                          <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
-                          <div className="text-lg font-medium text-gray-900 dark:text-white">
-                            No issues found!
-                          </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Your specification meets all requirements for this category.
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {getIssuesForCategory(selectedCategory).map((issue, index) => (
-                          <div
-                            key={index}
-                            className="bg-gray-50 dark:bg-gray-900/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-                          >
-                            <div className="flex items-start gap-3">
-                              <AlertCircle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
-                                issue.severity === 'high' ? 'text-red-500' :
-                                issue.severity === 'medium' ? 'text-yellow-500' : 'text-blue-500'
-                              }`} />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                    {issue.message}
-                                  </span>
-                                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getSeverityColor(issue.severity)}`}>
-                                    {issue.severity}
-                                  </span>
-                                </div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                  {issue.suggestion}
-                                </div>
-                                <div className="flex items-center gap-2 text-xs">
-                                  <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded font-mono text-gray-700 dark:text-gray-300">
-                                    {issue.path}
-                                  </span>
-                                  {issue.line && (
-                                    <span className="text-gray-500 dark:text-gray-400">
-                                      Line {issue.line}
-                                    </span>
-                                  )}
-                                </div>
+                <div className="max-h-[50vh] overflow-y-auto">
+                  {getIssuesForCategory(selectedCategory).length === 0 ? (
+                    <EmptyState
+                      variant="compact"
+                      tone="honey"
+                      icon={<CheckCircle2 />}
+                      title="No issues found!"
+                      description="Your specification meets all requirements for this category."
+                    />
+                  ) : (
+                    <ul className="flex flex-col gap-2">
+                      {getIssuesForCategory(selectedCategory).map((issue, index) => (
+                        <li key={index} className="rounded-md bg-subtle p-3">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle
+                              className={`mt-0.5 size-[var(--icon-dense)] shrink-0 ${
+                                issue.severity === 'high'
+                                  ? 'text-danger'
+                                  : issue.severity === 'medium'
+                                    ? 'text-warn'
+                                    : 'text-accent'
+                              }`}
+                              aria-hidden
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-1 flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-medium text-fg">{issue.message}</span>
+                                <Badge status={SEVERITY_STATUS[issue.severity] ?? 'unknown'}>
+                                  {issue.severity}
+                                </Badge>
+                              </div>
+                              <div className="mb-2 text-sm text-fg-muted">{issue.suggestion}</div>
+                              <div className="flex flex-wrap items-center gap-2 text-xs">
+                                <Badge variant="neutral" mono>
+                                  {issue.path}
+                                </Badge>
+                                {issue.line && <span className="text-fg-muted">Line {issue.line}</span>}
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
-      </div>
-
-      {/* Errors */}
-      {analysis.errors.length > 0 && (
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-xl border-2 border-red-200 dark:border-red-800 p-6">
-          <h3 className="text-lg font-semibold text-red-900 dark:text-red-300 mb-4 flex items-center gap-2">
-            <XCircle className="h-5 w-5" />
-            Errors ({analysis.errors.length})
-          </h3>
-          <div className="space-y-2">
-            {analysis.errors.map((error, index) => (
-              <div key={index} className="flex items-start gap-2 text-sm">
-                <XCircle className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-red-900 dark:text-red-200 font-medium">{error.message}</div>
-                  {error.path && (
-                    <div className="text-red-700 dark:text-red-400 text-xs mt-1">
-                      Path: {error.path}
-                    </div>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
-              </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      </Card>
+
+      {analysis.errors.length > 0 && (
+        <Card variant="flat" className="p-[var(--card-pad)]">
+          <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-fg">
+            <XCircle className="size-[var(--icon-dense)] text-danger" aria-hidden />
+            Errors ({analysis.errors.length})
+          </h3>
+          <ul className="flex flex-col gap-2">
+            {analysis.errors.map((error, index) => (
+              <li key={index} className="imp-row" data-level="error">
+                <XCircle className="mt-0.5 size-[var(--icon-dense)] shrink-0 text-danger" aria-hidden />
+                <div>
+                  <div className="text-sm font-medium text-fg">{error.message}</div>
+                  {error.path && <div className="mt-1 font-mono text-xs text-fg-muted">Path: {error.path}</div>}
+                </div>
+              </li>
             ))}
-          </div>
-        </div>
+          </ul>
+        </Card>
       )}
 
-      {/* Warnings */}
       {analysis.warnings.length > 0 && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-200 dark:border-yellow-800 p-6">
-          <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-300 mb-4 flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
+        <Card variant="flat" className="p-[var(--card-pad)]">
+          <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-fg">
+            <AlertCircle className="size-[var(--icon-dense)] text-warn" aria-hidden />
             Warnings ({analysis.warnings.length})
           </h3>
-          <div className="space-y-2">
+          <ul className="flex flex-col gap-2">
             {analysis.warnings.slice(0, 5).map((warning, index) => (
-              <div key={index} className="flex items-start gap-2 text-sm">
-                <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-                <div className="text-yellow-900 dark:text-yellow-200">{warning.message}</div>
-              </div>
+              <li key={index} className="imp-row" data-level="warn">
+                <AlertCircle className="mt-0.5 size-[var(--icon-dense)] shrink-0 text-warn" aria-hidden />
+                <div className="text-sm text-fg">{warning.message}</div>
+              </li>
             ))}
             {analysis.warnings.length > 5 && (
-              <div className="text-xs text-yellow-700 dark:text-yellow-400 mt-2 italic">
+              <li className="text-xs italic text-fg-muted">
                 + {analysis.warnings.length - 5} more warnings
-              </div>
+              </li>
             )}
-          </div>
-        </div>
+          </ul>
+        </Card>
       )}
     </div>
   );
 }
-

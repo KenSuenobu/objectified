@@ -5,20 +5,26 @@
  *
  * Consumes the BFF list proxies (`GET /api/export/jobs` or `GET /api/catalog/import`)
  * with offset/limit — never fetches the unbounded full history.
+ *
+ * Re-skinned by HIVE-6.4 (#5315) onto `DataTable`, which is what the import wizard's *Recent
+ * import jobs* drawer needed anyway: the table brings the caps header, the dense rows, the
+ * loading placeholders, the empty state and the failure state that this had hand-rolled or
+ * lacked. The pager stays bespoke — the endpoint pages by offset and reports a total, so the
+ * two buttons are the honest control for it, where `DataTablePager` wants a page count.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
 import {
-  dashboardTableTheadClass,
-  dashboardTableWrapClass,
-  dashboardTbodyClass,
-  dashboardThClass,
-  dashboardTrHoverClass,
-} from '../dashboardScreenClasses';
+  DataTable,
+  DataTableFoot,
+  dataTableRangeLabel,
+  type DataTableColumn,
+} from '../../../ui/DataTable';
+import { EmptyState } from '../../../ui/EmptyState';
 
 const DEFAULT_LIMIT = 10;
-const cellClass = 'px-4 py-2 text-sm text-gray-700 dark:text-gray-300';
 
 export type RecentAsyncJobKind = 'export' | 'import';
 
@@ -106,69 +112,58 @@ export function RecentAsyncJobsPanel({
     void load(0);
   }, [load]);
 
+  const columns: DataTableColumn<RecentAsyncJobRow>[] = [
+    {
+      id: 'job',
+      header: 'Job',
+      cell: (job) => <span className="font-mono text-xs">{job.job_id}</span>,
+    },
+    {
+      id: 'state',
+      header: 'State',
+      // `status` resolves through the shared vocabulary, so a running import here is the
+      // same amber as a running import in the wizard's own progress badge.
+      cell: (job) => <Badge status={job.state}>{job.state}</Badge>,
+    },
+    ...(kind === 'export'
+      ? ([
+          { id: 'target', header: 'Target', cell: (job) => job.target ?? '—' },
+          {
+            id: 'artifact',
+            header: 'Artifact',
+            cell: (job) => <span className="font-mono text-xs">{job.artifact ?? '—'}</span>,
+          },
+        ] as DataTableColumn<RecentAsyncJobRow>[])
+      : ([
+          {
+            id: 'progress',
+            header: 'Progress',
+            cell: (job) => (typeof job.percent === 'number' ? `${job.percent}%` : '—'),
+          },
+        ] as DataTableColumn<RecentAsyncJobRow>[])),
+  ];
+
   return (
     <section className={className} data-testid={id} aria-labelledby={`${id}-heading`}>
-      <h2
-        id={`${id}-heading`}
-        className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100"
-      >
+      <h2 id={`${id}-heading`} className="mb-2 text-sm font-semibold text-fg">
         {heading}
       </h2>
-      {error ? (
-        <p className="text-sm text-red-600 dark:text-red-400" data-testid={`${id}-error`} role="alert">
-          {error}
-        </p>
-      ) : (
-        <div className={dashboardTableWrapClass}>
-          <table className="min-w-full">
-            <thead className={dashboardTableTheadClass}>
-              <tr>
-                <th className={dashboardThClass}>Job</th>
-                <th className={dashboardThClass}>State</th>
-                {kind === 'export' ? (
-                  <>
-                    <th className={dashboardThClass}>Target</th>
-                    <th className={dashboardThClass}>Artifact</th>
-                  </>
-                ) : (
-                  <th className={dashboardThClass}>Progress</th>
-                )}
-              </tr>
-            </thead>
-            <tbody className={dashboardTbodyClass}>
-              {jobs.map((job) => (
-                <tr key={job.job_id} className={dashboardTrHoverClass}>
-                  <td className={`${cellClass} font-mono text-xs`}>{job.job_id}</td>
-                  <td className={cellClass}>{job.state}</td>
-                  {kind === 'export' ? (
-                    <>
-                      <td className={cellClass}>{job.target ?? '—'}</td>
-                      <td className={`${cellClass} font-mono text-xs`}>{job.artifact ?? '—'}</td>
-                    </>
-                  ) : (
-                    <td className={cellClass}>
-                      {typeof job.percent === 'number' ? `${job.percent}%` : '—'}
-                    </td>
-                  )}
-                </tr>
-              ))}
-              {jobs.length === 0 && !loading && (
-                <tr>
-                  <td
-                    colSpan={kind === 'export' ? 4 : 3}
-                    className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
-                  >
-                    No jobs yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-          <div className="flex items-center justify-between border-t border-gray-200 px-4 py-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+      <DataTable
+        dense
+        caption={heading}
+        columns={columns}
+        rows={jobs}
+        getRowId={(job) => job.job_id}
+        getRowLabel={(job) => job.job_id}
+        loading={loading && jobs.length === 0}
+        loadingLabel={`Loading ${kind} jobs…`}
+        error={error ? <span data-testid={`${id}-error`}>{error}</span> : undefined}
+        onRetry={() => void load(offset)}
+        empty={<EmptyState variant="compact" tone="neutral" title="No jobs yet." />}
+        footer={
+          <DataTableFoot>
             <span data-testid={`${id}-pagination-summary`}>
-              {total === 0
-                ? 'No jobs'
-                : `${offset + 1}–${Math.min(offset + pageLimit, total)} of ${total}`}
+              {dataTableRangeLabel(Math.floor(offset / pageLimit) + 1, pageLimit, total, 'job')}
             </span>
             <div className="flex items-center gap-2">
               <Button
@@ -190,9 +185,9 @@ export function RecentAsyncJobsPanel({
                 Next
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </DataTableFoot>
+        }
+      />
     </section>
   );
 }

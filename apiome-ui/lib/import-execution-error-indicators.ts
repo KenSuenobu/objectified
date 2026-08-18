@@ -1,6 +1,12 @@
 /**
- * Error indicator helpers for Import Execution Panel (#731).
- * Red for failures with details. Used by ImportExecutionPanel.
+ * Error indicator helpers for the import execution panel (#731, #732).
+ *
+ * Re-pointed by HIVE-6.4 (#5315): these used to return Tailwind palette class strings
+ * (`bg-red-50 dark:bg-red-950/30`) — four colours the design system does not have names for,
+ * chosen in TypeScript where no stylesheet and no theme could reach them. What a helper can
+ * usefully decide is the event's *severity*, so that is all {@link importEventLevel} returns;
+ * the log line and the checklist row carry it as `data-level` and `globals.css` §IMPORT WIZARD
+ * paints it, once, in tokens that follow all nine themes.
  */
 
 export type LogLevel = 'info' | 'warn' | 'error';
@@ -14,15 +20,38 @@ export interface ImportEventLike {
   context?: unknown;
 }
 
+/**
+ * The severity a row is drawn at.
+ *
+ * `skipped` is not a `LogLevel` — the server reports a skip as a warning, and it is the *code*
+ * that makes it deliberate rather than concerning. Keeping it distinct here is what lets a
+ * skipped property read as quiet grey while a real warning stays amber.
+ */
+export type ImportEventDisplayLevel = 'info' | 'warn' | 'error' | 'skipped';
+
 /** Event codes that represent intentionally skipped items (#732). */
 const SKIPPED_EVENT_CODES = new Set(['SKIP_PROPERTY', 'SKIP_CHILDREN']);
 
-/** Whether this event represents an intentionally skipped item (gray indicator). */
+/** Whether this event represents an intentionally skipped item (grey indicator). */
 export function isSkippedEvent(ev: ImportEventLike): boolean {
   return SKIPPED_EVENT_CODES.has(ev.code);
 }
 
-/** Filter events to error level only (for Failures section). */
+/**
+ * The severity to draw an event at.
+ *
+ * @param evOrLevel The event, or a bare level for callers that have nothing else (a bare level
+ *   can never be `skipped`, because only a code makes a skip deliberate).
+ * @returns The `data-level` value.
+ */
+export function importEventLevel(
+  evOrLevel: ImportEventLike | LogLevel
+): ImportEventDisplayLevel {
+  if (typeof evOrLevel === 'string') return evOrLevel;
+  return isSkippedEvent(evOrLevel) ? 'skipped' : evOrLevel.level;
+}
+
+/** Filter events to error level only (for the Failures section). */
 export function getErrorEvents(events: ImportEventLike[]): ImportEventLike[] {
   return events.filter((ev) => ev.level === 'error');
 }
@@ -31,30 +60,6 @@ export function getErrorEvents(events: ImportEventLike[]): ImportEventLike[] {
 export function formatEventContext(context: unknown): string {
   if (context == null) return '';
   return typeof context === 'string' ? context : JSON.stringify(context, null, 2);
-}
-
-/** Tailwind classes for Live Progress row (error = red, warn = amber, skipped = gray, info = default). Accepts event or level for backward compatibility. */
-export function getLiveProgressRowClasses(evOrLevel: ImportEventLike | LogLevel): string {
-  const ev: ImportEventLike = typeof evOrLevel === 'string'
-    ? { id: '', ts: 0, level: evOrLevel, code: '', message: '' }
-    : evOrLevel;
-  const base = 'flex items-start gap-2 p-2 rounded border ';
-  if (isSkippedEvent(ev)) return base + 'border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/60';
-  if (ev.level === 'error') return base + 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/30';
-  if (ev.level === 'warn') return base + 'border-yellow-200 dark:border-yellow-800 bg-amber-50/50 dark:bg-amber-950/20';
-  return base + 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40';
-}
-
-/** Tailwind classes for Import Log line (error = red, warn = amber, skipped = gray, info = default). Accepts event or level for backward compatibility. */
-export function getImportLogLineClasses(evOrLevel: ImportEventLike | LogLevel): string {
-  const ev: ImportEventLike = typeof evOrLevel === 'string'
-    ? { id: '', ts: 0, level: evOrLevel, code: '', message: '' }
-    : evOrLevel;
-  const base = 'text-xs font-mono rounded px-2 py-1 -mx-2 ';
-  if (isSkippedEvent(ev)) return base + 'bg-gray-100 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400';
-  if (ev.level === 'error') return base + 'bg-red-100 dark:bg-red-950/50 border-l-2 border-red-500 dark:border-red-500';
-  if (ev.level === 'warn') return base + 'bg-amber-50 dark:bg-amber-950/30';
-  return base.trim();
 }
 
 /** Whether the Failures section should be shown (has any error events). */

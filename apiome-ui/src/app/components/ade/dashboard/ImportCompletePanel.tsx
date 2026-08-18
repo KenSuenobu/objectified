@@ -203,7 +203,7 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
       </div>
     );
   }
@@ -220,43 +220,43 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
       <div className="flex flex-col items-center justify-center py-8">
         <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
           isSuccess 
-            ? 'bg-green-100 dark:bg-green-900/30' 
+            ? 'bg-ok-soft' 
             : isFailed 
-            ? 'bg-red-100 dark:bg-red-900/30'
+            ? 'bg-danger-soft'
             : isRolledBack
-            ? 'bg-gray-100 dark:bg-gray-800'
-            : 'bg-yellow-100 dark:bg-yellow-900/30'
+            ? 'bg-inset'
+            : 'bg-warn-soft'
         }`}>
           {isSuccess ? (
-            <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
+            <CheckCircle2 className="h-10 w-10 text-ok" />
           ) : isFailed ? (
-            <XCircle className="h-10 w-10 text-red-600 dark:text-red-400" />
+            <XCircle className="h-10 w-10 text-danger" />
           ) : isRolledBack ? (
-            <Undo2 className="h-10 w-10 text-gray-600 dark:text-gray-400" />
+            <Undo2 className="h-10 w-10 text-fg-muted" />
           ) : (
-            <AlertTriangle className="h-10 w-10 text-yellow-600 dark:text-yellow-400" />
+            <AlertTriangle className="h-10 w-10 text-warn" />
           )}
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-bold text-fg">
           {isDryRun ? 'Dry run complete' : isSuccess ? 'Import Complete!' : isFailed ? 'Import Failed' : isRolledBack ? 'Import Rolled Back' : 'Import Canceled'}
         </h2>
         {isDryRun && (
-          <p className="text-gray-600 dark:text-gray-400 mt-2 text-center max-w-md">
+          <p className="text-fg-muted mt-2 text-center max-w-md">
             No project or data was created. To import for real, go back and run again with &quot;Dry run (preview only)&quot; unchecked.
           </p>
         )}
         {isIncremental && (summary?.failed ?? 0) > 0 && (
-          <p className="text-gray-600 dark:text-gray-400 mt-2 text-center max-w-md">
+          <p className="text-fg-muted mt-2 text-center max-w-md">
             {summary?.success ?? 0} class(es) imported; {summary?.failed ?? 0} skipped due to errors.
           </p>
         )}
         {isRolledBack && (
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-fg-muted mt-2">
             The completed import was undone. The created project and all imported data have been removed.
           </p>
         )}
         {!isSuccess && !isRolledBack && !isDryRun && (
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-fg-muted mt-2">
             {isFailed
               ? 'There was an error during the import process.'
               : 'The import was canceled before completion.'}
@@ -265,9 +265,9 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
       </div>
 
       {/* Import Summary */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-surface rounded-xl border border-border p-6">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Import Summary</h3>
+          <h3 className="text-lg font-semibold text-fg">Import Summary</h3>
           {isDryRun && (
             <Badge variant="secondary" className="text-xs">Preview only</Badge>
           )}
@@ -278,29 +278,29 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
 
         {/* Imported Counts */}
         <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-3">
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center border border-green-200 dark:border-green-800">
-            <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+          <div className="bg-ok-soft rounded-lg p-4 text-center border border-ok">
+            <div className="text-3xl font-bold text-ok">
               {(summary?.success || 0).toLocaleString()}
             </div>
-            <div className="text-sm text-green-700 dark:text-green-300 flex items-center justify-center gap-1 mt-1">
+            <div className="text-sm text-ok flex items-center justify-center gap-1 mt-1">
               <CheckCircle2 className="h-4 w-4" />
               Classes imported
             </div>
           </div>
-          <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4 text-center border border-indigo-200 dark:border-indigo-800">
-            <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+          <div className="bg-accent-soft rounded-lg p-4 text-center border border-accent">
+            <div className="text-3xl font-bold text-accent">
               {(summary?.properties || 0).toLocaleString()}
             </div>
-            <div className="text-sm text-indigo-700 dark:text-indigo-300 flex items-center justify-center gap-1 mt-1">
+            <div className="text-sm text-accent flex items-center justify-center gap-1 mt-1">
               <FileText className="h-4 w-4" />
               Properties imported
             </div>
           </div>
-          <div className="bg-sky-50 dark:bg-sky-900/20 rounded-lg p-4 text-center border border-sky-200 dark:border-sky-800">
-            <div className="text-3xl font-bold text-sky-600 dark:text-sky-400">
+          <div className="bg-accent-soft rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-accent">
               {(summary?.paths || 0).toLocaleString()}
             </div>
-            <div className="text-sm text-sky-700 dark:text-sky-300 flex items-center justify-center gap-1 mt-1">
+            <div className="text-sm text-accent flex items-center justify-center gap-1 mt-1">
               <Plus className="h-4 w-4" />
               Paths imported
             </div>
@@ -309,20 +309,20 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
 
         {/* Import Health */}
         <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2">
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 text-center border border-yellow-200 dark:border-yellow-800">
-            <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+          <div className="bg-warn-soft rounded-lg p-4 text-center border border-warn">
+            <div className="text-3xl font-bold text-warn">
               {(summary?.warnings || 0).toLocaleString()}
             </div>
-            <div className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center justify-center gap-1 mt-1">
+            <div className="text-sm text-warn flex items-center justify-center gap-1 mt-1">
               <AlertTriangle className="h-4 w-4" />
               Warning
             </div>
           </div>
-          <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 text-center border border-red-200 dark:border-red-800">
-            <div className="text-3xl font-bold text-red-600 dark:text-red-400">
+          <div className="bg-danger-soft rounded-lg p-4 text-center border border-danger">
+            <div className="text-3xl font-bold text-danger">
               {(summary?.failed || 0).toLocaleString()}
             </div>
-            <div className="text-sm text-red-700 dark:text-red-300 flex items-center justify-center gap-1 mt-1">
+            <div className="text-sm text-danger flex items-center justify-center gap-1 mt-1">
               <XCircle className="h-4 w-4" />
               Failed
             </div>
@@ -333,27 +333,27 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
         {summary?.verification && (
           <div className={`rounded-lg p-4 mb-6 border ${
             summary.verification.passed 
-              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+              ? 'bg-ok-soft border-ok'
+              : 'bg-danger-soft border-danger'
           }`}>
             <div className="flex items-center gap-3 mb-2">
               {summary.verification.passed ? (
-                <ShieldCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <ShieldCheck className="h-6 w-6 text-ok" />
               ) : (
-                <ShieldX className="h-6 w-6 text-red-600 dark:text-red-400" />
+                <ShieldX className="h-6 w-6 text-danger" />
               )}
               <div className={`font-semibold ${
                 summary.verification.passed 
-                  ? 'text-green-900 dark:text-green-200'
-                  : 'text-red-900 dark:text-red-200'
+                  ? 'text-ok-fg'
+                  : 'text-danger'
               }`}>
                 {summary.verification.passed ? 'Import Verification Passed' : 'Import Verification Failed'}
               </div>
             </div>
             <div className={`text-sm ${
               summary.verification.passed 
-                ? 'text-green-700 dark:text-green-300'
-                : 'text-red-700 dark:text-red-300'
+                ? 'text-ok'
+                : 'text-danger'
             }`}>
               {summary.verification.passed ? (
                 <span>
@@ -366,9 +366,9 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
                     Found {summary.verification.mismatches.length} mismatches during verification.
                   </span>
                   {summary.verification.mismatches.slice(0, 5).map((mismatch, idx) => (
-                    <div key={idx} className="pl-4 border-l-2 border-red-300 dark:border-red-700 text-xs">
+                    <div key={idx} className="ps-4 border-s-2 border-danger text-xs">
                       <div className="font-medium">{mismatch.className}{mismatch.propertyName ? `.${mismatch.propertyName}` : ''}</div>
-                      <div className="text-red-600 dark:text-red-400">{mismatch.message}</div>
+                      <div className="text-danger">{mismatch.message}</div>
                     </div>
                   ))}
                   {summary.verification.mismatches.length > 5 && (
@@ -382,40 +382,38 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
           </div>
         )}
 
-        {/* Metadata */}
-        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-700 dark:text-gray-300">Total time:</span>
-            <span>{formatDuration(summary?.totalTime)}</span>
-          </div>
+        {/* Metadata — the mockup's `.kv-mini`: label in quiet ink, value in mono. */}
+        <dl className="imp-kv">
+          <dt>Total time</dt>
+          <dd>{formatDuration(summary?.totalTime)}</dd>
           {summary?.sourceName && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700 dark:text-gray-300">Source:</span>
-              <span>{summary.sourceName}</span>
-            </div>
+            <>
+              <dt>Source</dt>
+              <dd>{summary.sourceName}</dd>
+            </>
           )}
           {(summary?.projectName || summary?.versionId) && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700 dark:text-gray-300">Target:</span>
-              <span>
+            <>
+              <dt>Target</dt>
+              <dd>
                 {summary.projectName || 'Project'} / {summary.versionId || 'Version'}
-              </span>
-            </div>
+              </dd>
+            </>
           )}
-        </div>
+        </dl>
       </div>
 
       {/* Failure details — the same errors/warnings carried in the downloadable report */}
       {report && (report.errorsAndWarnings.length > 0 || report.failedClasses.length > 0) && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-red-200 dark:border-red-800 p-6">
+        <div className="bg-surface rounded-xl border border-danger p-6">
           <div className="flex items-center gap-2 mb-4">
-            <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Failure details</h3>
+            <XCircle className="h-5 w-5 text-danger" />
+            <h3 className="text-lg font-semibold text-fg">Failure details</h3>
           </div>
 
           {report.failedClasses.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <h4 className="text-sm font-medium text-fg mb-2">
                 Failed classes ({report.failedClasses.length})
               </h4>
               <div className="flex flex-wrap gap-2">
@@ -431,7 +429,7 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
 
           {report.errorsAndWarnings.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <h4 className="text-sm font-medium text-fg mb-2">
                 Errors &amp; warnings ({report.errorsAndWarnings.length})
               </h4>
               <div className="space-y-2">
@@ -444,34 +442,34 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
                         key={idx}
                         className={`rounded-lg border p-3 ${
                           isError
-                            ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
-                            : 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20'
+                            ? 'border-danger bg-danger-soft'
+                            : 'border-warn bg-warn-soft'
                         }`}
                       >
                         <div className="flex items-start gap-2">
                           {isError ? (
-                            <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-600 dark:text-red-400" />
+                            <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-danger" />
                           ) : (
-                            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-yellow-600 dark:text-yellow-400" />
+                            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-warn" />
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <Badge variant={isError ? 'error' : 'warning'} className="text-2xs uppercase">
                                 {entry.level}
                               </Badge>
-                              <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{entry.code}</span>
+                              <span className="font-mono text-xs text-fg-muted">{entry.code}</span>
                             </div>
                             <p
                               className={`mt-1 text-sm break-words ${
                                 isError
-                                  ? 'text-red-800 dark:text-red-200'
-                                  : 'text-yellow-800 dark:text-yellow-200'
+                                  ? 'text-danger'
+                                  : 'text-warn-fg'
                               }`}
                             >
                               {entry.message}
                             </p>
                             {entry.context != null && (
-                              <pre className="mt-2 max-h-40 overflow-auto rounded bg-gray-100 dark:bg-gray-900 p-2 text-2xs text-gray-700 dark:text-gray-300">
+                              <pre className="mt-2 max-h-40 overflow-auto rounded bg-inset p-2 text-2xs text-fg">
                                 {typeof entry.context === 'string'
                                   ? entry.context
                                   : JSON.stringify(entry.context, null, 2)}
@@ -501,8 +499,8 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
 
       {/* Imported Schemas */}
       {summary?.schemas && summary.schemas.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Imported Schemas</h3>
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <h3 className="text-lg font-semibold text-fg mb-4">Imported Schemas</h3>
           <div className="flex flex-wrap gap-2">
             {summary.schemas.map((schema, index) => (
               <Badge
@@ -530,18 +528,18 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
 
       {/* Rollback error */}
       {rollbackError && (
-        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 flex items-center gap-3">
-          <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0" />
-          <p className="text-sm text-red-800 dark:text-red-200">{rollbackError}</p>
+        <div className="rounded-xl border border-danger bg-danger-soft p-4 flex items-center gap-3">
+          <XCircle className="h-5 w-5 text-danger shrink-0" />
+          <p className="text-sm text-danger">{rollbackError}</p>
         </div>
       )}
 
       {/* Next Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Next Actions</h3>
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+      <div className="bg-surface rounded-xl border border-border p-6">
+        <h3 className="text-lg font-semibold text-fg mb-4">Next Actions</h3>
+        <div className="text-center py-8 text-fg-muted">
           {isDryRun && (
-            <p className="text-sm text-sky-700 dark:text-sky-300 mb-4">
+            <p className="text-sm text-accent mb-4">
               This was a preview only. No project was created — View on Canvas and Undo are not available.
             </p>
           )}
@@ -564,7 +562,7 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
             {isSuccess && !isDryRun && summary?.projectId && !isRolledBack && (
               <Button
                 variant="outline"
-                className="flex items-center gap-2 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                className="flex items-center gap-2 text-warn hover:bg-warn-soft"
                 onClick={handleRollbackCompleted}
                 disabled={isRollingBack}
               >

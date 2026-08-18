@@ -146,38 +146,38 @@ function countSchemaProperties(schema: any): number {
 // Simple preview node component for the chart view
 function PreviewClassNode({ data }: { data: { label: string; propertyCount: number; selected: boolean; hasComposition?: boolean; compositionType?: string } }) {
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border-2 min-w-[120px] max-w-[180px] ${
+    <div className={`bg-surface rounded-lg shadow-md border-2 min-w-[120px] max-w-[180px] ${
       data.selected 
-        ? 'border-indigo-400 dark:border-indigo-500' 
-        : 'border-gray-300 dark:border-gray-600 opacity-50'
+        ? 'border-accent' 
+        : 'border-border-strong opacity-50'
     }`}>
-      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-indigo-500" />
-      <Handle type="target" position={Position.Left} className="w-2 h-2 !bg-indigo-500" />
+      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[var(--accent)]" />
+      <Handle type="target" position={Position.Left} className="w-2 h-2 !bg-[var(--accent)]" />
 
-      <div className={`px-3 py-2 border-b border-gray-200 dark:border-gray-600 rounded-t-lg ${
+      <div className={`px-3 py-2 border-b border-border rounded-t-lg ${
         data.hasComposition 
-          ? 'bg-purple-50 dark:bg-purple-900/30' 
-          : 'bg-indigo-50 dark:bg-indigo-900/30'
+          ? 'bg-violet-soft' 
+          : 'bg-accent-soft'
       }`}>
         <div className="flex items-center gap-1.5">
           {data.hasComposition && data.compositionType && (
-            <span className="text-2xs px-1 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded">
+            <span className="text-2xs px-1 py-0.5 bg-violet-soft text-violet-fg rounded">
               {data.compositionType}
             </span>
           )}
-          <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+          <span className="text-xs font-semibold text-fg truncate">
             {data.label}
           </span>
         </div>
       </div>
       <div className="px-3 py-2">
-        <div className="text-2xs text-gray-500 dark:text-gray-400">
+        <div className="text-2xs text-fg-muted">
           {data.propertyCount} {data.propertyCount === 1 ? 'property' : 'properties'}
         </div>
       </div>
 
-      <Handle type="source" position={Position.Right} className="w-2 h-2 !bg-indigo-500" />
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-indigo-500" />
+      <Handle type="source" position={Position.Right} className="w-2 h-2 !bg-[var(--accent)]" />
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-[var(--accent)]" />
     </div>
   );
 }
@@ -206,7 +206,7 @@ function ExpandablePropertyRow({
   expandKey,
   isExpanded,
   onOpenChange,
-  accentClass = 'text-indigo-600 dark:text-indigo-400',
+  accentClass = 'text-accent',
 }: {
   propName: string;
   propValue: any;
@@ -239,24 +239,24 @@ function ExpandablePropertyRow({
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-2 w-full text-left rounded px-1 -mx-1 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+            className="flex items-center gap-2 w-full text-left rounded px-1 -mx-1 hover:bg-inset"
           >
             {hasAny ? (
               isExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                <ChevronDown className="h-4 w-4 text-fg-muted flex-shrink-0" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                <ChevronRight className="h-4 w-4 text-fg-muted flex-shrink-0" />
               )
             ) : (
               <span className="w-4 inline-block flex-shrink-0" aria-hidden />
             )}
             <span className={`font-mono ${accentClass}`}>{propName}</span>
-            <span className="text-gray-500 dark:text-gray-400">: </span>
-            <span className="text-gray-700 dark:text-gray-300">
+            <span className="text-fg-muted">: </span>
+            <span className="text-fg">
               {getPropertyType(propValue)}
             </span>
             {isRequired && (
-              <span className="ml-2 text-xs text-red-600 dark:text-red-400 font-medium">
+              <span className="ml-2 text-xs text-danger font-medium">
                 (required)
               </span>
             )}
@@ -264,22 +264,22 @@ function ExpandablePropertyRow({
         </CollapsibleTrigger>
         <CollapsibleContent>
           {hasAny && (
-            <div className="ml-6 mt-1 mb-2 pl-3 border-l border-gray-200 dark:border-gray-600 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+            <div className="ml-6 mt-1 mb-2 pl-3 border-l border-border space-y-1.5 text-xs text-fg-muted">
               {propValue?.description && (
                 <div>
-                  <span className="font-medium text-gray-500 dark:text-gray-500">Description: </span>
+                  <span className="font-medium text-fg-muted">Description: </span>
                   {propValue.description}
                 </div>
               )}
               {propValue?.format && (
                 <div>
-                  <span className="font-medium text-gray-500 dark:text-gray-500">Format: </span>
+                  <span className="font-medium text-fg-muted">Format: </span>
                   <span className="font-mono">{propValue.format}</span>
                 </div>
               )}
               {propValue?.default !== undefined && (
                 <div>
-                  <span className="font-medium text-gray-500 dark:text-gray-500">Default: </span>
+                  <span className="font-medium text-fg-muted">Default: </span>
                   <span className="font-mono">
                     {typeof propValue.default === 'object'
                       ? JSON.stringify(propValue.default)
@@ -289,7 +289,7 @@ function ExpandablePropertyRow({
               )}
               {propValue?.example !== undefined && (
                 <div>
-                  <span className="font-medium text-gray-500 dark:text-gray-500">Example: </span>
+                  <span className="font-medium text-fg-muted">Example: </span>
                   <span className="font-mono">
                     {typeof propValue.example === 'object'
                       ? JSON.stringify(propValue.example)
@@ -299,7 +299,7 @@ function ExpandablePropertyRow({
               )}
               {Array.isArray(propValue?.enum) && propValue.enum.length > 0 && (
                 <div>
-                  <span className="font-medium text-gray-500 dark:text-gray-500">Enum: </span>
+                  <span className="font-medium text-fg-muted">Enum: </span>
                   <span className="font-mono">
                     {propValue.enum.map((v: unknown) => (typeof v === 'string' ? `"${v}"` : String(v))).join(', ')}
                   </span>
@@ -307,13 +307,13 @@ function ExpandablePropertyRow({
               )}
               {propValue?.nullable === true && (
                 <div>
-                  <span className="font-medium text-gray-500 dark:text-gray-500">Nullable: </span>
+                  <span className="font-medium text-fg-muted">Nullable: </span>
                   true
                 </div>
               )}
               {(propValue?.minimum !== undefined || propValue?.maximum !== undefined) && (
                 <div>
-                  <span className="font-medium text-gray-500 dark:text-gray-500">Range: </span>
+                  <span className="font-medium text-fg-muted">Range: </span>
                   {propValue.minimum !== undefined && (
                     <span className="font-mono">min {propValue.minimum}</span>
                   )}
@@ -325,7 +325,7 @@ function ExpandablePropertyRow({
               )}
               {(propValue?.minLength !== undefined || propValue?.maxLength !== undefined) && (
                 <div>
-                  <span className="font-medium text-gray-500 dark:text-gray-500">Length: </span>
+                  <span className="font-medium text-fg-muted">Length: </span>
                   <span className="font-mono">
                     {propValue.minLength ?? 0} \u2013 {propValue.maxLength ?? '\u221E'}
                   </span>
@@ -333,7 +333,7 @@ function ExpandablePropertyRow({
               )}
               {propValue?.pattern && (
                 <div>
-                  <span className="font-medium text-gray-500 dark:text-gray-500">Pattern: </span>
+                  <span className="font-medium text-fg-muted">Pattern: </span>
                   <span className="font-mono break-all">{propValue.pattern}</span>
                 </div>
               )}
@@ -378,8 +378,8 @@ function SchemaTreeItem({
       <div
         className={`flex items-center gap-2 rounded-lg cursor-pointer transition-colors ${
           isSelected
-            ? 'bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800'
-            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+            ? 'bg-accent-soft'
+            : 'hover:bg-subtle'
         }`}
         style={{ paddingLeft: `${paddingLeft}px`, paddingRight: 12, paddingTop: 8, paddingBottom: 8 }}
         onClick={() => onSelectSchema(node.name)}
@@ -392,7 +392,7 @@ function SchemaTreeItem({
                 e.stopPropagation();
                 onToggleExpand(node.name);
               }}
-              className="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400"
+              className="p-0.5 rounded hover:bg-inset text-fg-muted"
               aria-label={isExpanded ? 'Collapse' : 'Expand'}
             >
               {isExpanded ? (
@@ -409,18 +409,18 @@ function SchemaTreeItem({
           checked={schemaInfo?.selected ?? false}
           onCheckedChange={() => onToggleSchema(node.name)}
           onClick={(e) => e.stopPropagation()}
-          className="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600 flex items-center justify-center flex-shrink-0"
+          className="w-5 h-5 rounded border-2 border-border-strong bg-surface data-[state=checked]:bg-accent data-[state=checked]:border-accent flex items-center justify-center flex-shrink-0"
         >
           <Checkbox.Indicator>
-            <Check className="w-4 h-4 text-white" />
+            <Check className="w-4 h-4 text-fg-on-accent" />
           </Checkbox.Indicator>
         </Checkbox.Root>
-        <Package className="h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+        <Package className="h-4 w-4 text-accent flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-gray-900 dark:text-white truncate text-sm">
+          <div className="font-medium text-fg truncate text-sm">
             {node.name}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-fg-muted">
             {schemaInfo != null ? `${schemaInfo.properties} properties` : ''}
           </div>
         </div>
@@ -804,7 +804,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
   return (
     <div className="space-y-6">
       {/* View Mode Tabs and Schema Selection Controls */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-surface rounded-xl border border-border p-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           {/* View Mode Tabs */}
           <div role="tablist" aria-label="Schema view" className={TAB_LIST_CLASS}>
@@ -845,17 +845,17 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSelectAll}
-                className="px-3 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-soft rounded-lg transition-colors"
               >
                 Select All
               </button>
               <button
                 onClick={handleSelectNone}
-                className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm font-medium text-fg-muted hover:bg-inset rounded-lg transition-colors"
               >
                 Select None
               </button>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-fg-muted">
                 {selectedCount} of {schemas.length} selected
               </span>
             </div>
@@ -864,19 +864,19 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
           {/* Search and filter by name, type, tags (#580) */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[140px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-faint" />
               <input
                 type="text"
                 placeholder="Search by name..."
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full pl-9 pr-4 py-2 text-sm border border-border-strong rounded-lg bg-surface text-fg placeholder:text-fg-faint focus:ring-2 focus:ring-accent focus:border-transparent"
               />
             </div>
             <select
               value={filterType}
               onChange={(e) => setFilterType((e.target.value || '') as SchemaDisplayType | '')}
-              className="py-2 pl-3 pr-8 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="py-2 pl-3 pr-8 text-sm border border-border-strong rounded-lg bg-surface text-fg focus:ring-2 focus:ring-accent focus:border-transparent"
               title="Filter by type"
             >
               <option value="">All types</option>
@@ -896,7 +896,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
             <select
               value={filterTag}
               onChange={(e) => setFilterTag(e.target.value)}
-              className="py-2 pl-3 pr-8 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="py-2 pl-3 pr-8 text-sm border border-border-strong rounded-lg bg-surface text-fg focus:ring-2 focus:ring-accent focus:border-transparent"
               title="Filter by tag"
             >
               <option value="">All tags</option>
@@ -909,7 +909,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
           </div>
 
           {/* Schema count - always visible */}
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-fg-muted">
             {selectedCount} of {schemas.length} schemas selected
           </span>
         </div>
@@ -917,12 +917,12 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
 
       {/* Relationship Diagram (#578) */}
       {panelView === 'chart' && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="border-b border-gray-200 dark:border-gray-700 p-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="bg-surface rounded-xl border border-border overflow-hidden">
+          <div className="border-b border-border p-4">
+            <h3 className="text-lg font-semibold text-fg">
               Relationship Diagram
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-fg-muted mt-1">
               Preview of schema relationships. Arrows show references; labels show the property or &quot;items&quot;. Filter by search, type, or tag above.
             </p>
           </div>
@@ -946,7 +946,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                 <MiniMap
                   nodeColor={(node) => node.data?.selected ? '#6366f1' : '#9ca3af'}
                   maskColor="rgba(0, 0, 0, 0.1)"
-                  className="bg-gray-100 dark:bg-gray-700"
+                  className="bg-inset"
                 />
               </ReactFlow>
             </ReactFlowProvider>
@@ -958,10 +958,10 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
       {(panelView === 'list' || panelView === 'tree') && (
       <div className="grid grid-cols-3 gap-6">
         {/* Left: Schema List or Tree - 1/3 width */}
-        <div className="col-span-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="border-b border-gray-200 dark:border-gray-700 p-4">
+        <div className="col-span-1 bg-surface rounded-xl border border-border">
+          <div className="border-b border-border p-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-fg">
                 {panelView === 'tree' ? 'Schema Tree' : 'Schemas to Import'}
               </h3>
               {panelView === 'list' && (
@@ -970,8 +970,8 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     onClick={() => setSortOrder(sortOrder === 'asc' ? null : 'asc')}
                     className={`p-1.5 rounded transition-colors ${
                       sortOrder === 'asc'
-                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                        : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? 'bg-accent-soft text-accent-fg'
+                        : 'text-fg-faint hover:text-fg-muted dark:hover:text-fg-faint hover:bg-inset'
                     }`}
                     title="Sort A → Z"
                   >
@@ -981,8 +981,8 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     onClick={() => setSortOrder(sortOrder === 'desc' ? null : 'desc')}
                     className={`p-1.5 rounded transition-colors ${
                       sortOrder === 'desc'
-                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                        : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? 'bg-accent-soft text-accent-fg'
+                        : 'text-fg-faint hover:text-fg-muted dark:hover:text-fg-faint hover:bg-inset'
                     }`}
                     title="Sort Z → A"
                   >
@@ -992,7 +992,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
               )}
             </div>
             {panelView === 'tree' && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-fg-muted mt-1">
                 Expand schemas to see referenced types ($ref)
               </p>
             )}
@@ -1002,34 +1002,25 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
               filteredSchemas.map((schema) => (
                 <div
                   key={schema.name}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                    selectedSchemaName === schema.name
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                  }`}
+                  data-selected={selectedSchemaName === schema.name || undefined}
+                  className="imp-schema-row"
                   onClick={() => setSelectedSchemaName(schema.name)}
                 >
                   <Checkbox.Root
                     checked={schema.selected}
                     onCheckedChange={() => handleToggleSchema(schema.name)}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600 flex items-center justify-center"
+                    className="w-5 h-5 rounded border-2 border-border-strong bg-surface data-[state=checked]:bg-accent data-[state=checked]:border-accent flex items-center justify-center"
                   >
                     <Checkbox.Indicator>
-                      <Check className="w-4 h-4 text-white" />
+                      <Check className="w-4 h-4 text-fg-on-accent" />
                     </Checkbox.Indicator>
                   </Checkbox.Root>
-                  <Package className="h-5 w-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 dark:text-white truncate">
-                      {schema.name}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {schema.properties} properties
-                    </div>
-                  </div>
+                  <Package className="h-5 w-5 text-accent flex-shrink-0" />
+                  <span className="min-w-0 flex-1 truncate font-medium">{schema.name}</span>
+                  <span className="imp-schema-row__meta">{schema.properties} properties</span>
                   {selectedSchemaName === schema.name && (
-                    <ChevronRight className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-accent" aria-hidden />
                   )}
                 </div>
               ))}
@@ -1052,20 +1043,20 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
         </div>
 
         {/* Right: Schema Preview - 2/3 width */}
-        <div className="col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="border-b border-gray-200 dark:border-gray-700 p-4">
+        <div className="col-span-2 bg-surface rounded-xl border border-border">
+          <div className="border-b border-border p-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-fg">
                 Schema Preview
               </h3>
               {selectedSchema && selectedSchemaName && (
-                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-inset rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('summary')}
                     className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                       viewMode === 'summary'
-                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-surface text-accent shadow-sm'
+                        : 'text-fg-muted hover:text-fg dark:hover:text-fg-on-accent'
                     }`}
                   >
                     Summary
@@ -1074,8 +1065,8 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     onClick={() => setViewMode('json')}
                     className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                       viewMode === 'json'
-                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-surface text-accent shadow-sm'
+                        : 'text-fg-muted hover:text-fg dark:hover:text-fg-on-accent'
                     }`}
                   >
                     JSON
@@ -1084,8 +1075,8 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     onClick={() => setViewMode('yaml')}
                     className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                       viewMode === 'yaml'
-                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-surface text-accent shadow-sm'
+                        : 'text-fg-muted hover:text-fg dark:hover:text-fg-on-accent'
                     }`}
                   >
                     YAML
@@ -1096,7 +1087,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
             {/* Custom name override for imported class (#754) - visible in all view modes */}
             {selectedSchema && selectedSchemaName && (
               <div className="mt-4">
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <label className="block text-xs font-medium text-fg-muted mb-1">
                   Import as class name
                 </label>
                 <input
@@ -1104,9 +1095,9 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                   value={importOptions.classNameMap?.[selectedSchemaName] ?? getSmartClassName(selectedSchemaName, selectedSchema)}
                   onChange={(e) => handleClassNameOverride(selectedSchemaName, selectedSchema, e.target.value)}
                   placeholder={getSmartClassName(selectedSchemaName, selectedSchema)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm border border-border-strong rounded-lg bg-surface text-fg placeholder:text-fg-faint focus:ring-2 focus:ring-accent focus:border-transparent"
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-fg-muted mt-1">
                   Override the class name when importing. From schema title / x-class-name when not set.
                 </p>
               </div>
@@ -1118,11 +1109,11 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                 {viewMode === 'summary' ? (
                   <>
                     <div>
-                      <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      <h4 className="text-xl font-bold text-fg mb-2">
                         {selectedSchemaName}
                       </h4>
                       {selectedSchema.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        <p className="text-sm text-fg-muted mb-4">
                           {selectedSchema.description}
                         </p>
                       )}
@@ -1130,10 +1121,10 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
 
                     {selectedSchema.properties && (
                       <div>
-                        <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <h5 className="text-sm font-semibold text-fg mb-2">
                           Properties:
                         </h5>
-                        <div className="space-y-0.5 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+                        <div className="space-y-0.5 pl-4 border-l-2 border-border">
                           {Object.entries(selectedSchema.properties).map(([propName, propValue]: [string, any]) => {
                             const expandKey = `${selectedSchemaName}|${propName}`;
                             return (
@@ -1170,15 +1161,15 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                         if (relationships.length > 0) {
                           return (
                             <div>
-                              <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                              <h5 className="text-sm font-semibold text-fg mb-2">
                                 Relationships:
                               </h5>
-                              <div className="space-y-1 pl-4 border-l-2 border-green-200 dark:border-green-700">
+                              <div className="space-y-1 pl-4 border-l-2 border-ok">
                                 {relationships.map((rel, idx) => (
                                   <div key={idx} className="text-sm flex items-center gap-2">
-                                    <span className="text-green-600 dark:text-green-400">→</span>
-                                    <span className="font-mono text-gray-900 dark:text-white">{rel.name}</span>
-                                    <span className="text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                                    <span className="text-ok">→</span>
+                                    <span className="font-mono text-fg">{rel.name}</span>
+                                    <span className="text-xs px-2 py-0.5 rounded bg-ok-soft text-ok-fg">
                                       {rel.type}
                                     </span>
                                   </div>
@@ -1194,18 +1185,18 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     {/* Show inheritance from allOf */}
                     {selectedSchema.allOf && (
                       <div>
-                        <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <h5 className="text-sm font-semibold text-fg mb-2">
                           Inherits From (allOf):
                         </h5>
-                        <div className="space-y-2 pl-4 border-l-2 border-blue-200 dark:border-blue-700">
+                        <div className="space-y-2 pl-4 border-l-2 border-accent">
                           {selectedSchema.allOf.map((item: any, idx: number) => {
                             if (item.$ref) {
                               const refName = item.$ref.split('/').pop();
                               return (
                                 <div key={idx} className="text-sm flex items-center gap-2">
-                                  <span className="text-blue-600 dark:text-blue-400">↑</span>
-                                  <span className="font-mono text-gray-900 dark:text-white">{refName}</span>
-                                  <span className="text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                                  <span className="text-accent">↑</span>
+                                  <span className="font-mono text-fg">{refName}</span>
+                                  <span className="text-xs px-2 py-0.5 rounded bg-accent-soft text-accent-fg">
                                     extends
                                   </span>
                                 </div>
@@ -1215,23 +1206,23 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                               return (
                                 <div key={idx} className="space-y-1">
                                   <div className="text-sm flex items-center gap-2">
-                                    <span className="text-blue-600 dark:text-blue-400">+</span>
-                                    <span className="text-gray-700 dark:text-gray-300 font-medium">
+                                    <span className="text-accent">+</span>
+                                    <span className="text-fg font-medium">
                                       additional properties:
                                     </span>
                                   </div>
-                                  <div className="ml-6 space-y-1 pl-3 border-l border-blue-100 dark:border-blue-800">
+                                  <div className="ml-6 space-y-1 pl-3 border-s border-accent">
                                     {propEntries.map(([propName, propValue]: [string, any]) => (
                                       <div key={propName} className="text-sm">
-                                        <span className="font-mono text-blue-600 dark:text-blue-400">
+                                        <span className="font-mono text-accent">
                                           {propName}
                                         </span>
-                                        <span className="text-gray-500 dark:text-gray-400">: </span>
-                                        <span className="text-gray-700 dark:text-gray-300">
+                                        <span className="text-fg-muted">: </span>
+                                        <span className="text-fg">
                                           {getPropertyType(propValue)}
                                         </span>
                                         {item.required?.includes(propName) && (
-                                          <span className="ml-2 text-xs text-red-600 dark:text-red-400 font-medium">
+                                          <span className="ml-2 text-xs text-danger font-medium">
                                             (required)
                                           </span>
                                         )}
@@ -1250,18 +1241,18 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     {/* Show polymorphism from oneOf */}
                     {selectedSchema.oneOf && (
                       <div>
-                        <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <h5 className="text-sm font-semibold text-fg mb-2">
                           Variants (oneOf):
                         </h5>
-                        <div className="space-y-2 pl-4 border-l-2 border-purple-200 dark:border-purple-700">
+                        <div className="space-y-2 pl-4 border-s-2 border-violet">
                           {selectedSchema.oneOf.map((item: any, idx: number) => {
                             if (item.$ref) {
                               const refName = item.$ref.split('/').pop();
                               return (
                                 <div key={idx} className="text-sm flex items-center gap-2">
-                                  <span className="text-purple-600 dark:text-purple-400">◇</span>
-                                  <span className="font-mono text-gray-900 dark:text-white">{refName}</span>
-                                  <span className="text-xs px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                                  <span className="text-violet">◇</span>
+                                  <span className="font-mono text-fg">{refName}</span>
+                                  <span className="text-xs px-2 py-0.5 rounded bg-violet-soft text-violet-fg">
                                     variant
                                   </span>
                                 </div>
@@ -1273,24 +1264,24 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                             return (
                               <div key={idx} className="space-y-1">
                                 <div className="text-sm flex items-center gap-2">
-                                  <span className="text-purple-600 dark:text-purple-400">◇</span>
-                                  <span className="text-gray-700 dark:text-gray-300 font-medium">
+                                  <span className="text-violet">◇</span>
+                                  <span className="text-fg font-medium">
                                     {hasRequired ? `requires: [${item.required.join(', ')}]` : 'inline schema'}
                                   </span>
                                 </div>
                                 {hasProperties && (
-                                  <div className="ml-6 space-y-1 pl-3 border-l border-purple-100 dark:border-purple-800">
+                                  <div className="ml-6 space-y-1 pl-3 border-s border-violet">
                                     {Object.entries(item.properties).map(([propName, propValue]: [string, any]) => (
                                       <div key={propName} className="text-sm">
-                                        <span className="font-mono text-purple-600 dark:text-purple-400">
+                                        <span className="font-mono text-violet">
                                           {propName}
                                         </span>
-                                        <span className="text-gray-500 dark:text-gray-400">: </span>
-                                        <span className="text-gray-700 dark:text-gray-300">
+                                        <span className="text-fg-muted">: </span>
+                                        <span className="text-fg">
                                           {getPropertyType(propValue)}
                                         </span>
                                         {item.required?.includes(propName) && (
-                                          <span className="ml-2 text-xs text-red-600 dark:text-red-400 font-medium">
+                                          <span className="ml-2 text-xs text-danger font-medium">
                                             (required)
                                           </span>
                                         )}
@@ -1308,18 +1299,18 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     {/* Show flexible matching from anyOf */}
                     {selectedSchema.anyOf && (
                       <div>
-                        <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <h5 className="text-sm font-semibold text-fg mb-2">
                           Options (anyOf):
                         </h5>
-                        <div className="space-y-2 pl-4 border-l-2 border-indigo-200 dark:border-indigo-700">
+                        <div className="space-y-2 pl-4 border-l-2 border-accent">
                           {selectedSchema.anyOf.map((item: any, idx: number) => {
                             if (item.$ref) {
                               const refName = item.$ref.split('/').pop();
                               return (
                                 <div key={idx} className="text-sm flex items-center gap-2">
-                                  <span className="text-indigo-600 dark:text-indigo-400">○</span>
-                                  <span className="font-mono text-gray-900 dark:text-white">{refName}</span>
-                                  <span className="text-xs px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
+                                  <span className="text-accent">○</span>
+                                  <span className="font-mono text-fg">{refName}</span>
+                                  <span className="text-xs px-2 py-0.5 rounded bg-accent-soft text-accent-fg">
                                     option
                                   </span>
                                 </div>
@@ -1331,24 +1322,24 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                             return (
                               <div key={idx} className="space-y-1">
                                 <div className="text-sm flex items-center gap-2">
-                                  <span className="text-indigo-600 dark:text-indigo-400">○</span>
-                                  <span className="text-gray-700 dark:text-gray-300 font-medium">
+                                  <span className="text-accent">○</span>
+                                  <span className="text-fg font-medium">
                                     {hasRequired ? `requires: [${item.required.join(', ')}]` : 'inline schema'}
                                   </span>
                                 </div>
                                 {hasProperties && (
-                                  <div className="ml-6 space-y-1 pl-3 border-l border-indigo-100 dark:border-indigo-800">
+                                  <div className="ml-6 space-y-1 pl-3 border-s border-accent">
                                     {Object.entries(item.properties).map(([propName, propValue]: [string, any]) => (
                                       <div key={propName} className="text-sm">
-                                        <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                                        <span className="font-mono text-accent">
                                           {propName}
                                         </span>
-                                        <span className="text-gray-500 dark:text-gray-400">: </span>
-                                        <span className="text-gray-700 dark:text-gray-300">
+                                        <span className="text-fg-muted">: </span>
+                                        <span className="text-fg">
                                           {getPropertyType(propValue)}
                                         </span>
                                         {item.required?.includes(propName) && (
-                                          <span className="ml-2 text-xs text-red-600 dark:text-red-400 font-medium">
+                                          <span className="ml-2 text-xs text-danger font-medium">
                                             (required)
                                           </span>
                                         )}
@@ -1364,7 +1355,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     )}
                   </>
                 ) : viewMode === 'json' ? (
-                  <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <div className="rounded-lg overflow-hidden border border-border">
                     <Editor
                       height="350px"
                       defaultLanguage="json"
@@ -1383,7 +1374,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     />
                   </div>
                 ) : (
-                  <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <div className="rounded-lg overflow-hidden border border-border">
                     <Editor
                       height="350px"
                       defaultLanguage="yaml"
@@ -1404,7 +1395,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                 )}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-400 dark:text-gray-500">
+              <div className="text-center py-12 text-fg-faint">
                 Select a schema to preview
               </div>
             )}
@@ -1414,15 +1405,15 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
       )}
 
       {/* Import Options */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="bg-surface rounded-xl border border-border p-6">
+        <h3 className="text-lg font-semibold text-fg mb-4">
           Import Options
         </h3>
 
         <div className="grid grid-cols-4 gap-6">
           {/* Project Name - 50% (2 columns) */}
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-fg mb-2">
               Project Name
             </label>
             <input
@@ -1430,16 +1421,16 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
               value={importOptions.projectName}
               onChange={(e) => handleOptionChange('projectName', e.target.value)}
               placeholder="Enter project name"
-              className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-2 text-sm border border-border-strong rounded-lg bg-surface text-fg placeholder:text-fg-faint focus:ring-2 focus:ring-accent focus:border-transparent"
             />
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <div className="text-xs text-fg-muted mt-1">
               A new project will be created with this name
             </div>
           </div>
 
           {/* Project Slug - 25% (1 column) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-fg mb-2">
               Slug
             </label>
             <input
@@ -1447,16 +1438,16 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
               value={importOptions.projectSlug}
               onChange={(e) => handleSlugChange(e.target.value)}
               placeholder="project-slug"
-              className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-2 text-sm border border-border-strong rounded-lg bg-surface text-fg placeholder:text-fg-faint focus:ring-2 focus:ring-accent focus:border-transparent"
             />
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <div className="text-xs text-fg-muted mt-1">
               URL-friendly identifier
             </div>
           </div>
 
           {/* Version Configuration - 25% (1 column) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-fg mb-2">
               Version
             </label>
             <div className="space-y-2">
@@ -1467,7 +1458,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                 onChange={(e) => handleVersionChange(e.target.value)}
                 placeholder={importOptions.versionSource === 'spec' ? 'Version from spec' : 'Enter version (e.g., 1.0.0)'}
                 disabled={importOptions.versionSource === 'spec'}
-                className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 dark:disabled:bg-gray-800"
+                className="w-full px-4 py-2 text-sm border border-border-strong rounded-lg bg-surface text-fg placeholder:text-fg-faint focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-subtle"
               />
               {/* Radio buttons for version source */}
               <div className="flex items-center gap-3">
@@ -1478,9 +1469,9 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     value="spec"
                     checked={importOptions.versionSource === 'spec'}
                     onChange={() => handleVersionSourceChange('spec')}
-                    className="w-4 h-4 text-indigo-600 focus:ring-2 focus:ring-indigo-500"
+                    className="w-4 h-4 text-accent focus:ring-2 focus:ring-accent"
                   />
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
+                  <span className="text-xs text-fg">
                     From spec
                   </span>
                 </label>
@@ -1491,14 +1482,14 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                     value="manual"
                     checked={importOptions.versionSource === 'manual'}
                     onChange={() => handleVersionSourceChange('manual')}
-                    className="w-4 h-4 text-indigo-600 focus:ring-2 focus:ring-indigo-500"
+                    className="w-4 h-4 text-accent focus:ring-2 focus:ring-accent"
                   />
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
+                  <span className="text-xs text-fg">
                     Manual
                   </span>
                 </label>
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-fg-muted">
                 {importOptions.versionSource === 'spec'
                   ? `Using "${analysis.document?.info?.version || '1.0.0'}" from specification`
                   : 'Allowed: 0-9, A-Z, a-z, . (dot), - (dash)'}
@@ -1513,22 +1504,22 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
           {(externalTypeKeys.length > 0 || requiredOverrideRows.length > 0 || descriptionOverrideRows.length > 0) && (
             <div className="col-span-4 flex flex-col gap-3 pt-2">
               {externalTypeKeys.length > 0 && (
-              <Collapsible defaultOpen={false} className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+              <Collapsible defaultOpen={false} className="rounded-lg border border-border overflow-hidden">
+                <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-fg hover:bg-subtle transition-colors">
                   <span>Type mapping</span>
                   <ChevronDown className="h-4 w-4 shrink-0 data-[state=open]:rotate-180 transition-transform" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="px-4 pb-4 pt-1 border-t border-gray-100 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  <div className="px-4 pb-4 pt-1 border-t border-border">
+                    <p className="text-xs text-fg-muted mb-3">
                       Map external types from the spec to internal types for imported properties.
                     </p>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-gray-200 dark:border-gray-600">
-                            <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">External type</th>
-                            <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">Map to</th>
+                          <tr className="border-b border-border">
+                            <th className="text-left py-2 font-medium text-fg">External type</th>
+                            <th className="text-left py-2 font-medium text-fg">Map to</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1538,13 +1529,13 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                               ? INTERNAL_TYPE_OPTIONS.find((o) => o.schema && JSON.stringify(o.schema) === JSON.stringify(currentMapped))?.value ?? '__keep__'
                               : '__keep__';
                             return (
-                              <tr key={externalKey} className="border-b border-gray-100 dark:border-gray-700/50">
-                                <td className="py-2 text-gray-900 dark:text-white font-mono text-xs">{externalKey}</td>
+                              <tr key={externalKey} className="border-b border-border/50">
+                                <td className="py-2 text-fg font-mono text-xs">{externalKey}</td>
                                 <td className="py-2">
                                   <select
                                     value={currentValue}
                                     onChange={(e) => handleTypeMappingChange(externalKey, e.target.value)}
-                                    className="w-full max-w-[220px] px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    className="w-full max-w-[220px] px-2 py-1.5 text-sm border border-border-strong rounded-md bg-surface text-fg"
                                   >
                                     <option value="__keep__">Keep as-is</option>
                                     {INTERNAL_TYPE_OPTIONS.filter((o) => o.value !== '__keep__').map((o) => (
@@ -1565,22 +1556,22 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
 
               {/* Default values: set defaults for properties that have none (#758) */}
               {externalTypeKeys.length > 0 && (
-              <Collapsible defaultOpen={false} className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+              <Collapsible defaultOpen={false} className="rounded-lg border border-border overflow-hidden">
+                <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-fg hover:bg-subtle transition-colors">
                   <span>Default values</span>
                   <ChevronDown className="h-4 w-4 shrink-0 data-[state=open]:rotate-180 transition-transform" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="px-4 pb-4 pt-1 border-t border-gray-100 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  <div className="px-4 pb-4 pt-1 border-t border-border">
+                    <p className="text-xs text-fg-muted mb-3">
                       Set a default value for properties that do not define one. Use JSON (e.g. &quot;&quot;, 0, false, null) or plain text for strings.
                     </p>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-gray-200 dark:border-gray-600">
-                            <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">Type</th>
-                            <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">Default value</th>
+                          <tr className="border-b border-border">
+                            <th className="text-left py-2 font-medium text-fg">Type</th>
+                            <th className="text-left py-2 font-medium text-fg">Default value</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1593,8 +1584,8 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                                   ? current
                                   : JSON.stringify(current);
                             return (
-                              <tr key={externalKey} className="border-b border-gray-100 dark:border-gray-700/50">
-                                <td className="py-2 text-gray-900 dark:text-white font-mono text-xs">{externalKey}</td>
+                              <tr key={externalKey} className="border-b border-border/50">
+                                <td className="py-2 text-fg font-mono text-xs">{externalKey}</td>
                                 <td className="py-2">
                                   <input
                                     type="text"
@@ -1620,7 +1611,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                                       onImportOptionsChange?.(newOptions);
                                     }}
                                     placeholder="(none)"
-                                    className="w-full max-w-[220px] px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                                    className="w-full max-w-[220px] px-2 py-1.5 text-sm border border-border-strong rounded-md bg-surface text-fg placeholder:text-fg-faint"
                                   />
                                 </td>
                               </tr>
@@ -1636,23 +1627,23 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
 
               {/* Required field override: set required/optional per property (#759) */}
               {requiredOverrideRows.length > 0 && (
-                <Collapsible defaultOpen={false} className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <Collapsible defaultOpen={false} className="rounded-lg border border-border overflow-hidden">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-fg hover:bg-subtle transition-colors">
                     <span>Required field override</span>
                     <ChevronDown className="h-4 w-4 shrink-0 data-[state=open]:rotate-180 transition-transform" />
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <div className="px-4 pb-4 pt-1 border-t border-gray-100 dark:border-gray-700">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <div className="px-4 pb-4 pt-1 border-t border-border">
+                      <p className="text-xs text-fg-muted mb-3">
                         Override required/optional for individual properties. &quot;As in spec&quot; uses the value from the specification.
                       </p>
                       <div className="overflow-x-auto max-h-[280px] overflow-y-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="border-b border-gray-200 dark:border-gray-600 sticky top-0 bg-gray-50 dark:bg-gray-800/95">
-                              <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">Schema</th>
-                              <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">Property</th>
-                              <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">Required</th>
+                            <tr className="border-b border-border sticky top-0 bg-subtle">
+                              <th className="text-left py-2 font-medium text-fg">Schema</th>
+                              <th className="text-left py-2 font-medium text-fg">Property</th>
+                              <th className="text-left py-2 font-medium text-fg">Required</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1660,9 +1651,9 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                               const override = importOptions.requiredOverrides?.[schemaKey]?.[propName];
                               const value = override === undefined ? '__spec__' : override ? 'required' : 'optional';
                               return (
-                                <tr key={`${schemaKey}.${propName}`} className="border-b border-gray-100 dark:border-gray-700/50">
-                                  <td className="py-1.5 text-gray-900 dark:text-white font-mono text-xs">{schemaKey}</td>
-                                  <td className="py-1.5 text-gray-900 dark:text-white font-mono text-xs">{propName}</td>
+                                <tr key={`${schemaKey}.${propName}`} className="border-b border-border/50">
+                                  <td className="py-1.5 text-fg font-mono text-xs">{schemaKey}</td>
+                                  <td className="py-1.5 text-fg font-mono text-xs">{propName}</td>
                                   <td className="py-1.5">
                                     <select
                                       value={value}
@@ -1684,7 +1675,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                                         setImportOptions(newOptions);
                                         onImportOptionsChange?.(newOptions);
                                       }}
-                                      className="w-full max-w-[140px] px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                      className="w-full max-w-[140px] px-2 py-1 text-sm border border-border-strong rounded-md bg-surface text-fg"
                                     >
                                       <option value="__spec__">As in spec ({requiredInSpec ? 'required' : 'optional'})</option>
                                       <option value="required">Required</option>
@@ -1704,23 +1695,23 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
 
               {/* Property descriptions: add or modify descriptions during import (#760) */}
               {descriptionOverrideRows.length > 0 && (
-                <Collapsible defaultOpen={false} className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <Collapsible defaultOpen={false} className="rounded-lg border border-border overflow-hidden">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-fg hover:bg-subtle transition-colors">
                     <span>Property descriptions</span>
                     <ChevronDown className="h-4 w-4 shrink-0 data-[state=open]:rotate-180 transition-transform" />
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <div className="px-4 pb-4 pt-1 border-t border-gray-100 dark:border-gray-700">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <div className="px-4 pb-4 pt-1 border-t border-border">
+                      <p className="text-xs text-fg-muted mb-3">
                         Add or change descriptions for imported properties. Leave empty to keep the specification value.
                       </p>
                       <div className="overflow-x-auto max-h-[280px] overflow-y-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="border-b border-gray-200 dark:border-gray-600 sticky top-0 bg-gray-50 dark:bg-gray-800/95">
-                              <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">Schema</th>
-                              <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">Property</th>
-                              <th className="text-left py-2 font-medium text-gray-700 dark:text-gray-300">Description</th>
+                            <tr className="border-b border-border sticky top-0 bg-subtle">
+                              <th className="text-left py-2 font-medium text-fg">Schema</th>
+                              <th className="text-left py-2 font-medium text-fg">Property</th>
+                              <th className="text-left py-2 font-medium text-fg">Description</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1729,9 +1720,9 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                               const displayValue = override !== undefined ? override : '';
                               const placeholder = descriptionInSpec ? `As in spec: ${descriptionInSpec.slice(0, 40)}${descriptionInSpec.length > 40 ? '…' : ''}` : '(no description in spec)';
                               return (
-                                <tr key={`desc-${schemaKey}.${propName}`} className="border-b border-gray-100 dark:border-gray-700/50">
-                                  <td className="py-1.5 text-gray-900 dark:text-white font-mono text-xs align-top">{schemaKey}</td>
-                                  <td className="py-1.5 text-gray-900 dark:text-white font-mono text-xs align-top">{propName}</td>
+                                <tr key={`desc-${schemaKey}.${propName}`} className="border-b border-border/50">
+                                  <td className="py-1.5 text-fg font-mono text-xs align-top">{schemaKey}</td>
+                                  <td className="py-1.5 text-fg font-mono text-xs align-top">{propName}</td>
                                   <td className="py-1.5 min-w-[180px]">
                                     <input
                                       type="text"
@@ -1755,7 +1746,7 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
                                         onImportOptionsChange?.(newOptions);
                                       }}
                                       placeholder={placeholder}
-                                      className="w-full min-w-[180px] px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                                      className="w-full min-w-[180px] px-2 py-1 text-sm border border-border-strong rounded-md bg-surface text-fg placeholder:text-fg-faint"
                                     />
                                   </td>
                                 </tr>

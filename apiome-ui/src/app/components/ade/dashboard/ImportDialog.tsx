@@ -1,13 +1,30 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import Link from 'next/link';
-import { Upload, X, FileCode, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
+/**
+ * The import wizard (HIVE-6.4, #5315).
+ *
+ * Authority: `docs/mockups/build/import-wizard.html`, design language `docs/mockups/DESIGN.md`.
+ *
+ * This file keeps every piece of state and every write it had before the redesign — the intake
+ * buffers, the analysis, the async job, the MCP endpoint lifecycle, the quality snapshot. What
+ * moved out is the skin and the decisions:
+ *
+ *   - the stepper, the head and the footer are `components/ade/import/ImportWizardChrome`;
+ *   - which verb the footer carries, whether Back is allowed, how a job state reads and what the
+ *     quality gate says are `importWizardModel`, so `import-wizard-model.test.ts` can assert the
+ *     whole table without starting an import;
+ *   - the source grid, the intake tab bar, the File intake and the MCP summary are their own
+ *     components.
+ *
+ * The flow itself is unchanged: Source → Analyze → Preview → Import → Done, with MCP short-
+ * circuiting Analyze and Preview because a discovery scan has neither.
+ */
+
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { ListChecks } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from '../../../components/ui/Dialog';
 import { Alert } from '../../../components/ui/Alert';
 import { Button } from '../../../components/ui/Button';
@@ -17,7 +34,6 @@ import { analyzeSpecification, AnalysisResult, extractFileMetadata, FileMetadata
 import ImportExecutionPanel from './ImportExecutionPanel';
 import ImportCompletePanel from './ImportCompletePanel';
 import UrlImportPanel, { type UrlImportPanelHandle, type UrlImportFooterState } from './UrlImportPanel';
-import { ImportSourceTabBar, type ImportSourceTabId } from './ImportSourceTabBar';
 import { useImportSources } from './useImportSources';
 import { type ImportVariant } from './importSourceCatalog';
 import ClipboardImportPanel from './ClipboardImportPanel';
@@ -36,6 +52,24 @@ import {
 import { startImport, getImportStatus, rollbackImport } from '../../../../../lib/db/import-actions';
 import { generateSlug } from '../../../utils/slug';
 import { appendProjectQualitySnapshot, buildQualitySnapshotReportExtras } from '../../../utils/project-quality-score-history';
+import {
+  FileIntakePanel,
+  ImportIntakeTabs,
+  ImportSourceCards,
+  ImportWizardBody,
+  ImportWizardFooter,
+  ImportWizardHead,
+  ImportWizardSteps,
+  McpImportDonePanel,
+  RecentImportJobsDrawer,
+  importFooterFor,
+  importQualityGate,
+  isAcceptedImportFile,
+  urlTestAction,
+  IMPORT_FILE_EXTENSIONS,
+  IMPORT_WIZARD_COPY,
+  type ImportWizardStep,
+} from '../import';
 
 interface ImportDialogProps {
   open: boolean;
@@ -77,7 +111,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
   onConsumeInitialSource,
   variant = 'all',
 }) => {
-  const [currentStep, setCurrentStep] = useState<'source' | 'file-upload' | 'analysis' | 'preview' | 'import' | 'done'>('source');
+  const [currentStep, setCurrentStep] = useState<ImportWizardStep>('source');
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -104,6 +138,8 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
   const [postmanFilename, setPostmanFilename] = useState<string | null>(null);
   const [postmanMetadata, setPostmanMetadata] = useState<FileMetadataPreview | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  /** The mockup's *Recent import jobs* side-sheet (HIVE-6.4). */
+  const [jobsDrawerOpen, setJobsDrawerOpen] = useState(false);
 
   // MCP Server import source (V2-MCP-24.1): collect endpoint config, then create → discover → poll.
   const [mcpForm, setMcpForm] = useState<McpImportForm>(emptyMcpImportForm);
@@ -188,11 +224,10 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
     setCurrentStep('file-upload');
   }, [open, initialSource, onConsumeInitialSource]);
 
-  const handleSourceClick = (source: string | ImportSourceTabId) => {
+  const handleSourceClick = (source: string) => {
     setErrorMessage(null);
     setSelectedSource(source);
     setCurrentStep('file-upload');
-    console.log('Selected source:', source);
   };
 
   /** Discard a catalog endpoint (best-effort) — used to clean up a failed/abandoned MCP import. */
@@ -219,7 +254,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
   const handleBack = () => {
     setErrorMessage(null);
     if (currentStep === 'done') {
-      setCurrentStep('preview');
+      setCurrentStep('import');
     } else if (currentStep === 'import' && selectedSource === 'mcp') {
       // MCP has no analyze/preview steps — Back returns to the endpoint config form. An uncommitted
       // endpoint (failed/in-progress scan the user didn't keep) is discarded on the way out.
@@ -315,6 +350,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
     setMcpSubmitting(false);
     setMcpEndpointCommitted(false);
     setErrorMessage(null);
+    setJobsDrawerOpen(false);
     dryRunRef.current = false;
   };
 
@@ -362,29 +398,13 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
     if (!selectedFile && !urlContent && !clipboardContent && !gitContent && !swaggerHubContent && !postmanContent) return;
 
     setErrorMessage(null);
-    console.log('Starting analysis...', {
-      selectedFile: selectedFile?.name,
-      urlFilename,
-      clipboardFilename,
-      gitFilename,
-      swaggerHubFilename,
-      postmanFilename,
-      hasUrlContent: !!urlContent,
-      hasClipboardContent: !!clipboardContent,
-      hasGitContent: !!gitContent,
-      hasSwaggerHubContent: !!swaggerHubContent,
-      hasPostmanContent: !!postmanContent
-    });
     setIsAnalyzing(true);
     try {
       const content = urlContent || clipboardContent || gitContent || swaggerHubContent || postmanContent || await selectedFile!.text();
       const filename = urlFilename || clipboardFilename || gitFilename || swaggerHubFilename || postmanFilename || selectedFile?.name || 'openapi-spec.yaml';
-      console.log('Content loaded, length:', content.length);
       const result = await analyzeSpecification(content, filename);
-      console.log('Analysis complete:', result);
       setAnalysisResult(result);
       setCurrentStep('analysis');
-      console.log('State updated to analysis step');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Analysis failed. Please check the specification and try again.');
     } finally {
@@ -396,7 +416,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
     setUrlContent(content);
     setUrlFilename(filename);
     setUrlMetadata(metadata || null);
-    // Don't auto-analyze - user needs to click "Analyze →" button
+    // Don't auto-analyze - user needs to click "Next →" button
   };
 
   const handleClipboardSpecificationReady = (content: string, filename: string) => {
@@ -448,46 +468,35 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
-      handleFileSelect(files[0]);
+      void handleFileSelect(files[0]);
     }
   };
 
   const handleFileSelect = async (file: File) => {
-    const validExtensions = ['.yaml', '.yml', '.json', '.zip', '.graphql', '.gql', '.raml', '.proto', '.avsc', '.thrift'];
-    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-
-    if (validExtensions.includes(fileExtension)) {
-      setErrorMessage(null);
-      setSelectedFile(file);
-      setFileMetadata(null);
-      console.log('File selected:', file.name);
-
-      // Extract metadata immediately for preview
-      if (fileExtension !== '.zip') {
-        setIsLoadingMetadata(true);
-        try {
-          const content = await file.text();
-          const metadata = extractFileMetadata(content);
-          setFileMetadata(metadata);
-          console.log('File metadata extracted:', metadata);
-        } catch (error) {
-          setErrorMessage(
-            error instanceof Error ? error.message : 'Could not read or preview this file. Try another file or format.'
-          );
-        } finally {
-          setIsLoadingMetadata(false);
-        }
-      }
-    } else {
+    if (!isAcceptedImportFile(file.name)) {
       setSelectedFile(null);
       setFileMetadata(null);
-      setErrorMessage(`Unsupported file type. Allowed: ${validExtensions.join(', ')}`);
+      setErrorMessage(`Unsupported file type. Allowed: ${IMPORT_FILE_EXTENSIONS.join(', ')}`);
+      return;
     }
-  };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFileSelect(e.target.files[0]);
+    setErrorMessage(null);
+    setSelectedFile(file);
+    setFileMetadata(null);
+
+    // A ZIP is a bundle, not a document — it is only opened once Analyze runs.
+    if (file.name.toLowerCase().endsWith('.zip')) return;
+
+    setIsLoadingMetadata(true);
+    try {
+      const content = await file.text();
+      setFileMetadata(extractFileMetadata(content));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Could not read or preview this file. Try another file or format.'
+      );
+    } finally {
+      setIsLoadingMetadata(false);
     }
   };
 
@@ -498,11 +507,11 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 
     // Validate that we have required IDs
     if (!tenantId) {
-      console.error('Import failed: No tenant ID available');
+      setErrorMessage('Import failed: no workspace is selected.');
       return;
     }
     if (!userId) {
-      console.error('Import failed: No user ID available');
+      setErrorMessage('Import failed: you are not signed in.');
       return;
     }
 
@@ -632,756 +641,284 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
     }
   };
 
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) void handleClose();
-      }}
-    >
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col" showCloseButton={false} aria-describedby={undefined}>
-        <DialogHeader className="border-b border-gray-200 dark:border-gray-700 pb-4">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-              Import Specification
-            </DialogTitle>
-            <button
-              onClick={handleClose}
-              className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            </button>
-          </div>
-        </DialogHeader>
+  /**
+   * Whether the chosen intake has produced something Analyze can read.
+   *
+   * One expression rather than the six `disabled={…}` clauses the old footer carried, so the
+   * "Analyze is offered exactly when there is content and the format is importable" rule holds
+   * for every source rather than for whichever branch was edited last.
+   */
+  const intakeReady = useMemo(() => {
+    switch (selectedSource) {
+      case 'file':
+        return Boolean(selectedFile) && (fileMetadata === null || fileMetadata.formatSupported);
+      case 'url':
+        return Boolean(urlContent) && (urlMetadata === null || urlMetadata.formatSupported);
+      case 'clipboard':
+      case 'llm':
+        return Boolean(clipboardContent);
+      case 'git':
+        return Boolean(gitContent) && (gitMetadata === null || gitMetadata.formatSupported);
+      case 'swaggerhub':
+        return Boolean(swaggerHubContent) && (swaggerHubMetadata === null || swaggerHubMetadata.formatSupported);
+      case 'postman':
+        return Boolean(postmanContent) && (postmanMetadata === null || postmanMetadata.formatSupported);
+      default:
+        return false;
+    }
+  }, [
+    selectedSource,
+    selectedFile,
+    fileMetadata,
+    urlContent,
+    urlMetadata,
+    clipboardContent,
+    gitContent,
+    gitMetadata,
+    swaggerHubContent,
+    swaggerHubMetadata,
+    postmanContent,
+    postmanMetadata,
+  ]);
 
-        {/* Step Indicator - Fixed */}
-        <div className="border-b border-gray-200 dark:border-gray-700 py-4 px-6">
-          <div className="flex items-center justify-center gap-2 text-sm">
-            <div className="flex items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold ${
-                currentStep === 'source' || currentStep === 'file-upload' 
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-green-600 text-white'
-              }`}>
-                {currentStep === 'analysis' || currentStep === 'preview' || currentStep === 'import' || currentStep === 'done' ? '✓' : '1'}
-              </div>
-              <span className={`ml-2 font-medium ${
-                currentStep !== 'source' ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
-              }`}>Source</span>
-            </div>
-            <div className={`w-16 h-0.5 ${
-              ['analysis','preview','import','done'].includes(currentStep) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-            }`}></div>
-            <div className="flex items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold ${
-                currentStep === 'analysis'
-                  ? 'bg-indigo-600 text-white'
-                  : ['preview','import','done'].includes(currentStep)
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-              }`}>
-                {['preview','import','done'].includes(currentStep) ? '✓' : '2'}
-              </div>
-              <span className={`ml-2 ${
-                ['analysis','preview','import','done'].includes(currentStep)
-                  ? 'font-medium text-gray-900 dark:text-white'
-                  : 'text-gray-500 dark:text-gray-400'
-              }`}>Analyze</span>
-            </div>
-            <div className={`w-16 h-0.5 ${
-              ['preview','import','done'].includes(currentStep) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-            }`}></div>
-            <div className="flex items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold ${
-                currentStep === 'preview'
-                  ? 'bg-indigo-600 text-white'
-                  : ['import','done'].includes(currentStep)
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-              }`}>
-                {['import','done'].includes(currentStep) ? '✓' : '3'}
-              </div>
-              <span className={`ml-2 ${
-                ['preview','import','done'].includes(currentStep)
-                  ? 'font-medium text-gray-900 dark:text-white'
-                  : 'text-gray-500 dark:text-gray-400'
-              }`}>Preview</span>
-            </div>
-            <div className={`w-16 h-0.5 ${
-              ['import','done'].includes(currentStep) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-            }`}></div>
-            <div className="flex items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold ${
-                currentStep === 'import'
-                  ? 'bg-indigo-600 text-white'
-                  : currentStep === 'done'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-              }`}>
-                {currentStep === 'done' ? '✓' : '4'}
-              </div>
-              <span className={`ml-2 ${
-                ['import','done'].includes(currentStep)
-                  ? 'font-medium text-gray-900 dark:text-white'
-                  : 'text-gray-500 dark:text-gray-400'
-              }`}>Import</span>
-            </div>
-            <div className={`w-16 h-0.5 ${ currentStep === 'done' ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }`}></div>
-            <div className="flex items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${ currentStep === 'done' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400' } font-semibold`}>
-                5
-              </div>
-              <span className={`ml-2 ${ currentStep === 'done' ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400' }`}>Done</span>
-            </div>
-          </div>
-        </div>
+  const footer = importFooterFor({
+    step: currentStep,
+    source: selectedSource,
+    importComplete,
+    importSucceeded,
+    analyzing: isAnalyzing,
+    intakeReady,
+    analysisImportable: Boolean(analysisResult?.isValid && analysisResult?.formatSupported),
+    hasSelection: Boolean(importOptions && importOptions.selectedSchemas.length > 0),
+    mcpReady: validateMcpImportForm(mcpForm) === null,
+    mcpSubmitting,
+  });
 
-        {/* Scrollable Content Area */}
-        <div className="flex flex-col min-h-0 overflow-y-auto py-6 px-6 h-[60vh]">
-          {errorMessage && (
-            <Alert variant="error" className="mb-4 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 shrink-0" />
-              {errorMessage}
+  const qualityGate = currentStep === 'analysis' ? importQualityGate(analysisResult) : null;
+
+  /** The one forward action of the step the wizard is on. */
+  const handlePrimary = () => {
+    if (currentStep === 'analysis') {
+      setCurrentStep('preview');
+      return;
+    }
+    if (currentStep === 'preview') {
+      void beginImport();
+      return;
+    }
+    if (currentStep === 'import') {
+      setCurrentStep('done');
+      return;
+    }
+    if (currentStep === 'done') {
+      void handleClose();
+      return;
+    }
+    if (currentStep === 'file-upload') {
+      if (selectedSource === 'mcp') void beginMcpImport();
+      else void handleAnalyze();
+    }
+  };
+
+  /** The dismiss verb — *Discard* on a failed MCP import also deletes the endpoint. */
+  const handleCancel = () => {
+    if (footer.keepAnyway) {
+      void discardMcpAndClose();
+      return;
+    }
+    void handleClose();
+  };
+
+  const urlTest = urlTestAction(urlImportFooter);
+  const showUrlTest = currentStep === 'file-upload' && selectedSource === 'url';
+
+  /** The intake panel for the chosen source, or the card grid when none is chosen yet. */
+  const renderStep = () => {
+    if (currentStep === 'source') {
+      return (
+        <ImportSourceCards
+          cards={sourceCards}
+          selected={selectedSource}
+          onSelect={handleSourceClick}
+        />
+      );
+    }
+
+    if (currentStep === 'analysis' && analysisResult) {
+      return (
+        <div className="flex flex-col gap-4">
+          {qualityGate ? (
+            <Alert variant={qualityGate.tone}>
+              <span className="font-semibold">{qualityGate.title}</span> — {qualityGate.body}
             </Alert>
-          )}
-          {(() => {
-            console.log('Render check:', { currentStep, selectedSource, hasAnalysisResult: !!analysisResult });
+          ) : null}
+          <AnalysisPanel fileName={selectedFile?.name || ''} analysis={analysisResult} />
+        </div>
+      );
+    }
 
-            if (currentStep === 'source') {
-              console.log('Rendering: Source selection');
-              return (
-            <>
-              {/* Choose Import Source */}
-              <div className="mb-8">
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl border-2 border-indigo-200 dark:border-indigo-800 p-6">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 text-center">
-                    Choose Import Source
-                  </h2>
+    if (currentStep === 'preview' && analysisResult) {
+      return <PreviewPanel analysis={analysisResult} onImportOptionsChange={setImportOptions} />;
+    }
 
-                  {/* Source Options Grid */}
-              {/*
-                MFI-1.3: cards are data-driven (built-ins + registry adapters). Adding an adapter
-                server-side makes a new card appear here with no change to this JSX. A card whose
-                adapter has no generic intake panel yet (discovery-only) renders disabled.
-              */}
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                {sourceCards.map((card) => {
-                  const Icon = card.icon;
-                  const isDisabled = card.panel === null;
-                  const isActive = !isDisabled && selectedSource === card.panel;
-                  return (
-                    <button
-                      key={card.key}
-                      type="button"
-                      onClick={() => card.panel && handleSourceClick(card.panel)}
-                      disabled={isDisabled}
-                      title={isDisabled ? 'Coming soon' : undefined}
-                      aria-label={card.label}
-                      className={`group relative p-6 rounded-lg border-2 transition-all duration-200 ${
-                        isDisabled
-                          ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60 cursor-not-allowed'
-                          : isActive
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 shadow-lg'
-                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md'
-                      }`}
-                    >
-                      <div className="flex flex-col items-center text-center">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors ${
-                          isActive
-                            ? 'bg-indigo-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
-                        }`}>
-                          <Icon className="h-6 w-6" />
-                        </div>
-                        <div className={`font-semibold mb-1 ${
-                          isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-900 dark:text-white'
-                        }`}>
-                          {card.label}
-                        </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                          {card.description}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-            </>
-              );
-            } else if (currentStep === 'file-upload' && selectedSource === 'mcp') {
-              return (
-                <McpImportPanel form={mcpForm} onChange={setMcpForm} />
-              );
-            } else if (currentStep === 'import' && selectedSource === 'mcp' && mcpEndpointId && mcpJobId) {
-              return (
-                <McpDiscoveryPanel
-                  endpointId={mcpEndpointId}
-                  jobId={mcpJobId}
-                  endpointName={mcpEndpointName}
-                  onComplete={(succeeded) => {
-                    setImportSucceeded(succeeded);
-                    setImportComplete(true);
-                    // A successful scan commits the endpoint; a failed scan leaves it uncommitted so
-                    // it is discarded unless the user picks "Add this server anyway".
-                    if (succeeded) setMcpEndpointCommitted(true);
-                  }}
-                />
-              );
-            } else if (currentStep === 'done' && selectedSource === 'mcp') {
-              return (
-                <div className="flex flex-1 flex-col items-center justify-center gap-4 py-10 text-center">
-                  <div
-                    className={`flex h-16 w-16 items-center justify-center rounded-2xl text-white ${
-                      importSucceeded ? 'bg-green-500' : 'bg-amber-500'
-                    }`}
-                  >
-                    {importSucceeded ? (
-                      <CheckCircle2 className="h-8 w-8" aria-hidden />
-                    ) : (
-                      <AlertTriangle className="h-8 w-8" aria-hidden />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {importSucceeded ? `${mcpEndpointName} cataloged` : `${mcpEndpointName} added`}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      {importSucceeded ? (
-                        <>
-                          Discovery committed catalog version&nbsp;1. Its tools, resources, and prompts
-                          are now available under MCP Servers.
-                        </>
-                      ) : (
-                        <>
-                          Discovery did not complete, so this server has no cataloged capabilities yet.
-                          Fix its connection or credentials, then re-run discovery from its page.
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  {mcpEndpointId && (
-                    <Link
-                      href={`/ade/dashboard/mcp/${mcpEndpointId}`}
-                      onClick={() => void handleClose()}
-                      className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-                    >
-                      View endpoint
-                      <ArrowRight className="h-4 w-4" aria-hidden />
-                    </Link>
-                  )}
-                </div>
-              );
-            } else if (currentStep === 'file-upload' && selectedSource === 'file') {
-              console.log('Rendering: File upload');
-              return (
-            <>
-              {/* Step 1a: File Upload View */}
+    if (currentStep === 'import' && selectedSource === 'mcp' && mcpEndpointId && mcpJobId) {
+      return (
+        <McpDiscoveryPanel
+          endpointId={mcpEndpointId}
+          jobId={mcpJobId}
+          endpointName={mcpEndpointName}
+          onComplete={(succeeded) => {
+            setImportSucceeded(succeeded);
+            setImportComplete(true);
+            // A successful scan commits the endpoint; a failed scan leaves it uncommitted so
+            // it is discarded unless the user picks "Add this server anyway".
+            if (succeeded) setMcpEndpointCommitted(true);
+          }}
+        />
+      );
+    }
 
-              <div className="mb-6">
-                <ImportSourceTabBar active="file" onSelect={(id) => handleSourceClick(id)} />
-              </div>
+    if (currentStep === 'import' && jobId) {
+      return (
+        <ImportExecutionPanel
+          jobId={jobId}
+          selectedSchemas={importOptions?.selectedSchemas ?? []}
+          isReviewing={importComplete}
+          onComplete={(succeeded) => {
+            setImportComplete(true);
+            setImportSucceeded(succeeded);
+          }}
+          onRetry={(newJobId) => {
+            setJobId(newJobId);
+            setImportComplete(false);
+          }}
+        />
+      );
+    }
 
-              {/* Drop Zone */}
-              <div className="mb-6">
-                <div
-                  onDragEnter={handleDragEnter}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-xl p-12 text-center transition-all ${
-                    isDragging
-                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-600'
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-4">
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-                      isDragging
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
-                    }`}>
-                      <Upload className="h-8 w-8" />
-                    </div>
+    if (currentStep === 'done') {
+      if (selectedSource === 'mcp') {
+        return (
+          <McpImportDonePanel
+            endpointId={mcpEndpointId}
+            endpointName={mcpEndpointName}
+            succeeded={importSucceeded}
+            onNavigate={() => void handleClose()}
+          />
+        );
+      }
+      return jobId ? <ImportCompletePanel jobId={jobId} /> : null;
+    }
 
-                    {selectedFile ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                          <FileCode className="h-5 w-5" />
-                          <span className="font-medium">{selectedFile.name}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {(selectedFile.size / 1024).toFixed(2)} KB
-                        </p>
-                        <button
-                          onClick={() => {
-                            setSelectedFile(null);
-                            setFileMetadata(null);
-                          }}
-                          className="text-sm text-red-600 dark:text-red-400 hover:underline"
-                        >
-                          Remove file
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-2">
-                          <p className="text-lg font-medium text-gray-900 dark:text-white">
-                            Drop files here
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            or
-                          </p>
-                        </div>
+    // Everything below is the intake step: the tab bar, then the chosen source's panel.
+    const intake = (() => {
+      switch (selectedSource) {
+        case 'file':
+          return (
+            <FileIntakePanel
+              file={selectedFile}
+              metadata={fileMetadata}
+              loading={isLoadingMetadata}
+              dragging={isDragging}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onPick={(file) => void handleFileSelect(file)}
+              onRemove={() => {
+                setSelectedFile(null);
+                setFileMetadata(null);
+              }}
+            />
+          );
+        case 'url':
+          return (
+            <UrlImportPanel
+              ref={urlImportRef}
+              onSpecificationFetched={handleUrlSpecificationFetched}
+              onFooterStateChange={handleUrlImportFooterState}
+            />
+          );
+        case 'clipboard':
+        case 'llm':
+          return <ClipboardImportPanel onSpecificationReady={handleClipboardSpecificationReady} />;
+        case 'git':
+          return <GitImportPanel userId={userId} onSpecificationFetched={handleGitSpecificationFetched} />;
+        case 'swaggerhub':
+          return <SwaggerHubImportPanel onSpecificationFetched={handleSwaggerHubSpecificationFetched} />;
+        case 'postman':
+          return <PostmanImportPanel onSpecificationFetched={handlePostmanSpecificationFetched} />;
+        case 'mcp':
+          return <McpImportPanel form={mcpForm} onChange={setMcpForm} />;
+        default:
+          return null;
+      }
+    })();
 
-                        <label className="cursor-pointer">
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept=".yaml,.yml,.json,.zip,.graphql,.gql,.raml,.proto,.avsc,.thrift"
-                            onChange={handleFileInputChange}
-                          />
-                          <span className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors shadow-sm">
-                            <Upload className="h-5 w-5" />
-                            Browse Files
-                          </span>
-                        </label>
+    return (
+      <div className="flex min-h-0 flex-col gap-4">
+        <ImportIntakeTabs cards={sourceCards} active={selectedSource} onSelect={handleSourceClick} />
+        {intake}
+      </div>
+    );
+  };
 
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Supports: .yaml, .yml, .json, .zip, .graphql, .gql, .raml, .proto, .avsc, .thrift
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* File Metadata Preview */}
-              {selectedFile && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <FileCode className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                    File Preview
-                  </h3>
-
-                  {isLoadingMetadata ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
-                      <span className="ml-3 text-gray-600 dark:text-gray-400">Analyzing file...</span>
-                    </div>
-                  ) : fileMetadata ? (
-                    <div className="space-y-4">
-                      {/* Unsupported Format Warning */}
-                      {!fileMetadata.formatSupported && fileMetadata.format !== 'unknown' && (
-                        <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                          <div className="flex items-start gap-3">
-                            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                            <div>
-                              <div className="font-medium text-amber-900 dark:text-amber-200">
-                                Format Not Available for Import
-                              </div>
-                              <div className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                                The detected format <span className="font-semibold">{fileMetadata.formatDisplayName}</span> is not yet supported for import.
-                                Currently supported formats: OpenAPI 3.x, Swagger 2.x, JSON Schema, Arazzo, RAML, AsyncAPI, GraphQL, Protobuf, Thrift, Avro, and Postman.
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Parse Error */}
-                      {!fileMetadata.syntaxValid && (
-                        <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                          <div className="flex items-start gap-3">
-                            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                            <div>
-                              <div className="font-medium text-red-900 dark:text-red-200">
-                                File Parse Error
-                              </div>
-                              <div className="text-sm text-red-700 dark:text-red-300 mt-1">
-                                {fileMetadata.parseError || 'Unable to parse file content'}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Metadata Grid */}
-                      <div className="grid grid-cols-3 gap-4">
-                        {/* Format */}
-                        <div className={`rounded-lg p-4 border ${fileMetadata.formatSupported ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'}`}>
-                          <div className="flex items-center gap-2 mb-2">
-                            {fileMetadata.formatSupported ? (
-                              <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                            ) : (
-                              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                            )}
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                              Detected Format
-                            </span>
-                          </div>
-                          <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {fileMetadata.formatDisplayName}
-                          </div>
-                        </div>
-
-                        {/* Spec Version */}
-                        <div className="rounded-lg p-4 border bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-700">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                              Version
-                            </span>
-                          </div>
-                          <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {fileMetadata.specVersion || fileMetadata.version || 'N/A'}
-                          </div>
-                        </div>
-
-                        {/* Syntax */}
-                        <div className={`rounded-lg p-4 border ${fileMetadata.syntaxValid ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
-                          <div className="flex items-center gap-2 mb-2">
-                            {fileMetadata.syntaxValid ? (
-                              <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                            ) : (
-                              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                            )}
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                              Syntax
-                            </span>
-                          </div>
-                          <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {fileMetadata.syntaxValid ? `Valid ${fileMetadata.syntax.toUpperCase()}` : 'Invalid'}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Title */}
-                      {fileMetadata.title && (
-                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Title
-                          </span>
-                          <div className="text-base font-semibold text-gray-900 dark:text-white mt-1">
-                            {fileMetadata.title}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Description */}
-                      {fileMetadata.description && (
-                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Description
-                          </span>
-                          <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 leading-relaxed line-clamp-3">
-                            {fileMetadata.description}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                      <p className="text-sm">ZIP files will be analyzed after clicking Analyze</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-              );
-            } else if (currentStep === 'analysis' && analysisResult) {
-              console.log('Rendering: Analysis panel');
-              return (
-            <>
-              {/* Step 2: Analysis Panel */}
-              <AnalysisPanel fileName={selectedFile?.name || ''} analysis={analysisResult} />
-            </>
-              );
-            } else if (currentStep === 'preview' && analysisResult) {
-              console.log('Rendering: Preview panel');
-              return (
-            <>
-              {/* Step 3: Preview Panel */}
-              <PreviewPanel
-                analysis={analysisResult}
-                onImportOptionsChange={setImportOptions}
-              />
-            </>
-              );
-            } else if (currentStep === 'import' && jobId) {
-              return (
-                <ImportExecutionPanel
-                  jobId={jobId}
-                  selectedSchemas={importOptions?.selectedSchemas ?? []}
-                  isReviewing={importComplete}
-                  onComplete={(succeeded) => {
-                    setImportComplete(true);
-                    setImportSucceeded(succeeded);
-                  }}
-                  onRetry={(newJobId) => {
-                    setJobId(newJobId);
-                    setImportComplete(false);
-                  }}
-                />
-              );
-            } else if (currentStep === 'done') {
-              return jobId ? (
-                <ImportCompletePanel jobId={jobId} />
-              ) : null;
-            } else if (currentStep === 'file-upload' && selectedSource === 'url') {
-              console.log('Rendering: URL import panel');
-              return (
-                <UrlImportPanel
-                  ref={urlImportRef}
-                  onSpecificationFetched={handleUrlSpecificationFetched}
-                  onSelectSource={(id) => handleSourceClick(id)}
-                  onFooterStateChange={handleUrlImportFooterState}
-                />
-              );
-            } else if (currentStep === 'file-upload' && selectedSource === 'clipboard') {
-              console.log('Rendering: Clipboard import panel');
-              return (
-                <ClipboardImportPanel
-                  onSpecificationReady={handleClipboardSpecificationReady}
-                />
-              );
-            } else if (currentStep === 'file-upload' && selectedSource === 'git') {
-              console.log('Rendering: Git import panel');
-              return (
-                <div className="flex flex-col flex-1 min-h-0">
-                  <GitImportPanel
-                    userId={userId}
-                    onSpecificationFetched={handleGitSpecificationFetched}
-                  />
-                </div>
-              );
-            } else if (currentStep === 'file-upload' && selectedSource === 'swaggerhub') {
-              console.log('Rendering: SwaggerHub import panel');
-              return (
-                <SwaggerHubImportPanel
-                  onSpecificationFetched={handleSwaggerHubSpecificationFetched}
-                />
-              );
-            } else if (currentStep === 'file-upload' && selectedSource === 'postman') {
-              console.log('Rendering: Postman import panel');
-              return (
-                <PostmanImportPanel
-                  onSpecificationFetched={handlePostmanSpecificationFetched}
-                />
-              );
-            } else if (selectedSource) {
-              console.log('Rendering: Placeholder for', selectedSource);
-              return (
-            <>
-              {/* Placeholder for other source views (Clipboard, etc.) */}
-              <div className="text-center py-12">
-                <p className="text-gray-600 dark:text-gray-400">
-                  {selectedSource} import view - Coming soon
-                </p>
-              </div>
-            </>
-              );
-            } else {
-              console.log('Rendering: Nothing');
-              return null;
+  return (
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) void handleClose();
+        }}
+      >
+        <DialogContent
+          size="full"
+          className="imp-wizard"
+          closeLabel={IMPORT_WIZARD_COPY.closeWarning}
+        >
+          <ImportWizardHead
+            actions={
+              <Button variant="ghost" size="sm" onClick={() => setJobsDrawerOpen(true)}>
+                <ListChecks aria-hidden />
+                {IMPORT_WIZARD_COPY.jobsDrawerTitle}
+              </Button>
             }
-          })()}
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
-          {currentStep === 'done' ? (
-            <>
-              <Button variant="outline" onClick={() => setCurrentStep('import')}>
-                ← Back
-              </Button>
-              <Button
-                onClick={handleClose}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-              >
-                Done
-              </Button>
-            </>
-          ) : currentStep === 'import' ? (
-            <>
-              <Button variant="outline" onClick={handleBack} disabled={!importComplete}>
-                ← Back
-              </Button>
-              <div className="flex gap-2">
-                {/* If import complete but failed/rolled back, just show Cancel */}
-                {importComplete && !importSucceeded ? (
-                  selectedSource === 'mcp' ? (
-                    // Failed auth/scan: discard by default (Discard / Close / Back all delete the
-                    // endpoint) unless the user explicitly keeps it.
-                    <>
-                      <Button variant="outline" onClick={() => void discardMcpAndClose()}>
-                        Discard
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setMcpEndpointCommitted(true);
-                          setCurrentStep('done');
-                        }}
-                        className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
-                      >
-                        Add this server anyway
-                      </Button>
-                    </>
-                  ) : (
-                    <Button variant="outline" onClick={handleClose}>
-                      Cancel
-                    </Button>
-                  )
-                ) : (
-                  <>
-                    <Button variant="outline" onClick={handleClose}>
-                      {importComplete ? 'Close' : 'Cancel'}
-                    </Button>
-                    {importComplete && importSucceeded && (
-                      <Button
-                        onClick={() => setCurrentStep('done')}
-                        className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                      >
-                        Next →
-                      </Button>
-                    )}
-                  </>
-                )}
-              </div>
-            </>
-          ) : currentStep !== 'source' ? (
-            <>
-              <Button variant="outline" onClick={handleBack}>
-                ← Back
-              </Button>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleClose}>
-                  Cancel
+          />
+          <ImportWizardSteps step={currentStep} />
+          <ImportWizardBody>
+            {errorMessage ? (
+              <Alert variant="danger" className="mb-4">
+                {errorMessage}
+              </Alert>
+            ) : null}
+            {renderStep()}
+          </ImportWizardBody>
+          <ImportWizardFooter
+            footer={footer}
+            onBack={handleBack}
+            onCancel={handleCancel}
+            onPrimary={handlePrimary}
+            onKeepAnyway={() => {
+              setMcpEndpointCommitted(true);
+              setCurrentStep('done');
+            }}
+            extra={
+              showUrlTest ? (
+                <Button
+                  variant={urlTest.tested ? 'success' : 'outline'}
+                  onClick={() => void urlImportRef.current?.testUrl()}
+                  disabled={urlTest.disabled}
+                >
+                  {urlTest.label}
                 </Button>
-                {currentStep === 'file-upload' && selectedSource === 'url' && (
-                  <Button
-                    variant="outline"
-                    onClick={() => void urlImportRef.current?.testUrl()}
-                    disabled={!urlImportFooter.canTestUrl || urlImportFooter.isTesting}
-                    className={
-                      urlImportFooter.urlTestedSuccessfully
-                        ? 'border-green-500 text-green-600 dark:border-green-500 dark:text-green-400'
-                        : undefined
-                    }
-                  >
-                    {urlImportFooter.isTesting
-                      ? 'Testing...'
-                      : urlImportFooter.urlTestedSuccessfully
-                        ? 'URL tested ✓'
-                        : 'Test URL'}
-                  </Button>
-                )}
-                {currentStep === 'file-upload' && selectedSource === 'file' && (
-                  <Button
-                    onClick={handleAnalyze}
-                    disabled={!selectedFile || isAnalyzing || (fileMetadata !== null && !fileMetadata.formatSupported)}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    {isAnalyzing ? 'Analyzing...' : 'Analyze →'}
-                  </Button>
-                )}
-                {currentStep === 'file-upload' && selectedSource === 'url' && (
-                  <Button
-                    onClick={handleAnalyze}
-                    disabled={!urlContent || isAnalyzing || (urlMetadata !== null && !urlMetadata.formatSupported)}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    {isAnalyzing ? 'Analyzing...' : 'Next →'}
-                  </Button>
-                )}
-                {currentStep === 'file-upload' && selectedSource === 'clipboard' && (
-                  <Button
-                    onClick={handleAnalyze}
-                    disabled={!clipboardContent || isAnalyzing}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    {isAnalyzing ? 'Analyzing...' : 'Analyze →'}
-                  </Button>
-                )}
-                {currentStep === 'file-upload' && selectedSource === 'git' && (
-                  <Button
-                    onClick={handleAnalyze}
-                    disabled={!gitContent || isAnalyzing || (gitMetadata !== null && !gitMetadata.formatSupported)}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    {isAnalyzing ? 'Analyzing...' : 'Analyze →'}
-                  </Button>
-                )}
-                {currentStep === 'file-upload' && selectedSource === 'swaggerhub' && (
-                  <Button
-                    onClick={handleAnalyze}
-                    disabled={!swaggerHubContent || isAnalyzing || (swaggerHubMetadata !== null && !swaggerHubMetadata.formatSupported)}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    {isAnalyzing ? 'Analyzing...' : 'Analyze →'}
-                  </Button>
-                )}
-                {currentStep === 'file-upload' && selectedSource === 'postman' && (
-                  <Button
-                    onClick={handleAnalyze}
-                    disabled={!postmanContent || isAnalyzing || (postmanMetadata !== null && !postmanMetadata.formatSupported)}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    {isAnalyzing ? 'Analyzing...' : 'Analyze →'}
-                  </Button>
-                )}
-                {currentStep === 'file-upload' && selectedSource === 'mcp' && (
-                  <Button
-                    onClick={beginMcpImport}
-                    disabled={mcpSubmitting || validateMcpImportForm(mcpForm) !== null}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    {mcpSubmitting ? 'Starting…' : 'Discover →'}
-                  </Button>
-                )}
-                {currentStep === 'analysis' && (
-                  <Button
-                    onClick={() => {
-                      setCurrentStep('preview');
-                    }}
-                    disabled={!analysisResult?.isValid || !analysisResult?.formatSupported}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    Next →
-                  </Button>
-                )}
-                {currentStep === 'preview' && (
-                  <Button
-                    onClick={beginImport}
-                    disabled={!importOptions || importOptions.selectedSchemas.length === 0}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    Import →
-                  </Button>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  // This is handled by handleSourceClick
-                }}
-                disabled={!selectedSource}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-              >
-                Next →
-              </Button>
-            </>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+              ) : undefined
+            }
+          />
+        </DialogContent>
+      </Dialog>
+      <RecentImportJobsDrawer open={jobsDrawerOpen} onOpenChange={setJobsDrawerOpen} />
+    </>
   );
 };
 
 export default ImportDialog;
-
