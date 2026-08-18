@@ -7,17 +7,28 @@
  * - Switch toggling the hosted mock via `PUT /api/versions/{id}/mock` (SIM-2.1, #4422);
  *   draft versions enable a private mock gated by API key at runtime (#4446).
  * - Stable mock base URL with a copy-to-clipboard button (confirmation toast).
- * - 30-day usage sparkline fed by the SIM-1.5 (#4420) rollups; renders the shared
- *   chart empty state when no usage was recorded.
+ * - 30-day usage sparkline fed by the SIM-1.5 (#4420) rollups; says *No requests yet* when
+ *   no usage was recorded.
  * - "Scenarios" opens the SIM-4.2 (#4454) scenario override editor.
+ *
+ * Re-skinned in place by HIVE-6.2 (#5313) to `docs/mockups/build/versions.html`'s `.mock-cell`:
+ * the switch, the label and the PRIVATE pill on one row, the mono URL with its copy button
+ * under it, then Scenarios beside the 30-day sparkline. Every colour is a token now (the
+ * `ver-mock-*` block in `globals.css`); the sparkline is the HIVE-2.6 metrics kit's, whose
+ * empty state is the mockup's quiet *No requests yet* rather than the MCP chart frame's dashed
+ * box. Nothing it does has changed, and the words beside the switch come from
+ * `versionMockLabel` so the cell and its tests agree on them.
  */
 
 import { useState } from 'react';
 import { Copy, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
+import { Badge } from '../../ui/Badge';
+import { Button } from '../../ui/Button';
 import { Switch } from '../../ui/Switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/Tooltip';
-import { Sparkline } from '../../ui/mcp/charts/Sparkline';
+import { Sparkline } from '../../ui/metrics';
+import { versionMockLabel } from '../versions/versionsModel';
 import { MockScenarioEditor } from './MockScenarioEditor';
 
 export interface VersionMockChange {
@@ -125,12 +136,12 @@ export function VersionMockCell({
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col gap-1.5" data-testid={`version-mock-cell-${versionRecordId}`}>
-        <div className="flex items-center gap-2">
+      <div className="ver-mock" data-testid={`version-mock-cell-${versionRecordId}`}>
+        <div className="ver-mock__row">
           <Tooltip>
             <TooltipTrigger asChild>
               {/* span wrapper: Radix needs a hoverable element even when the switch is disabled */}
-              <span className="inline-flex">
+              <span className="ver-mock__switch">
                 <Switch
                   checked={mockEnabled}
                   disabled={saving}
@@ -149,54 +160,41 @@ export function VersionMockCell({
                   : 'Enable a private draft mock for parallel development (requires API key)'}
             </TooltipContent>
           </Tooltip>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {mockEnabled
-              ? mockPrivate
-                ? 'Private mock on'
-                : published
-                  ? 'Mock on'
-                  : 'Mock on'
-              : published
-                ? 'Mock off'
-                : 'Draft mock off'}
-          </span>
+          <span className="ver-mock__label">{versionMockLabel(published, mockEnabled, mockPrivate)}</span>
           {mockEnabled && mockPrivate && (
-            <span className="text-2xs uppercase tracking-wide font-semibold text-violet-600 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 px-1.5 py-0.5 rounded">
+            <Badge status="private" className="ver-mock__private">
               Private
-            </span>
+            </Badge>
           )}
         </div>
 
         {mockEnabled && mockBaseUrl && (
-          <div className="flex items-center gap-1.5">
-            <code
-              className="text-xs bg-gray-50 dark:bg-gray-900 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-mono max-w-[14rem] truncate block"
-              title={mockBaseUrl}
-            >
-              {mockBaseUrl}
-            </code>
-            <button
+          <div className="ver-mock__url" title={mockBaseUrl}>
+            <code className="mono">{mockBaseUrl}</code>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
+              className="ver-mock__copy"
               onClick={() => void handleCopy()}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-white flex-shrink-0"
               aria-label={`Copy mock URL for version ${versionLabel}`}
               title="Copy mock URL"
             >
-              <Copy className="h-3.5 w-3.5" />
-            </button>
+              <Copy aria-hidden />
+            </Button>
           </div>
         )}
 
         {mockEnabled && (
-          <>
+          <div className="ver-mock__row">
             <button
               type="button"
               onClick={() => setScenarioEditorOpen(true)}
-              className="inline-flex items-center gap-1 self-start text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline transition-colors"
+              className="ver-mock__scenarios"
               aria-label={`Edit mock scenarios for version ${versionLabel}`}
               data-testid={`version-mock-scenarios-button-${versionRecordId}`}
             >
-              <FlaskConical className="h-3.5 w-3.5" />
+              <FlaskConical aria-hidden />
               Scenarios
             </button>
             <MockScenarioEditor
@@ -206,16 +204,21 @@ export function VersionMockCell({
               open={scenarioEditorOpen}
               onOpenChange={setScenarioEditorOpen}
             />
-          </>
-        )}
-
-        {mockEnabled && usageSeries !== undefined && (
-          <Sparkline
-            data={usageSeries}
-            tone="emerald"
-            title={`Mock requests for v${versionLabel}, last 30 days`}
-            className="h-8 w-28"
-          />
+            {usageSeries !== undefined ? (
+              usageSeries.length === 0 ? (
+                <span className="ver-mock__quiet" data-testid={`version-mock-no-usage-${versionRecordId}`}>
+                  No requests yet
+                </span>
+              ) : (
+                <Sparkline
+                  data={usageSeries}
+                  tone="ok"
+                  label={`Mock requests for v${versionLabel}, last 30 days`}
+                  className="ver-mock__spark"
+                />
+              )
+            ) : null}
+          </div>
         )}
       </div>
     </TooltipProvider>

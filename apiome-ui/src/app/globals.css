@@ -12162,3 +12162,1540 @@ button.auth-divider:disabled {
   color: var(--fg-muted);
   overflow-wrap: anywhere;
 }
+
+/* ==========================================================================
+   VERSIONS  (HIVE-6.2, #5313)
+   --------------------------------------------------------------------------
+   `docs/mockups/build/versions.html`, whose page-local `<style>` block this
+   replaces (`.ver-cell`, `.versions-table`, `.fork-box`, `.flag`, `.mock-cell`,
+   `.gate`, `.lineage`, `.lifecycle-select`) together with the inline `style=`
+   attributes its header, its overview grid, its toolbar selects, its dialogs
+   and its publish gates carry.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 and 6.1 blocks above give. Every rule
+   leans on the density and font-scale tokens; the overview grid, the publish
+   dialog's two columns and the version cell's chip line are real grids and
+   flex rows that a utility string spells badly; and the quiet lines, the
+   section titles and the dialog heads have to sit *after* the unlayered
+   `h1`–`h4` and `p` base rules near line 2497, which outrank anything in
+   `@layer utilities`. `DataTable`'s own cell rules are utilities too, which is
+   how `.ver-table td` below can move the rows to `vertical-align: top` without
+   the primitive learning a prop for one screen.
+
+   The mockup froze twelve things in pixels that must not be frozen: the six
+   column widths (235/110/178/118/138/88), the 190px project select, the 230px
+   search box, the 150px author select, the 140px date inputs, the 380px aside,
+   the 165px mock URL, the 80×20 sparkline, the 22px copy button, the 16px flag,
+   the 320px row menu and the 300px spec editor. All are `rem`, a token, an
+   `aspect-ratio` or a viewport length here, so they follow all six font scales.
+
+   No hue is named below — every colour is a token, so the surface follows all
+   nine themes. Where a *word* decides the colour it is not here at all: the
+   lifecycle and status pills, the gate badges and the mock cell's PRIVATE pill
+   take their tone from `ui/statusVocabulary.ts`, and the lint chip from its
+   A–F bands. Six measured deviations from the mockup, four of them ones the
+   earlier tickets already made:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle` or `--fg-faint`,
+     neither of which clears AA at these sizes on the canvas;
+   * the archived row is *not* faded to `opacity:.8` — the Archived pill and
+     the outline chips already say so, and fading a row fades its text;
+   * the row menu's Delete inks red only when highlighted, the reason the 6.1
+     block records: no red in the token layer clears AA as 13px text at rest;
+   * the Status column's *Disabled* pill is the vocabulary's `disabled`
+     (outline), not the mockup's `data-status="error"`: one word, one colour,
+     and the projects table beside it already prints Disabled in outline;
+   * no `-fg` ink is drawn on the surface, and no `-soft` fill under `--fg`:
+     outside the light and dark themes the pairs are not calibrated for that —
+     `--ok-fg` measures 1.5:1 on Nord's surface, `--fg` 1.1:1 on Nord's
+     `--warn-soft` — so the published date's green rides its check glyph, the
+     unpublish verb is plain, the breaking-changes gate is marked by a `--warn`
+     hairline rather than a fill, and every verdict is a `Badge` or an `Alert`;
+   * links are `--accent-fg` at rest (`--accent` measures 4.1:1 as ink in four
+     themes), with `--accent` returning on hover under the underline.
+
+   Three classes are borrowed rather than restated: `.tnt-icon-tile` from the
+   tenants block (the tinted square at the head of each dialog), `.tnt-menu`
+   and `.tnt-menu__item` for the row menu, and `.prj-menu__item--danger`'s
+   rule is restated as `.ver-menu__item--danger` because the two screens' menus
+   should be able to drift apart. `.input-wrap` (HIVE-2.1) frames the timeline
+   search.
+   ========================================================================== */
+
+/* ---- The honey flag -----------------------------------------------------
+   The one-word marker beside every `FEATURE_GITLIKE` affordance in a
+   non-production build. Honey, per DESIGN.md §2: a marker, never a warning.
+   Its type is the smallest step of the scale rather than the mockup's frozen
+   10px, so it follows the font-size preference with the row it sits in. */
+.ver-flag {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--space-1);
+  block-size: 1rem;
+  padding-inline: calc(var(--space-1) + 0.0625rem);
+  border-radius: var(--r-xs);
+  background: var(--honey-soft);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--honey-fg);
+  white-space: nowrap;
+}
+
+.ver-flag > svg {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+}
+
+/* ---- Shared quiet type -------------------------------------------------- */
+.ver-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* Links take `--accent-fg`, not `--accent`: `--accent` is a fill and measures 4.1:1 as ink
+   on the surface in four themes (the shortcut sheet's note); the `-fg` step clears 7:1 in all
+   nine. `--accent` returns on hover, where the underline is doing the work. */
+.ver-link {
+  color: var(--accent-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.125em;
+}
+
+/* ---- The header ---------------------------------------------------------
+   The title carries three chips (format, head status, stored quality); at the
+   Largest scale on a narrow column they wrap under the name instead of holding
+   the row open, which is the mockup's `.page-title { flex-wrap: wrap }`. */
+.ver-header .page-header__title {
+  flex-wrap: wrap;
+  row-gap: var(--space-2);
+}
+
+.ver-header__badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ver-desc-link {
+  color: var(--accent-fg);
+}
+
+.ver-desc-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* The project select's trigger. `inline-size` beats the primitive's `w-full`
+   because this rule is unlayered; the trigger still shrinks with the header's
+   action cluster because it may wrap. */
+.ver-project-select {
+  inline-size: 12rem;
+  max-inline-size: 100%;
+}
+
+.ver-tab-glyph {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+/* The Merge button and its flag, as one unit in the action cluster. */
+.ver-header__gitlike {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* A tab's panel that arrives without a card of its own (the conversion history). */
+.ver-panel {
+  padding: var(--card-pad);
+}
+
+/* ---- Banners ------------------------------------------------------------ */
+.ver-banners {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ver-banner__glyph {
+  margin-block-start: 0.0625rem;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+.ver-banner__title {
+  font-weight: 600;
+}
+
+/* Full ink, not the mockup's `opacity:.9`: this is the sentence the banner is
+   for, and a wash on a tinted ground is what pushes it under AA. */
+.ver-banner__body {
+  color: inherit;
+}
+
+.ver-banner__detail {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+}
+
+/* ---- The overview grid: related artifacts + project facts ---------------
+   `minmax(0, 1fr)` beside a `rem` aside; under a tablet width the aside drops
+   below, so nothing here can hold the document open sideways. */
+.ver-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 23.75rem;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 64rem) {
+  .ver-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- Related artifacts (shared with the catalog item detail) ------------ */
+.rart {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.rart__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: calc(var(--space-3) + 0.125rem) var(--card-pad);
+  border-bottom: 1px solid var(--border);
+}
+
+.rart__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.rart__title > svg {
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+  color: var(--fg-subtle);
+}
+
+.rart__all {
+  font-size: var(--fs-xs);
+  color: var(--accent-fg);
+  white-space: nowrap;
+}
+
+.rart__all:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.rart__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rart__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--card-pad);
+}
+
+.rart__row + .rart__row {
+  border-top: 1px solid var(--border);
+}
+
+.rart__row:hover {
+  background: color-mix(in srgb, var(--fg) 2.5%, transparent);
+}
+
+.rart__body {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.rart__name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* A deleted artifact is struck through and quiet — but quiet at `--fg-muted`,
+   which still reads, not the mockup's `opacity:.7` on the whole row. */
+.rart__name-deleted {
+  color: var(--fg-muted);
+  text-decoration: line-through;
+}
+
+.rart__link {
+  color: var(--fg);
+}
+
+.rart__link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.rart__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.rart__empty {
+  padding: var(--space-3) var(--card-pad);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.rart__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--card-pad);
+  border-top: 1px solid var(--border);
+}
+
+.rart__suggest {
+  align-self: flex-start;
+}
+
+.rart__suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The mockup's dashed `.card--flat` — an offer, not yet a row. */
+.rart__suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: calc(var(--space-2) + 0.125rem) var(--space-3);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--r-md);
+}
+
+.rart__suggestion-name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rart__suggestion-reason {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Project facts aside ------------------------------------------------ */
+.ver-facts {
+  padding: var(--card-pad);
+}
+
+.ver-facts__title {
+  margin-block-end: var(--space-3);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+}
+
+.ver-kv {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--fs-sm);
+}
+
+.ver-kv dt {
+  color: var(--fg-muted);
+}
+
+.ver-kv dd {
+  margin: 0;
+  min-inline-size: 0;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.ver-facts__rule {
+  margin-block: var(--space-4) var(--space-3);
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.ver-facts__links {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.ver-facts__links > * {
+  justify-content: flex-start;
+}
+
+/* ---- Timeline filter bar ------------------------------------------------ */
+.ver-filters {
+  padding: var(--space-3) var(--space-4);
+}
+
+.ver-filters__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ver-filters__label {
+  margin-inline-end: var(--space-1);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.ver-filters__search {
+  inline-size: 14.375rem;
+  max-inline-size: 100%;
+}
+
+.ver-filters__author {
+  inline-size: 9.375rem;
+  max-inline-size: 100%;
+}
+
+.ver-filters__date {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.ver-filters__date > input {
+  inline-size: 8.75rem;
+}
+
+/* ---- The git-like chip panels ------------------------------------------- */
+.ver-gitlike {
+  padding: var(--space-3) var(--space-4);
+}
+
+.ver-gitlike__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.ver-gitlike__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ver-gitlike__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.ver-gitlike__label > svg {
+  inline-size: 0.8125rem;
+  block-size: 0.8125rem;
+}
+
+.ver-gitlike__chip-set {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* hive.css §11 `.chip`, as a static label rather than a filter. */
+.ver-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space-1) + 0.125rem);
+  block-size: var(--control-h-sm);
+  padding-inline: calc(var(--space-2) + 0.125rem);
+  border-radius: var(--r-full);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.ver-chip > svg {
+  inline-size: 0.8125rem;
+  block-size: 0.8125rem;
+  flex-shrink: 0;
+}
+
+.ver-chip .mono {
+  color: var(--fg);
+}
+
+.ver-chip.is-active {
+  background: var(--fg);
+  color: var(--bg-surface);
+  box-shadow: none;
+}
+
+.ver-chip.is-active .mono {
+  color: inherit;
+}
+
+.ver-chip.is-active .ver-chip__badge {
+  background: var(--bg-surface);
+  color: var(--fg-muted);
+}
+
+.ver-chip__mark {
+  inline-size: 0.6875rem;
+  block-size: 0.6875rem;
+}
+
+.ver-chip--static {
+  block-size: 1.375rem;
+}
+
+.ver-gitlike__remove:hover {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.ver-gitlike__note {
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-gitlike__em {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* ---- The history-graph card (git-like) --------------------------------- */
+.ver-graph-card {
+  padding: var(--space-3) var(--space-4);
+}
+
+.ver-graph-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.ver-graph-card__head > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-subtle);
+}
+
+.ver-graph-card__title {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* ---- The table ----------------------------------------------------------
+   Column widths in `rem`, on the `<th>` and the `<td>` alike so an auto-layout
+   table honours them, and the version column's floor so its chip line does not
+   fold under the head at a narrow width — the wrapper scrolls instead. */
+.ver-col-version {
+  inline-size: 14.6875rem;
+  min-inline-size: 14.6875rem;
+}
+
+.ver-col-status {
+  inline-size: 6.875rem;
+}
+
+.ver-col-mock {
+  inline-size: 11.125rem;
+}
+
+.ver-col-creator {
+  inline-size: 8.625rem;
+}
+
+.ver-col-created {
+  inline-size: 8.625rem;
+}
+
+.ver-col-actions {
+  inline-size: 7rem;
+}
+
+/* The mockup: `td { vertical-align: top; padding-top: 10px; }`. `DataTable`
+   centres single-line rows on `--row-h`; the version and mock cells are two
+   and three lines, and top alignment is what keeps a chip line, a status pill
+   and a name reading as one row. Unlayered, so it wins over the primitive's
+   utility class without the primitive learning a prop for one screen. */
+.ver-table td {
+  vertical-align: top;
+  padding-block: calc(var(--space-2) + 0.125rem);
+}
+
+.ver-table td[data-row-actions],
+.ver-table [data-row-actions] {
+  padding-block-start: 0;
+}
+
+.ver-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.ver-cell__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* The mono link that opens the spec — a `<button>` with a link's manners. */
+.ver-cell__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  text-align: start;
+}
+
+.ver-cell__link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.ver-cell__id {
+  font-size: var(--fs-2xs);
+}
+
+/* An amber tag chip — a git tag on a revision. Honey because it is a *name*
+   the reader gave, not a state (DESIGN.md §2). */
+.ver-tag {
+  display: inline-flex;
+  align-items: center;
+  block-size: 1.25rem;
+  padding-inline: calc(var(--space-1) + 0.1875rem);
+  border-radius: var(--r-xs);
+  background: var(--honey-soft);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--honey-fg);
+  white-space: nowrap;
+}
+
+/* The violet fork box — an origin, not a state, so a tint of its own. */
+.ver-fork {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space-1) + 0.125rem);
+  align-self: flex-start;
+  max-inline-size: 100%;
+  padding: 0.1875rem var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--violet-soft);
+  font-size: var(--fs-2xs);
+  color: var(--violet-fg);
+}
+
+.ver-fork > svg {
+  inline-size: 0.6875rem;
+  block-size: 0.6875rem;
+  flex-shrink: 0;
+}
+
+.ver-fork__word {
+  font-weight: 600;
+}
+
+/* Revision / changelog: the note and its changelog, each clipped to the
+   mockup's 260px, on the *inner* block so an auto-layout table cannot widen
+   the column instead (the trap HIVE-5.8 measured). */
+.ver-note {
+  max-inline-size: 16.25rem;
+  min-inline-size: 0;
+}
+
+.ver-note__title,
+.ver-note__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ver-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ver-creator {
+  display: block;
+  min-inline-size: 0;
+}
+
+.ver-stamp {
+  display: block;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* The green published date. The mockup inks the words `--ok-fg`; measured, that ink is
+   calibrated for `--ok-soft` and lands at 1.5–3.5:1 on the surface in five themes. So the
+   words stay `--fg-muted` and the green rides the check glyph beside them, at `--ok` — a
+   mark, which WCAG 1.4.11 holds to 3:1, and `--ok` clears that in all nine (3.15 at worst). */
+.ver-stamp__published {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-start: 0.0625rem;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-stamp__published > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  color: var(--ok);
+}
+
+/* Hover row actions: the publish glyph is the ok mark (`--ok`, 3:1 everywhere). The mockup
+   inks unpublish `--orange`, which measures 2.98:1 in Nord — under the mark floor — so that
+   glyph stays the button's own muted ink, and its label says the verb. */
+.ver-row-action--publish {
+  color: var(--ok);
+}
+
+/* ---- The row menu -------------------------------------------------------
+   `.tnt-menu` carries the surface; this widens it to the mockup's 320px, in
+   rem, adds the separator `.tnt-menu` never declared, and the two verbs. */
+.ver-menu {
+  min-inline-size: 18rem;
+  max-inline-size: min(24rem, calc(100vw - 1rem));
+}
+
+.ver-menu__sep {
+  block-size: 1px;
+  margin: var(--space-1) var(--space-1);
+  background: var(--border);
+}
+
+.ver-menu__item[data-disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ver-menu__flag {
+  margin-inline-start: auto;
+}
+
+/* Publish's glyph is the ok mark; its words are the menu's own ink (see the stamp above for
+   why the `-fg` inks cannot be text on the surface). Unpublish is an ordinary row. */
+.ver-menu__item--publish > svg {
+  color: var(--ok);
+}
+
+/* Delete inks red only when highlighted — the 6.1 measurement, restated. */
+.ver-menu__item--danger[data-highlighted],
+.ver-menu__item--danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.ver-menu__item--danger[data-highlighted] > svg,
+.ver-menu__item--danger:hover > svg {
+  color: currentColor;
+}
+
+/* ---- The toolbar's selects and its sort mark ---------------------------- */
+.ver-toolbar-select {
+  inline-size: 10.625rem;
+  max-inline-size: 100%;
+}
+
+.ver-toolbar-select--history {
+  inline-size: 12.5rem;
+}
+
+.ver-sort-mark {
+  margin-inline-start: auto;
+  padding-inline-start: var(--space-4);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.ver-foot-side {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* ---- The mock cell (VersionMockCell, shared with Published) ------------- */
+.ver-mock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 9.375rem;
+}
+
+.ver-mock__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ver-mock__switch {
+  display: inline-flex;
+}
+
+.ver-mock__label {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.ver-mock__private {
+  text-transform: uppercase;
+}
+
+.ver-mock__url {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-inline-size: 10.3125rem;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.ver-mock__url > code {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ver-mock__copy {
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
+  padding: 0;
+}
+
+.ver-mock__scenarios {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--fs-xs);
+  color: var(--accent-fg);
+  cursor: pointer;
+}
+
+.ver-mock__scenarios:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.ver-mock__scenarios > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+/* The metrics kit's sparkline keeps its own 5:1 ratio; only the width is stated. */
+.ver-mock__spark {
+  inline-size: 5rem;
+  flex-shrink: 0;
+}
+
+.ver-mock__quiet {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The lint chip (VersionLintBadge) ----------------------------------- */
+.ver-lint-badge {
+  border: 0;
+  cursor: pointer;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.ver-lint-badge:hover {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+/* ---- Dialogs ------------------------------------------------------------ */
+.ver-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* The head: a tile, then the title block. `DialogHeader` stacks by default;
+   this is unlayered, so the row wins. */
+.ver-dialog__head {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.ver-dialog__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.ver-dialog__title-mono {
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.ver-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-block-size: 0;
+}
+
+.ver-dialog__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 40rem) {
+  .ver-dialog__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ver-dialog__span-2 {
+  grid-column: 1 / -1;
+}
+
+.ver-dialog__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ver-form-section + .ver-form-section {
+  padding-block-start: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.ver-form-section__title {
+  margin-block-end: var(--space-3);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ver-field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) + 0.125rem);
+  min-inline-size: 0;
+}
+
+.ver-field__label {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--fg);
+}
+
+/* A hint under a control. `--fg-muted`, not the mockup's `--fg-subtle`. */
+.ver-hint {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-hint--row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ver-hint--row > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+.ver-hint__em {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ver-dialog__note {
+  margin-block-start: var(--space-3);
+}
+
+.ver-dialog__subnote {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+}
+
+.ver-dialog__subnote-title {
+  font-weight: 600;
+}
+
+/* hive.css §14 `.callout` — a quiet aside with a rule on its leading edge. */
+.ver-callout {
+  padding: var(--space-3) calc(var(--space-3) + 0.125rem);
+  border-inline-start: 3px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-dialog__footer {
+  align-items: center;
+}
+
+.ver-dialog__footnote {
+  margin-inline-end: auto;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The lineage snippet ------------------------------------------------ */
+/* On the surface with a hairline, not the mockup's `.card--soft`: `--fg-muted` on `--bg-subtle`
+   is 4.35:1 in Solarized (the 6.1 measurement), and this card is nothing but muted lines. */
+.ver-lineage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: calc(var(--space-2) + 0.125rem) var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.ver-lineage__note,
+.ver-lineage__loading {
+  font-size: var(--fs-sm);
+}
+
+.ver-lineage__loading {
+  color: var(--fg-muted);
+}
+
+.ver-lineage__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ver-lineage__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.ver-lineage__hint {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-lineage__chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--space-1) + 0.125rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-lineage__step {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space-1) + 0.125rem);
+}
+
+.ver-lineage__arrow {
+  color: var(--fg-subtle);
+  user-select: none;
+}
+
+.ver-lineage__cur {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ver-lineage__source {
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+.ver-lineage__merge {
+  padding-inline-start: var(--space-2);
+  border-inline-start: 2px solid var(--border-strong);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-lineage__merge-word {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.ver-lineage__ascii {
+  margin: 0;
+  padding-block-start: var(--space-2);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+  overflow-x: auto;
+}
+
+/* ---- The publish dialog -------------------------------------------------
+   Two columns: the form, and a `rem` aside for the three gates. Collapses
+   under a tablet width, so a `dialog--xl` on a phone is one column. */
+.ver-publish {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 23.75rem;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 56rem) {
+  .ver-publish {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ver-publish__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.ver-publish__visibility {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 40rem) {
+  .ver-publish__visibility {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The visibility choice as a selectable card (hive.css `.card--flat` +
+   `.card--selected`): the whole card is the label, the radio sits in its head. */
+.ver-radio-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: calc(var(--space-2) + 0.125rem) var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  cursor: pointer;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.ver-radio-card:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.ver-radio-card.is-selected {
+  box-shadow: 0 0 0 2px var(--accent), var(--shadow-sm);
+}
+
+.ver-radio-card > input {
+  margin-block-start: 0.1875rem;
+}
+
+.ver-radio-card > span {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.ver-radio-card__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ver-radio-card__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-publish__force {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ver-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.ver-publish__gates {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-2) + 0.125rem);
+  min-inline-size: 0;
+}
+
+.ver-publish__gates-title {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* ---- The publication change report card ---------------------------------- */
+.ver-cr {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) calc(var(--space-3) + 0.125rem);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* Compiled but hidden: the offer's shape, dashed, with nothing to fill in. */
+.ver-cr--inert {
+  border: 1.5px dashed var(--border-strong);
+  box-shadow: none;
+}
+
+.ver-cr__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.ver-cr__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ver-cr__note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-cr__pair {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The preview: three markdown parts in a code-like well, capped and scrolling
+   inside itself. `40vh` rather than the mockup's frozen 110px so it grows with
+   the viewport and never with the font scale alone. */
+.ver-cr__preview {
+  max-block-size: min(20rem, 40vh);
+  overflow-y: auto;
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  text-align: start;
+}
+
+.ver-cr__preview-part {
+  margin-block-end: var(--space-3);
+  padding-block-end: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ---- A publish gate ----------------------------------------------------- */
+.ver-gate {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) calc(var(--space-3) + 0.125rem);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* The breaking-changes gate is marked by an inset `--warn` hairline, not the mockup's
+   `--warn-soft` fill: five themes leave `--warn-soft` at the light tint, on which this
+   card's `--fg` and `--fg-muted` lines measure about 1.1:1. The same call 6.1 made for
+   its attention card; the verdict inside is an `Alert`, which carries its own pair. */
+.ver-gate--warn {
+  box-shadow: inset 0 0 0 1px var(--warn);
+}
+
+.ver-gate__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.ver-gate__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ver-gate__title > svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  color: var(--fg-subtle);
+}
+
+.ver-gate__badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ver-gate__sub {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.ver-gate__em {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ver-gate__banner {
+  padding: var(--space-2) calc(var(--space-2) + 0.125rem);
+  font-size: var(--fs-xs);
+}
+
+.ver-gate__note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-gate__loading {
+  padding-block: var(--space-2);
+}
+
+.ver-gate__disclosure {
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.ver-gate__toggle {
+  display: flex;
+  inline-size: 100%;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  background: none;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+  text-align: start;
+  cursor: pointer;
+}
+
+.ver-gate__toggle > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+.ver-gate__findings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-block-size: 12rem;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+  overflow-y: auto;
+  list-style: none;
+  font-size: var(--fs-xs);
+}
+
+/* The verification gate's rows are not a disclosure, so no rule above them. */
+.ver-gate__findings--gates {
+  max-block-size: none;
+  padding: 0;
+  border-top: 0;
+  overflow: visible;
+}
+
+.ver-gate__finding {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  color: var(--fg);
+}
+
+/* hive.css §11 `.tag`: the rule id as a mono chip. */
+.ver-gate__tag {
+  display: inline-flex;
+  align-items: center;
+  block-size: 1.25rem;
+  padding-inline: calc(var(--space-1) + 0.1875rem);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.ver-gate__path {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.ver-gate__message {
+  flex-basis: 100%;
+  color: var(--fg-muted);
+}
+
+.ver-gate__truncated {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.ver-gate__gate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-xs);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: var(--fs-xs);
+}
+
+/* The policy's warnings ride inside a warn `Alert`, whose ink is the pair's; the list only
+   sets its rhythm. */
+.ver-gate__warnings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- The spec viewer ---------------------------------------------------- */
+.ver-spec__format {
+  align-self: flex-start;
+}
+
+/* The editor's height is a viewport share, not the mockup's frozen 300px, so
+   a tall screen sees more of the document and a short one still sees the
+   export cards below it. */
+.ver-spec__editor {
+  block-size: min(50vh, 32rem);
+  min-block-size: 12rem;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.ver-spec__loading {
+  block-size: 100%;
+}
+
+.ver-spec__filename {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+}
