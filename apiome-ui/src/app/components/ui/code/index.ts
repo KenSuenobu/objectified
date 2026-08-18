@@ -16,3 +16,6 @@ export * from './JsonDiffViewer';
 export * from './Disclosure';
 // Monaco's type metrics, in one place (HIVE-1.6, #5279).
 export * from './editorTypography';
+// The Hive palette as a Monaco theme (HIVE-5.7, #5310) — one theme id every editor asks
+// for, resolved from the live tokens so it follows all nine themes.
+export * from './monacoHiveTheme';

@@ -67,3 +67,89 @@ export function parseValidationDetail(error: unknown): ServerValidationDetail | 
   }
   return null;
 }
+
+// ---------------------------------------------------------------------------------------
+// Dry-run findings as markers (HIVE-5.7, #5310)
+// ---------------------------------------------------------------------------------------
+
+/**
+ * Monaco's `MarkerSeverity`, by the severity string the linter speaks.
+ *
+ * The numerics rather than the enum for the reason {@link YAML_ERROR_MARKER_SEVERITY}
+ * gives: this module is imported by pure unit tests and by the page's model, neither of
+ * which should pull `monaco-editor` into their bundle to read four constants.
+ */
+export const MARKER_SEVERITY: Readonly<Record<'error' | 'warning' | 'info', number>> = {
+  error: 8,
+  warning: 4,
+  info: 2,
+};
+
+/** A marker, in the shape `monaco.editor.setModelMarkers` takes. */
+export interface YamlMarker extends YamlPointerRange {
+  /** Monaco's numeric severity. */
+  severity: number;
+  /** The sentence shown in the hover and the problems list. */
+  message: string;
+  /** The rule the marker came from, shown after the message as Monaco's `source`. */
+  source: string;
+}
+
+/** One dry-run violation, reduced to what a marker needs. */
+export interface MarkerFinding {
+  /** The custom rule that fired. */
+  rule: string;
+  /** How badly. */
+  severity: 'error' | 'warning' | 'info';
+  /** What it says. */
+  message: string;
+  /** Where in the *document under test* — carried into the marker so the two can be paired. */
+  path?: string;
+}
+
+/**
+ * Map a dry run's results onto marker ranges in the draft YAML.
+ *
+ * This is the acceptance criterion "dry-run results map back to editor markers", and the
+ * mapping it makes is worth being explicit about, because there are two documents in play.
+ * A finding's `path` points into the **spec that was linted** (`paths./refunds.post…`),
+ * which is not open in this editor and has no line here. What the reader needs to see is
+ * *which rule they just wrote* produced it — so the marker is placed on that rule's own
+ * declaration, `rules.<ruleId>`, and the spec path travels in the message.
+ *
+ * A rule that aborted (`ruleErrors`) is always an error marker: it did not merely fail the
+ * document, it failed to run at all, and that is a defect in the YAML rather than in the
+ * spec.
+ *
+ * @param findings The violations the dry run reported.
+ * @param ruleErrors Rules that aborted during evaluation, by rule id.
+ * @param yaml The draft the editor is showing.
+ * @returns One marker per finding and per aborted rule, in that order.
+ */
+export function previewMarkers(
+  findings: readonly MarkerFinding[],
+  ruleErrors: Readonly<Record<string, string>>,
+  yaml: string,
+): YamlMarker[] {
+  const markers: YamlMarker[] = [];
+
+  for (const finding of findings) {
+    markers.push({
+      ...pointerToYamlRange(`rules.${finding.rule}`, yaml),
+      severity: MARKER_SEVERITY[finding.severity] ?? MARKER_SEVERITY.info,
+      message: finding.path ? `${finding.message} (${finding.path})` : finding.message,
+      source: finding.rule,
+    });
+  }
+
+  for (const [ruleId, reason] of Object.entries(ruleErrors)) {
+    markers.push({
+      ...pointerToYamlRange(`rules.${ruleId}`, yaml),
+      severity: MARKER_SEVERITY.error,
+      message: `Rule aborted during evaluation — ${reason}`,
+      source: ruleId,
+    });
+  }
+
+  return markers;
+}

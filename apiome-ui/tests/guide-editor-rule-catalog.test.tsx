@@ -150,8 +150,11 @@ describe('GuideEditorClient — rule catalog rendering', () => {
   it('renders every rule grouped by category with rationale and default severity', async () => {
     await renderEditor();
 
-    // Guide header, tab, and live count.
-    expect(screen.getByText('Payments Guide')).toBeInTheDocument();
+    // Guide header, tab, and live count. The name is asserted on the `h1` rather than by
+    // text: the redesign's breadcrumb ends on the guide, so the name is on the page twice.
+    expect(
+      screen.getByRole('heading', { name: 'Payments Guide', level: 1 }),
+    ).toBeInTheDocument();
     expect(screen.getByText('Rule catalog')).toBeInTheDocument();
     expect(screen.getByText('2 of 3 rules enabled')).toBeInTheDocument();
 
