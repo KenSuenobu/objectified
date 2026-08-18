@@ -6,6 +6,10 @@ import type { OnMount } from '@monaco-editor/react';
 import { cn } from '@lib/utils';
 import { guardedEditorOptions } from './exportViewerGuards';
 import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
+import {
+  useHiveMonacoTheme,
+  type MonacoThemeHost,
+} from '@/app/components/ui/code/monacoHiveTheme';
 
 /**
  * ReadOnlyCodeViewer — the shared read-only `@monaco-editor/react` viewer (MFX-43.1, #4361).
@@ -49,6 +53,8 @@ interface ViewerEditorProps {
   /** Forwarded by next/dynamic to {@link OfflineCodeFallback} if the editor chunk fails to load. */
   fallbackTestId?: string;
   options?: Record<string, unknown>;
+  /** Defines the Hive theme before the editor is created — see {@link useHiveMonacoTheme}. */
+  beforeMount?: (monaco: MonacoThemeHost) => void;
   onMount?: OnMount;
 }
 
@@ -95,11 +101,24 @@ const READ_ONLY_OPTIONS = {
   scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
 };
 
+/**
+ * Which palette the editor is painted in.
+ *
+ * `app` is Monaco's own `vs` / `vs-dark` pair, chosen by the `dark` class — what every export
+ * surface has always used. `hive` is the app's live token palette
+ * ({@link useHiveMonacoTheme}), which follows all nine themes rather than only the two: on
+ * Whiteboard or Solarized, `vs-dark` is a black box on a page the reader asked to be pale.
+ * New surfaces should ask for `hive`; the default stays `app` so no existing caller changes.
+ */
+export type ReadOnlyCodeViewerTheme = 'app' | 'hive';
+
 export interface ReadOnlyCodeViewerProps {
   /** The document text to display. */
   value: string;
   /** The Monaco language id for syntax highlighting (e.g. `protobuf`, `graphql`, `json`). */
   language: string;
+  /** Which palette to paint in. Defaults to `app` — Monaco's `vs` / `vs-dark`. */
+  theme?: ReadOnlyCodeViewerTheme;
   /** Soft-wrap long lines. Defaults to `'off'` (emitted specs are read horizontally). */
   wordWrap?: 'on' | 'off';
   /**
@@ -137,8 +156,10 @@ export interface ReadOnlyCodeViewerProps {
 }
 
 /**
- * The shared read-only code viewer. Tracks the app theme by observing the `dark` class Next-Themes
- * toggles on `<html>`, so it flips between Monaco's `vs-dark` and `vs` live as the user switches.
+ * The shared read-only code viewer. With the default `theme="app"` it tracks the `dark` class
+ * Next-Themes toggles on `<html>`, flipping between Monaco's `vs-dark` and `vs` live as the user
+ * switches; with `theme="hive"` it paints from the app's own tokens instead, so it follows all
+ * nine appearances rather than only light and dark (HIVE-6.6, #5317).
  *
  * @param props The document, its language, and presentation options.
  * @returns The read-only Monaco editor (or its offline fallback) in a themed container.
@@ -146,6 +167,7 @@ export interface ReadOnlyCodeViewerProps {
 export function ReadOnlyCodeViewer({
   value,
   language,
+  theme = 'app',
   wordWrap = 'off',
   folding = true,
   overlay,
@@ -159,6 +181,9 @@ export function ReadOnlyCodeViewer({
   const [isDark, setIsDark] = useState(false);
   // One name for the container region and for Monaco's textarea, so the two never disagree.
   const ariaLabel = `${documentLabel ?? language} — read-only ${language} viewer`;
+  // Called unconditionally — a hook cannot be conditional, and defining the Hive theme costs
+  // one `defineTheme` call whether or not this viewer is the one that asked for it.
+  const hiveTheme = useHiveMonacoTheme();
 
   useEffect(() => {
     const sync = () => setIsDark(document.documentElement.classList.contains('dark'));
@@ -187,7 +212,8 @@ export function ReadOnlyCodeViewer({
       <MonacoEditor
         height={fillsParent ? '100%' : height}
         language={language}
-        theme={isDark ? 'vs-dark' : 'vs'}
+        theme={theme === 'hive' ? hiveTheme.theme : isDark ? 'vs-dark' : 'vs'}
+        beforeMount={hiveTheme.beforeMount}
         value={value}
         fallbackTestId={fallbackTestId}
         // The size-guarded options (MFX-43.5) are computed from the text actually being rendered —

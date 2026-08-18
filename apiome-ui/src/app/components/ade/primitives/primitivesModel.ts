@@ -71,6 +71,25 @@ export function viewFromFocusParam(value: string | null | undefined): Primitives
     : null;
 }
 
+/**
+ * The type id `?edit=` names, if any.
+ *
+ * `?focus=`'s sibling, and the second half of the same bug: the **type-detail** page's Edit
+ * action linked to `/ade/dashboard/primitives?edit=<id>` and nothing here read *that* parameter
+ * either, so "edit this type" landed the reader on an unfiltered list of every type in the
+ * registry. HIVE-6.6 (#5317) makes the address work; this is the parser that admits it.
+ *
+ * The value is only trimmed, never validated: an id that matches no row is a caller's problem to
+ * report (`handleEditPrimitive` already refuses one), not a reason to silently drop the link.
+ *
+ * @param value The raw `?edit=` value, or `null` when the parameter is absent.
+ * @returns The primitive id to open the editor on, or `null`.
+ */
+export function primitiveIdFromEditParam(value: string | null | undefined): string | null {
+  const candidate = (value ?? '').trim();
+  return candidate.length > 0 ? candidate : null;
+}
+
 // ---------------------------------------------------------------------------------------
 // KPI strip
 // ---------------------------------------------------------------------------------------
