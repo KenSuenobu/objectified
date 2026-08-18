@@ -13,6 +13,11 @@
  */
 
 import type { LucideIcon } from 'lucide-react';
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
+import {
+  FIDELITY_BUCKET_TONE,
+  PROJECTION_OUTCOME_TONE,
+} from '@/app/components/ade/version-dialogs/versionDialogsModel';
 import { resolveLucideIcon } from '../importSourceCatalog';
 import { kindGlyph } from './exportFidelityPreview';
 
@@ -202,8 +207,26 @@ export function tierLabel(tier: ExportFidelityTier): string {
 }
 
 /**
+ * The tone of a fidelity tier badge (HIVE-6.3, #5314).
+ *
+ * `FIDELITY_BUCKET_TONE` is the same table the version panel's target chips, the fidelity
+ * warning ring and the projection graph's node borders read, so one tier is one colour across
+ * the whole export hand-off — and, being a tone name rather than a class pair, it follows all
+ * nine themes.
+ *
+ * @param tier The tier the registry reported for this target.
+ * @returns The tone name to hand `Badge`.
+ */
+export function tierTone(tier: ExportFidelityTier): StatusTone {
+  return FIDELITY_BUCKET_TONE[tier] ?? FIDELITY_BUCKET_TONE['types-only'];
+}
+
+/**
  * CSS utility classes for a card's fidelity tier badge. Colors follow the export mockup:
  * lossless → green, lossy → amber, types-only (severe) → red.
+ *
+ * @deprecated Superseded by {@link tierTone}, which names a token rather than a palette pair.
+ * Still read by `ExportStudio`, which is redesigned by its own epic; nothing new should use it.
  */
 export function tierBadgeClass(tier: ExportFidelityTier): string {
   switch (tier) {
@@ -250,8 +273,20 @@ export interface FidelityChip {
   label: string;
   /** How many constructs fell into this bucket. */
   count: number;
-  /** CSS utility classes for the chip (mockup palette: red / amber / violet / green). */
+  /**
+   * CSS utility classes for the chip.
+   *
+   * @deprecated Superseded by {@link FidelityChip.tone} in HIVE-6.3 (#5314). Still read by the
+   * studio surfaces their own epic redesigns.
+   */
   className: string;
+  /**
+   * The chip's tone, from the shared status vocabulary — what `Badge` takes (HIVE-6.3, #5314).
+   *
+   * The same table `projectionNodeStrokeVar` reads, so the count chip and the graph node it
+   * summarises are the same colour.
+   */
+  tone: StatusTone;
   /**
    * The bucket's glyph (`✕ ≈ ✚ ✓`, from {@link kindGlyph}), rendered before the count so the chip
    * distinguishes itself by shape as well as colour (MFX-41.5 — no colour-only status).
@@ -271,6 +306,7 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
       label: 'dropped',
       count: fidelity.dropped,
       className: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+      tone: PROJECTION_OUTCOME_TONE.dropped,
       glyph: kindGlyph('drop'),
     },
     {
@@ -278,6 +314,7 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
       label: 'approximated',
       count: fidelity.approximated,
       className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+      tone: PROJECTION_OUTCOME_TONE.approximated,
       glyph: kindGlyph('approx'),
     },
     {
@@ -285,6 +322,7 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
       label: 'synthesized',
       count: fidelity.synthesized,
       className: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
+      tone: PROJECTION_OUTCOME_TONE.synthesized,
       glyph: kindGlyph('synth'),
     },
   ];
@@ -294,6 +332,7 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
     label: 'clean',
     count: fidelity.preserved,
     className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+    tone: PROJECTION_OUTCOME_TONE.clean,
     glyph: kindGlyph('ok'),
   });
   return chips;

@@ -11,6 +11,7 @@
  * `./exportTargetCatalog.ts`, whose card type it orders.
  */
 
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
 import type { ExportTargetCard, TargetFidelitySummary } from './exportTargetCatalog';
 
 /** How the target grid is ordered. */
@@ -169,20 +170,27 @@ export function bandLabel(band: ExportReadinessBand): string {
 }
 
 /**
- * CSS utility classes for a card's readiness badge. Follows the fidelity palette so the two
- * badges read as one system: green = go, amber = look first, red = refused, grey = cannot run.
+ * The tone of a card's readiness badge (HIVE-6.3, #5314).
+ *
+ * Follows the fidelity vocabulary so the two badges on one card read as one system: green =
+ * go, amber = look first, red = refused, neutral = cannot run. It returned Tailwind palette
+ * pairs until the Versions redesign; a tone name is what `Badge` takes, and it is what makes
+ * the pair follow all nine themes together.
+ *
+ * @param band The pre-flight band.
+ * @returns The tone name to hand `Badge`.
  */
-export function bandBadgeClass(band: ExportReadinessBand): string {
+export function bandTone(band: ExportReadinessBand): StatusTone {
   switch (band) {
     case 'ready':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
+      return 'ok';
     case 'caution':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+      return 'warn';
     case 'blocked':
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300';
+      return 'danger';
     case 'unavailable':
     default:
-      return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+      return 'neutral';
   }
 }
 

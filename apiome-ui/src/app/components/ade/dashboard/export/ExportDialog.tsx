@@ -31,6 +31,7 @@ import { zipFilenameFor, type EmittedArtifact } from './exportArtifactPreview';
 import { buildZip } from './zipBundle';
 import { downloadBlob, filenameFromDisposition } from './exportDownload';
 import { exportStudioHref, type ExportStudioOrigin } from './exportStudioLink';
+import type { ExportStudioStep } from './exportStudioUrlState';
 import {
   changedOptions,
   exportTargetCards,
@@ -81,6 +82,43 @@ interface ExportDialogProps {
 }
 
 type Step = 'source' | 'target' | 'fidelity' | 'export';
+
+/**
+ * The Studio stop that corresponds to a dialog step (HIVE-6.3, #5314).
+ *
+ * The two steppers are not the same list — the dialog folds the Studio's *options* and *verify*
+ * stops into one *Fidelity* view, and its *export* stop has no Studio equivalent because the
+ * Studio re-verifies before it generates. The mapping keeps a reader roughly where they were:
+ *
+ * | dialog     | Studio    |
+ * | ---------- | --------- |
+ * | `source`   | `source`  |
+ * | `target`   | `target`  |
+ * | `fidelity` | `options` |
+ * | `export`   | `verify`  |
+ *
+ * With no target chosen the Studio cannot establish anything past `target`, so the stop is
+ * clamped there; `exportStudioUrlState` clamps again on read, and this only avoids minting a
+ * link that would visibly snap backwards.
+ *
+ * @param step Where the dialog is.
+ * @param hasTarget Whether a target has been selected.
+ * @returns The Studio stop to resume at.
+ */
+export function studioStepForDialogStep(step: Step, hasTarget: boolean): ExportStudioStep {
+  if (!hasTarget) return step === 'source' ? 'source' : 'target';
+  switch (step) {
+    case 'source':
+      return 'source';
+    case 'target':
+      return 'target';
+    case 'fidelity':
+      return 'options';
+    case 'export':
+    default:
+      return 'verify';
+  }
+}
 
 const STEP_LABELS = ['Source', 'Target', 'Fidelity', 'Export'] as const;
 const STEP_ORDER: Step[] = ['source', 'target', 'fidelity', 'export'];
@@ -180,9 +218,14 @@ export function ExportDialog({
   }, [reset, onClose]);
 
   /**
-   * Escalate to the full-page Export Studio (MFX-41.1), carrying the current selection: the
-   * source coordinates and, when one is picked, the chosen target. The dialog is the quick path;
-   * the Studio is where a verify-then-generate workflow gets room to work.
+   * Escalate to the full-page Export Studio (MFX-41.1), carrying the current selection.
+   *
+   * HIVE-6.3 (#5314) made "the current selection" mean all of it. The link used to carry the
+   * source coordinates and the chosen target only, so a reader who had picked GraphQL, unticked
+   * *Emit input types* and read the fidelity report arrived in the Studio back at defaults, on
+   * step one. It now carries the non-default option overrides and the equivalent stepper stop
+   * as well — the same `opts` / `step` params the version panel's *Re-run in Studio* and the
+   * Studio's own *Copy link* already use, so the three ways of reaching the Studio agree.
    */
   const openInStudio = useCallback(() => {
     const href = exportStudioHref({
@@ -192,10 +235,23 @@ export function ExportDialog({
       target: selectedKey,
       origin: studioOrigin,
       sourceFormat,
+      options: changedOpts,
+      step: studioStepForDialogStep(step, Boolean(selectedKey)),
     });
     handleClose();
     router.push(href);
-  }, [artifact, version, artifactLabel, selectedKey, studioOrigin, sourceFormat, handleClose, router]);
+  }, [
+    artifact,
+    version,
+    artifactLabel,
+    selectedKey,
+    studioOrigin,
+    sourceFormat,
+    changedOpts,
+    step,
+    handleClose,
+    router,
+  ]);
 
   /** Select a target card and seed the options form with that target's defaults. */
   const handleSelect = useCallback((card: ExportTargetCard) => {
@@ -312,8 +368,8 @@ export function ExportDialog({
               key={label}
               className={`rounded-full border px-3 py-1.5 text-center ${
                 idx <= stepIndex
-                  ? 'border-indigo-200 bg-indigo-50 font-medium text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200'
-                  : 'border-gray-200 text-gray-500 dark:border-gray-700 dark:text-gray-400'
+                  ? 'border-accent bg-accent-soft font-medium text-accent-fg'
+                  : 'border-border text-fg-muted'
               }`}
             >
               {idx + 1}. {label}
@@ -338,30 +394,30 @@ export function ExportDialog({
         >
         {step === 'source' && (
           <div className="space-y-4">
-            <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-                <Package className="h-4 w-4 text-indigo-500" aria-hidden />
+            <div className="vdlg-export__card">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-fg">
+                <Package className="h-4 w-4 text-accent" aria-hidden />
                 Source
               </div>
-              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700" />
+              <div className="my-3 h-px bg-inset" />
               {loading ? (
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
+                <div className="flex items-center gap-2 text-sm text-fg-muted">
+                  <Loader2 className="h-4 w-4 animate-spin text-accent" aria-hidden />
                   Measuring export fidelity for this source…
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <div className="text-sm font-medium text-fg">
                     {sourceLabel}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-fg-muted">
                     Version {versionLabel}
                     {response ? ` · ${cards.length} export targets available` : ''}
                   </div>
                 </div>
               )}
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-fg-muted">
               Export is scoped to this version: the fidelity badge on every target card is
               computed for this source, not a generic estimate.
             </p>
@@ -381,10 +437,10 @@ export function ExportDialog({
               onOrderChange={setTargetOrder}
               heading={
                 <div className="text-center">
-                  <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="text-sm font-semibold text-fg">
                     Choose a target format
                   </div>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-xs text-fg-muted">
                     Fidelity badges are computed for <strong>this</strong> source (version{' '}
                     {versionLabel}).
                   </p>
@@ -393,12 +449,12 @@ export function ExportDialog({
             />
 
             {selected && optionFields.length > 0 && (
-              <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-                  <SlidersHorizontal className="h-4 w-4 text-indigo-500" aria-hidden />
+              <div className="vdlg-export__card">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-fg">
+                  <SlidersHorizontal className="h-4 w-4 text-accent" aria-hidden />
                   Target options
                 </div>
-                <div className="my-3 h-px bg-gray-200 dark:bg-gray-700" />
+                <div className="my-3 h-px bg-inset" />
                 <ExportOptionsForm
                   targetKey={selected.key}
                   fields={optionFields}
@@ -445,8 +501,8 @@ export function ExportDialog({
         {step === 'export' &&
           (emitted ? (
             <div className="flex h-full min-h-0 flex-col gap-2">
-              <p className="shrink-0 text-xs text-gray-600 dark:text-gray-300">
-                <CheckCircle2 className="mr-1.5 inline h-4 w-4 text-green-500 align-text-bottom" aria-hidden />
+              <p className="shrink-0 text-xs text-fg-muted">
+                <CheckCircle2 className="mr-1.5 inline h-4 w-4 text-ok align-text-bottom" aria-hidden />
                 Review <strong>{emitted.filename}</strong> below, then download the file or a .zip bundle.
               </p>
               <ArtifactPreviewCard
@@ -458,15 +514,15 @@ export function ExportDialog({
             </div>
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-3 py-10 text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" aria-hidden />
-              <div className="text-sm text-gray-700 dark:text-gray-200">
+              <Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden />
+              <div className="text-sm text-fg">
                 Emitting {selected?.entry.descriptor.label ?? 'the document'}…
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-4 flex shrink-0 justify-between gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
+        <div className="mt-4 flex shrink-0 justify-between gap-2 border-t border-border pt-3">
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleClose} disabled={exporting}>
               {emitted ? 'Close' : 'Cancel'}

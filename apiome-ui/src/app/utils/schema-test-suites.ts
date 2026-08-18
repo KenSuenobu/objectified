@@ -8,6 +8,8 @@
  */
 
 import type { BenchSurface } from '@/app/utils/schema-test-bench';
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
+import { BENCH_VERDICT_TONE } from '@/app/components/ade/version-dialogs/versionDialogsModel';
 
 /** One payload of a suite, as the REST API returns it. */
 export interface SuitePayload {
@@ -88,16 +90,32 @@ export function suiteRefForSurface(surface: BenchSurface, artifact: string): str
   return `${surface}/${artifact}`;
 }
 
-/** Chip classes per verdict, matching the bench's tone vocabulary. */
-export function verdictToneClass(status: SuiteRunResult['status'] | SuiteRunSummary['status']): string {
+/**
+ * The tone of a verdict chip (HIVE-6.3, #5314).
+ *
+ * This returned three hand-built Tailwind pairs (`bg-emerald-100 text-emerald-800 …`) until
+ * the Versions redesign; a chip built from them was frozen on the light palette and did not
+ * match the identical verdict drawn by the findings list next to it. It now names a tone from
+ * the shared vocabulary, which `Badge` resolves to a token pair — so `passed` is the same
+ * green as every other "it worked" in the app, in all nine appearances.
+ *
+ * `completed` (a run summary's word for "it finished") and `passed` (a payload's) resolve to
+ * the same tone on purpose: they are the same outcome seen at two scales.
+ *
+ * @param status The run or result status.
+ * @returns The tone name to hand `Badge`.
+ */
+export function verdictTone(
+  status: SuiteRunResult['status'] | SuiteRunSummary['status']
+): StatusTone {
   switch (status) {
     case 'passed':
     case 'completed':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300';
+      return BENCH_VERDICT_TONE.valid;
     case 'failed':
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300';
+      return BENCH_VERDICT_TONE.invalid;
     default:
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300';
+      return BENCH_VERDICT_TONE.error;
   }
 }
 

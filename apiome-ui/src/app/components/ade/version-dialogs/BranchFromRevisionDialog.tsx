@@ -12,14 +12,13 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from '../../ui/Dialog';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { Label } from '../../ui/Label';
+import { GitBranchPlus } from 'lucide-react';
+import { VersionDialogHead } from '../versions/VersionDialogChrome';
 import type { DialogRevisionRef } from './types';
 
 export interface BranchFromRevisionDialogProps {
@@ -94,16 +93,20 @@ export function BranchFromRevisionDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !saving && onOpenChange(o)}>
-      <DialogContent className="max-w-md" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Create named branch</DialogTitle>
-          <DialogDescription>
-            Point a new branch name at revision <span className="font-mono">{revisionLabel}</span> in this project.
-            Further work can advance the tip via merge workflows.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1">
+      <DialogContent className="vdlg-dialog vdlg-dialog--sm" aria-describedby={undefined}>
+        <VersionDialogHead
+          icon={<GitBranchPlus aria-hidden />}
+          tone="accent"
+          title="Create named branch"
+          description={
+            <>
+              Point a new branch name at revision <span className="mono">{revisionLabel}</span> in this project.
+              Further work can advance the tip via merge workflows.
+            </>
+          }
+        />
+        <div className="vdlg-form">
+          <div className="vdlg-field">
             <Label htmlFor="canvas-branch-name">Branch name</Label>
             <Input
               id="canvas-branch-name"
@@ -112,7 +115,9 @@ export function BranchFromRevisionDialog({
               placeholder="e.g. feature/payments"
               autoComplete="off"
               autoFocus
+              className="vdlg-input--mono"
             />
+            <p className="vdlg-hint">Suggested from the revision message.</p>
           </div>
         </div>
         <DialogFooter>

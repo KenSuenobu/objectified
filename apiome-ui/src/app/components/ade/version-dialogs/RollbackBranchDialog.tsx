@@ -14,10 +14,7 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from '../../ui/Dialog';
 import { Alert } from '../../ui/Alert';
 import { Button } from '../../ui/Button';
@@ -25,6 +22,10 @@ import { Input } from '../../ui/Input';
 import { Label } from '../../ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/Select';
 import { CompatibilityReportPanel } from '../dashboard/CompatibilityReportPanel';
+import { Undo2 } from 'lucide-react';
+import { Checkbox } from '../../ui/Checkbox';
+import { VersionDialogHead } from '../versions/VersionDialogChrome';
+import { VERSION_DIALOG_COPY } from './versionDialogsModel';
 import type { DialogRevisionRef, VersionBranchRow } from './types';
 
 interface RollbackPreview {
@@ -212,22 +213,24 @@ export function RollbackBranchDialog({
         if (!previewLoading && !applyLoading) onOpenChange(o);
       }}
     >
-      <DialogContent className="max-w-2xl" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Rollback branch (revert-style)</DialogTitle>
-          <DialogDescription>
-            Creates a <strong>new</strong> revision whose schema matches revision{' '}
-            <span className="font-mono">{targetLabel}</span>; the branch tip moves forward with{' '}
-            <span className="font-mono">parent</span> pointing at the prior head. History is not rewritten.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
+      <DialogContent className="vdlg-dialog vdlg-dialog--lg" aria-describedby={undefined}>
+        <VersionDialogHead
+          icon={<Undo2 aria-hidden />}
+          tone="danger"
+          title="Rollback branch (revert-style)"
+          description={
+            <>
+              Creates a <strong>new</strong> revision whose schema matches revision{' '}
+              <span className="mono">{targetLabel}</span>; the branch tip moves forward with{' '}
+              <span className="mono">parent</span> pointing at the prior head. History is not rewritten.
+            </>
+          }
+        />
+        <div className="vdlg-form">
           {branches.length === 0 && !branchesLoading ? (
-            <Alert variant="warning">
-              No named branches exist in this project. Create one first before rolling back.
-            </Alert>
+            <Alert variant="warn">{VERSION_DIALOG_COPY.rollbackNoBranches}</Alert>
           ) : null}
-          <div className="space-y-1">
+          <div className="vdlg-field">
             <Label>Branch to update</Label>
             <Select
               value={branchName || '__pick__'}
@@ -248,7 +251,7 @@ export function RollbackBranchDialog({
             </Select>
           </div>
 
-          <div className="space-y-1">
+          <div className="vdlg-field">
             <Label htmlFor="canvas-rollback-msg">Revision note (optional)</Label>
             <Input
               id="canvas-rollback-msg"
@@ -263,19 +266,17 @@ export function RollbackBranchDialog({
             <Alert
               variant={
                 preview.compatOverall === 'safe'
-                  ? 'success'
+                  ? 'ok'
                   : preview.compatOverall === 'unknown'
-                    ? 'default'
-                    : 'error'
+                    ? 'neutral'
+                    : 'danger'
               }
             >
-              <span className="font-medium text-sm">
+              <span className="vdlg-alert__title">
                 Schema impact (current tip → restored content): {preview.compatOverall ?? '—'}
               </span>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                Rolling back can remove paths or fields consumers rely on.
-              </p>
-              <div className="mt-2">
+              <p className="vdlg-alert__note">Rolling back can remove paths or fields consumers rely on.</p>
+              <div className="vdlg-alert__body">
                 <CompatibilityReportPanel
                   findings={(preview.findings ?? []).map((f) => ({
                     id: f.id,
@@ -291,20 +292,15 @@ export function RollbackBranchDialog({
           )}
 
           {preview?.rollbackBlockedByCompatGate ? (
-            <p className="text-xs text-amber-800 dark:text-amber-200">
-              Project metadata sets <span className="font-mono">compatGateOnRollback</span> — apply is blocked until the
+            <Alert variant="warn" className="vdlg-note">
+              Project metadata sets <span className="mono">compatGateOnRollback</span> — apply is blocked until the
               rollback pair is safe or policy is updated.
-            </p>
+            </Alert>
           ) : null}
 
           {preview && preview.compatOverall && preview.compatOverall !== 'safe' ? (
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={skipCompat}
-                onChange={(e) => setSkipCompat(e.target.checked)}
-                className="rounded border-gray-300 dark:border-gray-600"
-              />
+            <label className="vdlg-check">
+              <Checkbox checked={skipCompat} onCheckedChange={(v) => setSkipCompat(v === true)} />
               I understand the compatibility risk — apply anyway
             </label>
           ) : null}

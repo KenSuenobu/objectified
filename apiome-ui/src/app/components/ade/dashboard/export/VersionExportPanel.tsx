@@ -4,12 +4,14 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { Download, FileClock, Loader2, RotateCcw, Shuffle } from 'lucide-react';
 import { Alert } from '../../../ui/Alert';
+import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
+import { VERSION_DIALOG_COPY } from '../../version-dialogs/versionDialogsModel';
 import { useExportTargets } from './useExportTargets';
 import {
   exportTargetCards,
   fidelityPreSummary,
-  tierBadgeClass,
+  tierTone,
   type ExportTargetCard,
 } from './exportTargetCatalog';
 import { fidelityBadgeLabel, loadRecentExports, type RecentExport } from './recentExports';
@@ -78,32 +80,27 @@ export function VersionExportPanel({
   );
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2" data-testid="version-export-panel">
-      <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-          <Shuffle className="h-4 w-4 text-indigo-500" aria-hidden />
+    <div className="vdlg-export" data-testid="version-export-panel">
+      <div className="vdlg-export__card">
+        <div className="vdlg-caps vdlg-export__card-title">
+          <Shuffle aria-hidden />
           Convert to any format
         </div>
-        <div className="my-3 h-px bg-gray-200 dark:bg-gray-700" />
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="vdlg-quiet">
           This version is held in the normalized model, so it can be transcoded to any target
           format. Fidelity varies — less-expressive targets drop or approximate detail. Pick a
           target to open it in the Export Studio.
         </p>
 
-        {error && (
-          <Alert variant="error" className="mt-3">
-            {error}
-          </Alert>
-        )}
+        {error && <Alert variant="danger">{error}</Alert>}
         {loading && !error && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
-            Measuring export fidelity for this version…
+          <div className="vdlg-loading-row" role="status">
+            <Loader2 className="animate-spin" aria-hidden />
+            {VERSION_DIALOG_COPY.exportMeasuring}
           </div>
         )}
         {!loading && !error && response && (
-          <dl className="mt-3 space-y-2 text-sm" data-testid="version-export-presummary">
+          <dl className="vdlg-export__summary" data-testid="version-export-presummary">
             <TargetBadgeRow
               label="Best-fidelity targets"
               cards={best}
@@ -121,57 +118,44 @@ export function VersionExportPanel({
           </dl>
         )}
 
-        <div className="mt-4">
+        <div className="vdlg-export__cta">
           <Button asChild>
             <Link href={studioHref} data-testid="version-export-open-studio">
-              <Download className="h-4 w-4" aria-hidden />
+              <Download aria-hidden />
               Export this version
             </Link>
           </Button>
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-          <FileClock className="h-4 w-4 text-indigo-500" aria-hidden />
+      <div className="vdlg-export__card">
+        <div className="vdlg-caps vdlg-export__card-title">
+          <FileClock aria-hidden />
           Recent exports
         </div>
-        <div className="my-3 h-px bg-gray-200 dark:bg-gray-700" />
         {recent.length === 0 ? (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            No exports of this version yet.
-          </p>
+          <p className="vdlg-quiet">{VERSION_DIALOG_COPY.exportNoRecent}</p>
         ) : (
-          <ul className="space-y-2 text-sm" data-testid="version-recent-exports">
+          <ul className="vdlg-export__recent" data-testid="version-recent-exports">
             {recent.map((entry) => (
-              <li
-                key={`${entry.targetKey}-${entry.exportedAt}`}
-                className="flex flex-wrap items-center justify-between gap-2"
-              >
-                <span className="flex items-center gap-2">
-                  <span
-                    className="font-medium text-gray-700 dark:text-gray-200"
-                    title={entry.filename}
-                  >
+              <li key={`${entry.targetKey}-${entry.exportedAt}`} className="vdlg-export__recent-row">
+                <span className="vdlg-export__recent-main">
+                  <span className="vdlg-export__recent-name" title={entry.filename}>
                     {entry.targetLabel}
                   </span>
                   <Link
                     href={rerunHref(entry, artifact, version, artifactLabel)}
                     data-testid="version-recent-export-rerun"
                     title={`Re-run this ${entry.targetLabel} export in the Studio with its options pre-filled`}
-                    className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                    className="vdlg-link"
                   >
-                    <RotateCcw className="h-3 w-3" aria-hidden />
+                    <RotateCcw aria-hidden />
                     Re-run in Studio
                   </Link>
                 </span>
-                <span className="flex items-center gap-2">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-2xs font-semibold ${tierBadgeClass(entry.tier)}`}
-                  >
-                    {fidelityBadgeLabel(entry)}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="vdlg-export__recent-meta">
+                  <Badge variant={tierTone(entry.tier)}>{fidelityBadgeLabel(entry)}</Badge>
+                  <span className="vdlg-quiet">
                     {formatRelativeTime(new Date(entry.exportedAt).toISOString()) ?? ''}
                   </span>
                 </span>
@@ -223,11 +207,11 @@ interface TargetBadgeRowProps {
  */
 function TargetBadgeRow({ label, cards, artifact, version, artifactLabel }: TargetBadgeRowProps) {
   return (
-    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-      <dt className="text-xs text-gray-500 dark:text-gray-400">{label}</dt>
-      <dd className="flex flex-wrap gap-1">
+    <div className="vdlg-export__summary-row">
+      <dt className="vdlg-caps">{label}</dt>
+      <dd className="vdlg-chips">
         {cards.length === 0 ? (
-          <span className="text-xs text-gray-400 dark:text-gray-500">None</span>
+          <span className="vdlg-quiet">{VERSION_DIALOG_COPY.exportBucketEmpty}</span>
         ) : (
           cards.map((card) => (
             <Link
@@ -241,9 +225,11 @@ function TargetBadgeRow({ label, cards, artifact, version, artifactLabel }: Targ
               })}
               data-testid="version-export-target-chip"
               title={`Export to ${card.entry.descriptor.label} — ${card.entry.fidelity.preserved_percent}% preserved`}
-              className={`rounded-full px-2 py-0.5 text-2xs font-semibold hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-700 ${tierBadgeClass(card.entry.fidelity.tier)}`}
+              className="vdlg-export__chip"
             >
-              {card.entry.descriptor.label}
+              <Badge variant={tierTone(card.entry.fidelity.tier)}>
+                {card.entry.descriptor.label}
+              </Badge>
             </Link>
           ))
         )}

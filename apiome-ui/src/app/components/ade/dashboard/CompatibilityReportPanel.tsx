@@ -1,6 +1,26 @@
 'use client';
 
+/**
+ * The compatibility verdict shared by merge, rollback and publish (#506), re-skinned by
+ * HIVE-6.3 (#5314).
+ *
+ * Authority: `docs/mockups/build/version-dialogs.html` §Merge branches and §Rollback — the
+ * intro sentence, the *Overall* verdict, the rule-hit tags, the per-severity finding groups
+ * with their `$ref` paths, and the documentation link.
+ *
+ * The verdict was printed as a bare word in `text-gray-700`; it is a `Badge` now, taking the
+ * tone `COMPAT_VERDICT_TONE` assigns so *breaking* reads red on every screen that shows it.
+ * The source links were `text-blue-600 dark:text-blue-400` — a hue with no token behind it —
+ * and are `.vdlg-link` (`--accent-fg`, which clears 7:1 in all nine appearances).
+ */
+
 import React from 'react';
+import { Badge } from '../../ui/Badge';
+import {
+  COMPAT_VERDICT_TONE,
+  VERSION_DIALOG_COPY,
+  compatVerdict,
+} from '../version-dialogs/versionDialogsModel';
 import {
   groupCompatibilityFindings,
   type CompatibilityFindingRow,
@@ -63,20 +83,21 @@ export function CompatibilityReportPanel({
   }, [ruleHits]);
 
   return (
-    <div className={`compat-report-panel space-y-3 text-xs ${className}`}>
-      {intro ? <div className="compat-report-intro text-gray-600 dark:text-gray-400">{intro}</div> : null}
+    <div className={`compat-report-panel vdlg-compat ${className}`}>
+      {intro ? <div className="compat-report-intro vdlg-quiet">{intro}</div> : null}
       {overall ? (
-        <p className="compat-report-overall text-gray-700 dark:text-gray-300">
-          <span className="font-medium">Overall:</span> {overall}
+        <p className="compat-report-overall vdlg-compat__overall">
+          <span className="vdlg-compat__overall-label">Overall:</span>{' '}
+          <Badge variant={COMPAT_VERDICT_TONE[compatVerdict(overall)]}>{overall}</Badge>
         </p>
       ) : null}
       {ruleEntries.length > 0 ? (
-        <div className="compat-report-rule-hits rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-2 py-1.5">
-          <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Rule hits</p>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 font-mono text-2xs text-gray-600 dark:text-gray-400">
+        <div className="compat-report-rule-hits vdlg-subcard">
+          <p className="vdlg-caps">Rule hits</p>
+          <ul className="vdlg-compat__rules">
             {ruleEntries.map(([rule, n]) => (
               <li key={rule}>
-                <span className="text-gray-800 dark:text-gray-200">{rule}</span>
+                <span className="mono">{rule}</span>
                 {' × '}
                 {n}
               </li>
@@ -85,15 +106,15 @@ export function CompatibilityReportPanel({
         </div>
       ) : null}
       {grouped.length === 0 ? (
-        <p className="compat-report-empty text-gray-500 dark:text-gray-400">
-          No structural findings in this report.
-        </p>
+        <p className="compat-report-empty vdlg-quiet">{VERSION_DIALOG_COPY.compatNoFindings}</p>
       ) : (
-        <div className="compat-report-findings space-y-3 max-h-64 overflow-y-auto pr-1">
+        <div className="compat-report-findings vdlg-compat__findings">
           {grouped.map((section) => (
             <div key={section.severity} className="compat-report-section">
-              <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">{section.label}</p>
-              <ul className="space-y-2 pl-0 list-none">
+              <p className="vdlg-compat__severity" data-severity={section.severity}>
+                {section.label}
+              </p>
+              <ul className="vdlg-compat__paths">
                 {section.paths.map(({ path, findings: pathFindings }) => {
                   const primary = pathFindings[0];
                   const href =
@@ -102,13 +123,13 @@ export function CompatibilityReportPanel({
                   return (
                     <li
                       key={`${section.severity}-${path}`}
-                      className="compat-report-path border-l-2 border-gray-200 dark:border-gray-600 pl-2"
+                      className="compat-report-path vdlg-compat__path"
                     >
-                      <div className="font-mono text-2xs text-gray-700 dark:text-gray-300 break-all">
+                      <div className="vdlg-compat__path-name mono">
                         {href ? (
                           <a
                             href={href}
-                            className="compat-report-path-link text-blue-600 dark:text-blue-400 underline underline-offset-2 hover:text-blue-700 dark:hover:text-blue-300"
+                            className="compat-report-path-link vdlg-link"
                             data-testid="compat-source-path-link"
                           >
                             {path}
@@ -117,12 +138,10 @@ export function CompatibilityReportPanel({
                           path
                         )}
                       </div>
-                      <ul className="mt-0.5 space-y-0.5 list-disc pl-4 text-gray-600 dark:text-gray-400">
+                      <ul className="vdlg-compat__messages">
                         {pathFindings.map((f) => (
                           <li key={f.id ?? `${f.path}-${f.rule}-${f.message}`}>
-                            <span className="font-mono text-2xs text-gray-500 dark:text-gray-500">
-                              {f.rule}
-                            </span>
+                            <span className="mono">{f.rule}</span>
                             {' — '}
                             {f.message}
                           </li>
@@ -141,7 +160,7 @@ export function CompatibilityReportPanel({
           href={docUrl}
           target="_blank"
           rel="noreferrer"
-          className="compat-report-doc-link text-xs underline inline-block text-blue-600 dark:text-blue-400"
+          className="compat-report-doc-link vdlg-link"
         >
           Breaking changes documentation (#746)
         </a>

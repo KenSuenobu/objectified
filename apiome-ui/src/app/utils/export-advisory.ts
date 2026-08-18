@@ -19,6 +19,8 @@
  * stays quiet.
  */
 
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
+
 /**
  * How much a fidelity loss matters, independent of its kind (mirrors Python
  * `lossiness.LossinessSeverity`). `info` is cosmetic, `warn` a meaningful degradation,
@@ -79,6 +81,42 @@ export function advisoryPresentation(advisory: ExportAdvisory): AdvisoryPresenta
 }
 
 /** CSS utility classes for the advisory banner container, keyed by presentation strength. */
+export function advisoryStrengthTone(strength: AdvisoryPresentation['strength']): StatusTone {
+  switch (strength) {
+    case 'critical':
+      return 'danger';
+    case 'warning':
+      return 'warn';
+    case 'info':
+    default:
+      return 'accent';
+  }
+}
+
+/**
+ * The tone of the severity pill in an advisory header (HIVE-6.3, #5314).
+ *
+ * @param severity The advisory severity, or `null` for the neutral case.
+ * @returns The tone name to hand `Badge`.
+ */
+export function advisorySeverityTone(severity: AdvisorySeverity | null): StatusTone {
+  switch (severity) {
+    case 'critical':
+      return 'danger';
+    case 'warn':
+      return 'warn';
+    case 'info':
+    default:
+      return 'accent';
+  }
+}
+
+/**
+ * The advisory banner's classes.
+ *
+ * @deprecated Superseded by {@link advisoryStrengthTone} in HIVE-6.3 (#5314); the banner is an
+ * `Alert` now. Kept for the catalog and studio surfaces their own epics redesign.
+ */
 export function advisoryBannerClass(strength: AdvisoryPresentation['strength']): string {
   switch (strength) {
     case 'critical':

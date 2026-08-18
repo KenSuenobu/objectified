@@ -13,6 +13,10 @@
  */
 
 import { Sparkles } from 'lucide-react';
+import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
+import { BENCH_VERDICT_TONE } from '@/app/components/ade/version-dialogs/versionDialogsModel';
 import type { BenchSynthesisPayload, BenchSynthesizedInstance } from '@/app/utils/schema-test-bench';
 
 export interface BenchGeneratedPanelProps {
@@ -28,12 +32,14 @@ export interface BenchGeneratedPanelProps {
   onLoadInstance: (instance: BenchSynthesizedInstance) => void;
 }
 
-/** Chip tone per instance kind: valid shapes green-ish, mutants rose. */
-function chipToneClass(instance: BenchSynthesizedInstance): string {
-  if (instance.kind === 'mutant') {
-    return 'border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/70';
-  }
-  return 'border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70';
+/**
+ * The tone of an instance chip: a valid shape passes, a mutant is meant to fail.
+ *
+ * `BENCH_VERDICT_TONE` is the same table the findings list and the run history read, so a
+ * mutant chip is the rose a failed payload is everywhere else in the bench.
+ */
+function chipTone(instance: BenchSynthesizedInstance): StatusTone {
+  return BENCH_VERDICT_TONE[instance.kind === 'mutant' ? 'invalid' : 'valid'];
 }
 
 /** Render the generate action and the loaded result's instance chips. */
@@ -49,20 +55,20 @@ export function BenchGeneratedPanel({
   const mutants = instances.filter((instance) => instance.kind === 'mutant');
 
   const renderChips = (list: BenchSynthesizedInstance[], group: string) => (
-    <ul className="flex flex-wrap gap-1.5" data-testid={`test-bench-generated-${group}`}>
+    <ul className="vdlg-chips" data-testid={`test-bench-generated-${group}`}>
       {list.map((instance) => (
         <li key={instance.id}>
           <button
             type="button"
             data-testid={`test-bench-load-${instance.id}`}
             onClick={() => onLoadInstance(instance)}
-            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${chipToneClass(instance)}`}
+            className="vdlg-chip"
+            data-tone={chipTone(instance)}
+            aria-pressed={false}
             title={`${instance.description} Loads into the payload editor; labelled synthetic.`}
           >
             {instance.title}
-            <span className="rounded bg-violet-100 px-1 text-2xs font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-900/50 dark:text-violet-300">
-              synthetic
-            </span>
+            <Badge variant="violet">synthetic</Badge>
           </button>
         </li>
       ))}
@@ -70,51 +76,46 @@ export function BenchGeneratedPanel({
   );
 
   return (
-    <section className="space-y-3" aria-label="Generated payloads">
-      <div className="flex flex-wrap items-center gap-3">
-        <button
+    <section className="vdlg-stack" aria-label="Generated payloads">
+      <div className="vdlg-bench__row">
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-testid="test-bench-generate"
           onClick={onGenerate}
           disabled={!enabled || generating}
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
         >
-          <Sparkles className="h-4 w-4 text-violet-500" aria-hidden />
+          <Sparkles aria-hidden />
           {generating ? 'Generating…' : 'Generate payloads'}
-        </button>
-        {result?.notice ? (
-          <p className="text-xs text-gray-500 dark:text-gray-400">{result.notice}</p>
-        ) : null}
+        </Button>
+        {result?.notice ? <p className="vdlg-quiet">{result.notice}</p> : null}
       </div>
 
       {validInstances.length > 0 ? (
-        <div className="space-y-1">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Valid instances
-          </h3>
+        <div className="vdlg-bench__group">
+          <h3 className="vdlg-caps">Valid instances</h3>
           {renderChips(validInstances, 'valid')}
         </div>
       ) : null}
 
       {mutants.length > 0 ? (
-        <div className="space-y-1">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Mutants (each violates exactly one constraint)
-          </h3>
+        <div className="vdlg-bench__group">
+          <h3 className="vdlg-caps">Mutants (each violates exactly one constraint)</h3>
           {renderChips(mutants, 'mutants')}
         </div>
       ) : null}
 
       {result && (result.rejected_mutants ?? 0) > 0 ? (
-        <p data-testid="test-bench-rejected-mutants" className="text-xs text-gray-500 dark:text-gray-400">
+        <p data-testid="test-bench-rejected-mutants" className="vdlg-quiet">
           {result.rejected_mutants} mutant candidate{result.rejected_mutants === 1 ? '' : 's'} were
           rejected because they did not provoke exactly the targeted violation.
         </p>
       ) : null}
 
       {(result?.diagnostics ?? []).map((diagnostic, index) => (
-        <p key={`${diagnostic.code}:${index}`} className="text-xs text-gray-500 dark:text-gray-400">
-          <code className="font-mono text-2xs">{diagnostic.code}</code> {diagnostic.message}
+        <p key={`${diagnostic.code}:${index}`} className="vdlg-quiet">
+          <code className="mono">{diagnostic.code}</code> {diagnostic.message}
         </p>
       ))}
     </section>

@@ -14,10 +14,7 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from '../../ui/Dialog';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
@@ -31,6 +28,8 @@ import {
 } from '@lib/version-notes';
 import { sortBranchesForPicker } from '@lib/studio-branch-resolve';
 import { parseStaleHeadFromVersionsPostJson } from '@/app/utils/push-conflict';
+import { GitCommitHorizontal } from 'lucide-react';
+import { VersionDialogHead } from '../versions/VersionDialogChrome';
 import type { VersionBranchRow, CreatedRevisionResult, DialogRevisionRef } from './types';
 
 type BumpStrategy = 'patch' | 'minor' | 'major';
@@ -322,25 +321,29 @@ export function CommitRevisionDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
       <DialogContent className="max-w-xl" aria-describedby="canvas-commit-desc">
-        <DialogHeader>
-          <DialogTitle>Commit revision</DialogTitle>
-          <DialogDescription id="canvas-commit-desc">
-            Record a new schema revision on top of a branch tip (like <code className="text-xs">git commit</code> on
-            that branch). Message is required; add an external reference when linking to a ticket or issue.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
+        <VersionDialogHead
+          icon={<GitCommitHorizontal aria-hidden />}
+          tone="accent"
+          title="Commit revision"
+          description={
+            <span id="canvas-commit-desc">
+              Record a new schema revision on top of a branch tip (like <span className="mono">git commit</span> on
+              that branch). Message is required; add an external reference when linking to a ticket or issue.
+            </span>
+          }
+        />
+        <div className="vdlg-form">
           {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
           {branchError && (
-            <Alert variant="warning" role="status">
+            <Alert variant="warn" role="status">
               {branchError} Using the currently selected revision as base.
             </Alert>
           )}
 
           {commitRevisionDialogShowsBranchPicker(lockedBranchId, branches) && (
-            <div className="space-y-1">
+            <div className="vdlg-field">
               <Label>Commit to branch</Label>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="vdlg-hint">
                 The new revision parents from this branch&apos;s current tip and becomes its new tip. Choose another
                 branch only if you intend to advance that branch instead.
               </p>
@@ -369,23 +372,21 @@ export function CommitRevisionDialog({
           {branches.length >= 1 &&
             !commitRevisionDialogShowsBranchPicker(lockedBranchId, branches) &&
             selectedBranch && (
-              <div className="space-y-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 dark:border-gray-600 dark:bg-gray-900/40 dark:text-gray-200">
-                <div>
-                  <span className="font-medium">Commit on current branch</span>
-                  <span className="mx-1.5 text-gray-400 dark:text-gray-500">·</span>
+              <div className="vdlg-subcard">
+                <div className="vdlg-subcard__title">
+                  <span>Commit on current branch</span>
+                  <span aria-hidden>·</span>
                   <span>{selectedBranch.name}</span>
-                  <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
-                    (tip v{selectedBranch.tip_version_string ?? '?'})
-                  </span>
+                  <span className="vdlg-quiet">(tip v{selectedBranch.tip_version_string ?? '?'})</span>
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  This revision will stack on that branch&apos;s tip — the same as <code className="text-2xs">git commit</code>{' '}
-                  while you&apos;re on this branch.
+                <p className="vdlg-hint">
+                  This revision will stack on that branch&apos;s tip — the same as{' '}
+                  <span className="mono">git commit</span> while you&apos;re on this branch.
                 </p>
               </div>
             )}
 
-          <div className="space-y-1">
+          <div className="vdlg-field">
             <Label htmlFor="canvas-commit-msg">Message *</Label>
             <Input
               id="canvas-commit-msg"
@@ -397,7 +398,7 @@ export function CommitRevisionDialog({
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="vdlg-field">
             <Label htmlFor="canvas-commit-changelog">Changelog (optional)</Label>
             <Textarea
               id="canvas-commit-changelog"
@@ -408,7 +409,7 @@ export function CommitRevisionDialog({
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="vdlg-field">
             <Label htmlFor="canvas-commit-ext">External reference (optional)</Label>
             <Input
               id="canvas-commit-ext"
@@ -419,13 +420,11 @@ export function CommitRevisionDialog({
               aria-invalid={overCap}
             />
             {overCap && (
-              <p className="text-xs text-red-600 dark:text-red-400">
-                Max {COMMIT_EXTERNAL_REF_MAX_CHARS} characters.
-              </p>
+              <p className="vdlg-error">Max {COMMIT_EXTERNAL_REF_MAX_CHARS} characters.</p>
             )}
           </div>
 
-          <div className="space-y-1">
+          <div className="vdlg-field">
             <Label>Auto-bump</Label>
             <Select value={bumpStrategy} onValueChange={(v) => setBumpStrategy(v as BumpStrategy)}>
               <SelectTrigger>

@@ -1,5 +1,21 @@
 'use client';
 
+/**
+ * The revision history graph (#743–#745), re-skinned by HIVE-6.3 (#5314).
+ *
+ * Authority: `docs/mockups/build/version-dialogs.html` §History graph — the help copy, the
+ * *Load older* control, the max-limit note, the lane chip strip with *Select all*, the canvas
+ * with its Fit all / HEAD / Selected controls, and the two empty states.
+ *
+ * Behaviour is unchanged. What moved is the paint: the panel frame was
+ * `bg-white dark:bg-gray-800 rounded-2xl … border-gray-100`, the lane chip switched between
+ * eight Tailwind palette pairs, the max-limit note was `text-amber-600`, and the React Flow
+ * surface itself was `bg-slate-50 dark:bg-gray-950` with a `rgba(0,0,0,0.12)` minimap mask.
+ * All of it is tokens now: the frame is `.vdlg-panel`, a lane chip takes the `data-tone`
+ * `laneToneForBranchIndex` hands it — the same tone the node's dot and the tip stripe take —
+ * and the graph surface reads `--bg-canvas` through `.vdlg-flow`.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ReactFlow,
@@ -18,7 +34,9 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Crosshair, Locate } from 'lucide-react';
+import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
+import { VERSION_DIALOG_COPY } from '../../../components/ade/version-dialogs/versionDialogsModel';
 import RevisionHistoryNode from './RevisionHistoryNode';
 import {
   buildLayoutedHistoryGraph,
@@ -26,7 +44,7 @@ import {
   MAX_HISTORY_GRAPH_NODES,
   expandVersionsForWindow,
   filterVersionsBySelectedBranches,
-  laneColorForBranchIndex,
+  laneToneForBranchIndex,
   type RevisionNodeData,
   type VersionHistoryBranchMeta,
   type VersionHistoryTag,
@@ -34,6 +52,16 @@ import {
 } from './version-history-dag';
 
 const nodeTypes = { revisionHistory: RevisionHistoryNode };
+
+/**
+ * The minimap's mask.
+ *
+ * React Flow paints the mask through an SVG `fill` attribute rather than a class, so it has to
+ * be a value; `--overlay` is the token the design language already spends on "the page behind
+ * this is dimmed", and it is the one colour on the graph that has to work over *both* the
+ * canvas and the nodes floating on it.
+ */
+const DAG_MINIMAP_MASK = 'var(--overlay)';
 
 export type VersionHistoryGraphPanelProps = {
   /** Filtered list (e.g. lifecycle + tag) — same as versions table */
@@ -95,39 +123,39 @@ function GraphCanvas({
 
   return (
     <>
-      <div className="absolute top-2 right-2 z-10 flex gap-1.5">
+      <div className="vdlg-dag__controls">
         <Button
           type="button"
           variant="secondary"
-          className="!px-2 !py-1 text-xs"
+          size="sm"
           title="Fit all revisions in view"
           onClick={() => fitView({ padding: 0.2, maxZoom: 1.35, duration: 400 })}
         >
-          <Crosshair className="h-3.5 w-3.5" aria-hidden />
-          <span className="ml-1">Fit all</span>
+          <Crosshair aria-hidden />
+          Fit all
         </Button>
         {headRevisionId ? (
           <Button
             type="button"
             variant="secondary"
-            className="!px-2 !py-1 text-xs"
+            size="sm"
             title="Center on current HEAD revision"
             onClick={() => centerOn(headRevisionId)}
           >
-            <Locate className="h-3.5 w-3.5" aria-hidden />
-            <span className="ml-1">HEAD</span>
+            <Locate aria-hidden />
+            HEAD
           </Button>
         ) : null}
         {selectedRevisionId && selectedRevisionId !== headRevisionId ? (
           <Button
             type="button"
             variant="secondary"
-            className="!px-2 !py-1 text-xs"
+            size="sm"
             title="Center on selected revision"
             onClick={() => centerOn(selectedRevisionId)}
           >
-            <Locate className="h-3.5 w-3.5" aria-hidden />
-            <span className="ml-1">Selected</span>
+            <Locate aria-hidden />
+            Selected
           </Button>
         ) : null}
       </div>
@@ -147,15 +175,11 @@ function GraphCanvas({
         minZoom={0.15}
         maxZoom={1.75}
         proOptions={{ hideAttribution: true }}
-        className="bg-slate-50 dark:bg-gray-950"
+        className="vdlg-flow"
       >
         <Background variant={BackgroundVariant.Dots} gap={14} size={1} />
         <Controls />
-        <MiniMap
-          className="!bg-white/90 dark:!bg-gray-900/90"
-          maskColor="rgba(0,0,0,0.12)"
-          nodeStrokeWidth={2}
-        />
+        <MiniMap className="vdlg-dag__minimap" maskColor={DAG_MINIMAP_MASK} nodeStrokeWidth={2} />
       </ReactFlow>
     </>
   );
@@ -233,33 +257,31 @@ export default function VersionHistoryGraphPanel({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-2 bg-gray-50/80 dark:bg-gray-900/40">
+    <div className="vdlg-panel vdlg-dag">
+      <div className="vdlg-dag__head">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Revision history graph</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <h3 className="vdlg-section-title">Revision history graph</h3>
+          <p className="vdlg-quiet">
             Left-to-right lanes (older → newer). Solid slate edge = primary parent; dashed violet = merge parent. Click a
             node to compare with its primary parent; Ctrl/Cmd-click to view spec. Merge commits use violet styling; branch
             tips show names and an emerald marker.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="vdlg-dag__head-actions">
           {canLoadMore ? (
             <Button
               type="button"
               variant="secondary"
-              className="text-xs"
+              size="sm"
               onClick={() => onWindowSizeIncrease(windowSize + HISTORY_WINDOW_STEP)}
             >
               Load older ({windowSize} → {windowSize + HISTORY_WINDOW_STEP})
             </Button>
           ) : null}
           {atMaxNodes && (
-            <span className="text-xs text-amber-600 dark:text-amber-400">
-              Max render limit reached ({MAX_HISTORY_GRAPH_NODES} nodes)
-            </span>
+            <Badge variant="warn">Max render limit reached ({MAX_HISTORY_GRAPH_NODES} nodes)</Badge>
           )}
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="vdlg-quiet">
             Showing {expanded.length} revision{expanded.length !== 1 ? 's' : ''}
             {expanded.length < branchFiltered.length ? ` (of ${branchFiltered.length} in branch filter)` : ''}
             {branchFiltered.length < versions.length ? ` — ${versions.length} total in table filter` : ''}
@@ -268,12 +290,11 @@ export default function VersionHistoryGraphPanel({
       </div>
 
       {branches.length > 0 ? (
-        <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 flex flex-wrap items-center gap-2 bg-white dark:bg-gray-800/80">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Lanes</span>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter graph by named branch">
+        <div className="vdlg-dag__lanes">
+          <span className="vdlg-caps">Lanes</span>
+          <div className="vdlg-chips" role="group" aria-label="Filter graph by named branch">
             {branches.map((b, idx) => {
               const on = selectedBranchIds.includes(b.id);
-              const color = laneColorForBranchIndex(idx);
               return (
                 <button
                   key={b.id}
@@ -281,38 +302,28 @@ export default function VersionHistoryGraphPanel({
                   aria-pressed={on}
                   title={on ? `Hide history for ${b.name}` : `Show history for ${b.name}`}
                   onClick={() => toggleBranch(b.id)}
-                  className={`inline-flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 border transition-colors ${
-                    on
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100 dark:border-emerald-600'
-                      : 'border-gray-200 bg-gray-100 text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400'
-                  }`}
+                  className="vdlg-chip"
+                  data-tone={laneToneForBranchIndex(idx)}
                 >
-                  <span
-                    className={`inline-block h-2 w-2 rounded-full ${color.dot} ${on ? '' : 'opacity-40'}`}
-                    aria-hidden
-                  />
+                  <span className="vdlg-chip__dot" aria-hidden />
                   {b.name}
                 </button>
               );
             })}
           </div>
           {selectedBranchIds.length < branches.length ? (
-            <button type="button" onClick={selectAllBranches} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+            <button type="button" onClick={selectAllBranches} className="vdlg-link">
               Select all
             </button>
           ) : null}
         </div>
       ) : null}
 
-      <div className="relative w-full h-[min(420px,55vh)] min-h-[280px]">
+      <div className="vdlg-dag__stage">
         {selectionBlocksGraph ? (
-          <div className="flex items-center justify-center h-full text-sm text-gray-500 dark:text-gray-400 px-4 text-center">
-            Select at least one branch to show the graph, or use &quot;Select all&quot;.
-          </div>
+          <p className="vdlg-dag__empty">{VERSION_DIALOG_COPY.historyNoLanes}</p>
         ) : layoutNodes.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-sm text-gray-500 dark:text-gray-400 px-4">
-            No revisions to graph.
-          </div>
+          <p className="vdlg-dag__empty">{VERSION_DIALOG_COPY.historyEmpty}</p>
         ) : (
           <ReactFlowProvider>
             <GraphCanvas

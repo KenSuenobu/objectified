@@ -13699,3 +13699,2904 @@ button.auth-divider:disabled {
   font-size: var(--fs-xs);
   font-weight: 400;
 }
+
+/* ==========================================================================
+   VERSION DIALOGS & SUPPORTING PANELS  (HIVE-6.3, #5314)
+   --------------------------------------------------------------------------
+   `docs/mockups/build/version-dialogs.html` — the eleven overlays that hang
+   off the Versions page: compare/diff, the change report and its templates
+   dialog, the history DAG and the relationship graph, branch/tag/commit/fork/
+   merge/rollback, the lint report and scoring panel, the mock cell and its
+   scenario editor, the test bench, and export. This block replaces the
+   mockup's page-local `<style>` (`.dlg-frame`, `.diff-pane`, `.legend-sw`,
+   `.dag`, `.canvas`, `.cnode`, `.conflict-row`, `.bench-editor`, `.kv-mini`,
+   `.fid-card`) together with the inline `style=` its cards carry.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5, 6.1 and 6.2 blocks give, and one more
+   that is particular to this ticket: **six of these surfaces are React Flow
+   canvases**, and a react-flow node's colour is written into an inline
+   `style` the cascade cannot reach. What a stylesheet *can* still own is
+   everything around the canvas — the frame, the controls, the legend, the
+   lane chips — and the components hand react-flow a `var(--ok)` rather than a
+   hue (`changeStrokeVar`, `historyEdgeStrokeVar`, `projectionNodeStrokeVar` in
+   `version-dialogs/versionDialogsModel.ts`), so the two halves of one graph
+   still follow the same theme swap.
+
+   What this replaced named colour outright in more than four hundred places.
+   The worst of it, and where it went:
+
+   * the canvas compare returned `'#10b981' / '#ef4444' / '#f59e0b' / '#9ca3af'`
+     from a `strokeForTone`, while the legend beside it drew the same four
+     ideas as `border-emerald-500` / `border-red-500` / `border-amber-500` /
+     `border-gray-400` — two spellings that could disagree. Both resolve
+     through `VERSION_CHANGE_TONE` now, and the swatch is `[data-tone]` below;
+   * the history DAG carried an eight-entry Tailwind lane palette
+     (`bg-emerald-500` … `bg-indigo-500`) plus a parallel `border-l-*` list for
+     tips, and stroked its edges `rgb(100 116 139)` / `rgb(139 92 246)`. A lane
+     is a tone name now — one table, `VERSION_LANE_TONES` — so the dot, the
+     chip, the tip stripe and the edge cannot drift;
+   * the merge conflict list framed itself `border-amber-200 bg-amber-50/80`
+     and tinted an unresolved row `bg-amber-50/90`;
+   * the export surface had four separate tier→colour functions
+     (`tierBadgeClass`, `bandBadgeClass`, `kindBadgeClass`, `ringStrokeClass`)
+     plus a fifth inside `fidelityChips`. Each grew a `*Tone` sibling that
+     names a token; the class versions stay only for the studio and catalog
+     screens their own epics redesign;
+   * the test bench spelled its own button, input and select skins — including
+     a `focus-visible:ring-indigo-500/70` that matched nothing else in the app.
+
+   The mockup froze fourteen things in pixels that must not be frozen: the
+   220px TOC, the 200px class search, the 220px conflict filter, the 170px
+   type filter, the 320px change-report select, the 300px projection aside,
+   the 220px scenario name, the 240px media type, the 90px chaos knobs, the
+   180px route key, the 200px/320px bench selects, the 56px/64px textareas,
+   the 220px diff pane and the 300px/420px canvases. All are `rem`, a token,
+   an `aspect-ratio` or a viewport length here, so they follow all six font
+   scales and neither the dialogs nor the panels scroll the document sideways.
+
+   No hue is named below — every colour is a token, so all eleven surfaces
+   follow all nine themes. Where a *word* decides the colour it is not here at
+   all: the change classes, the merge resolutions, the compat verdicts, the
+   A–F bands, the fidelity tiers and the bench verdicts take their tone from
+   `versionDialogsModel.ts` through `ui/statusVocabulary`. Five measured
+   deviations from the mockup, three of them ones the earlier tickets already
+   made:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle` or
+     `--fg-faint`, neither of which clears AA at these sizes (HIVE-6.2's
+     finding, and the reason `.vdlg-quiet` exists at all);
+   * no `-fg` ink is drawn on the surface and no `-soft` fill under `--fg`:
+     outside the light and dark themes those pairs are not calibrated for it
+     (`--ok-fg` measures 1.5:1 on Nord's surface). So the unresolved conflict
+     row takes a `color-mix` wash of `--warn` rather than `--warn-soft`, the
+     diff's added/removed lines take a wash of `--ok` / `--danger`, and every
+     verdict is a `Badge` or an `Alert` rather than tinted text;
+   * links are `--accent-fg` at rest with `--accent` returning under the
+     underline on hover — `--accent` measures 4.1:1 as ink in four themes;
+   * the diff pane's type is `--fs-2xs` from the scale rather than the
+     mockup's frozen 11px, so a reader at the Largest scale gets a bigger
+     diff rather than the same one in a taller box;
+   * the graph stages are `min(…vh, …rem)` rather than the mockup's `300px` /
+     `420px`: a canvas that grew with the font scale would push the dialog
+     past its own `90vh` and hide its footer.
+
+   Six classes are borrowed rather than restated: `.tnt-icon-tile` (the tinted
+   square at the head of every dialog), `.tnt-menu` and `.tnt-menu__item` (the
+   DAG node's action menu), `.mono` (HIVE-1.4), `.input-wrap` (HIVE-2.1) and
+   `.ver-dialog__head` (HIVE-6.2, reached through `VersionDialogHead`).
+   ========================================================================== */
+
+/* ---- Shared type ---------------------------------------------------------
+   The three steps every panel in this block leans on. `.vdlg-quiet` is the
+   muted step, not `--fg-subtle`: the reason the header note above records. */
+.vdlg-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-caps {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.vdlg-caps > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.vdlg-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-section-title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.vdlg-panel-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* A link takes the `-fg` step at rest (`--accent` measures 4.1:1 as ink in
+   four themes) and the fill on hover, where the underline carries the affordance. */
+.vdlg-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--accent-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.125em;
+  cursor: pointer;
+}
+
+.vdlg-link:hover {
+  color: var(--accent);
+}
+
+.vdlg-link > svg {
+  inline-size: 0.875em;
+  block-size: 0.875em;
+  flex-shrink: 0;
+}
+
+.vdlg-hint {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The same treatment `FormField` gives its own error line (HIVE-2.1): one
+   error style for the app, so a field that spells its message itself and one
+   that hands it to the primitive read alike. */
+.vdlg-error {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--danger-fg);
+}
+
+/* Two glyphs that used to be tinted (`text-red-500`, `text-amber-500`) and
+   are not any more: a trash can and a warning triangle already say what they
+   are by *shape*, and no semantic ink in the token layer clears AA against
+   the plain surface in all nine themes. Both take the quiet step; the button
+   around the trash can carries its own destructive state. */
+.vdlg-icon-danger {
+  color: var(--fg-muted);
+}
+
+.vdlg-icon-warn {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  color: var(--fg-muted);
+}
+
+.vdlg-icon-button {
+  display: inline-grid;
+  place-items: center;
+  block-size: var(--control-h);
+  inline-size: var(--control-h);
+  border-radius: var(--r-sm);
+  color: var(--fg-muted);
+  box-shadow: var(--shadow-control);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.vdlg-icon-button:hover:not(:disabled) {
+  background: var(--bg-subtle);
+  color: var(--fg);
+}
+
+.vdlg-icon-button:disabled {
+  opacity: 0.4;
+}
+
+/* ---- Shared containers ---------------------------------------------------
+   A panel is the flat card these surfaces sit in; `--pad` adds the density
+   padding, so a Compact reader gets a tighter panel everywhere at once. */
+.vdlg-panel {
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+
+.vdlg-panel--pad {
+  padding: var(--card-pad, var(--space-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.vdlg-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* A tinted block *inside* a panel — the commit dialog's branch note, the
+   change report's regenerate options, the compat rule-hit list. */
+.vdlg-subcard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.vdlg-subcard__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.vdlg-toolbar__grow {
+  flex: 1 1 14rem;
+  min-inline-size: 0;
+}
+
+.vdlg-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-loading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-loading-row > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+/* The quiet centred line a filtered-empty list shows in place of its rows. */
+.vdlg-inline-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding-block: var(--space-8);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* `LoadingState` takes a class rather than a height, so its two heights here
+   are named once instead of frozen at each call site. */
+.vdlg-min-h-block {
+  min-block-size: 10rem;
+}
+
+.vdlg-min-h-canvas {
+  min-block-size: min(45vh, 24rem);
+}
+
+/* ---- Dialog chrome -------------------------------------------------------
+   Three widths, all capped against the viewport so the widest one still fits
+   a 1280px screen with the rail out, and a shared column height so a dialog
+   with a scrolling body keeps its footer visible. */
+.vdlg-dialog {
+  display: flex;
+  flex-direction: column;
+  max-block-size: 90vh;
+}
+
+.vdlg-dialog--sm {
+  inline-size: min(32rem, calc(100vw - var(--space-8)));
+  max-inline-size: 100%;
+}
+
+.vdlg-dialog--md {
+  inline-size: min(40rem, calc(100vw - var(--space-8)));
+  max-inline-size: 100%;
+}
+
+.vdlg-dialog--lg {
+  inline-size: min(56rem, calc(100vw - var(--space-8)));
+  max-inline-size: 100%;
+}
+
+.vdlg-dialog__restore {
+  display: block;
+  margin-block-start: var(--space-2);
+  color: var(--fg);
+}
+
+/* A dialog's body: the fields, stacked, scrolling under a fixed head/foot. */
+.vdlg-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-block-size: 0;
+  overflow-y: auto;
+  padding-block: var(--space-1);
+}
+
+.vdlg-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.vdlg-field__label {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.vdlg-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.vdlg-check--top {
+  align-items: flex-start;
+}
+
+.vdlg-check__box {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex-shrink: 0;
+  border-radius: var(--r-xs);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.vdlg-input--mono {
+  font-family: var(--font-mono);
+}
+
+.vdlg-textarea {
+  min-block-size: 4rem;
+  resize: vertical;
+}
+
+.vdlg-textarea--mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  min-block-size: 3rem;
+}
+
+/* A native `<select>` wearing the Hive control chrome. The Radix `Select`
+   is the default everywhere else; the two places this is used — the bench's
+   schema picker and its version picker — need `<optgroup>`, which the Radix
+   primitive does not express. */
+.vdlg-select {
+  inline-size: 100%;
+  block-size: var(--control-h);
+  padding-inline: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  box-shadow: var(--shadow-control);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.vdlg-select:hover:not(:disabled) {
+  box-shadow: var(--shadow-control-hover);
+}
+
+.vdlg-select:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-control-focus);
+}
+
+.vdlg-select:disabled {
+  opacity: 0.6;
+}
+
+/* A note inside an `Alert`, and the alert's own two inner steps. */
+.vdlg-note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.vdlg-note[data-tone] {
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  font-size: var(--fs-xs);
+}
+
+.vdlg-note[data-tone="warn"] {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.vdlg-note[data-tone="danger"] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.vdlg-alert__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.vdlg-alert__note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  opacity: 0.92;
+}
+
+.vdlg-alert__body {
+  margin-block-start: var(--space-2);
+}
+
+/* A rule inside a tinted alert: the alert's own ink at low alpha, so the
+   divider tracks the tone rather than cutting a grey line through it. */
+.vdlg-alert__section {
+  margin-block-start: var(--space-3);
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid color-mix(in srgb, currentcolor 22%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ---- Chips ---------------------------------------------------------------
+   One chip, three uses: the compare filters, the DAG's lane strip and the
+   bench's generated instances. The tone arrives as `data-tone`; pressed state
+   is `aria-pressed`, so the colour is never the only signal. */
+.vdlg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vdlg-chip {
+  --vdlg-chip-tone: var(--neutral);
+  --vdlg-chip-soft: var(--neutral-soft);
+  --vdlg-chip-ink: var(--neutral-fg);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  block-size: 1.5rem;
+  padding-inline: var(--space-2);
+  border-radius: var(--r-full);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.vdlg-chip:hover {
+  color: var(--fg);
+}
+
+.vdlg-chip[aria-pressed="true"] {
+  background: var(--vdlg-chip-soft);
+  color: var(--vdlg-chip-ink);
+}
+
+.vdlg-chip__dot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--vdlg-chip-tone);
+}
+
+.vdlg-chip[aria-pressed="false"] .vdlg-chip__dot {
+  opacity: 0.4;
+}
+
+.vdlg-chip__check {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  flex-shrink: 0;
+}
+
+.vdlg-chip[data-tone="ok"] {
+  --vdlg-chip-tone: var(--ok);
+  --vdlg-chip-soft: var(--ok-soft);
+  --vdlg-chip-ink: var(--ok-fg);
+}
+
+.vdlg-chip[data-tone="warn"] {
+  --vdlg-chip-tone: var(--warn);
+  --vdlg-chip-soft: var(--warn-soft);
+  --vdlg-chip-ink: var(--warn-fg);
+}
+
+.vdlg-chip[data-tone="danger"] {
+  --vdlg-chip-tone: var(--danger);
+  --vdlg-chip-soft: var(--danger-soft);
+  --vdlg-chip-ink: var(--danger-fg);
+}
+
+.vdlg-chip[data-tone="accent"] {
+  --vdlg-chip-tone: var(--accent);
+  --vdlg-chip-soft: var(--accent-soft);
+  --vdlg-chip-ink: var(--accent-fg);
+}
+
+.vdlg-chip[data-tone="violet"] {
+  --vdlg-chip-tone: var(--violet);
+  --vdlg-chip-soft: var(--violet-soft);
+  --vdlg-chip-ink: var(--violet-fg);
+}
+
+.vdlg-chip[data-tone="orange"] {
+  --vdlg-chip-tone: var(--orange);
+  --vdlg-chip-soft: var(--orange-soft);
+  --vdlg-chip-ink: var(--orange-fg);
+}
+
+.vdlg-chip[data-tone="rose"] {
+  --vdlg-chip-tone: var(--rose);
+  --vdlg-chip-soft: var(--rose-soft);
+  --vdlg-chip-ink: var(--rose-fg);
+}
+
+.vdlg-chip[data-tone="honey"] {
+  --vdlg-chip-tone: var(--honey);
+  --vdlg-chip-soft: var(--honey-soft);
+  --vdlg-chip-ink: var(--honey-fg);
+}
+
+/* A quiet monospace tag — a rule id, an evidence key. Not a status pill. */
+.vdlg-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.0625rem var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* An inline count in a sentence — `+1 · −0 · ~1` above the class list.
+   Deliberately *not* tinted: it is ink on the plain surface, where the token
+   layer calibrates no semantic pair, and the `+` `−` `~` sigil in front of
+   each number already says which class it counts. */
+.vdlg-stat {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* ---- The change-class legend --------------------------------------------
+   The swatch and the react-flow node it explains read the same token: this
+   `[data-tone]` list and `changeStrokeVar` are two renderings of
+   `VERSION_CHANGE_TONE`, which is why they cannot disagree. */
+.vdlg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-legend__title {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-legend__swatch {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  flex-shrink: 0;
+  border-radius: var(--r-xs);
+  background: var(--neutral);
+}
+
+.vdlg-legend__swatch[data-tone="ok"] {
+  background: var(--ok);
+}
+
+.vdlg-legend__swatch[data-tone="danger"] {
+  background: var(--danger);
+}
+
+.vdlg-legend__swatch[data-tone="warn"] {
+  background: var(--warn);
+}
+
+.vdlg-legend__swatch[data-tone="neutral"] {
+  background: var(--fg-faint);
+}
+
+/* ---- 1 · Compare ---------------------------------------------------------
+   The dialog's head is a row that wraps: at the Largest scale the two
+   segmented switches drop under the title rather than squeezing it. */
+.vdlg-compare__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.vdlg-compare__subtitle {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+.vdlg-compare__switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.vdlg-compare__picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+/* Two columns that collapse — the rule every grid in this block follows, so
+   nothing here can scroll the document sideways at 1280px or below. */
+.vdlg-compare__picker-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  gap: var(--space-4);
+}
+
+.vdlg-compare__picker-cta {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--space-6);
+}
+
+.vdlg-compare__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  margin-block-end: var(--space-4);
+}
+
+.vdlg-compare__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: var(--space-3);
+}
+
+.vdlg-compare__classification {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-compare__classification-label {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-compare__legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--border);
+}
+
+/* Every tab body is one scroll region whose height is a viewport share less
+   the dialog's own chrome — never `calc(90vh - 280px)`, which assumed a
+   header height that changes with the font scale. */
+.vdlg-compare__tabpanel {
+  block-size: min(60vh, 40rem);
+  overflow-y: auto;
+  padding-inline: var(--space-1);
+}
+
+/* ---- The two revision cards --------------------------------------------- */
+.vdlg-revcard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  font-size: var(--fs-sm);
+}
+
+.vdlg-revcard__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.vdlg-revcard__label {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-revcard__note {
+  color: var(--fg);
+}
+
+/* Full ink, not the quiet step: this sits on `--bg-subtle`, where `--fg-muted`
+   measures 4.35:1 on Solarized — under AA. Every quiet line in this block is
+   on `--bg-surface` for the same reason. */
+.vdlg-revcard__changelog {
+  margin: 0;
+  max-block-size: 8rem;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+/* The line is quiet; the `Badge` in front of it carries the warning, in the
+   calibrated soft-fill/`-fg`-ink pair. */
+.vdlg-revcard__hints {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The diff pane ------------------------------------------------------- */
+.vdlg-diff {
+  block-size: min(56vh, 36rem);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-normal);
+}
+
+.vdlg-diff__scroll {
+  block-size: 100%;
+  overflow-y: auto;
+}
+
+.vdlg-diff__split {
+  display: flex;
+  block-size: 100%;
+}
+
+.vdlg-diff__pane {
+  inline-size: 50%;
+  block-size: 100%;
+  overflow-y: auto;
+}
+
+.vdlg-diff__pane--left {
+  border-inline-end: 1px solid var(--border);
+}
+
+.vdlg-diff__pane-title {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  padding: var(--space-1) var(--space-3);
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-subtle);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-diff__line {
+  padding-inline: var(--space-3);
+  padding-block: 0.0625rem;
+  white-space: pre-wrap;
+  color: var(--fg);
+}
+
+.vdlg-diff__ln {
+  display: inline-block;
+  inline-size: 2rem;
+  margin-inline-end: var(--space-2);
+  text-align: end;
+  user-select: none;
+  color: var(--fg-faint);
+}
+
+/* A wash of the tone rather than its `-soft` fill: `-soft` is calibrated
+   against `-fg` ink, and these lines are drawn in `--fg`. */
+.vdlg-diff__line[data-change="added"],
+.vdlg-diff [data-change="added"] > .vdlg-diff__line {
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+}
+
+.vdlg-diff__line[data-change="removed"],
+.vdlg-diff [data-change="removed"] > .vdlg-diff__line {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+/* ---- The schema-changes tab --------------------------------------------- */
+.vdlg-classdiff {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+}
+
+.vdlg-classdiff__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-block-end: var(--space-4);
+  border-block-end: 1px solid var(--border);
+}
+
+.vdlg-classdiff__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.vdlg-classdiff__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-classdiff__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-classdiff__search {
+  flex: 1 1 12rem;
+  min-inline-size: 0;
+}
+
+.vdlg-classdiff__list {
+  max-block-size: min(40vh, 22rem);
+  overflow-y: auto;
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.vdlg-classdiff__row + .vdlg-classdiff__row {
+  border-block-start: 1px solid var(--border);
+}
+
+.vdlg-classdiff__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: start;
+  border-inline-start: 0.25rem solid var(--fg-faint);
+  cursor: pointer;
+}
+
+.vdlg-classdiff__summary[data-change="added"] {
+  border-inline-start-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 8%, transparent);
+}
+
+.vdlg-classdiff__summary[data-change="removed"] {
+  border-inline-start-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+
+.vdlg-classdiff__summary[data-change="modified"] {
+  border-inline-start-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+}
+
+.vdlg-classdiff__sigil {
+  inline-size: 1rem;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-classdiff__name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-classdiff__meta {
+  flex-shrink: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-classdiff__drill {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-block-start: 1px dashed var(--border);
+  background: var(--bg-subtle);
+}
+
+.vdlg-classdiff__drill-title {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-classdiff__drill-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-xs);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.vdlg-classdiff__drill-row[data-change="added"] {
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+}
+
+.vdlg-classdiff__drill-row[data-change="removed"] {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.vdlg-classdiff__drill-row[data-change="modified"] {
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+
+.vdlg-classdiff__drill-empty {
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-2);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The three summary tiles, and the per-class lists under them. */
+.vdlg-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(8rem, 100%), 1fr));
+  gap: var(--space-3);
+}
+
+/* A tile is tinted *and* inked from the same tone — the pair the token layer
+   calibrates. A `-fg` number on the plain surface would be the trap the
+   header note records: `--ok-fg` measures 1.5:1 on Nord's surface. */
+.vdlg-stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--neutral-soft);
+  color: var(--neutral-fg);
+}
+
+.vdlg-stat-tile[data-tone="ok"] {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.vdlg-stat-tile[data-tone="danger"] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.vdlg-stat-tile[data-tone="warn"] {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.vdlg-stat-tile__value {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+}
+
+.vdlg-stat-tile__label {
+  font-size: var(--fs-xs);
+}
+
+.vdlg-changelist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.vdlg-changelist__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-changelist__dot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--fg-faint);
+}
+
+.vdlg-changelist__title[data-tone="ok"] .vdlg-changelist__dot {
+  background: var(--ok);
+}
+
+.vdlg-changelist__title[data-tone="danger"] .vdlg-changelist__dot {
+  background: var(--danger);
+}
+
+.vdlg-changelist__title[data-tone="warn"] .vdlg-changelist__dot {
+  background: var(--warn);
+}
+
+.vdlg-changelist__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.vdlg-changelist__row[data-change="added"] {
+  background: color-mix(in srgb, var(--ok) 8%, transparent);
+}
+
+.vdlg-changelist__row[data-change="removed"] {
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+
+.vdlg-changelist__row[data-change="modified"] {
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+}
+
+.vdlg-changelist__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-changelist__path {
+  font-weight: 500;
+}
+
+/* ---- The breaking-doc and migration-guide tabs -------------------------- */
+.vdlg-doc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2);
+}
+
+.vdlg-doc__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.vdlg-doc__note {
+  max-inline-size: 60ch;
+}
+
+.vdlg-doc__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.vdlg-doc__body {
+  flex: 1;
+  min-block-size: min(45vh, 26rem);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+/* ---- 2 · The change report ---------------------------------------------- */
+.vdlg-changes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+@media (min-width: 64rem) {
+  .vdlg-changes {
+    flex-direction: row;
+  }
+}
+
+.vdlg-changes__aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+@media (min-width: 64rem) {
+  .vdlg-changes__aside {
+    inline-size: 18rem;
+  }
+}
+
+.vdlg-changes__alert {
+  font-size: var(--fs-xs);
+}
+
+.vdlg-changes__list {
+  max-block-size: min(50vh, 28rem);
+  overflow-y: auto;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.vdlg-changes__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: start;
+  background: var(--bg-surface);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.vdlg-changes__item + .vdlg-changes__item {
+  border-block-start: 1px solid var(--border);
+}
+
+.vdlg-changes__item:hover {
+  background: var(--bg-subtle);
+}
+
+.vdlg-changes__item[data-active] {
+  background: var(--accent-soft);
+}
+
+.vdlg-changes__item-label {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-changes__main {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.vdlg-changes__note {
+  margin: 0;
+  padding-block: var(--space-6);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.vdlg-changes__initial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-8);
+  text-align: center;
+}
+
+.vdlg-changes__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.vdlg-changes__detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block-end: var(--space-3);
+  border-block-end: 1px solid var(--border);
+}
+
+.vdlg-changes__pair {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-changes__severity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-changes__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.vdlg-changes__group {
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+
+.vdlg-changes__group-head {
+  padding: var(--space-1) var(--space-3);
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-subtle);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-changes__entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vdlg-changes__entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+.vdlg-changes__entry + .vdlg-changes__entry {
+  border-block-start: 1px solid var(--border);
+}
+
+.vdlg-changes__entry-summary {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* A tinted pill rather than tinted words: the fill and the ink are the pair
+   the token layer calibrates, which the ink alone on the surface is not. */
+.vdlg-changes__unclassified {
+  display: inline-block;
+  margin-inline-start: var(--space-2);
+  padding-inline: var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--warn-soft);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--warn-fg);
+}
+
+.vdlg-changes__pointer {
+  display: block;
+  font-size: var(--fs-2xs);
+  word-break: break-all;
+  color: var(--fg-muted);
+}
+
+.vdlg-changes__diff-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  font-size: var(--fs-xs);
+  color: var(--accent-fg);
+  cursor: pointer;
+}
+
+.vdlg-changes__diff-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.vdlg-changes__diff-link > svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+}
+
+.vdlg-changes__refreshing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-changes__refreshing > svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+}
+
+/* ---- 3 · The history graph and the relationship graph ------------------- */
+/* Every react-flow surface in this block sits on the canvas token, so the
+   graph's ground follows the theme like every other page background does. */
+.vdlg-flow {
+  background: var(--bg-canvas);
+}
+
+.vdlg-dag {
+  display: flex;
+  flex-direction: column;
+}
+
+.vdlg-dag__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.vdlg-dag__head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-dag__lanes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-block-end: 1px solid var(--border);
+}
+
+/* A viewport share with a `rem` floor: tall enough to be a graph on a laptop,
+   never so tall that it pushes the panel below the fold. */
+.vdlg-dag__stage {
+  position: relative;
+  inline-size: 100%;
+  block-size: min(55vh, 30rem);
+  min-block-size: 16rem;
+}
+
+.vdlg-dag__controls {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+  z-index: 10;
+  display: flex;
+  gap: var(--space-1);
+}
+
+.vdlg-dag__minimap {
+  background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+}
+
+.vdlg-dag__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: 100%;
+  margin: 0;
+  padding-inline: var(--space-4);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* ---- A revision node ----------------------------------------------------
+   The node's own box is graph geometry (the exemption `canvas-theme.ts`
+   documents), so its `px` are the layout's; its *colours* are tokens. */
+.vdlg-node__body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.vdlg-node__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  margin-block-start: 0.25rem;
+}
+
+.vdlg-node__dot {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  border-radius: 50%;
+  background: var(--neutral);
+  box-shadow: 0 0 0 2px var(--bg-surface);
+}
+
+.vdlg-node__dot[data-tone="ok"] { background: var(--ok); }
+.vdlg-node__dot[data-tone="accent"] { background: var(--accent); }
+.vdlg-node__dot[data-tone="violet"] { background: var(--violet); }
+.vdlg-node__dot[data-tone="rose"] { background: var(--rose); }
+.vdlg-node__dot[data-tone="warn"] { background: var(--warn); }
+.vdlg-node__dot[data-tone="orange"] { background: var(--orange); }
+.vdlg-node__dot[data-tone="danger"] { background: var(--danger); }
+.vdlg-node__dot[data-tone="honey"] { background: var(--honey); }
+
+/* The merge and tip glyphs are `GitMerge` and `GitBranch` — two different
+   *shapes*, which is the channel that survives every theme. They are not
+   tinted: no semantic ink clears AA on the node's own surface in all nine. */
+.vdlg-node__glyph {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  color: var(--fg-muted);
+}
+
+/* The tip stripe down a node's leading edge. Its width is the canvas
+   vocabulary's `edgeStripeWidth`, stated once here rather than inline. */
+.vdlg-node__tip {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 4px;
+  border-start-start-radius: 8px;
+  border-end-start-radius: 8px;
+  background: var(--neutral);
+}
+
+.vdlg-node__tip[data-tone="ok"] { background: var(--ok); }
+.vdlg-node__tip[data-tone="accent"] { background: var(--accent); }
+.vdlg-node__tip[data-tone="violet"] { background: var(--violet); }
+.vdlg-node__tip[data-tone="rose"] { background: var(--rose); }
+.vdlg-node__tip[data-tone="warn"] { background: var(--warn); }
+.vdlg-node__tip[data-tone="orange"] { background: var(--orange); }
+.vdlg-node__tip[data-tone="danger"] { background: var(--danger); }
+.vdlg-node__tip[data-tone="honey"] { background: var(--honey); }
+
+.vdlg-node__version {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* The node's violet border and its `GitMerge` glyph mark a merge; this line
+   says so in words, in the page's own ink. */
+.vdlg-node__merge {
+  margin-block-start: 0.125rem;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+/* `Tip: main` — the branch name in words. The lane's colour is on the dot
+   beside it and on the stripe down the node's edge, both non-text marks that
+   the name makes redundant; the label itself stays in the quiet step so it is
+   legible whatever lane it belongs to. */
+.vdlg-node__tip-label {
+  margin-block-start: 0.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.vdlg-node__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.125rem var(--space-1);
+  border-radius: var(--r-full);
+  background: var(--honey-soft);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--honey-fg);
+}
+
+.vdlg-node__tag > svg {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  flex-shrink: 0;
+}
+
+.vdlg-node__tag-name {
+  max-inline-size: 6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vdlg-node__message {
+  margin-block-start: 0.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-node__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-start: 0.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-node__menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
+  padding: 0.125rem var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--bg-surface);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.vdlg-node__menu-trigger:hover {
+  background: var(--bg-subtle);
+  color: var(--fg);
+}
+
+.vdlg-node__menu {
+  z-index: 100;
+}
+
+.vdlg-node__menu-sep {
+  block-size: 1px;
+  margin-block: var(--space-1);
+  background: var(--border);
+}
+
+/* ---- The relationship graph dialog -------------------------------------- */
+/* The dialog is a column: head, then a frame that takes the rest of the height
+   so the graph grows with the viewport instead of overflowing a fixed box. */
+.vdlg-relgraph {
+  gap: var(--space-3);
+}
+
+.vdlg-relgraph__frame {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-block-size: 16rem;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+
+.vdlg-relgraph__state {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-block-size: 16rem;
+  margin: 0;
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.vdlg-relgraph__state-title {
+  margin: 0;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-relgraph__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-block-size: 0;
+}
+
+.vdlg-relgraph__note {
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+.vdlg-relgraph__stage {
+  inline-size: 100%;
+  block-size: min(50vh, 26rem);
+  min-block-size: 15rem;
+}
+
+/* ---- 4 · The canvas compare tab ----------------------------------------- */
+.vdlg-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-block-size: 0;
+}
+
+.vdlg-canvas__split {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  inline-size: 100%;
+  flex: 1;
+  min-block-size: 0;
+}
+
+@media (min-width: 48rem) {
+  .vdlg-canvas__split {
+    flex-direction: row;
+  }
+}
+
+.vdlg-canvas-pane {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-block-size: min(40vh, 22rem);
+}
+
+.vdlg-canvas-pane__title {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-subtle);
+  text-align: center;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-canvas-pane__empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding-inline: var(--space-4);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.vdlg-canvas-pane__flow {
+  position: relative;
+  inline-size: 100%;
+  flex: 1;
+  min-block-size: min(45vh, 24rem);
+}
+
+.vdlg-canvas__overlay-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-canvas__overlay-side {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-canvas__stack {
+  position: relative;
+  inline-size: 100%;
+  flex: 1;
+  min-block-size: min(50vh, 26rem);
+}
+
+.vdlg-canvas__layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* The two layers are separated by opacity, not by hue — the base is the same
+   drawing seen through the compare side. */
+.vdlg-canvas__layer--under {
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+.vdlg-canvas__layer--over {
+  z-index: 10;
+  opacity: 0.88;
+}
+
+.vdlg-canvas__loading {
+  inline-size: 100%;
+  padding-block: var(--space-8);
+  min-block-size: min(45vh, 24rem);
+}
+
+/* ---- 5 · Merge conflicts ------------------------------------------------
+   The card is framed by a warn hairline rather than filled: a `--warn-soft`
+   fill under body text is the pairing the header note rules out. */
+.vdlg-conflicts {
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--warn);
+  overflow: hidden;
+}
+
+.vdlg-conflicts__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-block-end: 1px solid var(--border);
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+}
+
+.vdlg-conflicts__title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-conflicts__lede {
+  margin: var(--space-1) 0 var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.vdlg-conflicts__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.vdlg-conflicts__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.vdlg-conflicts__filter-grow {
+  flex: 1 1 12rem;
+  min-inline-size: 0;
+}
+
+.vdlg-conflicts__filter-kind {
+  flex: 0 1 14rem;
+  min-inline-size: 0;
+}
+
+.vdlg-conflicts__bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-conflicts__scroll {
+  max-block-size: min(40vh, 22rem);
+  overflow: auto;
+}
+
+/* One dense table, shared by the conflict list. `DataTable`'s own rules are
+   utilities and would lose to nothing here, so this is stated outright. */
+.vdlg-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.vdlg-table th {
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-subtle);
+  text-align: start;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.vdlg-table td {
+  padding: var(--space-2) var(--space-3);
+  vertical-align: top;
+  color: var(--fg);
+}
+
+.vdlg-table tbody tr + tr td {
+  border-block-start: 1px solid var(--border);
+}
+
+.vdlg-table tbody tr[data-unresolved] {
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+
+.vdlg-table__path {
+  font-size: var(--fs-xs);
+  word-break: break-all;
+}
+
+.vdlg-table__nowrap {
+  white-space: nowrap;
+}
+
+.vdlg-table__actions-col {
+  min-inline-size: 14rem;
+}
+
+/* ---- 6 · The compatibility report and its external evidence ------------- */
+.vdlg-compat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.vdlg-compat__overall {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.vdlg-compat__overall-label {
+  font-weight: 500;
+}
+
+.vdlg-compat__rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+  gap: 0 var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg);
+}
+
+.vdlg-compat__findings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-block-size: min(35vh, 18rem);
+  overflow-y: auto;
+  padding-inline-end: var(--space-1);
+}
+
+/* A section heading drawn as a pill, for the reason the header note gives: a
+   `-fg` ink on the plain surface is calibrated against its own `-soft` fill
+   and nothing else. The word is still the signal; the tint reinforces it. */
+.vdlg-compat__severity {
+  display: inline-block;
+  margin: 0 0 var(--space-1);
+  padding: 0.0625rem var(--space-2);
+  border-radius: var(--r-xs);
+  background: var(--neutral-soft);
+  font-weight: 600;
+  color: var(--neutral-fg);
+}
+
+.vdlg-compat__severity[data-severity="breaking"] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.vdlg-compat__severity[data-severity="warning"] {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.vdlg-compat__severity[data-severity="safe"] {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.vdlg-compat__paths {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vdlg-compat__path {
+  padding-inline-start: var(--space-2);
+  border-inline-start: 2px solid var(--border-strong);
+}
+
+.vdlg-compat__path-name {
+  font-size: var(--fs-2xs);
+  word-break: break-all;
+  color: var(--fg);
+}
+
+.vdlg-compat__messages {
+  margin: 0.125rem 0 0;
+  padding-inline-start: var(--space-4);
+  list-style: disc;
+  color: var(--fg-muted);
+}
+
+.vdlg-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.vdlg-evidence__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-weight: 500;
+}
+
+.vdlg-evidence__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-block-size: min(30vh, 15rem);
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vdlg-evidence__item {
+  padding-inline-start: var(--space-2);
+  border-inline-start: 2px solid var(--accent-soft);
+}
+
+.vdlg-evidence__changelog {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.vdlg-evidence__changelog > summary {
+  cursor: pointer;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.vdlg-evidence__pre {
+  margin-block-start: var(--space-1);
+  max-block-size: 10rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The rollback confirm's key/value list. */
+.vdlg-kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  font-size: var(--fs-xs);
+  text-align: start;
+}
+
+.vdlg-kv dt {
+  color: var(--fg-muted);
+}
+
+.vdlg-kv dd {
+  margin: 0;
+  color: var(--fg);
+  word-break: break-all;
+}
+
+/* ---- 7 · Lint & score --------------------------------------------------- */
+/* The scoring panel: the head, the grade line and the findings, stacked. */
+.vdlg-score {
+  gap: var(--space-3);
+}
+
+.vdlg-score__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.vdlg-score__version {
+  margin-inline-start: var(--space-2);
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--fg);
+}
+
+.vdlg-score__headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.vdlg-score__value {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.vdlg-score__value > strong {
+  color: var(--fg);
+}
+
+.vdlg-score__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+/* ---- 8 · The mock scenario editor --------------------------------------- */
+.vdlg-mock__scenario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.vdlg-mock__override {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+}
+
+.vdlg-mock__step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.vdlg-mock__scope {
+  inline-size: 6rem;
+}
+
+.vdlg-mock__route {
+  flex: 1 1 12rem;
+  min-inline-size: 0;
+}
+
+.vdlg-mock__errors {
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.vdlg-mock__errors-title {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.vdlg-mock__errors-list {
+  margin: var(--space-1) 0 0;
+  padding-inline-start: var(--space-5);
+  list-style: disc;
+  font-size: var(--fs-xs);
+}
+
+/* ---- 9 · The test bench ------------------------------------------------- */
+.vdlg-bench {
+  gap: var(--space-5);
+}
+
+.vdlg-bench__title > svg {
+  color: var(--accent);
+}
+
+.vdlg-bench__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-bench__row--between {
+  justify-content: space-between;
+}
+
+.vdlg-bench__row--end {
+  align-items: flex-end;
+}
+
+.vdlg-bench__version-select {
+  inline-size: 12rem;
+  max-inline-size: 100%;
+}
+
+.vdlg-bench__ref {
+  margin: 0;
+  font-size: var(--fs-xs);
+  word-break: break-all;
+  color: var(--fg-muted);
+}
+
+.vdlg-bench__editor {
+  position: relative;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+
+.vdlg-bench__synthetic {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+  z-index: 1;
+}
+
+/* A status line states its verdict in words and leads with a distinct glyph
+   — `CheckCircle2` / `XCircle` / `AlertTriangle` / `HelpCircle`. Shape and
+   text are the two channels; a tint would be a third that no theme can
+   guarantee, so the line is drawn in the page's ink and `data-tone` survives
+   only as a hook the tests and any future theme can read. */
+.vdlg-bench__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-bench__status > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.vdlg-bench__status[data-tone="neutral"] { color: var(--fg-muted); }
+
+.vdlg-bench__truncated {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-bench__findings {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vdlg-bench__findings > li + li {
+  border-block-start: 1px solid var(--border);
+}
+
+.vdlg-bench__finding {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.125rem;
+  inline-size: 100%;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  text-align: start;
+  cursor: pointer;
+}
+
+.vdlg-bench__finding:hover {
+  background: var(--bg-subtle);
+}
+
+.vdlg-bench__finding-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.vdlg-bench__pointer {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-bench__finding-message {
+  inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.vdlg-bench__diagnostic {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-bench__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.vdlg-bench__name-input {
+  inline-size: 16rem;
+  max-inline-size: 100%;
+}
+
+.vdlg-bench__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vdlg-bench__list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.vdlg-bench__list-name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+  font-size: var(--fs-sm);
+}
+
+.vdlg-bench__list-date {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.vdlg-bench__suite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.vdlg-bench__suite-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-bench__suite-name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.vdlg-bench__run {
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+
+.vdlg-bench__run-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+  padding: var(--space-1) var(--space-2);
+  text-align: start;
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.vdlg-bench__run-head:hover {
+  background: var(--bg-subtle);
+}
+
+.vdlg-bench__chevron {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.vdlg-bench__run-label {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg-muted);
+}
+
+.vdlg-bench__run-count {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-bench__run-body {
+  padding: var(--space-1) var(--space-2);
+  border-block-start: 1px solid var(--border);
+}
+
+.vdlg-bench__results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vdlg-bench__result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-xs);
+  font-size: var(--fs-xs);
+}
+
+.vdlg-bench__result[data-regression] {
+  background: color-mix(in srgb, var(--rose) 10%, transparent);
+}
+
+.vdlg-bench__result-name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg);
+}
+
+.vdlg-bench__result-message {
+  min-inline-size: 0;
+  max-inline-size: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg-muted);
+}
+
+/* ---- 10 · Export -------------------------------------------------------- */
+.vdlg-export {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  gap: var(--space-3);
+}
+
+.vdlg-export__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 0 0 1px var(--border);
+  min-inline-size: 0;
+}
+
+.vdlg-export__card-title {
+  color: var(--fg);
+}
+
+.vdlg-export__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.vdlg-export__summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+}
+
+.vdlg-export__summary-row > dd {
+  margin: 0;
+}
+
+.vdlg-export__chip {
+  display: inline-flex;
+  border-radius: var(--r-full);
+}
+
+.vdlg-export__chip:hover {
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.vdlg-export__cta {
+  margin-block-start: auto;
+}
+
+.vdlg-export__recent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vdlg-export__recent-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+}
+
+.vdlg-export__recent-main,
+.vdlg-export__recent-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.vdlg-export__recent-name {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-export__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.vdlg-export__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr));
+  gap: var(--space-2);
+}
+
+.vdlg-export__target {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  text-align: center;
+  box-shadow: inset 0 0 0 1px var(--border);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.vdlg-export__target:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.vdlg-export__target[data-selected] {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.vdlg-export__target:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.vdlg-export__target-tier {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+}
+
+.vdlg-export__target-band {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+}
+
+.vdlg-export__target-icon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin-block: var(--space-4) var(--space-1);
+  color: var(--fg-muted);
+}
+
+.vdlg-export__target-label {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.vdlg-export__headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.vdlg-export__headline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-export__fidelity-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.vdlg-export__fidelity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.vdlg-export__fidelity-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+/* The preserved-% ring. The SVG's `viewBox` is its own coordinate system; the
+   box around it is `rem`, so the ring scales with the type beside it. */
+.vdlg-ring {
+  position: relative;
+  inline-size: 6rem;
+  block-size: 6rem;
+  flex-shrink: 0;
+}
+
+.vdlg-ring__svg {
+  inline-size: 100%;
+  block-size: 100%;
+  rotate: -90deg;
+}
+
+.vdlg-ring__track {
+  stroke: var(--border-strong);
+}
+
+.vdlg-ring__value {
+  stroke: var(--neutral);
+}
+
+.vdlg-ring[data-tone="ok"] .vdlg-ring__value { stroke: var(--ok); }
+.vdlg-ring[data-tone="warn"] .vdlg-ring__value { stroke: var(--warn); }
+.vdlg-ring[data-tone="danger"] .vdlg-ring__value { stroke: var(--danger); }
+
+.vdlg-ring__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.vdlg-ring__value-text {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  color: var(--fg);
+}
+
+.vdlg-export__report {
+  max-block-size: min(35vh, 15rem);
+  overflow-y: auto;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vdlg-export__report-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-sm);
+}
+
+.vdlg-export__report-row + .vdlg-export__report-row {
+  border-block-start: 1px solid var(--border);
+}
+
+.vdlg-export__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--r-full);
+  background: var(--neutral-soft);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  color: var(--neutral-fg);
+}
+
+.vdlg-export__kind[data-tone="danger"] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.vdlg-export__kind[data-tone="warn"] {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.vdlg-export__kind[data-tone="accent"] {
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+}
+
+.vdlg-export__kind[data-tone="ok"] {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.vdlg-export__construct {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  word-break: break-all;
+  color: var(--fg);
+}
+
+.vdlg-export__report-message {
+  display: block;
+  margin-block-start: 0.125rem;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The acknowledgement gate. Tinted, because it *is* the warning — but the
+   sentence inside it is the tone's own `-fg` ink, the one pairing the token
+   layer calibrates. */
+.vdlg-export__ack {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.vdlg-export__ack[data-tone="warn"] {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.vdlg-export__ack[data-tone="danger"] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.vdlg-export__ack--typed {
+  flex-direction: column;
+  gap: var(--space-2);
+  cursor: auto;
+}
+
+.vdlg-export__ack-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vdlg-export__ack-head > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+.vdlg-export__ack-title {
+  font-weight: 600;
+}
+
+.vdlg-export__ack-note {
+  display: block;
+  margin: 0;
+  font-size: var(--fs-xs);
+  opacity: 0.9;
+}
+
+.vdlg-export__ack-input {
+  inline-size: 100%;
+  block-size: var(--control-h);
+  padding-inline: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--danger);
+}
+
+.vdlg-export__ack-input[data-matches] {
+  box-shadow: inset 0 0 0 1px var(--ok);
+}
+
+.vdlg-export__preview {
+  margin-block-start: var(--space-2);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}

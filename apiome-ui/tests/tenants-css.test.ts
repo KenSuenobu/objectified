@@ -179,7 +179,11 @@ const PAPER: Rgb = { r: 255, g: 255, b: 255 };
 const TENANT_SECTION = (() => {
   const start = css.indexOf('TENANTS & THE MANAGE DRAWER');
   if (start < 0) throw new Error('globals.css has no tenants section');
-  return css.slice(start);
+  // Bounded at the next banner rather than run to EOF, the same correction HIVE-6.3 (#5314)
+  // made to `members-css.test.ts`: an EOF slice makes every assertion below a claim about
+  // every later section of the stylesheet as well.
+  const next = css.indexOf('/* =', start);
+  return css.slice(start, next < 0 ? css.length : next);
 })();
 
 /** The same block with its comments removed. */

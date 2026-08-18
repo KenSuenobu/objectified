@@ -158,11 +158,21 @@ function mixOver(name: string, appearance: unknown, backdrop: Rgb, percent: numb
   };
 }
 
-/** The members block, from its banner to the end of the stylesheet. */
+/**
+ * The members block, from its banner to the start of whatever section follows it.
+ *
+ * Bounded rather than run to the end of the file, for the reason `api-keys-css.test.ts`
+ * records and HIVE-6.3 (#5314) made concrete: `globals.css` grows one section per redesign
+ * ticket, and a slice that ended at EOF made every assertion below — the banned-palette walk
+ * in particular — a claim about every *later* section too. The version-dialogs block spends
+ * `var(--rose-soft)` on a lane chip, which contains the substring `rose-`, and this suite
+ * reported it as a members regression.
+ */
 const MEMBER_SECTION = (() => {
   const start = css.indexOf('MEMBERS (HIVE-5.2, #5305)');
   if (start < 0) throw new Error('globals.css has no members section');
-  return css.slice(start);
+  const next = css.indexOf('/* =', start);
+  return css.slice(start, next < 0 ? css.length : next);
 })();
 
 /** The same block with its comments removed. */

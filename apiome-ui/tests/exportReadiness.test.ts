@@ -8,7 +8,7 @@
  */
 
 import {
-  bandBadgeClass,
+  bandTone,
   bandLabel,
   cardTitle,
   isCardSelectable,
@@ -184,7 +184,7 @@ describe('orderTargetCards', () => {
   });
 });
 
-describe('bandLabel / bandBadgeClass', () => {
+describe('bandLabel / bandTone', () => {
   it('labels every band', () => {
     expect(bandLabel('ready')).toBe('ready');
     expect(bandLabel('caution')).toBe('check first');
@@ -193,10 +193,12 @@ describe('bandLabel / bandBadgeClass', () => {
   });
 
   it('uses the go / look / refused / cannot-run palette', () => {
-    expect(bandBadgeClass('ready')).toContain('emerald');
-    expect(bandBadgeClass('caution')).toContain('amber');
-    expect(bandBadgeClass('blocked')).toContain('rose');
-    expect(bandBadgeClass('unavailable')).toContain('gray');
+    // HIVE-6.3 (#5314): a band names a tone from the shared vocabulary, not a palette pair,
+    // so the badge follows all nine themes and matches the fidelity badge beside it.
+    expect(bandTone('ready')).toBe('ok');
+    expect(bandTone('caution')).toBe('warn');
+    expect(bandTone('blocked')).toBe('danger');
+    expect(bandTone('unavailable')).toBe('neutral');
   });
 });
 

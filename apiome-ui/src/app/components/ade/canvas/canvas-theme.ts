@@ -91,6 +91,12 @@ export function classifyTypeLabel(label: string): TypeChipRole {
 
 export const CANVAS_TOKENS = {
   radius: 8,
+  /** Inline padding of a node whose content is drawn directly rather than in rows. */
+  nodePadX: 12,
+  /** Block padding of the same. Named beside `radius` so a node's box has one vocabulary. */
+  nodePadY: 8,
+  /** Width of the accent stripe down a node's leading edge (a branch tip's lane marker). */
+  edgeStripeWidth: 4,
   headerStripeHeight: 3,
   handleSize: 8,
   handleSizeLarge: 10,

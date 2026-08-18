@@ -28,7 +28,8 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { FlaskConical, Play, Terminal, PackagePlus } from 'lucide-react';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
+import { Alert } from '@/app/components/ui/Alert';
+import { Button } from '@/app/components/ui/Button';
 import {
   TEST_BENCH_MAX_FINDINGS,
   TEST_BENCH_PAYLOAD_MAX_BYTES,
@@ -450,28 +451,22 @@ export function SchemaTestBench({
     );
   }, [selection, fixtureReady, payloadText, artifactName, syntheticContent, copyToClipboard]);
 
-  const actionButtonClass =
-    'inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700';
-
   return (
-    <section className={`${dashboardPanelClass} space-y-5 p-6`} data-testid="schema-test-bench">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          <FlaskConical className="h-4 w-4 text-indigo-500" aria-hidden />
-          Schema Test Bench
+    <section className="vdlg-panel vdlg-panel--pad vdlg-bench" data-testid="schema-test-bench">
+      <div className="vdlg-bench__row vdlg-bench__row--between">
+        <h2 className="vdlg-caps vdlg-bench__title">
+          <FlaskConical aria-hidden />
+          Schema test bench
         </h2>
         {versions.length > 1 ? (
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor={versionSelectId}
-              className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-            >
+          <div className="vdlg-bench__row">
+            <label htmlFor={versionSelectId} className="vdlg-caps">
               Version
             </label>
             <select
               id={versionSelectId}
               data-testid="test-bench-version-select"
-              className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="vdlg-select vdlg-bench__version-select"
               value={version}
               onChange={(event) => handleVersionChange(event.target.value)}
             >
@@ -486,9 +481,9 @@ export function SchemaTestBench({
       </div>
 
       {targetsError ? (
-        <p data-testid="test-bench-targets-error" className="text-sm text-amber-700 dark:text-amber-300">
+        <Alert variant="warn" data-testid="test-bench-targets-error">
           {targetsError}
-        </p>
+        </Alert>
       ) : null}
 
       <SchemaTargetPicker
@@ -503,7 +498,7 @@ export function SchemaTestBench({
       />
 
       {selection ? (
-        <p className="font-mono text-xs text-gray-500 dark:text-gray-400" data-testid="test-bench-selected-ref">
+        <p className="vdlg-bench__ref mono" data-testid="test-bench-selected-ref">
           {selection.ref}
         </p>
       ) : null}
@@ -517,41 +512,43 @@ export function SchemaTestBench({
         language={mediaType === 'application/xml' ? 'xml' : 'json'}
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
+      <div className="vdlg-button-row">
+        <Button
           type="button"
+          size="sm"
           data-testid="test-bench-validate"
           onClick={() => void handleValidate()}
           disabled={!selection || validating || payloadText.trim() === ''}
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <Play className="h-4 w-4" aria-hidden /> {validating ? 'Validating…' : 'Validate'}
-        </button>
-        <button
+          <Play aria-hidden /> {validating ? 'Validating…' : 'Validate'}
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-testid="test-bench-copy-curl"
           onClick={handleCopyCurl}
           disabled={!selection || !targets?.tenant_slug || payloadText.trim() === ''}
-          className={actionButtonClass}
           title="Copy a curl command that validates this payload against the REST endpoint (auth via $APIOME_API_KEY)."
         >
-          <Terminal className="h-4 w-4 text-gray-500" aria-hidden /> Copy as curl
-        </button>
-        <button
+          <Terminal aria-hidden /> Copy as curl
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-testid="test-bench-copy-fixture"
           onClick={handleCopyFixture}
           disabled={!fixtureReady}
-          className={actionButtonClass}
           title={
             fixtureReady
               ? 'Copy this validated payload as an IXH-1.1 corpus manifest entry plus file content.'
               : 'Validate the payload first — only a payload that just passed can become a corpus fixture.'
           }
         >
-          <PackagePlus className="h-4 w-4 text-emerald-600 dark:text-emerald-500" aria-hidden />
+          <PackagePlus aria-hidden />
           Copy as fixture
-        </button>
+        </Button>
       </div>
 
       {/* Screen-reader-audible progress/copy feedback. */}
