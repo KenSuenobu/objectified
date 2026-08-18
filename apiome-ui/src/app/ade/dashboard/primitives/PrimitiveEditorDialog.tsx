@@ -1,20 +1,49 @@
 'use client';
 
+/**
+ * The create / edit primitive dialog (restyled by HIVE-6.5, #5316).
+ *
+ * Authority: `docs/mockups/build/primitives.html` §Overlays → *Create / edit primitive* — the
+ * Form / Advanced JSON tabs, Basic information, the per-type constraint block, the enum chip
+ * input, default & examples, and the live schema preview with its validity badge.
+ *
+ * ### What changed
+ *
+ * Only the skin. The Ajv compile, the form ⇄ schema round trip and the save path are untouched,
+ * which is the ticket's fourth acceptance criterion: the editor validates exactly the same
+ * JSON-Schema constraints as before. What went is the palette — six `<select>`s carrying
+ * `border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700`, `bg-indigo-100` enum chips,
+ * `bg-gray-100 dark:bg-gray-800` example chips, a `bg-gray-100 dark:bg-gray-800` preview block,
+ * and `text-green-600` / `text-red-600` validity text that is a {@link Badge} now.
+ *
+ * The two chip fields were separately hand-written and had drifted (different placeholders,
+ * different remove buttons); they are one `renderChipField` call each now.
+ */
+
 import { useState, useEffect, useMemo } from 'react';
-import { AlertCircle, CheckCircle, Code, Settings, X, Plus } from 'lucide-react';
+import { AlertCircle, CheckCircle, Code, Plus, Settings2, Shapes, X } from 'lucide-react';
+import { Alert } from '@/app/components/ui/Alert';
+import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
+import { Checkbox } from '@/app/components/ui/Checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/app/components/ui/Dialog';
 import { Input } from '@/app/components/ui/Input';
 import { Label } from '@/app/components/ui/Label';
 import { Textarea } from '@/app/components/ui/Textarea';
-import { Alert } from '@/app/components/ui/Alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/app/components/ui/Dialog';
-import { Checkbox } from '@/app/components/ui/Checkbox';
 import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
+import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
+import { useHiveMonacoTheme } from '@/app/components/ui/code/monacoHiveTheme';
 import { cn } from '@lib/utils';
 import dynamic from 'next/dynamic';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -132,6 +161,9 @@ const initialFormData: PrimitiveFormData = {
 };
 
 export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMessage }: Props) {
+  // The raw-JSON tab is painted in the reader's own theme rather than Monaco's `vs-dark`, which
+  // was a black box on a paper page in six of the nine appearances.
+  const monacoTheme = useHiveMonacoTheme();
   const [formData, setFormData] = useState<PrimitiveFormData>(initialFormData);
   const [activeTab, setActiveTab] = useState<'form' | 'advanced'>('form');
   const [advancedJson, setAdvancedJson] = useState('');
@@ -391,107 +423,109 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
     }
   };
 
+
+  /** The `string` constraint block — format, pattern and the two length bounds. */
   const renderStringFields = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="format">Format</Label>
-          <select
-            id="format"
-            value={formData.format}
-            onChange={(e) => updateField('format', e.target.value)}
-            disabled={saving}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            {STRING_FORMATS.map(f => (
-              <option key={f.value} value={f.value}>{f.label}</option>
-            ))}
-          </select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="pattern">Pattern (Regex)</Label>
-          <Input
-            id="pattern"
-            value={formData.pattern}
-            onChange={(e) => updateField('pattern', e.target.value)}
-            placeholder="^[a-zA-Z0-9]+$"
-            disabled={saving}
-          />
-        </div>
+    <div className="prm-grid-4">
+      <div className="prm-field">
+        <Label htmlFor="format">Format</Label>
+        <select
+          id="format"
+          value={formData.format}
+          onChange={(e) => updateField('format', e.target.value)}
+          disabled={saving}
+          className="hive-control prm-select"
+        >
+          {STRING_FORMATS.map((f) => (
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
+          ))}
+        </select>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="minLength">Min Length</Label>
-          <Input
-            id="minLength"
-            type="number"
-            min="0"
-            value={formData.minLength}
-            onChange={(e) => updateField('minLength', e.target.value)}
-            disabled={saving}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="maxLength">Max Length</Label>
-          <Input
-            id="maxLength"
-            type="number"
-            min="0"
-            value={formData.maxLength}
-            onChange={(e) => updateField('maxLength', e.target.value)}
-            disabled={saving}
-          />
-        </div>
+      <div className="prm-field">
+        <Label htmlFor="pattern">Pattern (Regex)</Label>
+        <Input
+          id="pattern"
+          className="mono"
+          value={formData.pattern}
+          onChange={(e) => updateField('pattern', e.target.value)}
+          placeholder="^[a-zA-Z0-9]+$"
+          disabled={saving}
+        />
+      </div>
+      <div className="prm-field">
+        <Label htmlFor="minLength">Min length</Label>
+        <Input
+          id="minLength"
+          type="number"
+          min="0"
+          value={formData.minLength}
+          onChange={(e) => updateField('minLength', e.target.value)}
+          disabled={saving}
+        />
+      </div>
+      <div className="prm-field">
+        <Label htmlFor="maxLength">Max length</Label>
+        <Input
+          id="maxLength"
+          type="number"
+          min="0"
+          value={formData.maxLength}
+          onChange={(e) => updateField('maxLength', e.target.value)}
+          disabled={saving}
+        />
       </div>
     </div>
   );
 
+  /** The `number` / `integer` block — the two bounds with their exclusivity, and multiple-of. */
   const renderNumberFields = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+    <>
+      <div className="prm-grid-2">
+        <div className="prm-field">
           <Label htmlFor="minimum">Minimum</Label>
-          <div className="flex items-center gap-2">
+          <div className="prm-bound">
             <Input
               id="minimum"
               type="number"
               value={formData.minimum}
               onChange={(e) => updateField('minimum', e.target.value)}
               disabled={saving}
-              className="flex-1"
             />
-            <label className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+            <span className="prm-check">
               <Checkbox
+                id="exclusive-minimum"
                 checked={formData.exclusiveMinimum}
                 onCheckedChange={(checked) => updateField('exclusiveMinimum', !!checked)}
               />
-              Exclusive
-            </label>
+              <Label htmlFor="exclusive-minimum">Exclusive</Label>
+            </span>
           </div>
         </div>
-        <div className="space-y-2">
+        <div className="prm-field">
           <Label htmlFor="maximum">Maximum</Label>
-          <div className="flex items-center gap-2">
+          <div className="prm-bound">
             <Input
               id="maximum"
               type="number"
               value={formData.maximum}
               onChange={(e) => updateField('maximum', e.target.value)}
               disabled={saving}
-              className="flex-1"
             />
-            <label className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+            <span className="prm-check">
               <Checkbox
+                id="exclusive-maximum"
                 checked={formData.exclusiveMaximum}
                 onCheckedChange={(checked) => updateField('exclusiveMaximum', !!checked)}
               />
-              Exclusive
-            </label>
+              <Label htmlFor="exclusive-maximum">Exclusive</Label>
+            </span>
           </div>
         </div>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="multipleOf">Multiple Of</Label>
+      <div className="prm-field">
+        <Label htmlFor="multipleOf">Multiple of</Label>
         <Input
           id="multipleOf"
           type="number"
@@ -502,28 +536,31 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
           disabled={saving}
         />
       </div>
-    </div>
+    </>
   );
 
+  /** The `array` block — the item type and the two count bounds. */
   const renderArrayFields = () => (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="arrayItemType">Item Type</Label>
-        <select
-          id="arrayItemType"
-          value={formData.arrayItemType}
-          onChange={(e) => updateField('arrayItemType', e.target.value)}
-          disabled={saving}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-        >
-          {ARRAY_ITEM_TYPES.map(t => (
-            <option key={t.value} value={t.value}>{t.label}</option>
-          ))}
-        </select>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="minItems">Min Items</Label>
+    <>
+      <div className="prm-grid-2">
+        <div className="prm-field">
+          <Label htmlFor="arrayItemType">Item type</Label>
+          <select
+            id="arrayItemType"
+            value={formData.arrayItemType}
+            onChange={(e) => updateField('arrayItemType', e.target.value)}
+            disabled={saving}
+            className="hive-control prm-select"
+          >
+            {ARRAY_ITEM_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="prm-field">
+          <Label htmlFor="minItems">Min items</Label>
           <Input
             id="minItems"
             type="number"
@@ -533,8 +570,8 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
             disabled={saving}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="maxItems">Max Items</Label>
+        <div className="prm-field">
+          <Label htmlFor="maxItems">Max items</Label>
           <Input
             id="maxItems"
             type="number"
@@ -545,21 +582,23 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
           />
         </div>
       </div>
-      <label className="flex items-center gap-2">
+      <span className="prm-check">
         <Checkbox
+          id="unique-items"
           checked={formData.uniqueItems}
           onCheckedChange={(checked) => updateField('uniqueItems', !!checked)}
         />
-        <span className="text-sm text-gray-700 dark:text-gray-300">Unique Items Only</span>
-      </label>
-    </div>
+        <Label htmlFor="unique-items">Unique items only</Label>
+      </span>
+    </>
   );
 
+  /** The `object` block — the property-count bounds and the additional-properties gate. */
   const renderObjectFields = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="minProperties">Min Properties</Label>
+    <>
+      <div className="prm-grid-2">
+        <div className="prm-field">
+          <Label htmlFor="minProperties">Min properties</Label>
           <Input
             id="minProperties"
             type="number"
@@ -569,8 +608,8 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
             disabled={saving}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="maxProperties">Max Properties</Label>
+        <div className="prm-field">
+          <Label htmlFor="maxProperties">Max properties</Label>
           <Input
             id="maxProperties"
             type="number"
@@ -581,93 +620,108 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
           />
         </div>
       </div>
-      <label className="flex items-center gap-2">
+      <span className="prm-check">
         <Checkbox
+          id="additional-properties"
           checked={formData.additionalProperties}
           onCheckedChange={(checked) => updateField('additionalProperties', !!checked)}
         />
-        <span className="text-sm text-gray-700 dark:text-gray-300">Allow Additional Properties</span>
-      </label>
-    </div>
+        <Label htmlFor="additional-properties">Allow additional properties</Label>
+      </span>
+    </>
   );
 
-  const renderEnumSection = () => (
-    <div className="space-y-2">
-      <Label>Allowed Values (Enum)</Label>
-      <div className="flex gap-2">
+  /**
+   * A chip list with an add-field beneath it — the enum values and the examples.
+   *
+   * One component for both because they are the same control: the mockup draws each as a row of
+   * removable chips followed by an input, and having written it twice is how the two drifted into
+   * different placeholder wording and different remove affordances.
+   */
+  const renderChipField = ({
+    id,
+    label,
+    values,
+    inputValue,
+    onInputChange,
+    onAdd,
+    onRemove,
+    placeholder,
+    mono,
+  }: {
+    id: string;
+    label: string;
+    values: string[];
+    inputValue: string;
+    onInputChange: (value: string) => void;
+    onAdd: () => void;
+    onRemove: (value: string) => void;
+    placeholder: string;
+    mono?: boolean;
+  }) => (
+    <div className="prm-field">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="prm-chips">
+        {values.map((value) => (
+          <span key={value} className={cn('prm-chip', mono && 'mono')}>
+            {value}
+            <button
+              type="button"
+              className="prm-chip__remove"
+              onClick={() => onRemove(value)}
+              aria-label={`Remove ${value}`}
+            >
+              <X aria-hidden />
+            </button>
+          </span>
+        ))}
         <Input
-          value={enumInput}
-          onChange={(e) => setEnumInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEnumValue())}
-          placeholder="Add a value..."
+          id={id}
+          className="prm-chips__input"
+          value={inputValue}
+          onChange={(e) => onInputChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            onAdd();
+          }}
+          placeholder={placeholder}
           disabled={saving}
-          className="flex-1"
         />
-        <Button type="button" variant="secondary" onClick={addEnumValue} disabled={saving}>
-          <Plus className="w-4 h-4" />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onAdd}
+          disabled={saving}
+          aria-label={`Add to ${label.toLowerCase()}`}
+        >
+          <Plus aria-hidden />
         </Button>
       </div>
-      {formData.enum.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {formData.enum.map((value) => (
-            <span
-              key={value}
-              className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm"
-            >
-              {value}
-              <button type="button" onClick={() => removeEnumValue(value)} className="hover:text-red-500">
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderExamplesSection = () => (
-    <div className="space-y-2">
-      <Label>Examples</Label>
-      <div className="flex gap-2">
-        <Input
-          value={exampleInput}
-          onChange={(e) => setExampleInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addExample())}
-          placeholder="Add an example value..."
-          disabled={saving}
-          className="flex-1"
-        />
-        <Button type="button" variant="secondary" onClick={addExample} disabled={saving}>
-          <Plus className="w-4 h-4" />
-        </Button>
-      </div>
-      {formData.examples.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {formData.examples.map((value, idx) => (
-            <span
-              key={idx}
-              className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-sm"
-            >
-              {value}
-              <button type="button" onClick={() => removeExample(value)} className="hover:text-red-500">
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] min-h-[90vh] flex flex-col overflow-hidden" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>{primitive ? 'Edit Primitive' : 'Create Primitive'}</DialogTitle>
+      <DialogContent size="xl" className="prm-dialog prm-dialog--tall" aria-describedby={undefined}>
+        <DialogHeader className="prm-dialog__head">
+          <span className="tnt-icon-tile" data-tone="accent" aria-hidden>
+            <Shapes />
+          </span>
+          <div className="prm-dialog__heading">
+            <DialogTitle>{primitive ? 'Edit primitive' : 'Create primitive'}</DialogTitle>
+            <DialogDescription>
+              Author a JSON Schema 2020-12 type via form or raw JSON.
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
-        {/* Tab Navigation */}
-        <div role="tablist" aria-label="Primitive editor views" className={cn(TAB_LIST_CLASS, 'shrink-0')}>
+        <div
+          role="tablist"
+          aria-label="Primitive editor views"
+          className={cn(TAB_LIST_CLASS, 'prm-dialog__tabs')}
+        >
           <button
             type="button"
             role="tab"
@@ -675,7 +729,7 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
             onClick={() => setActiveTab('form')}
             className={tabTriggerClass({ active: activeTab === 'form' })}
           >
-            <Settings className="w-4 h-4" />
+            <Settings2 aria-hidden />
             Form
           </button>
           <button
@@ -685,27 +739,27 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
             onClick={() => setActiveTab('advanced')}
             className={tabTriggerClass({ active: activeTab === 'advanced' })}
           >
-            <Code className="w-4 h-4" />
+            <Code aria-hidden />
             Advanced JSON
           </button>
         </div>
 
-        <div className="space-y-4 py-4 pr-[10px] flex-1 min-h-0 overflow-y-auto">
+        <div className="prm-dialog__body prm-dialog__body--scroll">
           {validationError && (
-            <Alert variant="error">
-              <AlertCircle className="h-4 w-4" />
+            <Alert variant="danger">
               <span>{validationError}</span>
             </Alert>
           )}
 
           {activeTab === 'form' ? (
-            <div className="space-y-6">
-              {/* Basic Info */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Basic Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name *</Label>
+            <>
+              <section className="prm-form-section">
+                <h3 className="prm-form-section__title">Basic information</h3>
+                <div className="prm-grid-2">
+                  <div className="prm-field">
+                    <Label htmlFor="name">
+                      Name <span className="prm-req">*</span>
+                    </Label>
                     <Input
                       id="name"
                       value={formData.name}
@@ -714,22 +768,29 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
                       disabled={saving}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Type *</Label>
+                  <div className="prm-field">
+                    <Label htmlFor="category">
+                      Type <span className="prm-req">*</span>
+                    </Label>
                     <select
                       id="category"
                       value={formData.category}
                       onChange={(e) => updateField('category', e.target.value)}
                       disabled={saving || !!primitive}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
+                      className="hive-control prm-select"
                     >
-                      {CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
                       ))}
                     </select>
+                    {primitive ? (
+                      <p className="prm-hint">A type’s kind cannot change after it is created.</p>
+                    ) : null}
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="prm-field">
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
@@ -740,120 +801,168 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
                     disabled={saving}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tags">Tags</Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags}
-                    onChange={(e) => updateField('tags', e.target.value)}
-                    placeholder="email, contact, validation (comma-separated)"
-                    disabled={saving}
-                  />
+                <div className="prm-grid-2">
+                  <div className="prm-field">
+                    <Label htmlFor="tags">Tags</Label>
+                    <Input
+                      id="tags"
+                      value={formData.tags}
+                      onChange={(e) => updateField('tags', e.target.value)}
+                      placeholder="email, contact, validation (comma-separated)"
+                      disabled={saving}
+                    />
+                  </div>
+                  <span className="prm-check prm-check--field">
+                    <Checkbox
+                      id="nullable"
+                      checked={formData.nullable}
+                      onCheckedChange={(checked) => updateField('nullable', !!checked)}
+                    />
+                    <Label htmlFor="nullable">Nullable (allows null value)</Label>
+                  </span>
                 </div>
-                <label className="flex items-center gap-2">
-                  <Checkbox
-                    checked={formData.nullable}
-                    onCheckedChange={(checked) => updateField('nullable', !!checked)}
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Nullable (allows null value)</span>
-                </label>
-              </div>
+              </section>
 
-              {/* Type-specific Constraints */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {formData.category.charAt(0).toUpperCase() + formData.category.slice(1)} Constraints
+              <section className="prm-form-section">
+                <h3 className="prm-form-section__title">
+                  {formData.category.charAt(0).toUpperCase() + formData.category.slice(1)}{' '}
+                  constraints
                 </h3>
                 {formData.category === 'string' && renderStringFields()}
-                {(formData.category === 'number' || formData.category === 'integer') && renderNumberFields()}
+                {(formData.category === 'number' || formData.category === 'integer') &&
+                  renderNumberFields()}
                 {formData.category === 'array' && renderArrayFields()}
                 {formData.category === 'object' && renderObjectFields()}
                 {formData.category === 'boolean' && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Boolean type has no additional constraints. Use enum if you want to restrict to specific values.
+                  <p className="prm-quiet">
+                    Boolean type has no additional constraints. Use enum if you want to restrict to
+                    specific values.
                   </p>
                 )}
-              </div>
+              </section>
 
-              {/* Enum Values */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Validation</h3>
-                {renderEnumSection()}
-              </div>
+              <section className="prm-form-section">
+                <h3 className="prm-form-section__title">Validation</h3>
+                {renderChipField({
+                  id: 'enum-value',
+                  label: 'Allowed values (enum)',
+                  values: formData.enum,
+                  inputValue: enumInput,
+                  onInputChange: setEnumInput,
+                  onAdd: addEnumValue,
+                  onRemove: removeEnumValue,
+                  placeholder: 'Add a value...',
+                })}
+              </section>
 
-              {/* Default & Examples */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Default & Examples</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="defaultValue">Default Value</Label>
-                  <Input
-                    id="defaultValue"
-                    value={formData.defaultValue}
-                    onChange={(e) => updateField('defaultValue', e.target.value)}
-                    placeholder={formData.category === 'string' ? '"example"' : formData.category === 'boolean' ? 'true' : '0'}
-                    disabled={saving}
-                  />
-                  <p className="text-xs text-gray-500">For strings use quotes, for objects/arrays use JSON</p>
+              <section className="prm-form-section">
+                <h3 className="prm-form-section__title">Default &amp; examples</h3>
+                <div className="prm-grid-2">
+                  <div className="prm-field">
+                    <Label htmlFor="defaultValue">Default value</Label>
+                    <Input
+                      id="defaultValue"
+                      className="mono"
+                      value={formData.defaultValue}
+                      onChange={(e) => updateField('defaultValue', e.target.value)}
+                      placeholder={
+                        formData.category === 'string'
+                          ? '"example"'
+                          : formData.category === 'boolean'
+                            ? 'true'
+                            : '0'
+                      }
+                      disabled={saving}
+                    />
+                    <p className="prm-hint">
+                      For strings use quotes, for objects/arrays use JSON
+                    </p>
+                  </div>
+                  {renderChipField({
+                    id: 'example-value',
+                    label: 'Examples',
+                    values: formData.examples,
+                    inputValue: exampleInput,
+                    onInputChange: setExampleInput,
+                    onAdd: addExample,
+                    onRemove: removeExample,
+                    placeholder: 'Add an example value...',
+                    mono: true,
+                  })}
                 </div>
-                {renderExamplesSection()}
-              </div>
+              </section>
 
-              {/* Schema Preview */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Schema Preview</h3>
-                  <span className="text-xs text-green-600 flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" /> Valid
-                  </span>
-                </div>
-                <pre className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs overflow-auto max-h-40 font-mono">
+              <section className="prm-form-section">
+                <h3 className="prm-form-section__title">
+                  Schema preview
+                  <Badge variant="ok">
+                    <CheckCircle aria-hidden />
+                    Valid
+                  </Badge>
+                </h3>
+                <pre className="prm-code prm-code--tall" data-testid="primitive-schema-preview">
                   {JSON.stringify(buildSchema, null, 2)}
                 </pre>
-              </div>
-            </div>
+              </section>
+            </>
           ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>JSON Schema</Label>
-                  {schemaError ? (
-                    <span className="text-xs text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" /> Invalid
-                    </span>
-                  ) : advancedJson.trim() ? (
-                    <span className="text-xs text-green-600 flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" /> Valid
-                    </span>
-                  ) : null}
-                </div>
-                <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden min-h-[60vh]">
-                  <MonacoEditor
-                    height="60vh"
-                    language="json"
-                    theme="vs-dark"
-                    value={advancedJson}
-                    onChange={handleAdvancedJsonChange}
-                    options={{
-                      minimap: { enabled: false },
-                      scrollBeyondLastLine: false,
-                      fontSize: CODE_EDITOR_FONT_SIZE,
-                      readOnly: saving,
-                    }}
-                  />
-                </div>
-                {schemaError && <p className="text-xs text-red-600">{schemaError}</p>}
-              </div>
-              <Alert variant="default">
-                <span>Changes in Advanced mode will override the form. Switch to Form tab to use the visual editor.</span>
+            <>
+              <Alert variant="warn">
+                <span>
+                  Changes in Advanced mode will override the form. Switch to the Form tab to use the
+                  visual editor.
+                </span>
               </Alert>
-            </div>
+
+              <div className="prm-editor__bar">
+                <Label htmlFor="advanced-json">JSON Schema</Label>
+                {schemaError ? (
+                  <Badge variant="danger">
+                    <AlertCircle aria-hidden />
+                    Invalid
+                  </Badge>
+                ) : advancedJson.trim() ? (
+                  <Badge variant="ok">
+                    <CheckCircle aria-hidden />
+                    Valid
+                  </Badge>
+                ) : null}
+              </div>
+
+              <div className="prm-editor" id="advanced-json">
+                <MonacoEditor
+                  height="52vh"
+                  language="json"
+                  theme={monacoTheme.theme}
+                  beforeMount={monacoTheme.beforeMount}
+                  value={advancedJson}
+                  onChange={handleAdvancedJsonChange}
+                  options={{
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    fontSize: CODE_EDITOR_FONT_SIZE,
+                    readOnly: saving,
+                  }}
+                />
+              </div>
+              {schemaError && (
+                <p className="prm-error" role="status">
+                  {schemaError}
+                </p>
+              )}
+            </>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving || (activeTab === 'advanced' && !!schemaError)}>
-            {saving ? 'Saving...' : (primitive ? 'Update' : 'Create')}
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => void handleSave()}
+            disabled={saving || (activeTab === 'advanced' && !!schemaError)}
+          >
+            {saving ? 'Saving…' : primitive ? 'Update' : 'Create'}
           </Button>
         </DialogFooter>
       </DialogContent>

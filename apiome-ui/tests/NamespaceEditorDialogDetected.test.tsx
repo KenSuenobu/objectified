@@ -9,7 +9,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import NamespaceEditorDialog from '../src/app/ade/dashboard/primitives/NamespaceEditorDialog';
+import NamespaceEditorDialog from '../src/app/components/ade/primitives/NamespaceEditorDialog';
 import type { TypeNamespaceCollection } from '../src/app/ade/dashboard/primitives/primitivesRegistryTypes';
 
 const DETECTED = [

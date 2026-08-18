@@ -29,9 +29,10 @@ beforeAll(() => {
   Element.prototype.scrollIntoView = () => {};
 });
 
-import PrimitivesNamespacesView, {
+import NamespacesPanel from '../src/app/components/ade/primitives/NamespacesPanel';
+import {
   describeNamespaceRemoval,
-} from '../src/app/ade/dashboard/primitives/PrimitivesNamespacesView';
+} from '../src/app/components/ade/primitives/primitivesModel';
 import { DialogProvider } from '../src/app/components/providers/DialogProvider';
 import type { TypeNamespaceCollection } from '../src/app/ade/dashboard/primitives/primitivesRegistryTypes';
 
@@ -64,7 +65,7 @@ const NAMESPACES: TypeNamespaceCollection[] = [
   },
 ];
 
-describe('PrimitivesNamespacesView', () => {
+describe('NamespacesPanel', () => {
   const onRefresh = jest.fn();
   const onMessage = jest.fn();
 
@@ -79,7 +80,7 @@ describe('PrimitivesNamespacesView', () => {
   function renderView(namespaces = NAMESPACES) {
     return render(
       <DialogProvider>
-        <PrimitivesNamespacesView
+        <NamespacesPanel
           namespaces={namespaces}
           unresolvedByNamespace={{}}
           loading={false}
@@ -221,7 +222,7 @@ describe('describeNamespaceRemoval', () => {
   });
 });
 
-describe('PrimitivesNamespacesView — removing a namespace registration', () => {
+describe('NamespacesPanel — removing a namespace registration', () => {
   const onRefresh = jest.fn();
   const onMessage = jest.fn();
 
@@ -234,7 +235,7 @@ describe('PrimitivesNamespacesView — removing a namespace registration', () =>
   function renderView(namespaces = NAMESPACES) {
     return render(
       <DialogProvider>
-        <PrimitivesNamespacesView
+        <NamespacesPanel
           namespaces={namespaces}
           unresolvedByNamespace={{}}
           loading={false}

@@ -10,7 +10,7 @@ import {
   resolverTargetLinkLabel,
   shortenTarget,
   sourceLabel,
-  statusBadgeClass,
+  refStatusTone,
   statusLabel,
   summarizeStatuses,
   type ResolvedPrimitiveRefs,
@@ -137,14 +137,16 @@ describe('primitivesResolverModel', () => {
     expect(summarizeStatuses(withCircular)).toEqual({ resolved: 2, unresolved: 1, circular: 1 });
   });
 
-  it('statusLabel and statusBadgeClass cover every status', () => {
+  it('statusLabel and refStatusTone cover every status', () => {
     expect(statusLabel('resolved')).toBe('Resolved');
     expect(statusLabel('unresolved')).toBe('Unresolved');
     expect(statusLabel('circular')).toBe('Circular');
 
-    expect(statusBadgeClass('resolved')).toContain('emerald');
-    expect(statusBadgeClass('unresolved')).toContain('amber');
-    expect(statusBadgeClass('circular')).toContain('red');
+    // Tones of the shared vocabulary (HIVE-6.5), not Tailwind palette strings: the same green,
+    // amber and red the collections panel and the KPI strip resolve to.
+    expect(refStatusTone('resolved')).toBe('ok');
+    expect(refStatusTone('unresolved')).toBe('warn');
+    expect(refStatusTone('circular')).toBe('danger');
   });
 
   it('emptyResolveResponse is a zeroed response', () => {

@@ -97,12 +97,34 @@ function mockDashboardFetch() {
   );
 }
 
+/** Header label per sortable column, as `DataTable` draws it. */
+const HEADER_LABEL: Record<string, string> = {
+  name: 'Name',
+  namespace: 'Namespace',
+  category: 'Category',
+  description: 'Description',
+  usage: 'Usage',
+  type: 'Type',
+};
+
 /**
- * The types table, located via one of its own headers — the screen also renders the Type collections
+ * The types table, located via its caption — the screen also renders the Type collections
  * table, so `getByRole('table')` is ambiguous here.
  */
 function typesTable(): HTMLTableElement {
-  return screen.getByTestId('primitives-sort-name').closest('table') as HTMLTableElement;
+  return screen.getByRole('table', { name: 'Primitives' }) as HTMLTableElement;
+}
+
+/** One column's `<th>` in the types table. */
+function sortHeader(column: string): HTMLTableCellElement {
+  return within(typesTable()).getByRole('columnheader', {
+    name: new RegExp(`^${HEADER_LABEL[column]}$`, 'i'),
+  }) as HTMLTableCellElement;
+}
+
+/** The button inside that header, which is what a click on the column hits. */
+function sortControl(column: string): HTMLButtonElement {
+  return within(sortHeader(column)).getByRole('button') as HTMLButtonElement;
 }
 
 /** The Name cell of each body row, top to bottom. */
@@ -118,7 +140,7 @@ async function renderTable() {
       <PrimitivesManagementClient />
     </DialogProvider>
   );
-  await waitFor(() => expect(screen.getByTestId('primitives-sort-name')).toBeInTheDocument());
+  await waitFor(() => expect(sortHeader('name')).toBeInTheDocument());
   await waitFor(() => expect(renderedNameOrder().length).toBe(3));
 }
 
@@ -129,7 +151,7 @@ describe('Primitives table — column sorting', () => {
     await renderTable();
 
     expect(renderedNameOrder()).toEqual(['address', 'balance', 'charge']);
-    expect(screen.getByTestId('primitives-sort-name').closest('th')).toHaveAttribute(
+    expect(sortHeader('name')).toHaveAttribute(
       'aria-sort',
       'ascending'
     );
@@ -139,19 +161,19 @@ describe('Primitives table — column sorting', () => {
     await renderTable();
 
     for (const column of ['name', 'namespace', 'category', 'description', 'usage', 'type']) {
-      expect(screen.getByTestId(`primitives-sort-${column}`)).toBeInTheDocument();
+      expect(sortControl(column)).toBeInTheDocument();
     }
-    const actionsHeader = screen.getByText('Actions').closest('th')!;
+    const actionsHeader = within(typesTable()).getByRole('columnheader', { name: 'Actions' });
     expect(within(actionsHeader).queryByRole('button')).not.toBeInTheDocument();
   });
 
   it('reverses the order when the active column is clicked again', async () => {
     await renderTable();
 
-    fireEvent.click(screen.getByTestId('primitives-sort-name'));
+    fireEvent.click(sortControl('name'));
 
     expect(renderedNameOrder()).toEqual(['charge', 'balance', 'address']);
-    expect(screen.getByTestId('primitives-sort-name').closest('th')).toHaveAttribute(
+    expect(sortHeader('name')).toHaveAttribute(
       'aria-sort',
       'descending'
     );
@@ -160,44 +182,44 @@ describe('Primitives table — column sorting', () => {
   it('sorts usage numerically, most-used first on the second click', async () => {
     await renderTable();
 
-    fireEvent.click(screen.getByTestId('primitives-sort-usage'));
+    fireEvent.click(sortControl('usage'));
     expect(renderedNameOrder()).toEqual(['balance', 'charge', 'address']);
 
-    fireEvent.click(screen.getByTestId('primitives-sort-usage'));
+    fireEvent.click(sortControl('usage'));
     expect(renderedNameOrder()).toEqual(['address', 'charge', 'balance']);
   });
 
   it('sorts by type, system types first', async () => {
     await renderTable();
 
-    fireEvent.click(screen.getByTestId('primitives-sort-type'));
+    fireEvent.click(sortControl('type'));
     expect(renderedNameOrder()[0]).toBe('address');
 
-    fireEvent.click(screen.getByTestId('primitives-sort-type'));
+    fireEvent.click(sortControl('type'));
     expect(renderedNameOrder()[2]).toBe('address');
   });
 
   it('keeps a type with no namespace at the bottom in both directions', async () => {
     await renderTable();
 
-    fireEvent.click(screen.getByTestId('primitives-sort-namespace'));
+    fireEvent.click(sortControl('namespace'));
     // `charge` has no namespace, so it trails the two that do.
     expect(renderedNameOrder()[2]).toBe('charge');
 
-    fireEvent.click(screen.getByTestId('primitives-sort-namespace'));
+    fireEvent.click(sortControl('namespace'));
     expect(renderedNameOrder()[2]).toBe('charge');
   });
 
   it('moves the sort indicator to whichever column is active', async () => {
     await renderTable();
 
-    fireEvent.click(screen.getByTestId('primitives-sort-category'));
+    fireEvent.click(sortControl('category'));
 
-    expect(screen.getByTestId('primitives-sort-category').closest('th')).toHaveAttribute(
+    expect(sortHeader('category')).toHaveAttribute(
       'aria-sort',
       'ascending'
     );
-    expect(screen.getByTestId('primitives-sort-name').closest('th')).toHaveAttribute(
+    expect(sortHeader('name')).toHaveAttribute(
       'aria-sort',
       'none'
     );
@@ -206,8 +228,8 @@ describe('Primitives table — column sorting', () => {
   it('keeps the chosen sort while the search filter narrows the list', async () => {
     await renderTable();
 
-    fireEvent.click(screen.getByTestId('primitives-sort-usage'));
-    fireEvent.click(screen.getByTestId('primitives-sort-usage'));
+    fireEvent.click(sortControl('usage'));
+    fireEvent.click(sortControl('usage'));
     expect(renderedNameOrder()).toEqual(['address', 'charge', 'balance']);
 
     // Filtering re-runs the sort; it must not fall back to name-ascending.
