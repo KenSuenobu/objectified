@@ -111,7 +111,7 @@ function memberRow(options: {
     status === 'active' ? 'bg-ok-soft text-ok-fg' : 'bg-warn-soft text-warn-fg';
   const mark = pending
     ? `<span class="mbr-invite-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 7-9 5.7L2 7"/></svg></span>`
-    : `<span class="relative inline-grid size-6.5 shrink-0 place-items-center rounded-full bg-inset text-2xs font-semibold text-fg-muted" aria-hidden="true">MH</span>`;
+    : `<span class="relative inline-grid size-8 shrink-0 place-items-center rounded-full bg-inset text-xs font-semibold text-fg-muted" aria-hidden="true">MH</span>`;
 
   return `
   <tr class="group ${pending ? 'mbr-row--pending' : ''}" id="${id}">
@@ -223,8 +223,8 @@ const PAGE_MARKUP = `
           </tbody>
         </table>
       </div>
-      <div class="flex flex-wrap items-center gap-2 border-t border-border px-3 py-2.5">
-        <span class="text-xs text-fg-muted">5 people · 3 active · 1 pending · 1 suspended</span>
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3.5 py-2.5 text-xs text-fg-muted">
+        <span>5 people · 3 active · 1 pending · 1 suspended</span>
       </div>
     </div>
 

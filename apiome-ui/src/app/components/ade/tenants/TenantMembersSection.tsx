@@ -7,7 +7,12 @@ import { ArrowRight, Pencil, Shield, Trash2, UserPlus, Users, X } from 'lucide-r
 import { Avatar } from '@/app/components/ui/Avatar';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
-import { DataTable, type DataTableColumn } from '@/app/components/ui/DataTable';
+import {
+  DataTable,
+  DataTableFoot,
+  DataTableToolbar,
+  type DataTableColumn,
+} from '@/app/components/ui/DataTable';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { Input } from '@/app/components/ui/Input';
 
@@ -200,7 +205,7 @@ export default function TenantMembersSection({
         loadingLabel="Loading members…"
         className="shadow-[inset_0_0_0_1px_var(--border)]"
         toolbar={
-          <>
+          <DataTableToolbar>
             <div className="relative flex min-w-0 flex-1 items-center sm:max-w-[20rem]">
               <Input
                 type="search"
@@ -225,7 +230,7 @@ export default function TenantMembersSection({
             <span className="ml-auto shrink-0 text-xs text-fg-muted">
               Admins first, then name
             </span>
-          </>
+          </DataTableToolbar>
         }
         empty={
           filtering ? (
@@ -256,19 +261,19 @@ export default function TenantMembersSection({
           )
         }
         footer={
-          <>
-            <span className="text-xs text-fg-muted">
+          <DataTableFoot>
+            <span>
               {summary.total} {summary.total === 1 ? 'member' : 'members'} · {summary.admins}{' '}
               {summary.admins === 1 ? 'admin' : 'admins'}
             </span>
             <Link
               href={membersPageHref}
-              className="ml-auto inline-flex items-center gap-1 text-xs text-accent-fg transition-colors hover:text-accent"
+              className="ml-auto inline-flex items-center gap-1 text-accent-fg transition-colors hover:text-accent"
             >
               Open members &amp; roles
               <ArrowRight className="size-[var(--icon-button)]" aria-hidden />
             </Link>
-          </>
+          </DataTableFoot>
         }
       />
     </section>

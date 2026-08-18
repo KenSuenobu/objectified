@@ -156,22 +156,22 @@ const LIST_MARKUP = `
             </tr>
           </thead>
           <tbody>
-            <tr class="group bg-accent-soft" id="tnt-row-current">
+            <tr class="group tnt-row--current bg-accent-soft" id="tnt-row-current">
               <td class="${TD}">
                 <div class="flex items-center gap-3">
                   <span class="avatar-hex relative inline-grid size-6.5 shrink-0 place-items-center bg-inset text-2xs font-semibold text-fg-muted" aria-hidden="true">AC</span>
                   <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                      <span class="truncate text-sm font-semibold text-fg">Acme Corporation Europe</span>
+                    <div class="font-medium whitespace-nowrap text-fg flex items-center gap-2">
+                      <span class="truncate">Acme Corporation Europe</span>
                       <span class="${BADGE} bg-accent-soft text-accent-fg">Current</span>
                     </div>
-                    <div class="truncate font-mono text-2xs text-fg-muted" id="tnt-slug">${LONG_SLUG}</div>
+                    <div class="mt-px text-xs text-fg-muted truncate font-mono" id="tnt-slug">${LONG_SLUG}</div>
                   </div>
                 </div>
               </td>
               <td class="${TD}"><span class="line-clamp-1 max-w-[22rem] text-sm text-fg-muted">Merchant platform APIs — payments, orders and logistics for every market we operate in.</span></td>
               <td class="${TD}"><span class="${BADGE} bg-violet-soft text-violet-fg">Admin</span></td>
-              <td class="${TD}"><span class="${BADGE} bg-ok-soft text-ok-fg">Enabled</span></td>
+              <td class="${TD}"><span class="${BADGE} bg-ok-soft text-ok-fg"><span aria-hidden="true" class="size-1.5 shrink-0 rounded-full bg-current"></span>Enabled</span></td>
               <td class="${TD} text-right">
                 <div data-row-actions="" class="flex items-center justify-end gap-1">
                   <button type="button" id="tnt-manage" class="${BUTTON_SM}">Manage</button>
@@ -184,21 +184,21 @@ const LIST_MARKUP = `
                 <div class="flex items-center gap-3">
                   <span class="avatar-hex relative inline-grid size-6.5 shrink-0 place-items-center bg-inset text-2xs font-semibold text-fg-muted" aria-hidden="true">LH</span>
                   <div class="min-w-0">
-                    <div class="flex items-center gap-2"><button type="button" class="truncate rounded-sm text-left text-sm font-semibold text-fg">Legacy Holdings</button></div>
-                    <div class="truncate font-mono text-2xs text-fg-muted">legacy-holdings</div>
+                    <div class="font-medium whitespace-nowrap text-fg flex items-center gap-2"><button type="button" class="truncate rounded-sm text-left">Legacy Holdings</button></div>
+                    <div class="mt-px text-xs text-fg-muted truncate font-mono">legacy-holdings</div>
                   </div>
                 </div>
               </td>
               <td class="${TD}"><span class="text-sm text-fg-muted">—</span></td>
               <td class="${TD}"><span class="${BADGE} bg-surface text-fg-muted">Member</span></td>
-              <td class="${TD}"><span class="${BADGE} bg-surface text-fg-muted">Disabled</span></td>
+              <td class="${TD}"><span class="${BADGE} bg-surface text-fg-muted"><span aria-hidden="true" class="size-1.5 shrink-0 rounded-full bg-current"></span>Disabled</span></td>
               <td class="${TD} text-right"><div data-row-actions="" class="flex items-center justify-end gap-1"><button type="button" aria-label="Actions for Legacy Holdings" class="${BUTTON_SM} bg-transparent shadow-none px-1.5">⋯</button></div></td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="flex flex-wrap items-center gap-2 border-t border-border px-3 py-2.5">
-        <span class="text-xs text-fg-muted">3 tenants · you administer 2</span>
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3.5 py-2.5 text-xs text-fg-muted">
+        <span>3 tenants · you administer 2</span>
       </div>
     </div>
   </div>

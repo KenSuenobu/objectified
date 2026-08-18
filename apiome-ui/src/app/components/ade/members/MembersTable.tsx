@@ -9,8 +9,9 @@ import { Button } from '@/app/components/ui/Button';
 import {
   DataTable,
   DataTableFilterChip,
+  DataTableFoot,
   DataTableSearch,
-  DataTableToolbarSpacer,
+  DataTableToolbar,
   type DataTableColumn,
   type DataTableSortState,
 } from '@/app/components/ui/DataTable';
@@ -179,7 +180,7 @@ export default function MembersTable({
                   <Mail aria-hidden />
                 </span>
               ) : (
-                <Avatar name={name} seed={member.user_id} size="sm" />
+                <Avatar name={name} seed={member.user_id} />
               )}
               <span className="mbr-identity__text">
                 <span className="mbr-identity__name">
@@ -369,10 +370,16 @@ export default function MembersTable({
       sort={sort}
       onSortChange={setSort}
       onRowActivate={onOpenMember}
-      rowClassName={(member) => (isPendingInvite(member) ? 'mbr-row--pending' : undefined)}
+      rowClassName={(member) =>
+        isPendingInvite(member)
+          ? 'mbr-row--pending'
+          : member.status === 'suspended'
+            ? 'mbr-row--suspended'
+            : undefined
+      }
       data-testid="members-table"
       toolbar={
-        <>
+        <DataTableToolbar>
           <DataTableSearch
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -390,8 +397,7 @@ export default function MembersTable({
               {MEMBER_FACET_LABELS[entry]}
             </DataTableFilterChip>
           ))}
-          <DataTableToolbarSpacer />
-        </>
+        </DataTableToolbar>
       }
       empty={
         narrowed ? (
@@ -430,9 +436,9 @@ export default function MembersTable({
         )
       }
       footer={
-        <span className="text-xs text-fg-muted" data-testid="members-summary">
-          {describeMemberBreakdown(summary)}
-        </span>
+        <DataTableFoot>
+          <span data-testid="members-summary">{describeMemberBreakdown(summary)}</span>
+        </DataTableFoot>
       }
     />
   );

@@ -2484,9 +2484,15 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-button {
-  text-transform: none;
-}
+/* `button { text-transform: none }` used to live here too. Nothing in Tailwind's
+   preflight states it, so it was not a restatement — but it was *unlayered*, and
+   an unlayered rule outranks every `@layer utilities` class whatever its
+   specificity. `uppercase` on a button was therefore silently swallowed: the
+   sort button inside every `DataTable` header, and the caps sort headers the
+   catalog / projects / versions lists draw themselves, all rendered in mixed
+   case beside their non-sortable neighbours. `text-transform` inherits, and no
+   caps container in this stylesheet holds a button that must not follow it, so
+   inheritance is the right default and the reset is simply gone. */
 
 h1, h2, h3, h4 {
   letter-spacing: -0.015em;
@@ -6944,6 +6950,15 @@ button.auth-divider:disabled {
   }
 }
 
+/* ---- The current tenant's row -------------------------------------------
+   The mockup draws the current row `.is-selected` with its Manage and menu at
+   `opacity:1`: it is the row the viewer is standing in, and the way into its
+   drawer should not have to be discovered by hovering. `DataTable` reveals row
+   actions on hover, so this row opts out, as `.lnk-row--guarded` does. */
+.tnt-row--current [data-row-actions] {
+  opacity: 1;
+}
+
 /* ---- The row overflow menu ----------------------------------------------
    hive.css §16 `.menu`, as the tenants table's row actions need it. */
 .tnt-menu {
@@ -7116,7 +7131,9 @@ button.auth-divider:disabled {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  /* 500, the mockup's `.cell-primary` and `DataTableCellPrimary`: a row's name is the
+     lead line of a list, not a heading. */
+  font-weight: 500;
   color: var(--fg);
 }
 
@@ -7139,13 +7156,14 @@ button.auth-divider:disabled {
 
 /* A pending invitation's avatar is an envelope rather than initials: there are
    no initials to draw for an address nobody has claimed yet, and the mark is
-   half of what makes the row visually distinct. */
+   half of what makes the row visually distinct. 2rem is the default `Avatar`
+   size the accepted rows draw, so the two marks share a left edge. */
 .mbr-invite-mark {
   display: inline-grid;
   place-items: center;
   flex-shrink: 0;
-  inline-size: 1.75rem;
-  block-size: 1.75rem;
+  inline-size: 2rem;
+  block-size: 2rem;
   border-radius: var(--r-full);
   background: var(--warn-soft);
   color: var(--warn-fg);
@@ -7162,6 +7180,14 @@ button.auth-divider:disabled {
    amber. */
 .mbr-row--pending {
   background: color-mix(in srgb, var(--warn) 6%, transparent);
+}
+
+/* A suspended row keeps its Reinstate visible. `DataTable` reveals row actions
+   on hover, which is right for the actions every row has; the one action that
+   *undoes* the row's state is the mockup's `opacity:1` exception, because a
+   Reinstate you cannot see reads as a Reinstate that is not offered. */
+.mbr-row--suspended [data-row-actions] {
+  opacity: 1;
 }
 
 /* ---- The inline role select ---------------------------------------------

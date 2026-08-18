@@ -20,9 +20,12 @@ import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import {
   DataTable,
+  DataTableCellPrimary,
+  DataTableCellSub,
   DataTableFilterChip,
+  DataTableFoot,
   DataTableSearch,
-  DataTableToolbarSpacer,
+  DataTableToolbar,
   type DataTableColumn,
   type DataTableSortState,
 } from '@/app/components/ui/DataTable';
@@ -139,15 +142,15 @@ export default function TenantsTable({
               tone={tenant.isCurrent ? 'brand' : 'auto'}
             />
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
+              <DataTableCellPrimary className="flex items-center gap-2">
                 {tenant.isCurrent ? (
-                  <span className="truncate text-sm font-semibold text-fg">{tenant.name}</span>
+                  <span className="truncate">{tenant.name}</span>
                 ) : (
                   <button
                     type="button"
                     onClick={() => onSelectTenant(tenant)}
                     title="Select tenant"
-                    className="truncate rounded-sm text-left text-sm font-semibold text-fg transition-colors hover:text-accent-fg"
+                    className="truncate rounded-sm text-left transition-colors hover:text-accent-fg"
                   >
                     {tenant.name}
                   </button>
@@ -158,8 +161,8 @@ export default function TenantsTable({
                     Current
                   </Badge>
                 )}
-              </div>
-              <div className="truncate font-mono text-2xs text-fg-muted">{tenant.slug}</div>
+              </DataTableCellPrimary>
+              <DataTableCellSub className="truncate font-mono">{tenant.slug}</DataTableCellSub>
             </div>
           </div>
         ),
@@ -200,7 +203,9 @@ export default function TenantsTable({
         header: 'Status',
         sortable: true,
         cell: (tenant) => (
-          <Badge status={tenantStatus(tenant)}>{tenantStatusLabel(tenant)}</Badge>
+          <Badge status={tenantStatus(tenant)} dot>
+            {tenantStatusLabel(tenant)}
+          </Badge>
         ),
         skeletonWidth: '4.5rem',
       },
@@ -301,10 +306,10 @@ export default function TenantsTable({
       // rule: there is no opacity at which quiet text on a light surface survives AA, and
       // `--fg-muted` at 11 px drops to 3.99:1 behind an `opacity: .8` row. The Disabled
       // badge is what says a tenant is off, and it says it without dimming anything.
-      rowClassName={(tenant) => (tenant.isCurrent ? 'bg-accent-soft' : undefined)}
+      rowClassName={(tenant) => (tenant.isCurrent ? 'tnt-row--current bg-accent-soft' : undefined)}
       data-testid="tenants-table"
       toolbar={
-        <>
+        <DataTableToolbar>
           <DataTableSearch
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -322,8 +327,7 @@ export default function TenantsTable({
               {TENANT_FACET_LABELS[entry]}
             </DataTableFilterChip>
           ))}
-          <DataTableToolbarSpacer />
-        </>
+        </DataTableToolbar>
       }
       empty={
         narrowed ? (
@@ -368,10 +372,12 @@ export default function TenantsTable({
         )
       }
       footer={
-        <span className="text-xs text-fg-muted">
-          {summary.total} {summary.total === 1 ? 'tenant' : 'tenants'} · you administer{' '}
-          {summary.administered}
-        </span>
+        <DataTableFoot>
+          <span>
+            {summary.total} {summary.total === 1 ? 'tenant' : 'tenants'} · you administer{' '}
+            {summary.administered}
+          </span>
+        </DataTableFoot>
       }
     />
   );
