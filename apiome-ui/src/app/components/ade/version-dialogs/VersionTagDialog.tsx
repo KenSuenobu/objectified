@@ -12,14 +12,14 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from '../../ui/Dialog';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { Label } from '../../ui/Label';
+import { Tag as TagIcon } from 'lucide-react';
+import { Checkbox } from '../../ui/Checkbox';
+import { VersionDialogHead } from '../versions/VersionDialogChrome';
 import type { DialogRevisionRef } from './types';
 
 export interface VersionTagDialogProps {
@@ -99,16 +99,20 @@ export function VersionTagDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !saving && onOpenChange(o)}>
-      <DialogContent className="max-w-md" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Create version tag</DialogTitle>
-          <DialogDescription>
-            Attach a stable name to revision <span className="font-mono">{revisionLabel}</span>. Immutable tags cannot be
-            moved or deleted afterward.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1">
+      <DialogContent className="vdlg-dialog vdlg-dialog--sm" aria-describedby={undefined}>
+        <VersionDialogHead
+          icon={<TagIcon aria-hidden />}
+          tone="honey"
+          title="Create version tag"
+          description={
+            <>
+              Attach a stable name to revision <span className="mono">{revisionLabel}</span>. Immutable tags cannot be
+              moved or deleted afterward.
+            </>
+          }
+        />
+        <div className="vdlg-form">
+          <div className="vdlg-field">
             <Label htmlFor="tag-name">Tag name</Label>
             <Input
               id="tag-name"
@@ -117,9 +121,10 @@ export function VersionTagDialog({
               placeholder="e.g. v1.0.0 or stable"
               autoComplete="off"
               autoFocus
+              className="vdlg-input--mono"
             />
           </div>
-          <div className="space-y-1">
+          <div className="vdlg-field">
             <Label htmlFor="tag-msg">Message (optional)</Label>
             <Input
               id="tag-msg"
@@ -129,7 +134,7 @@ export function VersionTagDialog({
               autoComplete="off"
             />
           </div>
-          <div className="space-y-1">
+          <div className="vdlg-field">
             <Label htmlFor="tag-channel">Channel (optional)</Label>
             <Input
               id="tag-channel"
@@ -139,23 +144,13 @@ export function VersionTagDialog({
               autoComplete="off"
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={immutable}
-              onChange={(e) => setImmutable(e.target.checked)}
-              className="rounded border-gray-300 dark:border-gray-600"
-            />
+          <label className="vdlg-check">
+            <Checkbox checked={immutable} onCheckedChange={(v) => setImmutable(v === true)} />
             Lock tag (immutable — cannot move or delete)
           </label>
           {isTenantAdmin && (
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={tagProtected}
-                onChange={(e) => setTagProtected(e.target.checked)}
-                className="rounded border-gray-300 dark:border-gray-600"
-              />
+            <label className="vdlg-check">
+              <Checkbox checked={tagProtected} onCheckedChange={(v) => setTagProtected(v === true)} />
               Protected (only tenant admins can move or delete)
             </label>
           )}

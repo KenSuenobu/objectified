@@ -37,11 +37,15 @@ import {
   parseSuiteEnvelope,
   serializeSuiteEnvelope,
   suiteRefForSurface,
-  verdictToneClass,
+  verdictTone,
   type SchemaTestSuite,
   type SuiteExportEnvelope,
   type SuitePayload,
 } from '@/app/utils/schema-test-suites';
+import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import { Input } from '@/app/components/ui/Input';
+import { VERSION_DIALOG_COPY } from '@/app/components/ade/version-dialogs/versionDialogsModel';
 import { BenchSuiteRunHistory } from './BenchSuiteRunHistory';
 
 export interface BenchSuitesPanelProps {
@@ -59,8 +63,6 @@ export interface BenchSuitesPanelProps {
   active: boolean;
 }
 
-const ACTION_CLASS =
-  'inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700';
 
 /** Render the suites list and its actions. */
 export function BenchSuitesPanel({
@@ -312,20 +314,19 @@ export function BenchSuitesPanel({
   );
 
   return (
-    <section className="space-y-3" aria-label="Test suites" data-testid="bench-suites-panel">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          Test suites
-        </h3>
-        <button
+    <section className="vdlg-stack" aria-label="Test suites" data-testid="bench-suites-panel">
+      <div className="vdlg-bench__row vdlg-bench__row--between">
+        <h3 className="vdlg-caps">Test suites</h3>
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           data-testid="suite-import"
           onClick={() => importInputRef.current?.click()}
-          className={ACTION_CLASS}
           title="Import a suite from an exported corpus envelope (manifest + files JSON)."
         >
-          <Upload className="h-3.5 w-3.5 text-gray-500" aria-hidden /> Import
-        </button>
+          <Upload aria-hidden /> Import
+        </Button>
         <input
           ref={importInputRef}
           data-testid="suite-import-input"
@@ -341,8 +342,8 @@ export function BenchSuitesPanel({
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <input
+      <div className="vdlg-bench__row">
+        <Input
           data-testid="suite-create-name"
           type="text"
           value={newSuiteName}
@@ -355,127 +356,118 @@ export function BenchSuitesPanel({
           }}
           placeholder="e.g. order payload regression suite"
           aria-label="New suite name"
-          className="w-64 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          className="vdlg-bench__name-input"
         />
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-testid="suite-create"
           onClick={() => void handleCreate()}
           disabled={newSuiteName.trim() === ''}
-          className={ACTION_CLASS}
           title="Create a suite for this artifact, seeded with the current payload when one is present."
         >
-          <FolderPlus className="h-3.5 w-3.5 text-indigo-500" aria-hidden /> New suite
-        </button>
+          <FolderPlus aria-hidden /> New suite
+        </Button>
       </div>
 
       {error ? (
-        <p data-testid="suites-error" className="text-xs text-amber-700 dark:text-amber-300">
+        <p data-testid="suites-error" className="vdlg-bench__status" data-tone="warn">
           {error}
         </p>
       ) : null}
 
       {suites.length > 0 ? (
-        <ul data-testid="suites-list" className="space-y-1">
+        <ul data-testid="suites-list" className="vdlg-bench__list">
           {suites.map((suite) => {
             const latest = suite.latest_run;
             const busy = busySuiteId === suite.id;
             return (
-              <li
-                key={suite.id}
-                className="space-y-1.5 rounded-md border border-gray-100 px-2 py-1.5 dark:border-gray-800"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate text-sm text-gray-800 dark:text-gray-100">
-                    {suite.name}
-                  </span>
-                  <span className="shrink-0 text-2xs tabular-nums text-gray-400 dark:text-gray-500">
+              <li key={suite.id} className="vdlg-bench__suite">
+                <div className="vdlg-bench__suite-head">
+                  <span className="vdlg-bench__suite-name">{suite.name}</span>
+                  <span className="vdlg-bench__list-date">
                     {suite.payload_count} payloads · v{suite.suite_version}
                   </span>
                   {latest ? (
                     latest.status === 'error' ? (
-                      <span
-                        className={`rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider ${verdictToneClass('error')}`}
-                      >
-                        last run errored
-                      </span>
+                      <Badge variant={verdictTone('error')}>last run errored</Badge>
                     ) : (
-                      <span
-                        data-testid={`suite-latest-${suite.id}`}
-                        className="tabular-nums text-2xs text-gray-500 dark:text-gray-400"
-                      >
+                      <span data-testid={`suite-latest-${suite.id}`} className="vdlg-bench__run-count">
                         {latest.passed}/{latest.total} passed
                         {latest.resolved_version_label ? ` @ ${latest.resolved_version_label}` : ''}
                       </span>
                     )
                   ) : (
-                    <span className="text-2xs text-gray-400 dark:text-gray-500">never run</span>
+                    <span className="vdlg-quiet">never run</span>
                   )}
                   {latest?.regression ? (
-                    <span
-                      data-testid={`suite-regression-${suite.id}`}
-                      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider ${verdictToneClass('failed')}`}
-                    >
-                      <TrendingDown className="h-3 w-3" aria-hidden /> regression
-                    </span>
+                    <Badge variant={verdictTone('failed')} data-testid={`suite-regression-${suite.id}`}>
+                      <TrendingDown aria-hidden /> regression
+                    </Badge>
                   ) : null}
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button
+                <div className="vdlg-button-row">
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     data-testid={`suite-run-${suite.id}`}
                     onClick={() => void handleRun(suite)}
                     disabled={busy || suite.payload_count === 0}
-                    className={ACTION_CLASS}
                     title={
                       suite.payload_count === 0
                         ? 'Add a payload first — an empty suite has nothing to run.'
                         : `Run every payload against the selected version (${version}).`
                     }
                   >
-                    <Play className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
+                    <Play aria-hidden />
                     {busy ? 'Working…' : 'Run'}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     data-testid={`suite-add-payload-${suite.id}`}
                     onClick={() => void handleAddPayload(suite)}
                     disabled={busy || payloadText.trim() === ''}
-                    className={ACTION_CLASS}
                     title="Add the current editor payload to this suite (expected verdict: valid)."
                   >
-                    <ListPlus className="h-3.5 w-3.5 text-gray-500" aria-hidden /> Add payload
-                  </button>
-                  <button
+                    <ListPlus aria-hidden /> Add payload
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     data-testid={`suite-history-${suite.id}`}
                     onClick={() =>
                       setHistorySuiteId((current) => (current === suite.id ? null : suite.id))
                     }
                     aria-expanded={historySuiteId === suite.id}
-                    className={ACTION_CLASS}
                   >
-                    <History className="h-3.5 w-3.5 text-gray-500" aria-hidden /> History
-                  </button>
-                  <button
+                    <History aria-hidden /> History
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     data-testid={`suite-export-${suite.id}`}
                     onClick={() => void handleExport(suite)}
-                    className={ACTION_CLASS}
                     title="Download the suite as an IXH-1.1 corpus envelope (manifest + files)."
                   >
-                    <Download className="h-3.5 w-3.5 text-gray-500" aria-hidden /> Export
-                  </button>
-                  <button
+                    <Download aria-hidden /> Export
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     data-testid={`suite-delete-${suite.id}`}
                     onClick={() => void handleDelete(suite)}
                     disabled={busy}
-                    className="shrink-0 rounded p-1 text-gray-400 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:hover:bg-rose-950/40"
                     aria-label={`Delete suite ${suite.name}`}
                   >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                  </button>
+                    <Trash2 className="vdlg-icon-danger" aria-hidden />
+                  </Button>
                 </div>
                 {historySuiteId === suite.id ? (
                   <BenchSuiteRunHistory suiteId={suite.id} refreshToken={historyRefresh} />
@@ -485,9 +477,8 @@ export function BenchSuitesPanel({
           })}
         </ul>
       ) : (
-        <p className="text-xs text-gray-500 dark:text-gray-400" data-testid="suites-empty">
-          No test suites for this artifact yet — save the payloads that prove this schema works,
-          and every future revision can be checked against them.
+        <p className="vdlg-quiet" data-testid="suites-empty">
+          {VERSION_DIALOG_COPY.benchNoSuites}
         </p>
       )}
 

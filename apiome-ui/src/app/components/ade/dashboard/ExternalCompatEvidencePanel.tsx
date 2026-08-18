@@ -1,6 +1,9 @@
 'use client';
 
 import React from 'react';
+import { Alert } from '../../ui/Alert';
+import { Badge } from '../../ui/Badge';
+import { COMPAT_VERDICT_TONE, compatVerdict } from '../version-dialogs/versionDialogsModel';
 import { buildCompatibilitySourceHref } from '@lib/compatibility-source-link';
 
 type EvidenceFinding = {
@@ -122,28 +125,22 @@ export function ExternalCompatEvidencePanel({
 
   return (
     <div
-      className={`external-compat-evidence space-y-2 text-xs ${className}`}
+      className={`external-compat-evidence vdlg-evidence ${className}`}
       data-testid="external-compat-evidence"
     >
-      <p className="font-medium text-gray-800 dark:text-gray-200">
+      <p className="vdlg-evidence__title">
         External compatibility evidence (oasdiff)
         {overall ? (
-          <span className="ml-2 font-normal text-gray-500 dark:text-gray-400">
-            — {overall}
-          </span>
+          <Badge variant={COMPAT_VERDICT_TONE[compatVerdict(overall)]}>{overall}</Badge>
         ) : null}
       </p>
-      {loading ? (
-        <p className="text-gray-500 dark:text-gray-400">Loading independent evidence…</p>
-      ) : null}
-      {error ? (
-        <p className="text-amber-700 dark:text-amber-300">{error}</p>
-      ) : null}
+      {loading ? <p className="vdlg-quiet">Loading independent evidence…</p> : null}
+      {error ? <Alert variant="warn">{error}</Alert> : null}
       {!loading && !error && findings.length === 0 ? (
-        <p className="text-gray-500 dark:text-gray-400">No oasdiff findings for this pair.</p>
+        <p className="vdlg-quiet">No oasdiff findings for this pair.</p>
       ) : null}
       {findings.length > 0 ? (
-        <ul className="space-y-1.5 max-h-48 overflow-y-auto">
+        <ul className="vdlg-evidence__list">
           {findings.map((f, idx) => {
             const rule = f.ruleId || f.rule_id || 'unknown';
             const changeClass = f.changeClass || f.change_class || f.severity || '';
@@ -159,18 +156,18 @@ export function ExternalCompatEvidencePanel({
             return (
               <li
                 key={`${rule}-${path}-${idx}`}
-                className="border-l-2 border-indigo-200 dark:border-indigo-800 pl-2"
+                className="vdlg-evidence__item"
               >
                 <a
                   href={href}
-                  className="font-mono text-2xs text-blue-600 dark:text-blue-400 underline underline-offset-2"
+                  className="vdlg-link mono"
                   data-testid="external-compat-source-link"
                 >
                   {path}
                   {typeof line === 'number' ? `:${line}` : ''}
                 </a>
-                <div className="text-gray-600 dark:text-gray-400">
-                  <span className="font-mono text-2xs">[{changeClass}] {rule}</span>
+                <div className="vdlg-quiet">
+                  <span className="mono">[{changeClass}] {rule}</span>
                   {' — '}
                   {f.message}
                 </div>
@@ -180,11 +177,9 @@ export function ExternalCompatEvidencePanel({
         </ul>
       ) : null}
       {changelog ? (
-        <details className="external-compat-changelog rounded border border-gray-200 dark:border-gray-700 px-2 py-1">
-          <summary className="cursor-pointer text-gray-700 dark:text-gray-300">
-            Changelog (markdown)
-          </summary>
-          <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap font-mono text-2xs text-gray-600 dark:text-gray-400">
+        <details className="external-compat-changelog vdlg-evidence__changelog">
+          <summary>Changelog (markdown)</summary>
+          <pre className="vdlg-evidence__pre">
             {changelog}
           </pre>
         </details>

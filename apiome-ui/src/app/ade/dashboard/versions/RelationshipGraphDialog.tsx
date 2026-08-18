@@ -1,5 +1,19 @@
 'use client';
 
+/**
+ * The class `$ref` graph for one revision (#322), re-skinned by HIVE-6.3 (#5314).
+ *
+ * Authority: `docs/mockups/build/version-dialogs.html` §History graph → *Relationship graph* —
+ * a `max-w-4xl` dialog holding a TB auto-layout, with its two empty states and the "no
+ * references" note pinned to the corner of the canvas.
+ *
+ * The note used to be a hand-built amber strip (`bg-amber-50 … border-amber-200/80 …
+ * text-amber-800`); it is an `Alert` now, so it inherits the one warning treatment the app
+ * has. The canvas surface reads `--bg-canvas` through `.vdlg-flow` instead of
+ * `bg-gray-50 dark:bg-gray-900`, and its height is a viewport-relative token rather than the
+ * frozen `420px` that pushed the dialog past 85vh at the Largest font scale.
+ */
+
 import React, { useMemo, useEffect } from 'react';
 import {
   ReactFlow,
@@ -13,14 +27,12 @@ import {
   type Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../../../components/ui/Dialog';
+import { Dialog, DialogContent } from '../../../components/ui/Dialog';
+import { Alert } from '../../../components/ui/Alert';
+import { VersionDialogHead } from '../../../components/ade/versions';
 import { buildRelationshipGraphData, type ClassWithProperties } from '@/app/utils/relationship-graph';
 import { applyAutoLayout } from '@/app/utils/canvas-auto-layout';
+import { Waypoints } from 'lucide-react';
 
 const NODE_WIDTH = 140;
 const NODE_HEIGHT = 40;
@@ -88,41 +100,39 @@ export default function RelationshipGraphDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>
-            Relationship graph
-            {version && (
-              <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
-                {projectName} — v{version.version_id}
-              </span>
-            )}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="flex-1 min-h-[280px] flex flex-col rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <DialogContent className="vdlg-dialog vdlg-dialog--lg vdlg-relgraph" aria-describedby={undefined}>
+        <VersionDialogHead
+          icon={<Waypoints aria-hidden />}
+          tone="accent"
+          title="Relationship graph"
+          description={
+            version
+              ? `${projectName} — v${version.version_id} · class $ref graph for one revision`
+              : undefined
+          }
+        />
+        <div className="vdlg-relgraph__frame">
           {isLoading ? (
-            <div className="flex-1 min-h-[280px] flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Loading schema…
-            </div>
+            <p className="vdlg-relgraph__state">Loading schema…</p>
           ) : empty ? (
-            <div className="flex-1 min-h-[280px] flex flex-col items-center justify-center gap-2 px-6 py-8 text-center">
-              <p className="text-gray-600 dark:text-gray-400 font-medium">
+            <div className="vdlg-relgraph__state">
+              <p className="vdlg-relgraph__state-title">
                 {classesWithProperties === null
                   ? 'No schema data loaded.'
                   : 'This version has no classes yet.'}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 max-w-sm">
+              <p className="vdlg-quiet">
                 Add classes in the Studio and use reference properties ($ref) to other classes to see a relationship graph here.
               </p>
             </div>
           ) : (
-            <div className="flex-1 min-h-[400px] w-full flex flex-col">
+            <div className="vdlg-relgraph__body">
               {graphData.edges.length === 0 && graphData.nodes.length > 0 && (
-                <div className="flex-shrink-0 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200/80 dark:border-amber-800/50 text-sm text-amber-800 dark:text-amber-200">
+                <Alert variant="warn" className="vdlg-relgraph__note">
                   This version has {graphData.nodes.length} class{graphData.nodes.length !== 1 ? 'es' : ''} but no references ($ref) between them. Add reference properties in the Studio to see relationships here.
-                </div>
+                </Alert>
               )}
-              <div className="w-full" style={{ height: '420px', minHeight: '420px' }}>
+              <div className="vdlg-relgraph__stage">
               <ReactFlow
                 key={version?.id ?? 'graph'}
                 nodes={nodes}
@@ -134,7 +144,7 @@ export default function RelationshipGraphDialog({
                 elementsSelectable={true}
                 fitView
                 fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
-                className="bg-gray-50 dark:bg-gray-900"
+                className="vdlg-flow"
               >
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
                 <Controls />

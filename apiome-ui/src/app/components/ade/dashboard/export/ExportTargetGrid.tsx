@@ -1,13 +1,14 @@
 'use client';
 
 import { useMemo, type ReactNode } from 'react';
+import { Badge } from '../../../ui/Badge';
 import {
-  tierBadgeClass,
+  tierTone,
   tierLabel,
   type ExportTargetCard,
 } from './exportTargetCatalog';
 import {
-  bandBadgeClass,
+  bandTone,
   bandLabel,
   cardTitle,
   isCardSelectable,
@@ -91,7 +92,7 @@ export function ExportTargetGrid({
 
       {(qualityLine || (hasRanking && onOrderChange)) && (
         <div
-          className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400"
+          className="vdlg-export__toolbar"
           data-testid="export-readiness-toolbar"
         >
           <span data-testid="export-source-quality">{qualityLine}</span>
@@ -100,7 +101,7 @@ export function ExportTargetGrid({
               type="button"
               data-testid="export-order-toggle"
               onClick={() => onOrderChange(activeOrder === 'readiness' ? 'registry' : 'readiness')}
-              className="rounded-md border border-gray-200 px-2 py-1 font-medium text-gray-600 transition hover:border-indigo-200 hover:text-indigo-700 dark:border-gray-700 dark:text-gray-300 dark:hover:text-indigo-300"
+              className="vdlg-link"
             >
               {activeOrder === 'readiness' ? 'Sorted by readiness' : 'Sorted by name'}
             </button>
@@ -111,7 +112,7 @@ export function ExportTargetGrid({
       <div
         role="group"
         aria-label="Export target formats"
-        className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4"
+        className="vdlg-export__grid"
       >
         {ordered.map((card) => {
           const Icon = card.icon;
@@ -130,37 +131,31 @@ export function ExportTargetGrid({
               onClick={() => onSelect(card)}
               disabled={!selectable}
               title={cardTitle(card, target)}
-              className={`relative rounded-lg border p-3 text-center transition ${
-                isSelected
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100'
-                  : selectable
-                    ? 'border-gray-200 bg-white text-gray-700 hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200'
-                    : 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600'
-              }`}
+              className="vdlg-export__target"
+              data-selected={isSelected || undefined}
             >
-              <span
-                className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-2xs font-semibold ${tierBadgeClass(card.entry.fidelity.tier)}`}
-              >
+              <Badge variant={tierTone(card.entry.fidelity.tier)} className="vdlg-export__target-tier">
                 {tierLabel(card.entry.fidelity.tier)}
-              </span>
+              </Badge>
               {target && (
-                <span
+                <Badge
+                  variant={bandTone(target.band)}
                   data-testid={`export-target-band-${card.key}`}
-                  className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-2xs font-semibold ${bandBadgeClass(target.band)}`}
+                  className="vdlg-export__target-band"
                 >
                   {bandLabel(target.band)}
-                </span>
+                </Badge>
               )}
-              <Icon className="mx-auto mb-2 mt-3 h-5 w-5" aria-hidden />
-              <div className="text-sm font-medium">{card.entry.descriptor.label}</div>
-              <div className="mt-1 text-2xs text-gray-500 dark:text-gray-400">
+              <Icon className="vdlg-export__target-icon" aria-hidden />
+              <div className="vdlg-export__target-label">{card.entry.descriptor.label}</div>
+              <div className="vdlg-quiet">
                 {card.entry.descriptor.paradigm}
                 {card.entry.descriptor.multi_file ? ' · multi-file' : ''}
               </div>
               {target && (
                 <div
                   data-testid={`export-target-rationale-${card.key}`}
-                  className="mt-2 text-2xs leading-snug text-gray-500 dark:text-gray-400"
+                  className="vdlg-quiet"
                 >
                   {target.rationale}
                 </div>
@@ -173,27 +168,19 @@ export function ExportTargetGrid({
       {showHeadline && selected && fidelity && (
         <div
           data-testid="export-fidelity-headline"
-          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-700"
+          className="vdlg-export__headline"
         >
-          <div className="text-gray-700 dark:text-gray-200">
+          <div>
             Exporting to <strong>{selected.entry.descriptor.label}</strong>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="vdlg-export__headline-meta">
             {ranking[selected.key] && (
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${bandBadgeClass(ranking[selected.key].band)}`}
-              >
+              <Badge variant={bandTone(ranking[selected.key].band)}>
                 {bandLabel(ranking[selected.key].band)}
-              </span>
+              </Badge>
             )}
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-semibold ${tierBadgeClass(fidelity.tier)}`}
-            >
-              {tierLabel(fidelity.tier)}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {fidelity.preserved_percent}% preserved
-            </span>
+            <Badge variant={tierTone(fidelity.tier)}>{tierLabel(fidelity.tier)}</Badge>
+            <span className="vdlg-quiet">{fidelity.preserved_percent}% preserved</span>
           </div>
         </div>
       )}

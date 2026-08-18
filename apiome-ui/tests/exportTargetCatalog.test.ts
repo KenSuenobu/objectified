@@ -17,6 +17,7 @@ import {
   optionFieldsFromSchema,
   targetMatchesSourceFormat,
   tierBadgeClass,
+  tierTone,
   validateExportOptions,
   type ExportTargetDescriptor,
   type ExportTargetEntry,
@@ -102,6 +103,16 @@ describe('exportTargetCards', () => {
       targets: [entry],
     };
     expect(exportTargetCards(response)[0].available).toBe(true);
+  });
+});
+
+describe('tierTone', () => {
+  it('names a tone from the shared vocabulary per tier', () => {
+    // HIVE-6.3 (#5314): the version panel's chips, the fidelity ring and the projection graph
+    // all resolve a tier through this, so one tier is one colour across the export hand-off.
+    expect(tierTone('lossless')).toBe('ok');
+    expect(tierTone('lossy')).toBe('warn');
+    expect(tierTone('types-only')).toBe('danger');
   });
 });
 

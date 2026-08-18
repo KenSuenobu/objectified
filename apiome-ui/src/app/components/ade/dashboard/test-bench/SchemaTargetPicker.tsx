@@ -116,17 +116,14 @@ export function SchemaTargetPicker({
   ];
 
   return (
-    <div className="flex flex-col gap-1">
-      <label
-        htmlFor={selectId}
-        className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-      >
+    <div className="vdlg-field">
+      <label htmlFor={selectId} className="vdlg-caps">
         Schema
       </label>
       <select
         id={selectId}
         data-testid="test-bench-schema-select"
-        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+        className="vdlg-select"
         value={selectedKey}
         disabled={disabled}
         onChange={(event) => onSelect(byRef.get(event.target.value) ?? null)}

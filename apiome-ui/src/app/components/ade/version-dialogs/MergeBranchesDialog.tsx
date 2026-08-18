@@ -15,10 +15,7 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from '../../ui/Dialog';
 import { Alert } from '../../ui/Alert';
 import { Button } from '../../ui/Button';
@@ -32,6 +29,9 @@ import {
 import { VersionMergeConflictList } from '../dashboard/VersionMergeConflictList';
 import { CompatibilityReportPanel } from '../dashboard/CompatibilityReportPanel';
 import { ExternalCompatEvidencePanel } from '../dashboard/ExternalCompatEvidencePanel';
+import { GitMerge, Loader2 } from 'lucide-react';
+import { Checkbox } from '../../ui/Checkbox';
+import { VersionDialogHead } from '../versions/VersionDialogChrome';
 import type { VersionBranchRow } from './types';
 
 interface MergePreviewClassification {
@@ -370,16 +370,15 @@ export function MergeBranchesDialog({
         if (!previewLoading && !applyLoading) onOpenChange(o);
       }}
     >
-      <DialogContent className="max-w-2xl" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Merge branches</DialogTitle>
-          <DialogDescription>
-            Preview uses a three-way merge of OpenAPI components against the merge-base (LCA) revision. Run Preview
-            before Apply — when conflicts exist, choose a resolution for every path before applying.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1">
+      <DialogContent className="vdlg-dialog vdlg-dialog--lg" aria-describedby={undefined}>
+        <VersionDialogHead
+          icon={<GitMerge aria-hidden />}
+          tone="violet"
+          title="Merge branches"
+          description="Preview uses a three-way merge of OpenAPI components against the merge-base (LCA) revision. Run Preview before Apply — when conflicts exist, choose a resolution for every path before applying."
+        />
+        <div className="vdlg-form">
+          <div className="vdlg-field">
             <Label>Source branch</Label>
             <Select
               value={sourceBranch || '__pick__'}
@@ -399,7 +398,7 @@ export function MergeBranchesDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          <div className="vdlg-field">
             <Label>Target branch</Label>
             <Select
               value={targetBranch || '__pick__'}
@@ -421,7 +420,7 @@ export function MergeBranchesDialog({
           </div>
 
           {previewData?.classification && (
-            <Alert variant={previewData.classification.canAutoMerge ? 'success' : 'error'}>
+            <Alert variant={previewData.classification.canAutoMerge ? 'ok' : 'danger'}>
               {previewData.classification.canAutoMerge
                 ? 'No overlapping modified or removed paths — apply is allowed if the target tip has not moved.'
                 : `Conflicts: ${previewData.classification.conflictPaths.length} path(s). Apply stays disabled until every conflict row has a resolution (mine / theirs / manual).`}
@@ -440,13 +439,14 @@ export function MergeBranchesDialog({
           )}
 
           {previewData?.mergeBaseVersionId != null && previewData?.classification && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Merge-base revision: <span className="font-mono">{previewData.mergeBaseVersionId}</span>
+            <p className="vdlg-quiet">
+              Merge-base revision: <span className="mono">{previewData.mergeBaseVersionId}</span>
             </p>
           )}
 
           {compatLoading && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="vdlg-loading-row" role="status">
+              <Loader2 className="animate-spin" aria-hidden />
               Checking backward compatibility (target tip → source tip)…
             </p>
           )}
@@ -454,11 +454,11 @@ export function MergeBranchesDialog({
           {compat && !compatLoading && (
             <Alert
               variant={
-                compat.overall === 'safe' ? 'success' : compat.overall === 'unknown' ? 'default' : 'error'
+                compat.overall === 'safe' ? 'ok' : compat.overall === 'unknown' ? 'neutral' : 'danger'
               }
             >
-              <span className="font-medium text-sm">Backward compatibility (target tip → source tip)</span>
-              <div className="mt-2">
+              <span className="vdlg-alert__title">Backward compatibility (target tip → source tip)</span>
+              <div className="vdlg-alert__body">
                 <CompatibilityReportPanel
                   overall={compat.overall}
                   findings={compat.findings}
@@ -472,7 +472,7 @@ export function MergeBranchesDialog({
                     </span>
                   }
                 />
-                <div className="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
+                <div className="vdlg-alert__section">
                   <ExternalCompatEvidencePanel
                     projectId={projectId}
                     baseRevisionId={previewData?.targetTipVersionId}
@@ -481,22 +481,21 @@ export function MergeBranchesDialog({
                 </div>
               </div>
               {compat.mergeBlockedByCompatGate && (
-                <p className="text-xs mt-2 text-amber-800 dark:text-amber-200">
+                <p className="vdlg-alert__note">
                   Project metadata enables compat gating — merge is blocked until compatibility is safe, unless a tenant
                   administrator overrides with a written justification (recorded in the workflow audit log).
                 </p>
               )}
               {compat.mergeBlockedByCompatGate && isTenantAdmin ? (
-                <div className="mt-3 space-y-2 border-t border-amber-200/60 dark:border-amber-800/40 pt-3">
-                  <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                    <input
-                      type="checkbox"
+                <div className="vdlg-alert__section">
+                  <label className="vdlg-check vdlg-check--top">
+                    <Checkbox
                       checked={compatGateOverride}
-                      onChange={(e) => {
-                        setCompatGateOverride(e.target.checked);
-                        if (!e.target.checked) setCompatGateOverrideReason('');
+                      onCheckedChange={(checked) => {
+                        const next = checked === true;
+                        setCompatGateOverride(next);
+                        if (!next) setCompatGateOverrideReason('');
                       }}
-                      className="rounded border-gray-300 dark:border-gray-600 mt-0.5"
                     />
                     <span>
                       Override compatibility gate (tenant admin) — required when the gate blocks merge due to unsafe
@@ -504,7 +503,7 @@ export function MergeBranchesDialog({
                     </span>
                   </label>
                   {compatGateOverride ? (
-                    <div className="space-y-1">
+                    <div className="vdlg-field">
                       <Label htmlFor="canvas-merge-compat-reason">Justification *</Label>
                       <Textarea
                         id="canvas-merge-compat-reason"
@@ -512,7 +511,7 @@ export function MergeBranchesDialog({
                         onChange={(e) => setCompatGateOverrideReason(e.target.value)}
                         rows={3}
                         placeholder="Explain why merge should proceed despite the compatibility gate (audit record)"
-                        className="text-sm"
+                        className="vdlg-textarea"
                         aria-invalid={compatGateOverride && compatGateOverrideReason.trim().length === 0}
                       />
                     </div>

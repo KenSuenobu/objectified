@@ -11,7 +11,7 @@ import {
   serializeSuiteEnvelope,
   suiteRefForSurface,
   verdictDiffLabel,
-  verdictToneClass,
+  verdictTone,
   type SuiteExportEnvelope,
 } from '../src/app/utils/schema-test-suites';
 
@@ -32,12 +32,17 @@ describe('verdict display helpers', () => {
   });
 
   it('assigns distinct tones per verdict', () => {
-    const tones = new Set([
-      verdictToneClass('passed'),
-      verdictToneClass('failed'),
-      verdictToneClass('error'),
-    ]);
+    const tones = new Set([verdictTone('passed'), verdictTone('failed'), verdictTone('error')]);
     expect(tones.size).toBe(3);
+  });
+
+  it('reads its tones from the shared vocabulary rather than naming a colour', () => {
+    // HIVE-6.3 (#5314): the helper used to return Tailwind palette pairs. A tone name is what
+    // `Badge` takes, and it is what keeps this chip the same green as every other "it worked".
+    expect(verdictTone('passed')).toBe('ok');
+    expect(verdictTone('completed')).toBe('ok');
+    expect(verdictTone('failed')).toBe('rose');
+    expect(verdictTone('error')).toBe('danger');
   });
 });
 

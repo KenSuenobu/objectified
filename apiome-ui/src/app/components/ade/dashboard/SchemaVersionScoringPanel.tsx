@@ -6,17 +6,29 @@
  * The Designer/Studio surface for server-computed quality scoring: grade chip, applied style guide,
  * and itemized violations with rule id, rationale, guide name, and docs links. Also embedded in the
  * post-import report so developers see governance context immediately after import.
+ *
+ * Re-skinned by HIVE-6.3 (#5314) to `docs/mockups/build/version-dialogs.html` §Lint report &
+ * scoring — the *Lint & score* card beside the report dialog, with its guide chip, grade ring,
+ * findings list, and the "Lint report unavailable." + Retry pair.
+ *
+ * The grade chip used to come from `gradeChipClass`, five hand-built Tailwind triples
+ * (`bg-emerald-100 text-emerald-800 border-emerald-200` …) that the catalog and export
+ * surfaces share. Those callers belong to their own epics, so the helper is left alone; here
+ * the chip is a `Badge` taking the shared A–F band from `ui/statusVocabulary`, which is what
+ * makes this panel's B the same green as the version row's B two screens away. The error box
+ * and its Retry are an `ErrorState`-shaped `Alert` + `Button` rather than a rose-tinted div
+ * and a hand-skinned `<button>`.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { cn } from '@lib/utils';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
-import {
-  fetchVersionLintReport,
-  gradeChipClass,
-  type VersionLintReport,
-} from '@/app/utils/version-lint-report';
+import { Alert } from '@/app/components/ui/Alert';
+import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import { gradeBand } from '@/app/components/ui/statusVocabulary';
+import { VERSION_DIALOG_COPY } from '@/app/components/ade/version-dialogs/versionDialogsModel';
+import { fetchVersionLintReport, type VersionLintReport } from '@/app/utils/version-lint-report';
 import type { LintViolationDisplayView } from '@/app/utils/lint-violation-display-preferences';
 import {
   LintViolationFindingsList,
@@ -67,7 +79,7 @@ export function SchemaVersionScoringPanel({
     try {
       loaded = await fetchVersionLintReport(projectId, versionId, { signal: controller.signal });
     } catch (e) {
-      failure = e instanceof Error ? e.message : 'Failed to load lint report.';
+      failure = e instanceof Error ? e.message : VERSION_DIALOG_COPY.lintUnavailable;
     } finally {
       if (controller.signal.aborted) {
         /* superseded */
@@ -96,72 +108,49 @@ export function SchemaVersionScoringPanel({
 
   return (
     <section
-      className={cn(dashboardPanelClass, 'p-6', className)}
+      className={cn('vdlg-panel vdlg-panel--pad vdlg-score', className)}
       data-testid="schema-version-scoring-panel"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <div className="vdlg-score__head">
+        <h2 className="vdlg-caps">
           Lint &amp; score
-          {versionLabel ? (
-            <span className="ml-2 font-mono normal-case text-gray-700 dark:text-gray-300">
-              v{versionLabel}
-            </span>
-          ) : null}
+          {versionLabel ? <span className="vdlg-score__version mono">v{versionLabel}</span> : null}
         </h2>
         {report?.guideName ? (
-          <span
-            data-testid="studio-lint-guide-name"
-            className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200"
-          >
+          <Badge variant="outline" data-testid="studio-lint-guide-name">
             Guide: {report.guideName}
-          </span>
+          </Badge>
         ) : null}
       </div>
 
       {status === 'idle' || status === 'loading' ? (
-        <p className="mt-4 text-sm text-gray-500 dark:text-gray-400" data-testid="studio-lint-loading">
+        <p className="vdlg-quiet" data-testid="studio-lint-loading">
           Loading lint report…
         </p>
       ) : status === 'error' ? (
-        <div
-          className="mt-4 flex flex-col items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 p-4 text-sm dark:border-rose-900 dark:bg-rose-950/30"
-          data-testid="studio-lint-error"
-        >
-          <span className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
-            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
-            {errorMessage || 'Failed to load lint report.'}
-          </span>
-          <button
-            type="button"
-            data-testid="studio-lint-retry"
-            onClick={retry}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-          >
-            <RefreshCw className="h-4 w-4" /> Retry
-          </button>
+        <div className="vdlg-score__error" data-testid="studio-lint-error">
+          <Alert variant="danger">{errorMessage || VERSION_DIALOG_COPY.lintUnavailable}</Alert>
+          <Button type="button" variant="ghost" size="sm" data-testid="studio-lint-retry" onClick={retry}>
+            <RefreshCw aria-hidden /> Retry
+          </Button>
         </div>
       ) : report ? (
         <>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <span
-              className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-lg font-bold ${gradeChipClass(report.grade)}`}
-              data-testid="studio-lint-grade"
-            >
+          <div className="vdlg-score__headline">
+            <Badge variant={gradeBand(report.grade).tone} data-testid="studio-lint-grade">
               {report.grade}
-            </span>
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              Score <span className="font-semibold">{report.score}</span>/100
+            </Badge>
+            <span className="vdlg-score__value">
+              Score <strong>{report.score}</strong>/100
             </span>
           </div>
 
-          <div className="mt-4">
-            <LintViolationFindingsList
-              findings={report.findings}
-              guideName={guide.guideName}
-              guideId={guide.guideId}
-              preferenceView={preferenceView}
-            />
-          </div>
+          <LintViolationFindingsList
+            findings={report.findings}
+            guideName={guide.guideName}
+            guideId={guide.guideId}
+            preferenceView={preferenceView}
+          />
         </>
       ) : null}
     </section>

@@ -29,6 +29,7 @@ import {
   type EditorRange,
 } from '@/app/utils/schema-test-bench';
 import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
+import { Badge } from '@/app/components/ui/Badge';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -112,15 +113,16 @@ export const BenchPayloadEditor = forwardRef<BenchPayloadEditorHandle, BenchPayl
     );
 
     return (
-      <div className="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="vdlg-bench__editor">
         {synthetic ? (
-          <span
+          <Badge
+            variant="violet"
             data-testid="test-bench-synthetic-badge"
-            className="absolute right-2 top-2 z-10 rounded bg-violet-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-900/50 dark:text-violet-300"
+            className="vdlg-bench__synthetic"
             title="This payload was generated from the schema (IXH-5.2); it is not real data."
           >
             Synthetic
-          </span>
+          </Badge>
         ) : null}
         <Editor
           height={height}

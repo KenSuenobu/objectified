@@ -13,6 +13,11 @@
  * mirroring `./exportTargetCatalog.ts`.
  */
 
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
+import {
+  FIDELITY_BUCKET_TONE,
+  PROJECTION_OUTCOME_TONE,
+} from '@/app/components/ade/version-dialogs/versionDialogsModel';
 import type { ExportAdvisory } from '../../../../utils/export-advisory';
 import { isKnownReasonCode } from './capabilityRegistry';
 import type {
@@ -184,6 +189,26 @@ export function kindDescription(kind: LossinessKind): string {
  * CSS utility classes for a report row's kind badge. The palette matches the count chips
  * (`fidelityChips`): drop → red, approx → amber, synth → violet, ok → green.
  */
+export function kindTone(kind: LossinessKind): StatusTone {
+  switch (kind) {
+    case 'drop':
+      return PROJECTION_OUTCOME_TONE.dropped;
+    case 'approx':
+      return PROJECTION_OUTCOME_TONE.approximated;
+    case 'synth':
+      return PROJECTION_OUTCOME_TONE.synthesized;
+    case 'ok':
+    default:
+      return PROJECTION_OUTCOME_TONE.clean;
+  }
+}
+
+/**
+ * CSS utility classes for a loss-kind badge.
+ *
+ * @deprecated Superseded by {@link kindTone} in HIVE-6.3 (#5314), which names a token instead
+ * of a palette pair. Still read by `RoundtripComparisonPanel`, which its own epic redesigns.
+ */
 export function kindBadgeClass(kind: LossinessKind): string {
   switch (kind) {
     case 'drop':
@@ -294,6 +319,16 @@ export function ringGeometry(percent: number, radius: number): RingGeometry {
  * CSS utility classes for the ring's progress stroke, keyed by fidelity tier so the ring
  * reads with the same palette as the tier badge: lossless → green, lossy → amber,
  * types-only → red.
+ */
+export function ringTone(tier: ExportFidelityTier): StatusTone {
+  return FIDELITY_BUCKET_TONE[tier] ?? FIDELITY_BUCKET_TONE['types-only'];
+}
+
+/**
+ * The ring's stroke class.
+ *
+ * @deprecated Superseded by {@link ringTone} in HIVE-6.3 (#5314). The ring is drawn from
+ * `.vdlg-ring[data-tone]` now, so it follows the theme.
  */
 export function ringStrokeClass(tier: ExportFidelityTier): string {
   switch (tier) {

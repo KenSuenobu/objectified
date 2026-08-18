@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { AlertTriangle, CheckCircle2, HelpCircle, XCircle } from 'lucide-react';
 import { TEST_BENCH_FINDINGS_VIRTUALIZE_ABOVE } from '@/app/utils/preview-budgets';
 import { computeWindowedRange } from '@/app/utils/windowed-rows';
+import { Badge } from '@/app/components/ui/Badge';
 import type { BenchFinding, BenchValidationPayload } from '@/app/utils/schema-test-bench';
 
 /** Uniform row height for the windowed list (px). */
@@ -42,9 +43,10 @@ function StatusLine({ result }: { result: BenchValidationPayload }) {
     return (
       <p
         data-testid="test-bench-status"
-        className="flex items-center gap-1.5 text-sm font-medium text-amber-700 dark:text-amber-300"
+        className="vdlg-bench__status"
+        data-tone="warn"
       >
-        <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden /> {message}
+        <AlertTriangle aria-hidden /> {message}
       </p>
     );
   }
@@ -52,9 +54,10 @@ function StatusLine({ result }: { result: BenchValidationPayload }) {
     return (
       <p
         data-testid="test-bench-status"
-        className="flex items-center gap-1.5 text-sm font-medium text-emerald-700 dark:text-emerald-300"
+        className="vdlg-bench__status"
+        data-tone="ok"
       >
-        <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden /> Payload is valid against the schema.
+        <CheckCircle2 aria-hidden /> Payload is valid against the schema.
       </p>
     );
   }
@@ -62,9 +65,10 @@ function StatusLine({ result }: { result: BenchValidationPayload }) {
     return (
       <p
         data-testid="test-bench-status"
-        className="flex items-center gap-1.5 text-sm font-medium text-rose-700 dark:text-rose-300"
+        className="vdlg-bench__status"
+        data-tone="rose"
       >
-        <XCircle className="h-4 w-4 shrink-0" aria-hidden />
+        <XCircle aria-hidden />
         Payload is invalid — {result.total_findings ?? result.findings?.length ?? 0} finding
         {(result.total_findings ?? result.findings?.length ?? 0) === 1 ? '' : 's'}.
       </p>
@@ -73,9 +77,10 @@ function StatusLine({ result }: { result: BenchValidationPayload }) {
   return (
     <p
       data-testid="test-bench-status"
-      className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400"
+      className="vdlg-bench__status"
+      data-tone="neutral"
     >
-      <HelpCircle className="h-4 w-4 shrink-0" aria-hidden />
+      <HelpCircle aria-hidden />
       No validator ran over this payload — validity was not checked.
     </p>
   );
@@ -105,20 +110,14 @@ function FindingRow({
         onClick={() => onSelect(finding)}
         onFocus={onFocusRow}
         style={{ height: FINDING_ROW_HEIGHT }}
-        className="flex w-full flex-col items-start justify-center gap-0.5 overflow-hidden rounded-md px-2 py-1 text-left hover:bg-rose-50/60 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:hover:bg-rose-950/30"
+        className="vdlg-bench__finding"
         title="Reveal in payload editor"
       >
-        <span className="flex w-full min-w-0 items-center gap-2">
-          <code className="shrink-0 rounded bg-rose-100 px-1 py-0.5 font-mono text-2xs font-semibold text-rose-800 dark:bg-rose-900/50 dark:text-rose-300">
-            {finding.keyword}
-          </code>
-          <code className="truncate font-mono text-xs text-gray-600 dark:text-gray-400">
-            {finding.pointer || '(document root)'}
-          </code>
+        <span className="vdlg-bench__finding-head">
+          <Badge variant="rose">{finding.keyword}</Badge>
+          <code className="vdlg-bench__pointer mono">{finding.pointer || '(document root)'}</code>
         </span>
-        <span className="w-full truncate text-xs text-gray-700 dark:text-gray-300">
-          {finding.message}
-        </span>
+        <span className="vdlg-bench__finding-message">{finding.message}</span>
       </button>
     </li>
   );
@@ -171,16 +170,16 @@ export function BenchFindingsList({ result, onSelectFinding }: BenchFindingsList
   const diagnostics = result.diagnostics ?? [];
 
   return (
-    <section data-testid="test-bench-findings" className="space-y-3" aria-label="Validation result">
+    <section data-testid="test-bench-findings" className="vdlg-stack" aria-label="Validation result">
       <StatusLine result={result} />
 
       {result.truncated ? (
         <p
           data-testid="test-bench-findings-truncated"
-          className="text-xs text-amber-700 dark:text-amber-300"
+          className="vdlg-bench__truncated"
         >
           Showing {findings.length} of {total} findings — the report was truncated. Copy as curl
-          and raise <code className="font-mono">max_findings</code> for the complete report.
+          and raise <span className="mono">max_findings</span> for the complete report.
         </p>
       ) : null}
 
@@ -194,11 +193,11 @@ export function BenchFindingsList({ result, onSelectFinding }: BenchFindingsList
           aria-label={windowed ? `Findings (${findings.length}, windowed)` : undefined}
         >
           {windowed ? (
-            <p className="mb-1 text-2xs uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <p className="vdlg-caps">
               windowed — every finding stays reachable by scrolling
             </p>
           ) : null}
-          <ul className="relative divide-y divide-gray-100 dark:divide-gray-800">
+          <ul className="vdlg-bench__findings">
             {rowWindow.paddingTop > 0 && <li aria-hidden style={{ height: rowWindow.paddingTop }} />}
             {findings
               .slice(rowWindow.startIndex, rowWindow.endIndex)
@@ -213,23 +212,16 @@ export function BenchFindingsList({ result, onSelectFinding }: BenchFindingsList
 
       {diagnostics.length > 0 ? (
         <div data-testid="test-bench-diagnostics" className="space-y-1">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Diagnostics (limits on the check, not payload failures)
-          </h3>
+          <h3 className="vdlg-caps">Diagnostics (limits on the check, not payload failures)</h3>
           <ul className="space-y-1">
             {diagnostics.map((diagnostic, index) => (
               <li
                 key={`${diagnostic.code}:${index}`}
-                className="flex items-start gap-1.5 text-xs text-gray-600 dark:text-gray-400"
+                className="vdlg-bench__diagnostic"
               >
-                <AlertTriangle
-                  className="mt-0.5 h-3 w-3 shrink-0 text-amber-500"
-                  aria-hidden
-                />
+                <AlertTriangle className="vdlg-icon-warn" aria-hidden />
                 <span>
-                  <code className="font-mono text-2xs text-gray-500 dark:text-gray-500">
-                    {diagnostic.code}
-                  </code>{' '}
+                  <code className="mono">{diagnostic.code}</code>{' '}
                   {diagnostic.message}
                 </span>
               </li>

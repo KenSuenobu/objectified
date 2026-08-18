@@ -1,17 +1,41 @@
 'use client';
 
+/**
+ * The merge dialog's conflict list, re-skinned by HIVE-6.3 (#5314).
+ *
+ * Authority: `docs/mockups/build/version-dialogs.html` §Merge branches → *Merge conflicts* —
+ * a warning-framed card carrying the count sentence and the Mine/Theirs legend, a toolbar with
+ * the path filter, the type filter and the two bulk pairs (shown / all), then a dense table
+ * whose unresolved rows are tinted and whose Resolution cell is a badge.
+ *
+ * Behaviour and every string are unchanged. The paint is not: the card was framed in
+ * `border-amber-200 … bg-amber-50/80`, the unresolved row tinted `bg-amber-50/90`, the
+ * resolution pill switched between `bg-amber-200 text-amber-950` and `bg-slate-200
+ * text-slate-900`, and the type filter was a bare `<select>` with a hand-written
+ * `focus-visible:ring-indigo-500/70` skin that matched nothing else in the app. All four are
+ * gone: the frame and the tint are tokens, the pill is a `Badge` taking the tone
+ * `MERGE_RESOLUTION_TONE` assigns, and the filter is the `Select` primitive.
+ *
+ * The one measured deviation from the mockup: the unresolved row is tinted with a
+ * `color-mix` of `--warn` rather than `--warn-soft` outright. `--warn-soft` is a *fill for a
+ * badge*, calibrated against `--warn-fg`; used as a row background under `--fg` it measures
+ * 1.1:1 on Nord — the trap the HIVE-6.2 block records — so the row takes a light wash and the
+ * Unresolved badge carries the meaning.
+ */
+
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/Select';
+import { Dialog, DialogContent, DialogFooter } from '../../ui/Dialog';
+import { VersionDialogHead } from '../versions/VersionDialogChrome';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '../../ui/Dialog';
+  MERGE_RESOLUTION_LABEL,
+  MERGE_RESOLUTION_TONE,
+  type MergeResolution,
+} from '../version-dialogs/versionDialogsModel';
 import {
   filterMergeConflictRows,
   formatMergeConflictKinds,
@@ -30,11 +54,18 @@ export interface VersionMergeConflictListProps {
   className?: string;
 }
 
-function resolutionLabel(choice: MergeConflictResolutionChoice | null | undefined): string {
-  if (choice === 'mine') return 'Target (mine)';
-  if (choice === 'theirs') return 'Source (theirs)';
-  if (choice === 'manual') return 'Manual';
-  return 'Unresolved';
+/** The `Select` primitive cannot take the empty string; this is the "no type filter" value. */
+const ALL_KINDS = 'all';
+
+/**
+ * The resolution a row currently carries.
+ *
+ * @param choice What the session has stored for this path, if anything.
+ * @returns The resolution — `unresolved` when nothing is stored.
+ */
+function resolutionOf(choice: MergeConflictResolutionChoice | null | undefined): MergeResolution {
+  if (choice === 'mine' || choice === 'theirs' || choice === 'manual') return choice;
+  return 'unresolved';
 }
 
 export function VersionMergeConflictList({
@@ -48,7 +79,7 @@ export function VersionMergeConflictList({
 }: VersionMergeConflictListProps) {
   const [manualPath, setManualPath] = useState<string | null>(null);
   const [pathFilter, setPathFilter] = useState('');
-  const [kindFilter, setKindFilter] = useState<string | 'all'>('all');
+  const [kindFilter, setKindFilter] = useState<string>(ALL_KINDS);
 
   const kindOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -62,13 +93,17 @@ export function VersionMergeConflictList({
   }, [conflicts]);
 
   useEffect(() => {
-    if (kindFilter === 'all') return;
+    if (kindFilter === ALL_KINDS) return;
     const valid = kindOptions.some(([sig]) => sig === kindFilter);
-    if (!valid) setKindFilter('all');
+    if (!valid) setKindFilter(ALL_KINDS);
   }, [kindFilter, kindOptions]);
 
   const filteredConflicts = useMemo(
-    () => filterMergeConflictRows(conflicts, { pathContains: pathFilter, kindSignature: kindFilter }),
+    () =>
+      filterMergeConflictRows(conflicts, {
+        pathContains: pathFilter,
+        kindSignature: kindFilter === ALL_KINDS ? 'all' : kindFilter,
+      }),
     [conflicts, pathFilter, kindFilter]
   );
 
@@ -84,36 +119,29 @@ export function VersionMergeConflictList({
 
   return (
     <>
-      <div
-        className={cn(
-          'rounded-xl border border-amber-200 dark:border-amber-800 bg-white dark:bg-gray-800 overflow-hidden',
-          className
-        )}
-      >
-        <div className="flex items-start gap-3 p-4 border-b border-amber-200 dark:border-amber-800 bg-amber-50/80 dark:bg-amber-900/20">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
-            <AlertTriangle className="h-5 w-5" aria-hidden />
-          </div>
+      <div className={cn('vdlg-conflicts', className)}>
+        <div className="vdlg-conflicts__head">
+          <span className="tnt-icon-tile" data-tone="warn" aria-hidden>
+            <AlertTriangle />
+          </span>
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">Merge conflicts</h3>
-            <p className="mt-0.5 text-sm text-amber-900/90 dark:text-amber-200/90">
-              {conflicts.length} path{conflicts.length !== 1 ? 's' : ''} need a resolution before apply can succeed on the
-              server. Choices are stored in this session for the upcoming merge-resolution API.
+            <h3 className="vdlg-conflicts__title">Merge conflicts</h3>
+            <p className="vdlg-conflicts__lede">
+              {conflicts.length} path{conflicts.length !== 1 ? 's' : ''} need a resolution before apply can succeed on
+              the server. Choices are stored in this session for the upcoming merge-resolution API.
             </p>
-            <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-              <span className="font-medium text-gray-800 dark:text-gray-200">Mine</span> = target branch{' '}
-              <span className="font-mono">{targetBranchName || '—'}</span>
+            <p className="vdlg-quiet">
+              <strong>Mine</strong> = target branch <span className="mono">{targetBranchName || '—'}</span>
               {' · '}
-              <span className="font-medium text-gray-800 dark:text-gray-200">Theirs</span> = source branch{' '}
-              <span className="font-mono">{sourceBranchName || '—'}</span>
+              <strong>Theirs</strong> = source branch <span className="mono">{sourceBranchName || '—'}</span>
             </p>
           </div>
         </div>
 
-        <div className="px-4 py-3 border-b border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/20 space-y-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
-            <div className="min-w-0 flex-1 space-y-1">
-              <label htmlFor="merge-conflict-path-filter" className="text-xs font-medium text-gray-700 dark:text-gray-300">
+        <div className="vdlg-conflicts__toolbar">
+          <div className="vdlg-conflicts__filters">
+            <div className="vdlg-field vdlg-conflicts__filter-grow">
+              <label htmlFor="merge-conflict-path-filter" className="vdlg-field__label">
                 Filter paths
               </label>
               <Input
@@ -122,49 +150,39 @@ export function VersionMergeConflictList({
                 placeholder="Substring match on path…"
                 value={pathFilter}
                 onChange={(e) => setPathFilter(e.target.value)}
-                className="h-9 text-xs"
                 autoComplete="off"
               />
             </div>
-            <div className="w-full sm:w-56 space-y-1">
-              <label htmlFor="merge-conflict-kind-filter" className="text-xs font-medium text-gray-700 dark:text-gray-300">
+            <div className="vdlg-field vdlg-conflicts__filter-kind">
+              <label htmlFor="merge-conflict-kind-filter" className="vdlg-field__label">
                 Conflict type
               </label>
-              <select
-                id="merge-conflict-kind-filter"
-                value={kindFilter}
-                onChange={(e) => setKindFilter(e.target.value === 'all' ? 'all' : e.target.value)}
-                className={cn(
-                  'flex h-9 w-full rounded-md border border-slate-300 dark:border-slate-600',
-                  'bg-white dark:bg-slate-800 px-2 py-1.5 text-xs',
-                  'text-slate-900 dark:text-slate-100',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/70 focus-visible:ring-offset-2',
-                  'ring-offset-white dark:ring-offset-slate-900'
-                )}
-              >
-                <option value="all">All types</option>
-                {kindOptions.map(([sig, label]) => (
-                  <option key={sig} value={sig}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+              <Select value={kindFilter} onValueChange={setKindFilter}>
+                <SelectTrigger id="merge-conflict-kind-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_KINDS}>All types</SelectItem>
+                  {kindOptions.map(([sig, label]) => (
+                    <SelectItem key={sig} value={sig}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            Filter matches <span className="font-medium text-gray-800 dark:text-gray-200">{filteredConflicts.length}</span> of{' '}
-            <span className="font-medium text-gray-800 dark:text-gray-200">{conflicts.length}</span> path
-            {conflicts.length !== 1 ? 's' : ''}. Bulk actions for <span className="font-medium">shown</span> use this
-            filter.
+          <p className="vdlg-quiet">
+            Filter matches <strong>{filteredConflicts.length}</strong> of <strong>{conflicts.length}</strong> path
+            {conflicts.length !== 1 ? 's' : ''}. Bulk actions for <strong>shown</strong> use this filter.
           </p>
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 shrink-0">Bulk (shown)</span>
-            <div className="flex flex-wrap gap-1.5">
+          <div className="vdlg-conflicts__bulk">
+            <span className="vdlg-caps">Bulk (shown)</span>
+            <div className="vdlg-button-row">
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                className="text-xs"
                 disabled={shownPaths.length === 0}
                 onClick={() => applyBulk(shownPaths, 'mine')}
                 title={`Set Target (mine) for ${shownPaths.length} path(s) matching the filter`}
@@ -176,7 +194,6 @@ export function VersionMergeConflictList({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="text-xs"
                 disabled={shownPaths.length === 0}
                 onClick={() => applyBulk(shownPaths, 'theirs')}
                 title={`Set Source (theirs) for ${shownPaths.length} path(s) matching the filter`}
@@ -185,13 +202,12 @@ export function VersionMergeConflictList({
                 Theirs
               </Button>
             </div>
-            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 shrink-0 sm:ml-2">Bulk (all)</span>
-            <div className="flex flex-wrap gap-1.5">
+            <span className="vdlg-caps">Bulk (all)</span>
+            <div className="vdlg-button-row">
               <Button
                 type="button"
                 size="sm"
                 variant="secondary"
-                className="text-xs"
                 onClick={() => applyBulk(allPaths, 'mine')}
                 title={`Set Target (mine) for all ${allPaths.length} conflict path(s)`}
                 aria-label={`Bulk mine for all ${allPaths.length} conflict path(s)`}
@@ -202,7 +218,6 @@ export function VersionMergeConflictList({
                 type="button"
                 size="sm"
                 variant="secondary"
-                className="text-xs"
                 onClick={() => applyBulk(allPaths, 'theirs')}
                 title={`Set Source (theirs) for all ${allPaths.length} conflict path(s)`}
                 aria-label={`Bulk theirs for all ${allPaths.length} conflict path(s)`}
@@ -213,18 +228,14 @@ export function VersionMergeConflictList({
           </div>
         </div>
 
-        <div className="overflow-x-auto max-h-72 overflow-y-auto">
-          <table className="w-full text-sm">
+        <div className="vdlg-conflicts__scroll">
+          <table className="vdlg-table">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                <th scope="col" className="text-left py-2.5 px-3 font-semibold text-gray-700 dark:text-gray-300">Path</th>
-                <th scope="col" className="text-left py-2.5 px-3 font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Type
-                </th>
-                <th scope="col" className="text-left py-2.5 px-3 font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Resolution
-                </th>
-                <th scope="col" className="text-left py-2.5 px-3 font-semibold text-gray-700 dark:text-gray-300 min-w-[220px]">
+              <tr>
+                <th scope="col">Path</th>
+                <th scope="col">Type</th>
+                <th scope="col">Resolution</th>
+                <th scope="col" className="vdlg-table__actions-col">
                   Actions
                 </th>
               </tr>
@@ -232,40 +243,22 @@ export function VersionMergeConflictList({
             <tbody>
               {conflicts.map((row) => {
                 const choice = resolutions[row.path] ?? null;
-                const unresolved = choice === null || choice === undefined;
+                const resolution = resolutionOf(choice);
                 return (
-                  <tr
-                    key={row.path}
-                    className={cn(
-                      'border-b border-gray-100 dark:border-gray-800 last:border-0',
-                      unresolved && 'bg-amber-50/90 dark:bg-amber-950/30'
-                    )}
-                  >
-                    <td className="py-2.5 px-3 font-mono text-xs text-gray-900 dark:text-gray-100 break-all align-top">
-                      {row.path}
+                  <tr key={row.path} data-unresolved={resolution === 'unresolved' || undefined}>
+                    <td className="vdlg-table__path mono">{row.path}</td>
+                    <td className="vdlg-table__nowrap">{formatMergeConflictKinds(row.kinds)}</td>
+                    <td>
+                      <Badge variant={MERGE_RESOLUTION_TONE[resolution]}>
+                        {MERGE_RESOLUTION_LABEL[resolution]}
+                      </Badge>
                     </td>
-                    <td className="py-2.5 px-3 text-gray-700 dark:text-gray-300 align-top whitespace-nowrap">
-                      {formatMergeConflictKinds(row.kinds)}
-                    </td>
-                    <td className="py-2.5 px-3 align-top">
-                      <span
-                        className={cn(
-                          'inline-flex rounded-md px-2 py-0.5 text-xs font-medium',
-                          unresolved
-                            ? 'bg-amber-200 text-amber-950 dark:bg-amber-900/50 dark:text-amber-100'
-                            : 'bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-slate-100'
-                        )}
-                      >
-                        {resolutionLabel(choice)}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 align-top">
-                      <div className="flex flex-wrap gap-1.5">
+                    <td>
+                      <div className="vdlg-button-row">
                         <Button
                           type="button"
                           size="sm"
                           variant={choice === 'mine' ? 'default' : 'outline'}
-                          className="text-xs"
                           onClick={() => onResolve(row.path, 'mine')}
                           title={`Keep target (${targetBranchName}) at this path`}
                         >
@@ -275,7 +268,6 @@ export function VersionMergeConflictList({
                           type="button"
                           size="sm"
                           variant={choice === 'theirs' ? 'default' : 'outline'}
-                          className="text-xs"
                           onClick={() => onResolve(row.path, 'theirs')}
                           title={`Take source (${sourceBranchName}) at this path`}
                         >
@@ -285,7 +277,6 @@ export function VersionMergeConflictList({
                           type="button"
                           size="sm"
                           variant={choice === 'manual' ? 'secondary' : 'outline'}
-                          className="text-xs"
                           onClick={() => {
                             onResolve(row.path, 'manual');
                             setManualPath(row.path);
@@ -304,15 +295,18 @@ export function VersionMergeConflictList({
       </div>
 
       <Dialog open={manualPath !== null} onOpenChange={(o) => !o && setManualPath(null)}>
-        <DialogContent className="max-w-lg" aria-describedby="merge-manual-desc">
-          <DialogHeader>
-            <DialogTitle>Manual resolution</DialogTitle>
-            <DialogDescription id="merge-manual-desc">
-              Path <span className="font-mono text-gray-900 dark:text-gray-100">{manualPath}</span> is marked for manual
-              merge. A future release will open a side-by-side diff and let you submit the merged fragment to the merge
-              session API.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="vdlg-dialog vdlg-dialog--sm" aria-describedby="merge-manual-desc">
+          <VersionDialogHead
+            icon={<AlertTriangle aria-hidden />}
+            tone="warn"
+            title="Manual resolution"
+            description={
+              <span id="merge-manual-desc">
+                Path <span className="mono">{manualPath}</span> is marked for manual merge. A future release will open a
+                side-by-side diff and let you submit the merged fragment to the merge session API.
+              </span>
+            }
+          />
           <DialogFooter>
             <Button type="button" onClick={() => setManualPath(null)}>
               OK
@@ -323,3 +317,5 @@ export function VersionMergeConflictList({
     </>
   );
 }
+
+export default VersionMergeConflictList;

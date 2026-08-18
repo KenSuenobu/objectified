@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Markdown, MARKDOWN_EMPTY_EM_DASH } from '@/app/components/ui/Markdown';
 import { githubMarkdownComponents } from '@/app/components/ui/markdownGithubComponents';
 import Mustache from 'mustache';
-import { FileText, Loader2, RefreshCw, Settings2 } from 'lucide-react';
+import { FileText, LayoutTemplate, Loader2, RefreshCw, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/app/components/ui/Button';
 import { Label } from '@/app/components/ui/Label';
@@ -17,15 +17,13 @@ import { Checkbox } from '@/app/components/ui/Checkbox';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from '@/app/components/ui/Dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/Tabs';
 import { buildMustacheContext } from '@lib/change-report-mustache-context';
 import sampleFixture from '@lib/change-report-sample-fixture.json';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
+import { VERSION_DIALOG_COPY } from '@/app/components/ade/version-dialogs/versionDialogsModel';
+import { VersionDialogHead } from '@/app/components/ade/versions';
 
 export type VersionChangeReportVersionRow = {
   id: string;
@@ -387,18 +385,18 @@ export function VersionChangeReportPanel({
       <EmptyState
         icon={<FileText className="h-10 w-10" />}
         title="Select a project"
-        description="Choose a project to work with publication change reports."
+        description={VERSION_DIALOG_COPY.changeReportNoProject}
       />
     );
   }
 
   if (published.length === 0) {
     return (
-      <div data-testid="version-change-report-empty" className={`${dashboardPanelClass} p-6`}>
+      <div data-testid="version-change-report-empty" className="vdlg-panel vdlg-panel--pad">
         <EmptyState
           icon={<FileText className="h-10 w-10" />}
           title="No published revisions"
-          description="Publish a schema revision first. Change reports are generated when a version is published (CR-04)."
+          description={VERSION_DIALOG_COPY.changeReportNoPublished}
         />
       </div>
     );
@@ -410,9 +408,9 @@ export function VersionChangeReportPanel({
 
   return (
     <div data-testid="version-change-report-panel" className="space-y-4">
-      <div className={`${dashboardPanelClass} px-4 py-3 flex flex-wrap items-end gap-3`}>
-        <div className="flex flex-col gap-1 min-w-[14rem] flex-1">
-          <Label htmlFor="change-report-revision" className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="vdlg-panel vdlg-toolbar">
+        <div className="vdlg-field vdlg-toolbar__grow">
+          <Label htmlFor="change-report-revision" className="vdlg-field__label">
             Published revision
           </Label>
           <Select value={revisionId} onValueChange={setRevisionId}>
@@ -436,7 +434,7 @@ export function VersionChangeReportPanel({
           onClick={() => void loadReport()}
           disabled={loading}
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+          {loading ? <Loader2 className="animate-spin" aria-hidden /> : null}
           Refresh
         </Button>
         <Button
@@ -445,14 +443,14 @@ export function VersionChangeReportPanel({
           data-testid="change-report-template-dialog-open"
           onClick={() => setTemplateDialogOpen(true)}
         >
-          <Settings2 className="h-4 w-4 mr-1.5" aria-hidden />
+          <Settings2 aria-hidden />
           Templates
         </Button>
       </div>
 
       {loading && !report ? (
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400" role="status">
-          <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden />
+        <div className="vdlg-loading-row" role="status">
+          <Loader2 className="animate-spin" aria-hidden />
           Loading change report…
         </div>
       ) : null}
@@ -460,15 +458,15 @@ export function VersionChangeReportPanel({
       {error && (
         <Alert variant={notFoundMsg ? 'info' : 'error'} data-testid="change-report-error">
           {notFoundMsg
-            ? 'No change report is stored for this publication yet. It is created when the revision is published (if generation succeeded).'
+            ? VERSION_DIALOG_COPY.changeReportEmpty
             : error}
         </Alert>
       )}
 
       {report && (
-        <div className={`${dashboardPanelClass} p-4 space-y-4`}>
+        <div className="vdlg-panel vdlg-panel--pad vdlg-stack">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Publication change report</h2>
+            <h2 className="vdlg-panel-title">Publication change report</h2>
             {canEdit ? (
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -479,7 +477,7 @@ export function VersionChangeReportPanel({
                   onClick={() => void handleRegenerate()}
                   disabled={regenerating || saving}
                 >
-                  {regenerating ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <RefreshCw className="h-4 w-4" aria-hidden />}
+                  {regenerating ? <Loader2 className="animate-spin" aria-hidden /> : <RefreshCw aria-hidden />}
                   Regenerate
                 </Button>
               </div>
@@ -488,13 +486,13 @@ export function VersionChangeReportPanel({
 
           {canEdit ? (
             <div
-              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40 px-3 py-2 space-y-2"
+              className="vdlg-subcard"
               data-testid="change-report-regenerate-options"
             >
-              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Regenerate options</p>
+              <p className="vdlg-caps">Regenerate options</p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="flex flex-col gap-1 min-w-[12rem] flex-1">
-                  <Label className="text-xs text-gray-500 dark:text-gray-400">Template (optional)</Label>
+                  <Label className="vdlg-field__label">Template (optional)</Label>
                   <Select value={regenTemplateId} onValueChange={setRegenTemplateId}>
                     <SelectTrigger data-testid="change-report-regenerate-template">
                       <SelectValue placeholder="Effective default (project → tenant → system)" />
@@ -509,7 +507,7 @@ export function VersionChangeReportPanel({
                     </SelectContent>
                   </Select>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                <label className="vdlg-check">
                   <Checkbox
                     checked={discardEdits}
                     onCheckedChange={(v) => setDiscardEdits(v === true)}
@@ -532,29 +530,29 @@ export function VersionChangeReportPanel({
             </TabsList>
             <TabsContent value="view" className="pt-4 space-y-6" data-testid="change-report-view">
               <section aria-labelledby="cr-h">
-                <h3 id="cr-h" className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 id="cr-h" className="vdlg-section-title">
                   Header
                 </h3>
                 <SafeMarkdown content={report.effectiveHeaderSnapshot ?? ''} />
               </section>
               <section aria-labelledby="cr-b">
-                <h3 id="cr-b" className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 id="cr-b" className="vdlg-section-title">
                   Body
                 </h3>
                 <SafeMarkdown content={report.effectiveRenderedBody ?? ''} />
               </section>
               <section aria-labelledby="cr-f">
-                <h3 id="cr-f" className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 id="cr-f" className="vdlg-section-title">
                   Footnote
                 </h3>
                 <SafeMarkdown content={report.effectiveFootnoteSnapshot ?? ''} />
               </section>
             </TabsContent>
             <TabsContent value="edit" className="pt-4 space-y-3" data-testid="change-report-edit">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <Alert variant="neutral" className="vdlg-note">
                 Edits replace the rendered snapshot for this publication. Use <strong>Clear overrides</strong> to restore
                 server-rendered text.
-              </p>
+              </Alert>
               <div className="space-y-2">
                 <Label htmlFor="cr-edit-h">Header (HTML / Markdown from template pipeline)</Label>
                 <Textarea
@@ -613,14 +611,18 @@ export function VersionChangeReportPanel({
       )}
 
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" aria-describedby="tpl-desc">
-          <DialogHeader>
-            <DialogTitle>Change report templates</DialogTitle>
-            <DialogDescription id="tpl-desc">
-              Create a Mustache template triple (validated on save). Defaults can be scoped to this project or the whole
-              tenant (tenant admins only).
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="vdlg-dialog vdlg-dialog--lg" aria-describedby="tpl-desc">
+          <VersionDialogHead
+            icon={<LayoutTemplate aria-hidden />}
+            tone="accent"
+            title="Change report templates"
+            description={
+              <span id="tpl-desc">
+                Create a Mustache template triple (validated on save). Defaults can be scoped to this project or the
+                whole tenant (tenant admins only).
+              </span>
+            }
+          />
           <Tabs defaultValue="create" className="w-full">
             <TabsList>
               <TabsTrigger value="create">Create</TabsTrigger>
@@ -628,34 +630,34 @@ export function VersionChangeReportPanel({
               <TabsTrigger value="preview">Preview (sample fixture)</TabsTrigger>
             </TabsList>
             <TabsContent value="create" className="space-y-3 pt-3">
-              <div className="space-y-2">
+              <div className="vdlg-field">
                 <Label htmlFor="tpl-semver">Semver (unique per tenant)</Label>
                 <Input
                   id="tpl-semver"
                   value={tplSemver}
                   onChange={(e) => setTplSemver(e.target.value)}
-                  className="font-mono"
+                  className="vdlg-input--mono"
                   placeholder="e.g. 1.0.1"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="vdlg-field">
                 <Label htmlFor="tpl-h">Header template</Label>
-                <Textarea id="tpl-h" value={tplHeader} onChange={(e) => setTplHeader(e.target.value)} rows={4} className="font-mono text-xs" />
+                <Textarea id="tpl-h" value={tplHeader} onChange={(e) => setTplHeader(e.target.value)} rows={4} className="vdlg-textarea vdlg-textarea--mono" />
               </div>
-              <div className="space-y-2">
+              <div className="vdlg-field">
                 <Label htmlFor="tpl-b">Body template</Label>
-                <Textarea id="tpl-b" value={tplBody} onChange={(e) => setTplBody(e.target.value)} rows={10} className="font-mono text-xs" />
+                <Textarea id="tpl-b" value={tplBody} onChange={(e) => setTplBody(e.target.value)} rows={10} className="vdlg-textarea vdlg-textarea--mono" />
               </div>
-              <div className="space-y-2">
+              <div className="vdlg-field">
                 <Label htmlFor="tpl-f">Footnote template</Label>
-                <Textarea id="tpl-f" value={tplFoot} onChange={(e) => setTplFoot(e.target.value)} rows={4} className="font-mono text-xs" />
+                <Textarea id="tpl-f" value={tplFoot} onChange={(e) => setTplFoot(e.target.value)} rows={4} className="vdlg-textarea vdlg-textarea--mono" />
               </div>
               <Button type="button" onClick={() => void handleCreateTemplate()} disabled={tplCreating}>
                 {tplCreating ? 'Creating…' : 'Create template version'}
               </Button>
             </TabsContent>
             <TabsContent value="defaults" className="space-y-3 pt-3">
-              <div className="space-y-2">
+              <div className="vdlg-field">
                 <Label>Template version</Label>
                 <Select value={defaultPick} onValueChange={setDefaultPick}>
                   <SelectTrigger>
@@ -670,7 +672,7 @@ export function VersionChangeReportPanel({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="vdlg-button-row">
                 <Button type="button" variant="secondary" onClick={() => void handleSetProjectDefault()}>
                   Set as project default
                 </Button>
@@ -691,15 +693,15 @@ export function VersionChangeReportPanel({
             <TabsContent value="preview" className="space-y-3 pt-3">
               {previewBlocks.err ? <Alert variant="error">{previewBlocks.err}</Alert> : null}
               <section>
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Header preview</h4>
+                <h4 className="vdlg-caps">Header preview</h4>
                 <SafeMarkdown content={previewBlocks.h} />
               </section>
               <section>
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Body preview</h4>
+                <h4 className="vdlg-caps">Body preview</h4>
                 <SafeMarkdown content={previewBlocks.b} />
               </section>
               <section>
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Footnote preview</h4>
+                <h4 className="vdlg-caps">Footnote preview</h4>
                 <SafeMarkdown content={previewBlocks.f} />
               </section>
             </TabsContent>

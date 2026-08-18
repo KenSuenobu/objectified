@@ -6,7 +6,6 @@ import { Alert } from '@/app/components/ui/Alert';
 import { Badge } from '@/app/components/ui/Badge';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import {
   countsSummary,
   groupChangelogEntries,
@@ -174,7 +173,7 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
   if (published.length === 0) {
     return (
       <EmptyState
-        icon={<ScrollText className="h-10 w-10" />}
+        icon={<ScrollText />}
         title="No Published Versions"
         description="Publish a version to see its classified changelog here."
       />
@@ -186,20 +185,20 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
   const selectedSummary = summaryByRevision.get(revisionId) ?? null;
 
   return (
-    <div className={`${dashboardPanelClass} p-4`} data-testid="version-changes-panel">
-      <div className="flex flex-col lg:flex-row gap-4">
+    <div className="vdlg-panel" data-testid="version-changes-panel">
+      <div className="vdlg-changes">
         {/* Published revision list with severity badges */}
-        <div className="lg:w-72 shrink-0">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-            <ScrollText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
+        <div className="vdlg-changes__aside">
+          <h3 className="vdlg-section-title">
+            <ScrollText aria-hidden />
             Published versions
           </h3>
           {summariesError ? (
-            <Alert variant="error" className="mb-2 text-xs">
+            <Alert variant="error" className="vdlg-changes__alert">
               {summariesError}
             </Alert>
           ) : null}
-          <div className="max-h-[28rem] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800">
+          <div className="vdlg-changes__list">
             {published.map((v) => {
               const s = summaryByRevision.get(v.id);
               const active = v.id === revisionId;
@@ -210,13 +209,10 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
                   data-testid={`changes-version-${v.id}`}
                   aria-pressed={active}
                   onClick={() => setRevisionId(v.id)}
-                  className={`w-full text-left px-3 py-2 flex items-center gap-2 transition-colors ${
-                    active
-                      ? 'bg-indigo-50 dark:bg-indigo-950/40'
-                      : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                  }`}
+                  className="vdlg-changes__item"
+                  data-active={active || undefined}
                 >
-                  <span className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex-1">
+                  <span className="vdlg-changes__item-label">
                     {formatVersionWithPrefix(v.version_id)}
                   </span>
                   {s?.maxSeverity ? (
@@ -239,13 +235,13 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
         </div>
 
         {/* Stored changelog for the selected revision */}
-        <div className="flex-1 min-w-0" data-testid="changes-detail">
+        <div className="vdlg-changes__main" data-testid="changes-detail">
           {detailLoading ? (
-            <LoadingState minHeightClassName="min-h-[160px]" message="Loading changelog…" />
+            <LoadingState minHeightClassName="vdlg-min-h-block" message="Loading changelog…" />
           ) : detailError ? (
             <Alert variant="error">{detailError}</Alert>
           ) : !detail ? (
-            <p className="text-sm text-gray-600 dark:text-gray-400 py-8 text-center">
+            <p className="vdlg-changes__note">
               Changelog not available yet — classification runs right after publish.
               {selectedSummary?.status === 'failed'
                 ? ' The last classification attempt failed; it is retried on the next publish.'
@@ -257,17 +253,17 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
               {detail.error ? `: ${detail.error}` : '.'}
             </Alert>
           ) : detail.status === 'initial' || payload?.initialPublication ? (
-            <div className="py-8 text-center space-y-2" data-testid="changes-initial">
+            <div className="vdlg-changes__initial" data-testid="changes-initial">
               <Badge variant="secondary">Initial publication</Badge>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="vdlg-changes__note">
                 {formatVersionWithPrefix(detail.versionLabel ?? undefined)} is the first published
                 version on this line — there is no baseline to compare against.
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-gray-200 dark:border-gray-700">
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="vdlg-changes__detail">
+              <div className="vdlg-changes__detail-head">
+                <span className="vdlg-changes__pair">
                   {formatVersionWithPrefix(payload?.fromVersion ?? detail.baselineVersionLabel ?? undefined)}
                   {' → '}
                   {formatVersionWithPrefix(payload?.toVersion ?? detail.versionLabel ?? undefined)}
@@ -281,50 +277,41 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
               </div>
 
               {sections.length === 0 ? (
-                <p className="text-sm text-gray-600 dark:text-gray-400 py-6 text-center" data-testid="changes-empty">
+                <p className="vdlg-changes__note" data-testid="changes-empty">
                   No changes detected between these versions.
                 </p>
               ) : (
                 sections.map((section) => (
                   <section key={section.severity} data-testid={`changes-section-${section.severity}`}>
-                    <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                    <h4 className="vdlg-changes__severity">
                       <Badge variant={severityBadgeVariant(section.severity)}>
                         {severityLabel(section.severity)}
                       </Badge>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">
+                      <span className="vdlg-quiet">
                         {section.entries.length} change{section.entries.length === 1 ? '' : 's'}
                       </span>
                     </h4>
-                    <div className="space-y-3">
+                    <div className="vdlg-changes__groups">
                       {section.groups.map((group) => (
-                        <div
-                          key={group.pathGroup}
-                          className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
-                        >
-                          <div className="px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
-                            <code className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                              {group.pathGroup}
-                            </code>
+                        <div key={group.pathGroup} className="vdlg-changes__group">
+                          <div className="vdlg-changes__group-head">
+                            <code className="mono">{group.pathGroup}</code>
                           </div>
-                          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+                          <ul className="vdlg-changes__entries">
                             {group.entries.map((entry, i) => (
                               <li
                                 key={`${entry.pointer}-${entry.ruleId}-${i}`}
-                                className="px-3 py-2 flex flex-wrap items-start gap-2"
+                                className="vdlg-changes__entry"
                                 data-testid="changes-entry"
                               >
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-sm text-gray-900 dark:text-gray-100">
+                                  <p className="vdlg-changes__entry-summary">
                                     {entry.summary || entry.changeKind || entry.ruleId}
                                     {entry.unclassified ? (
-                                      <span className="ml-2 text-2xs uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                                        unclassified
-                                      </span>
+                                      <span className="vdlg-changes__unclassified">unclassified</span>
                                     ) : null}
                                   </p>
-                                  <code className="text-2xs text-gray-500 dark:text-gray-400 break-all">
-                                    {entry.pointer}
-                                  </code>
+                                  <code className="vdlg-changes__pointer">{entry.pointer}</code>
                                 </div>
                                 {detail.baselineRevisionId ? (
                                   <button
@@ -337,10 +324,10 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
                                         entry.pointer,
                                       )
                                     }
-                                    className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:underline shrink-0"
+                                    className="vdlg-changes__diff-link"
                                     title="Open this change in the diff view"
                                   >
-                                    <GitCompareArrows className="h-3.5 w-3.5" aria-hidden />
+                                    <GitCompareArrows aria-hidden />
                                     View in diff
                                   </button>
                                 ) : null}
@@ -355,14 +342,12 @@ export function VersionChangesPanel({ projectId, versions, onOpenDiff }: Version
               )}
 
               {detailLoading ? (
-                <p className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> Refreshing…
+                <p className="vdlg-changes__refreshing">
+                  <Loader2 className="animate-spin" aria-hidden /> Refreshing…
                 </p>
               ) : null}
               {countsSummary(payload?.counts) ? (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Totals: {countsSummary(payload?.counts)}
-                </p>
+                <p className="vdlg-quiet">Totals: {countsSummary(payload?.counts)}</p>
               ) : null}
             </div>
           )}

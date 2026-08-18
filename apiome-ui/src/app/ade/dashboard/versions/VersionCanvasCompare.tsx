@@ -1,5 +1,25 @@
 'use client';
 
+/**
+ * The compare dialog's **Canvas** tab — the two saved layouts, side by side or stacked.
+ *
+ * Re-skinned by HIVE-6.3 (#5314) to `docs/mockups/build/version-dialogs.html` §Compare →
+ * Canvas. Behaviour is unchanged: the same split/overlay modes, the same synchronised
+ * viewport, the same empty and loading copy.
+ *
+ * What changed is where the colour comes from. A node border used to be `'#10b981'` and the
+ * legend swatch beside it `border-emerald-500` — two spellings of the same idea, neither of
+ * which followed the reader's theme. Both now resolve through `changeStrokeVar` and
+ * `VERSION_CHANGE_TONE` in `versionDialogsModel`, so the swatch and the node it explains are
+ * the same token in all nine appearances. React Flow writes node and edge colour into an
+ * inline `style` that no stylesheet can reach, which is why the model hands out `var(--ok)`
+ * rather than a class: it is a token reference, so the theme swap still reaches it.
+ *
+ * The pane's heights are viewport-relative (`min(…vh, …rem)` in `.vdlg-canvas-pane`), not the
+ * frozen `min-h-[min(320px,40vh)]` strings this carried, so the tab holds its proportion at
+ * every font scale.
+ */
+
 import { useMemo, useEffect, useRef } from 'react';
 import {
   ReactFlow,
@@ -16,6 +36,13 @@ import {
 import '@xyflow/react/dist/style.css';
 import type { LayoutState, LayoutDiffSummary } from '../../../../../lib/layout-diff';
 import { compareLayouts } from '../../../../../lib/layout-diff';
+import {
+  changeStrokeVar,
+  VERSION_CANVAS_LEGEND,
+  VERSION_CHANGE_TONE,
+  VERSION_DIALOG_COPY,
+  type VersionChangeClass,
+} from '@/app/components/ade/version-dialogs/versionDialogsModel';
 
 export type CanvasCompareViewMode = 'split' | 'overlay';
 
@@ -39,19 +66,6 @@ function buildDiff(left: LayoutState | null, right: LayoutState | null): LayoutD
   return compareLayouts(l, r);
 }
 
-function strokeForTone(tone: 'added' | 'removed' | 'modified' | 'unchanged'): string {
-  switch (tone) {
-    case 'added':
-      return '#10b981';
-    case 'removed':
-      return '#ef4444';
-    case 'modified':
-      return '#f59e0b';
-    default:
-      return '#9ca3af';
-  }
-}
-
 type DiffSets = {
   nodes: { added: Set<string>; removed: Set<string>; modified: Set<string> };
   edges: { added: Set<string>; removed: Set<string>; modified: Set<string> };
@@ -72,11 +86,7 @@ function buildDiffSets(diff: LayoutDiffSummary): DiffSets {
   };
 }
 
-function classifyNode(
-  nodeId: string,
-  side: 'left' | 'right',
-  sets: DiffSets
-): 'added' | 'removed' | 'modified' | 'unchanged' {
+function classifyNode(nodeId: string, side: 'left' | 'right', sets: DiffSets): VersionChangeClass {
   if (side === 'left') {
     if (sets.nodes.removed.has(nodeId)) return 'removed';
     if (sets.nodes.modified.has(nodeId)) return 'modified';
@@ -87,11 +97,7 @@ function classifyNode(
   return 'unchanged';
 }
 
-function classifyEdge(
-  edgeId: string,
-  side: 'left' | 'right',
-  sets: DiffSets
-): 'added' | 'removed' | 'modified' | 'unchanged' {
+function classifyEdge(edgeId: string, side: 'left' | 'right', sets: DiffSets): VersionChangeClass {
   if (side === 'left') {
     if (sets.edges.removed.has(edgeId)) return 'removed';
     if (sets.edges.modified.has(edgeId)) return 'modified';
@@ -111,7 +117,7 @@ function toFlow(
     return { nodes: [], edges: [] };
   }
   const nodes: Node[] = safeArray(state.nodes).map((n) => {
-    const tone = classifyNode(n.id, side, sets);
+    const change = classifyNode(n.id, side, sets);
     const label =
       typeof n.data?.name === 'string'
         ? n.data.name
@@ -125,12 +131,12 @@ function toFlow(
       data: { label },
       style: {
         borderWidth: 2,
-        borderColor: strokeForTone(tone),
+        borderColor: changeStrokeVar(change),
       },
     };
   });
   const edges: Edge[] = safeArray(state.edges).map((e) => {
-    const tone = classifyEdge(e.id, side, sets);
+    const change = classifyEdge(e.id, side, sets);
     return {
       id: e.id,
       source: e.source,
@@ -138,8 +144,8 @@ function toFlow(
       sourceHandle: e.sourceHandle ?? undefined,
       targetHandle: e.targetHandle ?? undefined,
       style: {
-        stroke: strokeForTone(tone),
-        strokeWidth: tone === 'unchanged' ? 1 : 2,
+        stroke: changeStrokeVar(change),
+        strokeWidth: change === 'unchanged' ? 1 : 2,
       },
     };
   });
@@ -200,19 +206,12 @@ function FlowPane({
     !state || (safeArray(state.nodes).length === 0 && safeArray(state.edges).length === 0);
 
   return (
-    <div className="relative flex min-h-0 min-h-[min(320px,40vh)] flex-1 flex-col">
-      {showTitle && (
-        <div className="shrink-0 border-b border-gray-200 bg-gray-100 px-2 py-1 text-center text-xs font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
-          {title}
-        </div>
-      )}
+    <div className="vdlg-canvas-pane">
+      {showTitle && <div className="vdlg-canvas-pane__title">{title}</div>}
       {empty ? (
-        <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          No saved canvas layout for this revision. Save a default or named layout in Studio to
-          compare visually.
-        </div>
+        <p className="vdlg-canvas-pane__empty">{VERSION_DIALOG_COPY.canvasEmpty}</p>
       ) : (
-        <div className="relative min-h-[min(380px,45vh)] w-full flex-1">
+        <div className="vdlg-canvas-pane__flow">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -229,7 +228,7 @@ function FlowPane({
             fitView
             fitViewOptions={{ padding: 0.15, maxZoom: 1.1 }}
             onMove={onMoveCallback ? (_, vp) => onMoveCallback(vp) : undefined}
-            className="bg-gray-50 dark:bg-gray-900"
+            className="vdlg-flow"
           >
             {viewportSyncRef && <ViewportCapture syncRef={viewportSyncRef} />}
             <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
@@ -241,38 +240,27 @@ function FlowPane({
   );
 }
 
+/**
+ * The four-swatch legend.
+ *
+ * The swatch is a `data-tone` attribute, not a colour: `globals.css` paints
+ * `.vdlg-legend__swatch[data-tone]` from the same token `changeStrokeVar` hands React Flow, so
+ * the two can no longer disagree about what "added" looks like.
+ */
 function CanvasLegend() {
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 dark:text-gray-400">
-      <span className="font-medium text-gray-800 dark:text-gray-200">Legend</span>
-      <span className="inline-flex items-center gap-1.5">
-        <span
-          className="h-3 w-3 rounded border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40"
-          aria-hidden
-        />
-        Added (compare side)
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <span
-          className="h-3 w-3 rounded border-2 border-red-500 bg-red-50 dark:bg-red-950/40"
-          aria-hidden
-        />
-        Removed (base side)
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <span
-          className="h-3 w-3 rounded border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40"
-          aria-hidden
-        />
-        Moved / modified
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <span
-          className="h-3 w-3 rounded border-2 border-gray-400 bg-gray-50 dark:bg-gray-800/40"
-          aria-hidden
-        />
-        Unchanged
-      </span>
+    <div className="vdlg-legend">
+      <span className="vdlg-legend__title">Legend</span>
+      {VERSION_CANVAS_LEGEND.map((entry) => (
+        <span key={entry.change} className="vdlg-legend__item">
+          <span
+            className="vdlg-legend__swatch"
+            data-tone={VERSION_CHANGE_TONE[entry.change]}
+            aria-hidden
+          />
+          {entry.label}
+        </span>
+      ))}
     </div>
   );
 }
@@ -289,22 +277,12 @@ export default function VersionCanvasCompare({
   const underlaySetViewportRef = useRef<((vp: Viewport) => void) | null>(null);
 
   return (
-    <div className="flex min-h-0 flex-col">
+    <div className="vdlg-canvas" data-mode={mode}>
       <CanvasLegend />
-      <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-        Renders the resolved Studio layout (default snapshot, or the effective named layout when no
-        default exists). Logical schema diff stays on the other tabs.
-      </p>
+      <p className="vdlg-quiet">{VERSION_DIALOG_COPY.canvasNote}</p>
       {mode === 'split' ? (
-        <div className="flex min-h-0 w-full flex-1 flex-col gap-3 md:flex-row">
-          <FlowPane
-            state={left}
-            side="left"
-            diff={diff}
-            title={leftLabel}
-            showTitle
-            interactive
-          />
+        <div className="vdlg-canvas__split">
+          <FlowPane state={left} side="left" diff={diff} title={leftLabel} showTitle interactive />
           <FlowPane
             state={right}
             side="right"
@@ -316,20 +294,18 @@ export default function VersionCanvasCompare({
         </div>
       ) : (
         <>
-          <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
+          <div className="vdlg-canvas__overlay-key">
             <span>
-              <span className="font-medium text-gray-800 dark:text-gray-200">Base</span> —{' '}
-              {leftLabel}{' '}
-              <span className="text-gray-500 dark:text-gray-500">(underlay, dimmed)</span>
+              <span className="vdlg-canvas__overlay-side">Base</span> — {leftLabel}{' '}
+              <span className="vdlg-quiet">(underlay, dimmed)</span>
             </span>
             <span>
-              <span className="font-medium text-gray-800 dark:text-gray-200">Compare</span> —{' '}
-              {rightLabel}{' '}
-              <span className="text-gray-500 dark:text-gray-500">(on top, pan/zoom)</span>
+              <span className="vdlg-canvas__overlay-side">Compare</span> — {rightLabel}{' '}
+              <span className="vdlg-quiet">(on top, pan/zoom)</span>
             </span>
           </div>
-          <div className="relative min-h-[min(420px,50vh)] w-full flex-1">
-            <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.72]">
+          <div className="vdlg-canvas__stack">
+            <div className="vdlg-canvas__layer vdlg-canvas__layer--under">
               <FlowPane
                 state={left}
                 side="left"
@@ -340,7 +316,7 @@ export default function VersionCanvasCompare({
                 viewportSyncRef={underlaySetViewportRef}
               />
             </div>
-            <div className="absolute inset-0 z-10 opacity-[0.88]">
+            <div className="vdlg-canvas__layer vdlg-canvas__layer--over">
               <FlowPane
                 state={right}
                 side="right"

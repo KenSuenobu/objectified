@@ -31,18 +31,17 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { FlaskConical, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from '../../ui/Dialog';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { Textarea } from '../../ui/Textarea';
+import { VersionDialogHead } from '../versions/VersionDialogChrome';
+import { VERSION_DIALOG_COPY } from '../version-dialogs/versionDialogsModel';
 
 /** One canned response as stored by REST (camelCase wire shape). */
 export interface MockScenarioResponsePayload {
@@ -515,7 +514,7 @@ function ChaosBlockFields({ draft, onChange, ariaPrefix }: ChaosBlockFieldsProps
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 w-24">Default</span>
+        <span className="vdlg-caps vdlg-mock__scope">Default</span>
         <ChaosKnobsFields
           knobs={draft.default}
           onChange={(next) => onChange({ ...draft, default: next })}
@@ -537,7 +536,7 @@ function ChaosBlockFields({ draft, onChange, ariaPrefix }: ChaosBlockFieldsProps
             }
             placeholder="Operation (e.g. GET /pets/{petId})"
             aria-label={`${ariaPrefix} route ${index + 1} key`}
-            className="font-mono text-xs flex-1 min-w-[12rem]"
+            className="vdlg-input--mono vdlg-mock__route"
           />
           <ChaosKnobsFields
             knobs={operation.knobs}
@@ -560,7 +559,7 @@ function ChaosBlockFields({ draft, onChange, ariaPrefix }: ChaosBlockFieldsProps
             }
             aria-label={`Remove ${ariaPrefix.toLowerCase()} route override ${index + 1}`}
           >
-            <Trash2 className="h-4 w-4 text-red-500" />
+            <Trash2 className="vdlg-icon-danger" aria-hidden />
           </Button>
         </div>
       ))}
@@ -718,37 +717,41 @@ export function MockScenarioEditor({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-3xl max-h-[85vh] overflow-y-auto"
+        className="vdlg-dialog vdlg-dialog--lg"
         data-testid={`mock-scenario-editor-${versionRecordId}`}
       >
-        <DialogHeader>
-          <DialogTitle>Mock scenarios for v{versionLabel}</DialogTitle>
-          <DialogDescription>
-            Curated situations consumers select per request with the{' '}
-            <code className="font-mono text-xs">X-Mock-Scenario</code> header. Add several responses
-            to one operation to build a per-call sequence; requests without the header keep the
-            default mock behavior.
-          </DialogDescription>
-        </DialogHeader>
+        <VersionDialogHead
+          icon={<FlaskConical aria-hidden />}
+          tone="accent"
+          title={`Mock scenarios for v${versionLabel}`}
+          description={
+            <>
+              Curated situations consumers select per request with the{' '}
+              <span className="mono">X-Mock-Scenario</span> header. Add several responses to one
+              operation to build a per-call sequence; requests without the header keep the default
+              mock behavior.
+            </>
+          }
+        />
 
         {loading ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="mock-scenario-loading">
-            Loading scenarios…
+          <p className="vdlg-quiet" data-testid="mock-scenario-loading">
+            {VERSION_DIALOG_COPY.scenariosLoading}
           </p>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="vdlg-form">
             {drafts.length === 0 && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="vdlg-quiet">
                 No scenarios defined yet. Add one to get started — for example{' '}
-                <span className="font-mono text-xs">quota-exceeded</span> returning HTTP 429 from a
-                list operation.
+                <span className="mono">quota-exceeded</span> returning HTTP 429 from a list
+                operation.
               </p>
             )}
 
             {drafts.map((scenario, scenarioIndex) => (
               <fieldset
                 key={scenarioIndex}
-                className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 flex flex-col gap-3"
+                className="vdlg-mock__scenario"
                 data-testid={`mock-scenario-${scenarioIndex}`}
               >
                 <div className="flex items-start gap-2">
@@ -773,14 +776,14 @@ export function MockScenarioEditor({
                     onClick={() => setDrafts((prev) => prev.filter((_, i) => i !== scenarioIndex))}
                     aria-label={`Remove scenario ${scenario.name || scenarioIndex + 1}`}
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
+                    <Trash2 className="vdlg-icon-danger" aria-hidden />
                   </Button>
                 </div>
 
                 {scenario.operations.map((operation, operationIndex) => (
                   <div
                     key={operationIndex}
-                    className="rounded-md border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 p-3 flex flex-col gap-3"
+                    className="vdlg-mock__override"
                   >
                     <div className="flex items-center gap-2">
                       <Input
@@ -788,7 +791,7 @@ export function MockScenarioEditor({
                         onChange={(e) => updateOperation(scenarioIndex, operationIndex, { key: e.target.value })}
                         placeholder="Operation (e.g. GET /pets/{petId})"
                         aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} key`}
-                        className="font-mono text-xs"
+                        className="vdlg-input--mono"
                       />
                       <Button
                         type="button"
@@ -801,17 +804,17 @@ export function MockScenarioEditor({
                         }
                         aria-label={`Remove operation ${operation.key || operationIndex + 1}`}
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="vdlg-icon-danger" aria-hidden />
                       </Button>
                     </div>
 
                     {operation.responses.map((response, responseIndex) => (
                       <div
                         key={responseIndex}
-                        className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 flex flex-col gap-2"
+                        className="vdlg-mock__step"
                       >
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                          <span className="vdlg-caps">
                             {operation.responses.length > 1 ? `Call ${responseIndex + 1}` : 'Response'}
                           </span>
                           <Input
@@ -835,9 +838,9 @@ export function MockScenarioEditor({
                             }
                             placeholder="Media type (default application/json)"
                             aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} response ${responseIndex + 1} media type`}
-                            className="flex-1 min-w-[12rem]"
+                            className="vdlg-mock__route"
                           />
-                          <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
+                          <label className="vdlg-check">
                             <input
                               type="checkbox"
                               checked={response.offSpec}
@@ -847,7 +850,7 @@ export function MockScenarioEditor({
                                 })
                               }
                               aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} response ${responseIndex + 1} off-spec`}
-                              className="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600"
+                              className="vdlg-check__box"
                             />
                             Off-spec
                           </label>
@@ -863,7 +866,7 @@ export function MockScenarioEditor({
                               }
                               aria-label={`Remove response ${responseIndex + 1}`}
                             >
-                              <Trash2 className="h-4 w-4 text-red-500" />
+                              <Trash2 className="vdlg-icon-danger" aria-hidden />
                             </Button>
                           )}
                         </div>
@@ -876,7 +879,7 @@ export function MockScenarioEditor({
                           }
                           placeholder='Headers as JSON, e.g. {"Retry-After": "60"} (optional)'
                           aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} response ${responseIndex + 1} headers`}
-                          className="font-mono text-xs min-h-[44px]"
+                          className="vdlg-textarea vdlg-textarea--mono"
                         />
                         <Textarea
                           value={response.bodyText}
@@ -889,7 +892,7 @@ export function MockScenarioEditor({
                             'Body as JSON; leave blank for an empty response body. Supports {{templates}}, e.g. {"id": "{{request.path.petId}}"}'
                           }
                           aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} response ${responseIndex + 1} body`}
-                          className="font-mono text-xs min-h-[64px]"
+                          className="vdlg-textarea vdlg-textarea--mono"
                         />
                       </div>
                     ))}
@@ -909,7 +912,7 @@ export function MockScenarioEditor({
                     </Button>
 
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      <span className="vdlg-caps">
                         Match rules (advanced) — evaluated before the responses above; first match
                         wins, responses above are the fallback
                       </span>
@@ -922,7 +925,7 @@ export function MockScenarioEditor({
                           'Rules as JSON, e.g. [{"when": {"query": {"limit": {"gt": 10}}}, "responses": [{"status": 429}]}] (optional)'
                         }
                         aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} match rules`}
-                        className="font-mono text-xs min-h-[44px]"
+                        className="vdlg-textarea vdlg-textarea--mono"
                       />
                     </div>
                   </div>
@@ -947,11 +950,11 @@ export function MockScenarioEditor({
 
                 {scenario.chaos ? (
                   <div
-                    className="rounded-md border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 p-3 flex flex-col gap-2"
+                    className="vdlg-mock__override"
                     data-testid={`mock-scenario-${scenarioIndex}-chaos`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      <span className="vdlg-caps">
                         Scenario chaos — replaces the version-level knobs while this scenario is
                         selected
                       </span>
@@ -962,7 +965,7 @@ export function MockScenarioEditor({
                         onClick={() => updateScenario(scenarioIndex, { chaos: null })}
                         aria-label={`Remove scenario ${scenarioIndex + 1} chaos`}
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="vdlg-icon-danger" aria-hidden />
                       </Button>
                     </div>
                     <ChaosBlockFields
@@ -1004,14 +1007,14 @@ export function MockScenarioEditor({
             </Button>
 
             <fieldset
-              className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 flex flex-col gap-3"
+              className="vdlg-mock__scenario"
               data-testid="mock-chaos-editor"
             >
               <div>
-                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <p className="vdlg-section-title">
                   Latency &amp; chaos
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="vdlg-quiet">
                   Simulate a slow or flaky API: every response waits the configured delay (± jitter,
                   capped at 30s) and the error rate answers that percentage of calls with an injected
                   5xx. Route overrides win over the defaults; leave everything blank for an instant,
@@ -1023,13 +1026,13 @@ export function MockScenarioEditor({
 
             {errors.length > 0 && (
               <div
-                className="rounded-md border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-3"
+                className="vdlg-mock__errors"
                 data-testid="mock-scenario-errors"
               >
-                <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                <p className="vdlg-mock__errors-title">
                   Please fix the following before saving:
                 </p>
-                <ul className="mt-1 list-disc pl-5 text-xs text-red-700 dark:text-red-300">
+                <ul className="vdlg-mock__errors-list">
                   {errors.map((error, index) => (
                     <li key={index}>{error}</li>
                   ))}

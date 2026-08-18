@@ -2,10 +2,23 @@
  * Revision history DAG for ADE Versions (#743, #744).
  * Builds a subgraph from parent_version_id + merge_parent_version_id with windowing.
  * #744: left-to-right layered layout (lanes), branch tips vs merge styling, branch filtering.
+ *
+ * HIVE-6.3 (#5314) took the colour out. A lane used to be four Tailwind palette strings
+ * (`bg-emerald-500` / `ring-emerald-500` / `text-emerald-700 dark:text-emerald-300`) and an
+ * edge a literal `rgb(100 116 139)`; both froze the graph on one appearance, and neither
+ * agreed with the lane chip in the legend above it. A lane is now a **tone name** from the
+ * shared vocabulary and an edge a token reference, both from `versionDialogsModel`, so the
+ * dot, the chip, the tip stripe and the edge follow all nine themes together.
  */
 
 import type { Edge, Node } from '@xyflow/react';
 import { applyAutoLayout } from '@/app/utils/canvas-auto-layout';
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
+import {
+  VERSION_LANE_TONES,
+  historyEdgeStrokeVar,
+  laneToneForBranchIndex as laneToneForIndex,
+} from '@/app/components/ade/version-dialogs/versionDialogsModel';
 
 export type VersionHistoryVertex = {
   id: string;
@@ -141,56 +154,33 @@ function branchNamesByTipVersionId(branches: VersionHistoryBranchMeta[]): Map<st
   return m;
 }
 
-const TIP_ACCENT_BORDER = [
-  'border-l-emerald-500',
-  'border-l-sky-500',
-  'border-l-amber-500',
-  'border-l-rose-500',
-  'border-l-cyan-500',
-  'border-l-orange-500',
-  'border-l-teal-500',
-  'border-l-indigo-500',
-] as const;
-
-export type LaneColor = {
-  dot: string;
-  ring: string;
-  text: string;
-};
-
 /**
- * Lane palette for the commit dot and the lane legend. Kept parallel to `TIP_ACCENT_BORDER`
- * so a branch's accent border and its lane dot visually agree.
+ * The tone of the accent stripe down a branch tip's left edge.
+ *
+ * Hashed from the branch names rather than taken from the lane index, so a tip keeps the same
+ * stripe whichever filter is applied. The palette is `VERSION_LANE_TONES` — the same eight the
+ * lane dots use — so a tip's stripe and its dot are drawn from one vocabulary.
+ *
+ * @param names The branch names whose tip this revision is.
+ * @returns A tone, or `null` when the revision is nobody's tip.
  */
-export const LANE_COLOR_PALETTE: readonly LaneColor[] = [
-  { dot: 'bg-emerald-500', ring: 'ring-emerald-500', text: 'text-emerald-700 dark:text-emerald-300' },
-  { dot: 'bg-sky-500', ring: 'ring-sky-500', text: 'text-sky-700 dark:text-sky-300' },
-  { dot: 'bg-amber-500', ring: 'ring-amber-500', text: 'text-amber-700 dark:text-amber-300' },
-  { dot: 'bg-rose-500', ring: 'ring-rose-500', text: 'text-rose-700 dark:text-rose-300' },
-  { dot: 'bg-cyan-500', ring: 'ring-cyan-500', text: 'text-cyan-700 dark:text-cyan-300' },
-  { dot: 'bg-orange-500', ring: 'ring-orange-500', text: 'text-orange-700 dark:text-orange-300' },
-  { dot: 'bg-teal-500', ring: 'ring-teal-500', text: 'text-teal-700 dark:text-teal-300' },
-  { dot: 'bg-indigo-500', ring: 'ring-indigo-500', text: 'text-indigo-700 dark:text-indigo-300' },
-];
-
-const NEUTRAL_LANE: LaneColor = {
-  dot: 'bg-slate-400',
-  ring: 'ring-slate-400',
-  text: 'text-slate-600 dark:text-slate-300',
-};
-
-export function tipAccentClassForBranchNames(names: string[]): string {
-  if (names.length === 0) return '';
+export function tipToneForBranchNames(names: string[]): StatusTone | null {
+  if (names.length === 0) return null;
   const s = [...names].sort().join('\0');
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-  const idx = Math.abs(h) % TIP_ACCENT_BORDER.length;
-  return TIP_ACCENT_BORDER[idx];
+  return VERSION_LANE_TONES[Math.abs(h) % VERSION_LANE_TONES.length];
 }
 
-export function laneColorForBranchIndex(index: number | null | undefined): LaneColor {
-  if (index == null || index < 0) return NEUTRAL_LANE;
-  return LANE_COLOR_PALETTE[index % LANE_COLOR_PALETTE.length];
+/**
+ * The tone of lane *n* — re-exported from `versionDialogsModel` so the DAG, its legend chips
+ * and the compare surfaces all resolve a lane through one table (HIVE-6.3, #5314).
+ *
+ * @param index 0-based index into the branch list.
+ * @returns The lane's tone.
+ */
+export function laneToneForBranchIndex(index: number | null | undefined): StatusTone {
+  return laneToneForIndex(index);
 }
 
 /**
@@ -272,7 +262,7 @@ export function buildHistoryEdges(versions: VersionHistoryVertex[]): Edge[] {
         source: p,
         target: v.id,
         type: 'smoothstep',
-        style: { strokeWidth: 2, stroke: 'rgb(100 116 139)' },
+        style: { strokeWidth: 2, stroke: historyEdgeStrokeVar('primary') },
       });
     }
     const m = v.merge_parent_version_id?.trim();
@@ -282,7 +272,7 @@ export function buildHistoryEdges(versions: VersionHistoryVertex[]): Edge[] {
         source: m,
         target: v.id,
         type: 'smoothstep',
-        style: { strokeWidth: 2, strokeDasharray: '6 4', stroke: 'rgb(139 92 246)' },
+        style: { strokeWidth: 2, strokeDasharray: '6 4', stroke: historyEdgeStrokeVar('merge') },
       });
     }
   }
@@ -299,7 +289,8 @@ export type RevisionNodeData = {
   isBranchTip: boolean;
   /** Branch names whose tip is this revision — used for labels and hover (#744). */
   branchNamesForTip: string[];
-  tipAccentClass: string;
+  /** The tone of the tip stripe, or `null` when the revision is nobody's tip. */
+  tipTone: StatusTone | null;
   layoutDirection: 'LR';
   shortMessage?: string | null;
   /** Full commit message body for the tooltip. */
@@ -312,8 +303,8 @@ export type RevisionNodeData = {
   createdAt?: string | null;
   /** External ref (e.g. ticket id) surfaced in the tooltip. */
   externalRef?: string | null;
-  /** Lane color for the commit dot; neutral slate when no lane assignment. */
-  laneColor: LaneColor;
+  /** The commit dot's tone; `neutral` when the revision belongs to no named branch. */
+  laneTone: StatusTone;
   /** 0-based lane index into the palette (null for unassigned). */
   laneIndex: number | null;
   /** Primary parent revision id — used to label the tooltip. */
@@ -373,9 +364,9 @@ export function buildLayoutedHistoryGraph(
     const isMerge = !!(v.merge_parent_version_id && v.merge_parent_version_id.trim());
     const branchNamesForTip = tips.get(v.id) ?? [];
     const isBranchTip = branchNamesForTip.length > 0;
-    const tipAccentClass = tipAccentClassForBranchNames(branchNamesForTip);
+    const tipTone = tipToneForBranchNames(branchNamesForTip);
     const lane = laneIndex.get(v.id);
-    const laneColor = laneColorForBranchIndex(lane);
+    const laneTone = laneToneForBranchIndex(lane);
     const tagsForVersion = tagsByVersion.get(v.version_id) ?? [];
     return {
       id: v.id,
@@ -386,7 +377,7 @@ export function buildLayoutedHistoryGraph(
         isMerge,
         isBranchTip,
         branchNamesForTip,
-        tipAccentClass,
+        tipTone,
         layoutDirection: 'LR',
         shortMessage: v.shortMessage ?? null,
         fullMessage: v.commitMessage ?? null,
@@ -394,7 +385,7 @@ export function buildLayoutedHistoryGraph(
         relativeTime: formatRelativeTime(v.created_at, now),
         createdAt: v.created_at ?? null,
         externalRef: v.externalRef ?? null,
-        laneColor,
+        laneTone,
         laneIndex: lane ?? null,
         primaryParentId: v.parent_version_id ?? null,
         mergeParentId: v.merge_parent_version_id ?? null,

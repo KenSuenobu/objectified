@@ -226,7 +226,7 @@ export function ProjectionGraphPanel({
     <section
       data-testid="projection-panel"
       aria-label={`Projection map for ${targetLabel}`}
-      className="projection-panel rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+      className="projection-panel vdlg-export__card"
       onKeyDown={(event) => {
         if (event.key === 'Escape') {
           event.stopPropagation();
@@ -235,21 +235,21 @@ export function ProjectionGraphPanel({
       }}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-          <Network className="h-4 w-4 text-indigo-500" aria-hidden />
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-fg">
+          <Network className="h-4 w-4 text-accent" aria-hidden />
           Projection map
         </div>
         {snapshotHash && (
           <span
             data-testid="projection-snapshot"
             title={`Projection snapshot ${snapshotHash}`}
-            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="vdlg-tag mono"
           >
             snapshot {snapshotHash.slice(0, 12)}
           </span>
         )}
       </div>
-      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-xs text-fg-muted">
         Where this source&apos;s constructs land in {targetLabel}, from the server&apos;s
         projection manifest. The table below is the accessible equivalent of the graph —
         both show the same evidence.
@@ -258,9 +258,9 @@ export function ProjectionGraphPanel({
       {loading && view.entries.length === 0 && (
         <div
           data-testid="projection-loading"
-          className="mt-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300"
+          className="mt-4 flex items-center gap-2 text-sm text-fg-muted"
         >
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
+          <Loader2 className="h-4 w-4 animate-spin text-accent" aria-hidden />
           Loading the projection evidence…
         </div>
       )}
@@ -268,7 +268,7 @@ export function ProjectionGraphPanel({
       {error && (
         <div
           data-testid="projection-error"
-          className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+          className="vdlg-note" data-tone="warn"
         >
           <AlertTriangle className="mr-1.5 inline h-4 w-4 align-text-bottom" aria-hidden />
           The projection evidence could not be loaded — the fidelity summary above still
@@ -279,7 +279,7 @@ export function ProjectionGraphPanel({
       {integrityIssues.length > 0 && (
         <div
           data-testid="projection-integrity-error"
-          className="mt-4 rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200"
+          className="vdlg-note" data-tone="danger"
         >
           <ShieldAlert className="mr-1.5 inline h-4 w-4 align-text-bottom" aria-hidden />
           The projection evidence failed its integrity check and was not rendered (
@@ -293,7 +293,7 @@ export function ProjectionGraphPanel({
           {snapshotMismatch && (
             <div
               data-testid="projection-mismatch"
-              className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+              className="vdlg-note" data-tone="warn"
             >
               This evidence describes snapshot{' '}
               <code className="font-mono">{snapshotHash?.slice(0, 12)}</code>, but the fidelity
@@ -303,7 +303,7 @@ export function ProjectionGraphPanel({
             </div>
           )}
           {redacted && (
-            <p data-testid="projection-redacted" className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+            <p data-testid="projection-redacted" className="mt-3 text-xs text-fg-muted">
               Source-native evidence values were redacted for this view.
             </p>
           )}
@@ -313,10 +313,10 @@ export function ProjectionGraphPanel({
           {view.entries.length > 0 && (
             <>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-xs font-medium text-fg">
                   Graph
                   {view.aggregated && (
-                    <span data-testid="projection-aggregated-note" className="ml-2 font-normal text-gray-500 dark:text-gray-400">
+                    <span data-testid="projection-aggregated-note" className="ml-2 font-normal text-fg-muted">
                       · clean outcomes aggregated; every dropped, unavailable, or critical
                       construct is shown individually
                     </span>
@@ -329,7 +329,7 @@ export function ProjectionGraphPanel({
                     aria-label="Zoom out"
                     disabled={zoom <= MIN_ZOOM}
                     onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP))}
-                    className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="vdlg-icon-button"
                   >
                     <ZoomOut className="h-3.5 w-3.5" aria-hidden />
                   </button>
@@ -339,7 +339,7 @@ export function ProjectionGraphPanel({
                     aria-label="Zoom in"
                     disabled={zoom >= MAX_ZOOM}
                     onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP))}
-                    className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="vdlg-icon-button"
                   >
                     <ZoomIn className="h-3.5 w-3.5" aria-hidden />
                   </button>
@@ -348,7 +348,7 @@ export function ProjectionGraphPanel({
                     data-testid="projection-reset-view"
                     aria-label="Reset view"
                     onClick={resetView}
-                    className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="vdlg-icon-button"
                   >
                     <RotateCcw className="h-3.5 w-3.5" aria-hidden />
                   </button>
@@ -376,7 +376,7 @@ export function ProjectionGraphPanel({
 
           {!complete && !loading && (
             <div className="mt-3 flex items-center justify-between gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-fg-muted">
                 Showing the first {loadedRowCount} of {totalEvidence} evidence rows — the
                 status counts above cover the whole manifest.
               </span>
@@ -384,15 +384,15 @@ export function ProjectionGraphPanel({
                 type="button"
                 data-testid="projection-load-more"
                 onClick={loadMore}
-                className="rounded-md border border-indigo-200 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                className="vdlg-link"
               >
                 Load more evidence
               </button>
             </div>
           )}
           {loading && view.entries.length > 0 && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-500" aria-hidden />
+            <div className="mt-3 flex items-center gap-2 text-xs text-fg-muted">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" aria-hidden />
               Loading more evidence…
             </div>
           )}
@@ -474,7 +474,7 @@ function ProjectionGraphSvg({
   return (
     <div
       data-testid="projection-graph-scroll"
-      className="mt-2 max-h-80 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800"
+      className="mt-2 max-h-80 overflow-auto rounded-lg border border-border"
     >
       <svg
         data-testid="projection-graph"
@@ -497,7 +497,7 @@ function ProjectionGraphSvg({
               x={layout.columns.outcome}
               y={lane.headerY}
               fontSize={SVG_TEXT_SIZE.label}
-              className="fill-gray-500 font-semibold uppercase tracking-wide dark:fill-gray-400"
+              className="fill-fg-muted font-semibold uppercase tracking-wide"
             >
               {lane.label} ({lane.count})
             </text>
@@ -595,27 +595,27 @@ function ProjectionTable({ entries, selectedKey, onSelect }: ProjectionTableProp
   };
 
   return (
-    <div className="mt-3 max-h-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="mt-3 max-h-72 overflow-y-auto rounded-lg border border-border">
       <table data-testid="projection-table" className="w-full border-collapse text-left text-xs">
         <caption className="sr-only">
           Projection evidence — the accessible equivalent of the projection graph. Every graph
           node has one row here with the same status and evidence.
         </caption>
-        <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
-          <tr className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+        <thead className="sticky top-0 bg-subtle">
+          <tr className="text-2xs uppercase tracking-wide text-fg-muted">
             <th scope="col" className="px-3 py-2 font-semibold">Status</th>
             <th scope="col" className="px-3 py-2 font-semibold">Source construct</th>
             <th scope="col" className="px-3 py-2 font-semibold">Destination</th>
             <th scope="col" className="px-3 py-2 font-semibold">Reason</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+        <tbody className="divide-y divide-border">
           {entries.map((entry) => {
             const p = statusPresentation(entry.status);
             const isSelected = entry.key === selectedKey;
             const rowClass = isSelected
-              ? 'bg-indigo-50 dark:bg-indigo-950/40'
-              : 'motion-safe:transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/60';
+              ? 'bg-accent-soft'
+              : 'motion-safe:transition-colors hover:bg-subtle';
             if (entry.kind === 'aggregate') {
               const expanded = expandedAggregates.has(entry.key);
               return (
@@ -629,7 +629,7 @@ function ProjectionTable({ entries, selectedKey, onSelect }: ProjectionTableProp
                       data-testid={`projection-aggregate-toggle-${entry.status}`}
                       aria-expanded={expanded}
                       onClick={() => toggleAggregate(entry.key)}
-                      className="flex items-center gap-1 font-medium text-gray-900 dark:text-gray-100"
+                      className="flex items-center gap-1 font-medium text-fg"
                     >
                       {expanded ? (
                         <ChevronUp className="h-3.5 w-3.5" aria-hidden />
@@ -641,10 +641,10 @@ function ProjectionTable({ entries, selectedKey, onSelect }: ProjectionTableProp
                     {expanded && (
                       <ul className="mt-1.5 max-h-32 space-y-0.5 overflow-y-auto">
                         {entry.members?.map((member) => (
-                          <li key={member.id} className="font-mono text-2xs text-gray-600 dark:text-gray-300">
+                          <li key={member.id} className="font-mono text-2xs text-fg-muted">
                             {member.construct}
                             {member.targetLocation ? (
-                              <span className="text-gray-400 dark:text-gray-500"> → {member.targetLocation}</span>
+                              <span className="text-fg-muted"> → {member.targetLocation}</span>
                             ) : null}
                           </li>
                         ))}
@@ -667,30 +667,30 @@ function ProjectionTable({ entries, selectedKey, onSelect }: ProjectionTableProp
                     aria-pressed={isSelected}
                     aria-label={entryAriaLabel(entry)}
                     onClick={() => onSelect(entry.key)}
-                    className="break-all text-left font-mono text-2xs font-medium text-gray-900 underline-offset-2 hover:underline dark:text-gray-100"
+                    className="break-all text-left font-mono text-2xs font-medium text-fg underline-offset-2 hover:underline"
                   >
                     {row.construct}
                   </button>
                   {row.sourceLocation && (
-                    <div className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
+                    <div className="mt-0.5 text-2xs text-fg-muted">
                       from {row.sourceLocation}
                     </div>
                   )}
                 </td>
                 <td className="px-3 py-2 align-top">
                   {row.targetLocation ? (
-                    <code className="break-all font-mono text-2xs text-gray-700 dark:text-gray-300">
+                    <code className="break-all font-mono text-2xs text-fg">
                       {row.targetLocation}
                     </code>
                   ) : row.targetLabel ? (
-                    <span className="text-gray-700 dark:text-gray-300">{row.targetLabel}</span>
+                    <span className="text-fg">{row.targetLabel}</span>
                   ) : (
-                    <span className="text-gray-400 dark:text-gray-500">
+                    <span className="text-fg-muted">
                       — not in the destination
                     </span>
                   )}
                 </td>
-                <td className="px-3 py-2 align-top text-gray-600 dark:text-gray-300">
+                <td className="px-3 py-2 align-top text-fg-muted">
                   <ReasonCell row={row} entryKey={entry.key} />
                 </td>
               </tr>
@@ -745,7 +745,7 @@ function ReasonCell({ row, entryKey }: { row: ProjectionEvidenceRow; entryKey: s
           target="_blank"
           rel="noopener noreferrer"
           aria-label={docLink.ariaLabel}
-          className="inline-flex items-center gap-1 font-medium text-indigo-600 hover:underline dark:text-indigo-300"
+          className="vdlg-link"
         >
           {docLink.text}
           <ExternalLink className="h-3 w-3" aria-hidden />

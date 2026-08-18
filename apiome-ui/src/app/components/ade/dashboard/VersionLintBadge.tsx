@@ -16,6 +16,10 @@ import { ShieldCheck } from 'lucide-react';
 import { badgeVariants } from '../../ui/Badge';
 import { gradeBand } from '../../ui/statusVocabulary';
 import { cn } from '../../../../../lib/utils';
+import {
+  LINT_BADGE_UNSCORED_TITLE,
+  lintBadgeLabel,
+} from '../version-dialogs/versionDialogsModel';
 import { LintReportDialog } from './LintReportDialog';
 import { fetchVersionLintReport, type VersionLintReport } from '../../../utils/version-lint-report';
 
@@ -133,10 +137,10 @@ export function VersionLintBadge({
           type="button"
           onClick={openReport}
           className={cn(badgeVariants({ variant: 'outline' }), chipBaseClass)}
-          title="Not scored yet — click to lint this version"
+          title={LINT_BADGE_UNSCORED_TITLE}
           data-testid="version-lint-badge-unscored"
         >
-          Lint —
+          {lintBadgeLabel(null, null)}
         </button>
         {dialog}
       </>
@@ -153,7 +157,7 @@ export function VersionLintBadge({
         data-testid="version-lint-badge"
       >
         <ShieldCheck aria-hidden />
-        {headline.grade} · {headline.score}
+        {lintBadgeLabel(headline.grade, headline.score)}
       </button>
       {dialog}
     </>

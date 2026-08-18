@@ -5,7 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthSession } from '@lib/auth/session-client';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import {
+  Check,
+  GitBranchPlus,
+  Loader2,
   Package,
+  Tag as TagIcon,
+  Undo2,
   GitMerge,
   GitFork,
   GitGraph,
@@ -28,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from '../../../components/ui/Dialog';
 import {
   AlertDialog,
@@ -62,6 +66,19 @@ import PageHeader from '../../../components/shell/PageHeader';
 import { Page, PageBody } from '../../../components/shell/pageChrome';
 import { cn } from '@lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/Select';
+import { Segmented, SegmentedItem } from '../../../components/ui/Segmented';
+import { Checkbox } from '../../../components/ui/Checkbox';
+import { CompareRevisionCard } from '../../../components/ade/version-dialogs/CompareRevisionCard';
+import {
+  VERSION_CHANGE_LABEL,
+  VERSION_CHANGE_SIGIL,
+  VERSION_CHANGE_TONE,
+  VERSION_DIALOG_COPY,
+  VERSION_DIFF_LEGEND,
+  diffLinePrefix,
+  diffPartChange,
+  type VersionChangeClass,
+} from '../../../components/ade/version-dialogs/versionDialogsModel';
 import {
   DEFAULT_VERSIONS_SORT,
   EditVersionDialog,
@@ -78,6 +95,7 @@ import {
   VERSION_LIFECYCLES,
   VERSION_LIFECYCLE_LABEL,
   VERSION_SORT_OPTIONS,
+  VersionDialogHead,
   VersionGitlikePanels,
   VersionsBanners,
   VersionsTable,
@@ -183,7 +201,6 @@ import ExportDialog, { type ExportedArtifactSummary } from '../../../components/
 import { recordRecentExport } from '../../../components/ade/dashboard/export/recentExports';
 import { ProjectRelatedArtifactsSection } from '../../../components/ade/dashboard/ProjectRelatedArtifactsSection';
 import { FEATURE_GITLIKE } from '@lib/feature-flags';
-import * as ToggleGroup from '@radix-ui/react-toggle-group';
 import type { VersionMockChange } from '../../../components/ade/dashboard/VersionMockCell';
 import {
   guardrailBlocksPublish,
@@ -215,9 +232,14 @@ const CHANGE_REPORT_ENV_ALLOWED = process.env.NEXT_PUBLIC_CHANGE_REPORT_UI !== '
 const ALL_LIFECYCLES = '__all__';
 const ALL_REVISIONS = '__all__';
 
-const SPEC_JSON_YAML_TOGGLE_ITEM_CLASS =
-  'px-3 py-2 text-xs font-semibold rounded-md transition-all duration-200 data-[state=on]:bg-white dark:data-[state=on]:bg-gray-600 data-[state=on]:text-indigo-600 dark:data-[state=on]:text-indigo-400 data-[state=on]:shadow-sm data-[state=off]:text-gray-600 dark:data-[state=off]:text-gray-400 hover:text-gray-900 dark:hover:text-white';
-
+/**
+ * The JSON / YAML switch above the compare and spec panes.
+ *
+ * HIVE-6.3 (#5314) retired its hand-rolled `ToggleGroup` skin — an inset `bg-gray-100` well
+ * with a white thumb and an indigo label — for the `Segmented` primitive, which is the same
+ * control drawn from tokens and already carries the radiogroup semantics and the arrow-key
+ * behaviour this had to imitate.
+ */
 function SpecJsonYamlToggle({
   value,
   onChange,
@@ -226,21 +248,15 @@ function SpecJsonYamlToggle({
   onChange: (format: 'json' | 'yaml') => void;
 }) {
   return (
-    <ToggleGroup.Root
-      type="single"
+    <Segmented
       value={value}
-      onValueChange={(next) => {
-        if (next) onChange(next as 'json' | 'yaml');
-      }}
-      className="inline-flex shrink-0 items-center rounded-lg bg-gray-100 p-1 dark:bg-gray-700/50"
+      onValueChange={(next) => onChange(next as 'json' | 'yaml')}
+      size="sm"
+      aria-label="Spec format"
     >
-      <ToggleGroup.Item value="json" className={SPEC_JSON_YAML_TOGGLE_ITEM_CLASS}>
-        JSON
-      </ToggleGroup.Item>
-      <ToggleGroup.Item value="yaml" className={SPEC_JSON_YAML_TOGGLE_ITEM_CLASS}>
-        YAML
-      </ToggleGroup.Item>
-    </ToggleGroup.Root>
+      <SegmentedItem value="json">JSON</SegmentedItem>
+      <SegmentedItem value="yaml">YAML</SegmentedItem>
+    </Segmented>
   );
 }
 
@@ -3820,46 +3836,44 @@ const Versions = () => {
       <Dialog open={showCompareDialog} onOpenChange={setShowCompareDialog}>
         <DialogContent className="max-w-6xl h-[90vh] min-h-[90vh] flex flex-col" aria-describedby={undefined}>
           <DialogHeader className="flex-shrink-0">
-            <DialogTitle className="flex items-center justify-between">
+            <DialogTitle className="vdlg-compare__title">
               <div>
-                <div>Compare Version Schemas</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-normal">View differences between two version specifications</div>
+                <div>Compare version schemas</div>
+                <div className="vdlg-compare__subtitle">View differences between two version specifications</div>
               </div>
               {diffResult.length > 0 && activeCompareTab === 'diff' && (
-                <div className="flex gap-2">
-                  <div className="flex border border-gray-300 dark:border-gray-600 rounded overflow-hidden">
-                    <button onClick={() => setDiffViewMode('overlay')} className={`px-2 py-1 text-xs ${diffViewMode === 'overlay' ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>Overlay</button>
-                    <button onClick={() => setDiffViewMode('side-by-side')} className={`px-2 py-1 text-xs border-l border-gray-300 dark:border-gray-600 ${diffViewMode === 'side-by-side' ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>Side-by-Side</button>
-                  </div>
+                <div className="vdlg-compare__switches">
+                  <Segmented
+                    value={diffViewMode}
+                    onValueChange={(next) => setDiffViewMode(next as 'overlay' | 'side-by-side')}
+                    size="sm"
+                    aria-label="Diff layout"
+                  >
+                    <SegmentedItem value="overlay">Overlay</SegmentedItem>
+                    <SegmentedItem value="side-by-side">Side-by-side</SegmentedItem>
+                  </Segmented>
                   <SpecJsonYamlToggle value={compareFormat} onChange={handleCompareFormatChange} />
                 </div>
               )}
               {diffResult.length > 0 && activeCompareTab === 'canvas' && (
-                <div className="flex border border-gray-300 dark:border-gray-600 rounded overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => setCanvasCompareViewMode('split')}
-                    className={`px-2 py-1 text-xs ${canvasCompareViewMode === 'split' ? 'bg-teal-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
-                  >
-                    Split
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCanvasCompareViewMode('overlay')}
-                    className={`px-2 py-1 text-xs border-l border-gray-300 dark:border-gray-600 ${canvasCompareViewMode === 'overlay' ? 'bg-teal-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
-                  >
-                    Overlay
-                  </button>
-                </div>
+                <Segmented
+                  value={canvasCompareViewMode}
+                  onValueChange={(next) => setCanvasCompareViewMode(next as 'split' | 'overlay')}
+                  size="sm"
+                  aria-label="Canvas layout"
+                >
+                  <SegmentedItem value="split">Split</SegmentedItem>
+                  <SegmentedItem value="overlay">Overlay</SegmentedItem>
+                </Segmented>
               )}
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             {diffResult.length === 0 ? (
-              <div className="space-y-4 p-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Version 1 (Base)</Label>
+              <div className="vdlg-compare__picker">
+                <div className="vdlg-compare__picker-row">
+                  <div className="vdlg-field">
+                    <Label>Version 1 (base)</Label>
                     <Select
                       value={compareVersion1Id}
                       onValueChange={(id) => {
@@ -3871,8 +3885,8 @@ const Versions = () => {
                       <SelectContent>{versions.map((v) => <SelectItem key={v.id} value={v.id}>{v.published ? '🔒 ' : ''}v{v.version_id}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Version 2 (Compare To)</Label>
+                  <div className="vdlg-field">
+                    <Label>Version 2 (compare to)</Label>
                     <Select
                       value={compareVersion2Id}
                       onValueChange={(id) => {
@@ -3886,8 +3900,8 @@ const Versions = () => {
                   </div>
                 </div>
                 {versionTags.length > 0 && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  <div className="vdlg-compare__picker-row">
+                    <div className="vdlg-field">
                       <Label>Set base from tag</Label>
                       <Select
                         value={compareBaseTagId || '__none__'}
@@ -3912,7 +3926,7 @@ const Versions = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
+                    <div className="vdlg-field">
                       <Label>Set compare target from tag</Label>
                       <Select
                         value={compareToTagId || '__none__'}
@@ -3939,8 +3953,11 @@ const Versions = () => {
                     </div>
                   </div>
                 )}
-                <div className="flex justify-center py-8">
-                  <Button onClick={handleCompareVersions} disabled={!compareVersion1Id || !compareVersion2Id || isLoadingComparison}>{isLoadingComparison ? 'Loading...' : 'Compare Versions'}</Button>
+                <div className="vdlg-compare__picker-cta">
+                  <Button onClick={handleCompareVersions} disabled={!compareVersion1Id || !compareVersion2Id || isLoadingComparison}>
+                    <GitCompareArrows aria-hidden />
+                    {isLoadingComparison ? 'Comparing…' : 'Compare versions'}
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -3952,57 +3969,28 @@ const Versions = () => {
                   const breakBase = extractBreakingHintsFromChangelog(vBase.changelog);
                   const breakTo = extractBreakingHintsFromChangelog(vTo.changelog);
                   return (
-                    <div className="mb-4 space-y-3 flex-shrink-0">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/40 p-3 text-sm">
-                          <div className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                            v{vBase.version_id} (base)
-                          </div>
-                          <div className="text-gray-600 dark:text-gray-400">
-                            <span className="text-gray-500 dark:text-gray-500">Revision note:</span>{' '}
-                            {vBase.shortMessage?.trim() || '—'}
-                          </div>
-                          {vBase.changelog?.trim() ? (
-                            <pre className="mt-2 whitespace-pre-wrap text-xs text-gray-700 dark:text-gray-300 font-sans max-h-32 overflow-y-auto">
-                              {vBase.changelog}
-                            </pre>
-                          ) : (
-                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">No changelog</p>
-                          )}
-                          {breakBase.length > 0 && (
-                            <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-                              Breaking hints: {breakBase.join(' · ')}
-                            </p>
-                          )}
-                        </div>
-                        <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/40 p-3 text-sm">
-                          <div className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                            v{vTo.version_id} (compare to)
-                          </div>
-                          <div className="text-gray-600 dark:text-gray-400">
-                            <span className="text-gray-500 dark:text-gray-500">Revision note:</span>{' '}
-                            {vTo.shortMessage?.trim() || '—'}
-                          </div>
-                          {vTo.changelog?.trim() ? (
-                            <pre className="mt-2 whitespace-pre-wrap text-xs text-gray-700 dark:text-gray-300 font-sans max-h-32 overflow-y-auto">
-                              {vTo.changelog}
-                            </pre>
-                          ) : (
-                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">No changelog</p>
-                          )}
-                          {breakTo.length > 0 && (
-                            <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-                              Breaking hints: {breakTo.join(' · ')}
-                            </p>
-                          )}
-                        </div>
+                    <div className="vdlg-compare__summary">
+                      <div className="vdlg-compare__cards">
+                        <CompareRevisionCard
+                          label={`v${vBase.version_id}`}
+                          side="base"
+                          published={vBase.published}
+                          revisionNote={vBase.shortMessage}
+                          changelog={vBase.changelog}
+                          breakingHints={breakBase}
+                        />
+                        <CompareRevisionCard
+                          label={`v${vTo.version_id}`}
+                          side="compare to"
+                          published={vTo.published}
+                          revisionNote={vTo.shortMessage}
+                          changelog={vTo.changelog}
+                          breakingHints={breakTo}
+                        />
                       </div>
                       {compareStoredChangelog?.maxSeverity ? (
-                        <div
-                          className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400"
-                          data-testid="compare-stored-severity"
-                        >
-                          <span className="font-medium">Published classification:</span>
+                        <div className="vdlg-compare__classification" data-testid="compare-stored-severity">
+                          <span className="vdlg-compare__classification-label">Published classification:</span>
                           <Badge variant={severityBadgeVariant(compareStoredChangelog.maxSeverity)}>
                             {severityLabel(compareStoredChangelog.maxSeverity)}
                           </Badge>
@@ -4043,7 +4031,7 @@ const Versions = () => {
                       </svg>
                       <span>Schema Changes</span>
                       {schemaDiffSummary && (
-                        <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">
+                        <span className={TAB_COUNT_CLASS}>
                           {classDiffRows
                             ? classDiffRows.filter((r) => r.status !== 'unchanged').length
                             : schemaDiffSummary.added.length +
@@ -4095,51 +4083,57 @@ const Versions = () => {
                 {activeCompareTab === 'diff' ? (
                   // Diff View Tab
                   <div>
-                    <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-                      <div className="flex gap-4 text-sm">
-                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-red-200 dark:bg-red-900 border border-red-400"></div><span>Removed</span></div>
-                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-200 dark:bg-green-900 border border-green-400"></div><span>Added</span></div>
-                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gray-100 dark:bg-gray-800 border border-gray-300"></div><span>Unchanged</span></div>
+                    <div className="vdlg-compare__legend-row">
+                      <div className="vdlg-legend">
+                        {VERSION_DIFF_LEGEND.map((entry) => (
+                          <span key={entry.change} className="vdlg-legend__item">
+                            <span
+                              className="vdlg-legend__swatch"
+                              data-tone={VERSION_CHANGE_TONE[entry.change]}
+                              aria-hidden
+                            />
+                            {entry.label}
+                          </span>
+                        ))}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">{formatVersionWithPrefix(versions.find(v => v.id === compareVersion1Id)?.version_id)} → {formatVersionWithPrefix(versions.find(v => v.id === compareVersion2Id)?.version_id)}</div>
+                      <div className="vdlg-quiet">{formatVersionWithPrefix(versions.find(v => v.id === compareVersion1Id)?.version_id)} → {formatVersionWithPrefix(versions.find(v => v.id === compareVersion2Id)?.version_id)}</div>
                     </div>
-                    <div className="border border-gray-300 dark:border-gray-600 rounded font-mono text-xs h-[calc(90vh-280px)]">
+                    <div className="vdlg-diff">
                       {diffViewMode === 'overlay' ? (
                         // Overlay/Unified diff view
-                        <div className="h-full overflow-y-auto">
-                          {diffResult.map((part, i) => (
-                            <div key={i} className={part.added ? 'bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-200' : part.removed ? 'bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'}>
-                              {part.value.split('\n').filter(Boolean).map((line, j) => (
-                                <div key={j} className="px-3 py-0.5" style={{ whiteSpace: 'pre-wrap' }}>
-                                  {part.added && '+ '}{part.removed && '- '}{line}
-                                </div>
-                              ))}
-                            </div>
-                          ))}
+                        <div className="vdlg-diff__scroll">
+                          {diffResult.map((part, i) => {
+                            const change = diffPartChange(part);
+                            return (
+                              <div key={i} data-change={change}>
+                                {part.value.split('\n').filter(Boolean).map((line, j) => (
+                                  <div key={j} className="vdlg-diff__line">
+                                    {diffLinePrefix(change)}{line}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })}
                         </div>
                       ) : (
                         // Side-by-side view
-                        <div className="flex h-full">
+                        <div className="vdlg-diff__split">
                           {/* Left panel - Version 1 (Base) */}
                           <div
                             ref={leftPanelRef}
                             onScroll={handleLeftScroll}
-                            className="w-1/2 border-r border-gray-300 dark:border-gray-600 h-full overflow-y-auto"
+                            className="vdlg-diff__pane vdlg-diff__pane--left"
                           >
-                            <div className="sticky top-0 bg-gray-100 dark:bg-gray-700 px-3 py-1 text-xs font-semibold border-b border-gray-300 dark:border-gray-600 z-10">
-                              v{versions.find(v => v.id === compareVersion1Id)?.version_id} (Base)
+                            <div className="vdlg-diff__pane-title">
+                              v{versions.find(v => v.id === compareVersion1Id)?.version_id} (base)
                             </div>
                             {(() => {
                               const content1 = compareFormat === 'json' ? compareSpec1 : YAML.stringify(JSON.parse(compareSpec1));
                               return content1.split('\n').map((line, i) => {
                                 const isRemoved = diffResult.some(part => part.removed && part.value.includes(line));
                                 return (
-                                  <div
-                                    key={i}
-                                    className={`px-3 py-0.5 ${isRemoved ? 'bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
-                                    style={{ whiteSpace: 'pre-wrap' }}
-                                  >
-                                    <span className="text-gray-400 dark:text-gray-500 select-none mr-2 inline-block w-8 text-right">{i + 1}</span>
+                                  <div key={i} className="vdlg-diff__line" data-change={isRemoved ? 'removed' : 'unchanged'}>
+                                    <span className="vdlg-diff__ln">{i + 1}</span>
                                     {line || ' '}
                                   </div>
                                 );
@@ -4150,22 +4144,18 @@ const Versions = () => {
                           <div
                             ref={rightPanelRef}
                             onScroll={handleRightScroll}
-                            className="w-1/2 h-full overflow-y-auto"
+                            className="vdlg-diff__pane"
                           >
-                            <div className="sticky top-0 bg-gray-100 dark:bg-gray-700 px-3 py-1 text-xs font-semibold border-b border-gray-300 dark:border-gray-600 z-10">
-                              v{versions.find(v => v.id === compareVersion2Id)?.version_id} (Compare To)
+                            <div className="vdlg-diff__pane-title">
+                              v{versions.find(v => v.id === compareVersion2Id)?.version_id} (compare to)
                             </div>
                             {(() => {
                               const content2 = compareFormat === 'json' ? compareSpec2 : YAML.stringify(JSON.parse(compareSpec2));
                               return content2.split('\n').map((line, i) => {
                                 const isAdded = diffResult.some(part => part.added && part.value.includes(line));
                                 return (
-                                  <div
-                                    key={i}
-                                    className={`px-3 py-0.5 ${isAdded ? 'bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
-                                    style={{ whiteSpace: 'pre-wrap' }}
-                                  >
-                                    <span className="text-gray-400 dark:text-gray-500 select-none mr-2 inline-block w-8 text-right">{i + 1}</span>
+                                  <div key={i} className="vdlg-diff__line" data-change={isAdded ? 'added' : 'unchanged'}>
+                                    <span className="vdlg-diff__ln">{i + 1}</span>
                                     {line || ' '}
                                   </div>
                                 );
@@ -4178,30 +4168,30 @@ const Versions = () => {
                   </div>
                 ) : activeCompareTab === 'summary' ? (
                   // Schema Changes Summary Tab
-                  <div className="h-[calc(90vh-280px)] overflow-y-auto">
+                  <div className="vdlg-compare__tabpanel">
                     {schemaDiffSummary && (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="vdlg-classdiff">
                     {classDiffRows && classDiffCounts && (
-                      <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-3">
+                      <div className="vdlg-classdiff__block">
+                        <div className="vdlg-classdiff__head">
                           <div>
-                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Classes</h3>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            <h3 className="vdlg-section-title">Classes</h3>
+                            <p className="vdlg-quiet">
                               Structural diff (git-style). Stable ID = OpenAPI schema name.{' '}
-                              <span className="text-green-700 dark:text-green-400">+{classDiffCounts.added}</span>
+                              <span className="vdlg-stat">+{classDiffCounts.added}</span>
                               {' · '}
-                              <span className="text-red-700 dark:text-red-400">−{classDiffCounts.removed}</span>
+                              <span className="vdlg-stat">−{classDiffCounts.removed}</span>
                               {' · '}
-                              <span className="text-yellow-700 dark:text-yellow-400">~{classDiffCounts.modified}</span>
+                              <span className="vdlg-stat">~{classDiffCounts.modified}</span>
                               {' · '}
-                              <span className="text-gray-600 dark:text-gray-500">{classDiffCounts.unchanged} unchanged</span>
+                              <span>{classDiffCounts.unchanged} unchanged</span>
                             </p>
                           </div>
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="vdlg-classdiff__actions">
                             <Button
                               type="button"
                               variant="outline"
-                              className="text-xs h-8"
+                              size="sm"
                               onClick={async () => {
                                 try {
                                   await navigator.clipboard.writeText(formatClassDiffStatLines(classDiffRows));
@@ -4215,32 +4205,30 @@ const Versions = () => {
                             </Button>
                           </div>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-2 mb-2">
+                        <div className="vdlg-classdiff__filters">
                           <Input
                             type="search"
                             placeholder="Search classes…"
                             value={classDiffSearch}
                             onChange={(e) => setClassDiffSearch(e.target.value)}
-                            className="text-sm h-9 flex-1 min-w-0"
+                            className="vdlg-classdiff__search"
                             aria-label="Filter classes by name"
                           />
-                          <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap shrink-0">
-                            <input
-                              type="checkbox"
-                              className="rounded border-gray-300 dark:border-gray-600"
+                          <label className="vdlg-check">
+                            <Checkbox
                               checked={classDiffShowUnchanged}
-                              onChange={(e) => setClassDiffShowUnchanged(e.target.checked)}
+                              onCheckedChange={(checked) => setClassDiffShowUnchanged(checked === true)}
                             />
                             Show unchanged
                           </label>
                         </div>
-                        <p className="text-2xs text-gray-500 dark:text-gray-500 mb-1">
+                        <p className="vdlg-quiet">
                           Showing {filteredClassDiffRows.length} of {classDiffRows.length} classes
                           {classDiffListRender.virtualize ? ' · Virtualized list' : ''}
                         </p>
                         <div
                           ref={classListScrollRef}
-                          className="max-h-72 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-950"
+                          className="vdlg-classdiff__list"
                           style={
                             classDiffListRender.virtualize ? { height: CLASS_DIFF_VIEWPORT_PX } : undefined
                           }
@@ -4248,22 +4236,8 @@ const Versions = () => {
                         >
                           <div style={{ height: classDiffListRender.padTop }} aria-hidden />
                           {classDiffListRender.rows.map((row) => {
-                            const sym =
-                              row.status === 'added'
-                                ? '+'
-                                : row.status === 'removed'
-                                  ? '−'
-                                  : row.status === 'modified'
-                                    ? '~'
-                                    : ' ';
-                            const rowBg =
-                              row.status === 'added'
-                                ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900 border-l-green-600'
-                                : row.status === 'removed'
-                                  ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 border-l-red-600'
-                                  : row.status === 'modified'
-                                    ? 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-900 border-l-yellow-500'
-                                    : 'bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 border-l-gray-400';
+                            const change = row.status as VersionChangeClass;
+                            const sym = VERSION_CHANGE_SIGIL[change] ?? ' ';
                             const expanded = expandedClassDiffId === row.stableId;
                             const drill = expanded ? getClassChangeDiffs(schemaDiffSummary, row.stableId) : [];
                             const showAllProps = propDrillShowAllByClass[row.stableId] === true;
@@ -4275,40 +4249,29 @@ const Versions = () => {
                               <div
                                 key={row.stableId}
                                 id={`class-diff-row-${row.stableId}`}
-                                className="border-b border-gray-100 dark:border-gray-800 last:border-b-0"
+                                className="vdlg-classdiff__row"
                               >
                                 <button
                                   type="button"
                                   onClick={() =>
                                     setExpandedClassDiffId((id) => (id === row.stableId ? null : row.stableId))
                                   }
-                                  className={`w-full text-left px-3 py-2 flex items-center gap-2 border-l-4 ${rowBg} hover:opacity-95 transition-opacity`}
+                                  className="vdlg-classdiff__summary"
+                                  data-change={change}
                                   style={{ minHeight: CLASS_DIFF_ROW_PX }}
                                   aria-expanded={expanded}
                                 >
-                                  <span
-                                    className={`font-mono text-xs w-4 shrink-0 ${
-                                      row.status === 'added'
-                                        ? 'text-green-700 dark:text-green-400'
-                                        : row.status === 'removed'
-                                          ? 'text-red-700 dark:text-red-400'
-                                          : row.status === 'modified'
-                                            ? 'text-yellow-800 dark:text-yellow-300'
-                                            : 'text-gray-400 dark:text-gray-500'
-                                    }`}
-                                  >
+                                  <span className="vdlg-classdiff__sigil" aria-hidden>
                                     {sym}
                                   </span>
-                                  <span className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex-1">
-                                    {row.stableId}
-                                  </span>
+                                  <span className="vdlg-classdiff__name">{row.stableId}</span>
                                   {storedBreakingIds.has(row.stableId) && (
                                     <Badge variant="error" data-testid={`class-diff-breaking-${row.stableId}`}>
                                       Breaking
                                     </Badge>
                                   )}
                                   {row.status === 'modified' && (
-                                    <span className="text-2xs text-gray-600 dark:text-gray-400 shrink-0 hidden sm:inline">
+                                    <span className="vdlg-classdiff__meta">
                                       {row.propertyAdded ? `+${row.propertyAdded} ` : ''}
                                       {row.propertyRemoved ? `−${row.propertyRemoved} ` : ''}
                                       {row.propertyModified ? `~${row.propertyModified} ` : ''}
@@ -4316,33 +4279,22 @@ const Versions = () => {
                                     </span>
                                   )}
                                   {row.status === 'added' && (
-                                    <span className="text-2xs text-green-800 dark:text-green-300 shrink-0">
-                                      +{row.propertyAdded} props
-                                    </span>
+                                    <span className="vdlg-classdiff__meta">+{row.propertyAdded} props</span>
                                   )}
                                   {row.status === 'removed' && (
-                                    <span className="text-2xs text-red-800 dark:text-red-300 shrink-0">
-                                      −{row.propertyRemoved} props
-                                    </span>
+                                    <span className="vdlg-classdiff__meta">−{row.propertyRemoved} props</span>
                                   )}
                                 </button>
                                 {expanded && drill.length > 0 && (
-                                  <div className="px-3 pb-3 pt-0 space-y-1 bg-gray-50/80 dark:bg-gray-900/50 border-t border-dashed border-gray-200 dark:border-gray-700">
-                                    <p className="text-2xs font-medium text-gray-600 dark:text-gray-400 pt-2">
-                                      Property-level changes
-                                    </p>
+                                  <div className="vdlg-classdiff__drill">
+                                    <p className="vdlg-classdiff__drill-title">Property-level changes</p>
                                     {drillVisible.map((d, i) => (
                                       <div
                                         key={`${d.path}-${d.type}-${i}`}
-                                        className={`text-xs rounded px-2 py-1 font-mono flex flex-wrap gap-x-2 items-start ${
-                                          d.type === 'added'
-                                            ? 'bg-green-50 dark:bg-green-950/20 text-green-900 dark:text-green-100'
-                                            : d.type === 'removed'
-                                              ? 'bg-red-50 dark:bg-red-950/20 text-red-900 dark:text-red-100'
-                                              : 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-900 dark:text-yellow-100'
-                                        }`}
+                                        className="vdlg-classdiff__drill-row"
+                                        data-change={d.type === 'added' ? 'added' : d.type === 'removed' ? 'removed' : 'modified'}
                                       >
-                                        <span className="shrink-0 pt-px">
+                                        <span className="vdlg-classdiff__sigil" aria-hidden>
                                           {d.type === 'added' ? '+' : d.type === 'removed' ? '−' : '~'}
                                         </span>
                                         <span className="min-w-0 break-words">{formatPropertyDiffLine(d)}</span>
@@ -4351,7 +4303,7 @@ const Versions = () => {
                                     {drill.length > CLASS_PROP_DRILL_LIMIT && (
                                       <button
                                         type="button"
-                                        className="text-2xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1"
+                                        className="vdlg-link"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setPropDrillShowAllByClass((prev) => ({
@@ -4368,7 +4320,7 @@ const Versions = () => {
                                   </div>
                                 )}
                                 {expanded && drill.length === 0 && row.status === 'unchanged' && (
-                                  <p className="text-2xs text-gray-500 px-3 pb-2">No property-level changes.</p>
+                                  <p className="vdlg-classdiff__drill-empty">No property-level changes.</p>
                                 )}
                               </div>
                             );
@@ -4377,65 +4329,50 @@ const Versions = () => {
                         </div>
                       </div>
                     )}
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Schema Changes Summary</h3>
+                    <div className="vdlg-classdiff__head">
+                      <h3 className="vdlg-section-title">Schema changes summary</h3>
 
                       {/* Filter Controls */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600 dark:text-gray-400 mr-1">Filter:</span>
+                      <div className="vdlg-chips" role="group" aria-label="Filter by change type">
                         <button
+                          type="button"
                           onClick={() => setDiffFilter(prev => ({ ...prev, showAdded: !prev.showAdded }))}
-                          className={`px-2 py-1 text-xs rounded border transition-all flex items-center gap-1.5 ${
-                            diffFilter.showAdded
-                              ? 'bg-green-600 dark:bg-green-700 text-white border-green-700 dark:border-green-600 shadow-sm'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-500 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700'
-                          }`}
+                          className="vdlg-chip"
+                          data-tone={VERSION_CHANGE_TONE.added}
+                          aria-pressed={diffFilter.showAdded}
                           title={diffFilter.showAdded ? 'Hide additions' : 'Show additions'}
                         >
-                          {diffFilter.showAdded && (
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
+                          {diffFilter.showAdded && <Check className="vdlg-chip__check" aria-hidden />}
                           <span>+ Added ({schemaDiffSummary.added.length})</span>
                         </button>
                         <button
+                          type="button"
                           onClick={() => setDiffFilter(prev => ({ ...prev, showRemoved: !prev.showRemoved }))}
-                          className={`px-2 py-1 text-xs rounded border transition-all flex items-center gap-1.5 ${
-                            diffFilter.showRemoved
-                              ? 'bg-red-600 dark:bg-red-700 text-white border-red-700 dark:border-red-600 shadow-sm'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-500 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700'
-                          }`}
+                          className="vdlg-chip"
+                          data-tone={VERSION_CHANGE_TONE.removed}
+                          aria-pressed={diffFilter.showRemoved}
                           title={diffFilter.showRemoved ? 'Hide removals' : 'Show removals'}
                         >
-                          {diffFilter.showRemoved && (
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
+                          {diffFilter.showRemoved && <Check className="vdlg-chip__check" aria-hidden />}
                           <span>- Removed ({schemaDiffSummary.removed.length})</span>
                         </button>
                         <button
+                          type="button"
                           onClick={() => setDiffFilter(prev => ({ ...prev, showModified: !prev.showModified }))}
-                          className={`px-2 py-1 text-xs rounded border transition-all flex items-center gap-1.5 ${
-                            diffFilter.showModified
-                              ? 'bg-yellow-600 dark:bg-yellow-700 text-white border-yellow-700 dark:border-yellow-600 shadow-sm'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-500 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700'
-                          }`}
+                          className="vdlg-chip"
+                          data-tone={VERSION_CHANGE_TONE.modified}
+                          aria-pressed={diffFilter.showModified}
                           title={diffFilter.showModified ? 'Hide modifications' : 'Show modifications'}
                         >
-                          {diffFilter.showModified && (
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
+                          {diffFilter.showModified && <Check className="vdlg-chip__check" aria-hidden />}
                           <span>~ Modified ({schemaDiffSummary.modified.length})</span>
                         </button>
                         {/* Reset filter button */}
                         {(!diffFilter.showAdded || !diffFilter.showRemoved || !diffFilter.showModified) && (
                           <button
                             onClick={() => setDiffFilter({ showAdded: true, showRemoved: true, showModified: true })}
-                            className="px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                            type="button"
+                            className="vdlg-link"
                             title="Show all changes"
                           >
                             Clear
@@ -4444,28 +4381,26 @@ const Versions = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 mb-4">
-                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
-                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">{schemaDiffSummary.added.length}</div>
-                        <div className="text-xs text-green-700 dark:text-green-300">Added</div>
-                      </div>
-                      <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
-                        <div className="text-2xl font-bold text-red-600 dark:text-red-400">{schemaDiffSummary.removed.length}</div>
-                        <div className="text-xs text-red-700 dark:text-red-300">Removed</div>
-                      </div>
-                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                        <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{schemaDiffSummary.modified.length}</div>
-                        <div className="text-xs text-yellow-700 dark:text-yellow-300">Modified</div>
-                      </div>
+                    <div className="vdlg-stat-grid">
+                      {([
+                        ['added', schemaDiffSummary.added.length],
+                        ['removed', schemaDiffSummary.removed.length],
+                        ['modified', schemaDiffSummary.modified.length],
+                      ] as const).map(([change, count]) => (
+                        <div key={change} className="vdlg-stat-tile" data-tone={VERSION_CHANGE_TONE[change]}>
+                          <div className="vdlg-stat-tile__value">{count}</div>
+                          <div className="vdlg-stat-tile__label">{VERSION_CHANGE_LABEL[change]}</div>
+                        </div>
+                      ))}
                     </div>
 
                     {/* Detailed changes */}
                     <div className="space-y-4">
                       {/* Empty state when all filters are off or no matching changes */}
                       {(!diffFilter.showAdded && !diffFilter.showRemoved && !diffFilter.showModified) ? (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                          <div className="text-sm">All change types are filtered out</div>
-                          <div className="text-xs mt-1">Enable at least one filter to see changes</div>
+                        <div className="vdlg-inline-empty">
+                          <div>{VERSION_DIALOG_COPY.classDiffAllFiltered}</div>
+                          <div className="vdlg-quiet">Enable at least one filter to see changes</div>
                         </div>
                       ) : (
                         (diffFilter.showAdded && schemaDiffSummary.added.length === 0) &&
@@ -4475,24 +4410,24 @@ const Versions = () => {
                         (!diffFilter.showRemoved || schemaDiffSummary.removed.length === 0) &&
                         (!diffFilter.showModified || schemaDiffSummary.modified.length === 0)
                       ) ? (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                          <div className="text-sm">No changes match the current filter</div>
+                        <div className="vdlg-inline-empty">
+                          <div>{VERSION_DIALOG_COPY.classDiffNoMatch}</div>
                         </div>
                       ) : null}
 
                       {/* Added items */}
                       {diffFilter.showAdded && schemaDiffSummary.added.length > 0 && (
                         <div>
-                          <h4 className="text-xs font-semibold text-green-700 dark:text-green-300 mb-2 flex items-center gap-2">
-                            <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
+                          <h4 className="vdlg-changelist__title" data-tone={VERSION_CHANGE_TONE.added}>
+                            <span className="vdlg-changelist__dot" aria-hidden />
                             Added ({schemaDiffSummary.added.length})
                           </h4>
-                          <div className="space-y-1">
+                          <div className="vdlg-changelist">
                             {schemaDiffSummary.added.map((diff, idx) => (
-                              <div key={idx} className="flex items-center gap-2 text-sm bg-green-50 dark:bg-green-900/10 px-3 py-1.5 rounded border border-green-200 dark:border-green-800">
-                                <span className="text-green-600 dark:text-green-400 font-mono text-xs">+</span>
-                                <span className="text-green-900 dark:text-green-100 font-medium">{getPathLabel(diff.path)}</span>
-                                <span className="text-green-700 dark:text-green-300 text-xs">({diff.itemType})</span>
+                              <div key={idx} className="vdlg-changelist__row" data-change="added">
+                                <span className="vdlg-classdiff__sigil" aria-hidden>+</span>
+                                <span className="vdlg-changelist__path">{getPathLabel(diff.path)}</span>
+                                <span className="vdlg-quiet">({diff.itemType})</span>
                               </div>
                             ))}
                           </div>
@@ -4502,16 +4437,16 @@ const Versions = () => {
                       {/* Removed items */}
                       {diffFilter.showRemoved && schemaDiffSummary.removed.length > 0 && (
                         <div>
-                          <h4 className="text-xs font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-2">
-                            <span className="inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+                          <h4 className="vdlg-changelist__title" data-tone={VERSION_CHANGE_TONE.removed}>
+                            <span className="vdlg-changelist__dot" aria-hidden />
                             Removed ({schemaDiffSummary.removed.length})
                           </h4>
-                          <div className="space-y-1">
+                          <div className="vdlg-changelist">
                             {schemaDiffSummary.removed.map((diff, idx) => (
-                              <div key={idx} className="flex items-center gap-2 text-sm bg-red-50 dark:bg-red-900/10 px-3 py-1.5 rounded border border-red-200 dark:border-red-800">
-                                <span className="text-red-600 dark:text-red-400 font-mono text-xs">-</span>
-                                <span className="text-red-900 dark:text-red-100 font-medium">{getPathLabel(diff.path)}</span>
-                                <span className="text-red-700 dark:text-red-300 text-xs">({diff.itemType})</span>
+                              <div key={idx} className="vdlg-changelist__row" data-change="removed">
+                                <span className="vdlg-classdiff__sigil" aria-hidden>−</span>
+                                <span className="vdlg-changelist__path">{getPathLabel(diff.path)}</span>
+                                <span className="vdlg-quiet">({diff.itemType})</span>
                               </div>
                             ))}
                           </div>
@@ -4521,23 +4456,21 @@ const Versions = () => {
                       {/* Modified items */}
                       {diffFilter.showModified && schemaDiffSummary.modified.length > 0 && (
                         <div>
-                          <h4 className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-2 flex items-center gap-2">
-                            <span className="inline-block w-2 h-2 bg-yellow-500 rounded-full"></span>
+                          <h4 className="vdlg-changelist__title" data-tone={VERSION_CHANGE_TONE.modified}>
+                            <span className="vdlg-changelist__dot" aria-hidden />
                             Modified ({schemaDiffSummary.modified.length})
                           </h4>
-                          <div className="space-y-1">
+                          <div className="vdlg-changelist">
                             {schemaDiffSummary.modified.map((diff, idx) => (
-                              <div key={idx} className="flex items-start gap-2 text-sm bg-yellow-50 dark:bg-yellow-900/10 px-3 py-1.5 rounded border border-yellow-200 dark:border-yellow-800">
-                                <span className="text-yellow-600 dark:text-yellow-400 font-mono text-xs mt-0.5">~</span>
+                              <div key={idx} className="vdlg-changelist__row" data-change="modified">
+                                <span className="vdlg-classdiff__sigil" aria-hidden>~</span>
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-yellow-900 dark:text-yellow-100 font-medium">{getPathLabel(diff.path)}</span>
-                                    <span className="text-yellow-700 dark:text-yellow-300 text-xs">({diff.itemType})</span>
+                                  <div className="vdlg-changelist__line">
+                                    <span className="vdlg-changelist__path">{getPathLabel(diff.path)}</span>
+                                    <span className="vdlg-quiet">({diff.itemType})</span>
                                   </div>
                                   {diff.changes && diff.changes.length > 0 && (
-                                    <div className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
-                                      Changed: {diff.changes.join(', ')}
-                                    </div>
+                                    <div className="vdlg-quiet">Changed: {diff.changes.join(', ')}</div>
                                   )}
                                 </div>
                               </div>
@@ -4550,17 +4483,17 @@ const Versions = () => {
                     )}
                   </div>
                 ) : activeCompareTab === 'breaking' ? (
-                  <div className="h-[calc(90vh-280px)] overflow-y-auto flex flex-col gap-3 p-2">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between shrink-0">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 max-w-prose">
+                  <div className="vdlg-compare__tabpanel vdlg-doc">
+                    <div className="vdlg-doc__head">
+                      <p className="vdlg-quiet vdlg-doc__note">
                         Generated from the schema diff. Stable identifiers use{' '}
-                        <span className="font-mono text-2xs">components.schemas…</span> paths. The same revision pair always yields the same text (template version is in the header).
+                        <span className="mono">components.schemas…</span> paths. The same revision pair always yields the same text (template version is in the header).
                       </p>
-                      <div className="flex flex-wrap gap-2 shrink-0">
+                      <div className="vdlg-doc__actions">
                         <Button
                           type="button"
                           variant="outline"
-                          className="text-xs h-8"
+                          size="sm"
                           onClick={async () => {
                             try {
                               await navigator.clipboard.writeText(breakingChangesMarkdown);
@@ -4576,7 +4509,7 @@ const Versions = () => {
                         <Button
                           type="button"
                           variant="default"
-                          className="text-xs h-8"
+                          size="sm"
                           onClick={appendBreakingDocToCompareTargetChangelog}
                           disabled={!breakingChangesMarkdown}
                         >
@@ -4586,27 +4519,27 @@ const Versions = () => {
                     </div>
                     <Textarea
                       readOnly
-                      className="flex-1 min-h-[min(420px,50vh)] font-mono text-xs"
+                      className="vdlg-doc__body"
                       value={breakingChangesMarkdown}
                       placeholder="Compare two versions to generate breaking-changes Markdown."
                       aria-label="Generated breaking changes markdown"
                     />
                   </div>
                 ) : activeCompareTab === 'migration' ? (
-                  <div className="h-[calc(90vh-280px)] overflow-y-auto flex flex-col gap-3 p-2">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between shrink-0">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 max-w-prose">
-                        Ordered steps for <strong className="font-medium text-gray-800 dark:text-gray-200">breaking</strong>{' '}
+                  <div className="vdlg-compare__tabpanel vdlg-doc">
+                    <div className="vdlg-doc__head">
+                      <p className="vdlg-quiet vdlg-doc__note">
+                        Ordered steps for <strong>breaking</strong>{' '}
                         contract changes, tied to this revision pair. Companion to the{' '}
-                        <strong className="font-medium text-gray-800 dark:text-gray-200">Breaking doc</strong> tab (#746) and
+                        <strong>Breaking doc</strong> tab (#746) and
                         compatibility checks (#506). Template version is in the header; edit the Markdown after export if
                         needed (#502).
                       </p>
-                      <div className="flex flex-wrap gap-2 shrink-0">
+                      <div className="vdlg-doc__actions">
                         <Button
                           type="button"
                           variant="outline"
-                          className="text-xs h-8"
+                          size="sm"
                           onClick={async () => {
                             try {
                               await navigator.clipboard.writeText(migrationGuideMarkdown);
@@ -4661,20 +4594,20 @@ const Versions = () => {
                     </div>
                     <Textarea
                       readOnly
-                      className="flex-1 min-h-[min(420px,50vh)] font-mono text-xs"
+                      className="vdlg-doc__body"
                       value={migrationGuideMarkdown}
                       placeholder="Compare two versions to generate a migration guide."
                       aria-label="Generated migration guide markdown"
                     />
                   </div>
                 ) : (
-                  <div className="h-[calc(90vh-280px)] overflow-y-auto px-1 pt-1">
+                  <div className="vdlg-compare__tabpanel">
                     {canvasCompareLoading ? (
                       <LoadingState
-                        className="min-h-[min(380px,45vh)] w-full py-8"
-                        minHeightClassName="min-h-[min(380px,45vh)]"
+                        className="vdlg-canvas__loading"
+                        minHeightClassName="vdlg-min-h-canvas"
                         spinnerSize="md"
-                        message="Loading canvas layouts…"
+                        message={VERSION_DIALOG_COPY.canvasLoading}
                       />
                     ) : (
                       <VersionCanvasCompare
@@ -4720,15 +4653,15 @@ const Versions = () => {
       </Dialog>
 
       <Dialog open={FEATURE_GITLIKE && showForkDialog} onOpenChange={(open) => !forkSaving && setShowForkDialog(open)}>
-        <DialogContent className="max-w-lg" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Fork to another project</DialogTitle>
-            <DialogDescription>
-              Create an isolated copy of this revision in a different project. Edits stay separate from the upstream line until you merge or publish intentionally.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1">
+        <DialogContent className="vdlg-dialog vdlg-dialog--md" aria-describedby={undefined}>
+          <VersionDialogHead
+            icon={<GitFork aria-hidden />}
+            tone="violet"
+            title="Fork to another project"
+            description="Create an isolated copy of this revision in a different project. Forks are isolated copies — later changes are not synced."
+          />
+          <div className="vdlg-form">
+            <div className="vdlg-field">
               <Label htmlFor="fork-target-project">Target project</Label>
               <Select value={forkTargetProjectId} onValueChange={setForkTargetProjectId}>
                 <SelectTrigger id="fork-target-project">
@@ -4743,7 +4676,7 @@ const Versions = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="vdlg-field">
               <Label>Version ID</Label>
               <Select
                 value={forkAutoGenerate ? 'auto' : 'manual'}
@@ -4762,7 +4695,7 @@ const Versions = () => {
               </Select>
             </div>
             {forkAutoGenerate ? (
-              <div className="space-y-1">
+              <div className="vdlg-field">
                 <Label>Bump strategy</Label>
                 <Select value={forkBumpStrategy} onValueChange={(v) => setForkBumpStrategy(v as 'patch' | 'minor')}>
                   <SelectTrigger>
@@ -4775,7 +4708,7 @@ const Versions = () => {
                 </Select>
               </div>
             ) : (
-              <div className="space-y-1">
+              <div className="vdlg-field">
                 <Label htmlFor="fork-version-id">Version ID (semantic)</Label>
                 <Input
                   id="fork-version-id"
@@ -4786,7 +4719,7 @@ const Versions = () => {
                 />
               </div>
             )}
-            <div className="space-y-1">
+            <div className="vdlg-field">
               <Label htmlFor="fork-short">Revision note</Label>
               <Input
                 id="fork-short"
@@ -4796,7 +4729,7 @@ const Versions = () => {
                 autoComplete="off"
               />
             </div>
-            <div className="space-y-1">
+            <div className="vdlg-field">
               <Label htmlFor="fork-changelog">Changelog (optional)</Label>
               <Textarea
                 id="fork-changelog"
@@ -4804,7 +4737,7 @@ const Versions = () => {
                 onChange={(e) => setForkChangeLog(e.target.value)}
                 placeholder="Markdown release notes"
                 rows={3}
-                className="resize-y min-h-[72px]"
+                className="vdlg-textarea"
               />
             </div>
           </div>
@@ -4820,14 +4753,14 @@ const Versions = () => {
       </Dialog>
 
       <Dialog open={FEATURE_GITLIKE && showBranchDialog} onOpenChange={(open) => !branchSaving && setShowBranchDialog(open)}>
-        <DialogContent className="max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Create named branch</DialogTitle>
-            <DialogDescription>
-              Point a new branch name at this version snapshot in this project. Further work can advance the tip via merge workflows.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
+        <DialogContent className="vdlg-dialog vdlg-dialog--sm" aria-describedby={undefined}>
+          <VersionDialogHead
+            icon={<GitBranchPlus aria-hidden />}
+            tone="accent"
+            title="Create named branch"
+            description="Point a new branch name at this version snapshot in this project. Further work can advance the tip via merge workflows."
+          />
+          <div className="vdlg-form">
             <div className="space-y-1">
               <Label htmlFor="branch-name">Branch name</Label>
               <Input
@@ -4851,16 +4784,20 @@ const Versions = () => {
       </Dialog>
 
       <Dialog open={FEATURE_GITLIKE && showTagDialog} onOpenChange={(open) => !tagSaving && setShowTagDialog(open)}>
-        <DialogContent className="max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Create version tag</DialogTitle>
-            <DialogDescription>
-              Attach a stable name to this schema revision (like <span className="font-mono">v1.0</span> or{' '}
-              <span className="font-mono">stable</span>). Immutable tags cannot be moved or deleted afterward.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1">
+        <DialogContent className="vdlg-dialog vdlg-dialog--sm" aria-describedby={undefined}>
+          <VersionDialogHead
+            icon={<TagIcon aria-hidden />}
+            tone="honey"
+            title="Create version tag"
+            description={
+              <>
+                Attach a stable name to this schema revision (like <span className="mono">v1.0</span> or{' '}
+                <span className="mono">stable</span>). Immutable tags cannot be moved or deleted afterward.
+              </>
+            }
+          />
+          <div className="vdlg-form">
+            <div className="vdlg-field">
               <Label htmlFor="tag-name">Tag name</Label>
               <Input
                 id="tag-name"
@@ -4870,7 +4807,7 @@ const Versions = () => {
                 autoComplete="off"
               />
             </div>
-            <div className="space-y-1">
+            <div className="vdlg-field">
               <Label htmlFor="tag-msg">Message (optional)</Label>
               <Input
                 id="tag-msg"
@@ -4880,7 +4817,7 @@ const Versions = () => {
                 autoComplete="off"
               />
             </div>
-            <div className="space-y-1">
+            <div className="vdlg-field">
               <Label htmlFor="tag-channel">Channel (optional)</Label>
               <Input
                 id="tag-channel"
@@ -4890,23 +4827,13 @@ const Versions = () => {
                 autoComplete="off"
               />
             </div>
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={tagImmutable}
-                onChange={(e) => setTagImmutable(e.target.checked)}
-                className="rounded border-gray-300 dark:border-gray-600"
-              />
+            <label className="vdlg-check">
+              <Checkbox checked={tagImmutable} onCheckedChange={(v) => setTagImmutable(v === true)} />
               Lock tag (immutable — cannot move or delete)
             </label>
             {effectiveIsAdmin && (
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={tagProtected}
-                  onChange={(e) => setTagProtected(e.target.checked)}
-                  className="rounded border-gray-300 dark:border-gray-600"
-                />
+              <label className="vdlg-check">
+                <Checkbox checked={tagProtected} onCheckedChange={(v) => setTagProtected(v === true)} />
                 Protected (only tenant admins can move or delete)
               </label>
             )}
@@ -4933,15 +4860,15 @@ const Versions = () => {
           if (!mergePreviewLoading && !mergeApplyLoading) setShowMergeDialog(open);
         }}
       >
-        <DialogContent className="max-w-2xl" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Merge branches</DialogTitle>
-            <DialogDescription>
-              Preview uses a three-way merge of OpenAPI components against the merge-base (LCA) revision. Run Preview merge before Apply — when conflicts exist, choose a resolution for every path before applying.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1">
+        <DialogContent className="vdlg-dialog vdlg-dialog--lg" aria-describedby={undefined}>
+          <VersionDialogHead
+            icon={<GitMerge aria-hidden />}
+            tone="violet"
+            title="Merge branches"
+            description="Preview uses a three-way merge of OpenAPI components against the merge-base (LCA) revision. Run Preview merge before Apply — when conflicts exist, choose a resolution for every path before applying."
+          />
+          <div className="vdlg-form">
+            <div className="vdlg-field">
               <Label>Source branch</Label>
               <Select value={mergeSourceBranch || '__pick__'} onValueChange={(v) => setMergeSourceBranch(v === '__pick__' ? '' : v)}>
                 <SelectTrigger><SelectValue placeholder="Choose branch" /></SelectTrigger>
@@ -4953,7 +4880,7 @@ const Versions = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
+            <div className="vdlg-field">
               <Label>Target branch</Label>
               <Select value={mergeTargetBranch || '__pick__'} onValueChange={(v) => setMergeTargetBranch(v === '__pick__' ? '' : v)}>
                 <SelectTrigger><SelectValue placeholder="Choose branch" /></SelectTrigger>
@@ -4966,7 +4893,7 @@ const Versions = () => {
               </Select>
             </div>
             {mergePreviewData?.classification && (
-              <Alert variant={mergePreviewData.classification.canAutoMerge ? 'success' : 'error'}>
+              <Alert variant={mergePreviewData.classification.canAutoMerge ? 'ok' : 'danger'}>
                 {mergePreviewData.classification.canAutoMerge
                   ? 'No overlapping modified or removed paths — apply is allowed if the target tip has not moved.'
                   : `Conflicts: ${mergePreviewData.classification.conflictPaths.length} path(s). Apply stays disabled until every conflict row has a resolution (mine / theirs / manual).`}
@@ -4985,25 +4912,28 @@ const Versions = () => {
                 />
               )}
             {mergePreviewData?.mergeBaseVersionId != null && mergePreviewData?.classification && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Merge-base revision: <span className="font-mono">{mergePreviewData.mergeBaseVersionId}</span>
+              <p className="vdlg-quiet">
+                Merge-base revision: <span className="mono">{mergePreviewData.mergeBaseVersionId}</span>
               </p>
             )}
             {mergeCompatLoading && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">Checking backward compatibility (target tip → source tip)…</p>
+              <p className="vdlg-loading-row" role="status">
+                <Loader2 className="animate-spin" aria-hidden />
+                Checking backward compatibility (target tip → source tip)…
+              </p>
             )}
             {mergeCompat && !mergeCompatLoading && (
               <Alert
                 variant={
                   mergeCompat.overall === 'safe'
-                    ? 'success'
+                    ? 'ok'
                     : mergeCompat.overall === 'unknown'
-                      ? 'default'
-                      : 'error'
+                      ? 'neutral'
+                      : 'danger'
                 }
               >
-                <span className="font-medium text-sm">Backward compatibility (target tip → source tip)</span>
-                <div className="mt-2">
+                <span className="vdlg-alert__title">Backward compatibility (target tip → source tip)</span>
+                <div className="vdlg-alert__body">
                   <CompatibilityReportPanel
                     overall={mergeCompat.overall}
                     findings={mergeCompat.findings}
@@ -5016,7 +4946,7 @@ const Versions = () => {
                       </span>
                     }
                   />
-                  <div className="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
+                  <div className="vdlg-alert__section">
                     <ExternalCompatEvidencePanel
                       projectId={selectedProjectId}
                       baseRevisionId={mergePreviewData?.targetTipVersionId}
@@ -5025,24 +4955,23 @@ const Versions = () => {
                   </div>
                 </div>
                 {mergeCompat.mergeBlockedByCompatGate && (
-                  <p className="text-xs mt-2 text-amber-800 dark:text-amber-200">
+                  <p className="vdlg-alert__note">
                     Project metadata enables compat gating — merge is blocked until compatibility is safe, unless a tenant
                     administrator overrides with a written justification (recorded in the workflow audit log).
                   </p>
                 )}
                 {mergeCompat.mergeBlockedByCompatGate && effectiveIsAdmin ? (
-                  <div className="mt-3 space-y-2 border-t border-amber-200/60 dark:border-amber-800/40 pt-3">
-                    <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                      <input
-                        type="checkbox"
+                  <div className="vdlg-alert__section">
+                    <label className="vdlg-check vdlg-check--top">
+                      <Checkbox
                         checked={mergeCompatGateOverride}
-                        onChange={(e) => {
-                          setMergeCompatGateOverride(e.target.checked);
-                          if (!e.target.checked) {
+                        onCheckedChange={(checked) => {
+                          const next = checked === true;
+                          setMergeCompatGateOverride(next);
+                          if (!next) {
                             setMergeCompatGateOverrideReason('');
                           }
                         }}
-                        className="rounded border-gray-300 dark:border-gray-600 mt-0.5"
                       />
                       <span>
                         Override compatibility gate (tenant admin) — required when the gate blocks merge due to unsafe
@@ -5050,7 +4979,7 @@ const Versions = () => {
                       </span>
                     </label>
                     {mergeCompatGateOverride ? (
-                      <div className="space-y-1">
+                      <div className="vdlg-field">
                         <Label htmlFor="merge-compat-override-reason">Justification *</Label>
                         <Textarea
                           id="merge-compat-override-reason"
@@ -5058,7 +4987,7 @@ const Versions = () => {
                           onChange={(e) => setMergeCompatGateOverrideReason(e.target.value)}
                           rows={3}
                           placeholder="Explain why merge should proceed despite the compatibility gate (audit record)"
-                          className="text-sm"
+                          className="vdlg-textarea"
                           aria-invalid={
                             mergeCompatGateOverride && mergeCompatGateOverrideReason.trim().length === 0
                           }
@@ -5113,21 +5042,29 @@ const Versions = () => {
           }
         }}
       >
-        <DialogContent className="max-w-2xl" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Rollback branch (revert-style)</DialogTitle>
-            <DialogDescription>
-              Creates a <strong>new</strong> revision whose schema matches the selected row; the branch tip moves forward
-              with <span className="font-mono">parent</span> pointing at the prior head. History is not rewritten.
-              {rollbackTargetVersion ? (
-                <span className="block mt-2 text-gray-700 dark:text-gray-300">
-                  Restore snapshot from <span className="font-mono">{formatVersionWithPrefix(rollbackTargetVersion.version_id)}</span>
-                </span>
-              ) : null}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1">
+        <DialogContent className="vdlg-dialog vdlg-dialog--lg" aria-describedby={undefined}>
+          <VersionDialogHead
+            icon={<Undo2 aria-hidden />}
+            tone="danger"
+            title="Rollback branch (revert-style)"
+            description={
+              <>
+                Creates a <strong>new</strong> revision whose schema matches the selected row; the branch tip moves
+                forward with <span className="mono">parent</span> pointing at the prior head. History is not rewritten.
+                {rollbackTargetVersion ? (
+                  <span className="vdlg-dialog__restore">
+                    Restore snapshot from{' '}
+                    <span className="mono">{formatVersionWithPrefix(rollbackTargetVersion.version_id)}</span>
+                  </span>
+                ) : null}
+              </>
+            }
+          />
+          <div className="vdlg-form">
+            {versionBranches.length === 0 ? (
+              <Alert variant="warn">{VERSION_DIALOG_COPY.rollbackNoBranches}</Alert>
+            ) : null}
+            <div className="vdlg-field">
               <Label>Branch to update</Label>
               <Select
                 value={rollbackBranchName || '__pick__'}
@@ -5146,7 +5083,7 @@ const Versions = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
+            <div className="vdlg-field">
               <Label htmlFor="rollback-msg">Revision note (optional)</Label>
               <Input
                 id="rollback-msg"
@@ -5161,19 +5098,19 @@ const Versions = () => {
                 <Alert
                   variant={
                     rollbackPreview.compatOverall === 'safe'
-                      ? 'success'
+                      ? 'ok'
                       : rollbackPreview.compatOverall === 'unknown'
-                        ? 'default'
-                        : 'error'
+                        ? 'neutral'
+                        : 'danger'
                   }
                 >
-                  <span className="font-medium text-sm">
+                  <span className="vdlg-alert__title">
                     Schema impact (current tip → restored content): {rollbackPreview.compatOverall ?? '—'}
                   </span>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="vdlg-alert__note">
                     Same compatibility rules as elsewhere (#506): rolling back can remove paths or fields consumers rely on.
                   </p>
-                  <div className="mt-2">
+                  <div className="vdlg-alert__body">
                     <CompatibilityReportPanel
                       findings={(rollbackPreview.findings ?? []).map((f) => ({
                         id: f.id,
@@ -5187,24 +5124,22 @@ const Versions = () => {
                   </div>
                 </Alert>
                 {rollbackPreview.rollbackBlockedByCompatGate ? (
-                  <p className="text-xs text-amber-800 dark:text-amber-200">
-                    Project metadata sets <span className="font-mono">compatGateOnRollback</span> — apply is blocked until the
+                  <Alert variant="warn" className="vdlg-note">
+                    Project metadata sets <span className="mono">compatGateOnRollback</span> — apply is blocked until the
                     rollback pair is safe or policy is updated.
-                  </p>
+                  </Alert>
                 ) : null}
                 {(rollbackPreview.deprecationWarnings ?? []).length > 0 ? (
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <p className="vdlg-quiet">
                     Deprecation warnings: {(rollbackPreview.deprecationWarnings ?? []).length} (see compatibility API / sunset
                     timeline)
                   </p>
                 ) : null}
                 {rollbackPreview.compatOverall && rollbackPreview.compatOverall !== 'safe' ? (
-                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                    <input
-                      type="checkbox"
+                  <label className="vdlg-check">
+                    <Checkbox
                       checked={rollbackSkipCompat}
-                      onChange={(e) => setRollbackSkipCompat(e.target.checked)}
-                      className="rounded border-gray-300 dark:border-gray-600"
+                      onCheckedChange={(checked) => setRollbackSkipCompat(checked === true)}
                     />
                     I understand this rollback may break existing consumers; proceed anyway
                   </label>
@@ -5251,21 +5186,19 @@ const Versions = () => {
           if (!rollbackApplyLoading) setShowRollbackConfirmAlert(open);
         }}
       >
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="vdlg-dialog vdlg-dialog--sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Roll back?</AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-2 text-left text-sm text-gray-700 dark:text-gray-300">
-                <p>
-                  <span className="text-gray-500 dark:text-gray-400">Target revision: </span>
-                  <span className="font-mono text-xs break-all">{rollbackTargetVersion?.id ?? '—'}</span>
-                </p>
-                <p>
-                  <span className="text-gray-500 dark:text-gray-400">Committed: </span>
+              <dl className="vdlg-kv">
+                <dt>Target revision id</dt>
+                <dd className="mono">{rollbackTargetVersion?.id ?? '—'}</dd>
+                <dt>Committed UTC</dt>
+                <dd className="mono">
                   {rollbackTargetVersion ? formatRevisionTimestampUtc(rollbackTargetVersion.created_at) : '—'}
-                </p>
-                <p>
-                  <span className="text-gray-500 dark:text-gray-400">Impact: </span>
+                </dd>
+                <dt>Impact</dt>
+                <dd>
                   {rollbackPreview?.impactSummary != null ? (
                     <>
                       ~{rollbackPreview.impactSummary.changedEntityCount} entities differ vs branch tip (+
@@ -5273,10 +5206,10 @@ const Versions = () => {
                       {rollbackPreview.impactSummary.modified} modified)
                     </>
                   ) : (
-                    <>Run preview impact first to load entity counts.</>
+                    VERSION_DIALOG_COPY.rollbackNoPreview
                   )}
-                </p>
-              </div>
+                </dd>
+              </dl>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

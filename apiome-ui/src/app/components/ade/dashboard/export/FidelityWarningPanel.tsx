@@ -2,23 +2,27 @@
 
 import { useMemo, useState } from 'react';
 import { AlertTriangle, ChevronDown, ChevronUp, Loader2, ShieldAlert } from 'lucide-react';
+import { Alert } from '../../../ui/Alert';
+import type { StatusTone } from '../../../ui/statusVocabulary';
+import { Badge } from '../../../ui/Badge';
+import { Checkbox } from '../../../ui/Checkbox';
 import {
-  advisoryBannerClass,
   advisoryPresentation,
-  advisorySeverityPillClass,
+  advisorySeverityTone,
+  advisoryStrengthTone,
 } from '../../../../utils/export-advisory';
-import { tierBadgeClass, tierLabel, fidelityChips } from './exportTargetCatalog';
+import { tierTone, tierLabel, fidelityChips } from './exportTargetCatalog';
 import type { TargetFidelitySummary } from './exportTargetCatalog';
 import {
   acknowledgementPhraseMatches,
   EXPORT_TYPES_ONLY_ACK_PHRASE,
-  kindBadgeClass,
   kindDescription,
+  kindTone,
   kindGlyph,
   kindLabel,
   requiresExportAcknowledgement,
   ringGeometry,
-  ringStrokeClass,
+  ringTone,
   sortReportItemsWorstFirst,
 } from './exportFidelityPreview';
 import type {
@@ -71,6 +75,21 @@ export interface FidelityWarningPanelProps {
  * degrades gracefully — the summary keeps the panel honest and the acknowledgement gate
  * (driven by the summary tier, not the preview) still protects the download.
  */
+/**
+ * `Alert`'s name for a tone.
+ *
+ * The status vocabulary calls the informational tone `accent`; `Alert` — which predates the
+ * vocabulary — calls the same tint `info`. One line here rather than a second tone table.
+ *
+ * @param tone The tone the advisory resolved to.
+ * @returns The `Alert` variant that paints it.
+ */
+function alertVariantForTone(tone: StatusTone): 'info' | 'warn' | 'danger' {
+  if (tone === 'danger') return 'danger';
+  if (tone === 'warn') return 'warn';
+  return 'info';
+}
+
 export function FidelityWarningPanel({
   targetLabel,
   targetDescription,
@@ -97,69 +116,54 @@ export function FidelityWarningPanel({
   const ring = ringGeometry(fidelity.preserved_percent, RING_RADIUS);
 
   return (
-    <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="vdlg-export__card">
+      <div className="vdlg-export__fidelity-head">
         <div>
-          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Exporting to {targetLabel}
-          </div>
-          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{targetDescription}</div>
+          <div className="vdlg-section-title">Exporting to {targetLabel}</div>
+          <div className="vdlg-quiet">{targetDescription}</div>
         </div>
-        <span
-          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${tierBadgeClass(fidelity.tier)}`}
-        >
-          {tierLabel(fidelity.tier)}
-        </span>
+        <Badge variant={tierTone(fidelity.tier)}>{tierLabel(fidelity.tier)}</Badge>
       </div>
 
       {/* The advisory (MFX-2.4): server-side copy rendered verbatim, palette by severity. */}
       {previewLoading && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
+        <div className="vdlg-loading-row" role="status">
+          <Loader2 className="animate-spin" aria-hidden />
           Computing the detailed fidelity report…
         </div>
       )}
       {!previewLoading && previewError && (
-        <div
-          data-testid="export-advisory-error"
-          className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
-        >
+        <Alert variant="warn" data-testid="export-advisory-error" className="vdlg-note">
           The detailed fidelity report could not be loaded — the summary below still reflects
           this conversion. {previewError}
-        </div>
+        </Alert>
       )}
       {advisory && advisory.show && (
-        <div
+        <Alert
+          variant={alertVariantForTone(advisoryStrengthTone(advisoryPresentation(advisory).strength))}
           data-testid="export-advisory"
-          className={`mt-4 rounded-lg border p-3 ${advisoryBannerClass(advisoryPresentation(advisory).strength)}`}
+          className="vdlg-note"
+          icon={<AlertTriangle aria-hidden />}
         >
-          <div className="flex flex-wrap items-center gap-2">
-            <AlertTriangle className="h-4 w-4" aria-hidden />
-            <span className="text-sm font-semibold">{advisory.headline}</span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-2xs font-semibold uppercase ${advisorySeverityPillClass(advisory.severity)}`}
-            >
-              {advisory.severity ?? 'info'}
-            </span>
-          </div>
-          <p className="mt-1.5 text-sm">{advisory.message}</p>
-        </div>
+          <span className="vdlg-alert__title">{advisory.headline}</span>
+          <Badge variant={advisorySeverityTone(advisory.severity)}>
+            {advisory.severity ?? 'info'}
+          </Badge>
+          <p className="vdlg-alert__note">{advisory.message}</p>
+        </Alert>
       )}
       {advisory && !advisory.show && (
-        <p
-          data-testid="export-advisory"
-          className="mt-4 text-sm text-emerald-700 dark:text-emerald-300"
-        >
+        <p data-testid="export-advisory" className="vdlg-bench__status" data-tone="ok">
           {advisory.headline}
         </p>
       )}
 
       {/* Preserved-% ring + count chips, from the coarse summary (renders immediately). */}
-      <div className="mt-4 flex flex-wrap items-center gap-5">
-        <div className="relative h-24 w-24 shrink-0">
+      <div className="vdlg-export__fidelity">
+        <div className="vdlg-ring" data-tone={ringTone(fidelity.tier)}>
           <svg
             viewBox="0 0 96 96"
-            className="h-24 w-24 -rotate-90"
+            className="vdlg-ring__svg"
             role="img"
             aria-label={`${fidelity.preserved_percent}% of constructs preserved`}
           >
@@ -169,7 +173,7 @@ export function FidelityWarningPanel({
               r={RING_RADIUS}
               fill="none"
               strokeWidth="8"
-              className="stroke-gray-200 dark:stroke-gray-700"
+              className="vdlg-ring__track"
             />
             <circle
               cx="48"
@@ -180,37 +184,32 @@ export function FidelityWarningPanel({
               strokeLinecap="round"
               strokeDasharray={ring.circumference}
               strokeDashoffset={ring.dashOffset}
-              className={ringStrokeClass(fidelity.tier)}
+              className="vdlg-ring__value"
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div
-              data-testid="export-preserved-percent"
-              className="text-xl font-bold text-gray-900 dark:text-gray-100"
-            >
+          <div className="vdlg-ring__label">
+            <div data-testid="export-preserved-percent" className="vdlg-ring__value-text">
               {fidelity.preserved_percent}%
             </div>
-            <div className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              preserved
-            </div>
+            <div className="vdlg-caps">preserved</div>
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="vdlg-export__fidelity-body">
+          <div className="vdlg-chips">
             {fidelityChips(fidelity).map((chip) => (
-              <span
+              <Badge
                 key={chip.key}
+                variant={chip.tone}
                 data-testid={`export-fidelity-chip-${chip.key}`}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${chip.className}`}
               >
                 {/* Glyph first, count and word after: shape + text + colour, never colour alone. */}
                 <span aria-hidden>{chip.glyph}</span>
                 {chip.count} {chip.label}
-              </span>
+              </Badge>
             ))}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="vdlg-quiet">
             {fidelity.total} construct{fidelity.total === 1 ? '' : 's'} considered for this
             source.
           </p>
@@ -224,20 +223,16 @@ export function FidelityWarningPanel({
             type="button"
             data-testid="export-report-toggle"
             onClick={() => setReportOpen((open) => !open)}
-            className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
+            className="vdlg-link"
           >
-            {reportOpen ? (
-              <ChevronUp className="h-3.5 w-3.5" aria-hidden />
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5" aria-hidden />
-            )}
+            {reportOpen ? <ChevronUp aria-hidden /> : <ChevronDown aria-hidden />}
             {reportOpen ? 'Hide per-construct report' : 'Show per-construct report'} (
             {reportItems.length} construct{reportItems.length === 1 ? '' : 's'})
           </button>
           {reportOpen && (
             <ul
               data-testid="export-fidelity-report"
-              className="mt-2 max-h-60 divide-y divide-gray-100 overflow-y-auto rounded-lg border border-gray-200 dark:divide-gray-800 dark:border-gray-700"
+              className="vdlg-export__report"
             >
               {reportItems.map((item) => (
                 <FidelityReportRow key={`${item.construct}-${item.kind}-${item.message}`} item={item} />
@@ -252,19 +247,18 @@ export function FidelityWarningPanel({
       {ackMode === 'checkbox' && (
         <label
           data-testid="export-ack"
-          className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+          className="vdlg-export__ack"
+          data-tone="warn"
         >
-          <input
-            type="checkbox"
+          <Checkbox
             checked={acknowledged}
-            onChange={(e) => onAcknowledgedChange(e.target.checked)}
-            className="mt-0.5"
+            onCheckedChange={(checked) => onAcknowledgedChange(checked === true)}
           />
           <span>
-            <span className="font-medium">
+            <span className="vdlg-export__ack-title">
               I understand this conversion is lossy and want to export anyway.
             </span>
-            <span className="mt-0.5 block text-xs opacity-80">
+            <span className="vdlg-export__ack-note">
               The export stays disabled until you acknowledge the fidelity loss above.
             </span>
           </span>
@@ -311,15 +305,16 @@ function TypedAcknowledgement({
   return (
     <div
       data-testid="export-ack-typed"
-      className="mt-4 rounded-lg border border-red-400 bg-red-50 p-3 text-sm text-red-900 dark:border-red-700 dark:bg-red-950/40 dark:text-red-100"
+      className="vdlg-export__ack vdlg-export__ack--typed"
+      data-tone="danger"
     >
-      <div className="flex items-center gap-2">
-        <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden />
-        <span className="font-semibold">This export produces a types-only artifact.</span>
+      <div className="vdlg-export__ack-head">
+        <ShieldAlert aria-hidden />
+        <span className="vdlg-export__ack-title">This export produces a types-only artifact.</span>
       </div>
-      <p className="mt-1.5 text-xs opacity-90">
+      <p className="vdlg-export__ack-note">
         Only the schemas will be exported — every operation and channel is dropped. To confirm you
-        understand, type <code className="font-mono font-semibold">{EXPORT_TYPES_ONLY_ACK_PHRASE}</code>{' '}
+        understand, type <code className="mono">{EXPORT_TYPES_ONLY_ACK_PHRASE}</code>{' '}
         below. Generate stays disabled until it matches.
       </p>
       <label className="mt-2 block">
@@ -333,17 +328,15 @@ function TypedAcknowledgement({
           autoComplete="off"
           spellCheck={false}
           aria-invalid={typed.length > 0 && !matches}
-          className={`w-full rounded-md border bg-white px-2.5 py-1.5 font-mono text-xs text-gray-900 outline-none dark:bg-gray-900 dark:text-gray-100 ${
-            matches
-              ? 'border-emerald-400 focus:border-emerald-500 dark:border-emerald-600'
-              : 'border-red-300 focus:border-red-500 dark:border-red-700'
-          }`}
+          className="vdlg-input--mono vdlg-export__ack-input"
+          data-matches={matches || undefined}
         />
       </label>
       {matches && (
         <p
           data-testid="export-ack-typed-confirmed"
-          className="mt-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300"
+          className="vdlg-bench__status"
+          data-tone="ok"
         >
           Acknowledged — you can generate this export.
         </p>
@@ -364,10 +357,11 @@ function TypedAcknowledgement({
  */
 function FidelityReportRow({ item }: { item: LossItem }) {
   return (
-    <li className="flex items-start gap-3 p-2.5 text-sm">
+    <li className="vdlg-export__report-row">
       <span
         data-testid={`export-fidelity-kind-${item.kind}`}
-        className={`mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold ${kindBadgeClass(item.kind)}`}
+        className="vdlg-export__kind"
+        data-tone={kindTone(item.kind)}
       >
         <span aria-hidden>{kindGlyph(item.kind)}</span>
         <span aria-hidden>{kindLabel(item.kind)}</span>
@@ -375,22 +369,14 @@ function FidelityReportRow({ item }: { item: LossItem }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
-          <code className="break-all font-mono text-xs font-medium text-gray-900 dark:text-gray-100">
-            {item.construct}
-          </code>
+          <code className="vdlg-export__construct mono">{item.construct}</code>
           {item.severity !== 'info' && (
-            <span
-              className={`rounded-full px-1.5 py-0.5 text-2xs font-semibold uppercase ${advisorySeverityPillClass(item.severity)}`}
-            >
-              {item.severity}
-            </span>
+            <Badge variant={advisorySeverityTone(item.severity)}>{item.severity}</Badge>
           )}
         </span>
-        <span className="mt-0.5 block text-xs text-gray-600 dark:text-gray-300">
-          {item.message}
-        </span>
+        <span className="vdlg-export__report-message">{item.message}</span>
         {item.target_mapping && (
-          <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">
+          <span className="vdlg-quiet">
             In the target: {item.target_mapping}
           </span>
         )}

@@ -202,11 +202,11 @@ export function ArtifactPreviewCard({
   return (
     <div
       data-testid="export-artifact-preview"
-      className={cn('flex min-h-0 flex-col rounded-xl border border-gray-200 p-3 dark:border-gray-700', className)}
+      className={cn('vdlg-export__card', className)}
     >
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <FileCode2 className="h-4 w-4 text-indigo-500" aria-hidden />
-        <span className="text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+        <FileCode2 className="h-4 w-4 text-accent" aria-hidden />
+        <span className="text-xs font-semibold uppercase tracking-wide text-fg">
           Emitted {artifact.filename}
         </span>
         <span
@@ -256,7 +256,7 @@ export function ArtifactPreviewCard({
               entityMarkers.onEditorMount(editorInstance, monaco);
             }}
             height={360}
-            className="mt-2 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
+            className="vdlg-export__preview"
             editorTestId="export-artifact-editor"
             fallbackTestId="export-artifact-content"
             documentLabel={artifact.filename}
@@ -270,11 +270,11 @@ export function ArtifactPreviewCard({
         className="mt-2"
       />
 
-      <p className="mt-2 shrink-0 text-xs text-gray-500 dark:text-gray-400">{badge.hint}</p>
+      <p className="mt-2 shrink-0 text-xs text-fg-muted">{badge.hint}</p>
       <p
         data-testid="export-artifact-meta"
         data-truncated={plan.truncated ? 'true' : 'false'}
-        className="mt-0.5 shrink-0 text-2xs text-gray-400 dark:text-gray-500"
+        className="mt-0.5 shrink-0 text-2xs text-fg-muted"
       >
         {size}
         {/* When the viewer holds less than the document, the meta line says so too — the size on
