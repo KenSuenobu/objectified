@@ -21,15 +21,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      # Python comes from uv, not actions/setup-python: the CPython builds setup-python
+      # downloads for Ubuntu 26.04 declare `x86 ISA needed: x86-64-v3`, which the self-hosted
+      # runner's vCPU does not provide, so they abort with "CPU ISA level is lower than
+      # required". uv's python-build-standalone builds are baseline x86-64.
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
           python-version: "3.12"
+
+      - name: Set up Python
+        run: uv python install
 
       - name: Enable Corepack and set Yarn to 4.12.0
         run: corepack enable && corepack prepare yarn@4.12.0 --activate
