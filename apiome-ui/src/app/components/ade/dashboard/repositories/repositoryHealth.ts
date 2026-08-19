@@ -115,24 +115,6 @@ export function repositoryHealthLabel(level: RepositoryHealthLevel): string {
   return 'Healthy';
 }
 
-/**
- * Badge colour classes for a level.
- *
- * Deliberately the same palette the repository status pill uses (`repositoryStatusClass`),
- * so "green means fine, amber means look, rose means broken" reads identically across the
- * two pills sitting next to each other on a row.
- */
-export function repositoryHealthClass(level: RepositoryHealthLevel): string {
-  switch (level) {
-    case 'error':
-      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300';
-    case 'warnings':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
-    default:
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
-  }
-}
-
 /** Human sentence for the scan-rate line in the tooltip. */
 function scanRateLine(health: RepositoryHealth): string {
   if (health.scans_attempted === 0) {

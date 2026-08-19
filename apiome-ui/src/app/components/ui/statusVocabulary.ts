@@ -206,6 +206,23 @@ export const STATUS_TONE: Readonly<Record<string, StatusTone>> = {
   breaking: 'danger',
   unknown: 'neutral',
 
+  // ---- Repository scanning and auto-refresh (HIVE-7.3, #5320) --------------
+  // The states `/ade/dashboard/repositories` prints. `pending`, `stale`, `failed`, `error`
+  // and `archived` were already in this table and are not restated. A scan in progress is
+  // `accent` — the tone this table already spends on "informational, in flight" — and a
+  // repository that has finished one is `ready`, which is the same fact as `active`.
+  // `diverged` (RAR-4.4: the imported copy was edited after import, so auto-refresh is held)
+  // is `violet` for the reason `false_positive` and `private` are: it records a *judgement*,
+  // not a step on the healthy → broken scale, and amber would file it in a queue it does not
+  // belong to.
+  scanning: 'accent',
+  ready: 'ok',
+  'up-to-date': 'ok',
+  refreshing: 'accent',
+  diverged: 'violet',
+  /** The middle of the three repository health levels (REPO-6.5). */
+  warnings: 'warn',
+
   // ---- Lint severity -------------------------------------------------------
   error: 'danger',
   warning: 'warn',

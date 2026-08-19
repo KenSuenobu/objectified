@@ -1,13 +1,22 @@
 'use client';
 
+/**
+ * The repository wire contract, shared by every repository screen.
+ *
+ * What is left here after HIVE-7.3 (#5320) is the payload parser, the types it produces, the
+ * polling constants and the three presentational odds and ends the **Add repository** screen
+ * and the **repository detail** still draw. The list screen's own card, index snapshot,
+ * provider badge and status palette moved to `components/ade/repositories/*`, where they are
+ * Hive-tokened and covered by `tests/repositories-*`; HIVE-7.4 and HIVE-7.5 will take what is
+ * left the same way.
+ */
+
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { FileCode2, GitBranch, Github, Gitlab, Globe, Loader2 } from 'lucide-react';
+import { Github, Gitlab, Loader2 } from 'lucide-react';
 import { SiBitbucket } from 'react-icons/si';
 import { cn } from '@lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/ui/Tooltip';
-import { RepositoryRowMenu } from './RepositoryRowMenu';
-import { RepositoryHealthBadge } from './RepositoryHealthBadge';
 import { type RepositoryHealth, parseRepositoryHealth } from './repositoryHealth';
 
 export type RepositoryProvider = 'github' | 'gitlab' | 'bitbucket' | 'public_url';
@@ -276,310 +285,16 @@ export function repoInitials(name: string): string {
   return compact.slice(0, 2).toUpperCase() || 'R';
 }
 
-/**
- * Compact snapshot of repository scan/index data: importable share of indexed files,
- * or recent scan outcomes when `recent_scans` is populated (e.g. detail views).
- */
-export function RepositoryIndexSnapshot({ repo }: { repo: DashboardRepository }) {
-  const scans = repo.recent_scans?.length
-    ? [...repo.recent_scans].sort(
-        (a, b) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime(),
-      )
-    : [];
-  const totalFiles = typeof repo.total_files === 'number' ? repo.total_files : null;
-  const importable = typeof repo.importable_count === 'number' ? repo.importable_count : null;
-  const hasError = repo.status === 'error';
-
-  let ariaLabel: string;
-  let body: ReactNode;
-
-  if (scans.length > 0) {
-    const shown = scans.slice(-10);
-    const failCount = shown.filter((s) => s.failed).length;
-    ariaLabel =
-      failCount > 0
-        ? `${shown.length} recent scans, ${failCount} failed, latest on ${shown[shown.length - 1]?.branch ?? 'unknown branch'}.`
-        : `${shown.length} recent scans, all succeeded, latest on ${shown[shown.length - 1]?.branch ?? 'unknown branch'}.`;
-    body = (
-      <div className="flex h-5 min-w-[72px] max-w-[96px] items-end justify-stretch gap-px" role="img" aria-label={ariaLabel}>
-        {shown.map((s, i) => (
-          <span
-            key={`${s.finished_at}-${i}`}
-            title={`${s.branch} · ${s.failed ? 'failed' : 'ok'} · ${s.finished_at}`}
-            className={cn(
-              'min-w-[3px] flex-1 rounded-sm',
-              s.failed ? 'bg-rose-500/80 dark:bg-rose-400/80' : 'bg-emerald-500/80 dark:bg-emerald-400/80',
-            )}
-            style={{ height: s.failed ? 6 : 18 }}
-          />
-        ))}
-      </div>
-    );
-  } else if (totalFiles != null && totalFiles > 0) {
-    const hasImportable = importable != null;
-    const clampedImportable = hasImportable ? Math.max(0, Math.min(importable, totalFiles)) : 0;
-    const pct = hasImportable ? Math.round((clampedImportable / totalFiles) * 100) : null;
-    ariaLabel = hasImportable
-      ? `${clampedImportable.toLocaleString()} of ${totalFiles.toLocaleString()} indexed files matched importable patterns (${pct}%).`
-      : `${totalFiles.toLocaleString()} indexed files; importable tally not available yet.`;
-    body = (
-      <div className="flex w-[88px] flex-col gap-0.5" role="img" aria-label={ariaLabel}>
-        <div
-          className={cn(
-            'relative h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700',
-            hasError && 'ring-1 ring-rose-400/60 dark:ring-rose-500/50',
-          )}
-        >
-          {hasImportable ? (
-            <div
-              className={cn(
-                'h-full rounded-full transition-[width]',
-                pct === 0 ? 'bg-amber-500/90 dark:bg-amber-400/90' : 'bg-emerald-500 dark:bg-emerald-400',
-              )}
-              style={{ width: `${pct}%` }}
-            />
-          ) : (
-            <div className="h-full w-full rounded-full bg-slate-400/35 dark:bg-slate-500/40" />
-          )}
-        </div>
-        {hasImportable ? (
-          <span className="text-2xs font-medium tabular-nums leading-none text-slate-600 dark:text-slate-400">
-            {pct}%
-          </span>
-        ) : (
-          <span className="text-2xs font-medium leading-none text-slate-500 dark:text-slate-400">…</span>
-        )}
-      </div>
-    );
-  } else if (repo.status === 'scanning') {
-    ariaLabel = 'Repository scan in progress.';
-    body = (
-      <div className="flex h-5 w-[72px] items-center justify-start" role="img" aria-label={ariaLabel}>
-        <Loader2 className="h-4 w-4 animate-spin text-indigo-500 dark:text-indigo-400" aria-hidden />
-      </div>
-    );
-  } else if (repo.status === 'pending') {
-    ariaLabel = 'Scan not started yet.';
-    body = (
-      <span className="text-xs tabular-nums text-slate-400 dark:text-slate-500" title="No scan yet">
-        —
-      </span>
-    );
-  } else {
-    ariaLabel = 'No indexed files yet.';
-    body = (
-      <span className="text-xs tabular-nums text-slate-400 dark:text-slate-500" title="No indexed files">
-        —
-      </span>
-    );
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="inline-flex cursor-default outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 rounded">
-          {body}
-        </div>
-      </TooltipTrigger>
-      <TooltipContent side="left" align="center" className="max-w-xs text-left text-xs leading-snug">
-        {ariaLabel}
-      </TooltipContent>
-    </Tooltip>
-  );
-}
-
-export function repositoryStatusLabel(status: RepositoryStatus): string {
-  switch (status) {
-    case 'pending':
-      return 'Pending';
-    case 'scanning':
-      return 'Scanning';
-    case 'ready':
-      return 'Ready';
-    case 'error':
-      return 'Error';
-    case 'archived':
-      return 'Archived';
-    default:
-      return status;
-  }
-}
-
-export function repositoryStatusClass(status: RepositoryStatus): string {
-  switch (status) {
-    case 'pending':
-      return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
-    case 'scanning':
-      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200';
-    case 'ready':
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
-    case 'error':
-      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300';
-    case 'archived':
-      return 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
-    default:
-      return 'bg-slate-100 text-slate-700';
-  }
-}
-
-export function ProviderBadge({ provider }: { provider: RepositoryProvider }) {
-  if (provider === 'github') {
-    return (
-      <span className="inline-flex items-center gap-1 text-2xs text-gray-500 dark:text-gray-400">
-        <Github className="h-3 w-3" aria-hidden />
-        GitHub
-      </span>
-    );
-  }
-  if (provider === 'gitlab') {
-    return (
-      <span className="inline-flex items-center gap-1 text-2xs text-gray-500 dark:text-gray-400">
-        <Gitlab className="h-3 w-3 text-orange-500" aria-hidden />
-        GitLab
-      </span>
-    );
-  }
-  if (provider === 'bitbucket') {
-    return (
-      <span className="inline-flex items-center gap-1 text-2xs text-gray-500 dark:text-gray-400">
-        <SiBitbucket className="h-3 w-3 text-sky-600" aria-hidden />
-        Bitbucket
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 text-2xs text-gray-500 dark:text-gray-400">
-      <Globe className="h-3 w-3 text-indigo-500" aria-hidden />
-      Public URL
-    </span>
-  );
-}
-
-const gradientForIndex = (i: number) => {
-  const g = [
-    'from-emerald-500 to-teal-500',
-    'from-indigo-500 to-purple-500',
-    'from-purple-500 to-pink-500',
-    'from-amber-500 to-orange-500',
-    'from-rose-500 to-pink-500',
-    'from-cyan-500 to-blue-500',
-  ];
-  return g[i % g.length];
-};
-
-export function RepositoryCard({
-  repo,
-  index,
-  detailHref,
-  onRemoved,
-}: {
-  repo: DashboardRepository;
-  index: number;
-  detailHref?: string;
-  /** When set with `detailHref`, shows an actions menu (e.g. remove from tenant list). */
-  onRemoved?: () => void;
-}) {
-  const files = repo.total_files ?? 0;
-  const scanLabel = formatLastScan(repo.last_scanned_at, repo.status === 'error');
-  const grad = gradientForIndex(index);
-
-  const shellClass = cn(
-    'relative isolate rounded-xl border border-gray-200 bg-white p-5 transition-all duration-200 dark:border-gray-700 dark:bg-gray-800',
-    detailHref && 'hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/15'
-  );
-
-  const inner = (
-    <>
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <span
-            className={cn(
-              'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br font-mono text-xs font-bold text-white',
-              grad
-            )}
-          >
-            {repoInitials(repo.name)}
-          </span>
-          <div className="min-w-0">
-            <p className="truncate font-semibold">{repo.name}</p>
-            <p className="truncate font-mono text-2xs text-gray-500 dark:text-gray-400">{repo.full_name}</p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          {/* Health sits before the lifecycle status: "is it fine?" is read first. */}
-          <div className="pointer-events-auto" onPointerDown={(e) => e.stopPropagation()}>
-            <RepositoryHealthBadge health={repo.health} compact />
-          </div>
-          <span
-            className={cn(
-              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider',
-              repositoryStatusClass(repo.status)
-            )}
-          >
-            {repo.status === 'scanning' ? (
-              <Loader2 className="h-3 w-3 shrink-0 animate-spin" aria-hidden />
-            ) : null}
-            {repositoryStatusLabel(repo.status)}
-          </span>
-          {detailHref && onRemoved ? (
-            <div className="pointer-events-auto" onPointerDown={(e) => e.stopPropagation()}>
-              <RepositoryRowMenu
-                repositoryId={repo.id}
-                label={repo.name}
-                onRemoved={onRemoved}
-                triggerClassName="-mr-1"
-              />
-            </div>
-          ) : null}
-        </div>
-      </div>
-      {repo.description ? (
-        <p className="mb-3 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">{repo.description}</p>
-      ) : (
-        <p className="mb-3 text-xs text-gray-400 dark:text-gray-500">No description</p>
-      )}
-      <div className="mb-3 flex flex-wrap items-center gap-3 text-2xs text-gray-500 dark:text-gray-400">
-        <ProviderBadge provider={repo.provider} />
-        <span className="inline-flex items-center gap-1">
-          <GitBranch className="h-3 w-3" aria-hidden />
-          {repo.default_branch}
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <FileCode2 className="h-3 w-3" aria-hidden />
-          {files.toLocaleString()} files
-        </span>
-      </div>
-      <div className="flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-700">
-        <span className="text-2xs text-gray-500 dark:text-gray-400">{scanLabel}</span>
-        <div className="pointer-events-auto" onPointerDown={(e) => e.stopPropagation()}>
-          <RepositoryIndexSnapshot repo={repo} />
-        </div>
-      </div>
-    </>
-  );
-
-  if (detailHref) {
-    return (
-      <div className={shellClass}>
-        <Link
-          href={detailHref}
-          className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/70 focus-visible:ring-offset-2 ring-offset-white dark:ring-offset-gray-900"
-          aria-label={`Open repository ${repo.full_name || repo.name}`}
-        />
-        <div className="relative z-10 pointer-events-none">{inner}</div>
-      </div>
-    );
-  }
-
-  return <div className={shellClass}>{inner}</div>;
-}
-
-export function formatLastScan(iso: string | null | undefined, failed: boolean): string {
+export function formatLastScan(
+  iso: string | null | undefined,
+  failed: boolean,
+  now: number = Date.now(),
+): string {
   if (failed) return 'Scan failed';
   if (!iso) return 'Never scanned';
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return '—';
-  const diff = Date.now() - then;
+  const diff = now - then;
   const m = Math.floor(diff / 60000);
   if (m < 1) return 'just now';
   if (m < 60) return `${m}m ago`;
