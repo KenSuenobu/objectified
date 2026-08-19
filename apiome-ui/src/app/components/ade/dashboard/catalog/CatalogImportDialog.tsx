@@ -9,16 +9,31 @@ import {
   FileUp,
   GitBranch,
   Link2,
-  Loader2,
   SlidersHorizontal,
-  Upload,
   X,
 } from 'lucide-react';
 import { useImportSources } from '../useImportSources';
 import { baseIntakeTiles } from '../importSourceCatalog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../ui/Dialog';
+import { Dialog, DialogContent } from '../../../ui/Dialog';
 import { Button } from '../../../ui/Button';
 import { Alert } from '../../../ui/Alert';
+import { Card } from '../../../ui/Card';
+import { EmptyState } from '../../../ui/EmptyState';
+import { FormField } from '../../../ui/FormField';
+import { Input } from '../../../ui/Input';
+import { Spinner } from '../../../ui/Spinner';
+import { Textarea } from '../../../ui/Textarea';
+import { cn } from '@lib/utils';
+import {
+  CATALOG_IMPORT_STEPS,
+  ImportSourceCards,
+  ImportWizardBody,
+  ImportWizardFooter,
+  ImportWizardHead,
+  ImportWizardSteps,
+  catalogImportFooterFor,
+  catalogRoutingTone,
+} from '../../import';
 import { extractFileMetadata, type FileMetadataPreview } from '../../../../utils/openapi-analyzer';
 import { generateSlug } from '../../../../utils/slug';
 import { FormatPill } from '../../../ui/catalog/FormatPill';
@@ -27,7 +42,6 @@ import {
   decideCatalogImportRouting,
   paradigmForFormat,
   CATALOG_STORABLE_SOURCES,
-  type CatalogImportRoutingDecision,
 } from '../../../../utils/catalog-import-formats';
 import { resolveCatalogProtocol, resolveCatalogFormat } from '../../../../utils/catalog-format-registry';
 import { monacoLanguageForCatalogFormat } from '../../../../utils/catalog-source-language';
@@ -89,11 +103,6 @@ interface GitSkippedMember {
  */
 type Step = 'source' | 'detect' | 'options' | 'quality' | 'import';
 
-/** Rail order, shared by the step chips and the `stepIndex` progress calculation. */
-const STEP_ORDER: readonly Step[] = ['source', 'detect', 'options', 'quality', 'import'];
-
-/** Rail labels, index-aligned with {@link STEP_ORDER}. */
-const STEP_LABELS = ['Source', 'Detect & route', 'Options', 'Quality', 'Import'] as const;
 type ImportState = 'idle' | 'detecting' | 'fetching-url' | 'fetching-git' | 'storing' | 'done';
 type JsonSchemaChoice = 'catalog' | 'types';
 
@@ -158,19 +167,6 @@ function formatPercent(value: number | null | undefined): string {
 
 function formatChoiceLabel(format: string): string {
   return resolveCatalogFormat(format)?.label ?? format;
-}
-
-function routingTone(destination: CatalogImportRoutingDecision['destination']): string {
-  switch (destination) {
-    case 'catalog':
-      return 'border-indigo-200 bg-indigo-50 text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100';
-    case 'project':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100';
-    case 'json-schema-choice':
-      return 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100';
-    default:
-      return 'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200';
-  }
 }
 
 export function CatalogImportDialog({
@@ -720,81 +716,81 @@ export function CatalogImportDialog({
     setArchiveRoot(path.trim() || null);
   }, []);
 
-  const stepIndex = STEP_ORDER.indexOf(step);
   const detected = detection?.detected;
+
+  /*
+   * The footer, as data. Which verb each step carries, whether Back is offered and what
+   * closing costs are `catalogImportFooterFor` — the same shape the Projects importer's
+   * `importFooterFor` produces, so the two wizards' footers cannot drift into two layouts.
+   */
+  const footer = catalogImportFooterFor({
+    step,
+    storing: state === 'storing',
+    done: state === 'done',
+    canContinueFromDetect,
+    adapterUnavailable,
+    destination: routing.destination,
+    canStoreCatalog,
+  });
+
+  /** Back goes one stop up the rail; the rail is the array, so this is its index minus one. */
+  const handleBack = useCallback(() => {
+    setStep((current) => (current === 'options' ? 'detect' : 'source'));
+  }, []);
+
+  const handlePrimary = useCallback(() => {
+    if (step === 'detect') setStep('options');
+    else if (step === 'options') handleContinueFromOptions();
+    else if (step === 'import') handleClose();
+  }, [handleClose, handleContinueFromOptions, step]);
 
   return (
     <Dialog open={open} onOpenChange={(o) => (!o ? handleClose() : undefined)}>
-      {/* Fixed 90vh shell: the header/rail/footer are pinned and each step body owns the space
-          between them, so the detect step's editor can fill it instead of the dialog growing. */}
-      <DialogContent className="flex h-[90vh] max-h-[90vh] max-w-5xl flex-col overflow-hidden">
-        <DialogHeader className="shrink-0">
-          <DialogTitle>Import to catalog</DialogTitle>
-          <DialogDescription>
-            Start with File Upload, URL Import, Clipboard paste, or a Git repository. Catalog
-            imports are stored in their original format and converted only when explicitly
-            requested.
-          </DialogDescription>
-        </DialogHeader>
+      {/* The 6.4 wizard frame (`size="full"` + `.imp-wizard`): head, rail, one scrolling body
+          and a pinned footer. Sharing it is this ticket's acceptance criterion — and it is what
+          gives the detect step's editor a column it can fill instead of the dialog growing. */}
+      <DialogContent size="full" className="imp-wizard">
+        <ImportWizardHead
+          title="Import to catalog"
+          description="File, URL, clipboard or a Git repository. Catalog imports are stored in their original format and converted only when you ask."
+        />
+        <ImportWizardSteps
+          steps={CATALOG_IMPORT_STEPS}
+          current={step}
+          complete={state === 'done'}
+          label="Catalog import progress"
+        />
 
-        <div className="mt-3 grid shrink-0 grid-cols-5 gap-2 text-xs">
-          {STEP_LABELS.map((label, idx) => (
-            <div
-              key={label}
-              className={`rounded-full border px-3 py-1.5 text-center ${
-                idx <= stepIndex
-                  ? 'border-indigo-200 bg-indigo-50 font-medium text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200'
-                  : 'border-gray-200 text-gray-500 dark:border-gray-700 dark:text-gray-400'
-              }`}
-            >
-              {idx + 1}. {label}
-            </div>
-          ))}
-        </div>
+        <ImportWizardBody>
+          {error ? (
+            <Alert variant="danger" className="mb-4">
+              {error}
+            </Alert>
+          ) : null}
 
-        {error && (
-          <Alert variant="error" className="mt-3 shrink-0">
-            {error}
-          </Alert>
-        )}
+          {step === 'source' && (
+            <div className="cat-imp-source">
+              <div className="cat-imp-source__main">
+                <ImportSourceCards
+                  heading="Choose a source"
+                  cards={sourceTiles.map((tile) => tile.card)}
+                  selected={
+                    sourceTiles.find((tile) => tile.method === sourceMethod)?.card.panel ?? null
+                  }
+                  testId={(card) => {
+                    const tile = sourceTiles.find((entry) => entry.card.key === card.key);
+                    return tile ? `catalog-import-source-${tile.method}` : undefined;
+                  }}
+                  onSelect={(panel) => {
+                    const tile = sourceTiles.find((entry) => entry.card.panel === panel);
+                    if (!tile) return;
+                    setSourceMethod(tile.method);
+                    setError(null);
+                  }}
+                />
 
-        {step === 'source' && (
-          <div className="mt-4 grid min-h-0 flex-1 gap-4 overflow-y-auto lg:grid-cols-[1.35fr_.9fr]">
-            <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-                <Upload className="h-4 w-4 text-indigo-500" aria-hidden />
-                Choose a source
-              </div>
-              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700" />
-              <div className="grid gap-2 sm:grid-cols-3">
-                {sourceTiles.map(({ method, card }) => {
-                  const Icon = card.icon;
-                  return (
-                    <button
-                      key={card.key}
-                      type="button"
-                      data-testid={`catalog-import-source-${method}`}
-                      onClick={() => {
-                        setSourceMethod(method);
-                        setError(null);
-                      }}
-                      className={`rounded-lg border p-3 text-center transition ${
-                        sourceMethod === method
-                          ? 'border-indigo-500 bg-indigo-50 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200'
-                      }`}
-                    >
-                      <Icon className="mx-auto mb-2 h-5 w-5" aria-hidden />
-                      <div className="text-sm font-medium">{card.label}</div>
-                      <div className="mt-1 text-2xs text-gray-500 dark:text-gray-400">{card.description}</div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-4">
                 {sourceMethod === 'file' && (
-                  <div
+                  <label
                     onDragOver={(e) => {
                       e.preventDefault();
                       setIsDragging(true);
@@ -806,537 +802,459 @@ export function CatalogImportDialog({
                       const file = e.dataTransfer.files?.[0];
                       if (file) void handleFile(file);
                     }}
-                    className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 text-center ${
-                      isDragging
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
-                        : 'border-gray-300 dark:border-gray-700'
-                    }`}
+                    className={cn('imp-drop', isDragging && 'imp-drop--over')}
                   >
-                    <FileUp className="h-8 w-8 text-gray-400" aria-hidden />
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      Drop a source file here, or browse.
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                      Browse files
-                    </Button>
+                    <span className="tnt-icon-tile imp-drop__glyph" data-tone="accent" aria-hidden>
+                      <FileUp />
+                    </span>
+                    <span className="text-sm text-fg">Drop a source file here, or browse.</span>
+                    <span className="imp-drop__browse">Browse files</span>
                     <input
                       ref={fileInputRef}
                       type="file"
-                      className="hidden"
+                      className="sr-only"
                       accept=".proto,.graphql,.gql,.yaml,.yml,.json,.zip,.tar,.tar.gz,.tgz"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) void handleFile(file);
                       }}
                     />
-                  </div>
+                  </label>
                 )}
 
                 {sourceMethod === 'url' && (
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-200" htmlFor="catalog-import-url">
-                      Document URL
-                    </label>
-                    <input
-                      id="catalog-import-url"
-                      value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
-                      placeholder="https://api.example.com/schema.graphql"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
-                    />
+                  <div className="cat-imp-form">
+                    <FormField label="Document URL" htmlFor="catalog-import-url">
+                      <Input
+                        id="catalog-import-url"
+                        value={urlInput}
+                        onChange={(e) => setUrlInput(e.target.value)}
+                        placeholder="https://api.example.com/schema.graphql"
+                      />
+                    </FormField>
                     <Button onClick={handleUrlFetch} disabled={state === 'fetching-url'}>
-                      {state === 'fetching-url' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
+                      {state === 'fetching-url' ? <Spinner aria-hidden /> : <Link2 aria-hidden />}
                       Fetch and detect
                     </Button>
                   </div>
                 )}
 
                 {sourceMethod === 'paste' && (
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-200" htmlFor="catalog-import-paste">
-                      Source content
-                    </label>
-                    <textarea
-                      id="catalog-import-paste"
-                      value={pasteText}
-                      onChange={(e) => setPasteText(e.target.value)}
-                      placeholder="Paste GraphQL SDL, .proto, AsyncAPI, or JSON Schema content..."
-                      rows={9}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs dark:border-gray-700 dark:bg-gray-950"
-                    />
+                  <div className="cat-imp-form">
+                    <FormField label="Source content" htmlFor="catalog-import-paste">
+                      <Textarea
+                        id="catalog-import-paste"
+                        value={pasteText}
+                        onChange={(e) => setPasteText(e.target.value)}
+                        placeholder="Paste GraphQL SDL, .proto, AsyncAPI, or JSON Schema content..."
+                        rows={9}
+                        className="mono"
+                      />
+                    </FormField>
                     <Button onClick={handlePasteDetect}>
-                      <Clipboard className="h-4 w-4" aria-hidden />
+                      <Clipboard aria-hidden />
                       Detect pasted source
                     </Button>
                   </div>
                 )}
 
-                {/* Git selection (MFI-29.3): a repository path or glob at a ref, read server-side
-                    at an immutable commit and imported as a multi-file selection. */}
+                {/* Git selection (MFI-29.3): a repository path or glob at a ref, read
+                    server-side at an immutable commit and imported as a multi-file selection. */}
                 {sourceMethod === 'git' && (
-                  <div className="space-y-3" data-testid="catalog-import-git-panel">
-                    <div className="space-y-1">
-                      <label
-                        className="text-sm font-medium text-gray-700 dark:text-gray-200"
-                        htmlFor="catalog-import-git-repo"
-                      >
-                        Repository URL
-                      </label>
-                      <input
+                  <div className="cat-imp-form" data-testid="catalog-import-git-panel">
+                    <FormField label="Repository URL" htmlFor="catalog-import-git-repo">
+                      <Input
                         id="catalog-import-git-repo"
                         value={gitRepoUrl}
                         onChange={(e) => setGitRepoUrl(e.target.value)}
                         placeholder="https://github.com/owner/repo"
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
                       />
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1">
-                        <label
-                          className="text-sm font-medium text-gray-700 dark:text-gray-200"
-                          htmlFor="catalog-import-git-ref"
-                        >
-                          Branch, tag, or commit
-                        </label>
-                        <input
+                    </FormField>
+                    <div className="cat-imp-form__pair">
+                      <FormField label="Branch, tag, or commit" htmlFor="catalog-import-git-ref">
+                        <Input
                           id="catalog-import-git-ref"
                           value={gitRef}
                           onChange={(e) => setGitRef(e.target.value)}
                           placeholder="default branch"
-                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
                         />
-                      </div>
-                      <div className="space-y-1">
-                        <label
-                          className="text-sm font-medium text-gray-700 dark:text-gray-200"
-                          htmlFor="catalog-import-git-path"
-                        >
-                          Path or glob
-                        </label>
-                        <input
+                      </FormField>
+                      <FormField label="Path or glob" htmlFor="catalog-import-git-path">
+                        <Input
                           id="catalog-import-git-path"
                           value={gitPath}
                           onChange={(e) => setGitPath(e.target.value)}
                           placeholder="protos/**"
-                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
                         />
-                      </div>
+                      </FormField>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="cat-imp-note">
                       Private repositories are read with your linked account credentials. Leave the
                       path empty to consider the whole repository.
                     </p>
                     <Button onClick={handleGitFetch} disabled={state === 'fetching-git'}>
-                      {state === 'fetching-git' ? (
-                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                      ) : (
-                        <GitBranch className="h-4 w-4" aria-hidden />
-                      )}
+                      {state === 'fetching-git' ? <Spinner aria-hidden /> : <GitBranch aria-hidden />}
                       Fetch and detect
                     </Button>
                   </div>
                 )}
-              </div>
-            </div>
 
-            <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-                <GitBranch className="h-4 w-4 text-indigo-500" aria-hidden />
-                Destination guide
+                {/* IXH-6.3: paginated recent import jobs on the source step (bounded list). */}
+                <RecentAsyncJobsPanel kind="import" limit={5} />
               </div>
-              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700" />
-              <div className="space-y-3 text-sm">
-                <div>
-                  <div className="font-medium">Catalog only</div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {supportedLabel} stay non-publishable until explicit Convert.
-                  </p>
-                </div>
-                <div>
-                  <div className="font-medium">Projects</div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    OpenAPI, Swagger, and Arazzo create publishable Project versions.
-                  </p>
-                </div>
-                <div>
-                  <div className="font-medium">JSON Schema asks first</div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Choose Catalog for later conversion or Types/Projects as current schema.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Detect & route: a column of pinned detection facts above a flex-filling source editor.
-            `overflow-y-auto` is the safety valve for short viewports — the editor stops at its
-            240px floor and the column scrolls rather than spilling out of the 90vh dialog. */}
-        {step === 'detect' && (
-          <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-            <div className="flex shrink-0 items-center justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-              <div className="flex min-w-0 items-center gap-2">
-                <FileCode className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
-                <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{fileName}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FormatPill format={effectiveFormat === 'unknown' ? null : effectiveFormat} />
-                <button
-                  type="button"
-                  onClick={reset}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                  aria-label="Choose a different source"
-                >
-                  <X className="h-4 w-4" aria-hidden />
-                </button>
-              </div>
+              <Card className="cat-imp-guide">
+                <h2 className="imp-heading">
+                  <GitBranch aria-hidden />
+                  Destination guide
+                </h2>
+                <dl className="cat-imp-guide__list">
+                  <dt>Catalog only</dt>
+                  <dd>{supportedLabel} stay non-publishable until explicit Convert.</dd>
+                  <dt>Projects</dt>
+                  <dd>OpenAPI, Swagger, and Arazzo create publishable Project versions.</dd>
+                  <dt>JSON Schema asks first</dt>
+                  <dd>Choose Catalog for later conversion or Types/Projects as current schema.</dd>
+                </dl>
+              </Card>
             </div>
+          )}
 
-            <div className="shrink-0 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {formatOverride && formatOverride !== detectedFormat
-                  ? `Import format: ${formatChoiceLabel(effectiveFormat ?? '')}`
-                  : `Auto-detected: ${detected?.format || metadata?.formatDisplayName || 'Unknown'}`}
+          {/* Detect & route: a column of pinned detection facts above a flex-filling source
+              editor. The body already scrolls, so the editor stops at its floor and the column
+              scrolls rather than spilling out of the dialog. */}
+          {step === 'detect' && (
+            <div className="cat-imp-detect">
+              <div className="cat-imp-file">
+                <span className="cat-imp-file__name">
+                  <FileCode aria-hidden />
+                  <span className="truncate">{fileName}</span>
+                </span>
+                <span className="cat-imp-file__end">
+                  <FormatPill format={effectiveFormat === 'unknown' ? null : effectiveFormat} />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="px-1.5"
+                    onClick={reset}
+                    aria-label="Choose a different source"
+                  >
+                    <X aria-hidden />
+                  </Button>
+                </span>
               </div>
-              {formatOverride && formatOverride !== detectedFormat && detectedFormat && (
-                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Auto-detected {formatChoiceLabel(detectedFormat)} ({formatPercent(detected?.confidence)})
+
+              <Card className="cat-imp-card">
+                <div className="cat-imp-card__title">
+                  {formatOverride && formatOverride !== detectedFormat
+                    ? `Import format: ${formatChoiceLabel(effectiveFormat ?? '')}`
+                    : `Auto-detected: ${detected?.format || metadata?.formatDisplayName || 'Unknown'}`}
+                </div>
+                {formatOverride && formatOverride !== detectedFormat && detectedFormat && (
+                  <div className="cat-imp-note">
+                    Auto-detected {formatChoiceLabel(detectedFormat)} ({formatPercent(detected?.confidence)})
+                  </div>
+                )}
+                <div className="cat-imp-note">
+                  {formatPercent(
+                    formatChoices.find((c) => c.format === effectiveFormat)?.confidence ??
+                      detected?.confidence,
+                  )}
+                  {paradigmLabel ? ` · paradigm ${paradigmLabel}` : ''}
+                  {detected?.reason && !formatOverride ? ` · ${detected.reason}` : ''}
+                </div>
+              </Card>
+
+              {/* Bulk mode (MFI-29.5): the payload holds several independent specs, so the
+                  single routing decision below does not describe it. Importing them all runs one
+                  ordinary import per spec and reports each one separately. */}
+              {bulkPlan && bulkSource && (
+                <CatalogBulkImportBanner
+                  plan={bulkPlan}
+                  onStart={() => {
+                    setError(null);
+                    setBulkMode(true);
+                    setStep('import');
+                  }}
+                />
+              )}
+
+              {/* Git provenance (MFI-29.3): what the selection actually resolved to — the commit
+                  the files were read at, the root document, and anything deliberately skipped. */}
+              {gitSource && (
+                <Card className="cat-imp-card" data-testid="catalog-import-git-provenance">
+                  <div className="cat-imp-card__title">
+                    <GitBranch aria-hidden />
+                    {gitSource.repo_url}
+                  </div>
+                  <div className="cat-imp-note">
+                    {gitSource.ref} · commit {gitSource.commit_sha.slice(0, 7)}
+                    {gitSource.path ? ` · ${gitSource.path}` : ''}
+                  </div>
+                  <div className="cat-imp-note">
+                    {gitMembers.length} file{gitMembers.length === 1 ? '' : 's'} selected · root{' '}
+                    {archiveRoot ?? '—'}
+                    {gitSkipped.length > 0 ? ` · ${gitSkipped.length} skipped` : ''}
+                  </div>
+                  {gitSkipped.length > 0 && (
+                    <details className="cat-imp-skipped">
+                      <summary>Show skipped files</summary>
+                      <ul>
+                        {gitSkipped.map((item) => (
+                          <li key={item.path}>
+                            {item.path} — {item.reason}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </Card>
+              )}
+
+              {formatChoices.length > 1 && (
+                <div data-testid="format-override-select">
+                  <FormField
+                    label="Import as format"
+                    htmlFor="catalog-import-format-override"
+                    helperText="Detection matched more than one format. Override the assumed format if the top match is wrong."
+                  >
+                    <select
+                      id="catalog-import-format-override"
+                      value={effectiveFormat ?? ''}
+                      onChange={(event) => setFormatOverride(event.target.value)}
+                      className="hive-control imp-select"
+                    >
+                      {formatChoices.map((candidate) => (
+                        <option key={candidate.format} value={candidate.format}>
+                          {formatChoiceLabel(candidate.format)} ({formatPercent(candidate.confidence)})
+                        </option>
+                      ))}
+                    </select>
+                  </FormField>
                 </div>
               )}
-              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {formatPercent(
-                  formatChoices.find((c) => c.format === effectiveFormat)?.confidence ?? detected?.confidence,
-                )}
-                {paradigmLabel ? ` · paradigm ${paradigmLabel}` : ''}
-                {detected?.reason && !formatOverride ? ` · ${detected.reason}` : ''}
-              </div>
-            </div>
 
-            {/* Bulk mode (MFI-29.5): the payload holds several independent specs, so the single
-                routing decision below does not describe it. Importing them all runs one ordinary
-                import per spec and reports each one separately. */}
-            {bulkPlan && bulkSource && (
-              <CatalogBulkImportBanner
-                plan={bulkPlan}
-                onStart={() => {
-                  setError(null);
-                  setBulkMode(true);
-                  setStep('import');
-                }}
-              />
-            )}
+              {ambiguousCandidates.length > 0 && (
+                <Alert variant="warn" data-testid="detect-ambiguous">
+                  <div className="font-medium">
+                    Ambiguous source — using {formatChoiceLabel(effectiveFormat ?? 'the selected format')}
+                  </div>
+                  <div className="text-sm">
+                    This could also be{' '}
+                    {ambiguousCandidates
+                      .map((c) => `${formatChoiceLabel(c.format)} (${formatPercent(c.confidence)})`)
+                      .join(', ')}
+                    .
+                  </div>
+                </Alert>
+              )}
 
-            {/* Git provenance (MFI-29.3): what the selection actually resolved to — the commit
-                the files were read at, the root document, and anything deliberately skipped. */}
-            {gitSource && (
+              {/* The routing decision. Its tone is the shared status vocabulary — accent for the
+                  catalog, ok for the publishable route, warn for the fork that asks a question,
+                  neutral for the dead end — rather than four hand-written palette quads. */}
               <div
-                className="shrink-0 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
-                data-testid="catalog-import-git-provenance"
+                className="cat-imp-routing"
+                data-tone={catalogRoutingTone(routing.destination)}
+                data-testid="catalog-import-routing"
               >
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  <GitBranch className="h-4 w-4 text-indigo-500" aria-hidden />
-                  {gitSource.repo_url}
-                </div>
-                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {gitSource.ref} · commit {gitSource.commit_sha.slice(0, 7)}
-                  {gitSource.path ? ` · ${gitSource.path}` : ''}
-                </div>
-                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {gitMembers.length} file{gitMembers.length === 1 ? '' : 's'} selected · root{' '}
-                  {archiveRoot ?? '—'}
-                  {gitSkipped.length > 0 ? ` · ${gitSkipped.length} skipped` : ''}
-                </div>
-                {gitSkipped.length > 0 && (
-                  <details className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    <summary className="cursor-pointer">Show skipped files</summary>
-                    <ul className="mt-1 space-y-0.5">
-                      {gitSkipped.map((item) => (
-                        <li key={item.path}>
-                          {item.path} — {item.reason}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-              </div>
-            )}
-
-            {formatChoices.length > 1 && (
-              <div className="shrink-0 space-y-2" data-testid="format-override-select">
-                <label
-                  className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                  htmlFor="catalog-import-format-override"
-                >
-                  Import as format
-                </label>
-                <select
-                  id="catalog-import-format-override"
-                  value={effectiveFormat ?? ''}
-                  onChange={(event) => setFormatOverride(event.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
-                >
-                  {formatChoices.map((candidate) => (
-                    <option key={candidate.format} value={candidate.format}>
-                      {formatChoiceLabel(candidate.format)} ({formatPercent(candidate.confidence)})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Detection matched more than one format. Override the assumed format if the top match
-                  is wrong.
-                </p>
-              </div>
-            )}
-
-            {ambiguousCandidates.length > 0 && (
-              <Alert variant="warning" className="shrink-0" data-testid="detect-ambiguous">
-                <div className="font-medium">
-                  Ambiguous source — using {formatChoiceLabel(effectiveFormat ?? 'the selected format')}
-                </div>
-                <div className="text-sm">
-                  This could also be{' '}
-                  {ambiguousCandidates
-                    .map((c) => `${formatChoiceLabel(c.format)} (${formatPercent(c.confidence)})`)
-                    .join(', ')}
-                  .
-                </div>
-              </Alert>
-            )}
-
-            <div className={`shrink-0 rounded-lg border p-4 ${routingTone(routing.destination)}`}>
-              <div className="flex items-start gap-2">
                 {routing.destination === 'not-importable' ? (
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  <AlertTriangle aria-hidden />
                 ) : (
-                  <GitBranch className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  <GitBranch aria-hidden />
                 )}
                 <div>
-                  <div className="text-sm font-semibold">Routing decision → {routing.label}</div>
-                  <div className="mt-1 text-xs opacity-90">{routing.description}</div>
+                  <div className="cat-imp-routing__title">Routing decision → {routing.label}</div>
+                  <div className="cat-imp-routing__body">{routing.description}</div>
                   {adapterUnavailable && (
-                    <div className="mt-2 text-xs font-medium">
+                    <div className="cat-imp-routing__note">
                       {unavailableReason || `${adapter?.label} import is unavailable in this runtime.`}
                     </div>
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* The imported bytes, syntax-highlighted read-only in Monaco through the shared
-                {@link ReadOnlyCodeViewer} (MFX-43.1) — the same viewer the catalog detail's
-                Source & Code tab and the export surfaces use, so highlighting, theming and the
-                offline `<pre>` fallback are all inherited rather than re-derived. The language is
-                the detected/overridden format mapped through `monacoLanguageForCatalogFormat`, so
-                switching the format override re-highlights the preview. Archive uploads carry no
-                text (only base64 bytes), so they get a note instead of an empty editor. */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-              {content ? (
-                <ReadOnlyCodeViewer
-                  value={content}
-                  language={previewLanguage}
-                  height="100%"
-                  wordWrap="off"
-                  className="h-full"
-                  editorTestId="catalog-import-preview-editor"
-                  fallbackTestId="catalog-import-preview-fallback"
+              {/* The imported bytes, syntax-highlighted read-only in Monaco through the shared
+                  {@link ReadOnlyCodeViewer} (MFX-43.1) — the same viewer the catalog detail's
+                  Source & Code tab and the export surfaces use, so highlighting, theming and the
+                  offline `<pre>` fallback are all inherited rather than re-derived. The language
+                  is the detected/overridden format mapped through
+                  `monacoLanguageForCatalogFormat`, so switching the override re-highlights the
+                  preview. Archive uploads carry no text (only base64 bytes), so they get a note
+                  instead of an empty editor. */}
+              <div className="cat-imp-preview">
+                {content ? (
+                  <ReadOnlyCodeViewer
+                    value={content}
+                    language={previewLanguage}
+                    height="100%"
+                    wordWrap="off"
+                    className="h-full"
+                    editorTestId="catalog-import-preview-editor"
+                    fallbackTestId="catalog-import-preview-fallback"
+                  />
+                ) : (
+                  <p className="cat-imp-preview__empty" data-testid="catalog-import-preview-empty">
+                    {gitSource
+                      ? 'Repository selections have no single text document to preview. Detection ran over the selected files.'
+                      : documentBase64
+                        ? 'Archive uploads have no single text document to preview. Detection ran over the archive contents.'
+                        : 'No source content to preview.'}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {step === 'options' && (
+            <div className="cat-imp-options">
+              {routing.destination === 'catalog' && (
+                <Alert variant="info">
+                  <div className="font-medium">Store in catalog</div>
+                  <div className="text-sm">
+                    This source will be kept verbatim as {adapter?.label}. It will not create a
+                    Project or auto-convert to OpenAPI. Continue to review its quality score before
+                    anything is written.
+                  </div>
+                </Alert>
+              )}
+              {routing.destination === 'json-schema-choice' && (
+                <fieldset className="cat-imp-choice">
+                  <legend className="imp-heading">
+                    Choose where this JSON Schema should go.
+                  </legend>
+                  <label className="cat-imp-choice__option">
+                    <input
+                      type="radio"
+                      name="jsonSchemaChoice"
+                      className="imp-check"
+                      checked={jsonSchemaChoice === 'catalog'}
+                      onChange={() => setJsonSchemaChoice('catalog')}
+                    />
+                    <span>
+                      <span className="cat-imp-choice__title">Catalog for later conversion</span>
+                      <span className="cat-imp-choice__desc">
+                        Stored verbatim as a non-publishable, schemas-only catalog item — converted
+                        only when you explicitly request it.
+                      </span>
+                    </span>
+                  </label>
+                  <label className="cat-imp-choice__option">
+                    <input
+                      type="radio"
+                      name="jsonSchemaChoice"
+                      className="imp-check"
+                      checked={jsonSchemaChoice === 'types'}
+                      onChange={() => setJsonSchemaChoice('types')}
+                    />
+                    <span>
+                      <span className="cat-imp-choice__title">Types/Projects as current schema</span>
+                      <span className="cat-imp-choice__desc">
+                        Opens the existing type import review with this schema preloaded.
+                      </span>
+                    </span>
+                  </label>
+                </fieldset>
+              )}
+
+              {/* JSON Schema is the only format that asks the user anything here (Catalog vs
+                  Types/Projects). Every other route reaches this step with nothing to configure,
+                  so the otherwise-empty panel says so rather than reading as a rendering
+                  failure. */}
+              {!hasImportOptions && (
+                <EmptyState
+                  variant="compact"
+                  tone="neutral"
+                  icon={<SlidersHorizontal />}
+                  title="No additional options"
+                  description="Nothing to configure for this data type. Continue to the quality pre-flight — nothing is written to the catalog until you confirm it there."
+                  data-testid="catalog-import-no-options"
                 />
-              ) : (
-                <div
-                  data-testid="catalog-import-preview-empty"
-                  className="flex h-full items-center justify-center p-6 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  {gitSource
-                    ? 'Repository selections have no single text document to preview. Detection ran over the selected files.'
-                    : documentBase64
-                      ? 'Archive uploads have no single text document to preview. Detection ran over the archive contents.'
-                      : 'No source content to preview.'}
-                </div>
               )}
             </div>
-          </div>
-        )}
+          )}
 
-        {step === 'options' && (
-          <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-            {routing.destination === 'catalog' && (
-              <Alert variant="info" className="shrink-0">
-                <div className="font-medium">Store in catalog</div>
-                <div className="text-sm">
-                  This source will be kept verbatim as {adapter?.label}. It will not create a
-                  Project or auto-convert to OpenAPI. Continue to review its quality score before
-                  anything is written.
-                </div>
-              </Alert>
-            )}
-            {routing.destination === 'json-schema-choice' && (
-              <div className="shrink-0 space-y-3">
-                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Choose where this JSON Schema should go.
-                </div>
-                <label className="flex gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                  <input
-                    type="radio"
-                    name="jsonSchemaChoice"
-                    checked={jsonSchemaChoice === 'catalog'}
-                    onChange={() => setJsonSchemaChoice('catalog')}
-                  />
-                  <span>
-                    <span className="block text-sm font-medium">Catalog for later conversion</span>
-                    <span className="block text-xs text-gray-500 dark:text-gray-400">
-                      Stored verbatim as a non-publishable, schemas-only catalog item — converted
-                      only when you explicitly request it.
-                    </span>
-                  </span>
-                </label>
-                <label className="flex gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                  <input
-                    type="radio"
-                    name="jsonSchemaChoice"
-                    checked={jsonSchemaChoice === 'types'}
-                    onChange={() => setJsonSchemaChoice('types')}
-                  />
-                  <span>
-                    <span className="block text-sm font-medium">Types/Projects as current schema</span>
-                    <span className="block text-xs text-gray-500 dark:text-gray-400">
-                      Opens the existing type import review with this schema preloaded.
-                    </span>
-                  </span>
-                </label>
-              </div>
-            )}
+          {step === 'quality' && (
+            <CatalogImportQualityStep
+              documentBase64={documentBase64 ?? toBase64(content)}
+              label={fileName || 'Imported source'}
+              sourceKind={commitSourceKind}
+              inputKind={sourceMethod === 'git' ? 'fileset' : sourceMethod}
+              archiveRoot={archiveRoot}
+              onArchiveRootChange={handleArchiveRootChange}
+              url={sourceMethod === 'url' ? fileName : null}
+              rawSource={content}
+              autoAdvance={skipQualityStep}
+              skipPreference={skipQualityStep}
+              onSkipPreferenceChange={handleSkipPreferenceChange}
+              onCommit={handleQualityCommit}
+              onBack={() => setStep('options')}
+              onCancel={handleClose}
+              projectSlug={importSlug}
+            />
+          )}
 
-            {/* JSON Schema is the only format that asks the user anything here (Catalog vs
-                Types/Projects). Every other route reaches this step with nothing to configure, so
-                the otherwise-empty panel says so rather than reading as a rendering failure. */}
-            {!hasImportOptions && (
-              <div className="flex flex-1 items-center justify-center">
-                <div
-                  data-testid="catalog-import-no-options"
-                  className="max-w-lg rounded-xl border border-dashed border-gray-300 bg-gray-50 p-10 text-center dark:border-gray-700 dark:bg-gray-900"
-                >
-                  <SlidersHorizontal className="mx-auto h-8 w-8 text-gray-400" aria-hidden />
-                  <h3 className="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    No additional options
-                  </h3>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    No additional options are available for this data type. Continue to the quality
-                    pre-flight — nothing is written to the catalog until you confirm it there.
+          {step === 'import' && bulkMode && bulkPlan && bulkSource && (
+            <CatalogBulkImportPanel
+              plan={bulkPlan}
+              source={bulkSource}
+              onSuccess={() => {
+                setState('done');
+                onSuccess?.();
+              }}
+            />
+          )}
+
+          {step === 'import' && !bulkMode && (
+            <div className="cat-imp-terminal">
+              {state === 'done' ? (
+                <>
+                  <span className="tnt-icon-tile" data-tone="ok" aria-hidden>
+                    <CheckCircle2 />
+                  </span>
+                  <p>
+                    Stored in the catalog in its original format. Use{' '}
+                    <strong>Convert to OpenAPI</strong> when ready.
                   </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+                </>
+              ) : (
+                <>
+                  <Spinner size="lg" aria-hidden />
+                  <p role="status">Storing source in catalog…</p>
+                </>
+              )}
+            </div>
+          )}
+        </ImportWizardBody>
 
-        {step === 'quality' && (
-          <CatalogImportQualityStep
-            documentBase64={documentBase64 ?? toBase64(content)}
-            label={fileName || 'Imported source'}
-            sourceKind={commitSourceKind}
-            inputKind={sourceMethod === 'git' ? 'fileset' : sourceMethod}
-            archiveRoot={archiveRoot}
-            onArchiveRootChange={handleArchiveRootChange}
-            url={sourceMethod === 'url' ? fileName : null}
-            rawSource={content}
-            autoAdvance={skipQualityStep}
-            skipPreference={skipQualityStep}
-            onSkipPreferenceChange={handleSkipPreferenceChange}
-            onCommit={handleQualityCommit}
-            onBack={() => setStep('options')}
-            onCancel={handleClose}
-            projectSlug={importSlug}
-          />
-        )}
-
-        {step === 'import' && bulkMode && bulkPlan && bulkSource && (
-          <CatalogBulkImportPanel
-            plan={bulkPlan}
-            source={bulkSource}
-            onSuccess={() => {
-              setState('done');
-              onSuccess?.();
-            }}
-          />
-        )}
-
-        {step === 'import' && !bulkMode && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
-            {state === 'done' ? (
-              <>
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500 text-white">
-                  <CheckCircle2 className="h-7 w-7" aria-hidden />
-                </div>
-                <div className="text-sm text-gray-700 dark:text-gray-200">
-                  Stored in the catalog in its original format. Use <strong>Convert to OpenAPI</strong> when ready.
-                </div>
-              </>
-            ) : (
-              <>
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" aria-hidden />
-                <div className="text-sm text-gray-700 dark:text-gray-200">Storing source in catalog…</div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* IXH-6.3: paginated recent import jobs on the source step (bounded list). */}
-        {step === 'source' && (
-          <RecentAsyncJobsPanel kind="import" limit={5} className="mt-4 shrink-0" />
-        )}
-
-        {/* The quality step owns its own footer so all three of its exits — Cancel, Import anyway,
-            Import — sit on one row with the gate that governs them (IXH-2.2). */}
+        {/* The quality step owns its own footer so all three of its exits — Cancel, Import
+            anyway, Import — sit on one row with the gate that governs them (IXH-2.2). */}
         {step !== 'quality' && (
-          <div className="mt-4 flex shrink-0 justify-between gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
-            <div className="flex items-center gap-4">
-              <Button variant="outline" onClick={handleClose} disabled={state === 'storing'}>
-                {state === 'done' ? 'Close' : 'Cancel'}
-              </Button>
-              {/* The skip preference must stay reachable *outside* the quality step: with it on, a
-                  non-blocking pre-flight auto-commits, so the step's own checkbox flashes past too
-                  fast to uncheck — the preference would otherwise be a one-way switch. Options is
-                  the last stop before the quality step on every catalog route, so it is where the
-                  preference can always be turned back off. Hidden on the JSON Schema → Types
-                  hand-off, which never reaches the quality step at all. */}
-              {step === 'options' && commitSourceKind !== null && (
-                <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+          <ImportWizardFooter
+            footer={footer}
+            onBack={handleBack}
+            onCancel={handleClose}
+            onPrimary={handlePrimary}
+            extra={
+              /* The skip preference must stay reachable *outside* the quality step: with it on,
+                 a non-blocking pre-flight auto-commits, so the step's own checkbox flashes past
+                 too fast to uncheck — the preference would otherwise be a one-way switch.
+                 Options is the last stop before the quality step on every catalog route, so it
+                 is where the preference can always be turned back off. Hidden on the JSON
+                 Schema → Types hand-off, which never reaches the quality step at all. */
+              step === 'options' && commitSourceKind !== null ? (
+                <label className="cat-imp-skip">
                   <input
                     type="checkbox"
+                    className="imp-check"
                     checked={skipQualityStep}
                     onChange={(event) => handleSkipPreferenceChange(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
                     data-testid="catalog-import-options-skip-preference"
                   />
                   Skip the quality step for clean imports
                 </label>
-              )}
-            </div>
-            <div className="flex gap-2">
-              {step !== 'source' && step !== 'import' && (
-                <Button variant="outline" onClick={() => setStep(step === 'options' ? 'detect' : 'source')}>
-                  Back
-                </Button>
-              )}
-              {step === 'detect' && (
-                <Button onClick={() => setStep('options')} disabled={!canContinueFromDetect || adapterUnavailable}>
-                  Continue
-                </Button>
-              )}
-              {step === 'options' && (routing.destination === 'catalog' || routing.destination === 'json-schema-choice') && (
-                <Button
-                  onClick={handleContinueFromOptions}
-                  disabled={
-                    routing.destination === 'catalog' && (!canStoreCatalog || state === 'storing')
-                  }
-                >
-                  Continue
-                </Button>
-              )}
-              {step === 'import' && state === 'done' && (
-                <Button onClick={handleClose}>Done</Button>
-              )}
-            </div>
-          </div>
+              ) : undefined
+            }
+          />
         )}
       </DialogContent>
     </Dialog>

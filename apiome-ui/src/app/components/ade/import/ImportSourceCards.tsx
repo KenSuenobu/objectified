@@ -31,6 +31,17 @@ export interface ImportSourceCardsProps {
   selected: string | null;
   /** Called with the card's panel id when a usable card is pressed. */
   onSelect: (panel: string) => void;
+  /** The grid's heading. Defaults to the Projects importer's. */
+  heading?: string;
+  /**
+   * A `data-testid` per card.
+   *
+   * The Catalog importer (HIVE-7.1, #5318) names its tiles by *intake method* rather than by
+   * panel — `catalog-import-source-paste` — because that is the axis its own suites drive it
+   * on. Supplying the id from the caller is what lets the two wizards share this grid instead
+   * of the Catalog keeping a copy of it.
+   */
+  testId?: (card: ImportSourceCard) => string | undefined;
 }
 
 /**
@@ -46,11 +57,17 @@ export interface ImportSourceCardsProps {
  * @param props See {@link ImportSourceCardsProps}.
  * @returns The source grid.
  */
-export function ImportSourceCards({ cards, selected, onSelect }: ImportSourceCardsProps) {
+export function ImportSourceCards({
+  cards,
+  selected,
+  onSelect,
+  heading = IMPORT_WIZARD_COPY.sourceHeading,
+  testId,
+}: ImportSourceCardsProps) {
   return (
     <section aria-labelledby="imp-source-heading" className="flex flex-col gap-3">
       <h2 id="imp-source-heading" className="imp-heading">
-        {IMPORT_WIZARD_COPY.sourceHeading}
+        {heading}
       </h2>
       <div className="imp-cards">
         {cards.map((card) => {
@@ -62,6 +79,7 @@ export function ImportSourceCards({ cards, selected, onSelect }: ImportSourceCar
               key={card.key}
               type="button"
               disabled={disabled}
+              data-testid={testId?.(card)}
               aria-pressed={disabled ? undefined : active}
               title={disabled ? IMPORT_WIZARD_COPY.comingSoon : undefined}
               onClick={() => card.panel && onSelect(card.panel)}

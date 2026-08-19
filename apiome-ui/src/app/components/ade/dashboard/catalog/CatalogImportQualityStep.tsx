@@ -50,7 +50,8 @@ import { Button } from '../../../ui/Button';
 import { Alert } from '../../../ui/Alert';
 import { getNumericScoreTier } from '@/app/utils/numeric-score-tier';
 import { gaugeDashOffset } from '@/app/utils/catalog-lint-panel';
-import { gradeChipClass, severityBadgeClass } from '@/app/utils/version-lint-report';
+import { STATUS_TONE_SOFT_CLASS, statusTone } from '../../../ui/statusVocabulary';
+import { gradeBand } from '../../../ui/statusVocabulary';
 import {
   buildImportQualityWaiver,
   decidePreflightGate,
@@ -168,7 +169,7 @@ function GradeOrb({ score, grade }: { score: number | null; grade: string | null
             cy="20"
             r={GAUGE_R}
             fill="none"
-            className="stroke-gray-200 dark:stroke-gray-700"
+            className="stroke-border"
             strokeWidth="3.5"
           />
           {hasScore && (
@@ -189,21 +190,23 @@ function GradeOrb({ score, grade }: { score: number | null; grade: string | null
           <span
             className={cn(
               'font-mono text-2xl font-bold leading-none tabular-nums',
-              hasScore ? tier.textClass : 'text-gray-400 dark:text-gray-500',
+              hasScore ? tier.textClass : 'text-fg-subtle',
             )}
             data-testid="import-quality-grade"
           >
             {letter}
           </span>
-          <span className="mt-1 font-mono text-2xs tabular-nums text-gray-500 dark:text-gray-400">
+          <span className="mt-1 font-mono text-2xs tabular-nums text-fg-muted">
             {hasScore ? `${score}/100` : 'unscored'}
           </span>
         </div>
       </div>
+      {/* The A–F band is the shared vocabulary's (HIVE-7.1, #5318), so this grade is the same
+          colour as the one the catalog list will show once the item is stored. */}
       <span
         className={cn(
-          'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold',
-          gradeChipClass(letter),
+          'inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold',
+          gradeBand(letter).solidClass,
         )}
       >
         Grade {letter}
@@ -250,28 +253,28 @@ function FindingRow({
         data-testid="import-quality-finding"
         className={cn(
           'flex h-full w-full flex-col justify-center gap-1 rounded-lg border px-3 text-left motion-safe:transition',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent',
           selected
-            ? 'border-indigo-400 bg-indigo-50 dark:border-indigo-600 dark:bg-indigo-950/40'
-            : 'border-gray-200 bg-white hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-950',
+            ? 'border-accent bg-accent-soft'
+            : 'border-border bg-surface hover:border-accent',
         )}
       >
         <div className="flex items-center gap-2">
-          <span className="font-mono text-2xs tabular-nums text-gray-400">#{finding.rank}</span>
+          <span className="font-mono text-2xs tabular-nums text-fg-subtle">#{finding.rank}</span>
           <span
             className={cn(
               'inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-semibold uppercase',
-              severityBadgeClass(finding.severity),
+              STATUS_TONE_SOFT_CLASS[statusTone(finding.severity)],
             )}
           >
             {finding.severity}
           </span>
-          <span className="truncate font-mono text-2xs text-gray-500 dark:text-gray-400">
+          <span className="truncate font-mono text-2xs text-fg-muted">
             {finding.rule}
           </span>
         </div>
-        <div className="truncate text-sm text-gray-800 dark:text-gray-100">{finding.message}</div>
-        <div className="truncate font-mono text-2xs text-gray-500 dark:text-gray-400">
+        <div className="truncate text-sm text-fg">{finding.message}</div>
+        <div className="truncate font-mono text-2xs text-fg-muted">
           {finding.path || 'document root'}
           {line !== null ? ` · line ${line}` : ''}
         </div>
@@ -557,8 +560,8 @@ export function CatalogImportQualityStep({
           className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center"
           data-testid="import-quality-loading"
         >
-          <Loader2 className="h-8 w-8 motion-safe:animate-spin text-indigo-500" aria-hidden />
-          <div className="text-sm text-gray-700 dark:text-gray-200">
+          <Loader2 className="h-8 w-8 motion-safe:animate-spin text-accent" aria-hidden />
+          <div className="text-sm text-fg">
             Scoring this source before import — nothing has been written yet.
           </div>
         </div>
@@ -567,15 +570,15 @@ export function CatalogImportQualityStep({
           {/* Pinned gate facts. These are what the footer's exits are decided by, so they never
               move behind a tab — only the two tall exploration surfaces below do. */}
           <div className="shrink-0 space-y-3">
-            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border p-4">
               <GradeOrb
                 score={typeof report?.lint?.score === 'number' ? report.lint.score : null}
                 grade={report?.lint?.grade ?? null}
               />
               <div className="min-w-[16rem] flex-1 space-y-2">
                 <div className="flex items-center gap-2">
-                  <FileSearch className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
-                  <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <FileSearch className="h-4 w-4 shrink-0 text-fg-subtle" aria-hidden />
+                  <span className="truncate text-sm font-medium text-fg">
                     {label}
                   </span>
                 </div>
@@ -585,7 +588,7 @@ export function CatalogImportQualityStep({
                       key={row.severity}
                       className={cn(
                         'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium',
-                        severityBadgeClass(row.severity),
+                        STATUS_TONE_SOFT_CLASS[statusTone(row.severity)],
                       )}
                     >
                       <span className="tabular-nums">{row.count}</span> {row.severity}
@@ -593,7 +596,7 @@ export function CatalogImportQualityStep({
                   ))}
                 </div>
                 {report?.style_guide && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400" data-testid="import-quality-style-guide">
+                  <div className="text-xs text-fg-muted" data-testid="import-quality-style-guide">
                     Style guide: <span className="font-medium">{report.style_guide.name}</span> (
                     {report.style_guide.source})
                   </div>
@@ -603,8 +606,8 @@ export function CatalogImportQualityStep({
                     className={cn(
                       'text-xs font-medium',
                       comparison.meets
-                        ? 'text-emerald-700 dark:text-emerald-400'
-                        : 'text-rose-700 dark:text-rose-400',
+                        ? 'text-ok-fg'
+                        : 'text-danger-fg',
                     )}
                     data-testid="import-quality-threshold"
                   >
@@ -612,7 +615,7 @@ export function CatalogImportQualityStep({
                     {comparison.delta >= 0 ? `+${comparison.delta}` : comparison.delta})
                   </div>
                 ) : (
-                  <div className="text-xs text-gray-500 dark:text-gray-400" data-testid="import-quality-threshold">
+                  <div className="text-xs text-fg-muted" data-testid="import-quality-threshold">
                     No policy score threshold applies to this import.
                   </div>
                 )}
@@ -640,12 +643,12 @@ export function CatalogImportQualityStep({
             </Alert>
 
             {gate.tone === 'block' && gate.canOverride && (
-              <div className="space-y-2 rounded-lg border border-amber-300 p-3 dark:border-amber-700">
+              <div className="space-y-2 rounded-lg border border-warn p-3">
                 <label
-                  className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                  className="flex items-center gap-2 text-sm font-medium text-fg"
                   htmlFor="import-quality-justification"
                 >
-                  <ShieldAlert className="h-4 w-4 text-amber-500" aria-hidden />
+                  <ShieldAlert className="h-4 w-4 text-warn" aria-hidden />
                   Why is this import necessary?
                 </label>
                 <input
@@ -653,9 +656,9 @@ export function CatalogImportQualityStep({
                   value={justification}
                   onChange={(event) => setJustification(event.target.value)}
                   placeholder="Recorded with the waiver, e.g. vendor spec we do not control"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
+                  className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm"
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-fg-muted">
                   Importing anyway records a waiver against this report&apos;s fingerprint in your
                   tenant&apos;s ledger
                   {report?.policy?.override_roles?.length
@@ -664,7 +667,7 @@ export function CatalogImportQualityStep({
                 </p>
                 {waiverError && (
                   <p
-                    className="text-xs font-medium text-rose-600 dark:text-rose-400"
+                    className="text-xs font-medium text-danger"
                     data-testid="import-quality-waiver-error"
                     role="alert"
                   >
@@ -702,10 +705,10 @@ export function CatalogImportQualityStep({
                   <div>
                     {findings.length > 0 ? (
                       <>
-                        <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+                        <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-fg">
                           <span>Ranked findings ({findings.length})</span>
                           {virtualized && (
-                            <span className="font-normal normal-case text-gray-500 dark:text-gray-400">
+                            <span className="font-normal normal-case text-fg-muted">
                               windowed
                             </span>
                           )}
@@ -714,7 +717,7 @@ export function CatalogImportQualityStep({
                           ref={listRef}
                           onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
                           onKeyDown={handleListKeyDown}
-                          className="h-[380px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+                          className="h-[380px] overflow-y-auto rounded-lg border border-border"
                         >
                           {/* No inter-row margins: the row pitch must equal ROW_HEIGHT exactly
                               or the windowing spacer arithmetic drifts on every row. */}
@@ -768,7 +771,7 @@ export function CatalogImportQualityStep({
                         </div>
                         {findings[selectedIndex]?.remediation && (
                           <p
-                            className="mt-2 text-xs text-gray-600 dark:text-gray-300"
+                            className="mt-2 text-xs text-fg-muted"
                             data-testid="import-quality-finding-remediation"
                           >
                             {findings[selectedIndex].remediation}
@@ -778,7 +781,7 @@ export function CatalogImportQualityStep({
                       </>
                     ) : report?.ok ? (
                       <div
-                        className="flex items-center gap-2 rounded-lg border border-emerald-200 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:text-emerald-200"
+                        className="flex items-center gap-2 rounded-lg border border-ok p-3 text-sm text-ok-fg"
                         data-testid="import-quality-no-findings"
                       >
                         <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
@@ -788,18 +791,18 @@ export function CatalogImportQualityStep({
                   </div>
 
                   <div>
-                    <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg">
                       Source{selectedLine !== null ? ` · line ${selectedLine}` : ''}
                     </div>
                     <div
-                      className="h-[380px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+                      className="h-[380px] overflow-auto rounded-lg border border-border bg-subtle"
                       data-testid="import-quality-raw-viewer"
                     >
                       {rawLines.length > 0 ? (
                         <>
                           {rawRange.start > 0 && (
                             <p
-                              className="px-3 py-1 font-mono text-2xs text-gray-400 dark:text-gray-500"
+                              className="px-3 py-1 font-mono text-2xs text-fg-subtle"
                               data-testid="import-quality-raw-clipped-before"
                             >
                               … {rawRange.start.toLocaleString()} earlier{' '}
@@ -818,11 +821,11 @@ export function CatalogImportQualityStep({
                                   className={cn(
                                     'flex gap-3 px-3',
                                     isTarget
-                                      ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                      : 'text-gray-700 dark:text-gray-300',
+                                      ? 'bg-accent-soft text-accent-fg'
+                                      : 'text-fg',
                                   )}
                                 >
-                                  <span className="w-8 shrink-0 select-none text-right text-gray-400 tabular-nums">
+                                  <span className="w-8 shrink-0 select-none text-right text-fg-subtle tabular-nums">
                                     {lineNumber}
                                   </span>
                                   <span className="whitespace-pre-wrap break-all">{text}</span>
@@ -832,7 +835,7 @@ export function CatalogImportQualityStep({
                           </ol>
                           {rawRange.end < rawAllLines.length && (
                             <p
-                              className="px-3 py-1 font-mono text-2xs text-gray-400 dark:text-gray-500"
+                              className="px-3 py-1 font-mono text-2xs text-fg-subtle"
                               data-testid="import-quality-raw-clipped-after"
                             >
                               … {(rawAllLines.length - rawRange.end).toLocaleString()} later{' '}
@@ -841,7 +844,7 @@ export function CatalogImportQualityStep({
                           )}
                         </>
                       ) : (
-                        <p className="p-3 text-xs text-gray-500 dark:text-gray-400">
+                        <p className="p-3 text-xs text-fg-muted">
                           The raw source is not available for this candidate (archives are read
                           server-side), so findings link by path only.
                         </p>
@@ -853,7 +856,7 @@ export function CatalogImportQualityStep({
 
               {report?.ok && findings.length === 0 && rawSource === '' && (
                 <div
-                  className="flex items-center gap-2 rounded-lg border border-emerald-200 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:text-emerald-200"
+                  className="flex items-center gap-2 rounded-lg border border-ok p-3 text-sm text-ok-fg"
                   data-testid="import-quality-no-findings"
                 >
                   <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
@@ -901,17 +904,17 @@ export function CatalogImportQualityStep({
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
         <div className="flex items-center gap-4">
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+          <label className="flex items-center gap-2 text-xs text-fg-muted">
             <input
               type="checkbox"
               checked={skipPreference}
               onChange={(event) => onSkipPreferenceChange(event.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+              className="h-4 w-4 rounded border-border-strong"
             />
             Skip this step for clean imports
           </label>

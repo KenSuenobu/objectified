@@ -11,7 +11,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, jest, beforeEach, afterEach } from '@jest/globals';
 
@@ -114,11 +114,21 @@ describe('CatalogImportDialog — quality step (IXH-2.2)', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/import/sources', expect.anything()),
     );
 
-    expect(screen.getByText('1. Source')).toBeInTheDocument();
-    expect(screen.getByText('2. Detect & route')).toBeInTheDocument();
-    expect(screen.getByText('3. Options')).toBeInTheDocument();
-    expect(screen.getByText('4. Quality')).toBeInTheDocument();
-    expect(screen.getByText('5. Import')).toBeInTheDocument();
+    // The rail is the shared `ui/Stepper` since HIVE-7.1 (#5318) — the number is the step's
+    // own marker, drawn beside the label rather than inside it.
+    const rail = screen.getByRole('list', { name: 'Catalog import progress' });
+    expect(
+      within(rail)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent?.replace(/\s+/g, ' ').trim())
+        .filter((text) => text),
+    ).toEqual([
+      '1SourceStep 1 of 5',
+      '2Detect & routeNot started',
+      '3OptionsNot started',
+      '4QualityNot started',
+      '5ImportNot started',
+    ]);
   });
 
   it('renders the pre-flight report without committing, then imports on confirm', async () => {
@@ -167,7 +177,7 @@ describe('CatalogImportDialog — quality step (IXH-2.2)', () => {
     // Back on options: the routing decision the detect step made is still in force…
     expect(screen.getByText(/Store in catalog/i)).toBeInTheDocument();
     // …and Back again reaches the detect step with the detected format intact.
-    fireEvent.click(screen.getByRole('button', { name: /^back$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /back$/i }));
     expect(screen.getByText(/Auto-detected:/i)).toBeInTheDocument();
     expect(screen.getByText(/Routing decision → Catalog/i)).toBeInTheDocument();
     expect(recordedCalls(fetchMock).some((c) => c.url === '/api/catalog/import')).toBe(false);

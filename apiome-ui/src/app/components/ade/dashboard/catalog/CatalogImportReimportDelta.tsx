@@ -113,15 +113,15 @@ export function CatalogImportReimportDelta({
 
   return (
     <section
-      className="space-y-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+      className="space-y-3 rounded-lg border border-border p-3"
       data-testid="import-reimport-delta"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <GitCompareArrows className="h-4 w-4 shrink-0 text-indigo-500" aria-hidden />
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+        <GitCompareArrows className="h-4 w-4 shrink-0 text-accent" aria-hidden />
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-fg">
           Re-import delta
         </h4>
-        <span className="text-2xs text-gray-500 dark:text-gray-400">
+        <span className="text-2xs text-fg-muted">
           against <span className="font-medium">{targetLabel}</span>
           {delta.current_version_record_id ? ' (current revision)' : ''}
         </span>
@@ -138,7 +138,7 @@ export function CatalogImportReimportDelta({
         <div
           role="status"
           data-testid="import-reimport-noop"
-          className="flex flex-wrap items-center gap-3 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-xs text-sky-900 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200"
+          className="flex flex-wrap items-center gap-3 rounded-lg border border-accent bg-accent-soft px-3 py-2 text-xs text-accent-fg"
         >
           <CircleSlash className="h-4 w-4 shrink-0" aria-hidden />
           <span className="min-w-0 flex-1">
@@ -155,7 +155,7 @@ export function CatalogImportReimportDelta({
       ) : (
         <>
           <p
-            className="text-2xs text-gray-500 dark:text-gray-400"
+            className="text-2xs text-fg-muted"
             data-testid="import-reimport-classifier"
           >
             {graded ? (
@@ -191,7 +191,7 @@ export function CatalogImportReimportDelta({
               return (
                 <div
                   key={group.family}
-                  className="rounded-lg border border-gray-100 dark:border-gray-800"
+                  className="rounded-lg border border-border"
                   data-testid={`import-reimport-family-${group.family}`}
                 >
                   <button
@@ -202,17 +202,17 @@ export function CatalogImportReimportDelta({
                   >
                     <ChevronRight
                       className={cn(
-                        'h-3.5 w-3.5 shrink-0 text-gray-400 motion-safe:transition-transform',
+                        'h-3.5 w-3.5 shrink-0 text-fg-subtle motion-safe:transition-transform',
                         open && 'rotate-90',
                       )}
                       aria-hidden
                     />
-                    <span className="font-semibold text-gray-800 dark:text-gray-100">
+                    <span className="font-semibold text-fg">
                       {group.label}
                     </span>
                     {windowed && (
                       <span
-                        className="text-2xs font-normal text-gray-500 dark:text-gray-400"
+                        className="text-2xs font-normal text-fg-muted"
                         data-testid="import-reimport-windowed"
                       >
                         windowed
@@ -303,7 +303,7 @@ function FamilyEntriesList({
 
   return (
     <div
-      className={cn('border-t border-gray-100 px-2.5 py-1.5 dark:border-gray-800', windowed && 'overflow-y-auto')}
+      className={cn('border-t border-border px-2.5 py-1.5', windowed && 'overflow-y-auto')}
       style={windowed ? { height: viewportHeight } : undefined}
       onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
       tabIndex={windowed ? 0 : undefined}
@@ -362,12 +362,12 @@ function DeltaEntryRow({
           onClick={() => onRevealEntity?.(entry.key)}
           onFocus={onFocusRow}
           data-testid="import-reimport-reveal"
-          className="max-w-72 truncate font-mono text-indigo-600 underline decoration-dotted underline-offset-2 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+          className="max-w-72 truncate font-mono text-accent underline decoration-dotted underline-offset-2 hover:text-accent-fg"
         >
           {entry.key || '(document root)'}
         </button>
       ) : (
-        <span className="max-w-72 truncate font-mono text-gray-700 dark:text-gray-200">
+        <span className="max-w-72 truncate font-mono text-fg">
           {entry.key || '(document root)'}
         </span>
       )}
@@ -383,7 +383,7 @@ function DeltaEntryRow({
         </span>
       ) : null}
       {entry.rationale ? (
-        <span className="min-w-0 flex-1 truncate text-2xs text-gray-500 dark:text-gray-400">
+        <span className="min-w-0 flex-1 truncate text-2xs text-fg-muted">
           {entry.rationale}
         </span>
       ) : null}

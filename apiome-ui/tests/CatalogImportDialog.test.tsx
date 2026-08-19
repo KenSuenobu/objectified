@@ -113,8 +113,9 @@ describe('CatalogImportDialog — source grid (MFI-26.1)', () => {
     fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
     await waitFor(() => expect(screen.getByText(/kept verbatim/i)).toBeInTheDocument());
 
-    // Step back to Detect & route.
-    fireEvent.click(screen.getByRole('button', { name: /^back$/i }));
+    // Step back to Detect & route. The verb is the shared wizard footer's `← Back`
+    // (HIVE-7.1, #5318): the two importers draw one footer now.
+    fireEvent.click(screen.getByRole('button', { name: /back$/i }));
     await waitFor(() => expect(screen.getByText(/Auto-detected:/i)).toBeInTheDocument());
   });
 
@@ -141,6 +142,6 @@ describe('CatalogImportDialog — source grid (MFI-26.1)', () => {
     expect(
       await screen.findByRole('heading', { name: 'No additional options' }),
     ).toBeInTheDocument();
-    expect(card).toHaveTextContent('No additional options are available for this data type');
+    expect(card).toHaveTextContent('Nothing to configure for this data type');
   });
 });

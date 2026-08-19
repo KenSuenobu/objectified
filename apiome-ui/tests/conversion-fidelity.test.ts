@@ -8,7 +8,7 @@
 import {
   cleanDefaults,
   commitConversion,
-  coverageBadgeClass,
+  coverageTone,
   coverageLabel,
   fetchConversionDryRun,
   normalizeServers,
@@ -62,14 +62,18 @@ describe('tierWarning', () => {
 });
 
 describe('coverage presentation', () => {
-  it('maps every coverage tag to a non-empty badge class', () => {
-    for (const c of ['present', 'inferred', 'partial', 'missing', 'n/a'] as const) {
-      expect(coverageBadgeClass(c)).toBeTruthy();
-    }
+  // HIVE-7.1 (#5318): a coverage tag resolves to a *tone* from the shared status vocabulary,
+  // not to a hand-written class triple, so the badge follows all nine themes.
+  it('maps every coverage tag to a status tone', () => {
+    expect(coverageTone('present')).toBe('ok');
+    expect(coverageTone('inferred')).toBe('accent');
+    expect(coverageTone('partial')).toBe('warn');
+    expect(coverageTone('missing')).toBe('danger');
+    expect(coverageTone('n/a')).toBe('neutral');
   });
 
-  it('falls back gracefully for an unknown tag', () => {
-    expect(coverageBadgeClass('bogus')).toContain('gray');
+  it('falls back to neutral for an unknown tag, rather than borrowing another tag colour', () => {
+    expect(coverageTone('bogus')).toBe('neutral');
   });
 
   it('labels n/a as having no OpenAPI form', () => {

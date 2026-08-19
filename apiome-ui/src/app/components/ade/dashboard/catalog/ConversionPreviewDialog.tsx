@@ -38,18 +38,21 @@ import {
   DialogTitle,
   DialogDescription,
 } from '../../../ui/Dialog';
+import { Alert } from '../../../ui/Alert';
+import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
+import { gradeBand } from '../../../ui/statusVocabulary';
+import { cn } from '@lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../ui/Tabs';
 import {
   cleanDefaults,
   commitConversion,
-  coverageBadgeClass,
   coverageLabel,
+  coverageTone,
   fetchConversionDryRun,
-  gradeChipClass,
   partitionChecklist,
-  tierBannerClass,
-  tierPillClass,
+  tierBannerVariant,
+  tierTone,
   tierWarning,
   type ChecklistItem,
   type ConversionDefaults,
@@ -67,7 +70,7 @@ function OfflineOpenApiFallback({ value }: { value?: string }) {
   return (
     <pre
       data-testid="conversion-raw-content"
-      className="h-full overflow-auto whitespace-pre-wrap break-words p-3 font-mono text-xs leading-5 text-gray-800 dark:text-gray-200"
+      className="h-full overflow-auto whitespace-pre-wrap break-words p-3 font-mono text-xs leading-5 text-fg"
     >
       {value ?? ''}
     </pre>
@@ -82,7 +85,7 @@ const MonacoEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex h-full items-center justify-center text-sm text-fg-muted">
         Loading preview…
       </div>
     ),
@@ -105,21 +108,17 @@ interface ConversionPreviewDialogProps {
 /** One checklist row rendered as a compact card: construct name, coverage badge, count, reason, examples. */
 function ChecklistRow({ item }: { item: ChecklistItem }) {
   return (
-    <li className="rounded-md border border-gray-200 p-2.5 dark:border-gray-700" data-testid="conversion-checklist-row">
+    <li className="rounded-md border border-border p-2.5" data-testid="conversion-checklist-row">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.title}</span>
-        <span
-          className={`shrink-0 rounded px-1.5 py-0.5 text-2xs font-semibold ${coverageBadgeClass(
-            item.coverage
-          )}`}
-        >
+        <span className="text-sm font-medium text-fg">{item.title}</span>
+        <Badge status={coverageTone(item.coverage)} className="shrink-0">
           {coverageLabel(item.coverage)}
           {item.count > 0 ? ` · ${item.count}` : ''}
-        </span>
+        </Badge>
       </div>
-      <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">{item.reason}</p>
+      <p className="mt-1 text-xs text-fg-muted">{item.reason}</p>
       {item.examples.length > 0 && (
-        <p className="mt-1 truncate font-mono text-2xs text-gray-400 dark:text-gray-500" title={item.examples.join(', ')}>
+        <p className="mt-1 truncate font-mono text-2xs text-fg-subtle" title={item.examples.join(', ')}>
           {item.examples.join(', ')}
         </p>
       )}
@@ -130,18 +129,17 @@ function ChecklistRow({ item }: { item: ChecklistItem }) {
 /** One projection loss rendered as a compact card: subject, kind badge, detail. */
 function LossRow({ loss }: { loss: Loss }) {
   return (
-    <li className="rounded-md border border-gray-200 p-2.5 dark:border-gray-700" data-testid="conversion-loss-row">
+    <li className="rounded-md border border-border p-2.5" data-testid="conversion-loss-row">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-xs font-medium text-gray-900 dark:text-gray-100">{loss.subject}</span>
-        <span
-          className={`shrink-0 rounded px-1.5 py-0.5 text-2xs font-semibold ${coverageBadgeClass(
-            loss.kind === 'n/a' ? 'n/a' : 'inferred'
-          )}`}
+        <span className="font-mono text-xs font-medium text-fg">{loss.subject}</span>
+        <Badge
+          status={coverageTone(loss.kind === 'n/a' ? 'n/a' : 'inferred')}
+          className="shrink-0"
         >
           {loss.kind === 'n/a' ? 'no OpenAPI form' : 'inferred'}
-        </span>
+        </Badge>
       </div>
-      <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">{loss.detail}</p>
+      <p className="mt-1 text-xs text-fg-muted">{loss.detail}</p>
     </li>
   );
 }
@@ -326,18 +324,18 @@ export function ConversionPreviewDialog({
 
         {loading ? (
           <p
-            className="py-8 text-center text-sm text-gray-500 dark:text-gray-400"
+            className="py-8 text-center text-sm text-fg-muted"
             data-testid="conversion-preview-loading"
           >
             Analyzing conversion fidelity…
           </p>
         ) : error || !report ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center" data-testid="conversion-preview-error">
-            <p className="text-sm text-gray-600 dark:text-gray-300">{error || 'Conversion preview unavailable.'}</p>
+            <p className="text-sm text-fg-muted">{error || 'Conversion preview unavailable.'}</p>
             <button
               type="button"
               onClick={retry}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-fg transition-colors hover:bg-subtle"
             >
               Retry
             </button>
@@ -346,40 +344,33 @@ export function ConversionPreviewDialog({
           <>
             {/* Header: grade + score + tier + penalty */}
             <div className="flex flex-wrap items-center gap-3">
-              <span
-                className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-lg font-bold ${gradeChipClass(
-                  report.grade
-                )}`}
-              >
+              {/* The A–F band comes from the shared vocabulary, so this letter is the same
+                  colour as the one on the card the click came from. */}
+              <span className={cn('cnv-grade', gradeBand(report.grade).solidClass)}>
                 {report.grade}
               </span>
-              <span className="text-sm text-gray-600 dark:text-gray-300">
+              <span className="text-sm text-fg-muted">
                 Fidelity <span className="font-semibold">{report.score}</span>/100
               </span>
-              <span
-                className={`rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-wider ${tierPillClass(
-                  report.tier
-                )}`}
-                data-testid="conversion-tier-pill"
-              >
+              <Badge status={tierTone(report.tier)} data-testid="conversion-tier-pill">
                 {report.tier} fidelity
-              </span>
+              </Badge>
               {report.penalty > 0 && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">−{report.penalty} penalty</span>
+                <span className="text-xs text-fg-muted">−{report.penalty} penalty</span>
               )}
             </div>
 
             {/* Mandatory warning banner — strength scales with tier */}
             {warning && (
-              <div
-                className={`mt-3 rounded-lg border px-4 py-3 ${tierBannerClass(warning.severity)}`}
+              <Alert
+                variant={tierBannerVariant(warning.severity)}
+                className="mt-3"
                 data-testid="conversion-warning-banner"
                 data-severity={warning.severity}
-                role="alert"
               >
                 <p className="text-sm font-semibold">{warning.heading}</p>
                 <p className="mt-1 text-xs">{warning.body}</p>
-              </div>
+              </Alert>
             )}
 
             {/* Tabbed body: summary / projection graph / conversion. The list stays put;
@@ -409,12 +400,12 @@ export function ConversionPreviewDialog({
                 <TabsContent value="summary" data-testid="conversion-summary-tab-content">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <section data-testid="conversion-provided-column">
-                  <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <h3 className="mb-2 text-sm font-semibold text-fg">
                     What the source provides
-                    <span className="ml-1 font-normal text-gray-400">({provided.length})</span>
+                    <span className="ml-1 font-normal text-fg-subtle">({provided.length})</span>
                   </h3>
                   {provided.length === 0 ? (
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-fg-muted">
                       The source carries nothing directly onto OpenAPI.
                     </p>
                   ) : (
@@ -427,14 +418,14 @@ export function ConversionPreviewDialog({
                 </section>
 
                 <section data-testid="conversion-missing-column">
-                  <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <h3 className="mb-2 text-sm font-semibold text-fg">
                     What OpenAPI favors but is missing
-                    <span className="ml-1 font-normal text-gray-400">
+                    <span className="ml-1 font-normal text-fg-subtle">
                       ({missing.length + report.losses.length})
                     </span>
                   </h3>
                   {missing.length === 0 && report.losses.length === 0 ? (
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-fg-muted">
                       No gaps — this source covers the OpenAPI constructs it can.
                     </p>
                   ) : (
@@ -451,44 +442,44 @@ export function ConversionPreviewDialog({
               </div>
 
               {/* Optional inline defaults to close cheap gaps before committing */}
-              <section className="mt-4 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Fill cheap gaps <span className="font-normal text-gray-400">(optional)</span>
+              <section className="mt-4 rounded-lg border border-border p-3">
+                <h3 className="text-sm font-semibold text-fg">
+                  Fill cheap gaps <span className="font-normal text-fg-subtle">(optional)</span>
                 </h3>
-                <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-0.5 text-xs text-fg-muted">
                   Values you supply here flow into the converted spec, closing gaps the source did not carry.
                 </p>
                 <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <label className="flex flex-col gap-1 text-xs text-gray-600 dark:text-gray-300">
+                  <label className="flex flex-col gap-1 text-xs text-fg-muted">
                     Title
                     <input
                       type="text"
                       value={defaults.title ?? ''}
                       onChange={(e) => setDefaults((d) => ({ ...d, title: e.target.value }))}
                       placeholder={itemName}
-                      className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                      className="rounded-md border border-border-strong bg-surface px-2 py-1 text-sm text-fg"
                       data-testid="conversion-default-title"
                     />
                   </label>
-                  <label className="flex flex-col gap-1 text-xs text-gray-600 dark:text-gray-300">
+                  <label className="flex flex-col gap-1 text-xs text-fg-muted">
                     Version
                     <input
                       type="text"
                       value={defaults.version ?? ''}
                       onChange={(e) => setDefaults((d) => ({ ...d, version: e.target.value }))}
                       placeholder="1.0.0"
-                      className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                      className="rounded-md border border-border-strong bg-surface px-2 py-1 text-sm text-fg"
                       data-testid="conversion-default-version"
                     />
                   </label>
-                  <label className="flex flex-col gap-1 text-xs text-gray-600 dark:text-gray-300">
-                    Servers <span className="text-gray-400">(comma-separated)</span>
+                  <label className="flex flex-col gap-1 text-xs text-fg-muted">
+                    Servers <span className="text-fg-subtle">(comma-separated)</span>
                     <input
                       type="text"
                       value={serversText}
                       onChange={(e) => setServersText(e.target.value)}
                       placeholder="https://api.example.com"
-                      className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                      className="rounded-md border border-border-strong bg-surface px-2 py-1 text-sm text-fg"
                       data-testid="conversion-default-servers"
                     />
                   </label>
@@ -501,11 +492,11 @@ export function ConversionPreviewDialog({
                       onClick={() => void recompute({ ...defaults, servers: serversText.split(',') })}
                       disabled={recomputing}
                       data-testid="conversion-defaults-recompute"
-                      className="rounded-md border border-indigo-300 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                      className="rounded-md border border-accent px-2 py-1 text-xs font-medium text-accent-fg hover:bg-accent-soft disabled:opacity-50"
                     >
                       {recomputing ? 'Recomputing…' : 'Apply & recompute preview'}
                     </button>
-                    <span className="text-2xs text-gray-500 dark:text-gray-400">
+                    <span className="text-2xs text-fg-muted">
                       Recomputes the fidelity report and the projection graph together, and asks
                       for acknowledgement again.
                     </span>
@@ -513,7 +504,7 @@ export function ConversionPreviewDialog({
                 )}
                 {recomputeError && (
                   <p
-                    className="mt-2 text-xs text-rose-600 dark:text-rose-400"
+                    className="mt-2 text-xs text-danger"
                     data-testid="conversion-recompute-error"
                   >
                     The preview could not be recomputed — it still shows the previous defaults.{' '}
@@ -553,7 +544,7 @@ export function ConversionPreviewDialog({
                 >
                   {result?.openapi != null ? (
                     <div
-                      className="min-h-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
+                      className="min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-surface dark:bg-[#1e1e1e]"
                       data-testid="conversion-raw-preview"
                     >
                       <MonacoEditor
@@ -583,7 +574,7 @@ export function ConversionPreviewDialog({
                     </div>
                   ) : (
                     <p
-                      className="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
+                      className="rounded-lg border border-dashed border-border px-3 py-4 text-xs text-fg-subtle"
                       data-testid="conversion-raw-empty"
                     >
                       The dry run returned no OpenAPI document to preview.
@@ -594,21 +585,21 @@ export function ConversionPreviewDialog({
             </Tabs>
 
             {/* Footer: acknowledgement (low tier) + commit error + actions */}
-            <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+            <div className="mt-3 border-t border-border pt-3">
               {ackNeeded && warning && (
-                <label className="mb-3 flex items-start gap-2 text-sm text-gray-700 dark:text-gray-200">
+                <label className="mb-3 flex items-start gap-2 text-sm text-fg">
                   <input
                     type="checkbox"
                     checked={acknowledged}
                     onChange={(e) => setAcknowledged(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    className="mt-0.5 h-4 w-4 rounded border-border-strong text-accent focus:ring-accent"
                     data-testid="conversion-ack"
                   />
                   <span>{warning.ackLabel}</span>
                 </label>
               )}
               {commitError && (
-                <p className="mb-2 text-sm text-rose-600 dark:text-rose-400" data-testid="conversion-commit-error">
+                <p className="mb-2 text-sm text-danger" data-testid="conversion-commit-error">
                   {commitError}
                 </p>
               )}

@@ -33,6 +33,16 @@ import {
 export interface ImportWizardHeadProps {
   /** Extra controls for the head's trailing edge — the *Recent import jobs* trigger. */
   actions?: React.ReactNode;
+  /**
+   * The dialog's title. Defaults to the Projects importer's.
+   *
+   * The Catalog runs a second importer over the alternative formats (MFI-23.12) whose steps
+   * and copy differ but whose *frame* is this one — HIVE-7.1's acceptance criterion is that
+   * it shares this component rather than carrying a copy of it.
+   */
+  title?: React.ReactNode;
+  /** The sentence under the title. Defaults to the Projects importer's. */
+  description?: React.ReactNode;
 }
 
 /**
@@ -41,15 +51,19 @@ export interface ImportWizardHeadProps {
  * @param props See {@link ImportWizardHeadProps}.
  * @returns The header row.
  */
-export function ImportWizardHead({ actions }: ImportWizardHeadProps) {
+export function ImportWizardHead({
+  actions,
+  title = IMPORT_WIZARD_COPY.title,
+  description = IMPORT_WIZARD_COPY.description,
+}: ImportWizardHeadProps) {
   return (
     <DialogHeader className="imp-wizard__head">
       <span className="tnt-icon-tile" data-tone="accent" aria-hidden>
         <Upload />
       </span>
       <div className="imp-wizard__heading">
-        <DialogTitle>{IMPORT_WIZARD_COPY.title}</DialogTitle>
-        <DialogDescription>{IMPORT_WIZARD_COPY.description}</DialogDescription>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription>{description}</DialogDescription>
       </div>
       {actions ? <div className="imp-wizard__head-actions">{actions}</div> : null}
     </DialogHeader>
@@ -57,27 +71,52 @@ export function ImportWizardHead({ actions }: ImportWizardHeadProps) {
 }
 
 export interface ImportWizardStepsProps {
-  /** Where the wizard is. */
-  step: ImportWizardStep;
+  /** Where the Projects wizard is. Ignored when {@link ImportWizardStepsProps.steps} is given. */
+  step?: ImportWizardStep;
+  /**
+   * A different rail — the Catalog importer's five stops (MFI-23.12), which are not the
+   * Projects importer's.
+   *
+   * Given together with {@link ImportWizardStepsProps.current}; the two wizards then share
+   * this row, the `Stepper` inside it and the hairline it sits on, and differ only in what
+   * the stops are called.
+   */
+  steps?: ReadonlyArray<{ id: string; label: string }>;
+  /** The current stop's id, when `steps` is supplied. */
+  current?: string;
+  /** Every stop reads as complete — the terminal state of either rail. */
+  complete?: boolean;
+  /** The progress row's accessible name. */
+  label?: string;
 }
 
 /**
- * The five-stop progress row.
+ * The progress row.
  *
- * `Done` is the terminal stop rather than a sixth position, so on that step every stop reads as
- * complete — `Stepper`'s `complete` flag, which exists for exactly this shape.
+ * With no `steps` it draws the Projects importer's five stops from the wizard's internal
+ * position, where `Done` is the terminal stop rather than a sixth — `Stepper`'s `complete`
+ * flag, which exists for exactly that shape. With `steps` it draws whatever rail it is handed,
+ * which is how the Catalog importer reuses the frame.
  *
  * @param props See {@link ImportWizardStepsProps}.
  * @returns The stepper on its own row.
  */
-export function ImportWizardSteps({ step }: ImportWizardStepsProps) {
+export function ImportWizardSteps({
+  step,
+  steps,
+  current,
+  complete,
+  label = 'Import progress',
+}: ImportWizardStepsProps) {
+  const rail = steps ?? IMPORT_WIZARD_STEPS;
+  const at = steps ? current : step ? stepperIdFor(step) : undefined;
   return (
     <div className="imp-wizard__steps">
       <Stepper
-        aria-label="Import progress"
-        steps={IMPORT_WIZARD_STEPS}
-        current={stepperIdFor(step)}
-        complete={step === 'done'}
+        aria-label={label}
+        steps={rail}
+        current={at}
+        complete={complete ?? (steps ? false : step === 'done')}
       />
     </div>
   );

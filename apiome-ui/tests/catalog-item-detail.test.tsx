@@ -609,7 +609,7 @@ describe('CatalogItemDetailClient', () => {
     expect(order!.className).toContain('ring-2'); // transient deep-link highlight
   });
 
-  it('colors each entity tag per its kind (QUERY blue, MUTATION amber, OBJECT emerald)', async () => {
+  it('colors each entity tag per its kind (QUERY accent, MUTATION warn, OBJECT ok)', async () => {
     mockFetchItem(PARSED_ITEM);
     render(<CatalogItemDetailClient itemId={PARSED_ITEM.id} />);
 
@@ -617,9 +617,10 @@ describe('CatalogItemDetailClient', () => {
     const byTag = new Map(
       screen.getAllByTestId('catalog-detail-parsed-tag').map((el) => [el.textContent, el.className]),
     );
-    expect(byTag.get('QUERY')).toContain('bg-blue-100');
-    expect(byTag.get('MUTATION')).toContain('bg-amber-100');
-    expect(byTag.get('OBJECT')).toContain('bg-emerald-100');
+    // HIVE-7.1 (#5318) resolves the tag palette through the shared status vocabulary.
+    expect(byTag.get('QUERY')).toContain('bg-accent-soft');
+    expect(byTag.get('MUTATION')).toContain('bg-warn-soft');
+    expect(byTag.get('OBJECT')).toContain('bg-ok-soft');
   });
 
   it('derives the summaryNote sub-line from the parsed groups under the count boxes', async () => {

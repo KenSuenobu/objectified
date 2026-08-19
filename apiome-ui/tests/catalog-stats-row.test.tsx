@@ -1,5 +1,6 @@
 /**
- * Render tests for the Catalog stats row (MFI-24.1, #4081).
+ * Render tests for the Catalog stats row (MFI-24.1, #4081; re-skinned onto `ui/metrics`'
+ * `StatGrid` in HIVE-7.1, #5318).
  *
  * Confirms the four metric cards render from a fixture list and that the numbers shown match what
  * {@link computeCatalogStats} derives — cataloged items with active/disabled sub-badges, average
@@ -9,7 +10,7 @@ import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import { CatalogStatsRow } from '../src/app/components/ade/dashboard/catalog/CatalogStatsRow';
+import { CatalogStatsRow } from '../src/app/components/ade/catalog';
 import type { CatalogStatsItem } from '../src/app/utils/catalog-dashboard-stats';
 
 function item(partial: Partial<CatalogStatsItem> = {}): CatalogStatsItem {
@@ -50,8 +51,10 @@ describe('CatalogStatsRow', () => {
   it('shows average quality as letter · score', () => {
     render(<CatalogStatsRow items={FIXTURE} />);
     const card = screen.getByTestId('catalog-stat-quality');
-    // mean of the 3 live scores (92, 88, 70) = 83 -> grade B
-    expect(within(card).getByText('B · 83')).toBeInTheDocument();
+    // mean of the 3 live scores (92, 88, 70) = 83 -> grade B. The letter and the score are two
+    // elements now (the score is a quiet `<small>` beside the band-tinted letter), so the
+    // assertion is on the tile's text rather than on one node.
+    expect(card.textContent).toContain('B· 83');
   });
 
   it('shows the distinct format count and a sample badge', () => {

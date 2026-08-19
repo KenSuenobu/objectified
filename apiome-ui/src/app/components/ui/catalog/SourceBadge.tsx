@@ -30,8 +30,16 @@ export interface SourceBadgeProps extends React.HTMLAttributes<HTMLSpanElement> 
   label?: string | null;
 }
 
+/**
+ * The badge's chrome.
+ *
+ * Where a format's colour is an identity (`.fmt--*`, HIVE-2.4) and a status's is a state,
+ * *where a file came from* is neither — so this is the neutral inset surface, in tokens, and
+ * it follows all nine themes. HIVE-7.1 replaced the `bg-gray-100 … dark:bg-gray-700/60` pair
+ * this carried, which was the last palette literal left in the catalog pill set.
+ */
 const BADGE_BASE =
-  'inline-flex max-w-[14rem] items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700/60 dark:text-gray-300';
+  'inline-flex max-w-[14rem] items-center gap-1 rounded-md bg-inset px-2 py-0.5 text-xs font-medium text-fg-muted';
 
 /**
  * Render the source-material badge, or `null` when neither a resolved `source` nor a `kind` is
