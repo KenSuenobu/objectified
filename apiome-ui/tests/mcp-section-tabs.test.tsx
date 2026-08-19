@@ -50,14 +50,24 @@ describe('McpSectionTabs', () => {
     render(<McpSectionTabs hasServers />);
     const nav = screen.getByRole('navigation', { name: 'MCP Servers sections' });
     expect(nav).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Catalog' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Servers' })).toHaveAttribute(
       'href',
       '/ade/dashboard/mcp',
     );
-    expect(screen.getByRole('link', { name: 'Capability Directory' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Catalog Analytics/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Server Comparison' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Capabilities' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Analytics/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Compare' })).toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('prints only the counts the caller knows, and marks Analytics as preview', () => {
+    render(<McpSectionTabs hasServers counts={{ servers: 6, capabilities: 65 }} />);
+    expect(screen.getByRole('link', { name: 'Servers 6' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Capabilities 65' })).toBeInTheDocument();
+    // Compare has no figure this screen can know, so it draws no chip rather than a zero.
+    expect(screen.getByRole('link', { name: 'Compare' })).toBeInTheDocument();
+    // The maturity marker resolves through the shared vocabulary rather than a local palette.
+    expect(screen.getByText('Preview')).toHaveAttribute('data-status', 'preview');
   });
 
   it('probes the browse catalog and stays hidden when empty', async () => {

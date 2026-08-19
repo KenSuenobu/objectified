@@ -152,14 +152,17 @@ describe('McpCatalogToolbar', () => {
     expect(input.value).toBe('weather');
   });
 
-  it('exposes the density toggle and reflects the pressed state', () => {
+  // Since HIVE-7.7 (#5324) the density pair is `ui/Segmented`, so its options are `role="radio"`
+  // in one radiogroup rather than two `aria-pressed` buttons.
+  it('exposes the density toggle as one radiogroup and reflects the selection', () => {
     render(<Harness />);
-    const grid = screen.getByRole('button', { name: /Grid view/i });
-    const list = screen.getByRole('button', { name: /Dense list view/i });
-    expect(grid).toHaveAttribute('aria-pressed', 'true');
+    const group = screen.getByRole('radiogroup', { name: 'Layout density' });
+    const grid = within(group).getByRole('radio', { name: /Grid view/i });
+    const list = within(group).getByRole('radio', { name: /Dense list view/i });
+    expect(grid).toHaveAttribute('aria-checked', 'true');
     fireEvent.click(list);
-    expect(list).toHaveAttribute('aria-pressed', 'true');
-    expect(grid).toHaveAttribute('aria-pressed', 'false');
+    expect(list).toHaveAttribute('aria-checked', 'true');
+    expect(grid).toHaveAttribute('aria-checked', 'false');
   });
 
   it('opens the filter panel and toggles a facet value, updating the active count', () => {

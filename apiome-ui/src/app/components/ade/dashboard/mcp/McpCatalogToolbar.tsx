@@ -1,10 +1,48 @@
 'use client';
 
+/**
+ * The MCP catalog's controls strip (V2-MCP-24.8; redesigned HIVE-7.7, #5324).
+ *
+ * Authority: `docs/mockups/sources/mcp-servers.html` — the toolbar card and the facet panel that
+ * drops out of it, whose **Notes → Keeps (1:1)** list fixes the contents: search over
+ * name/slug/host/URL/category, a Filters button with an active-value bubble, Sort (Grade default ·
+ * Name · Last discovered · Capabilities · Health), the Grid / Dense list density pair, and the ten
+ * facets in the order Host · Grade · Transport · Safety · Complexity · Protocol · Health ·
+ * Visibility · Auth · Category.
+ *
+ * ### What the redesign changed
+ *
+ * 1. **The strip was a bar, not a card.** `border-b border-gray-200 bg-white dark:border-gray-700
+ *    dark:bg-gray-800` drew a full-bleed band across the page; the mockup's toolbar is a `ui/Card`
+ *    like every other panel on the page, so the controls sit on the same surface as the content
+ *    they filter.
+ * 2. **The density pair was a hand-built segmented control** — two buttons in a
+ *    `border-gray-300` box with `bg-indigo-600 text-white` for the pressed one. It is
+ *    `ui/Segmented`, whose options are `role="radio"` in a real radiogroup, so the pair is one
+ *    choice to a screen reader and one arrow-key stop to a keyboard.
+ * 3. **The facet chips were six palette classes each**, indigo when on and grey when off. They
+ *    are `.mcp-facet__chip`, an accent hairline over the surface when on — the same mark
+ *    `DataTableFilterChip` and `.spec-filters__facet[data-active]` use for a facet that is
+ *    narrowing a list.
+ * 4. **The active-filter bubble was `bg-indigo-600 text-white`.** It is `Badge variant="ink"`,
+ *    the vocabulary's "out-rank every coloured chip around me" tone, which is what the mockup's
+ *    `.badge--ink` is.
+ * 5. **The panel never said what it was doing.** The mockup prints the rule under the chips —
+ *    facets AND, values OR, counts from the full catalog — so a reader who selects two grades and
+ *    sees the count stay at 6 knows why.
+ *
+ * The health facet's chips carry a status dot, as the mockup's do. It is drawn from the shared
+ * vocabulary and never travels alone: the value's own word sits beside it.
+ */
+
 import * as React from 'react';
 import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
+import { Card } from '../../../ui/Card';
 import { Input } from '../../../ui/Input';
+import { Segmented, SegmentedItem } from '../../../ui/Segmented';
 import {
   Select,
   SelectContent,
@@ -12,8 +50,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../ui/Select';
+import { STATUS_TONE_DOT_CLASS, statusTone } from '../../../ui/statusVocabulary';
 import {
   MCP_CATALOG_EMPTY_FILTERS,
+  MCP_CATALOG_FACET_NOTE,
   MCP_CATALOG_SORTS,
   mcpCatalogActiveFilterCount,
   type McpCatalogDensity,
@@ -48,54 +88,7 @@ function toggleFacetValue(
   return { ...filters, [key]: next };
 }
 
-/** The grid ↔ dense-list density segmented control. */
-function DensityToggle({
-  density,
-  onDensityChange,
-}: {
-  density: McpCatalogDensity;
-  onDensityChange: (density: McpCatalogDensity) => void;
-}): React.ReactElement {
-  const base =
-    'inline-flex size-control items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500';
-  const active = 'bg-indigo-600 text-white';
-  const idle =
-    'bg-white text-gray-500 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700';
-  return (
-    <div
-      className="inline-flex overflow-hidden rounded-md border border-gray-300 dark:border-gray-600"
-      role="group"
-      aria-label="Layout density"
-    >
-      <button
-        type="button"
-        className={cn(base, density === 'grid' ? active : idle)}
-        aria-pressed={density === 'grid'}
-        title="Grid"
-        onClick={() => onDensityChange('grid')}
-      >
-        <LayoutGrid className="h-4 w-4" aria-hidden />
-        <span className="sr-only">Grid view</span>
-      </button>
-      <button
-        type="button"
-        className={cn(
-          base,
-          'border-l border-gray-300 dark:border-gray-600',
-          density === 'list' ? active : idle,
-        )}
-        aria-pressed={density === 'list'}
-        title="Dense list"
-        onClick={() => onDensityChange('list')}
-      >
-        <List className="h-4 w-4" aria-hidden />
-        <span className="sr-only">Dense list view</span>
-      </button>
-    </div>
-  );
-}
-
-/** One facet's value chips: a labeled group of toggle buttons with per-value counts. */
+/** One facet's value chips: a labelled group of toggle buttons with per-value counts. */
 function FacetGroup({
   facet,
   selected,
@@ -105,12 +98,13 @@ function FacetGroup({
   selected: string[];
   onToggle: (value: string) => void;
 }): React.ReactElement {
+  // Only the health facet's values are vocabulary states, so only it earns dots. Everywhere else
+  // a dot would be decoration standing in for nothing.
+  const showsDots = facet.key === 'healths';
   return (
-    <div className="min-w-0">
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-        {facet.label}
-      </p>
-      <div className="flex flex-wrap gap-1.5">
+    <div className="mcp-facet">
+      <p className="mcp-facet__label">{facet.label}</p>
+      <div className="mcp-facet__chips">
         {facet.values.map((fv) => {
           const isOn = selected.includes(fv.value);
           return (
@@ -119,16 +113,17 @@ function FacetGroup({
               type="button"
               aria-pressed={isOn}
               onClick={() => onToggle(fv.value)}
-              className={cn(
-                'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
-                isOn
-                  ? 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300'
-                  : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700',
-              )}
+              className="mcp-facet__chip"
+              data-active={isOn ? '' : undefined}
             >
-              <span className="truncate">{fv.label ?? fv.value}</span>
-              <span className="tabular-nums text-gray-400 dark:text-gray-500">{fv.count}</span>
+              {showsDots ? (
+                <span
+                  className={cn('mcp-facet__dot', STATUS_TONE_DOT_CLASS[statusTone(fv.value)])}
+                  aria-hidden
+                />
+              ) : null}
+              <span className="mcp-facet__value">{fv.label ?? fv.value}</span>
+              <span className="mcp-facet__count">{fv.count}</span>
             </button>
           );
         })}
@@ -138,12 +133,13 @@ function FacetGroup({
 }
 
 /**
- * `<McpCatalogToolbar>` — the catalog controls strip: a search box (wired to the private search),
- * a sort `<select>` (default `Grade ▾`), a grid ↔ dense-list density toggle, and a collapsible
- * filter panel whose facet chips compose (host / grade / transport / safety / complexity /
- * protocol / health / visibility / auth / category).
- * Faceting is data-driven — only facets and values present in the catalog render. All state is
+ * `<McpCatalogToolbar>` — search, filters, sort and density for the catalog.
+ *
+ * Faceting is data-driven: only facets and values present in the catalog render. All state is
  * controlled by the parent so it can persist density and reflect filters in one place.
+ *
+ * @param props See {@link McpCatalogToolbarProps}.
+ * @returns The toolbar card, with the facet panel when it is open.
  */
 export function McpCatalogToolbar({
   search,
@@ -161,51 +157,38 @@ export function McpCatalogToolbar({
   const hasFacets = facets.length > 0;
 
   return (
-    <div className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-      <div className="flex flex-wrap items-center gap-3 px-6 py-4">
-        <div className="relative min-w-[260px] max-w-md flex-1">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-            aria-hidden
-          />
+    <Card data-testid="mcp-catalog-toolbar">
+      <div className="mcp-toolbar">
+        <div className="input-wrap mcp-toolbar__search">
+          <Search aria-hidden />
           <Input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search by name, host, URL, or category…"
-            className="bg-gray-50 pl-9 dark:bg-gray-900/50"
             aria-label="Search the catalog"
           />
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="mcp-toolbar__controls">
           {hasFacets ? (
             <Button
               type="button"
-              variant={filtersOpen || activeFilters > 0 ? 'secondary' : 'outline'}
+              variant={activeFilters > 0 ? 'soft' : 'outline'}
               size="sm"
-              className="h-control"
               aria-expanded={filtersOpen}
               onClick={() => setFiltersOpen((v) => !v)}
+              data-testid="mcp-catalog-filters-toggle"
             >
-              <SlidersHorizontal className="h-4 w-4" aria-hidden />
+              <SlidersHorizontal aria-hidden />
               Filters
-              {activeFilters > 0 ? (
-                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-600 px-1 text-xs font-semibold text-white">
-                  {activeFilters}
-                </span>
-              ) : null}
+              {activeFilters > 0 ? <Badge variant="ink">{activeFilters}</Badge> : null}
             </Button>
           ) : null}
 
-          <div className="flex items-center gap-1.5">
-            <label
-              htmlFor="mcp-catalog-sort"
-              className="text-xs font-medium text-gray-500 dark:text-gray-400"
-            >
-              Sort
-            </label>
+          <label className="mcp-toolbar__sort" htmlFor="mcp-catalog-sort">
+            Sort
             <Select value={sort} onValueChange={(v) => onSortChange(v as McpCatalogSortKey)}>
-              <SelectTrigger id="mcp-catalog-sort" className="h-control w-[170px]">
+              <SelectTrigger id="mcp-catalog-sort" className="mcp-toolbar__sort-control">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -216,15 +199,31 @@ export function McpCatalogToolbar({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </label>
 
-          <DensityToggle density={density} onDensityChange={onDensityChange} />
+          <Segmented
+            size="sm"
+            value={density}
+            onValueChange={(next) => onDensityChange(next as McpCatalogDensity)}
+            aria-label="Layout density"
+          >
+            <SegmentedItem value="grid">
+              <LayoutGrid aria-hidden />
+              Grid
+              <span className="sr-only"> view</span>
+            </SegmentedItem>
+            <SegmentedItem value="list">
+              <List aria-hidden />
+              Dense list
+              <span className="sr-only"> view</span>
+            </SegmentedItem>
+          </Segmented>
         </div>
       </div>
 
       {filtersOpen && hasFacets ? (
-        <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-900/40">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mcp-facet-panel" data-testid="mcp-catalog-facets">
+          <div className="mcp-facets">
             {facets.map((facet) => (
               <FacetGroup
                 key={facet.key}
@@ -234,22 +233,22 @@ export function McpCatalogToolbar({
               />
             ))}
           </div>
-          {activeFilters > 0 ? (
-            <div className="mt-3">
+          <div className="mcp-facet-panel__foot">
+            <p className="mcp-facet-panel__note">{MCP_CATALOG_FACET_NOTE}</p>
+            {activeFilters > 0 ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 text-gray-500"
                 onClick={() => onFiltersChange({ ...MCP_CATALOG_EMPTY_FILTERS })}
               >
-                <X className="h-4 w-4" aria-hidden />
+                <X aria-hidden />
                 Clear all filters
               </Button>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       ) : null}
-    </div>
+    </Card>
   );
 }

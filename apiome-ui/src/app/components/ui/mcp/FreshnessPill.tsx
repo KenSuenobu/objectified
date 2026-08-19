@@ -20,6 +20,11 @@ export interface FreshnessPillProps extends React.HTMLAttributes<HTMLSpanElement
  * Since HIVE-2.4 (#5283) the tone comes from the shared status vocabulary — `stale`/`backoff` are
  * the vocabulary's warn, `failing`/`quarantined` its danger — so staleness reads the same as every
  * other warning in the product.
+ *
+ * Since HIVE-7.7 (#5324) the labelled form wears that tone's `-soft` ground as well as its ink,
+ * for the reason {@link import('./HealthPill').HealthPill} records: a `-fg` ink on a plain card
+ * measures 1.89–3.06:1 in the six themes that inherit the light semantic pairs, and axe caught a
+ * *Quarantined* chip in every one of them. `dotOnly` is unchanged.
  */
 export const FreshnessPill = React.forwardRef<HTMLSpanElement, FreshnessPillProps>(
   ({ freshness, lastKnownGoodAt, dotOnly = false, className, ...props }, ref) => {
@@ -34,11 +39,21 @@ export const FreshnessPill = React.forwardRef<HTMLSpanElement, FreshnessPillProp
       <span
         ref={ref}
         data-status={meta.status}
-        className={cn('inline-flex items-center gap-1.5 text-xs font-medium', meta.textClass, className)}
+        className={cn(
+          'inline-flex items-center gap-1.5 text-xs font-medium',
+          dotOnly ? meta.textClass : cn('rounded-full px-2 py-0.5', meta.softClass),
+          className,
+        )}
         title={title}
         {...props}
       >
-        <span className={cn('inline-block h-2 w-2 shrink-0 rounded-full', meta.dotClass)} aria-hidden />
+        <span
+          className={cn(
+            'inline-block h-2 w-2 shrink-0 rounded-full',
+            dotOnly ? meta.dotClass : 'bg-current',
+          )}
+          aria-hidden
+        />
         {dotOnly ? <span className="sr-only">{meta.label}</span> : meta.label}
       </span>
     );

@@ -91,6 +91,16 @@ export const TAB_TRIGGER_DISABLED_CLASS =
 /** The pane below the strip. */
 export const TAB_PANEL_CLASS = 'mt-4 focus-visible:rounded-md focus-visible:outline-none';
 
+/**
+ * The glyph a route-strip tab leads with, sized from the tab's own type.
+ *
+ * `--fs-md` rather than a `size-4`, so the icon keeps its proportion to the label through all six
+ * font scales. HIVE-7.3 spelled the same three declarations as a `.repo-tab__glyph` rule in
+ * `globals.css`; HIVE-7.7 (#5324) needed it a second time and put it here instead, where the rest
+ * of the tab strip's classes already live.
+ */
+export const TAB_GLYPH_CLASS = 'size-[var(--fs-md)] shrink-0';
+
 /** A count beside a tab's label — inset pill when idle, inverted when the tab is selected. */
 export const TAB_COUNT_CLASS =
   'ml-0.5 inline-flex items-center rounded-full bg-inset px-1.5 text-2xs font-semibold text-fg-muted';

@@ -25114,3 +25114,765 @@ button.cid-entity__head {
     max-inline-size: none;
   }
 }
+
+/* ==========================================================================
+   MCP SERVERS CATALOG  (HIVE-7.7, #5324)
+   --------------------------------------------------------------------------
+   `docs/mockups/sources/mcp-servers.html`, whose page-local `<style>` block
+   this replaces (`.grade`, `.mcp-card`, `.facets`, `.facet__label`,
+   `.host-head`) together with the palette classes the screen had grown: the
+   card's `border-gray-200 bg-white shadow-sm dark:border-gray-700
+   dark:bg-gray-800` frame and its `group-hover:text-indigo-600` name, the
+   toolbar's `bg-indigo-600 text-white` density pair and `border-indigo-200
+   bg-indigo-50 text-indigo-700` facet chips, the saved-search strip's
+   `border-amber-200 bg-amber-50 text-amber-800` pins, the collections strip's
+   `text-emerald-600` published word and `text-indigo-600 hover:bg-indigo-50`
+   View link, the two `text-red-600 hover:text-red-700` delete buttons, the
+   Changed marker's five amber classes, and the shadowed-names banner's
+   `border-red-200 bg-red-50 … dark:bg-red-900/20` box with its
+   `bg-rose-100 text-rose-800` / `bg-amber-100 text-amber-800` scope chips.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons every Epic-5 to Epic-7.6 block above gives. Every
+   rule leans on the density and font-scale tokens; the card grid, the facet
+   grid, the strips row, the dense row and the host head are real grids that a
+   utility string spells badly; and the quiet lines have to sit *after* the
+   unlayered `h1`–`h4` and `p` base rules near line 2497, which outrank
+   anything in `@layer utilities`.
+
+   The mockup froze seven things in pixels that must not be frozen: the 340px
+   search field, the 170px sort select, the three-column facet grid at a 1100px
+   media query, the 130px tracker node, the 70px dense-row timestamp, the 28px
+   grade letter and the 12px clock glyph. All are `rem`, a token or an
+   intrinsic grid here, so all six font scales and both densities hold.
+
+   No hue is named below. Every colour is a token, so the surface follows all
+   nine themes. No status is named either: grade, health, freshness and the
+   facet dots all resolve through `ui/statusVocabulary`, and the marks that
+   carry a tone take the class the component passes in.
+
+   Four measured deviations, and one stated limit:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+     about 3.1:1 against the canvas at these sizes — the call HIVE-3.5 and
+     every Epic-5 block already made. `--fg-faint` survives on two marks only,
+     both decorative and both `aria-hidden`: the trailing arrow that repeats
+     what the whole card already is (a link), and the middle dot that separates
+     two figures;
+   * a hovered dense row lands on `--bg-inset`, not the mockup's `--bg-subtle`,
+     and so does the facet panel. Both carry `--fg-muted` text, which measures
+     4.35:1 on `--bg-subtle` in Solarized and 5.02:1 on `--bg-inset` — the
+     finding HIVE-6.5 recorded and HIVE-7.4 hit again on its own hover;
+   * the facet chip's active mark is an `--accent` hairline over the surface,
+     not the mockup's accent *fill*. `--fg-muted` on `--accent-soft` measures
+     3.86:1 in Solarized, so a chip whose count stayed muted on a tinted ground
+     would fail; the hairline is 4.07:1 as a mark in every theme and the chip's
+     own ink rises to `--accent-fg` (5.22:1 on the surface) when it is on;
+   * the Preview marker on the Analytics tab is `accent`, not the mockup's
+     honey. DESIGN.md §3.1 gives honey to `new` and accent to `preview`, and
+     one word cannot be two colours — the Changed marker below *is* honey, for
+     the same reason.
+
+   The stated limit: `.mcp-card[data-alert="danger"]`'s frame measures 2.46:1
+   in Nord as a 1px inset against the surface, the figure HIVE-7.5 recorded for
+   its danger zone. So it is emphasis and never the only signal — the card's
+   own health pill prints "Unreachable" in words on its own tinted ground, and
+   the card is readable with the frame ignored entirely.
+
+   Seven classes are borrowed rather than restated: `.input-wrap` (HIVE-2.1),
+   `.mono` (HIVE-1.4), `.tnt-icon-tile` (HIVE-5.1), `ui/Card`'s surface,
+   `ui/Segmented`'s track, `ui/Badge`'s pill and `ui/Alert`'s tinted strip.
+   ========================================================================== */
+
+/* ---- The toolbar --------------------------------------------------------
+   One row that wraps, so the Largest font scale gives it a second line rather
+   than a horizontal scrollbar. */
+.mcp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--card-pad);
+}
+
+/* The search field grows into whatever the controls leave, between a floor
+   that still fits the placeholder and a ceiling that stops it eating the row.
+   Both in `rem`, unlike the mockup's 340px. */
+.mcp-toolbar__search {
+  flex: 1 1 17rem;
+  min-inline-size: 15rem;
+  max-inline-size: 22rem;
+}
+
+.mcp-toolbar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+/* The sort control and its word are one label, so clicking "Sort" opens the
+   menu — which is what a reader expects of a word that close to a control. */
+.mcp-toolbar__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* Wide enough for "Last discovered", the longest option, at every scale. */
+.mcp-toolbar__sort-control {
+  inline-size: 11rem;
+  block-size: var(--control-h-sm);
+  font-size: var(--fs-xs);
+}
+
+/* ---- The facet panel ----------------------------------------------------
+   A well under the toolbar, sharing its card's bottom corners.
+
+   `--bg-inset`, not the mockup's `card--soft` (`--bg-subtle`): the panel is
+   almost entirely quiet text — ten caps labels, ten count figures and the rule
+   note — and `--fg-muted` measures 4.35:1 on `--bg-subtle` in Solarized
+   against 5.02:1 on `--bg-inset`. The same call HIVE-6.5 recorded. */
+.mcp-facet-panel {
+  padding: var(--space-3) var(--card-pad) var(--space-4);
+  border-block-start: 1px solid var(--border);
+  border-end-start-radius: var(--r-lg);
+  border-end-end-radius: var(--r-lg);
+  background: var(--bg-inset);
+}
+
+/* Intrinsic rather than the mockup's `repeat(3, 1fr)` behind a 1100px media
+   query: ten facets of very different widths reflow to whatever fits, so the
+   panel holds at 420px and at the Largest font scale without a breakpoint. */
+.mcp-facets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-4) var(--space-5);
+}
+
+.mcp-facet {
+  min-inline-size: 0;
+}
+
+.mcp-facet__label {
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.mcp-facet__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* The chip itself: a surface pill on the well, so an unselected value reads as
+   available rather than as disabled. */
+.mcp-facet__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-inline-size: 100%;
+  padding: 0.1875rem var(--space-2);
+  border-radius: var(--r-full);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg);
+  cursor: pointer;
+  transition: box-shadow var(--dur-fast) ease-out, color var(--dur-fast) ease-out;
+}
+
+.mcp-facet__chip:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* Active: the accent hairline `DataTableFilterChip` and `.spec-filters__facet`
+   both use, plus the accent ink. Not a fill — see the block header. */
+.mcp-facet__chip[data-active] {
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--accent-fg);
+}
+
+.mcp-facet__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The per-value count. `--fg-muted` rather than the mockup's `--fg-faint`:
+   it is a figure a reader uses, not an ornament. */
+.mcp-facet__count {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.mcp-facet__chip[data-active] .mcp-facet__count {
+  color: inherit;
+}
+
+/* The health facet's dot. Never alone — the value's own word is beside it. */
+.mcp-facet__dot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  flex-shrink: 0;
+  border-radius: var(--r-full);
+}
+
+.mcp-facet-panel__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+}
+
+.mcp-facet-panel__note {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The saved-search and collection strips -----------------------------
+   Two panels side by side, one column below the width where either would have
+   to truncate its actions row. */
+.mcp-strips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+  gap: var(--space-4);
+}
+
+.mcp-strip {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.mcp-strip__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--card-pad);
+}
+
+.mcp-strip__lead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.mcp-strip__label {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.mcp-strip__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline-start: auto;
+}
+
+.mcp-strip__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--card-pad);
+  border-block-start: 1px solid var(--border);
+}
+
+/* The strip's quiet sentence: its subtitle, its loading line and its empty
+   line are the same voice, so they are the same rule. */
+.mcp-strip__note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.mcp-strip__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mcp-strip__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.mcp-strip__row + .mcp-strip__row {
+  border-block-start: 1px solid var(--border);
+}
+
+.mcp-strip__row-main {
+  flex: 1 1 14rem;
+  min-inline-size: 0;
+}
+
+.mcp-strip__row-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* The view a saved search restores, or a collection's size and note. It may
+   break anywhere: a ten-facet summary is longer than the panel is wide. */
+.mcp-strip__row-sub {
+  margin: var(--space-1) 0 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.mcp-strip__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* The row's one destructive action. `--danger-fg` on the surface is the ink
+   `ui/Button`'s own `danger-soft` label uses; the button keeps its ghost
+   ground, so the pair is the one the primitive already measured. */
+.mcp-strip__danger {
+  color: var(--danger-fg);
+}
+
+/* ---- The two dialogs ---------------------------------------------------- */
+.mcp-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-block: var(--space-2);
+}
+
+/* What the save dialog is about to save, printed in the same words the saved
+   row will print it in. */
+.mcp-dialog__summary {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.mcp-dialog__check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ---- The totals line ---------------------------------------------------- */
+.mcp-totals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.mcp-totals__counts {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.mcp-totals__hint {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The shadowed-names alert ------------------------------------------
+   The whole strip is the disclosure, so the summary is a full-width button
+   inside `ui/Alert` rather than a control beside it. */
+.mcp-shadow-alert {
+  display: block;
+  padding: 0;
+}
+
+.mcp-shadow-alert__summary {
+  display: flex;
+  inline-size: 100%;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  text-align: start;
+  color: inherit;
+  cursor: pointer;
+}
+
+.mcp-shadow-alert__bell,
+.mcp-shadow-alert__chevron {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+}
+
+.mcp-shadow-alert__chevron {
+  transition: transform var(--dur-base) ease-out;
+}
+
+.mcp-shadow-alert__chevron--open {
+  transform: rotate(180deg);
+}
+
+.mcp-shadow-alert__text {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.mcp-shadow-alert__count {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+}
+
+.mcp-shadow-alert__hint {
+  display: block;
+  margin-block-start: 0.125rem;
+  font-size: var(--fs-2xs);
+}
+
+.mcp-shadow-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-3);
+  list-style: none;
+}
+
+/* A collision sits on the page's own surface inside the tinted alert, so the
+   `--fg` / `--fg-muted` steps it prints are read against the ground they were
+   calibrated for rather than against the alert's tint. */
+.mcp-shadow-row {
+  padding: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  color: var(--fg);
+}
+
+.mcp-shadow-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mcp-shadow-row__name {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-xs);
+}
+
+.mcp-shadow-row__meta,
+.mcp-shadow-row__endpoints {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.mcp-shadow-row__endpoints {
+  margin: var(--space-1) 0 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---- The host group ----------------------------------------------------- */
+.mcp-host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: var(--space-3);
+}
+
+/* Smaller than the dialog tile the class was built for: a group head is a
+   label, not a hero. Both dimensions in `rem`, so it scales with the type. */
+.mcp-host__tile {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+}
+
+.mcp-host__name {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.mcp-host__health {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The two densities --------------------------------------------------
+   Intrinsic rather than `sm:grid-cols-2 xl:grid-cols-3`: a card needs about
+   19rem to hold its badge row on one line, and at the Largest font scale that
+   is 25% wider — a breakpoint in `px` cannot know that. */
+.mcp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: var(--space-3);
+}
+
+.mcp-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* ---- The grid card ------------------------------------------------------ */
+.mcp-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  min-inline-size: 0;
+}
+
+/* Emphasis, never the only signal — see the block header's stated limit. */
+.mcp-card[data-alert="danger"],
+.mcp-row[data-alert="danger"] {
+  box-shadow: inset 0 0 0 1px var(--danger), var(--shadow-sm);
+}
+
+.mcp-card--skeleton {
+  min-block-size: 11rem;
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.mcp-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.mcp-card__ident {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.mcp-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.mcp-card__name {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* The trailing arrow and the separating dots are the only marks that stay at
+   `--fg-faint`: both are `aria-hidden` ornaments that repeat what the whole
+   card already says (it is a link) or separate two figures. */
+.mcp-card__go,
+.mcp-row__go {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--fg-faint);
+  transition: color var(--dur-fast) ease-out;
+}
+
+.mcp-card:hover .mcp-card__go,
+.mcp-row:hover .mcp-row__go {
+  color: var(--accent-fg);
+}
+
+/* The server's advertised logo, boxed to the same square as the initials
+   avatar it replaces so the card's left edge never shifts. */
+.mcp-card__logo {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border-radius: var(--r-xs);
+  overflow: hidden;
+}
+
+.mcp-card__logo > img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+}
+
+.mcp-card__host {
+  margin-block-start: 0.125rem;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.mcp-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.mcp-card__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* The last foot row is pushed to the card's bottom edge, so cards of unequal
+   height still line their recency lines up across a row of the grid. */
+.mcp-card__foot:last-child {
+  margin-block-start: auto;
+}
+
+.mcp-card__metrics,
+.mcp-card__marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.mcp-card__metrics > [aria-hidden] {
+  color: var(--fg-faint);
+}
+
+.mcp-card__caps {
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* ---- The dense row ------------------------------------------------------ */
+.mcp-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  min-inline-size: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.mcp-row + .mcp-row {
+  border-block-start: 1px solid var(--border);
+}
+
+/* `--bg-inset`, not the mockup's `--bg-subtle` — see the block header. */
+.mcp-row:hover {
+  background: var(--bg-inset);
+  text-decoration: none;
+}
+
+.mcp-row__main {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.mcp-row__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.mcp-row__name {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.mcp-row__sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: 0.125rem;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.mcp-row__sub > [aria-hidden] {
+  color: var(--fg-faint);
+}
+
+/* The badge cluster and the timestamp are the two things a narrow row gives
+   up first: at that width the card grid is the better view, and the density
+   control is one click away. */
+.mcp-row__badges,
+.mcp-row__when {
+  display: none;
+}
+
+/* Stated in `rem` from the type it holds, unlike the mockup's 70px. */
+.mcp-row__when {
+  flex-shrink: 0;
+  inline-size: 5rem;
+  justify-content: flex-end;
+  text-align: end;
+}
+
+@media (min-width: 60rem) {
+  .mcp-row__badges {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .mcp-row__when {
+    display: inline-flex;
+  }
+}

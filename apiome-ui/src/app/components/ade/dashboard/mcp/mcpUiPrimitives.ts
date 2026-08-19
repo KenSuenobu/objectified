@@ -8,10 +8,8 @@
  * mappings those primitives render from, so they can be unit-tested directly and so the React
  * components stay free of color/branching literals.
  *
- * Colors are expressed as Tailwind utility classes (the project's token layer, mapped centrally to
- * the brand indigo / slate / emerald / amber / red scales and their `dark:` variants in
- * `globals.css`). Consumers never hard-code a hex or spacing value — they pass a domain value
- * (e.g. a transport string) and receive a {@link McpBadgeTone} + label.
+ * Colours are expressed as Hive token classes. Consumers never hard-code a hex or spacing value
+ * — they pass a domain value (e.g. a transport string) and receive a {@link McpBadgeTone} + label.
  *
  * HIVE-2.4 (#5283) moved the three mappings that answer a *status* question — the grade bands,
  * the health pill and the freshness pill — onto the app-wide vocabulary in
@@ -20,6 +18,12 @@
  * follows the reader's theme through the Hive token layer instead of a `dark:` variant. The
  * mappings that answer a *property* question (transport, auth, provenance, lint tier) are
  * untouched — they are not part of the status vocabulary.
+ *
+ * HIVE-7.7 (#5324) finished the job for the property mappings' *paint*. The tone names below are
+ * still the mockup's `.badge--*` names, because forty call sites and four suites spell them, but
+ * `ui/mcp/McpBadge` now resolves each one through the same vocabulary rather than through a pair
+ * of Tailwind palette classes. Visibility moved with it: `private` is violet, which is what
+ * DESIGN.md §3.1 and the vocabulary have both said all along.
  */
 
 import type { McpLintTier } from './mcpLintUi';
@@ -28,6 +32,7 @@ import {
   GRADE_BAND_UNSCORED,
   GRADE_LETTERS,
   STATUS_TONE_DOT_CLASS,
+  STATUS_TONE_SOFT_CLASS,
   STATUS_TONE_TEXT_CLASS,
   statusTone,
   type GradeLetter,
@@ -88,7 +93,7 @@ export function mcpGradeGlyphStyle(grade: string | null | undefined): McpGradeGl
 }
 
 // --- Badge tones ----------------------------------------------------------------------------
-// The mockup's `.badge.*` palette: a soft tinted fill + matching text + hairline border, in seven
+// The mockup's `.badge.*` palette: a soft tinted fill with the ink calibrated to it, in seven
 // semantic tones. McpBadge renders any tone; the resolvers below map a domain value (transport,
 // visibility, auth scheme, capability annotation) to the tone + label the mockup specifies.
 
@@ -130,11 +135,18 @@ export function mcpPublishedBadge(published: boolean): McpBadgeSpec {
     : { tone: 'slate', label: 'Unpublished' };
 }
 
-/** Resolve an endpoint's visibility to a badge: private → indigo, public → green. */
+/**
+ * Resolve an endpoint's visibility to a badge: private → violet, public → green.
+ *
+ * Private was `indigo` until HIVE-7.7 (#5324). DESIGN.md §3.1's Visibility row is
+ * "`private` violet · `public` ok", and `ui/statusVocabulary` has answered `private` with
+ * violet since HIVE-2.4 — so a private MCP endpoint was the one private thing in the product
+ * painted a different colour from every other. The label is untouched.
+ */
 export function mcpVisibilityBadge(visibility: string | null | undefined): McpBadgeSpec {
   const value = (visibility ?? '').trim().toLowerCase();
   if (value === 'public') return { tone: 'green', label: 'Public' };
-  if (value === 'private') return { tone: 'indigo', label: 'Private' };
+  if (value === 'private') return { tone: 'violet', label: 'Private' };
   return { tone: 'slate', label: visibility && visibility.trim() ? visibility : 'Unknown' };
 }
 
@@ -275,6 +287,16 @@ export interface McpHealthMeta {
   dotClass: string;
   /** Token class for the accompanying label. */
   textClass: string;
+  /**
+   * The tone's `-soft` fill *and* its calibrated `-fg` ink — the pair a labelled pill wears.
+   *
+   * Added by HIVE-7.7 (#5324). {@link McpHealthMeta.textClass} alone is the tone's ink on
+   * whatever ground it lands on, and on a plain card that measures 1.99–3.21:1 in the six
+   * themes that inherit the light semantic pairs — axe caught every health and freshness pill
+   * on the MCP catalog at once. A `-fg` ink is only legible on its own `-soft` ground, which is
+   * what `.badge[data-status]` has always been, so a *labelled* pill takes the pair.
+   */
+  softClass: string;
 }
 
 /** The vocabulary string each health state speaks, for {@link statusTone} to answer. */
@@ -302,6 +324,7 @@ function healthEntry(status: McpHealthStatus): McpHealthMeta {
     tone,
     dotClass: STATUS_TONE_DOT_CLASS[tone],
     textClass: STATUS_TONE_TEXT_CLASS[tone],
+    softClass: STATUS_TONE_SOFT_CLASS[tone],
   };
 }
 
@@ -383,6 +406,8 @@ export interface McpFreshnessMeta {
   dotClass: string;
   /** Token class for the accompanying label. */
   textClass: string;
+  /** The tone's `-soft` fill and its ink — see {@link McpHealthMeta.softClass}. */
+  softClass: string;
 }
 
 /** Human labels for the four states that are worth showing (`fresh` renders nothing). */
@@ -408,6 +433,7 @@ function freshnessEntry(status: Exclude<McpFreshnessStatus, 'fresh'>): McpFreshn
     tone,
     dotClass: STATUS_TONE_DOT_CLASS[tone],
     textClass: STATUS_TONE_TEXT_CLASS[tone],
+    softClass: STATUS_TONE_SOFT_CLASS[tone],
   };
 }
 

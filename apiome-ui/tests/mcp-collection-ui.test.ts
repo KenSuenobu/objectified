@@ -4,7 +4,7 @@ import {
   mcpCollectionMemberFromPayload,
   mcpCollectionPublicUrl,
   mcpCollectionsFromPayload,
-  mcpVisibleEndpointIds,
+  mcpVisibleEndpoints,
 } from '../src/app/components/ade/dashboard/mcp/mcpCollectionUi';
 
 describe('mcpCollectionUi', () => {
@@ -62,12 +62,19 @@ describe('mcpCollectionUi', () => {
     expect(mcpCollectionPublicUrl('demo', 'geo-tools')).toContain('/mcp/demo/collections/geo-tools');
   });
 
-  it('collects visible endpoint ids from browse groups', () => {
-    const ids = mcpVisibleEndpointIds([
-      { endpoints: [{ id: 'a' }, { id: 'b' }] },
-      { endpoints: [{ id: 'c' }] },
+  it('collects the visible endpoints from browse groups, in the order they are drawn', () => {
+    // Names as well as ids since HIVE-7.7 (#5324): the create dialog spells out the membership
+    // it is about to freeze, so an operator can check it before pressing Create.
+    expect(
+      mcpVisibleEndpoints([
+        { endpoints: [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }] },
+        { endpoints: [{ id: 'c', name: 'Gamma' }] },
+      ]),
+    ).toEqual([
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+      { id: 'c', name: 'Gamma' },
     ]);
-    expect(ids).toEqual(['a', 'b', 'c']);
   });
 
   it('rejects invalid collection payloads', () => {

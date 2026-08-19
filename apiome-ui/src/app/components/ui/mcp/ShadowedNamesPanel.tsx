@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Shadowed-names alert (CLX-3.4, #4858).
+ * Shadowed-names alert (CLX-3.4, #4858; re-tokened HIVE-7.7, #5324).
  *
  * Surfaces tool/resource/prompt names exposed by more than one *enabled* endpoint in the tenant's
  * host scope — tool shadowing (OWASP MCP09), where an agent routing by name can be steered to the
@@ -11,38 +11,49 @@
  * Renders nothing while loading, on error, or when the scope is clean — the catalog should not spend
  * a card on a "no shadowed names" empty state. When collisions exist, a compact bell alert carries
  * the count and expands to the grouped detail list.
+ *
+ * ### What HIVE-7.7 changed
+ *
+ * The banner was a hand-built box: `border-red-200 bg-red-50 text-red-900 dark:border-red-800 …`
+ * for its two tones, `bg-rose-100 text-rose-800` and `bg-amber-100 text-amber-800` for its two
+ * scope chips, and `bg-white/50 dark:bg-black/20` for the rows inside it. It is `ui/Alert` and
+ * `ui/Badge` now — the same banner and the same pill every other warning in the product draws —
+ * so the tone follows the reader's theme and the two scopes take the tones DESIGN.md §3.1
+ * already assigns them (`rose` for the same-host collision, `warn` for the cross-host one).
+ *
+ * The header stays a `<button>` inside the alert rather than becoming an `actions` slot: the whole
+ * strip is the disclosure control, which is what makes the count clickable at a glance.
  */
 
 import * as React from 'react';
 import { Bell, ChevronDown } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { Alert } from '../Alert';
+import { Badge } from '../Badge';
 import { parseShadowReport, type ShadowReport } from '@/app/utils/mcp-trust-drift';
 
-const CHIP_BASE =
-  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium';
-
-/** CSS classes for the host-scope chip (same-host is the stronger signal). */
-export function shadowScopeClass(hostScope: string): string {
-  return hostScope === 'same_host'
-    ? 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300'
-    : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+/**
+ * The badge tone each host scope takes.
+ *
+ * Same-host is the stronger signal and takes `rose`; cross-host is advisory and takes `warn`.
+ * Exported because the catalog suite asserts the pairing rather than re-deriving it.
+ *
+ * @param hostScope The collision's scope, as the report spells it.
+ * @returns The `Badge` variant to paint the scope chip with.
+ */
+export function shadowScopeTone(hostScope: string): 'rose' | 'warn' {
+  return hostScope === 'same_host' ? 'rose' : 'warn';
 }
 
-function shadowAlertTone(report: ShadowReport): 'error' | 'warning' {
-  return report.sameHostCount > 0 ? 'error' : 'warning';
+/**
+ * The alert tone the whole report takes: danger when any collision is same-host, warn otherwise.
+ *
+ * @param report The parsed shadowing report.
+ * @returns The `Alert` variant.
+ */
+export function shadowAlertTone(report: ShadowReport): 'danger' | 'warn' {
+  return report.sameHostCount > 0 ? 'danger' : 'warn';
 }
-
-const TONE_CLASS: Record<'error' | 'warning', string> = {
-  error:
-    'border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-900/20 dark:text-red-100',
-  warning:
-    'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-100',
-};
-
-const TONE_ICON_CLASS: Record<'error' | 'warning', string> = {
-  error: 'text-red-600 dark:text-red-400',
-  warning: 'text-amber-600 dark:text-amber-400',
-};
 
 export function ShadowedNamesPanel() {
   const [report, setReport] = React.useState<ShadowReport | null>(null);
@@ -87,64 +98,56 @@ export function ShadowedNamesPanel() {
     report.groupCount === 1 ? '1 shadowed name' : `${report.groupCount} shadowed names`;
   const scopeParts: string[] = [];
   if (report.sameHostCount > 0) {
-    scopeParts.push(
-      `${report.sameHostCount} same-host`,
-    );
+    scopeParts.push(`${report.sameHostCount} same-host`);
   }
   if (report.crossHostCount > 0) {
-    scopeParts.push(
-      `${report.crossHostCount} cross-host`,
-    );
+    scopeParts.push(`${report.crossHostCount} cross-host`);
   }
   const detailHint =
     scopeParts.length > 0
-      ? `${scopeParts.join(', ')} — duplicate capabilities across enabled endpoints`
+      ? `${scopeParts.join(', ')} — duplicate capabilities across enabled endpoints (tool shadowing, OWASP MCP09)`
       : 'Duplicate tool, resource, or prompt names across enabled endpoints';
 
   return (
-    <div
-      role="alert"
-      className={cn('rounded-lg border', TONE_CLASS[tone])}
+    <Alert
+      variant={tone}
+      icon={null}
+      className="mcp-shadow-alert"
+      data-testid="mcp-shadowed-names"
     >
       <button
         type="button"
-        className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-current dark:hover:bg-white/5"
+        className="mcp-shadow-alert__summary"
         aria-expanded={expanded}
         onClick={() => setExpanded((open) => !open)}
       >
-        <Bell className={cn('mt-0.5 h-4 w-4 shrink-0', TONE_ICON_CLASS[tone])} aria-hidden />
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium leading-snug">{countLabel}</span>
-          <span className="mt-0.5 block text-xs opacity-80">{detailHint}</span>
+        <Bell className="mcp-shadow-alert__bell" aria-hidden />
+        <span className="mcp-shadow-alert__text">
+          <span className="mcp-shadow-alert__count">{countLabel}</span>
+          <span className="mcp-shadow-alert__hint">{detailHint}</span>
         </span>
         <ChevronDown
-          className={cn(
-            'mt-0.5 h-4 w-4 shrink-0 opacity-70 transition-transform',
-            expanded && 'rotate-180',
-          )}
+          className={cn('mcp-shadow-alert__chevron', expanded && 'mcp-shadow-alert__chevron--open')}
           aria-hidden
         />
       </button>
 
       {expanded ? (
-        <ul className="space-y-2 border-t border-current/10 px-3 py-2.5">
+        <ul className="mcp-shadow-list">
           {report.groups.map((group) => (
-            <li
-              key={`${group.itemType}:${group.name}`}
-              className="rounded-md border border-current/15 bg-white/50 p-2 dark:bg-black/20"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={`${CHIP_BASE} ${shadowScopeClass(group.hostScope)}`}>
+            <li key={`${group.itemType}:${group.name}`} className="mcp-shadow-row">
+              <div className="mcp-shadow-row__head">
+                <Badge variant={shadowScopeTone(group.hostScope)}>
                   {group.hostScope === 'same_host' ? 'Same host' : 'Cross host'}
-                </span>
-                <span className="font-mono text-xs">
+                </Badge>
+                <span className="mono mcp-shadow-row__name">
                   {group.itemType}:{group.name}
                 </span>
-                <span className="text-xs opacity-70">
+                <span className="mcp-shadow-row__meta">
                   exposed by {group.endpointCount} endpoints
                 </span>
               </div>
-              <p className="mt-1 text-xs opacity-80">
+              <p className="mcp-shadow-row__endpoints">
                 {group.endpoints
                   .map((endpoint) => endpoint.name || endpoint.slug || endpoint.id)
                   .join(', ')}
@@ -153,7 +156,7 @@ export function ShadowedNamesPanel() {
           ))}
         </ul>
       ) : null}
-    </div>
+    </Alert>
   );
 }
 
