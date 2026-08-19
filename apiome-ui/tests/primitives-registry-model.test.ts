@@ -37,6 +37,7 @@ import {
   resolverFootLabel,
   shortBaseUri,
   typesFootLabel,
+  primitiveIdFromEditParam,
   viewFromFocusParam,
 } from '../src/app/components/ade/primitives/primitivesModel';
 import type {
@@ -143,6 +144,20 @@ describe('the tab strip and its deep link', () => {
 
   it('routes a type to its own page', () => {
     expect(primitiveDetailHref('p-1')).toBe(`${PRIMITIVES_ROUTE}/p-1`);
+  });
+
+  it('admits the type id an ?edit= link names (HIVE-6.6, #5317)', () => {
+    // `?focus=`'s sibling: the type-detail page linked here with `?edit=<id>` and nothing read
+    // it, so "edit this type" landed on an unfiltered list of every type in the registry.
+    expect(primitiveIdFromEditParam('p-money')).toBe('p-money');
+    expect(primitiveIdFromEditParam('  p-money  ')).toBe('p-money');
+  });
+
+  it('treats an absent or blank ?edit= as no request at all', () => {
+    expect(primitiveIdFromEditParam(null)).toBeNull();
+    expect(primitiveIdFromEditParam(undefined)).toBeNull();
+    expect(primitiveIdFromEditParam('')).toBeNull();
+    expect(primitiveIdFromEditParam('   ')).toBeNull();
   });
 });
 

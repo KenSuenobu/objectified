@@ -18832,3 +18832,535 @@ html[data-motion='reduce'] .prm-spin {
   color: var(--fg-muted);
   overflow-wrap: anywhere;
 }
+
+/* ==========================================================================
+   PRIMITIVE DETAIL  (HIVE-6.6, #5317)
+   --------------------------------------------------------------------------
+   `docs/mockups/build/primitive-detail.html`, whose page-local `<style>` block
+   this replaces (`.prop-row`, `.type-hint`, `.req-pill`, `.chain-dot`,
+   `.verdict`, `.nested`) together with the named palette the two components on
+   this route had grown: a `bg-gray-900` schema well and example block that
+   stayed black in Whiteboard, six `bg-*-100 text-*-700 dark:bg-*-900/40` pills
+   written between two and four times each, a `text-indigo-600` header glyph
+   repeated eight times, three `border-emerald-200 bg-emerald-50` /
+   `border-red-200 bg-red-50` / `border-amber-200 bg-amber-50` verdict skins,
+   ten `border-gray-200 … dark:border-gray-600` button and box hairlines, and
+   the `text-indigo-600` checkbox and `bg-indigo-600` mode switch of the test
+   form.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The reasons the Epic-5 and Epic-6 blocks above give, and one particular to
+   this route: **the page is a main column beside an aside that folds under it,
+   and the test form is a recursive tree whose rows have to keep one rhythm at
+   every depth.** A fold point stated once is a fold point the page and its
+   skeleton agree on, and a row rule that applies at depth 0 and depth 4 alike
+   cannot be a utility string repeated per call site.
+
+   The mockup froze seven things in pixels that must not be frozen: the
+   `req-pill`'s 16px box and 10px type, the `chain-dot`'s 10px, the prop row's
+   10px rhythm, the `nested` box's 10/12px padding, the banner's 6/10px, the
+   schema pane's 360px cap and the four `max-width: 280px` inputs. All seven
+   are a token or a `rem` here, so they follow both densities and all six font
+   scales.
+
+   Deviations from the mockup, and why
+   -----------------------------------
+   1. **The schema pane is Monaco in the Hive theme, not a `code--dark`
+      `<pre>`.** A dark box on a paper page is a theme the reader did not
+      choose — the call HIVE-6.5 made for the resolver's `$ref` example — and
+      the pane is also where a reader folds a 400-line schema. It is the shared
+      {@link ReadOnlyCodeViewer} with `theme="hive"`, so it is painted from the
+      live tokens in all nine appearances. Monaco's own type stays the px
+      exemption `ui/code/editorTypography.ts` owns and documents; the *box* is
+      `rem`, which is what makes the pane follow the font-scale preference.
+   2. **The verdict bar is an `Alert` in its tone's own pair**, rather than the
+      mockup's inline `background: var(--danger-soft); color: var(--danger-fg)`.
+      The values are the same; going through the component is what makes an
+      invalid instance the same red as every other failure in the product, and
+      what keeps the pair calibrated outside light and dark.
+   3. **A tone never paints a word here — only a glyph, a dot or a rail.**
+      Measured on `--bg-surface` across the nine appearances: `--fg` is 8.73:1
+      at worst and `--fg-muted` 4.86:1, both clear of AA; the tones are not —
+      `--warn` reaches 2.82:1 in Solarized and `--danger` 2.46:1 in Nord, and
+      `--danger-fg` measures 1.47:1 there. So every sentence in this block is
+      `--fg` or `--fg-muted` (`.prm-error` and `.prm-caution`, reused rather
+      than restated), and a tone only ever lands on a mark that sits *beside*
+      words saying the same thing: the pattern line's glyph, the base chain's
+      rail, the findings box's alert icon. `--ok`, the one tone carrying a mark
+      of its own — the chain's head dot — clears the 3:1 graphic floor in all
+      nine (3.15:1 at worst, in Darcula).
+   4. **Quiet text is `--fg-muted`, not the mockup's `--fg-subtle`,** which
+      measures about 3.1:1 against the canvas at these sizes. The standing
+      deviation of HIVE-3.5, 4.1, 6.1, 6.2 and 6.5.
+   5. **Every well that holds quiet text is `--bg-inset`**, not `--bg-subtle`:
+      `--fg-muted` clears AA on the first (5.02:1 at worst) and not on the
+      second (4.35:1 in Solarized). So the example instance reuses `.prm-code`.
+   6. **The `required` pill is a `Badge` in the `rose` tone** — the mockup's own
+      `--rose-soft` / `--rose-fg` pair, through the component that has it
+      calibrated in every theme.
+   7. **The base chain's unresolved step is marked, not inked.** The mockup
+      writes the step `--warn` text; here the rail and the dot carry the tone
+      and the step says the word `unresolved`, so the state survives both the
+      contrast floor and a reader who cannot see the hue.
+   8. The mockup's Metadata card ends with a callout describing what a *system*
+      type shows. That is documentation of the other variant, not a control:
+      this page renders the state the type is actually in — the badge, the lock
+      and the disabled Edit with its reason.
+
+   Every colour below is a token and every dimension is a token or `rem`, so
+   the screen follows the nine themes, both densities and all six font scales.
+   Nine classes are borrowed rather than restated: `.prm-quiet`, `.prm-hint`,
+   `.prm-faint`, `.prm-error`, `.prm-caution`, `.prm-code`, `.prm-lock`,
+   `.prm-ref-link` and the `.prm-panel-head*` block from the registry
+   (HIVE-6.5) — this route is the registry's own detail view and must not drift
+   from it.
+   ========================================================================== */
+
+/* ---- The page's two columns ---------------------------------------------
+   Main column then aside, side by side above the fold point and stacked below
+   it. `minmax(0, …)` on the first track is what stops a long `$id` — a URL
+   with no spaces in it — from holding the column open and pushing the aside
+   off the page. The fold point is the registry's own (`.prm-registry-grid`),
+   because the two screens are one surface and should turn together. */
+.pd-grid {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 68.75rem) {
+  .pd-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+/* A column of cards, at the page body's own rhythm. */
+.pd-col {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ---- Header -------------------------------------------------------------
+   The badge cluster beside the `h1`. It wraps: four badges plus a long type
+   name is more than a phone's width, and `.page-header__title` does not wrap
+   its own children (HIVE-3.5). */
+.pd-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The library glyph beside the type's name. Sized in `em` because it belongs to
+   the title rather than to the icon vocabulary: it has to stay in proportion as
+   `.page-header__title` grows with the font scale. It sits *inside* the title's
+   own wrapping span, which is not a flex box, so the gap is a margin. */
+.pd-title-glyph {
+  display: inline-block;
+  flex-shrink: 0;
+  margin-inline-end: var(--space-2);
+  inline-size: 0.85em;
+  block-size: 0.85em;
+  color: var(--fg-muted);
+  vertical-align: -0.06em;
+}
+
+/* ---- A card's own head --------------------------------------------------
+   Title on one side, the card's actions on the other, wrapping rather than
+   squeezing — the same rule `.page-header__row` follows one level up. */
+.pd-head {
+  display: flex;
+  /* Stated because `CardHeader` is a `flex-col` and this class is unlayered: an
+     unlayered rule outranks `@layer utilities`, but only for what it declares —
+     omit `flex-direction` and the row silently stays a column. */
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pd-head__actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+/* The head of a *collapsible* card: the whole title is the toggle. The button
+   sits inside the heading — the WAI-ARIA accordion shape, and the only legal
+   one, because a `button` may hold phrasing content and not a heading — so the
+   button carries the row while the heading carries the type. */
+.pd-toggle {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  border-radius: var(--r-xs);
+  text-align: start;
+}
+
+.pd-toggle > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+/* ---- The schema pane ----------------------------------------------------
+   A framed well the editor fills. The height arrives as a `rem` length from
+   the component, sized to the document and clamped, so the pane follows the
+   font-scale preference; everything else about the box is here. */
+.pd-viewer {
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* ---- Test this type ----------------------------------------------------- */
+.pd-test {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Mode switch and Reset, pushed to the trailing edge. */
+.pd-test__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* The loose-validation note under the verdict. An `Alert` at a tighter rhythm:
+   it is a footnote to the bar above it, not a banner of its own.
+
+   The ground is restated. `Alert`'s neutral variant is `--bg-subtle`, and
+   `--fg-muted` on that measures **4.34:1 in Solarized** — under AA, and axe says
+   so (`e2e/hive-primitive-detail.spec.ts` caught it). `--bg-inset` clears it in
+   all nine (6.01:1 there, 5.02:1 at worst), which is deviation 5 of this block's
+   banner and the call HIVE-6.5 made for every well that holds quiet text. */
+.pd-note {
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-inset);
+  font-size: var(--fs-xs);
+}
+
+/* ---- The property rows -------------------------------------------------
+   One stack, hairlines between the rows rather than around them, so a form
+   twelve properties deep reads as one object with rules in it. */
+.pd-props {
+  display: flex;
+  flex-direction: column;
+}
+
+.pd-prop {
+  display: flex;
+  gap: calc(var(--space-1) * 2.5);
+  align-items: flex-start;
+  padding-block: calc(var(--space-1) * 2.5);
+}
+
+.pd-prop + .pd-prop {
+  border-block-start: 1px solid var(--border);
+}
+
+/* The tick box sits on the first line of the row's own text rather than at the
+   top of its box, which is a hair higher. */
+.pd-prop__check {
+  margin-block-start: 0.125rem;
+}
+
+.pd-prop__body {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: var(--space-1);
+}
+
+.pd-prop__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.pd-prop__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+/* `string · pattern`, `$ref ../../std/v0/types/currency-code`. */
+.pd-type-hint {
+  min-inline-size: 0;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  overflow-wrap: anywhere;
+}
+
+/* A row's editor, indented to clear the tick-box gutter so the control lines
+   up under the property's name rather than under its checkbox. */
+.pd-prop__editor {
+  padding-inline-start: calc(var(--space-4) + var(--space-1));
+}
+
+/* A control and the lines that belong to it — the live `pattern` verdict, the
+   unresolved-`$ref` hint, a coercion error, the findings anchored on it. Tighter
+   than the card's own rhythm, because these are one thought, not four. */
+.pd-stack {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* A repeatable list: its elements, then Add. The elements stretch; the button
+   carries its own `self-start`, which is why this does not set `align-items`. */
+.pd-list {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* A single scalar box. Wide enough for a decimal or an ISO code and no wider —
+   `28ch` rather than the mockup's 280px, so the measure follows the type. */
+.pd-input {
+  max-inline-size: 28ch;
+}
+
+/* ---- A box inside the form ---------------------------------------------
+   A nested object, one array element, or one dynamic-property row. */
+.pd-nested {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: calc(var(--space-1) * 2.5) var(--space-3);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.pd-nested__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pd-nested__title {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* The name box of a dynamic property. */
+.pd-extra-key {
+  inline-size: 12ch;
+  max-inline-size: 100%;
+}
+
+/* ---- Findings -----------------------------------------------------------
+   The whole-instance list at the foot of the card, and the per-field list
+   under one control. Both are `--fg` sentences — see deviation 3. */
+.pd-findings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: calc(var(--space-1) * 2.5) var(--space-3);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.pd-findings__title {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.pd-findings__title > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+  color: var(--danger);
+}
+
+.pd-findings__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.pd-finding {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.pd-finding__pointer {
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.pd-field-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* ---- The live pattern verdict ------------------------------------------
+   The regex, then whether the value matches it, recomputed every keystroke.
+   The glyph carries the tone and the words carry the state, so the line reads
+   the same to someone who cannot see the hue — deviation 3. */
+.pd-pattern {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  align-items: center;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.pd-pattern > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+  color: var(--fg-muted);
+}
+
+.pd-pattern[data-matches='true'] > svg {
+  color: var(--ok);
+}
+
+.pd-pattern[data-matches='false'] > svg {
+  color: var(--danger);
+}
+
+.pd-pattern[data-matches='invalid-pattern'] > svg {
+  color: var(--warn);
+}
+
+.pd-pattern__regex {
+  min-inline-size: 0;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Metadata aside ----------------------------------------------------
+   Label above value, so a value with no spaces in it — an `$id`, a namespace
+   path — has the card's full width to break in rather than a half of it. */
+.pd-kv {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) * 2.5);
+}
+
+.pd-kv > div {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.pd-kv dt {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.pd-kv dd {
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Used in -----------------------------------------------------------
+   The stat strip sits inside a card, so it drops the elevation the strip
+   carries when it stands on the page by itself. */
+.pd-usage {
+  box-shadow: none;
+}
+
+/* ---- Base chain --------------------------------------------------------
+   This type, then one step per relative `$ref`, down to a primitive. */
+.pd-chain {
+  display: flex;
+  flex-direction: column;
+}
+
+.pd-chain__step {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding-block: calc(var(--space-1) * 1.5);
+}
+
+/* Every step below the head hangs off a rail, which is also what carries the
+   step's own state — see deviation 7. */
+.pd-chain__step--ref {
+  margin-inline-start: 0.25rem;
+  border-inline-start: 2px solid var(--border);
+  padding-inline-start: calc(var(--space-1) * 1.5);
+}
+
+.pd-chain__step--ref[data-status='unresolved'] {
+  border-inline-start-color: var(--warn);
+}
+
+/* The head node only — the type being viewed, which is by definition resolved. Every
+   step below it is a hop and carries the glyph instead, so there is no second dot
+   colour to state. */
+.pd-chain__dot {
+  flex-shrink: 0;
+  margin-block-start: 0.25rem;
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  border-radius: var(--r-full);
+  background: var(--ok);
+}
+
+.pd-chain__glyph {
+  flex-shrink: 0;
+  margin-block-start: 0.1875rem;
+  inline-size: var(--icon-button);
+  block-size: var(--icon-button);
+  color: var(--fg-muted);
+}
+
+.pd-chain__step--ref[data-status='unresolved'] .pd-chain__glyph {
+  color: var(--warn);
+}
+
+.pd-chain__body {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+}
+
+.pd-chain__label {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.pd-chain__meta {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}

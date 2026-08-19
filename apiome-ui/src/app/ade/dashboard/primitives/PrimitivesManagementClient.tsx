@@ -23,9 +23,14 @@
  * `$ref` explainer both linked to `?focus=resolver`, and **nothing on this screen read that
  * parameter**. Both now switch to the Resolver tab directly, and {@link viewFromFocusParam}
  * makes the address itself work when it is pasted or bookmarked.
+ *
+ * `?edit=<id>` is the same bug on the other side, closed by HIVE-6.6 (#5317): the type-detail
+ * page's Edit action linked here with it and nothing read it either, so "edit this type" landed
+ * on an unfiltered list. {@link primitiveIdFromEditParam} admits the id and the effect below
+ * opens the editor on that row once the registry has loaded it.
  */
 
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthSession } from '@lib/auth/session-client';
 import { FolderTree, GitFork, Library, Plus, Settings2, Upload } from 'lucide-react';
@@ -50,6 +55,7 @@ import {
   ResolverPanel,
   TypeCollectionsPanel,
   deletePrimitiveConfirm,
+  primitiveIdFromEditParam,
   viewFromFocusParam,
   type NamespaceSelection,
   type PrimitivesView,
@@ -307,16 +313,36 @@ export default function PrimitivesManagementClient() {
     setShowEditorDialog(true);
   };
 
-  const handleEditPrimitive = (primitive: { id: string }) => {
-    const target = primitives.find((candidate) => candidate.id === primitive.id);
-    if (!target) return;
-    if (target.is_system) {
-      showMessage('error', 'System primitives cannot be edited');
-      return;
-    }
-    setEditingPrimitive(target);
-    setShowEditorDialog(true);
-  };
+  const handleEditPrimitive = useCallback(
+    (primitive: { id: string }) => {
+      const target = primitives.find((candidate) => candidate.id === primitive.id);
+      if (!target) return;
+      if (target.is_system) {
+        showMessage('error', 'System primitives cannot be edited');
+        return;
+      }
+      setEditingPrimitive(target);
+      setShowEditorDialog(true);
+    },
+    [primitives, showMessage]
+  );
+
+  /**
+   * `?edit=<id>` — the type-detail page's Edit action (HIVE-6.6, #5317).
+   *
+   * Honoured **once**, and only once the registry has rows to match the id against: the editor
+   * needs the whole row, not just the id, so the parameter cannot be read on mount the way
+   * `?focus=` is. The latch is a ref rather than state because re-opening a dialog the reader
+   * has closed is exactly what a re-run would do.
+   */
+  const editParam = primitiveIdFromEditParam(searchParams?.get('edit'));
+  const editParamConsumed = useRef(false);
+
+  useEffect(() => {
+    if (!editParam || editParamConsumed.current || primitives.length === 0) return;
+    editParamConsumed.current = true;
+    handleEditPrimitive({ id: editParam });
+  }, [editParam, primitives, handleEditPrimitive]);
 
   const handleDeletePrimitive = async (primitive: { id: string }) => {
     const target = primitives.find((candidate) => candidate.id === primitive.id);

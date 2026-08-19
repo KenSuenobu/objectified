@@ -10,7 +10,7 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import { PrimitiveTestForm } from '../src/app/ade/dashboard/primitives/PrimitiveTestForm';
+import { PrimitiveTestForm } from '../src/app/components/ade/primitives/detail/PrimitiveTestForm';
 
 const MONEY_SCHEMA = {
   $id: 'https://api.apiome.dev/types/std/v0/types/money',

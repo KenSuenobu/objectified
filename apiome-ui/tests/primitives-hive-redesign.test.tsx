@@ -51,6 +51,15 @@ jest.mock('@/app/components/providers/DialogProvider', () => ({
   useDialog: () => ({ confirm: (options: unknown) => mockConfirm(options as never) }),
 }));
 
+// Page-level outcomes go to the app-wide toaster; a stub keeps them out of the DOM and makes the
+// refusals assertable.
+jest.mock('sonner', () => ({
+  __esModule: true,
+  toast: Object.assign(jest.fn(), { success: jest.fn(), error: jest.fn() }),
+}));
+
+import { toast } from 'sonner';
+
 import PrimitivesManagementClient from '../src/app/ade/dashboard/primitives/PrimitivesManagementClient';
 
 const PRIMITIVES = [
@@ -227,6 +236,8 @@ beforeEach(() => {
   currentTenantId = 'tenant-1';
   mockPush.mockClear();
   mockConfirm.mockClear();
+  (toast.error as jest.Mock).mockClear();
+  (toast.success as jest.Mock).mockClear();
 });
 
 afterEach(() => jest.restoreAllMocks());
@@ -316,6 +327,33 @@ describe('the KPI strip and the resolver deep link', () => {
     render(<PrimitivesManagementClient />);
 
     expect(screen.getByTestId('primitives-tab-registry')).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('opens the editor on the type ?edit= names (HIVE-6.6, #5317)', async () => {
+    // The type-detail page's Edit action links here with `?edit=<id>`; before #5317 nothing read
+    // it, so the reader landed on an unfiltered list instead of on the type they were viewing.
+    searchParams = new URLSearchParams('edit=p-money');
+    await renderScreen();
+
+    expect(await screen.findByRole('heading', { name: 'Edit primitive' })).toBeInTheDocument();
+  });
+
+  it('refuses ?edit= on a system type, with the reason it refuses every other way', async () => {
+    searchParams = new URLSearchParams('edit=p-currency');
+    await renderScreen();
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith('System primitives cannot be edited')
+    );
+    expect(screen.queryByRole('heading', { name: 'Edit primitive' })).not.toBeInTheDocument();
+  });
+
+  it('ignores an ?edit= naming no row rather than opening an empty editor', async () => {
+    searchParams = new URLSearchParams('edit=p-nonexistent');
+    await renderScreen();
+
+    expect(screen.queryByRole('heading', { name: 'Edit primitive' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Create primitive' })).not.toBeInTheDocument();
   });
 });
 

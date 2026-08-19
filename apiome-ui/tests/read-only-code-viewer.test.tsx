@@ -111,6 +111,33 @@ describe('ReadOnlyCodeViewer (MFX-43.1)', () => {
     expect(editor).toHaveAttribute('data-theme', 'vs-dark');
   });
 
+  it('paints from the app’s own tokens when asked for the Hive palette (HIVE-6.6)', async () => {
+    // `vs` / `vs-dark` follow only light and dark; the Hive theme follows all nine appearances,
+    // which is why the primitive-detail schema pane asks for it. The default is unchanged.
+    render(<ReadOnlyCodeViewer value={PROTO} language="protobuf" theme="hive" />);
+
+    const editor = await screen.findByTestId('mock-monaco');
+    expect(editor).toHaveAttribute('data-theme', 'hive');
+  });
+
+  it('keeps the Hive palette when the html carries the dark class', async () => {
+    // The Hive theme reads the live tokens, so the `dark` class is already accounted for in them:
+    // asking for `hive` must not fall back to `vs-dark` under it.
+    document.documentElement.classList.add('dark');
+    render(<ReadOnlyCodeViewer value={PROTO} language="protobuf" theme="hive" />);
+
+    const editor = await screen.findByTestId('mock-monaco');
+    expect(editor).toHaveAttribute('data-theme', 'hive');
+  });
+
+  it('accepts a rem box, so a caller can make the pane follow the font scale', async () => {
+    render(<ReadOnlyCodeViewer value={PROTO} language="protobuf" height="21.5rem" />);
+
+    const host = await screen.findByTestId('read-only-code-editor');
+    expect(host).toHaveStyle({ height: '21.5rem' });
+    expect(await screen.findByTestId('mock-monaco')).toHaveAttribute('data-height', '21.5rem');
+  });
+
   it('passes a concrete pixel height into Monaco (not a nested 100%)', async () => {
     render(<ReadOnlyCodeViewer value={PROTO} language="protobuf" />);
 
