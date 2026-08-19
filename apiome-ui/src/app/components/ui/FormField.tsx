@@ -37,21 +37,44 @@ export interface FormFieldProps {
  * the hairline red (`.hive-control[aria-invalid]` in globals.css) *and* what a screen reader
  * announces — one flag, so the two can never disagree. A control that already sets the
  * attribute itself is left alone.
+ *
+ * The message itself is an `alert` and, when the field names its control with `htmlFor`, is
+ * pointed at by that control's `aria-describedby` (HIVE-7.6, #5323). Without both, a
+ * validation failure is a sentence a sighted reader sees appear and nobody else is told about
+ * — which is what the hand-rolled fields this primitive replaced had each wired up for
+ * themselves, in four different ways.
  */
 export const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
   ({ label, helperText, error, required, htmlFor, className, children }, ref) => {
     const invalid = Boolean(error);
+
+    // The message's id, so the control can point at it. Derived from the control's own id
+    // rather than generated, so the two cannot drift apart across a re-render; a field that
+    // does not name its control has nothing to hang the association on and simply omits it.
+    const errorId = invalid && htmlFor ? `${htmlFor}-error` : undefined;
 
     // Mark the control rather than the wrapper: `aria-invalid` belongs on the thing the
     // user is typing into. Only elements are touched, and only when they have not already
     // said something about their own validity.
     const control = invalid
       ? React.Children.map(children, (child) => {
-          if (!React.isValidElement<{ 'aria-invalid'?: React.AriaAttributes['aria-invalid'] }>(child)) {
+          if (
+            !React.isValidElement<{
+              'aria-invalid'?: React.AriaAttributes['aria-invalid'];
+              'aria-describedby'?: string;
+            }>(child)
+          ) {
             return child;
           }
-          if (child.props['aria-invalid'] !== undefined) return child;
-          return React.cloneElement(child, { 'aria-invalid': true });
+          const patch: {
+            'aria-invalid'?: true;
+            'aria-describedby'?: string;
+          } = {};
+          if (child.props['aria-invalid'] === undefined) patch['aria-invalid'] = true;
+          if (errorId && child.props['aria-describedby'] === undefined) {
+            patch['aria-describedby'] = errorId;
+          }
+          return Object.keys(patch).length > 0 ? React.cloneElement(child, patch) : child;
         })
       : children;
 
@@ -69,7 +92,7 @@ export const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
         )}
         {control}
         {error ? (
-          <p className="flex items-center gap-1 text-xs text-danger-fg">
+          <p id={errorId} role="alert" className="flex items-center gap-1 text-xs text-danger-fg">
             <CircleAlert className="size-3 shrink-0" aria-hidden="true" />
             {error}
           </p>

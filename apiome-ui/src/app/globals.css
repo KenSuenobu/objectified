@@ -24217,3 +24217,900 @@ button.cid-entity__head {
     margin-block-start: var(--space-2);
   }
 }
+
+/* ==========================================================================
+   DISCOVERED SPECS · QUOTA · WEBHOOK ALLOWLIST  (HIVE-7.6, #5323)
+   --------------------------------------------------------------------------
+   `docs/mockups/sources/repository-catalog.html`,
+   `docs/mockups/sources/repository-telemetry.html` and
+   `docs/mockups/sources/webhook-allowlist.html`, whose three page-local
+   `<style>` blocks this replaces (`.fmt`/`.t-num` nowrap, the 44px
+   `.metric-card .sparkline`, the `.cidr-chip`) together with the ~150 palette
+   classes the three screens had grown between them — `bg-emerald-100
+   text-emerald-700 dark:bg-emerald-900/40` status pills,
+   `border-amber-300 dark:border-amber-700` pressure frames, an
+   `bg-indigo-600 text-white` range switch, `border-red-200 bg-red-50` error
+   panels, `border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800`
+   inputs and a `text-amber-700 dark:text-amber-300` provider error line.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons every Epic-5 to Epic-7.5 block above gives. Every
+   rule leans on the density and font-scale tokens; the filter row, the figure
+   grid, the metric card, the provider grid and the entry row are real grids
+   that a utility string spells badly; and the quiet lines have to sit *after*
+   the unlayered `h1`–`h4` and `p` base rules near line 2497, which outrank
+   anything in `@layer utilities`.
+
+   The three mockups froze eight things in pixels that must not be frozen: the
+   240/340px search field, the 160/180/190px filter selects, the 44px
+   sparkline, the 64px bar track, the 22px CIDR chip, the 200/220/280px add
+   fields, the 260/420px reason field and the 18px button offsets that align a
+   button with a labelled field. All are `rem`, a token, or a grid alignment
+   here, so all six font scales and both densities hold.
+
+   No hue is named below. Every colour is a token, so the three surfaces follow
+   all nine themes. No status is named either: the four catalog states resolve
+   through `ui/statusVocabulary` (this ticket added them to it), the quota
+   pressure levels and the allowlist postures map onto vocabulary strings the
+   table already held, and the marks that carry a tone take the class the
+   component passes in.
+
+   Five measured deviations, and one stated limit:
+
+   * quiet text is `--fg-muted`, not the mockups' `--fg-subtle`, which measures
+     about 3.1:1 against the canvas at these sizes — the call HIVE-3.5 and
+     every Epic-5 block already made;
+   * every tone ink sits on its own `-soft` ground. `--warn-fg` as bare ink on
+     the plain card measures 2.6:1 in Nord and `--danger-fg` 1.47:1 (the
+     finding HIVE-7.2 recorded), so a provider's overdue line and its last
+     error are tinted strips rather than coloured sentences;
+   * a row's spec link is `--accent-fg`, not `ui/Button`'s `text-accent`, which
+     measures 4.14:1 at `--fs-sm` — the same call HIVE-7.5 made for its file
+     links;
+   * the bar track's minimum height is 2% rather than 0. A day with nothing in
+     it still draws its baseline tick, because a missing bar and a bar of
+     height zero are the same picture and only one of them is true;
+   * the deferral card's amber frame is joined by a glyph *and* an amber
+     sparkline. DESIGN.md §6: one of the three has to survive a reader who
+     cannot separate the hues, and the glyph does;
+   * the quota meter's printed share is `--fg-muted`, not the tone `-fg` that
+     `ui/metrics/Meter` inks its own figure with. At `--fs-xs` on the card that
+     pair measures 1.58:1 in Nord and fails in four more themes — the
+     primitive-level exposure HIVE-7.2 recorded and HIVE-7.3 worked around the
+     same way. The bar beside it still carries the tone.
+
+   The stated limit: `.wal-provider[data-overdue]`'s frame measures 2.46:1 in
+   Nord as a 1px inset against the surface, the same figure HIVE-7.5 recorded
+   for its danger zone. So it is emphasis and never the only signal — the
+   refresh line inside the card says "overdue" in words on its own tinted
+   ground, and the card is readable with the frame ignored entirely.
+
+   Six classes are borrowed rather than restated: `.input-wrap` (HIVE-2.1),
+   `.mono` (HIVE-1.4), `.repo-provider__glyph` and `.repo-filter[data-active]`'s
+   idea from HIVE-7.3, `.hive-meter` / `.hive-sparkline` from the metrics set
+   (HIVE-2.6), and `.fmt` from the fixed identity block (HIVE-2.4).
+   ========================================================================== */
+
+/* ---- Discovered specs: the filter panel ---------------------------------
+   Two rows in one card. Both wrap, so the Largest font scale gives them more
+   lines rather than a horizontal scrollbar. */
+.spec-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--card-pad);
+}
+
+.spec-filters__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The second row is separated by a hairline rather than by extra space: it
+   holds modifiers and a note, not more of the same controls. */
+.spec-filters__row--flags {
+  gap: var(--space-2) var(--space-4);
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+
+/* The search field grows into whatever the selects leave, between a floor that
+   still fits the placeholder and a ceiling that stops it eating the row. Both
+   in `rem`, unlike the mockup's 240/340px. */
+.spec-filters__search {
+  flex: 1 1 15rem;
+  min-inline-size: 15rem;
+  max-inline-size: 21rem;
+}
+
+/* One width for all five dropdowns. A row of selects that are almost but not
+   quite the same width reads as a mistake — the call HIVE-7.3 recorded for
+   `.repo-filter`. */
+.spec-filters__facet {
+  inline-size: 10.5rem;
+  block-size: var(--control-h-sm);
+  font-size: var(--fs-xs);
+}
+
+/* The sort menu carries "Sort: Recent activity", which is the longest label in
+   the row and the one that must not truncate. */
+.spec-filters__facet--sort {
+  inline-size: 12rem;
+}
+
+/* A facet that is narrowing the list must not look like one that is not. The
+   accent hairline is the mark `DataTableFilterChip` uses for an active facet,
+   at the weight a field can carry without becoming a second primary. */
+.spec-filters__facet[data-active] {
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--accent-fg);
+}
+
+.spec-filters__flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.spec-filters__clear {
+  margin-inline-start: auto;
+}
+
+/* The note about the address bar. It follows *after* the Clear button in the
+   source, so it is the last thing to wrap onto its own line. */
+.spec-filters__note {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Discovered specs: the table's cells -------------------------------- */
+.spec-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+/* The path: a dimmed directory and the file name that matters, on one line
+   that may break anywhere. A 90-character path must not hold the row open —
+   which only works because `min-inline-size: 0` is on the cell above it. */
+.spec-path {
+  display: block;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.spec-path:hover {
+  color: var(--accent-fg);
+}
+
+.spec-path__dir {
+  color: var(--fg-muted);
+}
+
+.spec-path__file {
+  font-weight: 600;
+}
+
+.spec-refs {
+  margin-block-start: 0.125rem;
+}
+
+/* The repository and project links. `--accent-fg`, not the saturated
+   `--accent`: see the third deviation in the banner above. */
+.spec-link {
+  display: block;
+  min-inline-size: 0;
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spec-link:hover {
+  color: var(--accent-fg);
+}
+
+.spec-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.spec-branch > svg {
+  inline-size: var(--fs-2xs);
+  block-size: var(--fs-2xs);
+  flex-shrink: 0;
+}
+
+/* "Unmapped" is a real answer, not an absence, so it is muted rather than
+   faint — a reader has to be able to tell it apart from an empty cell. */
+.spec-unmapped {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.spec-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.spec-pager {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* ---- Discovered specs: the status vocabulary card -----------------------
+   A definition list where the term is a badge. `align-items: baseline` keeps
+   the pill's text on the same line as the sentence beside it at every scale. */
+.spec-vocab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.spec-vocab__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.spec-vocab__row > dt {
+  display: flex;
+}
+
+.spec-vocab__desc {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+/* ---- Quota: the polling panel ------------------------------------------- */
+.quota-panel__head {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.quota-panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-md);
+}
+
+.quota-panel__title > svg {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.quota-panel__copy {
+  margin: 0;
+  max-inline-size: 80ch;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+/* Four figures, auto-fit at a `rem` minimum rather than the mockup's fixed
+   four columns: at the Largest scale four columns of tabular figures no longer
+   fit, and this folds to two and then one instead of scrolling the page. */
+.quota-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-4);
+  margin-block-start: var(--space-4);
+}
+
+.quota-figure__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.quota-figure__value {
+  margin: 0;
+  margin-block-start: 0.125rem;
+  font-size: var(--fs-2xl);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+  color: var(--fg);
+}
+
+.quota-panel__meter {
+  margin-block-start: var(--space-4);
+}
+
+/* The share, printed by the panel rather than by `Meter` — see the sixth deviation in the
+   banner above. `--fg-muted` on the card, not the tone's `-fg`, which measures 1.58:1 there
+   in Nord; the bar beside it still carries the tone, so nothing is lost but the failure. */
+.quota-panel__share {
+  margin: 0;
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* ---- Quota: the metric grid --------------------------------------------- */
+.quota-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 30rem) {
+  .quota-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A metric that counts work the quota postponed. The frame is one of three
+   signals — see the fifth deviation in the banner above. */
+.quota-metric[data-deferral="true"] {
+  box-shadow: inset 0 0 0 1px var(--warn), var(--shadow-sm);
+}
+
+.quota-metric__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quota-metric__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.quota-metric__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.quota-metric__flag {
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+  flex-shrink: 0;
+  color: var(--warn);
+}
+
+.quota-metric__window {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.quota-metric__value {
+  margin: 0;
+  font-size: var(--fs-4xl);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+  color: var(--fg);
+}
+
+/* The sparkline's proportion comes from `.hive-sparkline`; only the width is
+   stated here, so the trend is the same shape as every other one in the app. */
+.quota-metric__spark {
+  inline-size: 100%;
+}
+
+.quota-metric__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.quota-metric__foot > div {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.quota-metric__foot dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.quota-metric__desc {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+  color: var(--fg-muted);
+}
+
+/* ---- Quota: the daily distribution --------------------------------------
+   Fourteen bars over a baseline, `align-items: flex-end` so a bar grows upward
+   from it. Heights are set inline as a percentage of the track, which is the
+   one thing about this mark that has to be a style attribute — the value is
+   data, and a class per percentage is 101 classes. The same shape
+   `.home-bars` takes. */
+.quota-bars-card__head {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.quota-bars-card__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+}
+
+.quota-bars-card__title > svg {
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.quota-bars-card__window {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.quota-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.1875rem;
+  block-size: 4.5rem;
+  padding-block-start: var(--space-1);
+  border-block-end: 1px solid var(--border);
+}
+
+/* `currentColor`, so the tone class the component passes in paints the bar —
+   the same rule every mark in the metrics set follows. */
+.quota-bars__bar {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  border-radius: var(--r-xs) var(--r-xs) 0 0;
+  background: currentColor;
+}
+
+/* A day with nothing in it keeps the baseline tick and loses the tone: an
+   empty day is a measurement, and `--fg-faint` is what "measured, nothing
+   there" looks like beside bars that are carrying a hue. */
+.quota-bars__bar[data-count="0"] {
+  background: var(--fg-faint);
+}
+
+.quota-bars__axis {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0;
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.quota-bars__total {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* ---- Allowlist: the posture banner -------------------------------------- */
+.wal-posture__body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.wal-posture__text {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.wal-posture__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+}
+
+.wal-posture__desc {
+  margin: 0;
+  margin-block-start: var(--space-1);
+  max-inline-size: 80ch;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+.wal-posture__reason {
+  margin: 0;
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The tinted square at the head of the banner. Each tone takes its own
+   `-soft` ground and the ink calibrated against it, which is the pair the
+   token layer measures — never a tone ink on the plain card. */
+.wal-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: calc(var(--fs-md) * 2.5);
+  block-size: calc(var(--fs-md) * 2.5);
+  flex-shrink: 0;
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+}
+
+.wal-tile > svg {
+  inline-size: var(--fs-lg);
+  block-size: var(--fs-lg);
+}
+
+.wal-tile[data-tone="ok"] {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.wal-tile[data-tone="warn"] {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.wal-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+  margin-block-start: var(--space-4);
+}
+
+.wal-fact__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.wal-fact__value {
+  margin: 0;
+  margin-block-start: 0.125rem;
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+/* ---- Allowlist: the provider cards -------------------------------------- */
+.wal-providers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 30rem) {
+  .wal-providers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A provider whose refresh is overdue. Emphasis only — see the stated limit
+   in the banner above; the refresh line inside carries the meaning. */
+.wal-provider[data-overdue="true"] {
+  box-shadow: inset 0 0 0 1px var(--warn), var(--shadow-sm);
+}
+
+.wal-provider__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.wal-provider__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.wal-provider__name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.wal-provider__name > svg {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  flex-shrink: 0;
+}
+
+.wal-provider__note,
+.wal-provider__refresh {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+  color: var(--fg-muted);
+}
+
+/* "…overdue." and the last error both sit on their own tinted ground rather
+   than on the plain card: see the second deviation in the banner above. */
+.wal-provider__refresh[data-overdue="true"] {
+  align-self: flex-start;
+  padding: 0.0625rem var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--warn-soft);
+  font-weight: 600;
+  color: var(--warn-fg);
+}
+
+.wal-provider__error {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0.0625rem var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+  color: var(--danger-fg);
+}
+
+.wal-provider__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  max-block-size: 11rem;
+  overflow-y: auto;
+}
+
+.wal-provider__empty {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-style: italic;
+  color: var(--fg-muted);
+}
+
+/* The CIDR chip. `rem` and a token, not the mockup's 22px box. */
+.wal-cidr {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: calc(var(--fs-2xs) * 2);
+  padding-inline: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* ---- Allowlist: the workspace's own ranges ------------------------------ */
+.wal-ranges__head {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.wal-ranges__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-md);
+}
+
+.wal-ranges__title > svg {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.wal-ranges__count {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.wal-ranges__desc {
+  margin: 0;
+  max-inline-size: 80ch;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+.wal-ranges__empty {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-style: italic;
+  color: var(--fg-muted);
+}
+
+/* The add row. `align-items: end` is what puts the button on the controls'
+   baseline without the mockup's 18px top margin — a magic number that only
+   held at one font scale. */
+.wal-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+.wal-add__field {
+  flex: 1 1 14rem;
+  min-inline-size: 12rem;
+  max-inline-size: 22rem;
+}
+
+.wal-add__submit {
+  flex-shrink: 0;
+}
+
+.wal-entries {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block-start: 1px solid var(--border);
+}
+
+.wal-entry {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--card-pad);
+}
+
+.wal-entry + .wal-entry {
+  border-block-start: 1px solid var(--border);
+}
+
+/* A disabled entry is dimmed in the mockup. Dimming fades its text with it, so
+   the row keeps full contrast and the `disabled` badge in its meta line is
+   what says so — the call HIVE-7.3 recorded for the zero refresh chip. */
+.wal-entry__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.wal-entry__nodesc {
+  font-style: italic;
+}
+
+.wal-entry__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* ---- Allowlist: enforcement --------------------------------------------- */
+.wal-enforce {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+.wal-enforce__desc {
+  margin: 0;
+  max-inline-size: 80ch;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+.wal-enforce__field {
+  flex: 1 1 18rem;
+  min-inline-size: 15rem;
+  max-inline-size: 28rem;
+}
+
+.wal-enforce__submit {
+  flex-shrink: 0;
+}
+
+.wal-enforce__restore {
+  margin-block-start: var(--space-4);
+}
+
+.wal-enforce__changed {
+  margin: 0;
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Narrow viewports ---------------------------------------------------
+   Every multi-column row on these three routes collapses before the document
+   can scroll sideways, which is the ticket's "no horizontal document scroll at
+   ≥1280 px" criterion measured at every font scale rather than only at the
+   default one. Both breakpoints are `rem`, so the fold moves with the reader's
+   type rather than staying put while the text grows past it. */
+@media (max-width: 40rem) {
+  .spec-filters__facet,
+  .spec-filters__facet--sort,
+  .spec-filters__search {
+    inline-size: 100%;
+    max-inline-size: none;
+  }
+
+  .spec-filters__clear {
+    margin-inline-start: 0;
+  }
+
+  .spec-vocab__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .wal-posture__body {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* The entry's meta line moves under its CIDR, so a long reason never pushes
+     the two buttons off the right edge. */
+  .wal-entry {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .wal-entry__meta {
+    grid-column: 1 / -1;
+  }
+
+  .wal-add__field,
+  .wal-enforce__field {
+    max-inline-size: none;
+  }
+}
