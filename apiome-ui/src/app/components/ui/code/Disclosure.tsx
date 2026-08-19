@@ -23,6 +23,19 @@ export interface DisclosureProps {
  *
  * Promoted from `ui/mcp/McpDisclosure` to `ui/code` in MFI-28.7 (#4123); `ui/mcp` keeps a back-compat
  * re-export.
+ *
+ * ### Re-tokened by HIVE-7.8 (#5325)
+ *
+ * Authority: the `.disclosure` block of `docs/mockups/sources/mcp-endpoint.html`.
+ *
+ * It was `border-gray-200 bg-gray-50 text-gray-700` with a `text-gray-400` meta and an indigo
+ * braces glyph, which froze it on one light palette and one dark one. The browser sweep this
+ * ticket added caught the meta outright: `#99a1af` on `#f9fafb` measures **2.48:1** at 12 px, an
+ * axe `color-contrast` failure on every capability card and every change row at once.
+ *
+ * The one deliberate departure from the mockup: the meta is `--fg-muted`, not its `--fg-subtle`,
+ * which is the same call every Epic-5 to Epic-7 block records — `--fg-subtle` is about 3.1:1
+ * against the canvas at this size, and "14 lines" is a figure a reader uses.
  */
 export function Disclosure({
   label,
@@ -38,7 +51,7 @@ export function Disclosure({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700',
+        'overflow-hidden rounded-md shadow-[inset_0_0_0_1px_var(--border)]',
         className,
       )}
     >
@@ -49,25 +62,25 @@ export function Disclosure({
           setEverOpened(true);
         }}
         aria-expanded={open}
-        className="flex w-full items-center gap-2 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:bg-gray-900/40 dark:text-gray-300 dark:hover:bg-gray-900/70"
+        className="flex w-full items-center gap-2 bg-inset px-3 py-2 text-left text-xs font-medium text-fg-muted transition-colors hover:bg-subtle hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         <ChevronRight
           className={cn(
-            'h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform',
+            'size-3.5 shrink-0 transition-transform',
             open && 'rotate-90',
           )}
           aria-hidden
         />
-        {icon ?? <Braces className="h-3.5 w-3.5 shrink-0 text-indigo-500" aria-hidden />}
+        {icon ?? <Braces className="size-3.5 shrink-0" aria-hidden />}
         {label}
         {meta ? (
-          <span className="ml-auto font-normal tabular-nums text-gray-400 dark:text-gray-500">
+          <span className="ml-auto font-normal tabular-nums">
             {meta}
           </span>
         ) : null}
       </button>
       {everOpened ? (
-        <div className={open ? 'border-t border-gray-200 dark:border-gray-700' : 'hidden'}>
+        <div className={open ? 'border-t border-border' : 'hidden'}>
           {children}
         </div>
       ) : null}

@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
+import { STATUS_TONE_SOFT_CLASS } from '@/app/components/ui/statusVocabulary';
 import { GradeGlyph } from '@/app/components/ui/mcp/GradeGlyph';
 import { TrendLine, chartSeriesStyle } from '@/app/components/ui/mcp/charts';
 import {
@@ -54,15 +55,16 @@ interface Props {
 function DeltaBadge({ delta, unit }: { delta: number | null; unit: string }) {
   if (delta === null) return null;
   const Icon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
+  // A chip on the tone's own soft ground, not coloured text: see `.mcp-tone-figure`.
   const tone =
     delta > 0
-      ? 'text-emerald-600 dark:text-emerald-400'
+      ? STATUS_TONE_SOFT_CLASS.ok
       : delta < 0
-        ? 'text-red-600 dark:text-red-400'
-        : 'text-gray-500 dark:text-gray-400';
+        ? STATUS_TONE_SOFT_CLASS.danger
+        : STATUS_TONE_SOFT_CLASS.neutral;
   const sign = delta > 0 ? '+' : '';
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium tabular-nums ${tone}`}>
+    <span className={`mcp-tone-figure text-xs ${tone}`}>
       <Icon className="h-3.5 w-3.5" aria-hidden />
       {sign}
       {delta} {unit}
@@ -83,7 +85,7 @@ function TrendBlock({
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-2">
-        <span className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span className="text-xs font-medium uppercase tracking-wider text-fg-muted">
           {title}
         </span>
         {delta}
@@ -106,7 +108,7 @@ export function GradeSurfaceTrendPanel({ series, loading, error, onSelectVersion
     return (
       <EmptyState
         variant="compact"
-        icon={<LineChart className="h-8 w-8 text-white" aria-hidden />}
+        icon={<LineChart className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Trend unavailable"
         description={error}
       />
@@ -117,7 +119,7 @@ export function GradeSurfaceTrendPanel({ series, loading, error, onSelectVersion
     return (
       <EmptyState
         variant="compact"
-        icon={<LineChart className="h-8 w-8 text-white" aria-hidden />}
+        icon={<LineChart className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No history yet"
         description="This endpoint has no recorded snapshots to chart. Run discovery to start building its evolution history."
       />
@@ -144,12 +146,12 @@ export function GradeSurfaceTrendPanel({ series, loading, error, onSelectVersion
             <GradeGlyph variant="glyph" size="md" />
           )}
           <div className="flex flex-col">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-fg-muted">
               {trend.latestScored ? 'Latest grade' : 'Not yet scored'}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-fg-muted">
               across{' '}
-              <span className="font-semibold tabular-nums text-gray-700 dark:text-gray-200">
+              <span className="font-semibold tabular-nums text-fg">
                 {series.length}
               </span>{' '}
               {series.length === 1 ? 'snapshot' : 'snapshots'}
@@ -157,8 +159,8 @@ export function GradeSurfaceTrendPanel({ series, loading, error, onSelectVersion
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm text-gray-600 dark:text-gray-300">
-            <span className="text-lg font-semibold tabular-nums text-gray-900 dark:text-white">
+          <div className="text-sm text-fg-muted">
+            <span className="text-lg font-semibold tabular-nums text-fg">
               {trend.latestTotal ?? 0}
             </span>{' '}
             {trend.latestTotal === 1 ? 'capability' : 'capabilities'} now
@@ -178,7 +180,7 @@ export function GradeSurfaceTrendPanel({ series, loading, error, onSelectVersion
             pointLabel={(i) => mcpTrendScoreLabel(trend.columns[i])}
           />
         ) : (
-          <p className="rounded-md border border-dashed border-gray-200 bg-gray-50/60 px-3 py-4 text-center text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-400">
+          <p className="rounded-md border border-dashed border-border bg-inset px-3 py-4 text-center text-xs text-fg-muted">
             No snapshot has been scored yet, so there is no quality trend to plot.
           </p>
         )}
@@ -201,11 +203,11 @@ export function GradeSurfaceTrendPanel({ series, loading, error, onSelectVersion
       {/* Breaking-change markers: a legend + clickable chips that deep-link to each release's diff. */}
       {breakingColumns.length > 0 ? (
         <div className="space-y-2">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
             <svg viewBox="0 0 10 10" className="h-2.5 w-2.5" aria-hidden>
               <rect x={0} y={0} width={10} height={10} rx={2} className={markerStyle.fillClass} />
             </svg>
-            <ShieldAlert className="h-3.5 w-3.5 text-red-500 dark:text-red-400" aria-hidden />
+            <ShieldAlert className="size-3.5 text-danger" aria-hidden />
             Breaking-change releases
           </div>
           <div className="flex flex-wrap gap-2">
@@ -214,7 +216,7 @@ export function GradeSurfaceTrendPanel({ series, loading, error, onSelectVersion
                 key={column.versionId}
                 type="button"
                 onClick={() => onSelectVersion(column.versionId)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs text-red-700 transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/30"
+                className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-2.5 py-1 text-xs text-danger-fg transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
               >
                 <span className="font-semibold">{column.axisLabel}</span>
                 <span className="tabular-nums">
@@ -223,15 +225,15 @@ export function GradeSurfaceTrendPanel({ series, loading, error, onSelectVersion
               </button>
             ))}
           </div>
-          <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-            <MousePointerClick className="h-3.5 w-3.5 shrink-0 text-indigo-400" aria-hidden />
+          <p className="flex items-center gap-1.5 text-xs text-fg-muted">
+            <MousePointerClick className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden />
             Select a breaking-change release to open its diff in the version history.
           </p>
         </div>
       ) : (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-fg-muted">
           No breaking changes recorded across{' '}
-          <span className="font-semibold tabular-nums text-gray-700 dark:text-gray-200">
+          <span className="font-semibold tabular-nums text-fg">
             {series.length}
           </span>{' '}
           {series.length === 1 ? 'snapshot' : 'snapshots'}.

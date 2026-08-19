@@ -1,16 +1,36 @@
 "use client";
 
 /**
- * Endpoint-detail "Settings" tab (V2-MCP-24.9 / MCAT-10.9).
+ * Endpoint-detail "Settings" tab (V2-MCP-24.9 / MCAT-10.9; re-skinned by HIVE-7.8, #5325).
  *
- * Rendered inside the 10.2 detail shell. Lets the owner edit an endpoint's identity & connection
- * (name, URL, transport, visibility, discovery cadence) and manage its lifecycle (enable/disable,
- * delete). Identity edits persist via `PATCH /api/mcp/endpoints/{id}`; delete (with a typed confirm
- * that names the cascade) calls `DELETE` and surfaces the returned teardown summary. Inline
- * validation reuses the import-source URL/transport rules; every style is a design-token class.
+ * Lets the owner edit an endpoint's identity & connection (name, URL, transport, visibility,
+ * discovery cadence) and manage its lifecycle (enable/disable, delete). Identity edits persist via
+ * `PATCH /api/mcp/endpoints/{id}`; delete — behind a confirmation that has to be typed — calls
+ * `DELETE` and surfaces the returned teardown summary. Inline validation reuses the import-source
+ * URL/transport rules.
  *
  * The component is self-contained: it owns the form state and the network calls, and lifts results
  * to the parent through `onSaved` (an updated endpoint) and `onDeleted` (the teardown summary).
+ *
+ * ### What HIVE-7.8 changed
+ *
+ * Authority: `docs/mockups/sources/mcp-endpoint.html`'s Settings panel, whose three
+ * `.settings-grid` sections this is.
+ *
+ * 1. **Each section was a `lg:grid-cols-3` with a heading in column one.** It is
+ *    `.mcp-settings-grid` — the mockup's `minmax(0,1fr) minmax(0,2fr)` — so the explanation
+ *    column keeps a readable measure instead of a third of whatever is left.
+ * 2. **Every field was a hand-rolled `Label` + control + `<p class="text-xs text-gray-500">`.**
+ *    They are `ui/FormField`, which is what wires the hint to the control's `aria-describedby`
+ *    and turns a validation failure into something a screen reader is told about.
+ * 3. **Forty-five palette classes.** `text-red-500` requirement stars, a `text-amber-600`
+ *    unsaved-changes dot, `bg-emerald-500` / `bg-gray-400` lifecycle dots, a
+ *    `border-red-200 bg-red-50/60 dark:bg-red-950/20` danger panel and a
+ *    `bg-red-600 hover:bg-red-700` delete button that re-stated what `Button`'s `destructive`
+ *    variant already draws. All tokens now, so the tab follows all nine themes.
+ *
+ * The typed-DELETE confirmation is untouched: the dialog still names the cascade, still requires
+ * the word to be typed exactly, and still stays mounted while the request runs.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -18,6 +38,8 @@ import { Loader2, Power, PowerOff, Save, Server, Trash2, TriangleAlert } from "l
 import { toast } from "sonner";
 import { useDialog } from "@/app/components/providers/DialogProvider";
 import { Button } from "@/app/components/ui/Button";
+import { Card, CardBody } from "@/app/components/ui/Card";
+import { FormField } from "@/app/components/ui/FormField";
 import { Input } from "@/app/components/ui/Input";
 import { Label } from "@/app/components/ui/Label";
 import {
@@ -37,7 +59,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/app/components/ui/AlertDialog";
-import { dashboardPanelPaddedClass } from "@/app/components/ade/dashboard/dashboardScreenClasses";
 import {
   MCP_TRANSPORT_OPTIONS,
   type McpTransport,
@@ -74,8 +95,8 @@ export interface McpEndpointSettingsProps {
   onDeleted: (summary: McpTeardownSummary) => void;
 }
 
-const fieldLabelClass = "mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300";
-const helpTextClass = "mt-1 text-xs text-gray-500 dark:text-gray-400";
+/** The dot that says whether the endpoint is in the sweep. Never alone — the words are beside it. */
+const LIFECYCLE_DOT_CLASS = "inline-block size-2.5 shrink-0 rounded-full";
 
 /** Read an error message out of a `{ error }` JSON body, falling back to a status line. */
 function errorFromResponse(data: unknown, statusText: string): string {
@@ -220,176 +241,182 @@ export default function McpEndpointSettings({
   const anyBusy = busy !== null;
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-6">
       {/* Identity & connection ------------------------------------------------------------- */}
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8">
+      <section className="mcp-settings-grid">
         <div>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-            <Server className="h-4 w-4 text-indigo-500" aria-hidden />
+          <h3 className="flex items-center gap-2 text-base font-semibold text-fg">
+            <Server aria-hidden className="size-[var(--fs-md)] shrink-0 text-fg-muted" />
             Identity &amp; connection
           </h3>
-          <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-            How this endpoint appears in your catalog and how discovery connects to it. Changing the
-            URL or transport takes effect on the next discovery run.
+          <p className="mt-1 text-sm text-fg-muted">
+            How this endpoint appears in your catalog and how discovery connects to it. Changing
+            the URL or transport takes effect on the next discovery run.
           </p>
         </div>
-        <div className={`${dashboardPanelPaddedClass} space-y-4 lg:col-span-2`}>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <Label htmlFor="mcp-settings-name" className={fieldLabelClass}>
-                Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="mcp-settings-name"
-                type="text"
-                value={form.name}
-                onChange={(e) => set("name", e.target.value)}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <Label htmlFor="mcp-settings-url" className={fieldLabelClass}>
-                Endpoint URL <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="mcp-settings-url"
-                type="text"
-                inputMode="url"
-                placeholder="https://mcp.example.com/sse"
-                value={form.endpointUrl}
-                onChange={(e) => set("endpointUrl", e.target.value)}
-              />
-              <p className={helpTextClass}>The MCP server&apos;s connection URL.</p>
-            </div>
-
-            <div>
-              <Label htmlFor="mcp-settings-transport" className={fieldLabelClass}>
-                Transport
-              </Label>
-              <Select
-                value={form.transport}
-                onValueChange={(v) => set("transport", v as McpTransport)}
+        <Card>
+          <CardBody>
+            <div className="mcp-settings-fields">
+              <FormField
+                label="Name"
+                required
+                htmlFor="mcp-settings-name"
+                className="mcp-settings-fields__wide"
               >
-                <SelectTrigger id="mcp-settings-transport">
-                  <SelectValue placeholder="Select transport" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MCP_TRANSPORT_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <Input
+                  id="mcp-settings-name"
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => set("name", e.target.value)}
+                />
+              </FormField>
 
-            <div>
-              <Label htmlFor="mcp-settings-visibility" className={fieldLabelClass}>
-                Visibility
-              </Label>
-              <Select
-                value={form.visibility}
-                onValueChange={(v) => set("visibility", v as McpVisibility)}
+              <FormField
+                label="Endpoint URL"
+                required
+                htmlFor="mcp-settings-url"
+                helperText="The MCP server's connection URL."
+                className="mcp-settings-fields__wide"
               >
-                <SelectTrigger id="mcp-settings-visibility">
-                  <SelectValue placeholder="Select visibility" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MCP_VISIBILITY_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <Input
+                  id="mcp-settings-url"
+                  type="text"
+                  inputMode="url"
+                  placeholder="https://mcp.example.com/sse"
+                  value={form.endpointUrl}
+                  onChange={(e) => set("endpointUrl", e.target.value)}
+                />
+              </FormField>
 
-            <div>
-              <Label htmlFor="mcp-settings-cadence" className={fieldLabelClass}>
-                Discovery cadence
-              </Label>
-              <Select
-                value={cadenceSelectValueFromForm(form.cadence)}
-                onValueChange={(v) => set("cadence", normalizeCadenceSelectValue(v))}
+              <FormField label="Transport" htmlFor="mcp-settings-transport">
+                <Select
+                  value={form.transport}
+                  onValueChange={(v) => set("transport", v as McpTransport)}
+                >
+                  <SelectTrigger id="mcp-settings-transport">
+                    <SelectValue placeholder="Select transport" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MCP_TRANSPORT_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+              <FormField label="Visibility" htmlFor="mcp-settings-visibility">
+                <Select
+                  value={form.visibility}
+                  onValueChange={(v) => set("visibility", v as McpVisibility)}
+                >
+                  <SelectTrigger id="mcp-settings-visibility">
+                    <SelectValue placeholder="Select visibility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MCP_VISIBILITY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+              <FormField
+                label="Discovery cadence"
+                htmlFor="mcp-settings-cadence"
+                helperText="How often this endpoint is re-discovered automatically. Sub-daily cadences ask for confirmation."
+                className="mcp-settings-fields__wide"
               >
-                <SelectTrigger id="mcp-settings-cadence">
-                  <SelectValue placeholder="Default cadence" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cadenceOptions.map((opt) => (
-                    <SelectItem
-                      key={opt.value || MCP_CADENCE_DEFAULT_SELECT_VALUE}
-                      value={opt.value || MCP_CADENCE_DEFAULT_SELECT_VALUE}
-                    >
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className={helpTextClass}>How often this endpoint is re-discovered automatically.</p>
+                <Select
+                  value={cadenceSelectValueFromForm(form.cadence)}
+                  onValueChange={(v) => set("cadence", normalizeCadenceSelectValue(v))}
+                >
+                  <SelectTrigger id="mcp-settings-cadence">
+                    <SelectValue placeholder="Default cadence" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cadenceOptions.map((opt) => (
+                      <SelectItem
+                        key={opt.value || MCP_CADENCE_DEFAULT_SELECT_VALUE}
+                        value={opt.value || MCP_CADENCE_DEFAULT_SELECT_VALUE}
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormField>
             </div>
-          </div>
 
-          {formError ? (
-            <p
-              role="alert"
-              className="flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400"
-            >
-              <TriangleAlert className="h-4 w-4" aria-hidden />
-              {formError}
-            </p>
-          ) : null}
-
-          <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-700">
-            {dirty && !saving ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />
-                Unsaved changes
-              </span>
+            {formError ? (
+              // The words are the message and the glyph is emphasis: no red in the token
+              // layer reads as text on a plain surface in all nine themes (see
+              // `.mcp-tone-figure` in globals.css), and `.prm-error` made the same call.
+              <p
+                role="alert"
+                className="mt-4 flex items-center gap-1.5 text-sm text-fg"
+                data-testid="mcp-settings-error"
+              >
+                <TriangleAlert aria-hidden className="size-4 shrink-0 text-danger" />
+                {formError}
+              </p>
             ) : null}
-            <Button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={anyBusy || !dirty}
-              title={dirty ? "Save changes" : "No changes to save"}
-            >
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-              ) : (
-                <Save className="h-4 w-4" aria-hidden />
-              )}
-              {saving ? "Saving…" : "Save changes"}
-            </Button>
-          </div>
-        </div>
+
+            <div className="mcp-settings-actions">
+              {dirty && !saving ? (
+                <span
+                  className="mcp-settings-actions__dirty"
+                  data-testid="mcp-settings-dirty"
+                >
+                  <span className={`${LIFECYCLE_DOT_CLASS} bg-warn`} aria-hidden />
+                  Unsaved changes
+                </span>
+              ) : null}
+              <Button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={anyBusy || !dirty}
+                title={dirty ? "Save changes" : "No changes to save"}
+              >
+                {saving ? (
+                  <Loader2 className="animate-spin" aria-hidden />
+                ) : (
+                  <Save aria-hidden />
+                )}
+                {saving ? "Saving…" : "Save changes"}
+              </Button>
+            </div>
+          </CardBody>
+        </Card>
       </section>
 
       {/* Lifecycle ------------------------------------------------------------------------- */}
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8">
+      <section className="mcp-settings-grid">
         <div>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-            <Power className="h-4 w-4 text-indigo-500" aria-hidden />
+          <h3 className="flex items-center gap-2 text-base font-semibold text-fg">
+            <Power aria-hidden className="size-[var(--fs-md)] shrink-0 text-fg-muted" />
             Lifecycle
           </h3>
-          <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-fg-muted">
             A disabled endpoint stays in the catalog with its versions intact but is skipped by
             scheduled discovery.
           </p>
         </div>
-        <div className={`${dashboardPanelPaddedClass} lg:col-span-2`}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <Card>
+          <CardBody className="mcp-ep-row">
             <div className="flex items-center gap-3">
               <span
-                className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                  endpoint.enabled ? "bg-emerald-500" : "bg-gray-400 dark:bg-gray-600"
-                }`}
+                className={`${LIFECYCLE_DOT_CLASS} ${endpoint.enabled ? "bg-ok" : "bg-fg-subtle"}`}
                 aria-hidden
               />
               <div>
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                <div className="text-sm font-medium text-fg">
                   {endpoint.enabled ? "Endpoint is enabled" : "Endpoint is disabled"}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-fg-muted">
                   {endpoint.enabled
                     ? "It is included in the scheduled discovery sweep."
                     : "It is skipped by the scheduled discovery sweep."}
@@ -403,38 +430,39 @@ export default function McpEndpointSettings({
               disabled={anyBusy}
             >
               {togglingEnabled ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                <Loader2 className="animate-spin" aria-hidden />
               ) : endpoint.enabled ? (
-                <PowerOff className="h-4 w-4" aria-hidden />
+                <PowerOff aria-hidden />
               ) : (
-                <Power className="h-4 w-4" aria-hidden />
+                <Power aria-hidden />
               )}
               {endpoint.enabled ? "Disable" : "Enable"}
             </Button>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </section>
 
       {/* Danger zone ----------------------------------------------------------------------- */}
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8">
+      <section className="mcp-settings-grid">
         <div>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-red-700 dark:text-red-400">
-            <TriangleAlert className="h-4 w-4" aria-hidden />
+          <h3 className="mcp-ep-danger__title flex items-center gap-2 text-base font-semibold">
+            <TriangleAlert aria-hidden className="size-[var(--fs-md)] shrink-0" />
             Danger zone
           </h3>
-          <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-fg-muted">
             Destructive actions that cannot be undone.
           </p>
         </div>
-        <div className="rounded-lg border border-red-200 bg-red-50/60 p-4 dark:border-red-900 dark:bg-red-950/20 lg:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* The frame is emphasis, never the only signal: the heading beside it says "Danger
+            zone" in words, the button is `destructive`, and deleting still needs the word
+            DELETE typed into the dialog below. */}
+        <Card className="mcp-ep-danger" data-testid="mcp-settings-danger">
+          <CardBody className="mcp-ep-row">
             <div>
-              <div className="text-sm font-medium text-gray-900 dark:text-white">
-                Delete this endpoint
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Permanently removes the endpoint and purges its versions, discovery jobs, and stored
-                credentials. This cannot be undone.
+              <div className="text-sm font-medium text-fg">Delete this endpoint</div>
+              <p className="text-xs text-fg-muted">
+                Permanently removes the endpoint and purges its versions, discovery jobs, and
+                stored credentials. This cannot be undone.
               </p>
             </div>
             <Button
@@ -446,11 +474,11 @@ export default function McpEndpointSettings({
               }}
               disabled={anyBusy}
             >
-              <Trash2 className="h-4 w-4" aria-hidden />
+              <Trash2 aria-hidden />
               Delete endpoint
             </Button>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </section>
 
       <AlertDialog open={deleteOpen} onOpenChange={(open) => !deleting && setDeleteOpen(open)}>
@@ -464,9 +492,8 @@ export default function McpEndpointSettings({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div>
-            <Label htmlFor="mcp-delete-confirm" className={fieldLabelClass}>
-              Type <span className="font-mono font-semibold">{MCP_DELETE_CONFIRM_WORD}</span> to
-              confirm
+            <Label htmlFor="mcp-delete-confirm" className="mb-1.5 block text-sm font-medium text-fg">
+              Type <span className="mono font-semibold">{MCP_DELETE_CONFIRM_WORD}</span> to confirm
             </Label>
             <Input
               id="mcp-delete-confirm"
@@ -480,7 +507,7 @@ export default function McpEndpointSettings({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 text-white hover:bg-red-700"
+              variant="destructive"
               disabled={!isDeleteConfirmed(deleteConfirm) || deleting}
               onClick={(e) => {
                 // Keep the dialog mounted while the request runs; close it ourselves on success.
@@ -489,9 +516,9 @@ export default function McpEndpointSettings({
               }}
             >
               {deleting ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                <Loader2 className="animate-spin" aria-hidden />
               ) : (
-                <Trash2 className="h-4 w-4" aria-hidden />
+                <Trash2 aria-hidden />
               )}
               {deleting ? "Deleting…" : "Delete endpoint"}
             </AlertDialogAction>

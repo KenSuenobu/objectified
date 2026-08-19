@@ -71,7 +71,7 @@ function SelectControl({
     <div className="flex items-center gap-2">
       <label
         htmlFor={id}
-        className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+        className="text-xs font-medium uppercase tracking-wider text-fg-muted"
       >
         {label}
       </label>
@@ -79,7 +79,7 @@ function SelectControl({
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 rounded-md border border-gray-300 bg-white px-2.5 text-sm text-gray-900 transition-colors hover:border-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-indigo-700"
+        className="h-[var(--control-h)] rounded-md border border-border-strong bg-surface px-2.5 text-sm text-fg transition-colors hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         {children}
       </select>
@@ -92,7 +92,7 @@ function ParameterSplitBar({ view }: { view: McpToolComplexityView }) {
   const total = view.metrics.property_count;
   if (total === 0) {
     return (
-      <p className="text-xs text-gray-500 dark:text-gray-400">No parameters — this tool takes no input.</p>
+      <p className="text-xs text-fg-muted">No parameters — this tool takes no input.</p>
     );
   }
   const label = `${view.requiredCount} required, ${view.optionalCount} optional of ${total} ${
@@ -101,33 +101,33 @@ function ParameterSplitBar({ view }: { view: McpToolComplexityView }) {
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span className="text-xs font-medium uppercase tracking-wider text-fg-muted">
           Parameters
         </span>
-        <span className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">{total}</span>
+        <span className="text-sm font-semibold tabular-nums text-fg">{total}</span>
       </div>
       <div
-        className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+        className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-inset"
         role="img"
         aria-label={label}
       >
         {view.requiredCount > 0 ? (
-          <div className="h-full bg-indigo-500 dark:bg-indigo-400" style={{ width: `${view.requiredPct}%` }} />
+          <div className="h-full bg-accent" style={{ width: `${view.requiredPct}%` }} />
         ) : null}
         {view.optionalCount > 0 ? (
           <div
-            className="h-full bg-indigo-200 dark:bg-indigo-800"
+            className="h-full bg-accent-soft"
             style={{ width: `${view.optionalPct}%` }}
           />
         ) : null}
       </div>
-      <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+      <div className="mt-1 flex items-center gap-3 text-xs text-fg-muted tabular-nums">
         <span className="flex items-center gap-1">
-          <span className="inline-block h-2 w-2 rounded-sm bg-indigo-500 dark:bg-indigo-400" aria-hidden />
+          <span className="inline-block h-2 w-2 rounded-sm bg-accent" aria-hidden />
           {view.requiredCount} required
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-2 w-2 rounded-sm bg-indigo-200 dark:bg-indigo-800" aria-hidden />
+          <span className="inline-block size-2 rounded-sm bg-accent-soft" aria-hidden />
           {view.optionalCount} optional
         </span>
       </div>
@@ -149,8 +149,8 @@ function FeatureChip({
     <span
       className={
         muted
-          ? 'inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500'
-          : 'inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+          ? 'inline-flex items-center gap-1 rounded-full bg-inset px-2 py-0.5 text-xs text-fg-faint'
+          : 'inline-flex items-center gap-1 rounded-full bg-inset px-2 py-0.5 text-xs font-medium text-fg'
       }
     >
       {icon ? (
@@ -167,13 +167,13 @@ function FeatureChip({
 function ToolCard({ view }: { view: McpToolComplexityView }) {
   const { metrics } = view;
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+    <div className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-[inset_0_0_0_1px_var(--border)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h5 className="truncate font-mono text-sm font-semibold text-gray-900 dark:text-white" title={view.displayName}>
+          <h5 className="truncate font-mono text-sm font-semibold text-fg" title={view.displayName}>
             {view.displayName}
           </h5>
-          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+          <p className="mt-0.5 text-xs text-fg-muted tabular-nums">
             Complexity score {view.score}
           </p>
         </div>
@@ -206,7 +206,7 @@ function ComplexityHistogram({ views }: { views: readonly McpToolComplexityView[
   const data = bins.map((bin) => ({ label: bin.label, value: bin.count, tone: bin.tone }));
   return (
     <div>
-      <div className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <div className="mb-1 text-xs font-medium uppercase tracking-wider text-fg-muted">
         Complexity distribution
       </div>
       <BarSeries
@@ -218,9 +218,9 @@ function ComplexityHistogram({ views }: { views: readonly McpToolComplexityView[
         {bins.map((bin) => (
           <li
             key={bin.key}
-            className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 tabular-nums"
+            className="flex items-center gap-1.5 text-xs text-fg-muted tabular-nums"
           >
-            <span className="font-medium text-gray-700 dark:text-gray-200">{bin.label}</span>
+            <span className="font-medium text-fg">{bin.label}</span>
             {bin.count}
           </li>
         ))}
@@ -252,7 +252,7 @@ export function ToolComplexityPanel({ tools, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Layers3 className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Layers3 className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Tool complexity unavailable"
         description={error}
       />
@@ -264,7 +264,7 @@ export function ToolComplexityPanel({ tools, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Layers3 className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Layers3 className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No tools"
         description="This snapshot declares no tools, so there are no schemas to profile."
       />
@@ -276,7 +276,7 @@ export function ToolComplexityPanel({ tools, loading, error }: Props) {
       <ComplexityHistogram views={views} />
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <p className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+        <p className="text-xs text-fg-muted tabular-nums">
           {visible.length === views.length
             ? `${views.length} ${views.length === 1 ? 'tool' : 'tools'}`
             : `${visible.length} of ${views.length} tools`}
@@ -302,7 +302,7 @@ export function ToolComplexityPanel({ tools, loading, error }: Props) {
       {visible.length === 0 ? (
         <EmptyState
           variant="compact"
-          icon={<Layers3 className="h-8 w-8 text-white" aria-hidden />}
+          icon={<Layers3 className="h-8 w-8 text-fg-on-accent" aria-hidden />}
           title="No tools match this filter"
           description="No tool on this snapshot matches the selected filter. Choose “All tools” to see them all."
         />

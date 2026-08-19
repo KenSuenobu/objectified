@@ -1,11 +1,46 @@
 "use client";
 
+/**
+ * Endpoint-detail "Insight" tab (V2-MCP-28.4 / MCAT-14.x–17.x; re-skinned by HIVE-7.8, #5325).
+ *
+ * Fourteen views onto one snapshot's capability surface, filed under the four groups the roadmap
+ * arc gives them, with a snapshot selector and a report export above them. Every panel is pure
+ * given its props and every read runs in this component's effects, so switching views is instant
+ * and never re-fetches.
+ *
+ * ### What HIVE-7.8 changed
+ *
+ * Authority: `docs/mockups/sources/mcp-endpoint.html`'s Insight panel, whose `.insight-rail` and
+ * fourteen `[data-tab-panel]` blocks this is.
+ *
+ * 1. **The rail was Tailwind utilities over `TAB_LIST_SCROLL_CLASS`**, including a
+ *    `lg:border-gray-200 dark:lg:border-gray-700` edge and `text-gray-400
+ *    group-data-[state=active]:text-indigo-600` glyphs. It is `.mcp-insight__rail`, whose
+ *    sticky offset is a token rather than the mockup's `top: 140px` and whose width is `rem`
+ *    rather than its `240px`.
+ * 2. **The snapshot selector was a bare `<select>`** carrying eight palette classes and its own
+ *    `h-9`. It is `ui/Select` in a `ui/FormField`, like every other select on the route.
+ * 3. **The export control was a `<details>` menu.** A menu that does not trap focus, does not
+ *    close on Escape and does not answer the arrow keys. It is a Radix `DropdownMenu` on the
+ *    same `.mcp-menu` surface the tenants table uses; the three formats, the print path and the
+ *    cataloger-commentary switch are unchanged.
+ * 4. **Each panel's heading was `text-gray-900 dark:text-white` over an indigo glyph.** They
+ *    are `ui/Card` headers on tokens.
+ *
+ * The nested-tab question the ticket's fourth acceptance criterion asks about resolves here:
+ * this rail is a Radix `Tabs.Root` of its own, mounted inside the outer strip's `insight`
+ * panel. The outer strip is *not* Radix (see `McpEndpointTabs`), so the two share no context
+ * and switching a view never disturbs the tab it lives in.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import {
   Activity,
   BarChart3,
   BookOpen,
+  ChevronDown,
   Download,
   FileCode2,
   FileText,
@@ -25,11 +60,19 @@ import {
   Trophy,
 } from "lucide-react";
 import { Badge } from "@/app/components/ui/Badge";
+import { Button } from "@/app/components/ui/Button";
+import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
+import { Checkbox } from "@/app/components/ui/Checkbox";
+import { FormField } from "@/app/components/ui/FormField";
 import {
-  TAB_LIST_SCROLL_CLASS,
-  tabRailTriggerRadixClass,
-} from "@/app/components/ui/tabStyles";
-import { cn } from "@lib/utils";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/Select";
+import { tabRailTriggerRadixClass } from "@/app/components/ui/tabStyles";
+import { Stat, StatGrid } from "@/app/components/ui/metrics";
 import { LoadingState } from "@/app/components/ui/LoadingState";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { ServerProfileCard } from "@/app/components/ui/mcp/ServerProfileCard";
@@ -50,7 +93,6 @@ import {
 } from "@/app/components/ui/mcp/ScoreBreakdownPanel";
 import { TrustProfilePanel } from "@/app/components/ui/mcp/TrustProfilePanel";
 import { PeerPercentilePanel } from "@/app/components/ui/mcp/PeerPercentilePanel";
-import { dashboardPanelPaddedClass } from "@/app/components/ade/dashboard/dashboardScreenClasses";
 import {
   mcpVersionDetailFromPayload,
   type McpCapabilityItem,
@@ -160,24 +202,41 @@ interface InsightView {
   node: React.ReactNode;
 }
 
-/** The shared heading — icon, title, and a one-line description — atop each insight panel's content. */
-function PanelHeading({
+/**
+ * One insight panel: a titled card with a one-line description, and the chart or table below it.
+ *
+ * Every one of the fourteen views is this shape, which is why it is a component rather than the
+ * `<div className={dashboardPanelPaddedClass}><PanelHeading …/></div>` pair it replaces — that
+ * spelled the panel surface fifteen times and named two palettes each time.
+ *
+ * @param props.icon        The glyph beside the title.
+ * @param props.title       What the panel shows.
+ * @param props.description One line on how to read it.
+ * @param props.children    The panel's content.
+ * @returns The card.
+ */
+function InsightPanel({
   icon: Icon,
   title,
   description,
+  children,
 }: {
   icon: typeof BarChart3;
   title: string;
   description: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="mb-3">
-      <h4 className="flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-white">
-        <Icon className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
-        {title}
-      </h4>
-      <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{description}</p>
-    </div>
+    <Card data-testid={`mcp-insight-panel-${title}`}>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <Icon aria-hidden className="size-[var(--fs-md)] shrink-0 text-fg-muted" />
+          {title}
+        </CardTitle>
+        <p className="text-xs text-fg-muted">{description}</p>
+      </CardHeader>
+      <CardBody>{children}</CardBody>
+    </Card>
   );
 }
 
@@ -186,7 +245,19 @@ function versionOptionLabel(version: McpVersionSummary): string {
   return `${mcpVersionSeqLabel(version.version_seq)} · ${mcpVersionDateTag(version)}`;
 }
 
-/** The snapshot selector — a native, accessible `<select>` that drives an insight re-fetch on change. */
+/**
+ * The snapshot selector — which version's insight the fourteen views describe.
+ *
+ * `ui/Select` in a `ui/FormField`, like every other select on this route. It was a bare
+ * `<select>` carrying its own `h-9` and eight palette classes, which is how the one control on
+ * this tab ended up the only one in the app that did not follow the density preference.
+ *
+ * @param props.versions Every snapshot, newest first.
+ * @param props.value    The selected snapshot's id.
+ * @param props.disabled Whether a fetch is in flight.
+ * @param props.onChange Called with the newly selected id.
+ * @returns The labelled selector.
+ */
 function VersionSelector({
   versions,
   value,
@@ -199,28 +270,21 @@ function VersionSelector({
   onChange: (versionId: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <label
-        htmlFor="mcp-insight-version"
-        className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-      >
-        Snapshot
-      </label>
-      <select
-        id="mcp-insight-version"
-        value={value ?? undefined}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-9 rounded-md border border-gray-300 bg-white px-2.5 text-sm text-gray-900 transition-colors hover:border-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-indigo-700"
-      >
-        {versions.map((version) => (
-          <option key={version.id} value={version.id}>
-            {versionOptionLabel(version)}
-            {version.is_current ? " (current)" : ""}
-          </option>
-        ))}
-      </select>
-    </div>
+    <FormField label="Snapshot" htmlFor="mcp-insight-version" className="min-w-[14rem]">
+      <Select value={value ?? undefined} disabled={disabled} onValueChange={onChange}>
+        <SelectTrigger id="mcp-insight-version" aria-label="Snapshot">
+          <SelectValue placeholder="Select a snapshot…" />
+        </SelectTrigger>
+        <SelectContent>
+          {versions.map((version) => (
+            <SelectItem key={version.id} value={version.id}>
+              {versionOptionLabel(version)}
+              {version.is_current ? " (current)" : ""}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </FormField>
   );
 }
 
@@ -249,7 +313,7 @@ function ReportExportMenu({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [includeCatalogerNotes, setIncludeCatalogerNotes] = useState(false);
-  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(false);
 
   const reportUrl = useCallback(
     (format: "markdown" | "html") => {
@@ -261,9 +325,7 @@ function ReportExportMenu({
     [endpointId, versionId, includeCatalogerNotes],
   );
 
-  const closeMenu = useCallback(() => {
-    if (detailsRef.current) detailsRef.current.open = false;
-  }, []);
+  const closeMenu = useCallback(() => setOpen(false), []);
 
   /** Fetch one format's document, surfacing a normalized error on failure. */
   const fetchReport = useCallback(
@@ -340,67 +402,63 @@ function ReportExportMenu({
     }
   }, [fetchReport, closeMenu]);
 
-  const itemClass =
-    "flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-700";
+  /** The three formats, so the menu's items are a list rather than three near-identical blocks. */
+  const formats = [
+    { key: "markdown", icon: FileText, label: "Download Markdown", run: () => void download("markdown") },
+    { key: "html", icon: FileCode2, label: "Download HTML", run: () => void download("html") },
+    { key: "print", icon: Printer, label: "Print / Save as PDF", run: () => void printPdf() },
+  ] as const;
 
   return (
-    <details ref={detailsRef} className="relative">
-      <summary
-        className="flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-indigo-700 [&::-webkit-details-marker]:hidden"
-        aria-label="Export report card"
-        aria-disabled={disabled}
-      >
-        {busy ? (
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
-        ) : (
-          <Download className="h-4 w-4 text-indigo-500" aria-hidden />
-        )}
-        Export report
-      </summary>
-      <div className="absolute right-0 z-10 mt-1 w-56 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-        <label className="flex cursor-pointer items-start gap-2 border-b border-gray-100 px-3 py-2 text-left text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300">
-          <input
-            type="checkbox"
-            className="mt-0.5"
+    <DropdownMenu.Root open={open} onOpenChange={setOpen}>
+      <DropdownMenu.Trigger asChild disabled={disabled}>
+        <Button type="button" variant="outline" data-testid="mcp-insight-export">
+          {busy ? <Loader2 className="animate-spin" aria-hidden /> : <Download aria-hidden />}
+          Export report
+          <ChevronDown aria-hidden />
+        </Button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content className="mcp-menu" sideOffset={4} align="end">
+          {/* A *setting* the three items below read, not an action — so it is a checkbox item
+              that keeps the menu open when it is toggled. */}
+          <DropdownMenu.CheckboxItem
+            className="mcp-menu__note"
             checked={includeCatalogerNotes}
-            onChange={(e) => setIncludeCatalogerNotes(e.target.checked)}
+            onCheckedChange={(checked) => setIncludeCatalogerNotes(checked === true)}
+            onSelect={(event) => event.preventDefault()}
             disabled={busy}
-          />
-          <span>Include cataloger commentary (human notes, not from the server)</span>
-        </label>
-        <button type="button" className={itemClass} disabled={busy} onClick={() => download("markdown")}>
-          <FileText className="h-4 w-4 text-gray-400" aria-hidden />
-          Download Markdown
-        </button>
-        <button type="button" className={itemClass} disabled={busy} onClick={() => download("html")}>
-          <FileCode2 className="h-4 w-4 text-gray-400" aria-hidden />
-          Download HTML
-        </button>
-        <button type="button" className={itemClass} disabled={busy} onClick={() => void printPdf()}>
-          <Printer className="h-4 w-4 text-gray-400" aria-hidden />
-          Print / Save as PDF
-        </button>
-        {error ? (
-          <p className="border-t border-gray-100 px-3 py-2 text-xs text-red-600 dark:border-gray-700 dark:text-red-400">
-            {error}
-          </p>
-        ) : null}
-      </div>
-    </details>
-  );
-}
-
-/** A single count tile (capability kind → count) in the surface baseline. */
-function CountTile({ label, value }: { label: string; value: number }) {
-  return (
-    <div className={dashboardPanelPaddedClass}>
-      <div className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-        {label}
-      </div>
-      <div className="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
-        {value}
-      </div>
-    </div>
+          >
+            <Checkbox checked={includeCatalogerNotes} tabIndex={-1} aria-hidden />
+            <span>Include cataloger commentary (human notes, not from the server)</span>
+          </DropdownMenu.CheckboxItem>
+          {formats.map((format) => {
+            const Glyph = format.icon;
+            return (
+              <DropdownMenu.Item
+                key={format.key}
+                className="mcp-menu__item"
+                disabled={busy}
+                onSelect={(event) => {
+                  // The run is async and closes the menu itself on success, so the default
+                  // close-on-select would tear the trigger's focus out from under it.
+                  event.preventDefault();
+                  format.run();
+                }}
+              >
+                <Glyph aria-hidden />
+                {format.label}
+              </DropdownMenu.Item>
+            );
+          })}
+          {error ? (
+            <p className="mcp-menu__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   );
 }
 
@@ -422,13 +480,14 @@ function SurfaceBaseline({
   error: string | null;
 }) {
   if (loading && !surface) {
-    return <LoadingState minHeightClassName="min-h-[140px]" message="Loading insight…" />;
+    return <LoadingState minHeightClassName="min-h-[9rem]" message="Loading insight…" />;
   }
   if (error) {
     return (
       <EmptyState
-        variant="compact"
-        icon={<BarChart3 className="h-8 w-8 text-white" aria-hidden />}
+        variant="inline"
+        tone="danger"
+        icon={<BarChart3 aria-hidden />}
         title="Insight unavailable"
         description={error}
       />
@@ -440,30 +499,29 @@ function SurfaceBaseline({
   const total = surface.metrics.type_counts.total;
 
   return (
-    <div className="space-y-4" aria-busy={loading}>
+    <div className="flex flex-col gap-4" aria-busy={loading}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-gray-600 dark:text-gray-300">
-          <span className="text-lg font-semibold text-gray-900 dark:text-white tabular-nums">
-            {total}
-          </span>{" "}
+        <span className="text-sm text-fg-muted">
+          <span className="text-lg font-semibold tabular-nums text-fg">{total}</span>{" "}
           {total === 1 ? "capability" : "capabilities"} in this snapshot
         </span>
-        {surface.is_current ? <Badge variant="success">Current</Badge> : null}
+        {surface.is_current ? <Badge status="published">Current</Badge> : null}
       </div>
 
       {total === 0 ? (
         <EmptyState
-          variant="compact"
-          icon={<Layers className="h-8 w-8 text-white" aria-hidden />}
+          variant="inline"
+          tone="neutral"
+          icon={<Layers aria-hidden />}
           title="No capabilities"
           description="This snapshot declares no tools, resources, or prompts to summarize."
         />
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatGrid columns={4}>
           {tiles.map((tile) => (
-            <CountTile key={tile.key} label={tile.label} value={tile.value} />
+            <Stat key={tile.key} label={tile.label} value={tile.value} />
           ))}
-        </div>
+        </StatGrid>
       )}
     </div>
   );
@@ -1049,7 +1107,7 @@ export default function McpEndpointInsight({
   );
 
   if (versionsLoading) {
-    return <LoadingState minHeightClassName="min-h-[220px]" message="Loading insight…" />;
+    return <LoadingState minHeightClassName="min-h-[14rem]" message="Loading insight…" />;
   }
 
   // Never-discovered (or unreadable) endpoint: there is no snapshot to summarize — a helpful empty
@@ -1057,13 +1115,14 @@ export default function McpEndpointInsight({
   if (versionsError || versions.length === 0) {
     return (
       <EmptyState
-        variant="compact"
-        icon={<BarChart3 className="h-8 w-8 text-white" aria-hidden />}
+        icon={<BarChart3 aria-hidden />}
+        tone={versionsError ? 'danger' : 'neutral'}
         title="No insight yet"
         description={
           versionsError ??
           "This endpoint has never been discovered, so there is no capability surface to visualize. Run discovery to populate its insight."
         }
+        data-testid="mcp-insight-empty"
       />
     );
   }
@@ -1088,29 +1147,27 @@ export default function McpEndpointInsight({
           {/* "Changed since last view" digest (MCAT-16.5) — a per-user welcome-back summary. Loaded
               endpoint-level; reading it advances the user's seen-marker (once) so the next visit
               reads relative to the version they are seeing now. */}
-          <div className={dashboardPanelPaddedClass}>
-            <PanelHeading
-              icon={History}
-              title="Changed since your last view"
-              description="What changed on this server's surface since you last looked — and how breaking it is."
-            />
+          <InsightPanel
+            icon={History}
+            title="Changed since your last view"
+            description="What changed on this server's surface since you last looked — and how breaking it is."
+          >
             <ChangedSinceDigestPanel
               digest={digest}
               loading={digestLoading}
               error={digestError}
               onReviewChanges={(versionId) => onOpenVersionDiff?.(versionId)}
             />
-          </div>
+          </InsightPanel>
           {/* Trust-drift alerts (CLX-3.4, #4858) — how the current snapshot differs from the approved
               baseline, each change classified normal / quality / security / coverage-loss. */}
-          <div className={dashboardPanelPaddedClass}>
-            <PanelHeading
-              icon={ShieldAlert}
-              title="Trust drift from your approved baseline"
-              description="Every material surface or source change since you approved this server's baseline, classified as a normal change, a quality regression, a security regression, or coverage loss."
-            />
+          <InsightPanel
+            icon={ShieldAlert}
+            title="Trust drift from your approved baseline"
+            description="Every material surface or source change since you approved this server's baseline, classified as a normal change, a quality regression, a security regression, or coverage loss."
+          >
             <TrustDriftAlertsPanel endpointId={endpointId} />
-          </div>
+          </InsightPanel>
         </div>
       ),
     },
@@ -1120,14 +1177,13 @@ export default function McpEndpointInsight({
       label: "Capability counts",
       icon: Layers,
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={Layers}
-            title="Capability counts"
-            description="What this snapshot exposes — total capabilities and their per-kind breakdown."
-          />
+        <InsightPanel
+          icon={Layers}
+          title="Capability counts"
+          description="What this snapshot exposes — total capabilities and their per-kind breakdown."
+        >
           <SurfaceBaseline surface={surface} loading={surfaceLoading} error={surfaceError} />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1137,14 +1193,13 @@ export default function McpEndpointInsight({
       icon: Share2,
       // Capability relationship graph (MCAT-15.2).
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={Share2}
-            title="Capability relationship graph"
-            description="How tools, resources, and prompts relate — edges inferred from concrete signals."
-          />
+        <InsightPanel
+          icon={Share2}
+          title="Capability relationship graph"
+          description="How tools, resources, and prompts relate — edges inferred from concrete signals."
+        >
           <CapabilityGraphPanel graph={graph} loading={graphLoading} error={graphError} />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1155,18 +1210,17 @@ export default function McpEndpointInsight({
       // Tool schema shape & complexity (MCAT-15.3). Reads the same surface fetch as the counts view;
       // as its own view it now surfaces the surface error itself rather than hiding to avoid a dup.
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={ListTree}
-            title="Tool schema shape & complexity"
-            description="How hard each tool is to call — parameters, required/optional split, nesting, and schema features — with a distribution across the server's tools."
-          />
+        <InsightPanel
+          icon={ListTree}
+          title="Tool schema shape & complexity"
+          description="How hard each tool is to call — parameters, required/optional split, nesting, and schema features — with a distribution across the server's tools."
+        >
           <ToolComplexityPanel
             tools={surface ? surface.metrics.tool_complexity : null}
             loading={surfaceLoading}
             error={surfaceError}
           />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1176,19 +1230,18 @@ export default function McpEndpointInsight({
       icon: ShieldAlert,
       // Safety & annotation posture (MCAT-15.4).
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={ShieldAlert}
-            title="Safety & annotation posture"
-            description="Read-only vs destructive tools from their behavioural hints, cross-referenced with whether the endpoint requires auth."
-          />
+        <InsightPanel
+          icon={ShieldAlert}
+          title="Safety & annotation posture"
+          description="Read-only vs destructive tools from their behavioural hints, cross-referenced with whether the endpoint requires auth."
+        >
           <SafetyPosturePanel
             items={items}
             authType={authType}
             loading={itemsLoading}
             error={itemsError}
           />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1198,14 +1251,13 @@ export default function McpEndpointInsight({
       icon: BookOpen,
       // Documentation & schema coverage (MCAT-15.5).
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={BookOpen}
-            title="Documentation & schema coverage"
-            description="How well this snapshot is documented — descriptions, titles, parameter docs, and output-schema adoption — each meter linking to the items that fall short."
-          />
+        <InsightPanel
+          icon={BookOpen}
+          title="Documentation & schema coverage"
+          description="How well this snapshot is documented — descriptions, titles, parameter docs, and output-schema adoption — each meter linking to the items that fall short."
+        >
           <DocCoveragePanel items={items} loading={itemsLoading} error={itemsError} />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1215,19 +1267,18 @@ export default function McpEndpointInsight({
       icon: GitCompareArrows,
       // Capability churn timeline (MCAT-16.1). Each column deep-links to that snapshot's diff.
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={GitCompareArrows}
-            title="Capability churn timeline"
-            description="How much the surface changed per snapshot — added, removed, and modified capabilities over time, each column linking to that release's diff."
-          />
+        <InsightPanel
+          icon={GitCompareArrows}
+          title="Capability churn timeline"
+          description="How much the surface changed per snapshot — added, removed, and modified capabilities over time, each column linking to that release's diff."
+        >
           <CapabilityChurnPanel
             series={evolution}
             loading={evolutionLoading}
             error={evolutionError}
             onSelectVersion={(versionId) => onOpenVersionDiff?.(versionId)}
           />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1237,19 +1288,18 @@ export default function McpEndpointInsight({
       icon: LayoutGrid,
       // Capability lifespan / presence matrix (MCAT-16.2).
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={LayoutGrid}
-            title="Capability lifespan & presence"
-            description="When each capability existed across snapshots — a presence matrix revealing volatile vs long-lived tools, resources, and prompts."
-          />
+        <InsightPanel
+          icon={LayoutGrid}
+          title="Capability lifespan & presence"
+          description="When each capability existed across snapshots — a presence matrix revealing volatile vs long-lived tools, resources, and prompts."
+        >
           <CapabilityPresenceMatrixPanel
             versions={matrixVersions}
             loading={matrixLoading}
             error={matrixError}
             onSelectVersion={(versionId) => onOpenVersionDiff?.(versionId)}
           />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1259,19 +1309,18 @@ export default function McpEndpointInsight({
       icon: LineChart,
       // Grade & surface-size trend (MCAT-16.4), with breaking-change markers (MCAT-16.3) overlaid.
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={LineChart}
-            title="Grade & surface-size trend"
-            description="Whether the server is improving — its quality score and capability count over snapshots, with breaking-change releases marked. Unscored snapshots are gapped, not zeroed."
-          />
+        <InsightPanel
+          icon={LineChart}
+          title="Grade & surface-size trend"
+          description="Whether the server is improving — its quality score and capability count over snapshots, with breaking-change releases marked. Unscored snapshots are gapped, not zeroed."
+        >
           <GradeSurfaceTrendPanel
             series={evolution}
             loading={evolutionLoading}
             error={evolutionError}
             onSelectVersion={(versionId) => onOpenVersionDiff?.(versionId)}
           />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1281,14 +1330,13 @@ export default function McpEndpointInsight({
       icon: Activity,
       // Discovery health & availability timeline (MCAT-17.1).
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={Activity}
-            title="Discovery health & availability"
-            description="Whether the server has been reachable over time — each recent discovery attempt's outcome, an availability percentage, and whether it is currently quarantined after repeated failures."
-          />
+        <InsightPanel
+          icon={Activity}
+          title="Discovery health & availability"
+          description="Whether the server has been reachable over time — each recent discovery attempt's outcome, an availability percentage, and whether it is currently quarantined after repeated failures."
+        >
           <DiscoveryHealthPanel health={health} loading={healthLoading} error={healthError} />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1298,14 +1346,13 @@ export default function McpEndpointInsight({
       icon: Timer,
       // Tool latency & error-rate panel (MCAT-17.2). Same insight/reliability read as the health view.
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={Timer}
-            title="Tool latency & error rate"
-            description="How fast and how reliable each tool is when called — p50/p95/p99 latency and error ratio per tool, a latency distribution, and the slowest and flakiest tools."
-          />
+        <InsightPanel
+          icon={Timer}
+          title="Tool latency & error rate"
+          description="How fast and how reliable each tool is when called — p50/p95/p99 latency and error ratio per tool, a latency distribution, and the slowest and flakiest tools."
+        >
           <ToolLatencyPanel reliability={tools} loading={healthLoading} error={healthError} />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1315,19 +1362,18 @@ export default function McpEndpointInsight({
       icon: Gauge,
       // Score & lint breakdown (MCAT-17.3). Same per-version lint report the Lint & Score tab uses.
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={Gauge}
-            title="Score & lint breakdown"
-            description="Where this snapshot's quality grade comes from — the points each rule group (naming, structure, annotations, security, hygiene) deducted and the findings behind them, each linking to the capability it flags."
-          />
+        <InsightPanel
+          icon={Gauge}
+          title="Score & lint breakdown"
+          description="Where this snapshot's quality grade comes from — the points each rule group (naming, structure, annotations, security, hygiene) deducted and the findings behind them, each linking to the capability it flags."
+        >
           <ScoreBreakdownPanel
             report={report}
             loading={reportLoading}
             error={reportError}
             onNavigateToItem={onNavigateToItem}
           />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1337,14 +1383,13 @@ export default function McpEndpointInsight({
       icon: ShieldCheck,
       // Composite trust profile radar (MCAT-17.4) — the capstone of the single-server view.
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={ShieldCheck}
-            title="Composite trust profile"
-            description="A synthesized trust glance across five normalized axes — quality, safety, documentation, stability, and responsiveness — each with its methodology on hover. A heuristic composite, not an official rating; unmeasured axes show as gaps, never zeros."
-          />
+        <InsightPanel
+          icon={ShieldCheck}
+          title="Composite trust profile"
+          description="A synthesized trust glance across five normalized axes — quality, safety, documentation, stability, and responsiveness — each with its methodology on hover. A heuristic composite, not an official rating; unmeasured axes show as gaps, never zeros."
+        >
           <TrustProfilePanel profile={trust} loading={trustLoading} error={trustError} />
-        </div>
+        </InsightPanel>
       ),
     },
     {
@@ -1354,39 +1399,45 @@ export default function McpEndpointInsight({
       icon: Trophy,
       // Peer percentile & category ranking (MCAT-18.3) — a peer baseline, not an absolute grade.
       node: (
-        <div className={dashboardPanelPaddedClass}>
-          <PanelHeading
-            icon={Trophy}
-            title="Peer ranking in category"
-            description="Where this server stands against its category peers — a “top 10% for documentation”-style baseline across grade, safety, documentation, and latency, not an absolute grade. Unmeasured axes are shown as gaps."
-          />
+        <InsightPanel
+          icon={Trophy}
+          title="Peer ranking in category"
+          description="Where this server stands against its category peers — a “top 10% for documentation”-style baseline across grade, safety, documentation, and latency, not an absolute grade. Unmeasured axes are shown as gaps."
+        >
           <PeerPercentilePanel
             profile={peerPercentile}
             loading={peerLoading}
             error={peerError}
           />
-        </div>
+        </InsightPanel>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+    <TabsPrimitive.Root
+      value={activeView}
+      onValueChange={setActiveView}
+      orientation="vertical"
+      className="mcp-insight"
+      data-testid="mcp-insight"
+    >
+      <div className="mcp-insight__head">
+        <div className="flex items-center gap-2 text-sm text-fg-muted">
           {surfaceLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
+            <Loader2 className="size-4 animate-spin" aria-hidden />
           ) : (
-            <BarChart3 className="h-4 w-4 text-indigo-500" aria-hidden />
+            <BarChart3 className="size-4" aria-hidden />
           )}
           <span>
             Insight for{" "}
-            <span className="font-medium text-gray-900 dark:text-white">
+            <span className="font-medium text-fg">
               {selectedVersion ? mcpVersionSeqLabel(selectedVersion.version_seq) : "—"}
             </span>
           </span>
+          {selectedVersion?.is_current ? <Badge status="published">Current</Badge> : null}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-end gap-2">
           <VersionSelector
             versions={versions}
             value={selectedVersionId}
@@ -1401,69 +1452,48 @@ export default function McpEndpointInsight({
         </div>
       </div>
 
-      {/* Left-nav insight views. A vertical, grouped tab rail (horizontal + scrollable on narrow
-          screens) drives which single panel shows on the right — so the tall stack of charts becomes
-          navigable instead of one long scroll. The rail sticks to the top of the content pane on wide
-          screens so it stays reachable while a tall panel scrolls. */}
-      <TabsPrimitive.Root
-        value={activeView}
-        onValueChange={setActiveView}
-        orientation="vertical"
-        className="flex flex-col gap-6 lg:flex-row lg:items-start"
-      >
-        <TabsPrimitive.List
-          aria-label="Insight sections"
-          className={cn(
-            TAB_LIST_SCROLL_CLASS,
-            'lg:sticky lg:top-0 lg:w-60 lg:flex-col lg:items-stretch lg:gap-0.5 lg:overflow-visible',
-            'lg:border-b-0 lg:border-l lg:border-gray-200 dark:lg:border-gray-700',
-          )}
-        >
-          {INSIGHT_GROUPS.map((group) => {
-            const groupViews = views.filter((view) => view.group === group.key);
-            if (groupViews.length === 0) return null;
-            return (
-              // `contents` on narrow screens so the triggers flow directly into the horizontal rail;
-              // a real block on wide screens so each group stacks under its label.
-              <div key={group.key} className="contents lg:block">
-                {group.label ? (
-                  <p className="hidden px-3 pb-1 pt-4 text-2xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 lg:block">
-                    {group.label}
-                  </p>
-                ) : null}
-                {groupViews.map((view) => {
-                  const Icon = view.icon;
-                  return (
-                    <TabsPrimitive.Trigger
-                      key={view.key}
-                      value={view.key}
-                      className={tabRailTriggerRadixClass({ className: 'group' })}
-                    >
-                      <Icon
-                        className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-gray-500 group-data-[state=active]:text-indigo-600 dark:group-data-[state=active]:text-indigo-400"
-                        aria-hidden
-                      />
-                      {view.label}
-                    </TabsPrimitive.Trigger>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </TabsPrimitive.List>
+      {/* The rail of fourteen views: a column on a wide viewport, a scrolling strip on a narrow
+          one. It sticks, so a reader three screens down a churn timeline can still reach Peer
+          ranking without scrolling back. */}
+      <TabsPrimitive.List aria-label="Insight views" className="mcp-insight__rail">
+        {INSIGHT_GROUPS.map((group) => {
+          const groupViews = views.filter((view) => view.group === group.key);
+          if (groupViews.length === 0) return null;
+          return (
+            <div key={group.key} className="mcp-insight__group">
+              {group.label ? (
+                <p className="mcp-insight__group-label">{group.label}</p>
+              ) : null}
+              {groupViews.map((view) => {
+                const Icon = view.icon;
+                return (
+                  <TabsPrimitive.Trigger
+                    key={view.key}
+                    value={view.key}
+                    data-testid={`mcp-insight-view-${view.key}`}
+                    className={tabRailTriggerRadixClass()}
+                  >
+                    <Icon className="mcp-insight__glyph" aria-hidden />
+                    {view.label}
+                  </TabsPrimitive.Trigger>
+                );
+              })}
+            </div>
+          );
+        })}
+      </TabsPrimitive.List>
 
-        <div className="min-w-0 flex-1">
-          {views.map((view) => (
-            <TabsPrimitive.Content
-              key={view.key}
-              value={view.key}
-              className="focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-            >
-              {view.node}
-            </TabsPrimitive.Content>
-          ))}
-        </div>
-      </TabsPrimitive.Root>
-    </div>
+      <div className="mcp-insight__panel">
+        {views.map((view) => (
+          <TabsPrimitive.Content
+            key={view.key}
+            value={view.key}
+            className="focus-visible:outline-none"
+          >
+            {view.node}
+          </TabsPrimitive.Content>
+        ))}
+      </div>
+    </TabsPrimitive.Root>
   );
 }

@@ -1,11 +1,30 @@
 'use client';
 
+/**
+ * Cataloger commentary — the human notes on an MCP endpoint (MCAT-18.x; re-skinned by
+ * HIVE-7.8, #5325).
+ *
+ * Authority: `docs/mockups/sources/mcp-endpoint.html`'s `card--honey` commentary block, and
+ * DESIGN.md §2, which reserves honey for brand moments and forbids it as a warning.
+ *
+ * Everything else on this screen was reported by an MCP server. This is the one panel a *person*
+ * wrote, and the wash is what says so — which is why honey is spent here and nowhere else on the
+ * route. It was fourteen amber palette classes before (`border-amber-200 bg-amber-50/80 …
+ * dark:bg-amber-950/30`, `text-amber-950`, `text-amber-800/90`, `text-amber-900/70`), which froze
+ * the panel on one light palette and one dark one and, at `--warn`'s hue, read as a warning in
+ * every theme in between. It is `ui/Card`'s `honey` variant now: the same brand gradient the
+ * first-run checklist and the onboarding tips use.
+ *
+ * The CRUD contract is unchanged — list, create, edit in place, delete, each through
+ * `/api/mcp/endpoints/{id}/notes` and each announcing itself with a toast.
+ */
+
 import * as React from 'react';
-import { Loader2, MessageSquarePlus, Pencil, Plus, StickyNote, Trash2, X } from 'lucide-react';
+import { Loader2, Pencil, Plus, StickyNote, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../../ui/Button';
+import { Card } from '../../../ui/Card';
 import { Textarea } from '../../../ui/Textarea';
-import { dashboardPanelPaddedClass } from '../dashboardScreenClasses';
 import {
   mcpEndpointNoteAuthorLabel,
   mcpEndpointNoteWasEdited,
@@ -16,6 +35,14 @@ import {
 export interface McpEndpointNotesPanelProps {
   endpointId: string;
 }
+
+/** The panel's one-line explanation of what these notes are — pinned by the redesign suite. */
+export const MCP_NOTES_SUBTITLE =
+  'Human notes from your team — not reported by the MCP server.';
+
+/** What an endpoint with no commentary yet says. */
+export const MCP_NOTES_EMPTY =
+  'No cataloger notes yet. Add context, caveats, or recommendations for your team.';
 
 function notesUrl(endpointId: string, noteId?: string): string {
   const base = `/api/mcp/endpoints/${encodeURIComponent(endpointId)}/notes`;
@@ -40,6 +67,9 @@ function formatTimestamp(value: string): string {
 
 /**
  * Cataloger notes on an endpoint — human commentary kept visually distinct from discovered data.
+ *
+ * @param props.endpointId Which endpoint's notes to read and write.
+ * @returns The honey commentary card.
  */
 export function McpEndpointNotesPanel({
   endpointId,
@@ -51,8 +81,10 @@ export function McpEndpointNotesPanel({
   const [saving, setSaving] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [editDraft, setEditDraft] = React.useState('');
-  /** Whether the add-note composer is open. Collapsed by default so the panel leads with the notes. */
+  /** Whether the add-note composer is open. Collapsed by default so the panel leads with notes. */
   const [composing, setComposing] = React.useState(false);
+  /** The heading's id, so the card can be a region labelled by the words a reader sees. */
+  const headingId = React.useId();
 
   const reload = React.useCallback(async () => {
     setLoading(true);
@@ -168,71 +200,64 @@ export function McpEndpointNotesPanel({
   };
 
   return (
-    <section
-      aria-label="Cataloger commentary"
-      className="rounded-lg border border-amber-200 bg-amber-50/80 dark:border-amber-900/60 dark:bg-amber-950/30"
+    <Card
+      variant="honey"
+      role="region"
+      aria-labelledby={headingId}
+      data-testid="mcp-endpoint-notes"
     >
-      <div className="border-b border-amber-200/80 px-4 py-3 dark:border-amber-900/50">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-2">
-            <StickyNote className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-            <div>
-              <h3 className="text-sm font-semibold text-amber-950 dark:text-amber-100">
-                Cataloger commentary
-              </h3>
-              <p className="mt-0.5 text-xs text-amber-800/90 dark:text-amber-200/80">
-                Human notes from your team — not reported by the MCP server.
-              </p>
-            </div>
+      <div className="mcp-notes__head">
+        <div className="mcp-notes__title">
+          <StickyNote aria-hidden className="mcp-notes__glyph" />
+          <div className="min-w-0">
+            <h2 id={headingId} className="text-base font-semibold leading-snug text-fg">
+              Cataloger commentary
+            </h2>
+            <p className="mt-0.5 text-xs text-fg-muted">{MCP_NOTES_SUBTITLE}</p>
           </div>
-          {!composing ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="shrink-0"
-              onClick={() => setComposing(true)}
-            >
-              <Plus className="h-4 w-4" aria-hidden />
-              Add Note
-            </Button>
-          ) : null}
         </div>
+        {!composing ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="shrink-0"
+            onClick={() => setComposing(true)}
+            data-testid="mcp-endpoint-note-add"
+          >
+            <Plus aria-hidden />
+            Add note
+          </Button>
+        ) : null}
       </div>
 
-      <div className="space-y-4 p-4">
+      <div className="mcp-notes__body">
         {loading ? (
-          <div className="flex items-center gap-2 text-sm text-amber-900/80 dark:text-amber-100/80">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          <p className="flex items-center gap-2 text-sm text-fg-muted" role="status">
+            <Loader2 className="size-4 animate-spin" aria-hidden />
             Loading notes…
-          </div>
+          </p>
         ) : null}
 
         {error ? (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          <p className="rounded-md bg-danger-soft px-3 py-2 text-sm text-danger-fg" role="alert">
             {error}
           </p>
         ) : null}
 
         {!loading && notes.length === 0 ? (
-          <p className="text-sm text-amber-900/70 dark:text-amber-100/70">
-            No cataloger notes yet. Add context, caveats, or recommendations for your team.
-          </p>
+          <p className="text-sm text-fg-muted">{MCP_NOTES_EMPTY}</p>
         ) : null}
 
         {notes.map((note) => (
-          <article
-            key={note.id}
-            className={`${dashboardPanelPaddedClass} border border-amber-100 bg-white/90 dark:border-amber-900/40 dark:bg-gray-900/40`}
-          >
+          <article key={note.id} className="mcp-note" data-testid={`mcp-endpoint-note-${note.id}`}>
             {editingId === note.id ? (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 <Textarea
                   value={editDraft}
                   onChange={(e) => setEditDraft(e.target.value)}
                   rows={4}
                   aria-label="Edit cataloger note"
-                  className="bg-white dark:bg-gray-900"
                 />
                 <div className="flex flex-wrap gap-2">
                   <Button
@@ -241,32 +266,28 @@ export function McpEndpointNotesPanel({
                     disabled={saving || !editDraft.trim()}
                     onClick={() => void handleUpdate(note.id)}
                   >
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                    {saving ? <Loader2 className="animate-spin" aria-hidden /> : null}
                     Save
                   </Button>
                   <Button type="button" size="sm" variant="outline" onClick={cancelEdit}>
-                    <X className="h-4 w-4" aria-hidden />
+                    <X aria-hidden />
                     Cancel
                   </Button>
                 </div>
               </div>
             ) : (
               <>
-                <p className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">
-                  {note.body}
-                </p>
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-amber-100 pt-3 text-xs text-gray-500 dark:border-amber-900/40 dark:text-gray-400">
-                  <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">
-                      {mcpEndpointNoteAuthorLabel(note)}
+                <p className="mcp-note__text">{note.body}</p>
+                <div className="mcp-note__foot">
+                  <span>
+                    <span className="font-medium text-fg">{mcpEndpointNoteAuthorLabel(note)}</span>
+                    <span className="mx-1" aria-hidden>
+                      ·
                     </span>
-                    <span className="mx-1">·</span>
                     <time dateTime={note.createdAt}>{formatTimestamp(note.createdAt)}</time>
-                    {mcpEndpointNoteWasEdited(note) ? (
-                      <span className="ml-1 text-gray-400">(edited)</span>
-                    ) : null}
-                  </div>
-                  <div className="flex gap-1">
+                    {mcpEndpointNoteWasEdited(note) ? <em className="ml-1">(edited)</em> : null}
+                  </span>
+                  <span className="mcp-note__actions">
                     <Button
                       type="button"
                       size="sm"
@@ -274,9 +295,9 @@ export function McpEndpointNotesPanel({
                       disabled={saving}
                       onClick={() => startEdit(note)}
                       title="Edit note"
+                      aria-label="Edit note"
                     >
-                      <Pencil className="h-3.5 w-3.5" aria-hidden />
-                      <span className="sr-only">Edit</span>
+                      <Pencil aria-hidden />
                     </Button>
                     <Button
                       type="button"
@@ -285,11 +306,12 @@ export function McpEndpointNotesPanel({
                       disabled={saving}
                       onClick={() => void handleDelete(note.id)}
                       title="Delete note"
+                      aria-label="Delete note"
                     >
-                      <Trash2 className="h-3.5 w-3.5 text-red-500" aria-hidden />
-                      <span className="sr-only">Delete</span>
+                      {/* The glyph is emphasis; the button's accessible name is the message. */}
+                      <Trash2 aria-hidden className="text-danger" />
                     </Button>
-                  </div>
+                  </span>
                 </div>
               </>
             )}
@@ -297,12 +319,11 @@ export function McpEndpointNotesPanel({
         ))}
 
         {composing ? (
-          <div className="space-y-2 border-t border-amber-200/80 pt-4 dark:border-amber-900/50">
+          <div className="mcp-note">
             <label
               htmlFor={`cataloger-note-draft-${endpointId}`}
-              className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-amber-900/80 dark:text-amber-200/80"
+              className="mb-1.5 block text-2xs font-semibold uppercase tracking-[var(--track-caps)] text-fg-muted"
             >
-              <MessageSquarePlus className="h-3.5 w-3.5" aria-hidden />
               Add a note
             </label>
             <Textarea
@@ -312,18 +333,8 @@ export function McpEndpointNotesPanel({
               rows={3}
               autoFocus
               placeholder="e.g. Prefer the staging endpoint for QA — production is read-only."
-              className="bg-white dark:bg-gray-900"
             />
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                disabled={saving || !draft.trim()}
-                onClick={() => void handleCreate()}
-              >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-                Save note
-              </Button>
+            <div className="mcp-note__form-actions">
               <Button
                 type="button"
                 size="sm"
@@ -331,13 +342,22 @@ export function McpEndpointNotesPanel({
                 disabled={saving}
                 onClick={cancelCompose}
               >
-                <X className="h-4 w-4" aria-hidden />
+                <X aria-hidden />
                 Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={saving || !draft.trim()}
+                onClick={() => void handleCreate()}
+              >
+                {saving ? <Loader2 className="animate-spin" aria-hidden /> : null}
+                Save note
               </Button>
             </div>
           </div>
         ) : null}
       </div>
-    </section>
+    </Card>
   );
 }

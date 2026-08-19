@@ -8,6 +8,11 @@
  * types and the *pure* adapter/format helpers that turn those payloads into what the panel
  * renders — kept free of React so they can be unit-tested directly. JSON pretty-printing is
  * shared with the capability view via {@link mcpFormatJson}.
+ *
+ * HIVE-7.8 (#5325) moved the change kinds' *paint* onto `ui/statusVocabulary`. Added / removed /
+ * modified were three pairs of Tailwind palette classes, so the same "breaking" red here was a
+ * different red from the digest panel's two tabs away; each kind names the vocabulary string it
+ * is now (`ok` / `breaking` / `info`) and the table answers with the tone.
  */
 
 import {
@@ -16,6 +21,12 @@ import {
   type McpBadgeVariant,
   type McpServerBranding,
 } from './mcpBrowseUi';
+import {
+  STATUS_TONE_BORDER_CLASS,
+  STATUS_TONE_SOFT_CLASS,
+  statusTone,
+  type StatusTone,
+} from '../../../ui/statusVocabulary';
 
 export type { McpServerBranding } from './mcpBrowseUi';
 
@@ -250,9 +261,41 @@ export function mcpCompareHeader(compare: McpVersionCompare): string {
 export interface McpChangeCountPart {
   key: 'added' | 'removed' | 'modified' | 'fingerprint';
   label: string;
-  /** Tailwind text-color class for the token. */
+  /**
+   * The token's paint: its tone's `-soft` fill **and** the `-fg` ink calibrated to it.
+   *
+   * A pair, not an ink. Until HIVE-7.8 (#5325) this was the `-fg` ink alone, drawn on whatever
+   * was behind it — and the browser sweep that ticket added measured `+3` at 1.58:1 in
+   * Solarized, 1.64:1 in Blueprint and 2.38:1 in High contrast, because only `:root` and
+   * `[data-theme="dark"]` recalibrate the semantic pairs. Render it with `.mcp-tone-figure`,
+   * which supplies the chip's shape.
+   */
   colorClass: string;
 }
+
+/**
+ * The vocabulary string each change kind speaks.
+ *
+ * Additive is `ok`, a removal is `breaking` (which the table answers with danger, because a
+ * client aligned to the older surface may break), and a modification is `info` — the tone the
+ * vocabulary spends on "informational, worth a look". The mockup's add-green / remove-red /
+ * modify-blue language is preserved exactly; what changed is that all three follow the reader's
+ * theme instead of one light palette and one dark one.
+ */
+const CHANGE_VOCABULARY: Record<McpChangeType | 'unknown', string> = {
+  added: 'ok',
+  removed: 'breaking',
+  modified: 'info',
+  unknown: 'unknown',
+};
+
+/** The resolved tone per change kind, so the count parts and the rows cannot disagree. */
+const CHANGE_TONE = {
+  added: statusTone(CHANGE_VOCABULARY.added),
+  removed: statusTone(CHANGE_VOCABULARY.removed),
+  modified: statusTone(CHANGE_VOCABULARY.modified),
+  unknown: statusTone(CHANGE_VOCABULARY.unknown),
+} as const;
 
 /**
  * Build the change-count summary tokens for a compare result, in the canonical
@@ -266,27 +309,62 @@ export function mcpChangeCountParts(compare: McpVersionCompare): McpChangeCountP
     {
       key: 'added',
       label: `+${counts.added} added`,
-      colorClass: 'text-green-600 dark:text-green-400',
+      colorClass: STATUS_TONE_SOFT_CLASS[CHANGE_TONE.added],
     },
     {
       key: 'removed',
       label: `−${counts.removed} removed`,
-      colorClass: 'text-red-600 dark:text-red-400',
+      colorClass: STATUS_TONE_SOFT_CLASS[CHANGE_TONE.removed],
     },
     {
       key: 'modified',
       label: `~${counts.modified} modified`,
-      colorClass: 'text-blue-600 dark:text-blue-400',
+      colorClass: STATUS_TONE_SOFT_CLASS[CHANGE_TONE.modified],
     },
   ];
   if (compare.fingerprint_changed) {
+    // Not a change *kind* — a fact about the pair — so it stays the page's quiet ink rather
+    // than borrowing one of the three tones beside it.
     parts.push({
       key: 'fingerprint',
       label: 'fingerprint changed',
-      colorClass: 'text-gray-500 dark:text-gray-400',
+      colorClass: STATUS_TONE_SOFT_CLASS.neutral,
     });
   }
   return parts;
+}
+
+/**
+ * The `+N −N ~N` triple for one snapshot's own change counts (HIVE-7.8, #5325).
+ *
+ * The same three tones {@link mcpChangeCountParts} gives a compare, in the compact form a
+ * timeline row prints. It exists so the two cannot drift: the timeline used to spell
+ * `text-green-600 dark:text-green-400` and its two siblings inline, which is how a row's "+3"
+ * ended up a different green from the diff header's above it.
+ *
+ * @param counts A snapshot's `change_counts`.
+ * @returns Three tokens, always — a zero count reads explicitly rather than disappearing.
+ */
+export function mcpVersionChangeCountParts(
+  counts: McpVersionChangeCounts,
+): McpChangeCountPart[] {
+  return [
+    {
+      key: 'added',
+      label: `+${counts.added}`,
+      colorClass: STATUS_TONE_SOFT_CLASS[CHANGE_TONE.added],
+    },
+    {
+      key: 'removed',
+      label: `−${counts.removed}`,
+      colorClass: STATUS_TONE_SOFT_CLASS[CHANGE_TONE.removed],
+    },
+    {
+      key: 'modified',
+      label: `~${counts.modified}`,
+      colorClass: STATUS_TONE_SOFT_CLASS[CHANGE_TONE.modified],
+    },
+  ];
 }
 
 /** Color-coded presentation for one change row, keyed off its direction. */
@@ -295,40 +373,50 @@ export interface McpChangeStyle {
   label: string;
   /** Sign glyph used in the summary and row badge (`+` / `−` / `~`). */
   sign: string;
-  /** Tailwind classes for the row container (left border + tinted background). */
+  /**
+   * The leading edge a change row is marked with.
+   *
+   * A *rule*, not a fill. It was `border-l-4 border-green-500 bg-green-50 dark:bg-green-900/20`
+   * until HIVE-7.8 (#5325) — a tinted row — and a diff of twelve of those is a wall of colour
+   * in which the *content* of the change is the thing that stops being legible. The row's own
+   * kind badge carries the tone in a form a reader can name.
+   */
   rowClass: string;
   /** Badge variant for the direction chip. */
   badgeVariant: McpBadgeVariant;
+  /** The tone this change kind *is*, in the shared status vocabulary (HIVE-7.8, #5325). */
+  tone: StatusTone;
+}
+
+/** Build one change kind's styling, taking its colour from the shared vocabulary. */
+function changeStyle(
+  label: string,
+  sign: string,
+  tone: StatusTone,
+  badgeVariant: McpBadgeVariant,
+): McpChangeStyle {
+  return {
+    label,
+    sign,
+    tone,
+    badgeVariant,
+    rowClass: `border-l-2 ${STATUS_TONE_BORDER_CLASS[tone]}`,
+  };
 }
 
 const MCP_CHANGE_STYLES: Record<McpChangeType, McpChangeStyle> = {
-  added: {
-    label: 'Added',
-    sign: '+',
-    rowClass: 'border-l-4 border-green-500 bg-green-50 dark:bg-green-900/20',
-    badgeVariant: 'success',
-  },
-  removed: {
-    label: 'Removed',
-    sign: '−',
-    rowClass: 'border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20',
-    badgeVariant: 'error',
-  },
-  modified: {
-    label: 'Modified',
-    sign: '~',
-    rowClass: 'border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20',
-    badgeVariant: 'default',
-  },
+  added: changeStyle('Added', '+', CHANGE_TONE.added, 'success'),
+  removed: changeStyle('Removed', '−', CHANGE_TONE.removed, 'error'),
+  modified: changeStyle('Modified', '~', CHANGE_TONE.modified, 'default'),
 };
 
 /** Neutral fallback styling for an unrecognized `change_type` (defensive; never expected). */
-const MCP_CHANGE_STYLE_FALLBACK: McpChangeStyle = {
-  label: 'Changed',
-  sign: '~',
-  rowClass: 'border-l-4 border-gray-400 bg-gray-50 dark:bg-gray-900/20',
-  badgeVariant: 'secondary',
-};
+const MCP_CHANGE_STYLE_FALLBACK: McpChangeStyle = changeStyle(
+  'Changed',
+  '~',
+  CHANGE_TONE.unknown,
+  'secondary',
+);
 
 /** Resolve the color-coded styling for a change row from its `change_type`. */
 export function mcpChangeStyle(changeType: string): McpChangeStyle {

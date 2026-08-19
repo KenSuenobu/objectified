@@ -242,8 +242,20 @@ const SECTION_CODE = SECTION.replace(/\/\*[\s\S]*?\*\//g, '');
 /** The first line of this ticket's block, so its rules can be found by position. */
 const SECTION_FIRST_LINE = css.slice(0, css.indexOf(SECTION)).split('\n').length;
 
+/**
+ * The line after this ticket's block.
+ *
+ * Bounded at both ends since HIVE-7.8 (#5325) added the next block below it. Before that this
+ * block was the last in the file, so "every rule from here on" and "every rule in this block"
+ * were the same set — and the two `--fg-faint` marks and the one `--bg-subtle` ground the
+ * deviations below enumerate quietly became the *next* screen's as well.
+ */
+const SECTION_LAST_LINE = SECTION_FIRST_LINE + SECTION.split('\n').length;
+
 /** Every top-level rule declared in this ticket's block, however its prelude is wrapped. */
-const MCP_RULES: CssRule[] = rules.filter((rule) => rule.line >= SECTION_FIRST_LINE);
+const MCP_RULES: CssRule[] = rules.filter(
+  (rule) => rule.line >= SECTION_FIRST_LINE && rule.line < SECTION_LAST_LINE
+);
 
 /* -------------------------------------------------------------------------
    1. The section exists, and names no colour

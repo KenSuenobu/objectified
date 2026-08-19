@@ -131,6 +131,29 @@ export const STATUS_TONE_DOT_CLASS: Readonly<Record<StatusTone, string>> = {
 };
 
 /**
+ * A tone as a **rule** — the leading edge that marks a row without tinting it (HIVE-7.8, #5325).
+ *
+ * The saturated role colour, like {@link STATUS_TONE_DOT_CLASS}: a 2 px rule is a mark, not
+ * text, so it is held to the 3:1 non-text floor rather than to AA, and the `-fg` step would
+ * read as a smudge at that width. Use it where a *list* of tinted rows would be a wall of
+ * colour — the lint findings and the version diff both are — and let the row's own badge carry
+ * the tone in a form a reader can name.
+ */
+export const STATUS_TONE_BORDER_CLASS: Readonly<Record<StatusTone, string>> = {
+  neutral: 'border-neutral',
+  ok: 'border-ok',
+  warn: 'border-warn',
+  danger: 'border-danger',
+  accent: 'border-accent',
+  honey: 'border-honey',
+  violet: 'border-violet',
+  orange: 'border-orange',
+  rose: 'border-rose',
+  outline: 'border-border-strong',
+  ink: 'border-fg',
+};
+
+/**
  * A tone as **text on a page surface** — a pill's label, a gauge's centred letter.
  *
  * These are the `-fg` inks rather than the saturated `-` ones: the saturated hue is calibrated

@@ -22,6 +22,7 @@ import * as React from 'react';
 import { Activity, AlertOctagon, Clock, ShieldOff } from 'lucide-react';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
+import { STATUS_TONE_SOFT_CLASS } from '@/app/components/ui/statusVocabulary';
 import { StackedTimeline, chartSeriesStyle } from '@/app/components/ui/mcp/charts';
 import {
   mcpAvailabilityKind,
@@ -44,17 +45,17 @@ const AVAILABILITY_TONE: Record<
   ReturnType<typeof mcpAvailabilityKind>,
   string
 > = {
-  healthy: 'text-emerald-600 dark:text-emerald-400',
-  degraded: 'text-amber-600 dark:text-amber-400',
-  poor: 'text-red-600 dark:text-red-400',
-  unknown: 'text-gray-500 dark:text-gray-400',
+  healthy: STATUS_TONE_SOFT_CLASS.ok,
+  degraded: STATUS_TONE_SOFT_CLASS.warn,
+  poor: STATUS_TONE_SOFT_CLASS.danger,
+  unknown: STATUS_TONE_SOFT_CLASS.neutral,
 };
 
 /** One legend row: a swatch drawn with the band's own chart colour, plus its label. */
 function LegendSwatch({ tone, label }: { tone: 'green' | 'red' | 'neutral'; label: string }) {
   const style = chartSeriesStyle(tone);
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
+    <span className="inline-flex items-center gap-1.5 text-xs text-fg-muted">
       <svg viewBox="0 0 10 10" className="h-2.5 w-2.5" aria-hidden>
         <rect x={0} y={0} width={10} height={10} rx={2} className={style.fillClass} />
       </svg>
@@ -76,7 +77,7 @@ export function DiscoveryHealthPanel({ health, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Activity className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Activity className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Discovery health unavailable"
         description={error}
       />
@@ -89,7 +90,7 @@ export function DiscoveryHealthPanel({ health, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Activity className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Activity className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No discovery history yet"
         description="This endpoint has not been discovered yet, so there is no reliability timeline to show. Run discovery to start recording its health."
       />
@@ -105,7 +106,7 @@ export function DiscoveryHealthPanel({ health, loading, error }: Props) {
     <div className="space-y-4" aria-busy={loading}>
       {/* Quarantine banner — the auto-disable state the AC asks us to flag prominently. */}
       {health.quarantined ? (
-        <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-200">
+        <div className="flex items-start gap-2 rounded-md bg-danger-soft px-3 py-2 text-xs text-danger-fg">
           <ShieldOff className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <div className="space-y-0.5">
             <p className="font-semibold">Quarantined — auto-excluded from discovery</p>
@@ -119,7 +120,7 @@ export function DiscoveryHealthPanel({ health, loading, error }: Props) {
               ) : null}
             </p>
             {health.quarantined_at ? (
-              <p className="text-red-600 dark:text-red-300">
+              <p>
                 Since {mcpDiscoveryEventTime(health.quarantined_at)} ·{' '}
                 <span className="tabular-nums">{health.consecutive_failures}</span> consecutive{' '}
                 {health.consecutive_failures === 1 ? 'failure' : 'failures'}
@@ -132,15 +133,15 @@ export function DiscoveryHealthPanel({ health, loading, error }: Props) {
       {/* Availability headline + outcome tallies over the window. */}
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
         <div>
-          <div className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          <div className="text-xs font-medium uppercase tracking-wider text-fg-muted">
             Availability
           </div>
-          <div className={`text-3xl font-semibold tabular-nums ${AVAILABILITY_TONE[availabilityKind]}`}>
+          <div className={`mcp-tone-figure mcp-tone-figure--lead mt-1 ${AVAILABILITY_TONE[availabilityKind]}`}>
             {availabilityText}
           </div>
-          <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-0.5 text-xs text-fg-muted">
             over{' '}
-            <span className="font-semibold tabular-nums text-gray-700 dark:text-gray-200">
+            <span className="font-semibold tabular-nums text-fg">
               {health.terminal_count}
             </span>{' '}
             completed {health.terminal_count === 1 ? 'attempt' : 'attempts'}
@@ -148,14 +149,14 @@ export function DiscoveryHealthPanel({ health, loading, error }: Props) {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          <span className="text-emerald-600 dark:text-emerald-400">
-            <span className="font-semibold tabular-nums">{health.ok_count}</span> ok
+          <span className={`mcp-tone-figure ${STATUS_TONE_SOFT_CLASS.ok}`}>
+            {health.ok_count} ok
           </span>
-          <span className="text-red-600 dark:text-red-400">
-            <span className="font-semibold tabular-nums">{health.failed_count}</span> failed
+          <span className={`mcp-tone-figure ${STATUS_TONE_SOFT_CLASS.danger}`}>
+            {health.failed_count} failed
           </span>
           {health.pending_count > 0 ? (
-            <span className="text-gray-500 dark:text-gray-400">
+            <span className="text-fg-muted">
               <span className="font-semibold tabular-nums">{health.pending_count}</span> pending
             </span>
           ) : null}
@@ -181,7 +182,7 @@ export function DiscoveryHealthPanel({ health, loading, error }: Props) {
           />
         </div>
       ) : (
-        <p className="rounded-md border border-dashed border-gray-200 bg-gray-50/60 px-3 py-4 text-center text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-400">
+        <p className="rounded-md border border-dashed border-border bg-inset px-3 py-4 text-center text-xs text-fg-muted">
           No discovery jobs recorded in the recent window yet.
         </p>
       )}
@@ -189,15 +190,15 @@ export function DiscoveryHealthPanel({ health, loading, error }: Props) {
       {/* Per-code failure breakdown — what the failures actually were. */}
       {timeline.failures.length > 0 ? (
         <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-            <AlertOctagon className="h-3.5 w-3.5 text-red-500 dark:text-red-400" aria-hidden />
+          <div className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
+            <AlertOctagon className="size-3.5 text-danger" aria-hidden />
             Failure breakdown
           </div>
           <div className="flex flex-wrap gap-2">
             {timeline.failures.map((failure) => (
               <span
                 key={failure.code}
-                className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300"
+                className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-2.5 py-1 text-xs text-danger-fg"
               >
                 <span className="font-medium">{failure.label}</span>
                 <span className="tabular-nums">×{failure.count}</span>
@@ -209,13 +210,13 @@ export function DiscoveryHealthPanel({ health, loading, error }: Props) {
 
       {/* Last-attempt footnote — the most recent outcome and when it ran. */}
       {health.last_status || health.last_discovered_at ? (
-        <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-          <Clock className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+        <p className="flex items-center gap-1.5 text-xs text-fg-muted">
+          <Clock className="size-3.5 shrink-0 text-fg-subtle" aria-hidden />
           Last discovery
           {health.last_status ? (
             <>
               {' '}
-              <span className="font-medium text-gray-700 dark:text-gray-200">
+              <span className="font-medium text-fg">
                 {mcpDiscoveryOutcomeLabel(health.last_status)}
               </span>
             </>

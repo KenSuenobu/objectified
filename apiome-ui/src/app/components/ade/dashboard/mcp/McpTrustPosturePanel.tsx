@@ -15,23 +15,33 @@
  * - Each finding carries an explicit "Signal — not proven exploitable" label, never a bare red chip.
  * - Skipped rules are shown as visible coverage gaps, so an unscanned lane never reads as clean.
  *
- * Styling uses shared dashboard classes and token utilities only — no hard-coded values.
+ * ### Where it is mounted (HIVE-7.8, #5325)
+ *
+ * Nowhere, until this ticket. The component, its API route and its test suite have existed since
+ * CLX-3.2 (#4856) and no screen rendered them. `docs/mockups/sources/mcp-endpoint.html` proposes a
+ * home — a sixth tab on the endpoint detail, beside Lint & score — and marks it **Proposed** in
+ * honey so the fact that it is a proposal rather than a shipped decision stays on the screen. That
+ * is what {@link McpEndpointTabList} draws and what this panel now fills.
+ *
+ * The re-skin that came with it: the honesty banner was `border-sky-200 bg-sky-50 text-sky-900
+ * dark:…` (a hand-rolled `ui/Alert`), each section was a `dashboardPanelPaddedClass` div, and the
+ * severity and origin chips were six pairs of palette classes. All tokens now — see
+ * `utils/mcp-trust-posture` for the two chip helpers.
  */
 
 import * as React from 'react';
+import { Info } from 'lucide-react';
+import { Alert } from '@/app/components/ui/Alert';
 import { Badge } from '@/app/components/ui/Badge';
+import { Card, CardBody, CardHeader, CardTitle } from '@/app/components/ui/Card';
 import { LoadingState } from '@/app/components/ui/LoadingState';
 import { EmptyState } from '@/app/components/ui/EmptyState';
-import {
-  dashboardContentStackClass,
-  dashboardPanelPaddedClass,
-} from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import {
   fetchPostureReport,
   groupFindingsByOwasp,
   hasProvenFindings,
-  originChipClass,
-  severityChipClass,
+  postureOriginTone,
+  postureSeverityTone,
   type PostureReport,
 } from '@/app/utils/mcp-trust-posture';
 
@@ -77,8 +87,10 @@ export function McpTrustPosturePanel({ endpointId, versionId, profile }: McpTrus
   if (error) {
     return (
       <EmptyState
+        tone="danger"
         title="Trust posture unavailable"
         description={error}
+        data-testid="mcp-posture-error"
       />
     );
   }
@@ -88,135 +100,143 @@ export function McpTrustPosturePanel({ endpointId, versionId, profile }: McpTrus
   const proven = hasProvenFindings(report);
 
   return (
-    <div className={dashboardContentStackClass}>
-      {/* The honesty banner. Present for as long as nothing has been proven — driven by the report,
-          not hard-coded, so it retires itself when CLX-3.3 probes arrive. */}
+    <div className="flex flex-col gap-4" data-testid="mcp-trust-posture">
+      {/* The honesty banner. Present for as long as nothing has been proven — driven by the
+          report, not hard-coded, so it retires itself when CLX-3.3's probes arrive. */}
       {!proven ? (
-        <div
-          className="rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200"
-          role="note"
-        >
+        <Alert variant="info" icon={<Info aria-hidden className="mt-px size-4 shrink-0" />}>
           Every finding below is a <strong>signal to review</strong>, not a demonstrated exploit.
           Static analysis can indicate risk; it cannot prove a server is exploitable. Confirmation
           requires a dynamic probe.
-        </div>
+        </Alert>
       ) : null}
 
-      <section className={dashboardPanelPaddedClass}>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trust posture</h3>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+      <Card>
+        <CardHeader className="flex-row flex-wrap items-center gap-3">
+          <div className="min-w-0">
+            <CardTitle>Trust posture</CardTitle>
+            <p className="mt-1 text-sm text-fg-muted">
               Profile {report.profile} · OWASP MCP {report.owaspRevision} · score {report.score}/100
               (grade {report.grade})
             </p>
           </div>
-          <Badge variant={report.gate.passed ? 'success' : 'error'} title="Gate decision">
+          <Badge
+            className="ml-auto"
+            status={report.gate.passed ? 'passed' : 'failed'}
+            title="Gate decision"
+          >
             Gate {report.gate.passed ? 'passed' : 'failed'}
           </Badge>
-        </div>
+        </CardHeader>
         {report.gate.reasons.length > 0 ? (
-          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-600 dark:text-gray-400">
-            {report.gate.reasons.map((reason) => (
-              <li key={reason}>{reason}</li>
-            ))}
-          </ul>
+          <CardBody>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-fg-muted">
+              {report.gate.reasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          </CardBody>
         ) : null}
-      </section>
+      </Card>
 
       {groups.length === 0 ? (
         <EmptyState
           title="No trust-posture findings"
           description="No signals were raised by the rules that could be evaluated for this snapshot."
+          data-testid="mcp-posture-clean"
         />
       ) : (
         groups.map(({ riskId, findings }) => (
-          <section key={riskId} className={dashboardPanelPaddedClass}>
-            <div className="flex items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {riskId}
-              </h4>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+          <Card key={riskId} data-testid={`mcp-posture-risk-${riskId}`}>
+            <CardHeader className="flex-row items-center gap-2">
+              <CardTitle className="text-sm">{riskId}</CardTitle>
+              <span className="ml-auto text-xs text-fg-muted">
                 {findings.length} finding{findings.length === 1 ? '' : 's'}
               </span>
-            </div>
-            <ul className="mt-3 space-y-3">
-              {findings.map((finding) => (
-                <li
-                  key={finding.id}
-                  className="rounded-md border border-gray-200 p-3 dark:border-gray-700"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded px-1.5 py-0.5 text-xs font-medium ${severityChipClass(finding.severity)}`}
-                    >
-                      {finding.severity}
-                    </span>
-                    <span
-                      className={`rounded px-1.5 py-0.5 text-xs font-medium ${originChipClass(finding.origin)}`}
-                      title="Which evidence lane this came from"
-                    >
-                      {finding.originLabel || finding.origin}
-                    </span>
-                    {/* The exploitability label is never omitted — it is the honesty guarantee. */}
-                    <span
-                      className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300"
-                      title="Static findings are signals, not demonstrated exploits"
-                    >
-                      {finding.exploitabilityLabel}
-                    </span>
-                    <code className="text-xs text-gray-500 dark:text-gray-400">{finding.path}</code>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-800 dark:text-gray-200">{finding.message}</p>
-                  {finding.excerpt ? (
-                    <pre className="mt-2 overflow-x-auto rounded bg-gray-50 p-2 text-xs text-gray-700 dark:bg-gray-900 dark:text-gray-300">
-                      {finding.excerpt}
-                    </pre>
-                  ) : null}
-                  {finding.remediation ? (
-                    <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                      <strong>Remediation:</strong> {finding.remediation}
-                    </p>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </section>
+            </CardHeader>
+            <CardBody>
+              <ul className="flex flex-col gap-3">
+                {findings.map((finding) => (
+                  <li key={finding.id} className="mcp-posture__finding">
+                    <div className="mcp-posture__head">
+                      <Badge variant={postureSeverityTone(finding.severity)}>
+                        {finding.severity}
+                      </Badge>
+                      <Badge
+                        variant={postureOriginTone(finding.origin)}
+                        title="Which evidence lane this came from"
+                      >
+                        {finding.originLabel || finding.origin}
+                      </Badge>
+                      {/* Never omitted — it is the honesty guarantee. */}
+                      <Badge
+                        variant="outline"
+                        title="Static findings are signals, not demonstrated exploits"
+                      >
+                        {finding.exploitabilityLabel}
+                      </Badge>
+                      <code className="mono text-xs text-fg-muted">{finding.path}</code>
+                    </div>
+                    <p className="mcp-posture__message">{finding.message}</p>
+                    {finding.excerpt ? (
+                      <pre className="mt-2 overflow-x-auto rounded-sm bg-inset p-2 text-xs text-fg-muted">
+                        {finding.excerpt}
+                      </pre>
+                    ) : null}
+                    {finding.remediation ? (
+                      <p className="mcp-posture__remediation">
+                        <strong className="text-fg">Remediation:</strong> {finding.remediation}
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </CardBody>
+          </Card>
         ))
       )}
 
-      {/* Coverage gaps. Shown, not hidden: a rule with no evidence was not evaluated, and that is a
-          different thing from a rule that passed. */}
-      {report.skippedRules.length > 0 ? (
-        <section className={dashboardPanelPaddedClass}>
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-            Not evaluated ({report.skippedRules.length})
-          </h4>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            These rules could not run for lack of evidence. They are <strong>not passing</strong> —
-            they are unverified.
-          </p>
-          <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
-            {report.skippedRules.map((ruleId) => (
-              <li key={ruleId}>
-                <code className="text-xs">{ruleId}</code>
-                {report.skipReasons[ruleId] ? ` — ${report.skipReasons[ruleId]}` : null}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {/* Coverage gaps. Shown, not hidden: a rule with no evidence was not evaluated, and that
+          is a different thing from a rule that passed. */}
+      <div className="mcp-posture__coverage">
+        {report.skippedRules.length > 0 ? (
+          <Card variant="soft" data-testid="mcp-posture-skipped">
+            <CardBody>
+              <h4 className="text-sm font-semibold text-fg">
+                Not evaluated ({report.skippedRules.length})
+              </h4>
+              <p className="mt-1 text-sm text-fg-muted">
+                These rules could not run for lack of evidence. They are <strong>not
+                passing</strong> — they are unverified.
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-fg-muted">
+                {report.skippedRules.map((ruleId) => (
+                  <li key={ruleId}>
+                    <code className="mono text-xs">{ruleId}</code>
+                    {report.skipReasons[ruleId] ? ` — ${report.skipReasons[ruleId]}` : null}
+                  </li>
+                ))}
+              </ul>
+            </CardBody>
+          </Card>
+        ) : null}
 
-      {report.owaspCoverage.uncovered.length > 0 ? (
-        <section className={dashboardPanelPaddedClass}>
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">OWASP coverage</h4>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            The evaluated rules do not cover these OWASP MCP risks. An unmentioned risk is not an
-            absent one — it is one this scan cannot speak to:{' '}
-            <span className="font-medium">{report.owaspCoverage.uncovered.join(', ')}</span>.
-          </p>
-        </section>
-      ) : null}
+        {report.owaspCoverage.uncovered.length > 0 ? (
+          <Card variant="soft" data-testid="mcp-posture-coverage">
+            <CardBody>
+              <h4 className="text-sm font-semibold text-fg">OWASP coverage</h4>
+              <p className="mt-1 text-sm text-fg-muted">
+                The evaluated rules do not cover these OWASP MCP risks. An unmentioned risk is not
+                an absent one — it is one this scan cannot speak to:{' '}
+                <span className="font-medium text-fg">
+                  {report.owaspCoverage.uncovered.join(', ')}
+                </span>
+                .
+              </p>
+            </CardBody>
+          </Card>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -46,20 +46,20 @@ function AxisRow({ axis }: { axis: McpPeerAxis }) {
   return (
     <li className="flex items-start justify-between gap-3 py-2">
       <div className="min-w-0">
-        <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{axis.label}</div>
-        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{axis.detail}</p>
+        <div className="text-sm font-medium text-fg">{axis.label}</div>
+        <p className="mt-0.5 text-xs text-fg-muted">{axis.detail}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {axis.available ? (
-          <span className="text-sm font-semibold tabular-nums text-gray-700 dark:text-gray-200">
+          <span className="text-sm font-semibold tabular-nums text-fg">
             {axis.value}
-            <span className="text-xs font-normal text-gray-400 dark:text-gray-500">/100</span>
+            <span className="text-xs font-normal text-fg-subtle">/100</span>
           </span>
         ) : null}
         {badgeLabel ? (
           <McpBadge tone={tone}>{badgeLabel}</McpBadge>
         ) : (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+          <span className="rounded-full bg-inset px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-fg-muted">
             Not ranked
           </span>
         )}
@@ -81,7 +81,7 @@ export function PeerPercentilePanel({ profile, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Trophy className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Trophy className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Peer ranking unavailable"
         description={error}
       />
@@ -94,7 +94,7 @@ export function PeerPercentilePanel({ profile, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Trophy className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Trophy className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Not enough peers to rank yet"
         description="This server has no measured axis to rank, or no peers in its category to rank against. Register and discover more servers in this category — then grade, documentation, safety, and latency rankings appear here."
       />
@@ -107,7 +107,7 @@ export function PeerPercentilePanel({ profile, loading, error }: Props) {
   return (
     <div className="space-y-4" aria-busy={loading}>
       {/* Cohort context — who this server is being ranked against. */}
-      <div className="flex items-start gap-2 rounded-md border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-xs text-indigo-800 dark:border-indigo-900/40 dark:bg-indigo-900/20 dark:text-indigo-200">
+      <div className="flex items-start gap-2 rounded-md bg-accent-soft px-3 py-2 text-xs text-accent-fg">
         <Users className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
         {soleMember ? (
           <p>
@@ -125,15 +125,15 @@ export function PeerPercentilePanel({ profile, loading, error }: Props) {
         )}
       </div>
 
-      <ul className="divide-y divide-gray-100 dark:divide-gray-700/60">
+      <ul className="divide-y divide-border/60">
         {profile.axes.map((axis) => (
           <AxisRow key={axis.key} axis={axis} />
         ))}
       </ul>
 
       {profile.rankedCount < profile.axes.length ? (
-        <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-          <Info className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+        <p className="flex items-center gap-1.5 text-xs text-fg-muted">
+          <Info className="size-3.5 shrink-0 text-fg-subtle" aria-hidden />
           Unranked axes have no measurement on this server yet — they are not counted as a low rank.
         </p>
       ) : null}

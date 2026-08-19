@@ -15,11 +15,18 @@
  * read in both themes by design and are asserted to stay saturated solids rather than needing a
  * dark override.
  *
- * Two of the mappings have since left this mechanism behind: HIVE-2.4 (#5283) moved the grade
- * bands and the health pill onto the Hive token layer, where a *token* is swapped per theme
- * rather than a second palette being named per utility. Their blocks below assert the stronger
- * property that replaced the `dark:` variant — a token and no palette literal — and the tones
- * themselves are pinned in `tests/hive-status-vocabulary.test.tsx`.
+ * Most of the mappings have since left this mechanism behind, because a `dark:` variant is one
+ * palette swapped for a second one and only knows about the app's original light/dark pair.
+ * HIVE-2.4 (#5283) moved the grade bands and the health pill onto the Hive token layer, HIVE-7.7
+ * (#5324) moved `McpBadge`'s seven tones, and HIVE-7.8 (#5325) moved the last three — the version
+ * diff's change kinds, the lint tiers, and the trust-posture chips. Their blocks below assert the
+ * stronger property that replaced the `dark:` variant — a token and no palette literal, over all
+ * nine themes rather than two — and the tones themselves are pinned in
+ * `tests/hive-status-vocabulary.test.tsx`.
+ *
+ * What still asserts a `dark:` variant is what has not moved yet: the shared
+ * `numeric-score-tier` bands, which nine surfaces outside MCP read and which therefore belong to
+ * a ticket of their own.
  */
 
 import {
@@ -33,6 +40,7 @@ import type { McpBadgeTone } from '../src/app/components/ade/dashboard/mcp/mcpUi
 import {
   mcpChangeStyle,
   mcpChangeCountParts,
+  mcpVersionChangeCountParts,
   type McpVersionCompare,
 } from '../src/app/components/ade/dashboard/mcp/mcpVersionsUi';
 import {
@@ -41,6 +49,17 @@ import {
   MCP_LINT_TIER_ORDER,
 } from '../src/app/components/ade/dashboard/mcp/mcpLintUi';
 import {
+  STATUS_TONES,
+  STATUS_TONE_DOT_CLASS,
+  STATUS_TONE_SOFT_CLASS,
+} from '../src/app/components/ui/statusVocabulary';
+import {
+  originChipClass,
+  postureOriginTone,
+  postureSeverityTone,
+  severityChipClass,
+} from '../src/app/utils/mcp-trust-posture';
+import {
   getNumericScoreTier,
   NUMERIC_SCORE_TIER_LEGEND,
 } from '../src/app/utils/numeric-score-tier';
@@ -48,11 +67,6 @@ import {
 /** A `dark:`-prefixed Tailwind utility appears somewhere in the class string. */
 function hasDarkVariant(className: string): boolean {
   return /(^|\s)dark:/.test(className);
-}
-
-/** A solid, saturated fill (`bg-*-400/500/600`) — readable on both themes without a dark override. */
-function isSaturatedSolidBg(className: string): boolean {
-  return /\bbg-[a-z]+-(400|500|600)\b/.test(className);
 }
 
 const GRADE_LETTERS: McpGradeLetter[] = ['A', 'B', 'C', 'D', 'F'];
@@ -154,18 +168,35 @@ describe('badge tones — Hive tokens rather than a dark variant', () => {
   });
 });
 
-describe('version diff dark-theme tokens', () => {
-  it.each(CHANGE_TYPES)('gives the %s change row a tinted dark background', (changeType) => {
+describe('version diff — Hive tokens rather than a dark variant', () => {
+  /**
+   * HIVE-7.8 (#5325) moved the change kinds onto the token layer, the same move HIVE-2.4 made for
+   * the grade bands and HIVE-7.7 for `McpBadge`. So the assertion is the stronger one those
+   * blocks make — a token and no palette literal, over all nine themes rather than two — plus the
+   * *shape* the ticket changed with it: a change row is marked with a rule, not tinted with a
+   * fill, because a diff of twelve tinted rows buries the JSON a reader came for.
+   */
+  it.each(CHANGE_TYPES)('paints the %s change row from tokens, with no palette literal', (changeType) => {
     const style = mcpChangeStyle(changeType);
-    // The row's tinted background sits on the panel surface, so it must adapt to dark.
-    expect(hasDarkVariant(style.rowClass)).toBe(true);
+    expect(style.rowClass).not.toMatch(PALETTE_LITERAL);
+    expect(hasDarkVariant(style.rowClass)).toBe(false);
   });
 
-  it('gives the unrecognized-change fallback row a dark variant', () => {
-    expect(hasDarkVariant(mcpChangeStyle('mystery').rowClass)).toBe(true);
+  it('gives the unrecognized-change fallback the same treatment', () => {
+    const style = mcpChangeStyle('mystery');
+    expect(style.rowClass).not.toMatch(PALETTE_LITERAL);
+    expect(style.tone).toBe('neutral');
   });
 
-  it('keeps the diff add/remove/modify count colors legible on dark', () => {
+  it('marks a change row with a rule rather than a tint', () => {
+    for (const changeType of [...CHANGE_TYPES, 'mystery']) {
+      const { rowClass } = mcpChangeStyle(changeType);
+      expect(rowClass).toContain('border-l-2');
+      expect(rowClass).not.toMatch(/\bbg-/);
+    }
+  });
+
+  it('keeps the add=ok / remove=danger / modify=accent language on the count tokens', () => {
     const compare = {
       base: { id: 'a', version_seq: 1, version_tag: null, surface_fingerprint: null },
       target: { id: 'b', version_seq: 2, version_tag: null, surface_fingerprint: null },
@@ -174,44 +205,80 @@ describe('version diff dark-theme tokens', () => {
       changes: [],
     } as McpVersionCompare;
     const parts = mcpChangeCountParts(compare);
-    // added / removed / modified / fingerprint — every token carries a dark variant.
     for (const part of parts) {
-      expect(hasDarkVariant(part.colorClass)).toBe(true);
+      expect(part.colorClass).not.toMatch(PALETTE_LITERAL);
+      expect(hasDarkVariant(part.colorClass)).toBe(false);
     }
     const byKey = Object.fromEntries(parts.map((p) => [p.key, p.colorClass]));
-    // The add=green / remove=red / modify=blue language is preserved on both themes.
-    expect(byKey.added).toContain('text-green-600');
-    expect(byKey.added).toContain('dark:text-green-400');
-    expect(byKey.removed).toContain('text-red-600');
-    expect(byKey.modified).toContain('text-blue-600');
+    // The *pair*, not the ink alone: the browser sweep HIVE-7.8 added measured `+3` at 1.58:1 in
+    // Solarized when it was the `-fg` step on whatever was behind it.
+    expect(byKey.added).toBe(STATUS_TONE_SOFT_CLASS.ok);
+    expect(byKey.removed).toBe(STATUS_TONE_SOFT_CLASS.danger);
+    expect(byKey.modified).toBe(STATUS_TONE_SOFT_CLASS.accent);
+    // The fingerprint is a fact about the pair, not a change kind — so it stays neutral.
+    expect(byKey.fingerprint).toBe(STATUS_TONE_SOFT_CLASS.neutral);
   });
 
-  it('keeps the light diff row tints (light theme is unchanged)', () => {
-    expect(mcpChangeStyle('added').rowClass).toContain('bg-green-50');
-    expect(mcpChangeStyle('removed').rowClass).toContain('bg-red-50');
-    expect(mcpChangeStyle('modified').rowClass).toContain('bg-blue-50');
+  it('gives a snapshot row the same three tones the compare header uses', () => {
+    const counts = { added: 1, removed: 2, modified: 3, total: 6 };
+    for (const part of mcpVersionChangeCountParts(counts)) {
+      expect(part.colorClass).not.toMatch(PALETTE_LITERAL);
+    }
   });
 });
 
-describe('lint report dark-theme tokens', () => {
-  it.each([...MCP_LINT_TIER_ORDER])('gives the %s finding row a tinted dark background', (tier) => {
-    expect(hasDarkVariant(mcpLintTierMeta(tier).rowClass)).toBe(true);
+describe('lint report — Hive tokens rather than a dark variant', () => {
+  /** The same move, for the three requirement tiers (HIVE-7.8, #5325). */
+  it.each([...MCP_LINT_TIER_ORDER])('paints the %s tier from tokens, with no palette literal', (tier) => {
+    const meta = mcpLintTierMeta(tier);
+    for (const className of [meta.rowClass, meta.barClass]) {
+      expect(className).not.toMatch(PALETTE_LITERAL);
+      expect(hasDarkVariant(className)).toBe(false);
+    }
   });
 
-  it.each([...MCP_LINT_TIER_ORDER])('paints the %s count bar as a saturated solid', (tier) => {
-    // The category/severity bars are saturated solids that read on both themes.
-    expect(isSaturatedSolidBg(mcpLintTierMeta(tier).barClass)).toBe(true);
+  it.each([...MCP_LINT_TIER_ORDER])('files the %s tier under a shared status tone', (tier) => {
+    expect(STATUS_TONES).toContain(mcpLintTierMeta(tier).tone);
   });
 
-  it('paints each severity bar as a saturated solid', () => {
-    expect(isSaturatedSolidBg(mcpLintSeverityBarClass('error'))).toBe(true);
-    expect(isSaturatedSolidBg(mcpLintSeverityBarClass('warning'))).toBe(true);
-    expect(isSaturatedSolidBg(mcpLintSeverityBarClass('info'))).toBe(true);
+  it('marks a finding row with a rule rather than a tint', () => {
+    for (const tier of MCP_LINT_TIER_ORDER) {
+      const { rowClass } = mcpLintTierMeta(tier);
+      expect(rowClass).toContain('border-l-2');
+      expect(rowClass).not.toMatch(/\bbg-/);
+    }
   });
 
-  it('keeps the light lint row tints (light theme is unchanged)', () => {
-    expect(mcpLintTierMeta('must').rowClass).toContain('bg-red-50');
-    expect(mcpLintTierMeta('should').rowClass).toContain('bg-amber-50');
+  it('paints each severity bar as the tone-s saturated fill', () => {
+    expect(mcpLintSeverityBarClass('error')).toBe(STATUS_TONE_DOT_CLASS.danger);
+    expect(mcpLintSeverityBarClass('warning')).toBe(STATUS_TONE_DOT_CLASS.warn);
+    expect(mcpLintSeverityBarClass('info')).toBe(STATUS_TONE_DOT_CLASS.neutral);
+  });
+});
+
+describe('trust posture — Hive tokens rather than a dark variant', () => {
+  /** The two chip helpers, moved with the rest (HIVE-7.8, #5325). */
+  it.each(['error', 'warning', 'info'])('paints the %s severity chip from tokens', (severity) => {
+    expect(severityChipClass(severity)).not.toMatch(PALETTE_LITERAL);
+    expect(hasDarkVariant(severityChipClass(severity))).toBe(false);
+  });
+
+  it.each(['metadata', 'source', 'dependency', 'protocol'])(
+    'paints the %s origin chip from tokens',
+    (origin) => {
+      expect(originChipClass(origin)).not.toMatch(PALETTE_LITERAL);
+      expect(hasDarkVariant(originChipClass(origin))).toBe(false);
+    },
+  );
+
+  it('gives a posture error the same tone as a lint MUST and a failed job', () => {
+    expect(postureSeverityTone('error')).toBe('danger');
+    expect(postureSeverityTone('error')).toBe(mcpLintTierMeta('must').tone);
+  });
+
+  it('keeps the four evidence lanes distinguishable', () => {
+    const tones = ['metadata', 'source', 'dependency', 'protocol'].map(postureOriginTone);
+    expect(new Set(tones).size).toBe(4);
   });
 });
 
