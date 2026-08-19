@@ -40,6 +40,32 @@ const PROVIDER_ICON: Readonly<
   public_url: Globe,
 };
 
+export interface ProviderGlyphProps {
+  /** The provider whose mark to draw. */
+  provider: RepositoryProvider;
+  /** Sizing class for the glyph. */
+  className?: string;
+}
+
+/**
+ * One provider's mark, without the chip around it.
+ *
+ * Split out for HIVE-7.4 (#5321), whose linked-account tiles draw the mark beside a heading
+ * rather than inside a badge. The tint travels with it — `.repo-provider__glyph` is keyed off a
+ * `data-provider` ancestor, so the caller's wrapper carries the attribute — which is what keeps
+ * a GitLab account orange on the Add-repository screen and in the repositories table without
+ * either surface naming a hue.
+ *
+ * Always `aria-hidden`: a provider is named in words wherever this is drawn (DESIGN.md §6).
+ *
+ * @param props See {@link ProviderGlyphProps}.
+ * @returns The provider's lucide (or Simple Icons) mark.
+ */
+export function ProviderGlyph({ provider, className }: ProviderGlyphProps) {
+  const Icon = PROVIDER_ICON[provider];
+  return <Icon className={cn('repo-provider__glyph', className)} aria-hidden />;
+}
+
 export interface ProviderBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   /** The provider this repository came from. */
   provider: RepositoryProvider;
@@ -51,7 +77,6 @@ export interface ProviderBadgeProps extends React.HTMLAttributes<HTMLDivElement>
  * @returns An outline badge carrying the provider's tinted glyph and its name.
  */
 export function ProviderBadge({ provider, className, ...props }: ProviderBadgeProps) {
-  const Icon = PROVIDER_ICON[provider];
   return (
     <Badge
       variant="outline"
@@ -60,7 +85,7 @@ export function ProviderBadge({ provider, className, ...props }: ProviderBadgePr
       className={cn('repo-provider', className)}
       {...props}
     >
-      <Icon className="repo-provider__glyph" aria-hidden />
+      <ProviderGlyph provider={provider} />
       {REPOSITORY_PROVIDER_LABEL[provider]}
     </Badge>
   );
