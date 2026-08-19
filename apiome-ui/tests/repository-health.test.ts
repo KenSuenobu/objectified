@@ -11,7 +11,6 @@ import {
   type RepositoryHealth,
   parseRepositoryHealth,
   repositoryHealthAriaLabel,
-  repositoryHealthClass,
   repositoryHealthLabel,
   repositoryHealthRank,
   repositoryHealthTooltipLines,
@@ -141,20 +140,9 @@ describe('level presentation', () => {
     expect(repositoryHealthRank('warnings')).toBeLessThan(repositoryHealthRank('error'));
   });
 
-  it('gives each level a distinct palette with a dark-mode pair', () => {
-    const classes = (['healthy', 'warnings', 'error'] as const).map(repositoryHealthClass);
-    expect(new Set(classes).size).toBe(3);
-    for (const c of classes) {
-      expect(c).toMatch(/dark:/);
-    }
-  });
-
-  it('carries no hard-coded colour values', () => {
-    // Palette lives in the design-system class names, never in inline hex or rgb.
-    for (const level of ['healthy', 'warnings', 'error'] as const) {
-      expect(repositoryHealthClass(level)).not.toMatch(/#[0-9a-f]{3,8}|rgb\(/i);
-    }
-  });
+  // The palette used to live here as three `bg-emerald-100 … dark:…` triples. HIVE-7.3
+  // (#5320) moved it to `repositoriesModel`'s `REPOSITORY_HEALTH_TONE`, which resolves
+  // through the shared status vocabulary — see `tests/repositories-model.test.ts`.
 });
 
 describe('repositoryHealthTooltipLines', () => {

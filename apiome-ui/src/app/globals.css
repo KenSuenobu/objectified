@@ -21531,3 +21531,702 @@ button.cid-entity__head {
     margin-inline-end: 0;
   }
 }
+
+/* ==========================================================================
+   REPOSITORIES  (HIVE-7.3, #5320)
+   --------------------------------------------------------------------------
+   `docs/mockups/sources/repositories.html`, whose page-local `<style>` block
+   this replaces (`.repo-card`, `.scanbars`, `.refresh-chip`) together with the
+   ~180 palette classes the list screen and its four helper components had
+   grown — `from-indigo-500 to-purple-500` avatars, `bg-emerald-100
+   text-emerald-700 dark:bg-emerald-900/40` status pills, a
+   `border-amber-300/60 bg-amber-50/50 text-amber-950` refresh chip and a
+   `bg-rose-500/80 dark:bg-rose-400/80` scan bar.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 to Epic-7.2 blocks above give. Every rule
+   leans on the density and font-scale tokens; the card, the card grid and the
+   refresh panel's drill-in rows are real grids that a utility string spells
+   badly; and the quiet lines have to sit *after* the unlayered `h1`–`h4` and
+   `p` base rules near line 2497, which outrank anything in `@layer utilities`.
+
+   The mockup froze six things in pixels that must not be frozen: the 22px scan
+   strip, its 6px bars and 2px gap, the 250/150/180/190px filter fields, the
+   90–120px importable meter, the 40px description reserve and the 200px add
+   tile. All are `rem` or a token here, so they follow all six font scales.
+
+   No hue is named below. Every colour is a token, so the surface follows all
+   nine themes. A status, a health level and a refresh state are never named
+   here either: all three resolve through `ui/statusVocabulary.ts`, which is
+   what the ticket's "health states map to the shared status vocabulary"
+   criterion asks for, and the marks that carry a tone take it from the class
+   the component passes in.
+
+   Three measured deviations from the mockup:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+     about 3.1:1 against the canvas at these sizes — the call HIVE-3.5 and
+     every Epic-5 block already made;
+   * a zero refresh chip is the `outline` tone at full opacity, not the
+     `opacity:.5 grayscale` the screen this replaces used. Fading a chip fades
+     its text with it, and a greyed `--warn-fg` on `--warn-soft` measures about
+     2:1 — a chip that says "nothing to do here" still has to be readable;
+   * the importable meter's printed share is `--fg-muted`, not the `--ok-fg`
+     `ui/metrics/Meter` inks its own figure with. At `--fs-2xs` on the plain
+     surface that pair lands under 4.5:1 in five of the nine themes — the
+     primitive-level exposure HIVE-7.2 recorded. The bar beside it still
+     carries the tone, so nothing is lost but the failure.
+
+   Four classes are borrowed rather than restated: `.tnt-menu` and
+   `.tnt-menu__item` (the row menu), `.hive-stat*` (the KPI strip) and `.mono`
+   (HIVE-1.4).
+   ========================================================================== */
+
+/* ---- Shared quiet type --------------------------------------------------
+   The muted lines every part of the screen draws — a health column with
+   nothing in it, a footer's last-scan phrase. */
+.repo-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* A menu row that destroys something. The rule the projects and catalog blocks
+   both state: no red in the token layer clears AA as 13px ink on the menu
+   surface, so the row reads as an ordinary row until it is the one under the
+   pointer or the keyboard, and then it takes the designed soft/ink pair. */
+.repo-menu__item--danger[data-highlighted],
+.repo-menu__item--danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.repo-menu__item--danger[data-highlighted] > svg,
+.repo-menu__item--danger:hover > svg {
+  color: currentColor;
+}
+
+/* The separator `.tnt-menu` never declared. */
+.repo-menu__sep {
+  block-size: 1px;
+  margin: var(--space-1);
+  background: var(--border);
+}
+
+/* The overflow trigger, on a card or in a row-actions cell. Square, so the
+   glyph is centred at every density. */
+.repo-row-menu {
+  inline-size: var(--control-h-sm);
+  padding: 0;
+}
+
+/* ---- The sub-nav --------------------------------------------------------
+   The tab row's glyph, sized from the tab's own type so it keeps its
+   proportion through all six font scales. */
+.repo-tab__glyph {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  flex-shrink: 0;
+}
+
+/* ---- The KPI strip ------------------------------------------------------
+   The em dash standing in for a figure that has no aggregation behind it. Not
+   `--fg-faint`: it is the *value* of a stat, and a reader has to be able to
+   see that the answer is "not measured" rather than that the tile is empty. */
+.repo-kpi__unwired {
+  color: var(--fg-muted);
+}
+
+.repo-kpi__note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The last-scan dot. A mark beside words that already say the same thing, per
+   DESIGN.md §6 — the tone class the component passes in paints it. */
+.repo-kpi__dot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--r-full);
+  flex-shrink: 0;
+}
+
+/* ---- The toolbar's quick filters ----------------------------------------
+   Two `Select`s and the sort menu over three different vocabularies. `rem`
+   rather than the mockup's 150/180/190px, and one width for all three: a row
+   of selects that are almost but not quite the same width reads as a mistake. */
+.repo-filter {
+  inline-size: 10.5rem;
+  block-size: var(--control-h-sm);
+  font-size: var(--fs-xs);
+}
+
+/* A filter that is narrowing the list must not look like one that is not. The
+   accent hairline is the same mark `DataTableFilterChip` uses for an active
+   facet, at the weight a field can carry without becoming a second primary. */
+.repo-filter[data-active] {
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--accent-fg);
+}
+
+/* ---- The provider chip --------------------------------------------------
+   Four outline chips whose glyphs are the thing that tells them apart, so each
+   glyph takes a role token. The label is always drawn beside it — colour is
+   never the only signal (DESIGN.md §6). */
+.repo-provider__glyph {
+  flex-shrink: 0;
+}
+
+.repo-provider[data-provider="gitlab"] .repo-provider__glyph {
+  color: var(--orange);
+}
+
+.repo-provider[data-provider="bitbucket"] .repo-provider__glyph {
+  color: var(--accent);
+}
+
+.repo-provider[data-provider="public_url"] .repo-provider__glyph {
+  color: var(--violet);
+}
+
+/* ---- The health pill ----------------------------------------------------
+   The compact form is the icon alone, for the card's dense mark cluster. It
+   keeps the badge's own tinted ground, so the icon is read against the pair it
+   was calibrated on rather than against the card. */
+.repo-health--compact {
+  padding-inline: 0.25rem;
+}
+
+/* ---- The index mark -----------------------------------------------------
+   The last-ten-scans strip. Bars grow from the baseline; a failed scan is both
+   **short** and danger-toned, so a failure reads by shape before it reads by
+   colour — which is what keeps the strip inside DESIGN.md §6 even though
+   `--danger` as a solid does not clear the 3:1 mark floor on the surface in
+   every theme. The whole strip also carries a sentence naming the failures as
+   its accessible name, so the shape is never the only account of it. */
+.repo-scanbars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.125rem;
+  block-size: 1.375rem;
+}
+
+.repo-scanbars > span {
+  inline-size: 0.375rem;
+  border-radius: var(--r-xs) var(--r-xs) 0 0;
+  background: var(--ok);
+}
+
+.repo-scanbars > span[data-failed] {
+  background: var(--danger);
+}
+
+/* The importable share: the shared `Meter` plus a figure this block inks
+   itself — see the third deviation in the banner above. */
+.repo-index-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: 6.5rem;
+}
+
+.repo-index-meter > .hive-meter {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.repo-index-meter__value {
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* Files indexed but no importable tally yet: an empty track, never a 0% fill,
+   which would report a measured zero where nothing has been measured. */
+.repo-index-pending {
+  display: inline-flex;
+  align-items: center;
+  inline-size: 4.5rem;
+}
+
+.repo-index-pending__track {
+  inline-size: 100%;
+  block-size: 0.1875rem;
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+}
+
+.repo-index-mark {
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: 3rem;
+}
+
+.repo-index-mark--empty {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* ---- The cards panel ----------------------------------------------------
+   `auto-fit` at a `rem` minimum rather than the mockup's fixed `grid-3`: a card
+   whose minimum is stated in `rem` keeps three columns at the default font
+   scale and drops to two and then one as the scale grows, which is what stops
+   the Largest scale pushing a horizontal scrollbar onto the document. */
+.repo-cards-panel {
+  overflow: hidden;
+}
+
+.repo-cards-panel__empty {
+  padding: var(--space-4);
+}
+
+.repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+@media (max-width: 30rem) {
+  .repo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- The card ------------------------------------------------------------ */
+.repo-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border), var(--shadow-sm);
+  transition:
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.repo-card:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px var(--border-strong), var(--shadow-md);
+}
+
+/* A repository whose last scan failed. The frame carries it, so the card's own
+   text keeps full contrast — the same call the catalog block records. */
+.repo-card[data-status="error"] {
+  box-shadow: inset 0 0 0 1px var(--danger), var(--shadow-sm);
+}
+
+/* The placeholder card the grid draws while the first read is in flight —
+   `DataTable` skeletons the table, and the two waits should look alike. */
+.repo-card--skeleton {
+  min-block-size: 13rem;
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.repo-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  padding-block-end: var(--space-3);
+}
+
+.repo-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.repo-card__identity {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.repo-card__name {
+  min-inline-size: 0;
+  overflow: hidden;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The stretched link: one tab stop, one accessible name, the whole card as its
+   hit area. Everything that has to stay clickable is `.repo-card__above`. */
+.repo-card__link {
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.repo-card__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.repo-card__link:hover {
+  color: var(--accent-fg);
+}
+
+/* The focus ring belongs to the card, not to the words inside it: the whole
+   card is what the link activates. */
+.repo-card__link:focus-visible::after {
+  box-shadow: var(--shadow-focus);
+}
+
+.repo-card__full-name {
+  margin-block-start: 0.125rem;
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The cluster the stretched link must not swallow: health, status, the menu. */
+.repo-card__marks {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* One stacking step above the stretched link, so these stay clickable. */
+.repo-card__above {
+  position: relative;
+  z-index: 1;
+}
+
+/* Two lines, always the same height, so a grid of cards keeps its rhythm
+   whether a repository carries a description or not. */
+.repo-card__summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  min-block-size: calc(var(--fs-sm) * var(--lh-normal) * 2);
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+.repo-card__summary[data-empty] {
+  font-style: italic;
+}
+
+.repo-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.repo-card__fact {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+.repo-card__fact > svg {
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  flex-shrink: 0;
+}
+
+.repo-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-start: auto;
+  padding: var(--space-3) var(--space-4);
+  border-block-start: 1px solid var(--border);
+}
+
+.repo-card__scan {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--r-full);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* "Scan failed" is the one phrase on this screen that has to be read as bad
+   news, and a tone ink cannot say so on the plain surface: `--danger-fg` there
+   measures 1.47:1 in Nord (the finding HIVE-7.2 recorded). So the phrase takes
+   the `--danger-soft` ground the pair *was* calibrated against, which is the
+   same shape `Badge` gives every other state on the card. */
+.repo-card__scan[data-failed] {
+  padding: 0.0625rem var(--space-2);
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+  font-weight: 600;
+}
+
+/* ---- The add tile -------------------------------------------------------
+   The mockup's dashed placeholder, sitting in the grid as the last card. It is
+   the one place the grid itself offers the next step. */
+.repo-add-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-block-size: 12rem;
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    box-shadow var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out);
+}
+
+.repo-add-tile:hover {
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.repo-add-tile:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--accent), var(--shadow-focus);
+}
+
+.repo-add-tile__art {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  clip-path: var(--hex-clip);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+}
+
+.repo-add-tile__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.repo-add-tile__desc {
+  max-inline-size: 22ch;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The table's cells --------------------------------------------------- */
+.repo-row__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.repo-row__names {
+  min-inline-size: 0;
+}
+
+.repo-row__branch,
+.repo-row__num {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.repo-row__scan {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--r-full);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* The same pair the card's footer takes, for the same measured reason. */
+.repo-row__scan[data-failed] {
+  padding: 0.0625rem var(--space-2);
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+  font-weight: 600;
+}
+
+/* ---- The refresh-activity panel ------------------------------------------ */
+.repo-refresh {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--card-pad);
+}
+
+.repo-refresh__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.repo-refresh__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.repo-refresh__title > svg {
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  flex-shrink: 0;
+}
+
+.repo-refresh__count {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.repo-refresh__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.repo-refresh__chip {
+  gap: var(--space-1);
+}
+
+.repo-refresh__n {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.repo-refresh__list {
+  display: flex;
+  flex-direction: column;
+  border-block-start: 1px solid var(--border);
+}
+
+.repo-refresh__list > li + li {
+  border-block-start: 1px solid var(--border);
+}
+
+.repo-refresh__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.repo-refresh__row:hover {
+  color: var(--accent-fg);
+}
+
+.repo-refresh__row-glyph,
+.repo-refresh__row-chevron {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.repo-refresh__row-name {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repo-refresh__row-detail {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* The two sentences the panel draws instead of a list. Both sit on their own
+   tinted ground rather than on the plain surface: `--ok-fg` as bare ink
+   measures under 4.5:1 on the surface in several themes, and `--ok-soft` is
+   the ground the pair was calibrated against. */
+.repo-refresh__healthy {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--ok-soft);
+  font-size: var(--fs-sm);
+  color: var(--ok-fg);
+}
+
+.repo-refresh__empty {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.repo-refresh__more {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.repo-refresh--waiting {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.repo-refresh--failed {
+  background: var(--danger-soft);
+  font-size: var(--fs-sm);
+  color: var(--danger-fg);
+}
+
+/* ---- Narrow viewports ---------------------------------------------------
+   Every multi-column row on this route collapses before the document can
+   scroll sideways, which is the ticket's "no horizontal document scroll at
+   ≥1280 px" criterion measured at every font scale rather than only at the
+   default one. Both breakpoints are `rem`, so the fold moves with the reader's
+   type rather than staying put while the text grows past it. */
+@media (max-width: 40rem) {
+  .repo-refresh__row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .repo-refresh__row-detail {
+    grid-column: 2 / -1;
+    white-space: normal;
+  }
+
+  .repo-card__meta {
+    gap: var(--space-1) var(--space-2);
+  }
+}

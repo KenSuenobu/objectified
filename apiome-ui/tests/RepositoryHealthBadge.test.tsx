@@ -13,16 +13,15 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { TooltipProvider } from '../src/app/components/ui/Tooltip';
+import { DialogProvider } from '../src/app/components/providers/DialogProvider';
 
 import { RepositoryHealthBadge } from '../src/app/components/ade/dashboard/repositories/RepositoryHealthBadge';
 import {
   type RepositoryHealth,
   parseRepositoryHealth,
 } from '../src/app/components/ade/dashboard/repositories/repositoryHealth';
-import {
-  RepositoryCard,
-  dashboardRepositoryFromApi,
-} from '../src/app/components/ade/dashboard/repositories/repositoryStoreUi';
+import { dashboardRepositoryFromApi } from '../src/app/components/ade/dashboard/repositories/repositoryStoreUi';
+import { RepositoryCard } from '../src/app/components/ade/repositories/RepositoryCard';
 
 function health(overrides: Record<string, unknown> = {}): RepositoryHealth {
   const parsedHealth = parseRepositoryHealth({
@@ -174,7 +173,14 @@ describe('the badge on a repository row', () => {
     if (!repo) throw new Error('expected the repository payload to parse');
     return render(
       <TooltipProvider>
-        <RepositoryCard repo={repo} index={0} />
+        <DialogProvider>
+          <RepositoryCard
+            repository={repo}
+            onOpenDetail={() => {}}
+            onRescan={() => {}}
+            onRemove={() => {}}
+          />
+        </DialogProvider>
       </TooltipProvider>
     );
   }

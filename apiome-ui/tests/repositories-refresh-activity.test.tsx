@@ -1,5 +1,5 @@
 /**
- * Dashboard "Refresh activity" widget tests (RAR-5.5, #3536).
+ * Dashboard "Refresh activity" panel tests (RAR-5.5, #3536; re-drawn by HIVE-7.3, #5320).
  *
  * Integration coverage for the tenant-wide refresh-health card:
  *  - state counts and the refreshed-(24h) tally render from the summary;
@@ -15,10 +15,12 @@ import '@testing-library/jest-dom';
 
 import {
   AFFECTED_REPOS_SHOWN,
-  RepositoryRefreshActivityCard,
-  RepositoryRefreshActivityCardView,
+  RepositoryRefreshActivityPanel,
+  RepositoryRefreshActivityPanelView,
   repositoryRefreshSpecsHref,
-} from '../src/app/components/ade/dashboard/repositories/RepositoryRefreshActivityCard';
+} from '../src/app/components/ade/repositories/RepositoryRefreshActivityPanel';
+import { REFRESH_STATUS_TONE } from '../src/app/components/ade/repositories/repositoriesModel';
+import { statusTone } from '../src/app/components/ui/statusVocabulary';
 import {
   summarizeRefreshActivity,
   type RefreshActivitySignal,
@@ -60,7 +62,7 @@ describe('repositoryRefreshSpecsHref', () => {
   });
 });
 
-describe('RepositoryRefreshActivityCardView', () => {
+describe('RepositoryRefreshActivityPanelView', () => {
   test('renders counts by state and the refreshed-(24h) tally', () => {
     const summary = makeSummary([
       // stale
@@ -76,7 +78,7 @@ describe('RepositoryRefreshActivityCardView', () => {
       // up-to-date, refreshed an hour ago
       makeSignal({ path: 'd.yaml', last_refreshed_at: '2026-06-22T11:00:00Z' }),
     ]);
-    render(<RepositoryRefreshActivityCardView summary={summary} />);
+    render(<RepositoryRefreshActivityPanelView summary={summary} />);
 
     expect(screen.getByTestId('refresh-activity-count-stale')).toHaveTextContent('Stale1');
     expect(screen.getByTestId('refresh-activity-count-failed')).toHaveTextContent('Failed1');
@@ -101,7 +103,7 @@ describe('RepositoryRefreshActivityCardView', () => {
       }),
       makeSignal({ repository_id: 'repo-healthy', repository_full_name: 'acme/healthy' }),
     ]);
-    render(<RepositoryRefreshActivityCardView summary={summary} />);
+    render(<RepositoryRefreshActivityPanelView summary={summary} />);
 
     const links = screen.getAllByTestId('refresh-activity-repo-link');
     expect(links).toHaveLength(1);
@@ -121,7 +123,7 @@ describe('RepositoryRefreshActivityCardView', () => {
         last_refresh_failed: true,
       }),
     );
-    render(<RepositoryRefreshActivityCardView summary={makeSummary(rows)} />);
+    render(<RepositoryRefreshActivityPanelView summary={makeSummary(rows)} />);
 
     expect(screen.getAllByTestId('refresh-activity-repo-link')).toHaveLength(
       AFFECTED_REPOS_SHOWN,
@@ -133,7 +135,7 @@ describe('RepositoryRefreshActivityCardView', () => {
 
   test('all-healthy summary renders the healthy note instead of drill-in rows', () => {
     const summary = makeSummary([makeSignal()]);
-    render(<RepositoryRefreshActivityCardView summary={summary} />);
+    render(<RepositoryRefreshActivityPanelView summary={summary} />);
     expect(screen.queryAllByTestId('refresh-activity-repo-link')).toHaveLength(0);
     expect(
       screen.getByText('All repositories healthy — nothing stale, diverged, or failed.'),
@@ -141,7 +143,7 @@ describe('RepositoryRefreshActivityCardView', () => {
   });
 
   test('empty summary renders the no-specs copy', () => {
-    render(<RepositoryRefreshActivityCardView summary={makeSummary([])} />);
+    render(<RepositoryRefreshActivityPanelView summary={makeSummary([])} />);
     expect(screen.getByTestId('refresh-activity-card')).toHaveTextContent(
       'No imported specs tracked yet',
     );
@@ -151,9 +153,34 @@ describe('RepositoryRefreshActivityCardView', () => {
       ),
     ).toBeInTheDocument();
   });
+
+  // ---- HIVE-7.3 ---------------------------------------------------------------------------
+
+  test('every chip takes its tone from the shared status vocabulary', () => {
+    // The ticket's "health states map to the shared status vocabulary" criterion, at the one
+    // place the five refresh states are drawn. Asserted against `statusTone` rather than
+    // against a literal, so a chip cannot drift from the badge that shares its word.
+    for (const [code, tone] of Object.entries(REFRESH_STATUS_TONE)) {
+      expect(statusTone(code)).toBe(tone);
+    }
+  });
+
+  test('a zero chip recedes without being faded out of legibility', () => {
+    // It used to be `opacity-50 grayscale`, which took a legible amber ink to roughly 2:1.
+    const summary = makeSummary([makeSignal()]);
+    render(<RepositoryRefreshActivityPanelView summary={summary} />);
+    const zero = screen.getByTestId('refresh-activity-count-stale');
+    expect(zero.className).not.toMatch(/opacity|grayscale/);
+    // `outline` is how the vocabulary spells "set aside": a hairline, muted ink, no fill.
+    expect(zero.className).toContain('text-fg-muted');
+    // …and a state that has something in it keeps its own tone and its dot.
+    const filled = screen.getByTestId('refresh-activity-count-up-to-date');
+    expect(filled.className).toContain('bg-ok-soft');
+    expect(within(filled).getByTestId('badge-dot')).toBeInTheDocument();
+  });
 });
 
-describe('RepositoryRefreshActivityCard (fetching wrapper)', () => {
+describe('RepositoryRefreshActivityPanel (fetching wrapper)', () => {
   const originalFetch = global.fetch;
 
   afterEach(() => {
@@ -176,7 +203,7 @@ describe('RepositoryRefreshActivityCard (fetching wrapper)', () => {
       }),
     }) as unknown as typeof fetch;
 
-    render(<RepositoryRefreshActivityCard />);
+    render(<RepositoryRefreshActivityPanel />);
     await waitFor(() =>
       expect(screen.getByTestId('refresh-activity-card')).toBeInTheDocument(),
     );
@@ -194,7 +221,7 @@ describe('RepositoryRefreshActivityCard (fetching wrapper)', () => {
       json: async () => ({ success: false, error: 'Server exploded' }),
     }) as unknown as typeof fetch;
 
-    render(<RepositoryRefreshActivityCard />);
+    render(<RepositoryRefreshActivityPanel />);
     await waitFor(() =>
       expect(screen.getByTestId('refresh-activity-error')).toHaveTextContent(
         'Server exploded',
