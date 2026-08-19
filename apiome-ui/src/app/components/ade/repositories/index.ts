@@ -7,7 +7,13 @@
  */
 
 export * from './repositoriesModel';
-export { ProviderBadge } from './ProviderBadge';
+export * from './addRepositoryModel';
+export { AddRepositorySourceChoice } from './AddRepositorySourceChoice';
+export { LinkedAccountPicker } from './LinkedAccountPicker';
+export { ProposedStepsCard } from './ProposedStepsCard';
+export { ProviderBadge, ProviderGlyph } from './ProviderBadge';
+export { PublicCloneUrlField } from './PublicCloneUrlField';
+export { RemoteRepositoryPicker } from './RemoteRepositoryPicker';
 export { RepositoriesSubNav, activeRepositoriesTab } from './RepositoriesSubNav';
 export { RepositoryCard } from './RepositoryCard';
 export { RepositoryIndexMark } from './RepositoryIndexMark';

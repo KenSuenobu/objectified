@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { cn } from '../../../../lib/utils';
 
-export interface RadioGroupProps {
+export interface RadioGroupProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue'> {
   value?: string;
   onValueChange?: (value: string) => void;
   className?: string;
@@ -13,6 +14,16 @@ export interface RadioGroupProps {
 export interface RadioGroupItemProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: string;
   label?: React.ReactNode;
+  /**
+   * Classes for the `<input>` itself.
+   *
+   * For a choice row that draws its *own* selected mark — HIVE-7.4's repository picker paints
+   * the chosen row and adds a tick — where a second, native dot beside it would say the same
+   * thing twice. Pass `sr-only` there: the input keeps its place in the tab order and in the
+   * accessibility tree, and `:has(input:focus-visible)` on the row is what puts the focus ring
+   * back where the reader can see it.
+   */
+  inputClassName?: string;
 }
 
 /**
@@ -50,7 +61,7 @@ export const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
 RadioGroup.displayName = 'RadioGroup';
 
 export const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
-  ({ className, value, label, ...props }, ref) => {
+  ({ className, value, label, inputClassName, ...props }, ref) => {
     return (
       <label
         className={cn(
@@ -65,7 +76,8 @@ export const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemP
           value={value}
           className={cn(
             'size-4 shrink-0 accent-accent',
-            'focus-visible:outline-none disabled:cursor-not-allowed'
+            'focus-visible:outline-none disabled:cursor-not-allowed',
+            inputClassName
           )}
           {...props}
         />

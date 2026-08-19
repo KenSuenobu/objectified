@@ -3,18 +3,18 @@
 /**
  * The repository wire contract, shared by every repository screen.
  *
- * What is left here after HIVE-7.3 (#5320) is the payload parser, the types it produces, the
- * polling constants and the three presentational odds and ends the **Add repository** screen
- * and the **repository detail** still draw. The list screen's own card, index snapshot,
- * provider badge and status palette moved to `components/ade/repositories/*`, where they are
- * Hive-tokened and covered by `tests/repositories-*`; HIVE-7.4 and HIVE-7.5 will take what is
- * left the same way.
+ * What is left here after HIVE-7.4 (#5321) is the payload parser, the types it produces, the
+ * polling constants and the small presentational pieces the **repository detail** still draws.
+ * The list screen's own card, index snapshot, provider badge and status palette moved to
+ * `components/ade/repositories/*` in HIVE-7.3 (#5320); the Add-repository screen's
+ * `SourceOptionCard`, `LinkedAccountIcon` and `ManageLinkedAccountsLink` — the last three
+ * palette-class components in this file — went the same way in HIVE-7.4, replaced by
+ * `AddRepositorySourceChoice`, `ProviderGlyph` and a plain link in the card's header.
+ * HIVE-7.5 will take what is left.
  */
 
 import type { ReactNode } from 'react';
-import Link from 'next/link';
-import { Github, Gitlab, Loader2 } from 'lucide-react';
-import { SiBitbucket } from 'react-icons/si';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/ui/Tooltip';
 import { type RepositoryHealth, parseRepositoryHealth } from './repositoryHealth';
@@ -302,57 +302,4 @@ export function formatLastScan(
   if (h < 48) return `${h}h ago`;
   const d = Math.floor(h / 24);
   return `${d}d ago`;
-}
-
-export function ManageLinkedAccountsLink() {
-  return (
-    <Link href="/ade/dashboard/linked-accounts" className="text-2xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
-      Manage linked accounts →
-    </Link>
-  );
-}
-
-export function SourceOptionCard({
-  selected,
-  icon,
-  title,
-  description,
-  onSelect,
-  radioName,
-}: {
-  selected: boolean;
-  icon: ReactNode;
-  title: string;
-  description: string;
-  onSelect: () => void;
-  radioName: string;
-}) {
-  return (
-    <label
-      className={cn(
-        'cursor-pointer rounded-lg border-2 p-4 transition-colors',
-        selected
-          ? 'border-indigo-500 bg-indigo-50/40 dark:border-indigo-500 dark:bg-indigo-900/10'
-          : 'border-gray-200 hover:border-indigo-300 dark:border-gray-700 dark:hover:border-indigo-600'
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <input type="radio" name={radioName} checked={selected} onChange={onSelect} className="mt-1" />
-        <div>
-          <p className="inline-flex items-center gap-2 text-sm font-semibold">
-            {icon}
-            {title}
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{description}</p>
-        </div>
-      </div>
-    </label>
-  );
-}
-
-export function LinkedAccountIcon({ provider }: { provider: string }) {
-  const p = provider.toLowerCase();
-  if (p === 'gitlab') return <Gitlab className="h-4 w-4 text-orange-500" aria-hidden />;
-  if (p === 'bitbucket') return <SiBitbucket className="h-4 w-4 text-sky-600" aria-hidden />;
-  return <Github className="h-4 w-4" aria-hidden />;
 }

@@ -22230,3 +22230,613 @@ button.cid-entity__head {
     gap: var(--space-1) var(--space-2);
   }
 }
+
+/* ==========================================================================
+   ADD REPOSITORY  (HIVE-7.4, #5321)
+   --------------------------------------------------------------------------
+   `docs/mockups/sources/repository-new.html`, whose page-local `<style>` block
+   this replaces (`.src-option`, `.acct-tile`, `.repo-row`) together with the
+   ~40 palette classes the 643-line screen had grown — a
+   `from-purple-500 to-pink-500` header medallion, `border-indigo-500
+   bg-indigo-50/40 dark:bg-indigo-900/10` choice cards, `bg-indigo-50
+   text-indigo-950 dark:bg-indigo-900/25` repository rows, `text-emerald-600` /
+   `text-rose-600` result lines and a `border-rose-200 bg-rose-50` banner.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 to Epic-7.3 blocks above give. Every rule
+   leans on the density and font-scale tokens; the choice cards, the account
+   tiles and the repository rows are real grids that a utility string spells
+   badly; and the quiet lines and the `h2` card titles have to sit *after* the
+   unlayered `h1`–`h4` and `p` base rules near line 2497, which outrank anything
+   in `@layer utilities`.
+
+   The mockup froze five things in pixels that must not be frozen: the 14/16px
+   choice-card inset, the 10/12px account tile, the 7/10px repository row, the
+   12px lock glyph and the 22rem scroll list. All are `rem` or a token here, so
+   they follow all six font scales; only the 22rem cap is left at the mockup's
+   figure, because it is already a `rem`.
+
+   No hue is named below. Every colour is a token, so the surface follows all
+   nine themes. The URL test's two outcomes are never spelled here either: the
+   line takes `data-tone` from `urlTestTone()`, which resolves through
+   `ui/statusVocabulary.ts`.
+
+   Three measured deviations from the mockup:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+     about 3.1:1 against the canvas at these sizes — the call HIVE-3.5 and every
+     Epic-5 block already made;
+   * the URL result line is a **tinted strip** (`-soft` ground, `-fg` ink), not
+     the mockup's bare `--ok-fg` on the card. The six themes that inherit the
+     light semantic pairs read a `-fg` ink on their own surface at 1.5–3.5:1 —
+     the exposure HIVE-7.3 recorded and this block does not repeat. Untested is
+     `--fg-muted` on `--bg-inset` (5.02:1 worst-of-nine), not on `--bg-subtle`
+     (4.35:1, which fails);
+   * a selected row is the accent tint plus an accent hairline, not the tint
+     alone: `--accent-soft` against `--bg-surface` is under 1.3:1 in four
+     themes, so the fill alone is not a signal a reader can see. `--accent`
+     measures 4.07–9.98 as a mark in all nine, and the trailing tick is the
+     third channel (DESIGN.md §6). A *selected* row also raises its quiet line
+     from `--fg-muted` to `--fg`: on `--accent-soft` the muted step measures
+     3.86:1 in Solarized (axe caught all three pickers at once), while `--fg`
+     is 6.51 worst-of-nine. For the same reason a hovered row is `--bg-inset`,
+     not the mockup's `--bg-subtle`, where the muted step is 4.35:1 there.
+
+   One measured limit, stated rather than hidden: the proposal card's honey
+   frame is 1.85:1 against the surface in light and whiteboard (4.05–11.33 in
+   the other seven), so it is a brand mark and never a state indicator. That is
+   only allowed because the card says "Proposed steps 2–4" in its heading,
+   carries "Redesign proposal — not in the app today" as a badge, and holds
+   nothing that can be pressed — a reader who cannot see the frame loses
+   nothing. `tests/add-repository-css.test.ts` pins that.
+
+   Two classes are borrowed rather than restated: `.input-wrap` (HIVE-2.1's
+   leading-icon field) and `.repo-provider` + `data-provider` (HIVE-7.3's
+   provider tint table, reused whole by the account tiles).
+   ========================================================================== */
+
+/* ---- Shared page furniture ----------------------------------------------
+   The quiet line every card draws — a hint, a note, a state sentence. */
+.repo-new-note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* "Manage linked accounts →". `--accent-fg`, not `--accent`: the saturated hue
+   measures 4.07:1 as text, which is a serious axe finding at this size. */
+.repo-new-link {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--accent-fg);
+  text-underline-offset: 2px;
+}
+
+.repo-new-link:hover {
+  text-decoration: underline;
+}
+
+.repo-new-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* ---- The progress row ---------------------------------------------------
+   The stepper and the chip that says three of its four steps do not exist.
+   `flex-wrap`, so at the largest font scale the chip drops under the row
+   instead of squeezing it. */
+.repo-new-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* ---- A card of the form -------------------------------------------------
+   `Card` supplies the surface, the radius and the elevation; this supplies the
+   inset and the rhythm between a title, its hint and its control. */
+.repo-new-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--card-pad);
+}
+
+.repo-new-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* The card's own heading. It has to be a class: the unlayered `h2` base rule
+   outranks any utility, so a Tailwind size would be ignored here. */
+.repo-new-card__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+/* ---- The source choice --------------------------------------------------
+   Two cards side by side, one column on a phone. */
+.repo-new-sources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+/* The card itself is the `<label>` of a native radio, so the whole rectangle is
+   the hit area and the browser owns the arrow keys. */
+.repo-new-source {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: calc(var(--space-3) + 0.125rem) var(--space-4);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  cursor: pointer;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.repo-new-source:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.repo-new-source.is-selected {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* The native dot is drawn, so it is the dot that takes the ring — but the ring
+   has to be visible around the *card*, which is what the reader is choosing. */
+.repo-new-source:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.repo-new-source > input {
+  margin-block-start: 0.1875rem;
+}
+
+/* `RadioGroupItem` wraps its label in one span; this is that span. */
+.repo-new-source > span {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+/* The subject glyph (hive.css §12 `.icon-tile`). Square at every density, and
+   sized from the type beside it rather than from a pixel count. */
+.repo-new-source__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: calc(var(--fs-md) * 2);
+  block-size: calc(var(--fs-md) * 2);
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+}
+
+.repo-new-source.is-selected .repo-new-source__tile {
+  background: var(--accent);
+  color: var(--fg-on-accent);
+}
+
+.repo-new-source__tile > svg {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+}
+
+.repo-new-source__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.repo-new-source__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.repo-new-source__desc {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+/* On the tint, the muted step drops under AA in one theme. See the banner. */
+.repo-new-source.is-selected .repo-new-source__desc {
+  color: var(--fg);
+}
+
+/* ---- The linked-account tiles -------------------------------------------
+   `auto-fit` at a rem minimum rather than the mockup's fixed three columns: at
+   the Largest font scale a three-up row of tiles would push the page sideways,
+   and a tile that has dropped a column still reads. */
+.repo-new-accounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-3);
+}
+
+.repo-new-account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) calc(var(--space-2) + 0.25rem);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  cursor: pointer;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.repo-new-account:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.repo-new-account.is-selected {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.repo-new-account:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.repo-new-account > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  flex: 1 1 auto;
+}
+
+/* The provider mark. `.repo-provider` beside it carries HIVE-7.3's tint table,
+   so the hue is that block's, not a second opinion about it. */
+.repo-new-account__mark {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.repo-new-account__mark > svg {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+}
+
+.repo-new-account__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-inline-size: 0;
+}
+
+.repo-new-account__provider {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* The handle, which is the part the reader recognises in a repository path.
+   `--fg-muted` on the tile's ground, never `--fg-subtle`. */
+.repo-new-account__handle {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repo-new-account.is-selected .repo-new-account__handle {
+  color: var(--fg);
+}
+
+/* "URL only" — the browse limitation, on the tile it applies to. */
+.repo-new-account__chip {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
+
+/* ---- The repository picker ----------------------------------------------
+   The search field's own spacing; the wrapper is `.input-wrap` (HIVE-2.1). */
+.repo-new-search {
+  inline-size: 100%;
+}
+
+/* The mockup's 22rem scroll list, as a well inside the card. `overscroll-
+   behavior` keeps a wheel that reaches the end of the list from scrolling the
+   page underneath it. */
+.repo-new-repos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  max-block-size: 22rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-1);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* One row. `min-block-size` rather than `height`, so the row grows with the
+   type at every font scale instead of clipping it. */
+.repo-new-repo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: var(--control-h-sm);
+  padding: calc(var(--space-1) + 0.0625rem) var(--space-2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.repo-new-repo:hover {
+  background: var(--bg-inset);
+}
+
+.repo-new-repo.is-selected {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.repo-new-repo:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.repo-new-repo > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  flex: 1 1 auto;
+}
+
+.repo-new-repo__glyph {
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+/* The name never wraps: a path broken across two lines stops being a path. */
+.repo-new-repo__name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-inline-size: 100%;
+}
+
+/* The private mark. A glyph beside a visually-hidden word, never colour alone. */
+.repo-new-repo__lock {
+  inline-size: var(--fs-2xs);
+  block-size: var(--fs-2xs);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+/* The provider's description. It is the part that gives way when the row is
+   short of room, which is why it is the only flexible child. */
+.repo-new-repo__desc {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-inline-size: 0;
+  flex: 1 1 auto;
+}
+
+.repo-new-repo.is-selected .repo-new-repo__desc {
+  color: var(--fg);
+}
+
+/* The third channel on a chosen row, after the tint and the hairline. */
+.repo-new-repo__tick {
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  color: var(--accent-fg);
+}
+
+/* ---- The public URL field -----------------------------------------------
+   Field and Test button on one line, wrapping before either is squeezed. */
+.repo-new-url {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.repo-new-url__input {
+  flex: 1 1 16rem;
+  min-inline-size: 0;
+}
+
+.repo-new-url__test {
+  flex-shrink: 0;
+}
+
+/* The standing verdict. A tinted strip rather than coloured text, so the ink is
+   read against the ground it was calibrated on in every one of the nine
+   themes; `data-tone` comes from `urlTestTone()`. */
+.repo-new-url__result {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) calc(var(--space-2) + 0.25rem);
+  border-radius: var(--r-md);
+  font-size: var(--fs-xs);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+}
+
+.repo-new-url__result[data-tone="ok"] {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.repo-new-url__result[data-tone="danger"] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.repo-new-url__result-glyph {
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+  flex-shrink: 0;
+  margin-block-start: 0.0625rem;
+}
+
+/* ---- The failure banner -------------------------------------------------
+   `Alert` supplies the tint and the ink; these are the two lines inside it. */
+.repo-new-error__message {
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.repo-new-error__remedy {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  opacity: 0.9;
+}
+
+/* ---- The proposal card --------------------------------------------------
+   The honey frame. DESIGN.md §2 spends honey on brand moments rather than on
+   states: a design proposal inside the product is one, and amber would file it
+   with the things that are wrong. 1.5px, like `hive.css` §14's dashed empty
+   state, so the frame still reads against the card behind it. */
+.repo-new-proposal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--card-pad);
+  background: linear-gradient(135deg, var(--honey-soft), var(--bg-surface) 70%);
+  box-shadow: inset 0 0 0 1.5px var(--honey);
+}
+
+.repo-new-proposal__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.repo-new-proposal__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.repo-new-proposal__title > svg {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  flex-shrink: 0;
+  color: var(--honey-fg);
+}
+
+.repo-new-proposal__badge {
+  flex-shrink: 0;
+}
+
+.repo-new-proposal__note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* Three descriptions of steps, not three steps. `auto-fit` at a rem minimum, so
+   the row folds rather than scrolling the page. */
+.repo-new-proposal__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+}
+
+.repo-new-proposal__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+/* A caps label is a heading here, so it has to be a class — the same third
+   reason the tenants and home blocks above both give. */
+.repo-new-proposal__step {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.repo-new-proposal__body {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+/* ---- The action band ----------------------------------------------------
+   Cancel at the leading edge, Back and Continue at the trailing one. */
+.repo-new-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.repo-new-actions__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ---- Narrow viewports ---------------------------------------------------
+   Every multi-column row on this route collapses before the document can
+   scroll sideways — the ticket's "no horizontal document scroll at ≥1280 px"
+   criterion, measured at every font scale rather than only at the default one.
+   The breakpoint is `rem`, so the fold moves with the reader's type rather than
+   staying put while the text grows past it. */
+@media (max-width: 40rem) {
+  .repo-new-sources {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .repo-new-accounts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .repo-new-proposal__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The row's description drops under the name rather than competing with it
+     for a width neither can use. */
+  .repo-new-repo > span {
+    flex-wrap: wrap;
+  }
+
+  .repo-new-repo__desc {
+    flex-basis: 100%;
+  }
+}
