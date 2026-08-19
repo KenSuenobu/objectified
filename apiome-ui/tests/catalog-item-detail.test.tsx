@@ -117,7 +117,9 @@ describe('CatalogItemDetailClient', () => {
     mockFetchItem(RICH_ITEM);
     render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
 
-    await waitFor(() => expect(screen.getByText('Acme gRPC API')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: /Acme gRPC API/ })).toBeInTheDocument(),
+    );
     // The format + protocol pills appear in the header (and again in the provenance panel).
     expect(screen.getAllByTestId('format-pill')[0]).toHaveTextContent('Protobuf');
     expect(screen.getAllByTestId('protocol-pill')[0]).toHaveTextContent('grpc');
@@ -264,7 +266,9 @@ describe('CatalogItemDetailClient', () => {
     });
     render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
 
-    await waitFor(() => expect(screen.getByText('Acme gRPC API')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: /Acme gRPC API/ })).toBeInTheDocument(),
+    );
     expect(screen.getByTestId('catalog-detail-no-source')).toBeInTheDocument();
     expect(screen.getByTestId('catalog-detail-summary')).toHaveTextContent(/not been captured/i);
     expect(screen.queryByTestId('catalog-detail-download')).not.toBeInTheDocument();
@@ -283,7 +287,9 @@ describe('CatalogItemDetailClient', () => {
     mockFetchItem(RICH_ITEM);
     render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
 
-    await waitFor(() => expect(screen.getByText('Acme gRPC API')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: /Acme gRPC API/ })).toBeInTheDocument(),
+    );
     expect(screen.queryByText(/publish/i)).not.toBeInTheDocument();
   });
 
@@ -389,11 +395,11 @@ describe('CatalogItemDetailClient', () => {
       ['overview', 'Overview'],
       // Format details (CPDO-2.1, #4797) — the native payload view, beside the canonical Overview.
       ['format', 'Format details'],
-      ['source', 'Source & Code'],
+      ['source', 'Source & code'],
       ['provenance', 'Provenance'],
       // Conversions (CPDO-3.3, #4803) — the provenance evidence history.
       ['conversions', 'Conversions'],
-      ['lint', 'Lint & Score'],
+      ['lint', 'Lint & score'],
       ['versions', 'Versions'],
     ] as const) {
       expect(screen.getByTestId(`catalog-detail-tab-${id}`)).toHaveTextContent(label);
@@ -606,7 +612,9 @@ describe('CatalogItemDetailClient', () => {
     expect(scrollSpy).toHaveBeenCalled();
     const order = document.getElementById('catalog-entity-Order');
     expect(order).not.toBeNull();
-    expect(order!.className).toContain('ring-2'); // transient deep-link highlight
+    // The transient deep-link highlight is one attribute (`.cid-entity[data-highlighted]`)
+    // rather than six palette classes and their dark twins.
+    expect(order!.getAttribute('data-highlighted')).toBe('true');
   });
 
   it('colors each entity tag per its kind (QUERY accent, MUTATION warn, OBJECT ok)', async () => {
@@ -680,9 +688,12 @@ describe('CatalogItemDetailClient', () => {
     // 2 of 3 fields carry a description ('Lifecycle state', 'Order total') → 67%.
     const docs = screen.getByTestId('catalog-detail-docs-coverage');
     expect(docs).toHaveTextContent('2');
-    expect(docs).toHaveTextContent('67% carry a description');
+    expect(docs).toHaveTextContent('67%');
+    expect(docs).toHaveTextContent('carry a description');
     // 2 of 3 fields are required (id, total) → 67%.
-    expect(screen.getByTestId('catalog-detail-required-coverage')).toHaveTextContent('67% are required');
+    const required = screen.getByTestId('catalog-detail-required-coverage');
+    expect(required).toHaveTextContent('67%');
+    expect(required).toHaveTextContent('are required');
     // The kind mix chips tally the tags with their share.
     const mix = screen.getByTestId('catalog-detail-kind-mix');
     expect(mix).toHaveTextContent('QUERY');

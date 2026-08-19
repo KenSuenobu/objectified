@@ -433,10 +433,13 @@ describe('CatalogLintPanel (MFI-25.5)', () => {
     // The findings list scrolls inside its own region rather than growing the card…
     const scroll = screen.getByTestId('catalog-lint-findings-scroll');
     expect(scroll.className).toContain('overflow-y-auto');
-    // …and both columns are pinned to the same fixed height, so selection never shifts layout.
-    expect(scroll.closest('div[class*="h-[900px]"]')).not.toBeNull();
+    // …and both columns are pinned to the same height, so selection never shifts layout.
+    // HIVE-7.2 (#5319) moved that height off `h-[900px]` and onto `.cid-lint-col`, which
+    // states it in `rem` so the frame grows with the font-size preference instead of holding
+    // three fewer lines at the Largest scale.
+    expect(scroll.closest('div.cid-lint-col')).not.toBeNull();
     const paneColumn = screen.getByTestId('catalog-lint-source-pane').parentElement;
-    expect(paneColumn?.className).toContain('h-[900px]');
+    expect(paneColumn?.className).toContain('cid-lint-col');
     // The source viewer fills its frame instead of sizing to content.
     expect(screen.getByTestId('catalog-lint-source-viewer').className).toContain('flex-1');
   });

@@ -56,7 +56,7 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@lib/utils';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
+import { Card } from '@/app/components/ui/Card';
 import { clampRowIndex, computeWindowedRange } from '@/app/utils/windowed-rows';
 import { ANALYSIS_TREE_VIRTUALIZE_ABOVE } from '@/app/utils/preview-budgets';
 import {
@@ -175,13 +175,13 @@ export interface CatalogFormatDetailPanelProps {
 /** Badge tone classes. Text always carries the meaning; colour only reinforces it. */
 const BADGE_TONE: Record<'positive' | 'caution' | 'neutral' | 'negative', string> = {
   positive:
-    'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300',
+    'border-ok bg-ok-soft text-ok-fg',
   caution:
-    'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300',
+    'border-warn bg-warn-soft text-warn-fg',
   neutral:
-    'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300',
+    'border-border bg-subtle text-fg',
   negative:
-    'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-300',
+    'border-danger bg-danger-soft text-danger-fg',
 };
 
 /** A labelled badge whose `label` is read by assistive tech and whose `value` is visible. */
@@ -222,18 +222,15 @@ function StateBadge({
 function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-        {label}
-      </dt>
+      {/* `--fg`, not `--fg-muted`: this block sits on `--bg-subtle`, where the muted ink
+          measures 4.34:1 in Solarized — the serious `color-contrast` finding HIVE-5.4, 5.6
+          and 7.1 each measured, and which the browser sweep caught here too. */}
+      <dt className="text-2xs font-medium uppercase tracking-wider text-fg">{label}</dt>
       <dd className="mt-0.5">
-        <span className="font-mono text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
+        <span className="font-mono text-sm font-semibold tabular-nums text-fg">
           {value}
         </span>
-        {hint ? (
-          <span className="mt-0.5 block text-2xs leading-snug text-gray-500 dark:text-gray-400">
-            {hint}
-          </span>
-        ) : null}
+        {hint ? <span className="mt-0.5 block text-2xs leading-snug text-fg">{hint}</span> : null}
       </dd>
     </div>
   );
@@ -261,12 +258,12 @@ function WarningRow({ warning, testId }: { warning: AnalysisWarning; testId: str
       className="flex flex-wrap items-baseline gap-x-2 gap-y-1 py-1.5"
     >
       <StateBadge label="Severity" value={`${meta.symbol} ${meta.label}`} tone={meta.tone} />
-      <code className="font-mono text-2xs text-gray-600 dark:text-gray-400">{warning.code}</code>
-      <span className="min-w-0 flex-1 text-xs text-gray-700 dark:text-gray-300">
+      <code className="font-mono text-2xs text-fg-muted">{warning.code}</code>
+      <span className="min-w-0 flex-1 text-xs text-fg">
         {warning.message || 'The analyzer recorded no message for this warning.'}
       </span>
       {location ? (
-        <span className="font-mono text-2xs text-gray-500 dark:text-gray-400">{location}</span>
+        <span className="font-mono text-2xs text-fg-muted">{location}</span>
       ) : null}
     </li>
   );
@@ -718,16 +715,16 @@ export function CatalogFormatDetailPanel({
           className={cn(
             'flex h-8 w-full items-center gap-2 rounded-md pr-2 text-left text-xs motion-safe:transition',
             'pl-[calc(0.5rem+(var(--tree-depth)-1)*1.125rem)]',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent',
             selected
-              ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-100'
-              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+              ? 'bg-accent-soft text-accent-fg'
+              : 'text-fg hover:bg-subtle',
           )}
         >
           {row.hasChildren ? (
             <ChevronRight
               className={cn(
-                'h-3.5 w-3.5 shrink-0 text-gray-400 motion-safe:transition-transform',
+                'h-3.5 w-3.5 shrink-0 text-fg-muted motion-safe:transition-transform',
                 row.expanded && 'rotate-90',
               )}
               aria-hidden
@@ -735,12 +732,12 @@ export function CatalogFormatDetailPanel({
           ) : (
             <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
           )}
-          <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
+          <span className="shrink-0 rounded-full bg-subtle px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-fg">
             {analysisKindLabel(row.node.kind)}
           </span>
           <span className="truncate font-mono">{analysisNodeLabel(row.node)}</span>
           {row.node.redacted ? (
-            <span className="shrink-0 rounded bg-violet-100 px-1 py-0.5 text-2xs font-semibold uppercase text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+            <span className="shrink-0 rounded bg-violet-soft px-1 py-0.5 text-2xs font-semibold uppercase text-violet-fg">
               redacted
             </span>
           ) : null}
@@ -748,7 +745,7 @@ export function CatalogFormatDetailPanel({
             <span
               data-testid="catalog-format-detail-node-presence"
               data-presence={presence}
-              className="shrink-0 rounded bg-sky-100 px-1 py-0.5 text-2xs font-semibold uppercase text-sky-800 dark:bg-sky-900/40 dark:text-sky-300"
+              className="shrink-0 rounded bg-accent-soft px-1 py-0.5 text-2xs font-semibold uppercase text-accent-fg"
             >
               {presenceBadge.label}
             </span>
@@ -756,14 +753,14 @@ export function CatalogFormatDetailPanel({
           {worst ? (
             <span
               data-testid="catalog-format-detail-node-warning"
-              className="shrink-0 rounded bg-amber-100 px-1 py-0.5 text-2xs font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+              className="shrink-0 rounded bg-warn-soft px-1 py-0.5 text-2xs font-semibold uppercase text-warn-fg"
             >
               {(SEVERITY_META[worst.severity] ?? SEVERITY_META.warning).label}
               {warnings.length > 1 ? ` ×${warnings.length}` : ''}
             </span>
           ) : null}
           {location ? (
-            <span className="ml-auto shrink-0 font-mono text-2xs text-gray-500 dark:text-gray-400">
+            <span className="ml-auto shrink-0 font-mono text-2xs text-fg-muted">
               {location}
             </span>
           ) : null}
@@ -773,13 +770,13 @@ export function CatalogFormatDetailPanel({
   };
 
   return (
-    <section className={`${dashboardPanelClass} p-6`} data-testid="catalog-detail-format">
+    <Card className="cid-panel" data-testid="catalog-detail-format">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          <ListTree className="h-4 w-4 text-indigo-500" aria-hidden />
+        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-fg-muted">
+          <ListTree className="h-4 w-4 text-accent" aria-hidden />
           Format details
         </h2>
-        <p className="text-xs text-gray-400 dark:text-gray-500">
+        <p className="text-xs text-fg-muted">
           The imported payload in its own vocabulary
         </p>
       </div>
@@ -823,7 +820,7 @@ export function CatalogFormatDetailPanel({
           />
         ) : null}
         {analyzerKey ? (
-          <span className="font-mono text-2xs text-gray-500 dark:text-gray-400">
+          <span className="font-mono text-2xs text-fg-muted">
             {analyzerKey}@{analyzerVersion ?? '0.0.0'}
           </span>
         ) : null}
@@ -831,7 +828,7 @@ export function CatalogFormatDetailPanel({
 
       <p
         data-testid="catalog-format-detail-statement"
-        className="mt-2 text-xs leading-snug text-gray-600 dark:text-gray-300"
+        className="mt-2 text-xs leading-snug text-fg-muted"
       >
         {presentation.statement}
       </p>
@@ -839,7 +836,7 @@ export function CatalogFormatDetailPanel({
       {/* Metrics — a text alternative to the tree: the shape of the structure without walking it. */}
       <dl
         data-testid="catalog-format-detail-metrics"
-        className="mt-3 grid grid-cols-2 gap-4 rounded-lg border border-gray-100 bg-gray-50/60 p-3 sm:grid-cols-4 dark:border-gray-700/60 dark:bg-gray-900/30"
+        className="cid-inset mt-3 grid grid-cols-2 gap-4 p-3 sm:grid-cols-4"
       >
         <Metric label="Nodes" value={nodeCount.toLocaleString()} />
         <Metric label="Depth" value={maxDepth.toLocaleString()} />
@@ -853,7 +850,7 @@ export function CatalogFormatDetailPanel({
 
       {kindCounts.length > 0 ? (
         <div className="mt-3">
-          <h3 className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          <h3 className="text-2xs font-medium uppercase tracking-wider text-fg-muted">
             Native constructs
           </h3>
           <ul
@@ -863,7 +860,8 @@ export function CatalogFormatDetailPanel({
             {kindCounts.map(([kind, count]) => (
               <li
                 key={kind}
-                className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-2xs font-bold uppercase tracking-wider text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+                /* On `--bg-subtle`, so `--fg` rather than `--fg-muted` — see `Metric`. */
+                className="inline-flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1 text-2xs font-bold uppercase tracking-wider text-fg"
               >
                 {analysisKindLabel(kind)}
                 <span className="font-mono font-semibold tabular-nums normal-case">
@@ -876,9 +874,9 @@ export function CatalogFormatDetailPanel({
       ) : null}
 
       {truncated ? (
-        <p
+        <div
           data-testid="catalog-format-detail-bounding-note"
-          className="mt-3 flex items-start gap-1.5 rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/20 dark:text-amber-300"
+          className="mt-3 flex items-start gap-1.5 rounded-lg border border-warn bg-warn-soft px-3 py-2 text-xs text-warn-fg"
         >
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
           <span>
@@ -889,52 +887,52 @@ export function CatalogFormatDetailPanel({
             . What is shown is the top of the structure; the missing nodes are absent from the
             record, not from your source, and scrolling cannot reach them.
           </span>
-        </p>
+        </div>
       ) : null}
 
       {/* Transport states. A refusal is never rendered as an absence of analysis. */}
       {status === 'loading' ? (
         <div
           data-testid="catalog-format-detail-loading"
-          className="mt-4 flex items-center justify-center gap-2 py-8 text-sm text-gray-600 dark:text-gray-300"
+          className="mt-4 flex items-center justify-center gap-2 py-8 text-sm text-fg-muted"
         >
-          <Loader2 className="h-5 w-5 motion-safe:animate-spin text-indigo-500" aria-hidden />
+          <Loader2 className="h-5 w-5 motion-safe:animate-spin text-accent" aria-hidden />
           Loading the native payload analysis…
         </div>
       ) : status === 'forbidden' ? (
-        <p
+        <div
           data-testid="catalog-format-detail-forbidden"
-          className="mt-4 flex items-start gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300"
+          className="mt-4 flex items-start gap-1.5 rounded-lg border border-border bg-subtle px-3 py-2 text-sm text-fg"
         >
-          <Lock className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" aria-hidden />
+          <Lock className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" aria-hidden />
           <span>
             You do not have permission to read this item&apos;s native payload structure, which is
             gated on <span className="font-mono">imports:view</span>. This is a permission boundary —
             the analysis itself may well exist.
           </span>
-        </p>
+        </div>
       ) : status === 'error' ? (
-        <p
+        <div
           data-testid="catalog-format-detail-error"
-          className="mt-4 flex items-start gap-1.5 rounded-lg border border-rose-200 bg-rose-50/60 px-3 py-2 text-sm text-rose-700 dark:border-rose-800/60 dark:bg-rose-950/20 dark:text-rose-300"
+          className="mt-4 flex items-start gap-1.5 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-sm text-danger-fg"
         >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <span>
             {errorMessage || 'The native payload analysis could not be loaded.'} Nothing is claimed
             about the source from a failed read.
           </span>
-        </p>
+        </div>
       ) : null}
 
       {recordWarnings.length > 0 ? (
         <section aria-labelledby="catalog-format-detail-warnings-heading" className="mt-4">
           <h3
             id="catalog-format-detail-warnings-heading"
-            className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+            className="text-2xs font-medium uppercase tracking-wider text-fg-muted"
           >
             Analyzer warnings
           </h3>
-          <ul className="mt-1 divide-y divide-gray-100 dark:divide-gray-700/60">
+          <ul className="mt-1 divide-y divide-border">
             {recordWarnings.map((warning, index) => (
               <WarningRow
                 key={`${warning.code}-${index}`}
@@ -947,14 +945,14 @@ export function CatalogFormatDetailPanel({
       ) : null}
 
       {missingDeepLink ? (
-        <p
+        <div
           data-testid="catalog-format-detail-missing-node"
-          className="mt-4 rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/20 dark:text-amber-300"
+          className="mt-4 rounded-lg border border-warn bg-warn-soft px-3 py-2 text-xs text-warn-fg"
         >
           The linked node <span className="font-mono">{missingDeepLink}</span> is not in this
           analysis. A re-import or an analyzer upgrade mints a new analysis, and node ids are only
           stable within one.
-        </p>
+        </div>
       ) : null}
 
       {/* CPDO-2.2: the interchange read as an interchange — envelope controls, declared delimiters,
@@ -989,7 +987,7 @@ export function CatalogFormatDetailPanel({
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative min-w-0 flex-1 sm:max-w-xs">
               <Filter
-                className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400"
+                className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-muted"
                 aria-hidden
               />
               <input
@@ -999,7 +997,7 @@ export function CatalogFormatDetailPanel({
                 onChange={(event) => setFilter(event.target.value)}
                 placeholder="Filter structure…"
                 aria-label="Filter the native structure by name, construct, or source location"
-                className="w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-8 pr-8 text-xs text-gray-700 placeholder:text-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                className="w-full rounded-lg border border-border bg-surface py-1.5 pl-8 pr-8 text-xs text-fg placeholder:text-fg-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               />
               {filtering ? (
                 <button
@@ -1007,7 +1005,7 @@ export function CatalogFormatDetailPanel({
                   data-testid="catalog-format-detail-filter-clear"
                   onClick={() => setFilter('')}
                   aria-label="Clear the structure filter"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 motion-safe:transition-colors hover:text-gray-700 dark:hover:text-gray-200"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-fg-muted motion-safe:transition-colors hover:text-fg"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
@@ -1015,7 +1013,7 @@ export function CatalogFormatDetailPanel({
             </div>
             <span
               data-testid="catalog-format-detail-row-count"
-              className="shrink-0 font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
+              className="shrink-0 font-mono text-2xs tabular-nums text-fg-muted"
             >
               {rows.length.toLocaleString()} of {nodeCount.toLocaleString()} nodes shown
             </span>
@@ -1024,14 +1022,14 @@ export function CatalogFormatDetailPanel({
               data-testid="catalog-format-detail-collapse-all"
               onClick={() => setExpandedIds(new Set<string>())}
               disabled={!anythingExpanded || filtering}
-              className="shrink-0 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-2xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="shrink-0 rounded-lg border border-border bg-surface px-2.5 py-1 text-2xs font-medium text-fg transition-colors hover:bg-subtle disabled:cursor-not-allowed disabled:opacity-50"
             >
               Collapse all
             </button>
             {virtualized ? (
               <span
                 data-testid="catalog-format-detail-windowed"
-                className="shrink-0 text-2xs text-gray-500 dark:text-gray-400"
+                className="shrink-0 text-2xs text-fg-muted"
               >
                 windowed
               </span>
@@ -1050,7 +1048,7 @@ export function CatalogFormatDetailPanel({
               ref={listRef}
               onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
               onKeyDown={handleTreeKeyDown}
-              className="h-[380px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+              className="h-[380px] overflow-y-auto rounded-lg border border-border"
               style={viewportHeight !== ANALYSIS_TREE_HEIGHT ? { height: viewportHeight } : undefined}
             >
               <ul
@@ -1074,7 +1072,7 @@ export function CatalogFormatDetailPanel({
           ) : (
             <p
               data-testid="catalog-format-detail-no-matches"
-              className="rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300"
+              className="rounded-lg border border-border px-3 py-2 text-xs text-fg-muted"
             >
               No construct matches “{filter.trim()}”. The filter searches names, constructs and
               source locations — never observed values.
@@ -1086,14 +1084,14 @@ export function CatalogFormatDetailPanel({
             <section
               aria-labelledby="catalog-format-detail-node-heading"
               data-testid="catalog-format-detail-selected"
-              className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+              className="rounded-lg border border-border bg-surface p-3"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <h3
                   id="catalog-format-detail-node-heading"
-                  className="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                  className="text-sm font-semibold text-fg"
                 >
-                  <span className="text-gray-500 dark:text-gray-400">
+                  <span className="text-fg-muted">
                     {analysisKindLabel(selectedNode.kind)}
                   </span>{' '}
                   <span className="font-mono">{analysisNodeLabel(selectedNode)}</span>
@@ -1123,7 +1121,7 @@ export function CatalogFormatDetailPanel({
                 {selectedReference ? (
                   <span
                     data-testid="catalog-format-detail-selected-reference"
-                    className="font-mono text-2xs text-gray-500 dark:text-gray-400"
+                    className="font-mono text-2xs text-fg-muted"
                   >
                     {selectedReference}
                   </span>
@@ -1132,17 +1130,17 @@ export function CatalogFormatDetailPanel({
                   href={nodeHref(selectedNode.id)}
                   data-testid="catalog-format-detail-node-link"
                   title="A shareable address for this construct in this analysis"
-                  className="ml-auto inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-2xs font-medium text-indigo-700 transition-colors hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-800 dark:text-indigo-300 dark:hover:bg-indigo-950/30"
+                  className="ml-auto inline-flex items-center gap-1 rounded-lg border border-border bg-surface px-2.5 py-1 text-2xs font-medium text-accent-fg transition-colors hover:bg-accent-soft"
                 >
                   <Link2 className="h-3.5 w-3.5" aria-hidden /> Link to this construct
                 </Link>
               </div>
 
-              <p className="mt-2 text-xs text-gray-700 dark:text-gray-300">{selectedValue.text}</p>
+              <div className="mt-2 text-xs text-fg">{selectedValue.text}</div>
               {selectedValue.value !== null ? (
                 <pre
                   data-testid="catalog-format-detail-node-value"
-                  className="mt-1 overflow-x-auto rounded bg-gray-50 p-2 font-mono text-2xs text-gray-800 dark:bg-gray-900/60 dark:text-gray-200"
+                  className="mt-1 overflow-x-auto rounded bg-subtle p-2 font-mono text-2xs text-fg"
                 >
                   {selectedValue.value}
                 </pre>
@@ -1150,12 +1148,12 @@ export function CatalogFormatDetailPanel({
 
               <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2">
                 <div className="min-w-0">
-                  <dt className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <dt className="text-2xs font-medium uppercase tracking-wider text-fg-muted">
                     Source location
                   </dt>
                   <dd
                     data-testid="catalog-format-detail-node-location"
-                    className="mt-0.5 break-words font-mono text-2xs text-gray-700 dark:text-gray-300"
+                    className="mt-0.5 break-words font-mono text-2xs text-fg"
                   >
                     {sourceLocationText(selectedLocation) ??
                       'This analyzer recorded no source location for this construct.'}
@@ -1163,10 +1161,10 @@ export function CatalogFormatDetailPanel({
                 </div>
                 {selectedAttributes.map(([name, value]) => (
                   <div key={name} className="min-w-0">
-                    <dt className="text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <dt className="text-2xs font-medium uppercase tracking-wider text-fg-muted">
                       {name}
                     </dt>
-                    <dd className="mt-0.5 break-words font-mono text-2xs text-gray-700 dark:text-gray-300">
+                    <dd className="mt-0.5 break-words font-mono text-2xs text-fg">
                       {value}
                     </dd>
                   </div>
@@ -1174,7 +1172,7 @@ export function CatalogFormatDetailPanel({
               </dl>
 
               {selectedWarnings.length > 0 ? (
-                <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-700/60">
+                <ul className="mt-2 divide-y divide-border">
                   {selectedWarnings.map((warning, index) => (
                     <WarningRow
                       key={`${warning.code}-${index}`}
@@ -1202,9 +1200,9 @@ export function CatalogFormatDetailPanel({
                         `${analysisKindLabel(selectedNode.kind)} ${analysisNodeLabel(selectedNode)}`,
                       )
                     }
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-2xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-2xs font-medium text-fg transition-colors hover:bg-subtle"
                   >
-                    <Code className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
+                    <Code className="h-3.5 w-3.5 text-accent" aria-hidden />
                     {selectedRange !== null
                       ? `Highlight ${selectedRange.length.toLocaleString()} character${
                           selectedRange.length === 1 ? '' : 's'
@@ -1214,7 +1212,7 @@ export function CatalogFormatDetailPanel({
                 ) : (
                   <p
                     data-testid="catalog-format-detail-no-source-jump"
-                    className="text-2xs text-gray-500 dark:text-gray-400"
+                    className="text-2xs text-fg-muted"
                   >
                     {!sourceAvailable
                       ? 'The raw source was not captured at import, so there is nothing to open.'
@@ -1236,7 +1234,7 @@ export function CatalogFormatDetailPanel({
           className="mt-4"
         />
       ) : null}
-    </section>
+    </Card>
   );
 }
 

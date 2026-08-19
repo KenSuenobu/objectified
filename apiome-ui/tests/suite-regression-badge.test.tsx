@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { axe } from 'jest-axe';
 import 'jest-axe/extend-expect';
@@ -95,5 +95,44 @@ describe('SuiteRegressionBadge', () => {
     const { container } = render(<SuiteRegressionBadge surface="catalog" artifact="legacy-soap" />);
     await screen.findByTestId('suite-regression-badge');
     expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+  });
+
+  /**
+   * HIVE-7.2 (#5319): `sources/catalog-item.html` makes the chip a link to the verdict diff
+   * its tooltip already names. Given a handler the chip *is* the button — the badge's classes
+   * on a `<button>`, so the whole pill is the hit area and no interactive element is nested
+   * inside another one.
+   */
+  describe('as a link to the verdict diff', () => {
+    it('stays an inert chip when no handler is given', async () => {
+      mockList({ success: true, items: [suiteWith(true)] });
+      render(<SuiteRegressionBadge surface="catalog" artifact="legacy-soap" />);
+      const chip = await screen.findByTestId('suite-regression-badge');
+      expect(chip.tagName).toBe('DIV');
+      expect(chip.querySelector('button')).toBeNull();
+    });
+
+    it('becomes the button itself when one is', async () => {
+      mockList({ success: true, items: [suiteWith(true)] });
+      const onSelect = jest.fn();
+      render(
+        <SuiteRegressionBadge surface="catalog" artifact="legacy-soap" onSelect={onSelect} />,
+      );
+      const chip = await screen.findByTestId('suite-regression-badge');
+      expect(chip.tagName).toBe('BUTTON');
+      // No nested interactive element — the pill and the control are one node.
+      expect(chip.querySelector('button, a')).toBeNull();
+      fireEvent.click(chip);
+      expect(onSelect).toHaveBeenCalledTimes(1);
+    });
+
+    it('is axe-clean as a button too', async () => {
+      mockList({ success: true, items: [suiteWith(true)] });
+      const { container } = render(
+        <SuiteRegressionBadge surface="catalog" artifact="legacy-soap" onSelect={() => {}} />,
+      );
+      await screen.findByTestId('suite-regression-badge');
+      expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+    });
   });
 });

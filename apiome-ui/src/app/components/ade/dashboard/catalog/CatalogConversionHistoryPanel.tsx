@@ -21,6 +21,7 @@ import { Loader2, RotateCcw } from 'lucide-react';
 import { ConversionHistoryList } from './ConversionHistoryList';
 import { ConversionProjectionGraphPanel } from './ConversionProjectionGraphPanel';
 import { useConversionHistory } from './useConversionHistory';
+import { useReportedCount } from './useReportedCount';
 import {
   hasStoredSnapshot,
   makeStoredEvidenceSource,
@@ -36,17 +37,22 @@ export interface CatalogConversionHistoryPanelProps {
   active: boolean;
   /** Open the Convert preview dialog, when the owner wires it (the fresh-evidence pointer). */
   onOpenConvertPreview?: () => void;
+  /** Report how many conversions this item has, for the shell's tab count (HIVE-7.2). */
+  onCountChange?: (count: number) => void;
 }
 
 export function CatalogConversionHistoryPanel({
   itemId,
   active,
   onOpenConvertPreview,
+  onCountChange,
 }: CatalogConversionHistoryPanelProps) {
   const { rows, currentSourceHash, loaded, loading, error, retry } = useConversionHistory(
     active,
     useMemo(() => ({ kind: 'catalog' as const, itemId }), [itemId]),
   );
+
+  useReportedCount(loaded, rows.length, onCountChange);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Auto-select the newest row so the tab is immediately useful; an explicit pick wins.
@@ -63,15 +69,15 @@ export function CatalogConversionHistoryPanel({
   return (
     <div data-testid="conversion-history-panel" className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Conversion history</h3>
-        <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+        <h3 className="text-sm font-semibold text-fg">Conversion history</h3>
+        <p className="mt-1 text-xs text-fg-muted">
           Every conversion of this item, newest first, with the exact evidence each one was
           approved with.
         </p>
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <div className="flex items-center gap-2 text-sm text-fg-muted">
           <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
           Loading conversion history…
         </div>
@@ -81,7 +87,7 @@ export function CatalogConversionHistoryPanel({
         <div
           data-testid="conversion-history-error"
           role="alert"
-          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+          className="rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger-fg"
         >
           <p>{error}</p>
           <button
@@ -98,7 +104,7 @@ export function CatalogConversionHistoryPanel({
       {loaded && rows.length === 0 ? (
         <p
           data-testid="conversion-history-empty"
-          className="rounded-md border border-dashed border-gray-300 px-3 py-4 text-sm text-gray-600 dark:border-gray-600 dark:text-gray-300"
+          className="rounded-md border border-dashed border-border-strong px-3 py-4 text-sm text-fg-muted"
         >
           No conversions have been recorded for this item yet. Approve a conversion from the
           Convert preview to start its history.
@@ -115,19 +121,19 @@ export function CatalogConversionHistoryPanel({
 
       {selected ? (
         <div className="space-y-3">
-          <p
+          <div
             data-testid="conversion-history-historic-note"
-            className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-300"
+            className="rounded-md border border-border bg-subtle px-3 py-2 text-xs text-fg"
           >
             Historic evidence captured{' '}
             {selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : 'at commit'}
             {selected.manifestHash ? ` · snapshot ${snapshotHashShort(selected.manifestHash)}` : ''}.
             This is the evidence this conversion was approved with.
-          </p>
+          </div>
           {sourceChangedSince(selected, currentSourceHash) ? (
-            <p
+            <div
               data-testid="conversion-history-stale-note"
-              className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+              className="rounded-md border border-warn bg-warn-soft px-3 py-2 text-xs text-warn-fg"
             >
               The source has changed since this conversion was approved.{' '}
               {onOpenConvertPreview ? (
@@ -138,7 +144,7 @@ export function CatalogConversionHistoryPanel({
                 'Open the Convert preview'
               )}{' '}
               to compute fresh evidence.
-            </p>
+            </div>
           ) : null}
 
           {evidenceSource ? (
@@ -154,7 +160,7 @@ export function CatalogConversionHistoryPanel({
           ) : (
             <p
               data-testid="conversion-history-snapshot-unavailable"
-              className="rounded-md border border-dashed border-gray-300 px-3 py-4 text-sm text-gray-600 dark:border-gray-600 dark:text-gray-300"
+              className="rounded-md border border-dashed border-border-strong px-3 py-4 text-sm text-fg-muted"
             >
               This conversion predates stored evidence snapshots, so its graph cannot be
               replayed. The recorded fidelity grade and tool versions above remain authoritative.

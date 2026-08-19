@@ -68,11 +68,11 @@ export function ConversionHistoryList({
         const body = (
           <>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              <span className="text-sm font-medium text-fg">
                 {formatWhen(row.createdAt)}
               </span>
               {row.targetVersionLabel ? (
-                <span className="text-xs text-gray-600 dark:text-gray-300">
+                <span className="text-xs text-fg-muted">
                   → {perspective === 'catalog' && row.targetProjectName ? `${row.targetProjectName} ` : ''}
                   v{row.targetVersionLabel}
                 </span>
@@ -89,7 +89,7 @@ export function ConversionHistoryList({
               {row.reconverted ? (
                 <span
                   data-testid="conversion-history-reconverted"
-                  className="inline-flex items-center rounded bg-sky-100 px-1.5 py-0.5 text-2xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200"
+                  className="inline-flex items-center rounded bg-accent-soft px-1.5 py-0.5 text-2xs font-medium text-accent-fg"
                 >
                   Re-converted
                 </span>
@@ -111,7 +111,7 @@ export function ConversionHistoryList({
                 </span>
               )}
               {row.conversionMode ? (
-                <span className="text-2xs text-gray-500 dark:text-gray-400">{row.conversionMode}</span>
+                <span className="text-2xs text-fg-muted">{row.conversionMode}</span>
               ) : null}
             </div>
           </>
@@ -129,8 +129,8 @@ export function ConversionHistoryList({
                 className={cn(
                   'w-full rounded-md border px-3 py-2 text-left motion-safe:transition-colors',
                   selected
-                    ? 'border-indigo-400 bg-indigo-50/60 dark:border-indigo-500 dark:bg-indigo-950/40'
-                    : 'border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800/60',
+                    ? 'border-accent bg-accent-soft'
+                    : 'border-border hover:bg-subtle',
                 )}
               >
                 {body}
@@ -139,7 +139,7 @@ export function ConversionHistoryList({
               <div
                 data-testid="conversion-history-row"
                 data-provenance-id={row.provenanceId}
-                className="rounded-md border border-gray-200 px-3 py-2 dark:border-gray-700"
+                className="rounded-md border border-border px-3 py-2"
               >
                 {body}
                 <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -147,12 +147,12 @@ export function ConversionHistoryList({
                     <Link
                       data-testid="conversion-history-open-catalog"
                       href={`/ade/dashboard/catalog/${encodeURIComponent(row.sourceProjectId)}?tab=conversions`}
-                      className="text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="text-xs font-medium text-accent-fg hover:underline"
                     >
                       Open catalog item{row.sourceProjectName ? `: ${row.sourceProjectName}` : ''}
                     </Link>
                   ) : (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-fg-muted">
                       Source catalog item no longer exists
                     </span>
                   )}
@@ -161,7 +161,7 @@ export function ConversionHistoryList({
                       type="button"
                       data-testid="conversion-history-open-version"
                       onClick={() => onOpenVersion(row.targetVersionRecordId as string)}
-                      className="text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="text-xs font-medium text-accent-fg hover:underline"
                     >
                       View version{row.targetVersionLabel ? ` ${row.targetVersionLabel}` : ''}
                     </button>

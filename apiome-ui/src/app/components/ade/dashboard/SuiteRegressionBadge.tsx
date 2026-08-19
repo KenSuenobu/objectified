@@ -12,7 +12,8 @@
 
 import { useEffect, useState } from 'react';
 import { TrendingDown } from 'lucide-react';
-import { Badge } from '../../ui/Badge';
+import { Badge, badgeVariants } from '../../ui/Badge';
+import { cn } from '@lib/utils';
 import type { BenchSurface } from '@/app/utils/schema-test-bench';
 import {
   countRegressedSuites,
@@ -27,10 +28,24 @@ export interface SuiteRegressionBadgeProps {
   artifact: string;
   /** Extra classes for placement on the hosting surface. */
   className?: string;
+  /**
+   * Follow the chip to the verdict diff it names (HIVE-7.2, #5319).
+   *
+   * The chip's tooltip has always ended "Open the Test bench tab for the verdict diff" — and
+   * `sources/catalog-item.html` makes it an actual link. Given a handler the badge becomes a
+   * button that does what the sentence says; without one it stays the inert chip the project
+   * version surface draws.
+   */
+  onSelect?: () => void;
 }
 
 /** Render the chip, or nothing when no suite regressed (or the state is unknown). */
-export function SuiteRegressionBadge({ surface, artifact, className }: SuiteRegressionBadgeProps) {
+export function SuiteRegressionBadge({
+  surface,
+  artifact,
+  className,
+  onSelect,
+}: SuiteRegressionBadgeProps) {
   const [regressedCount, setRegressedCount] = useState(0);
 
   useEffect(() => {
@@ -56,18 +71,33 @@ export function SuiteRegressionBadge({ surface, artifact, className }: SuiteRegr
 
   if (regressedCount === 0) return null;
 
+  const title =
+    `${regressedCount} test suite${regressedCount === 1 ? '' : 's'} whose latest run has a ` +
+    'previously-passing payload now failing. Open the Test Bench tab for the verdict diff.';
+  const label = `Suite regression${regressedCount === 1 ? '' : ` ×${regressedCount}`}`;
+
+  // With a handler the chip *is* the button — the badge's own classes on a `<button>` rather
+  // than a button nested inside the chip, so the whole pill is the hit area and there is no
+  // interactive element inside another one.
+  if (onSelect) {
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        data-testid="suite-regression-badge"
+        title={title}
+        className={cn(badgeVariants({ variant: 'rose' }), 'cursor-pointer', className)}
+      >
+        <TrendingDown aria-hidden />
+        {label}
+      </button>
+    );
+  }
+
   return (
-    <Badge
-      variant="rose"
-      data-testid="suite-regression-badge"
-      title={
-        `${regressedCount} test suite${regressedCount === 1 ? '' : 's'} whose latest run has a ` +
-        'previously-passing payload now failing. Open the Test Bench tab for the verdict diff.'
-      }
-      className={className}
-    >
+    <Badge variant="rose" data-testid="suite-regression-badge" title={title} className={className}>
       <TrendingDown aria-hidden />
-      Suite regression{regressedCount === 1 ? '' : ` ×${regressedCount}`}
+      {label}
     </Badge>
   );
 }

@@ -195,9 +195,10 @@ describe('the Format details tab', () => {
     const tab = await screen.findByTestId('catalog-detail-tab-format');
     expect(tab).toHaveTextContent('Format details');
     expect(tab).toHaveAttribute('aria-selected', 'false');
-    // Tab order: Overview, then Format details, then Source & Code.
+    // Tab order: Overview, then Format details, then Source & code (HIVE-7.2 took the
+    // mockup's sentence case for the last two words of three labels).
     const labels = screen.getAllByRole('tab').map((element) => element.textContent);
-    expect(labels.slice(0, 3)).toEqual(['Overview', 'Format details', 'Source & Code']);
+    expect(labels.slice(0, 3)).toEqual(['Overview', 'Format details', 'Source & code']);
 
     // The item was read; the permission-gated record was not.
     expect(analysisCalls()).toHaveLength(0);

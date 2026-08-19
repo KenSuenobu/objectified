@@ -20,6 +20,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useReportedCount } from './useReportedCount';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
@@ -33,7 +34,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { cn } from '@lib/utils';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
+import { Card } from '@/app/components/ui/Card';
 import { formatVersionWithPrefix, getVersionRevisionNote } from '@/app/utils/version-display';
 import {
   JsonDiffViewer,
@@ -58,6 +59,8 @@ interface CatalogVersionsPanelProps {
   itemMetadata?: Record<string, unknown> | null;
   /** Whether the Versions tab is active; revisions are fetched the first time this is true. */
   active: boolean;
+  /** Report how many revisions this item has, for the shell's tab count (HIVE-7.2). */
+  onCountChange?: (count: number) => void;
 }
 
 /** The fetch lifecycle of the version list (`idle`/`loading` render the spinner). */
@@ -123,7 +126,7 @@ function DiffModeToggle({
       role="radiogroup"
       aria-label="Diff layout"
       data-testid="catalog-versions-diff-mode"
-      className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 dark:border-gray-700 dark:bg-gray-800"
+      className="inline-flex rounded-lg border border-border bg-surface p-0.5"
     >
       {options.map((opt) => {
         const selected = mode === opt.value;
@@ -138,8 +141,8 @@ function DiffModeToggle({
             className={cn(
               'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
               selected
-                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200',
+                ? 'bg-accent-soft text-accent-fg'
+                : 'text-fg-muted hover:text-fg',
             )}
           >
             <opt.icon className="h-3.5 w-3.5" aria-hidden />
@@ -161,6 +164,7 @@ export function CatalogVersionsPanel({
   itemName,
   itemMetadata,
   active,
+  onCountChange,
 }: CatalogVersionsPanelProps) {
   const router = useRouter();
   const [status, setStatus] = useState<VersionsStatus>('idle');
@@ -180,6 +184,8 @@ export function CatalogVersionsPanel({
   const [expandAll, setExpandAll] = useState(false);
   // Monotonic token so a superseded compare (older pair) never clobbers a newer one's result.
   const compareTokenRef = useRef(0);
+
+  useReportedCount(status === 'loaded', revisions.length, onCountChange);
 
   // Hydrate the persisted diff layout on mount (client-only; SSR default stays `split`).
   useEffect(() => {
@@ -287,13 +293,13 @@ export function CatalogVersionsPanel({
   const hasPair = canDiffRevisions(selected) && pair != null;
 
   return (
-    <section className={`${dashboardPanelClass} p-6`} data-testid="catalog-detail-versions">
+    <Card className="cid-panel" data-testid="catalog-detail-versions">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-fg-muted">
             Versions
           </h2>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-xs text-fg-muted">
             Tick any two revisions to compare them inline. Catalog items share the versions table with
             Projects.
           </p>
@@ -303,9 +309,9 @@ export function CatalogVersionsPanel({
             type="button"
             data-testid="catalog-detail-versions-link"
             onClick={openHistory}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-fg transition-colors hover:bg-subtle"
           >
-            <GitBranch className="h-4 w-4 text-indigo-500" /> Open version history
+            <GitBranch className="h-4 w-4 text-accent" /> Open version history
           </button>
         </div>
       </div>
@@ -313,16 +319,16 @@ export function CatalogVersionsPanel({
       {status === 'idle' || status === 'loading' ? (
         <p
           data-testid="catalog-versions-loading"
-          className="mt-6 text-sm text-gray-500 dark:text-gray-400"
+          className="mt-6 text-sm text-fg-muted"
         >
           Loading versions…
         </p>
       ) : status === 'error' ? (
         <div
           data-testid="catalog-versions-error"
-          className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 p-4 text-sm dark:border-rose-900 dark:bg-rose-950/30"
+          className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-danger bg-danger-soft p-4 text-sm"
         >
-          <span className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
+          <span className="flex items-center gap-2 text-danger-fg">
             <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
             {errorMessage || 'Failed to load versions.'}
           </span>
@@ -330,7 +336,7 @@ export function CatalogVersionsPanel({
             type="button"
             data-testid="catalog-versions-retry"
             onClick={retry}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-fg transition-colors hover:bg-subtle"
           >
             <RefreshCw className="h-4 w-4" /> Retry
           </button>
@@ -338,7 +344,7 @@ export function CatalogVersionsPanel({
       ) : revisions.length === 0 ? (
         <p
           data-testid="catalog-versions-empty"
-          className="mt-6 text-sm text-gray-600 dark:text-gray-300"
+          className="mt-6 text-sm text-fg-muted"
         >
           No revisions yet — this catalog item has a single, unversioned import.
         </p>
@@ -346,7 +352,7 @@ export function CatalogVersionsPanel({
         <>
           <p
             data-testid="catalog-versions-selection-hint"
-            className="mt-4 text-xs text-gray-500 dark:text-gray-400"
+            className="mt-4 text-xs text-fg-muted"
           >
             {selected.length} of {MAX_DIFF_SELECTION} selected
             {hasPair ? ' — showing the diff below (old → new).' : '. Select two to compare.'}
@@ -365,8 +371,8 @@ export function CatalogVersionsPanel({
                   className={cn(
                     'flex items-start gap-3 rounded-lg border p-3 transition-colors',
                     isChecked
-                      ? 'border-indigo-300 bg-indigo-50/60 dark:border-indigo-700 dark:bg-indigo-950/30'
-                      : 'border-gray-100 bg-gray-50/60 dark:border-gray-700/60 dark:bg-gray-900/30',
+                      ? 'border-accent bg-accent-soft'
+                      : 'border-border bg-subtle',
                   )}
                 >
                   <label
@@ -378,7 +384,7 @@ export function CatalogVersionsPanel({
                     <input
                       type="checkbox"
                       data-testid="catalog-versions-checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed dark:border-gray-600 dark:bg-gray-700"
+                      className="h-4 w-4 rounded border-border-strong text-accent-fg focus:ring-accent disabled:cursor-not-allowed"
                       checked={isChecked}
                       disabled={isDisabled}
                       onChange={() => toggle(rev.id)}
@@ -387,24 +393,24 @@ export function CatalogVersionsPanel({
                   </label>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-100">
+                      <span className="font-mono text-sm font-semibold text-fg">
                         {formatVersionWithPrefix(rev.version_id)}
                       </span>
                       {rev.published ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        <span className="inline-flex items-center gap-1 rounded bg-ok-soft px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-ok-fg">
                           <Lock className="h-3 w-3" aria-hidden /> Published
                         </span>
                       ) : null}
                       {rev.lifecycle && rev.lifecycle !== 'stable' ? (
-                        <span className="inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        <span className="inline-flex items-center rounded bg-inset px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-fg-muted">
                           {rev.lifecycle}
                         </span>
                       ) : null}
                     </div>
                     {note ? (
-                      <p className="mt-0.5 text-sm text-gray-700 dark:text-gray-200">{note}</p>
+                      <div className="mt-0.5 text-sm text-fg">{note}</div>
                     ) : null}
-                    <p className="mt-0.5 text-2xs text-gray-400 dark:text-gray-500">
+                    <p className="mt-0.5 text-2xs text-fg-muted">
                       {formatTimestamp(rev.created_at)}
                       {rev.creator_name || rev.creator_email
                         ? ` · ${rev.creator_name || rev.creator_email}`
@@ -419,9 +425,9 @@ export function CatalogVersionsPanel({
           {hasPair ? (
             <div className="mt-5" data-testid="catalog-versions-diff">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <h3 className="flex items-center gap-2 font-mono text-sm font-semibold text-gray-800 dark:text-gray-100">
+                <h3 className="flex items-center gap-2 font-mono text-sm font-semibold text-fg">
                   {compare.status === 'loading' ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
+                    <Loader2 className="h-4 w-4 animate-spin text-accent" aria-hidden />
                   ) : null}
                   {formatVersionWithPrefix(pair!.base.version_id)}
                   {' → '}
@@ -437,7 +443,7 @@ export function CatalogVersionsPanel({
                     title={
                       expandAll ? 'Collapse the unchanged regions' : 'Expand every unchanged region'
                     }
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {expandAll ? (
                       <ChevronsDownUp className="h-3.5 w-3.5" aria-hidden />
@@ -453,7 +459,7 @@ export function CatalogVersionsPanel({
               {compare.status === 'error' ? (
                 <div
                   data-testid="catalog-versions-diff-error"
-                  className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/60 p-4 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300"
+                  className="flex items-center gap-2 rounded-xl border border-danger bg-danger-soft p-4 text-sm text-danger-fg"
                 >
                   <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
                   {compare.error || 'Failed to build the diff.'}
@@ -470,7 +476,7 @@ export function CatalogVersionsPanel({
               ) : (
                 <p
                   data-testid="catalog-versions-diff-loading"
-                  className="rounded-xl border border-gray-200 bg-gray-50/60 p-4 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+                  className="rounded-xl border border-border bg-subtle p-4 text-sm text-fg"
                 >
                   Building the diff…
                 </p>
@@ -479,6 +485,6 @@ export function CatalogVersionsPanel({
           ) : null}
         </>
       )}
-    </section>
+    </Card>
   );
 }
