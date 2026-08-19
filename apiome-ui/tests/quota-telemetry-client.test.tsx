@@ -1,8 +1,9 @@
 /**
- * Integration tests for the quota & rate-limit telemetry page (REPO-7.3, #2801).
+ * The quota telemetry screen, driven (REPO-7.3, #2801; redesigned HIVE-7.6, #5323).
  *
- * These drive the real component against a stubbed `/api/repositories/quota-telemetry` and
- * assert the behaviours the ticket's acceptance criteria name:
+ * These drive the real screen against a stubbed `/api/repositories/quota-telemetry` and assert
+ * the behaviours the original ticket's acceptance criteria name — all of which the redesign had
+ * to carry over intact:
  *
  *  - the last 7 days are shown for every metric, including metrics with no activity;
  *  - deferral counts are surfaced separately from the work that was performed;
@@ -10,6 +11,9 @@
  *
  * Plus the degradation that matters most: counters that could not be read must not render as
  * a quiet week.
+ *
+ * `repository-bring-in-hive-redesign.test.tsx` holds what the *redesign* added; this holds what
+ * it must not have broken.
  */
 
 import { describe, test, expect, jest, beforeEach, afterEach } from '@jest/globals';
@@ -28,7 +32,14 @@ jest.mock('sonner', () => ({
   toast: { error: jest.fn(), message: jest.fn(), success: jest.fn() },
 }));
 
-import { RepositoryQuotaTelemetry } from '@/app/components/ade/dashboard/repositories/RepositoryQuotaTelemetry';
+// The Repositories sub-nav under the title reads the path to decide which tab is current.
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/ade/dashboard/repositories/telemetry',
+}));
+
+import { QuotaTelemetryClient } from '@/app/ade/dashboard/repositories/telemetry/QuotaTelemetryClient';
 
 const MB = 1024 * 1024;
 
@@ -165,7 +176,7 @@ afterEach(() => {
 
 describe('the metric panels', () => {
   test('shows every metric the server reported', async () => {
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     await waitFor(() => expect(screen.getAllByTestId('quota-metric-card')).toHaveLength(5));
     expect(screen.getByRole('heading', { name: 'Polls' })).toBeInTheDocument();
@@ -176,7 +187,7 @@ describe('the metric panels', () => {
   test('a metric with no activity all week still renders its panel', async () => {
     // Absence of deferrals is the answer an operator came for; a missing card reads as
     // "telemetry is broken" instead.
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     await waitFor(() => expect(screen.getAllByTestId('quota-metric-card')).toHaveLength(5));
     const card = screen
@@ -187,7 +198,7 @@ describe('the metric panels', () => {
   });
 
   test('deferral metrics are marked apart from work performed', async () => {
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     await waitFor(() => expect(screen.getAllByTestId('quota-metric-card')).toHaveLength(5));
     const byMetric = Object.fromEntries(
@@ -202,18 +213,26 @@ describe('the metric panels', () => {
   });
 
   test('each metric plots one point per day in the range', async () => {
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     await waitFor(() => expect(screen.getAllByTestId('quota-metric-card')).toHaveLength(5));
     const polls = screen
       .getAllByTestId('quota-metric-card')
       .find((node) => node.getAttribute('data-metric') === 'polls')!;
-    // The sparkline's accessible fallback is a row per point.
-    expect(within(polls).getAllByRole('row')).toHaveLength(DAYS.length);
+    // `ui/metrics/Sparkline` (HIVE-2.6) states the series as a sentence on a `role="img"`
+    // rather than as the MCP kit's hidden table — so the count is asserted where a screen
+    // reader actually hears it, and the label names the window the shape covers.
+    const spark = within(polls).getByRole('img');
+    expect(spark).toHaveAccessibleName(
+      expect.stringContaining(`last ${DAYS.length} days`) as unknown as string
+    );
+    expect(spark).toHaveAccessibleName(
+      expect.stringContaining(`${DAYS.length} points`) as unknown as string
+    );
   });
 
   test('a byte metric is rendered in a byte unit, not as a raw count', async () => {
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     await waitFor(() => expect(screen.getAllByTestId('quota-metric-card')).toHaveLength(5));
     const scanned = screen
@@ -225,7 +244,7 @@ describe('the metric panels', () => {
   });
 
   test('an hourly metric labels its headline as an hourly figure', async () => {
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     await waitFor(() => expect(screen.getAllByTestId('quota-metric-card')).toHaveLength(5));
     const polls = screen
@@ -237,7 +256,7 @@ describe('the metric panels', () => {
 
 describe('the quota summary', () => {
   test('reports the current window against the enforced ceiling', async () => {
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     const summary = await screen.findByTestId('quota-summary');
     expect(within(summary).getByText('42')).toBeInTheDocument();
@@ -258,7 +277,7 @@ describe('the quota summary', () => {
         },
       })
     );
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     const summary = await screen.findByTestId('quota-summary');
     expect(summary).toHaveAttribute('data-pressure', 'unlimited');
@@ -279,7 +298,7 @@ describe('the quota summary', () => {
         },
       })
     );
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     const summary = await screen.findByTestId('quota-summary');
     expect(summary).toHaveAttribute('data-pressure', 'exhausted');
@@ -289,17 +308,19 @@ describe('the quota summary', () => {
 
 describe('the range', () => {
   test('requests seven days by default', async () => {
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(lastQuery().get('days')).toBe('7');
   });
 
   test('changing the range re-requests rather than slicing what is already held', async () => {
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
-    await userEvent.click(screen.getByRole('button', { name: '30d' }));
+    // The range group is `ui/Segmented` since HIVE-7.6 (#5323): three mutually exclusive
+    // ranges are one choice, so its options are radios rather than toggle buttons.
+    await userEvent.click(screen.getByRole('radio', { name: '30d' }));
 
     await waitFor(() => expect(lastQuery().get('days')).toBe('30'));
   });
@@ -324,7 +345,7 @@ describe('degradation', () => {
         },
       })
     );
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     const banner = await screen.findByTestId('telemetry-unavailable');
     expect(banner).toHaveTextContent(/missing data, not a quiet week/i);
@@ -332,7 +353,7 @@ describe('degradation', () => {
 
   test('a failed request surfaces the error instead of an empty dashboard', async () => {
     stubFetch({ success: false, error: 'Repository API unavailable' }, { ok: false, status: 503 });
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Repository API unavailable');
     expect(screen.queryByTestId('quota-metric-card')).not.toBeInTheDocument();
@@ -340,12 +361,14 @@ describe('degradation', () => {
 
   test('with no tenant selected the page asks for one instead of requesting nothing', async () => {
     currentTenantId = undefined;
-    render(<RepositoryQuotaTelemetry />);
+    render(<QuotaTelemetryClient />);
 
     // The shared gate (HIVE-2.5, #5284): one lock, one sentence, one way through it, rather
     // than the amber card this screen used to grow for itself.
     expect(await screen.findByText('Pick a workspace first')).toBeInTheDocument();
-    expect(screen.getByText('Quota telemetry is scoped to one workspace.')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Quota telemetry is metered per workspace/)
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Go to tenants/i })).toHaveAttribute(
       'href',
       '/ade/dashboard/tenants'

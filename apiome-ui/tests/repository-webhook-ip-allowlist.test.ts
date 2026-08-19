@@ -15,9 +15,12 @@
  */
 
 import { describe, test, expect } from '@jest/globals';
+import { statusTone } from '@/app/components/ui/statusVocabulary';
 import {
   POSTURE_COPY,
+  POSTURE_STATUS,
   POSTURE_TONE,
+  type IpAllowlistEntry,
   type IpAllowlistResponse,
   type IpProvider,
   allowlistPosture,
@@ -26,7 +29,12 @@ import {
   providerLabel,
   refreshSummary,
   validateCidr,
-} from '@/app/components/ade/dashboard/repositories/repositoryWebhookIpAllowlist';
+  allowlistRangeTotal,
+  bypassConfirm,
+  isProviderOverdue,
+  rangeSourceTitle,
+  removeRangeConfirm,
+} from '@/app/components/ade/repositories/webhookAllowlistModel';
 
 function provider(overrides: Partial<IpProvider> = {}): IpProvider {
   return {
@@ -42,6 +50,20 @@ function provider(overrides: Partial<IpProvider> = {}): IpProvider {
     lastOutcome: 'success',
     lastError: null,
     stale: false,
+    ...overrides,
+  };
+}
+
+/** One tenant-managed entry, enabled unless a test says otherwise. */
+function entry(overrides: Partial<IpAllowlistEntry> = {}): IpAllowlistEntry {
+  return {
+    id: 'e1',
+    cidr: '203.0.113.0/24',
+    family: 4,
+    description: 'Self-hosted GitLab runner',
+    enabled: true,
+    createdAt: '2026-08-02T09:00:00Z',
+    updatedAt: null,
     ...overrides,
   };
 }
@@ -100,9 +122,19 @@ describe('allowlistPosture', () => {
   });
 
   test('only the enforced posture is drawn as good news', () => {
-    expect(POSTURE_TONE.enforced).toBe('good');
+    // `ok`, not the `good` this module used to invent: the tone names are the shared
+    // vocabulary's, so the banner, its tile and any badge beside it take the same green
+    // (HIVE-7.6, #5323).
+    expect(POSTURE_TONE.enforced).toBe('ok');
     expect(POSTURE_TONE.unfiltered).toBe('warn');
     expect(POSTURE_TONE.bypassed).toBe('warn');
+    expect(POSTURE_TONE.off).toBe('neutral');
+  });
+
+  test('every posture resolves its tone through a string the shared table holds', () => {
+    for (const posture of ['off', 'bypassed', 'unfiltered', 'enforced'] as const) {
+      expect(statusTone(POSTURE_STATUS[posture])).toBe(POSTURE_TONE[posture]);
+    }
   });
 });
 
@@ -211,5 +243,82 @@ describe('validateCidr', () => {
 
   test('an absurdly long value is refused before it is parsed', () => {
     expect(validateCidr('1.2.3.4'.padEnd(200, '0'))).toContain('too long');
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// HIVE-7.6 (#5323) — the confirms, and the rest of the redesign's rules
+// ---------------------------------------------------------------------------------------
+
+describe('the remove-range confirm', () => {
+  test('names the exact range in its title, not “this range”', () => {
+    // A confirm an operator can answer without having checked which row they clicked is a
+    // confirm that does not protect anything.
+    expect(removeRangeConfirm('203.0.113.0/24').title).toBe('Remove 203.0.113.0/24?');
+  });
+
+  test('says what happens, in the present tense', () => {
+    const copy = removeRangeConfirm('198.51.100.7');
+    expect(copy.description).toContain('refused as soon as it is removed');
+    expect(copy.confirmLabel).toBe('Remove range');
+  });
+});
+
+describe('the bypass confirm', () => {
+  test('quotes the reason back — the last moment anyone can correct the ledger entry', () => {
+    const copy = bypassConfirm('  Vendor relay delivers from an unpublished address  ');
+    expect(copy.description).toContain('“Vendor relay delivers from an unpublished address”');
+    expect(copy.description).toContain('audit ledger');
+  });
+
+  test('states the consequence before the button that causes it', () => {
+    const copy = bypassConfirm('Vendor relay');
+    expect(copy.title).toBe('Bypass the allowlist?');
+    expect(copy.description).toContain('any address');
+    expect(copy.confirmLabel).toBe('Bypass allowlist');
+  });
+});
+
+describe('overdue providers', () => {
+  test('a stale provider with a list to fetch is overdue', () => {
+    expect(isProviderOverdue(provider({ stale: true, lastOutcome: 'success' }))).toBe(true);
+  });
+
+  test('a provider that publishes no list is settled, not overdue', () => {
+    // Drawing it amber for ever would train an operator to ignore the colour on the cards
+    // that mean it.
+    expect(isProviderOverdue(provider({ stale: true, lastOutcome: 'skipped' }))).toBe(false);
+  });
+
+  test('a provider refreshing on schedule is not overdue', () => {
+    expect(isProviderOverdue(provider({ stale: false, lastOutcome: 'success' }))).toBe(false);
+  });
+});
+
+describe('what the filter is actually built from', () => {
+  test('counts cached provider ranges plus the enabled tenant ones', () => {
+    const data = response({
+      providers: [provider({ rangeCount: 6 }), provider({ provider: 'gitlab', rangeCount: 2 })],
+      entries: [entry({ enabled: true }), entry({ id: 'e2', enabled: true })],
+    });
+    expect(allowlistRangeTotal(data)).toBe(10);
+  });
+
+  test('a disabled entry is not part of the filter, so it is not counted', () => {
+    const data = response({
+      providers: [provider({ rangeCount: 1 })],
+      entries: [entry({ enabled: true }), entry({ id: 'e2', enabled: false })],
+    });
+    expect(allowlistRangeTotal(data)).toBe(2);
+  });
+});
+
+describe('where a cached range came from', () => {
+  test('a provider-published range says so', () => {
+    expect(rangeSourceTitle('provider')).toContain('Published by the provider');
+  });
+
+  test('a deployment-configured range is not passed off as the provider’s', () => {
+    expect(rangeSourceTitle('configured')).toContain('deployment');
   });
 });

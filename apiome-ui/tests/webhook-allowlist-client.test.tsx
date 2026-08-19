@@ -1,9 +1,14 @@
 /**
- * Integration tests for the webhook source-IP allowlist page (REPO-7.6, #2804).
+ * The webhook allowlist screen, driven (REPO-7.6, #2804; redesigned HIVE-7.6, #5323).
  *
- * These drive the real component against a stubbed `/api/repositories/webhook-ip-allowlist`
- * and assert the behaviours the ticket's third acceptance criterion names — the allowlist is
- * visible in the admin UI, and the bypass is an explicit, reasoned act.
+ * These drive the real screen against a stubbed `/api/repositories/webhook-ip-allowlist`
+ * and assert the behaviours the original ticket's third acceptance criterion names — the
+ * allowlist is visible in the admin UI, and the bypass is an explicit, reasoned act.
+ *
+ * The redesign put a confirm in front of the two edits that *weaken* the filter, so the two
+ * paths that used to mutate on click now answer a dialog first. Everything else here is the
+ * behaviour the redesign had to carry over intact;
+ * `repository-bring-in-hive-redesign.test.tsx` holds what it added.
  *
  * Plus the two degradations that matter:
  *
@@ -26,11 +31,18 @@ jest.mock('@lib/auth/session-client', () => ({
 
 const toastError = jest.fn();
 const toastSuccess = jest.fn();
+
+// The Repositories sub-nav under the title reads the path to decide which tab is current.
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/ade/dashboard/repositories/webhook-ip-allowlist',
+}));
 jest.mock('sonner', () => ({
   toast: { error: (...args: unknown[]) => toastError(...args), success: (...args: unknown[]) => toastSuccess(...args), message: jest.fn() },
 }));
 
-import { RepositoryWebhookIpAllowlist } from '@/app/components/ade/dashboard/repositories/RepositoryWebhookIpAllowlist';
+import { WebhookAllowlistClient } from '@/app/ade/dashboard/repositories/webhook-ip-allowlist/WebhookAllowlistClient';
 
 const ENTRY_ID = 'aa0e8400-e29b-41d4-a716-44665544000a';
 
@@ -124,14 +136,14 @@ afterEach(() => {
 
 describe('the allowlist view', () => {
   test('shows the provider ranges and this workspace’s own entries', async () => {
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     expect(await screen.findByText('192.30.252.0/22')).toBeInTheDocument();
     expect(screen.getByText('203.0.113.0/24')).toBeInTheDocument();
     expect(screen.getByText(/Vendor relay/)).toBeInTheDocument();
   });
 
   test('states the posture rather than leaving three switches to be combined', async () => {
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     const banner = await screen.findByTestId('allowlist-posture');
     expect(banner).toHaveAttribute('data-posture', 'enforced');
   });
@@ -139,7 +151,7 @@ describe('the allowlist view', () => {
   test('enforcement with nothing cached is not drawn as protection', async () => {
     // The dangerous state: everything reads "on" and every delivery is being allowed.
     stubFetch(() => ({ body: payload({ providers: providers(0) }) }));
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     const banner = await screen.findByTestId('allowlist-posture');
     expect(banner).toHaveAttribute('data-posture', 'unfiltered');
     expect(within(banner).getByText(/nothing to filter against/i)).toBeInTheDocument();
@@ -149,14 +161,14 @@ describe('the allowlist view', () => {
     stubFetch(() => ({
       body: payload({ tenantEnforcementEnabled: false, bypassReason: 'Vendor relay' }),
     }));
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     const banner = await screen.findByTestId('allowlist-posture');
     expect(banner).toHaveAttribute('data-posture', 'bypassed');
     expect(screen.getByTestId('bypass-reason')).toHaveTextContent('Vendor relay');
   });
 
   test('a provider with no list to fetch is not shown as broken', async () => {
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findAllByTestId('provider-card');
     const cards = screen.getAllByTestId('provider-card');
     const gitlabCard = cards.find((card) => card.getAttribute('data-provider') === 'gitlab')!;
@@ -167,13 +179,13 @@ describe('the allowlist view', () => {
 
   test('a workspace with no entries says the provider ranges are all there is', async () => {
     stubFetch(() => ({ body: payload({ entries: [] }) }));
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     expect(await screen.findByText(/No additional ranges/)).toBeInTheDocument();
   });
 
   test('no tenant selected is a guard, not an error', async () => {
     currentTenantId = undefined;
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     // The shared gate (HIVE-2.5, #5284) — a lock and a way through, not an amber warning.
     expect(await screen.findByText('Pick a workspace first')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -182,7 +194,7 @@ describe('the allowlist view', () => {
 
   test('an unreachable API is reported rather than shown as an empty allowlist', async () => {
     stubFetch(() => ({ status: 503, body: { success: false, error: 'Repository API unavailable' } }));
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     expect(await screen.findByRole('alert')).toHaveTextContent('Repository API unavailable');
   });
 });
@@ -192,7 +204,7 @@ describe('the allowlist view', () => {
 describe('adding a range', () => {
   test('sends the CIDR and the reason', async () => {
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findByText('203.0.113.0/24');
 
     await user.type(screen.getByLabelText('Address or CIDR'), '198.51.100.0/24');
@@ -213,20 +225,26 @@ describe('adding a range', () => {
     // The same rule the server applies: an operator who meant one host and got 256 would
     // never learn it from this screen.
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findByText('203.0.113.0/24');
 
     await user.type(screen.getByLabelText('Address or CIDR'), '10.0.0.1/24');
     await user.type(screen.getByLabelText('Why'), 'runner');
     await user.click(screen.getByRole('button', { name: /allow range/i }));
 
+    // A `ui/FormField` error: an `alert` beside the field it belongs to, and the field points
+    // at it with `aria-describedby` rather than the message floating under the whole card.
     expect(await screen.findByRole('alert')).toHaveTextContent(/host bits/);
+    expect(screen.getByLabelText('Address or CIDR')).toHaveAttribute(
+      'aria-describedby',
+      'allowlist-cidr-error'
+    );
     expect(calls.some((call) => call.init?.method === 'POST')).toBe(false);
   });
 
   test('a range with no reason is refused before it is sent', async () => {
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findByText('203.0.113.0/24');
 
     await user.type(screen.getByLabelText('Address or CIDR'), '198.51.100.0/24');
@@ -243,7 +261,7 @@ describe('adding a range', () => {
         : { body: payload() }
     );
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findByText('203.0.113.0/24');
 
     await user.type(screen.getByLabelText('Address or CIDR'), '198.51.100.0/24');
@@ -263,7 +281,7 @@ describe('adding a range', () => {
 describe('existing entries', () => {
   test('an entry can be disabled without being deleted', async () => {
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findByText('203.0.113.0/24');
 
     await user.click(screen.getByRole('button', { name: 'Disable' }));
@@ -291,16 +309,21 @@ describe('existing entries', () => {
         ],
       }),
     }));
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     expect(await screen.findByRole('button', { name: 'Enable' })).toBeInTheDocument();
   });
 
   test('an entry can be removed', async () => {
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findByText('203.0.113.0/24');
 
     await user.click(screen.getByRole('button', { name: /Remove 203\.0\.113\.0\/24/ }));
+    // HIVE-7.6 (#5323): removing a range narrows what an unauthenticated endpoint accepts, so
+    // it confirms first. The dialog names the range rather than saying "this range".
+    const confirm = await screen.findByRole('alertdialog');
+    expect(within(confirm).getByText('Remove 203.0.113.0/24?')).toBeInTheDocument();
+    await user.click(within(confirm).getByRole('button', { name: 'Remove range' }));
 
     await waitFor(() => {
       const del = calls.find((call) => call.init?.method === 'DELETE');
@@ -315,10 +338,13 @@ describe('existing entries', () => {
       init?.method === 'DELETE' ? { body: payload({ entries: [] }) } : { body: payload() }
     );
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findByText('203.0.113.0/24');
 
     await user.click(screen.getByRole('button', { name: /Remove 203\.0\.113\.0\/24/ }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Remove range' })
+    );
 
     expect(await screen.findByText(/No additional ranges/)).toBeInTheDocument();
   });
@@ -329,22 +355,31 @@ describe('existing entries', () => {
 describe('the bypass', () => {
   test('asks for a reason before it will turn enforcement off', async () => {
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findByText('203.0.113.0/24');
 
     await user.click(screen.getByRole('button', { name: /bypass allowlist/i }));
 
-    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    // The refusal is a field error now, not a toast that leaves the field unmarked — and the
+    // confirm never opens, so the reason cannot be skipped by answering a dialog.
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Say why enforcement/);
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(calls.some((call) => call.init?.method === 'PUT')).toBe(false);
   });
 
   test('sends the reason with the change so the ledger can record it', async () => {
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
     await screen.findByText('203.0.113.0/24');
 
     await user.type(screen.getByLabelText(/reason for bypassing/i), 'Relay has no published range');
     await user.click(screen.getByRole('button', { name: /bypass allowlist/i }));
+
+    // The confirm quotes the reason back — the last moment anyone can correct what the audit
+    // ledger is about to record.
+    const confirm = await screen.findByRole('alertdialog');
+    expect(confirm).toHaveTextContent('“Relay has no published range”');
+    await user.click(within(confirm).getByRole('button', { name: 'Bypass allowlist' }));
 
     await waitFor(() => {
       const put = calls.find((call) => call.init?.method === 'PUT');
@@ -362,7 +397,7 @@ describe('the bypass', () => {
         : { body: payload({ tenantEnforcementEnabled: false, bypassReason: 'Relay' }) }
     );
     const user = userEvent.setup();
-    render(<RepositoryWebhookIpAllowlist />);
+    render(<WebhookAllowlistClient />);
 
     await user.click(await screen.findByRole('button', { name: /restore enforcement/i }));
 

@@ -223,6 +223,19 @@ export const STATUS_TONE: Readonly<Record<string, StatusTone>> = {
   /** The middle of the three repository health levels (REPO-6.5). */
   warnings: 'warn',
 
+  // ---- Discovered specs (HIVE-7.6, #5323) ----------------------------------
+  // The four states `/ade/dashboard/repositories/catalog` files every discovered spec into.
+  // They were four pairs of Tailwind palette classes inside the catalog's own module, which
+  // is how the same "imported" ended up a different green from a published version. A spec
+  // that has produced a version is `ok` for the same reason `completed` is; one the scanner
+  // could not score is `warn`; one bound to a project but not yet imported is `accent`, the
+  // tone this table already spends on "informational, in flight"; and one that has only been
+  // indexed is `outline` — set aside, awaiting a decision, not a step on a health scale.
+  needs_attention: 'warn',
+  imported: 'ok',
+  mapped: 'accent',
+  discovered: 'outline',
+
   // ---- Lint severity -------------------------------------------------------
   error: 'danger',
   warning: 'warn',

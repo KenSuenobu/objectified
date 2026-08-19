@@ -30,7 +30,16 @@ import {
   quotaRangeLabel,
   quotaUsagePercent,
   quotaWindowLabel,
-} from '@/app/components/ade/dashboard/repositories/repositoryQuotaTelemetry';
+  QUOTA_PRESSURE_LABEL,
+  QUOTA_PRESSURE_STATUS,
+  type RepositoryQuotaTelemetry,
+  findQuotaMetric,
+  quotaDayBars,
+  quotaDayBarsAxis,
+  quotaDeferralNotice,
+} from '@/app/components/ade/repositories/quotaTelemetryModel';
+import { statusTone } from '@/app/components/ui/statusVocabulary';
+import { meterTier } from '@/app/components/ui/metrics/metricTiers';
 
 function metric(overrides: Partial<QuotaTelemetryMetric> = {}): QuotaTelemetryMetric {
   return {
@@ -210,5 +219,151 @@ describe('range handling', () => {
         metrics: [],
       })
     ).toBe('');
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// HIVE-7.6 (#5323) — the redesign's own rules
+// ---------------------------------------------------------------------------------------
+
+describe('the pressure badge', () => {
+  test('every level has a word, so the tone is never the only signal', () => {
+    for (const level of ['unlimited', 'comfortable', 'approaching', 'exhausted'] as const) {
+      expect(QUOTA_PRESSURE_LABEL[level].length).toBeGreaterThan(0);
+    }
+  });
+
+  test('each level resolves its tone through a string the shared table already holds', () => {
+    // Four levels that only one screen uses do not belong in the product-wide vocabulary; they
+    // map onto strings it does hold, so the badge stays inside the one tone set.
+    expect(statusTone(QUOTA_PRESSURE_STATUS.comfortable)).toBe('ok');
+    expect(statusTone(QUOTA_PRESSURE_STATUS.approaching)).toBe('warn');
+    expect(statusTone(QUOTA_PRESSURE_STATUS.exhausted)).toBe('danger');
+    expect(statusTone(QUOTA_PRESSURE_STATUS.unlimited)).toBe('neutral');
+  });
+
+  test('the escalation the badge prints is the one the meter derives', () => {
+    // The ticket's "quota meter thresholds match server semantics": one percentage, one set of
+    // bands. `meterTier` is what `<Meter>` paints with, so a badge saying "approaching" over a
+    // meter drawn in the quiet tone would be this screen disagreeing with itself.
+    const at = (used: number) =>
+      quotaPressure({
+        pollsPerHour: 100,
+        effectivePollsPerHour: 100,
+        windowSeconds: 3600,
+        usedThisWindow: used,
+        remainingThisWindow: 100 - used,
+        enforced: true,
+      });
+    expect(at(50)).toBe('comfortable');
+    expect(meterTier(50)).toBe('accent');
+    expect(at(80)).toBe('approaching');
+    expect(meterTier(80)).toBe('warn');
+    expect(at(100)).toBe('exhausted');
+    expect(meterTier(100)).toBe('danger');
+  });
+});
+
+describe('the deferral notice', () => {
+  /** A telemetry projection carrying one deferral metric with the given range total. */
+  const withDeferrals = (total: number): RepositoryQuotaTelemetry => ({
+    days: 30,
+    rangeStart: '2026-07-17T00:00:00Z',
+    rangeEnd: '2026-08-15T00:00:00Z',
+    available: true,
+    metrics: [
+      metric({ metric: METRIC_POLLS, deferral: false, total: 86420 }),
+      metric({ metric: METRIC_POLLS_DEFERRED, deferral: true, total }),
+    ],
+  });
+
+  test('a range that deferred nothing raises no notice', () => {
+    expect(quotaDeferralNotice(withDeferrals(0))).toBeNull();
+  });
+
+  test('a range that deferred work says how much, and that nothing failed', () => {
+    const notice = quotaDeferralNotice(withDeferrals(128));
+    expect(notice).toContain('128 polls were deferred');
+    expect(notice).toContain('stay due');
+    expect(notice).toContain('nothing is marked failed');
+  });
+
+  test('one deferral reads as one, not as “1 polls”', () => {
+    expect(quotaDeferralNotice(withDeferrals(1))).toContain('1 poll was deferred');
+  });
+});
+
+describe('the daily distribution', () => {
+  /** A metric whose points climb from 0 to `days - 1`. */
+  const ramp = (days: number) =>
+    metric({
+      points: Array.from({ length: days }, (_, index) => ({
+        date: `2026-08-${String(index + 1).padStart(2, '0')}`,
+        value: index,
+      })),
+    });
+
+  test('only the trailing window is drawn', () => {
+    expect(quotaDayBars(ramp(30), 14)).toHaveLength(14);
+    expect(quotaDayBars(ramp(30), 14)[0].date).toBe('2026-08-17');
+  });
+
+  test('heights are relative to the busiest day in the window, not to the whole range', () => {
+    const bars = quotaDayBars(ramp(30), 14);
+    expect(bars[bars.length - 1].percent).toBe(100);
+    // The window's own minimum, which is 16 in a 30-day ramp — not 0, which is off the left
+    // edge. Scaling to a peak nobody can see would flatten the whole card.
+    expect(bars[0].percent).toBe(Math.round((16 / 29) * 100));
+  });
+
+  test('an empty day keeps a neutral tone rather than a 0 % accent fill', () => {
+    const bars = quotaDayBars(metric({ points: [{ date: '2026-08-01', value: 0 }] }), 14);
+    expect(bars[0]).toMatchObject({ value: 0, percent: 0, tone: 'neutral' });
+  });
+
+  test('the busiest days take the meter’s warn band, so a heavy day reads like a full meter', () => {
+    const bars = quotaDayBars(ramp(15), 14);
+    const heavy = bars.filter((bar) => bar.tone === 'warn');
+    expect(heavy.length).toBeGreaterThan(0);
+    for (const bar of heavy) expect(bar.percent).toBeGreaterThanOrEqual(80);
+    for (const bar of bars.filter((bar) => bar.tone === 'accent')) {
+      expect(bar.percent).toBeLessThan(80);
+    }
+  });
+
+  test('a metric with no points draws nothing rather than an empty axis', () => {
+    expect(quotaDayBars(metric({ points: [] }), 14)).toEqual([]);
+    expect(quotaDayBars(null, 14)).toEqual([]);
+  });
+
+  test('the axis names both ends and totals the window, for a reader who cannot see bars', () => {
+    const axis = quotaDayBarsAxis(quotaDayBars(ramp(15), 14));
+    expect(axis.from).not.toBe('');
+    expect(axis.to).not.toBe('');
+    // 1 + 2 + … + 14 = 105.
+    expect(axis.total).toBe('105 in 14 days');
+  });
+
+  test('no bars means no axis to draw', () => {
+    expect(quotaDayBarsAxis([])).toEqual({ from: '', to: '', total: '' });
+  });
+});
+
+describe('finding one metric', () => {
+  const telemetry: RepositoryQuotaTelemetry = {
+    days: 7,
+    rangeStart: '2026-08-09T00:00:00Z',
+    rangeEnd: '2026-08-15T00:00:00Z',
+    available: true,
+    metrics: [metric({ metric: METRIC_POLLS })],
+  };
+
+  test('a metric the server reported is returned', () => {
+    expect(findQuotaMetric(telemetry, METRIC_POLLS)?.metric).toBe(METRIC_POLLS);
+  });
+
+  test('a metric it did not report is null, not an empty stand-in', () => {
+    expect(findQuotaMetric(telemetry, METRIC_SCANS)).toBeNull();
+    expect(findQuotaMetric(null, METRIC_POLLS)).toBeNull();
   });
 });
