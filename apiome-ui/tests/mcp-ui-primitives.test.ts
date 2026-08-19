@@ -102,7 +102,7 @@ describe('mcpPublishedBadge', () => {
 
 describe('mcpVisibilityBadge', () => {
   it('maps private to indigo and public to green', () => {
-    expect(mcpVisibilityBadge('private')).toEqual({ tone: 'indigo', label: 'Private' });
+    expect(mcpVisibilityBadge('private')).toEqual({ tone: 'violet', label: 'Private' });
     expect(mcpVisibilityBadge('PUBLIC')).toEqual({ tone: 'green', label: 'Public' });
   });
 

@@ -226,13 +226,49 @@ export const MCP_CATALOG_EMPTY_FILTERS: McpCatalogFilters = {
 export const MCP_CATALOG_UNKNOWN_PROTOCOL = 'unknown';
 
 /** Human labels for the machine-named facet values the 35.1 facets introduce. */
-const MCP_CATALOG_FACET_VALUE_LABELS: Record<string, string> = {
+export const MCP_CATALOG_FACET_VALUE_LABELS: Readonly<Record<string, string>> = {
   has_destructive: 'Has destructive',
   read_only_only: 'Read-only only',
 };
 
 /** The facet dimensions the catalog exposes, in the order their controls render. */
 export type McpCatalogFacetKey = keyof McpCatalogFilters;
+
+/**
+ * The ten facet dimensions in the order `sources/mcp-servers.html` lists them.
+ *
+ * The order is part of the design, not an accident of how the tallies are built: the first
+ * three answer "which server is this" (host, grade, transport), the next four "what will it do
+ * to me" (safety, complexity, protocol, health) and the last three "who may see it" (visibility,
+ * auth, category). Listed once here so the panel, the saved-search summary and the tests all
+ * read the same sequence.
+ */
+export const MCP_CATALOG_FACET_ORDER: readonly McpCatalogFacetKey[] = [
+  'hosts',
+  'grades',
+  'transports',
+  'safeties',
+  'complexities',
+  'protocols',
+  'healths',
+  'visibilities',
+  'auths',
+  'categories',
+] as const;
+
+/** The human name of each facet, as its panel label and in a saved view's summary line. */
+export const MCP_CATALOG_FACET_LABELS: Readonly<Record<McpCatalogFacetKey, string>> = {
+  hosts: 'Host',
+  grades: 'Grade',
+  transports: 'Transport',
+  safeties: 'Safety',
+  complexities: 'Complexity',
+  protocols: 'Protocol',
+  healths: 'Health',
+  visibilities: 'Visibility',
+  auths: 'Auth',
+  categories: 'Category',
+};
 
 /** One selectable value within a facet, with how many endpoints carry it. */
 export interface McpCatalogFacetValue {
@@ -355,19 +391,23 @@ export function mcpCatalogFacets(groups: McpBrowseHostGroup[]): McpCatalogFacet[
     }
   }
 
-  const facets: McpCatalogFacet[] = [
-    { key: 'hosts', label: 'Host', values: facetValues(hosts) },
-    { key: 'grades', label: 'Grade', values: facetValues(grades) },
-    { key: 'transports', label: 'Transport', values: facetValues(transports) },
-    { key: 'safeties', label: 'Safety', values: facetValues(safeties) },
-    { key: 'complexities', label: 'Complexity', values: facetValues(complexities) },
-    { key: 'protocols', label: 'Protocol', values: facetValues(protocols) },
-    { key: 'healths', label: 'Health', values: facetValues(healths) },
-    { key: 'visibilities', label: 'Visibility', values: facetValues(visibilities) },
-    { key: 'auths', label: 'Auth', values: facetValues(auths) },
-    { key: 'categories', label: 'Category', values: facetValues(categories) },
-  ];
-  return facets.filter((f) => f.values.length > 0);
+  const byKey: Record<McpCatalogFacetKey, Map<string, number>> = {
+    hosts,
+    grades,
+    transports,
+    safeties,
+    complexities,
+    protocols,
+    healths,
+    visibilities,
+    auths,
+    categories,
+  };
+  return MCP_CATALOG_FACET_ORDER.map((key) => ({
+    key,
+    label: MCP_CATALOG_FACET_LABELS[key],
+    values: facetValues(byKey[key]),
+  })).filter((f) => f.values.length > 0);
 }
 
 /**
@@ -402,6 +442,163 @@ export function mcpApplyCatalog(
   }
   return result;
 }
+
+// --- What the screen says about itself (HIVE-7.7, #5324) ------------------------------------
+// The catalog's own prose: the totals line, the sort hint, and the one-line summary a saved view
+// and the save dialog both print. All of it is derived here rather than assembled in JSX, so the
+// sentence a reader sees on the page is the sentence a test can assert without a DOM.
+
+/** The three figures the totals line prints for one slice of the catalog. */
+export interface McpCatalogTotals {
+  hostCount: number;
+  endpointCount: number;
+  capabilityCount: number;
+}
+
+/** Count hosts, endpoints and capabilities across a set of groups. */
+export function mcpCatalogTotals(groups: McpBrowseHostGroup[]): McpCatalogTotals {
+  return {
+    hostCount: groups.length,
+    endpointCount: groups.reduce((sum, g) => sum + g.endpoints.length, 0),
+    capabilityCount: groups.reduce((sum, g) => sum + g.capability_count, 0),
+  };
+}
+
+/**
+ * `1 host` / `3 hosts` — a count and the noun it agrees with.
+ *
+ * @param count How many.
+ * @param one The singular noun.
+ * @param many The plural, when it is not just the singular plus `s`.
+ * @returns The counted phrase.
+ */
+function plural(count: number, one: string, many = `${one}s`): string {
+  return `${count} ${count === 1 ? one : many}`;
+}
+
+/**
+ * The totals line under the toolbar.
+ *
+ * The mockup prints the *whole* catalog's figures and appends "filtered by 2 facet values". This
+ * ticket's first acceptance criterion asks instead that the counts reflect the **active set**, so
+ * the leading figures are the visible slice's and the full catalog is named after them — a reader
+ * who has narrowed the list sees what is in front of them first, and still learns what it was
+ * narrowed from. With nothing filtered the two are the same and only one is printed.
+ *
+ * @param visible The groups currently on screen (after search and facets).
+ * @param all Every group the catalog loaded.
+ * @param activeFilterCount How many facet *values* are selected, from {@link mcpCatalogActiveFilterCount}.
+ * @param query The search box's text, so a search alone is named too.
+ * @returns One sentence, e.g. `2 hosts · 3 endpoints · 21 capabilities · filtered from 6 endpoints by 2 facet values`.
+ */
+export function mcpCatalogTotalsLine(
+  visible: McpBrowseHostGroup[],
+  all: McpBrowseHostGroup[],
+  activeFilterCount: number,
+  query: string,
+): string {
+  const shown = mcpCatalogTotals(visible);
+  const total = mcpCatalogTotals(all);
+  const head = [
+    plural(shown.hostCount, 'host'),
+    plural(shown.endpointCount, 'endpoint'),
+    plural(shown.capabilityCount, 'capability', 'capabilities'),
+  ].join(' · ');
+
+  const narrowed: string[] = [];
+  if (activeFilterCount > 0) narrowed.push(`${plural(activeFilterCount, 'facet value')}`);
+  if (query.trim()) narrowed.push(`a search for “${query.trim()}”`);
+  if (narrowed.length === 0) return head;
+  return `${head} · filtered from ${plural(total.endpointCount, 'endpoint')} by ${narrowed.join(' and ')}`;
+}
+
+/** What each ordering promises, printed beside the totals line so the order is never a guess. */
+export const MCP_CATALOG_SORT_HINT: Readonly<Record<McpCatalogSortKey, string>> = {
+  grade: 'Sorted by grade · A→F, unscored last',
+  name: 'Sorted by name · A→Z',
+  recency: 'Sorted by last discovered · newest first',
+  capabilities: 'Sorted by capabilities · most first',
+  health: 'Sorted by health · healthy first',
+};
+
+/**
+ * Spell one facet's selection the way its chips do, e.g. `Safety Has destructive`.
+ *
+ * @param key Which facet.
+ * @param values The selected raw values.
+ * @returns The phrase, or null when nothing in the facet is selected.
+ */
+function facetPhrase(key: McpCatalogFacetKey, values: string[]): string | null {
+  if (values.length === 0) return null;
+  const spelled = values.map((value) => MCP_CATALOG_FACET_VALUE_LABELS[value] ?? value);
+  return `${MCP_CATALOG_FACET_LABELS[key]} ${spelled.join(', ')}`;
+}
+
+/** The filter half of a saved view's summary, or `null` when no facet is constrained. */
+export function mcpCatalogFilterSummary(filters: McpCatalogFilters): string | null {
+  const parts = MCP_CATALOG_FACET_ORDER.map((key) => facetPhrase(key, filters[key])).filter(
+    (part): part is string => part !== null,
+  );
+  return parts.length ? parts.join(', ') : null;
+}
+
+/**
+ * The one line that describes a catalog view — what a saved search row shows under its name, and
+ * what the save dialog shows before the view is saved.
+ *
+ * Every part is omitted when it is empty, so a view that only sorts reads `Sort Grade` rather than
+ * `Query "" · Filters: none · Sort Grade`. The sort is always named because every view has one.
+ *
+ * @param query The search text.
+ * @param filters The facet selection.
+ * @param sort The ordering.
+ * @returns The summary line.
+ */
+export function mcpCatalogViewSummary(
+  query: string,
+  filters: McpCatalogFilters,
+  sort: McpCatalogSortKey,
+): string {
+  const parts: string[] = [];
+  if (query.trim()) parts.push(`Query “${query.trim()}”`);
+  const filterSummary = mcpCatalogFilterSummary(filters);
+  if (filterSummary) parts.push(`Filters: ${filterSummary}`);
+  parts.push(`Sort ${MCP_CATALOG_SORTS.find((s) => s.key === sort)?.label ?? sort}`);
+  return parts.join(' · ');
+}
+
+// --- The screen's fixed copy ----------------------------------------------------------------
+// Every string the catalog's states print, in one place: the page, the two panels and the tests
+// all name the same constant, so a wording change cannot land in only one of the three.
+
+/** The page's own title and one-line description (DESIGN.md §5.3: a noun, then ≤14 words). */
+export const MCP_CATALOG_TITLE = 'MCP servers';
+export const MCP_CATALOG_DESCRIPTION =
+  'Every MCP server in this workspace, grade-led and grouped by host.';
+
+/** The rule the facet panel states about itself — the mockup prints it under the chips. */
+export const MCP_CATALOG_FACET_NOTE =
+  'Facets AND together; values within a facet OR. Counts reflect the full catalog.';
+
+/** While the browse payload is in flight. */
+export const MCP_CATALOG_LOADING = 'Loading the MCP catalog…';
+
+/** When it fails. */
+export const MCP_CATALOG_ERROR_TITLE = 'Could not load the MCP catalog';
+export const MCP_CATALOG_ERROR_FALLBACK = 'The catalog service did not respond.';
+
+/** When the workspace has never registered a server. */
+export const MCP_CATALOG_EMPTY_TITLE = 'No MCP endpoints yet';
+export const MCP_CATALOG_EMPTY_DESC =
+  'Register an MCP server. Once discovered, its endpoints appear here grouped by host.';
+
+/** When search and facets exclude everything the catalog holds. */
+export const MCP_CATALOG_NO_MATCH_TITLE = 'No matches';
+export const MCP_CATALOG_NO_MATCH_DESC =
+  'No endpoints match your search and filters. Try clearing a filter or broadening the search.';
+
+/** When there is no workspace to scope the catalog to. */
+export const MCP_CATALOG_NO_TENANT = 'The MCP catalog is scoped to one workspace.';
 
 // --- Health rollup --------------------------------------------------------------------------
 

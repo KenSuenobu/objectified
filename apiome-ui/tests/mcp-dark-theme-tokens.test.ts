@@ -112,19 +112,45 @@ describe('health pill — Hive tokens rather than a dark variant', () => {
   });
 });
 
-describe('badge tone dark-theme tokens', () => {
-  it.each(BADGE_TONES)('gives the %s badge a dark fill, text, and border', (tone) => {
+/**
+ * The badge tones left this mechanism behind in HIVE-7.7 (#5324), for the reason the grade glyph
+ * and the health pill left it in HIVE-2.4: a `dark:` variant knows about two palettes, and the
+ * product has nine appearances. Each tone now resolves through `ui/statusVocabulary`'s `-soft`
+ * fill and its calibrated `-fg` ink, so the assertion worth making is "a token and no palette
+ * literal" rather than "has a dark variant".
+ */
+describe('badge tones — Hive tokens rather than a dark variant', () => {
+  it.each(BADGE_TONES)('paints the %s tone from tokens, with no palette literal', (tone) => {
     const className = mcpBadgeVariants({ tone });
-    expect(hasDarkVariant(className)).toBe(true);
-    expect(className).toMatch(/dark:bg-/);
-    expect(className).toMatch(/dark:text-/);
-    expect(className).toMatch(/dark:border-/);
+    expect(className).not.toMatch(PALETTE_LITERAL);
+    expect(hasDarkVariant(className)).toBe(false);
   });
 
-  it('keeps the soft light fills (light theme is unchanged)', () => {
-    expect(mcpBadgeVariants({ tone: 'indigo' })).toContain('bg-indigo-50');
-    expect(mcpBadgeVariants({ tone: 'green' })).toContain('bg-emerald-50');
-    expect(mcpBadgeVariants({ tone: 'slate' })).toContain('bg-slate-50');
+  it.each(BADGE_TONES)('pairs the %s tone\'s soft fill with its own ink', (tone) => {
+    // A `-fg` ink is only legible on its own `-soft` ground; the two always travel together.
+    const className = mcpBadgeVariants({ tone });
+    const fill = /\bbg-([a-z]+)-soft\b/.exec(className);
+    const ink = /\btext-([a-z]+)-fg\b/.exec(className);
+    expect(fill).not.toBeNull();
+    expect(ink).not.toBeNull();
+    expect(ink?.[1]).toBe(fill?.[1]);
+  });
+
+  it('maps the seven tone names onto the vocabulary they mean', () => {
+    expect(mcpBadgeVariants({ tone: 'green' })).toContain('bg-ok-soft');
+    expect(mcpBadgeVariants({ tone: 'amber' })).toContain('bg-warn-soft');
+    expect(mcpBadgeVariants({ tone: 'red' })).toContain('bg-danger-soft');
+    expect(mcpBadgeVariants({ tone: 'slate' })).toContain('bg-neutral-soft');
+    expect(mcpBadgeVariants({ tone: 'violet' })).toContain('bg-violet-soft');
+    // DESIGN.md §0 retires indigo: both informational hues are the one azure accent now.
+    expect(mcpBadgeVariants({ tone: 'indigo' })).toContain('bg-accent-soft');
+    expect(mcpBadgeVariants({ tone: 'blue' })).toContain('bg-accent-soft');
+  });
+
+  it('no longer draws a hairline border from a third colour', () => {
+    for (const tone of BADGE_TONES) {
+      expect(mcpBadgeVariants({ tone })).not.toMatch(/\bborder-/);
+    }
   });
 });
 

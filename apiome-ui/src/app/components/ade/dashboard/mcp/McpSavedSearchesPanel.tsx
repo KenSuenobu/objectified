@@ -1,10 +1,48 @@
 'use client';
 
+/**
+ * Saved catalog searches (V2-MCP-35.3 / MCAT-21.3; redesigned HIVE-7.7, #5324).
+ *
+ * Authority: `docs/mockups/sources/mcp-servers.html` — the left half of the strips row, whose
+ * **Notes → Keeps (1:1)** list fixes the contract: pinned honey pills, a *Save search* button, a
+ * `Saved (n)` disclosure, a manage list with Run / Pin-Unpin / Delete per row, and a
+ * *Save catalog search* dialog with a required name and *Pin as catalog view*. Server-persisted.
+ *
+ * ### The contract this keeps
+ *
+ * A saved search stores **the view, not the result**: the query, the ten facets and the sort as
+ * they were when it was saved. Running it puts those controls back and the catalog is re-filtered
+ * from whatever is in it now — so a saved view picks up an endpoint registered yesterday, which
+ * is the whole reason to save one. The row prints exactly what will be restored
+ * ({@link mcpCatalogViewSummary}), and the dialog prints the same line before it is saved, so
+ * "what did I save?" is never a question a reader has to answer by running it.
+ *
+ * ### What the redesign changed
+ *
+ * 1. **The strip had no panel of its own.** It was a bare row the page wrapped in a
+ *    `border-b border-gray-200 bg-white` band. It is a `ui/Card` with a titled header row, as the
+ *    mockup draws it, so the saved views and the collections beside them are two matching panels.
+ * 2. **The pinned pills were six amber palette classes.** They are `Button variant="honey"`
+ *    pills — honey is DESIGN.md §2's "marked by a person" ornament, which is what a pin is, and
+ *    `ui/statusVocabulary` already answers `pinned` with it.
+ * 3. **A row said only its name and its raw query.** It now prints the whole view, filters
+ *    included, so a list of five saved searches is readable without running any of them.
+ * 4. **The dialog was hand-built** out of a bare `<label>`, an `<input type="checkbox">` with a
+ *    `rounded border-gray-300`, and no summary. It is `FormField` + `Checkbox`, and it shows the
+ *    view it is about to save.
+ * 5. **Errors were a red sentence** (`text-red-600 dark:text-red-400`). They are `ui/Alert`.
+ */
+
 import * as React from 'react';
-import { Bookmark, Pin, Play, Trash2, X } from 'lucide-react';
-import { cn } from '@lib/utils';
+import { Bookmark, Pin, PinOff, Play, Trash2 } from 'lucide-react';
+import { Alert } from '../../../ui/Alert';
+import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
+import { Card } from '../../../ui/Card';
+import { Checkbox } from '../../../ui/Checkbox';
+import { FormField } from '../../../ui/FormField';
 import { Input } from '../../../ui/Input';
+import { Label } from '../../../ui/Label';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +58,11 @@ import {
   mcpSavedSearchesFromPayload,
   type McpSavedSearch,
 } from './mcpSavedSearchUi';
-import type { McpCatalogFilters, McpCatalogSortKey } from './mcpCatalogUi';
+import {
+  mcpCatalogViewSummary,
+  type McpCatalogFilters,
+  type McpCatalogSortKey,
+} from './mcpCatalogUi';
 
 export interface McpSavedSearchesPanelProps {
   filters: McpCatalogFilters;
@@ -28,6 +70,11 @@ export interface McpSavedSearchesPanelProps {
   sort: McpCatalogSortKey;
   onApply: (next: { filters: McpCatalogFilters; query: string; sort: McpCatalogSortKey }) => void;
 }
+
+/** What the panel says while it is reading, and when it has nothing to show. */
+export const SAVED_SEARCHES_LOADING = 'Loading saved searches…';
+export const SAVED_SEARCHES_EMPTY =
+  'No saved searches yet. Set your filters and choose Save search.';
 
 async function fetchSavedSearches(): Promise<McpSavedSearch[]> {
   const res = await fetch('/api/mcp/saved-searches', { credentials: 'include' });
@@ -38,9 +85,6 @@ async function fetchSavedSearches(): Promise<McpSavedSearch[]> {
   return mcpSavedSearchesFromPayload(data);
 }
 
-/**
- * Saved-search controls: pinned catalog views, save dialog, and manage list.
- */
 export function McpSavedSearchesPanel({
   filters,
   query,
@@ -74,6 +118,9 @@ export function McpSavedSearchesPanel({
   }, [reload]);
 
   const pinned = React.useMemo(() => mcpPinnedSavedSearches(searches), [searches]);
+
+  /** The view the dialog is about to save, in the same words a saved row prints. */
+  const pendingSummary = mcpCatalogViewSummary(query, filters, sort);
 
   const handleSave = async () => {
     const name = saveName.trim();
@@ -144,116 +191,95 @@ export function McpSavedSearchesPanel({
   };
 
   return (
-    <>
-      <div className="flex flex-wrap items-center gap-2">
-        {pinned.map((search) => (
-          <button
-            key={search.id}
+    <Card className="mcp-strip" data-testid="mcp-saved-searches">
+      <div className="mcp-strip__head">
+        <div className="mcp-strip__lead">
+          <p className="mcp-strip__label">Saved searches</p>
+          {pinned.map((search) => (
+            <Button
+              key={search.id}
+              type="button"
+              variant="honey"
+              size="sm"
+              pill
+              onClick={() => handleRun(search)}
+              title={`Run saved view: ${search.name}`}
+            >
+              <Pin aria-hidden />
+              {search.name}
+            </Button>
+          ))}
+        </div>
+        <div className="mcp-strip__actions">
+          <Button type="button" variant="outline" size="sm" onClick={() => setSaveOpen(true)}>
+            <Bookmark aria-hidden />
+            Save search
+          </Button>
+          <Button
             type="button"
-            onClick={() => handleRun(search)}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800',
-              'transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
-            )}
-            title={`Run saved view: ${search.name}`}
+            variant="ghost"
+            size="sm"
+            aria-expanded={panelOpen}
+            onClick={() => setPanelOpen((v) => !v)}
           >
-            <Pin className="h-3.5 w-3.5" aria-hidden />
-            {search.name}
-          </button>
-        ))}
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-9"
-          onClick={() => setSaveOpen(true)}
-        >
-          <Bookmark className="h-4 w-4" aria-hidden />
-          Save search
-        </Button>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-9"
-          aria-expanded={panelOpen}
-          onClick={() => setPanelOpen((v) => !v)}
-        >
-          Saved ({searches.length})
-        </Button>
+            Saved ({searches.length})
+          </Button>
+        </div>
       </div>
 
       {panelOpen ? (
-        <div className="border-t border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
-          {error ? (
-            <p className="mb-3 text-sm text-red-600 dark:text-red-400" role="alert">
-              {error}
-            </p>
-          ) : null}
+        <div className="mcp-strip__body">
+          {error ? <Alert variant="danger">{error}</Alert> : null}
           {loading ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">Loading saved searches…</p>
+            <p className="mcp-strip__note">{SAVED_SEARCHES_LOADING}</p>
           ) : searches.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              No saved searches yet. Set your filters and click Save search.
-            </p>
+            <p className="mcp-strip__note">{SAVED_SEARCHES_EMPTY}</p>
           ) : (
-            <ul className="divide-y divide-gray-200 rounded-md border border-gray-200 dark:divide-gray-700 dark:border-gray-700">
+            <ul className="mcp-strip__list">
               {searches.map((search) => (
-                <li
-                  key={search.id}
-                  className="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                <li key={search.id} className="mcp-strip__row">
+                  <div className="mcp-strip__row-main">
+                    <div className="mcp-strip__row-title">
                       {search.name}
-                      {search.isPinned ? (
-                        <span className="ml-2 text-xs font-normal text-amber-600 dark:text-amber-400">
-                          pinned
-                        </span>
-                      ) : null}
+                      {search.isPinned ? <Badge status="pinned">pinned</Badge> : null}
+                    </div>
+                    <p className="mcp-strip__row-sub">
+                      {mcpCatalogViewSummary(search.query, search.filters, search.sort)}
                     </p>
-                    {search.query ? (
-                      <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                        Query: {search.query}
-                      </p>
-                    ) : null}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="mcp-strip__row-actions">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8"
                       title="Run saved search"
                       onClick={() => handleRun(search)}
                     >
-                      <Play className="h-4 w-4" aria-hidden />
-                      <span className="sr-only">Run</span>
+                      <Play aria-hidden />
+                      <span className="sr-only">Run {search.name}</span>
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8"
                       title={search.isPinned ? 'Unpin view' : 'Pin as catalog view'}
                       onClick={() => void handleTogglePin(search)}
                     >
-                      <Pin className="h-4 w-4" aria-hidden />
-                      <span className="sr-only">{search.isPinned ? 'Unpin' : 'Pin'}</span>
+                      {search.isPinned ? <PinOff aria-hidden /> : <Pin aria-hidden />}
+                      <span className="sr-only">
+                        {search.isPinned ? 'Unpin' : 'Pin'} {search.name}
+                      </span>
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 text-red-600 hover:text-red-700 dark:text-red-400"
+                      className="mcp-strip__danger"
                       title="Delete saved search"
                       onClick={() => void handleDelete(search.id)}
                     >
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                      <span className="sr-only">Delete</span>
+                      <Trash2 aria-hidden />
+                      <span className="sr-only">Delete {search.name}</span>
                     </Button>
                   </div>
                 </li>
@@ -264,37 +290,37 @@ export function McpSavedSearchesPanel({
       ) : null}
 
       <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent size="sm">
           <DialogHeader>
             <DialogTitle>Save catalog search</DialogTitle>
             <DialogDescription>
               Save the current filters, search text, and sort so you can re-run them later.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="saved-search-name">
-              Name
-            </label>
-            <Input
-              id="saved-search-name"
-              value={saveName}
-              onChange={(e) => setSaveName(e.target.value)}
-              placeholder="e.g. Ungraded destructive servers"
-              autoFocus
-            />
-            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              <input
-                type="checkbox"
-                checked={savePinned}
-                onChange={(e) => setSavePinned(e.target.checked)}
-                className="rounded border-gray-300"
+          <div className="mcp-dialog__body">
+            <FormField label="Name" htmlFor="saved-search-name" required>
+              <Input
+                id="saved-search-name"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="e.g. Ungraded destructive servers"
+                autoFocus
               />
-              Pin as catalog view
-            </label>
+            </FormField>
+            <Card variant="soft" className="mcp-dialog__summary" data-testid="mcp-save-summary">
+              Saves: {pendingSummary}
+            </Card>
+            <div className="mcp-dialog__check">
+              <Checkbox
+                id="saved-search-pin"
+                checked={savePinned}
+                onCheckedChange={(next) => setSavePinned(next === true)}
+              />
+              <Label htmlFor="saved-search-pin">Pin as catalog view</Label>
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setSaveOpen(false)}>
-              <X className="h-4 w-4" aria-hidden />
               Cancel
             </Button>
             <Button
@@ -307,6 +333,6 @@ export function McpSavedSearchesPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </Card>
   );
 }

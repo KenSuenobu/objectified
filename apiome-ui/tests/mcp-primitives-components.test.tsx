@@ -13,6 +13,7 @@ import '@testing-library/jest-dom';
 import { GradeGlyph } from '../src/app/components/ui/mcp/GradeGlyph';
 import { McpBadge } from '../src/app/components/ui/mcp/McpBadge';
 import { HealthPill } from '../src/app/components/ui/mcp/HealthPill';
+import { FreshnessPill } from '../src/app/components/ui/mcp/FreshnessPill';
 import { RecencyPill } from '../src/app/components/ui/mcp/RecencyPill';
 import { FindingSeverity } from '../src/app/components/ui/mcp/FindingSeverity';
 import {
@@ -82,6 +83,56 @@ describe('HealthPill', () => {
   it('hides the label but keeps it accessible in dot-only mode', () => {
     render(<HealthPill status="healthy" dotOnly />);
     expect(screen.getByText('Healthy')).toHaveClass('sr-only');
+  });
+});
+
+/**
+ * The grounds a tone ink is allowed to sit on (HIVE-7.7, #5324).
+ *
+ * Only `:root` and `[data-theme="dark"]` recalibrate the semantic `-soft`/`-fg` pairs; the other
+ * six themes inherit the *light* inks, so a `-fg` drawn straight onto a card measures 1.89–3.21:1
+ * in them — which is what axe found on every health and freshness pill on the MCP catalog at
+ * once. These four tests are the guard that would have caught it before the browser did.
+ */
+describe('a labelled pill wears its own ground', () => {
+  it('pairs the health pill’s soft fill with its own ink', () => {
+    render(<HealthPill status="degraded" />);
+    const pill = screen.getByText('Degraded');
+    expect(pill.className).toContain('bg-warn-soft');
+    expect(pill.className).toContain('text-warn-fg');
+  });
+
+  it('pairs the freshness pill’s soft fill with its own ink', () => {
+    render(<FreshnessPill freshness="quarantined" />);
+    const pill = screen.getByText('Quarantined');
+    expect(pill.className).toContain('bg-danger-soft');
+    expect(pill.className).toContain('text-danger-fg');
+  });
+
+  it('leaves the dot-only forms a bare saturated swatch, with the label still readable', () => {
+    // A dense row cannot carry a second filled pill beside the endpoint's name, and a dot is a
+    // *mark* rather than text — the saturated role colour is the step that reads as one.
+    const { container, rerender } = render(<HealthPill status="unreachable" dotOnly />);
+    const health = screen.getByText('Unreachable');
+    expect(health).toHaveClass('sr-only');
+    expect(health.parentElement?.className).not.toContain('-soft');
+    expect(container.querySelector('.bg-danger')).not.toBeNull();
+
+    rerender(<FreshnessPill freshness="stale" dotOnly />);
+    expect(screen.getByText('Stale')).toHaveClass('sr-only');
+    expect(container.querySelector('.bg-warn')).not.toBeNull();
+  });
+
+  it('inks the grade glyph’s figures in --fg/--fg-muted, leaving the tone to the fill', () => {
+    const { rerender } = render(<GradeGlyph grade="A" score={94} />);
+    expect(screen.getByText('94').className).toContain('text-fg-muted');
+    // The chip beside it is the solid role fill, which is where the tone lives.
+    expect(screen.getByText('A').className).toContain('bg-ok');
+
+    rerender(<GradeGlyph variant="gauge" grade="A" score={94} />);
+    // The arc carries the tone; the centred letter is the page's own ink.
+    expect(screen.getByText('A').className).toContain('text-fg');
+    expect(screen.getByText('A').className).not.toContain('text-ok-fg');
   });
 });
 

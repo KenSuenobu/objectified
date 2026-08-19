@@ -55,8 +55,13 @@ function resolveLetter(grade?: string | null, score?: number | null): string | n
  * - `variant="glyph"` (default): a solid colored square with the letter, optionally `· 82`.
  * - `variant="gauge"`: a ring swept to the score with the letter centered and the score beneath.
  *
- * All colors come from the token mappings — no literals here or in consumers. An absent score/grade
- * renders a neutral "unscored" glyph.
+ * All colours come from the token mappings — no literals here or in consumers. An absent
+ * score/grade renders a neutral "unscored" glyph.
+ *
+ * The tone lives in the *fill*: the solid chip and the gauge arc. Since HIVE-7.7 (#5324) neither
+ * the centred letter nor the printed figure is inked in the band's `-fg`, which measures
+ * 1.99–3.21:1 against a card in the six themes that inherit the light semantic pairs — the same
+ * exposure `HealthPill` records. They are `--fg` and `--fg-muted`, which clear AA everywhere.
  *
  * Since HIVE-2.4 (#5283) the bands behind `mcpGradeGlyphStyle` are the shared ones in
  * `ui/statusVocabulary.ts`, which the catalog's `GradeChip` reads as well — so a B is one green,
@@ -124,9 +129,10 @@ export const GradeGlyph = React.forwardRef<HTMLDivElement, GradeGlyphProps>(
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={cn('font-bold leading-none', dims.letter, style.textClass)}>
-              {display}
-            </span>
+            {/* The letter is `--fg`, not the band's ink (HIVE-7.7, #5324): the *arc* around it
+                already carries the tone, and the band's `-fg` on a plain surface measures
+                1.99–3.21:1 in the six themes that inherit the light semantic pairs. */}
+            <span className={cn('font-bold leading-none text-fg', dims.letter)}>{display}</span>
             {showScore && roundedScore !== null ? (
               <span
                 className={cn('mt-1 font-medium tabular-nums text-fg-muted', dims.score)}
@@ -159,7 +165,9 @@ export const GradeGlyph = React.forwardRef<HTMLDivElement, GradeGlyphProps>(
           {display}
         </span>
         {showScore && roundedScore !== null ? (
-          <span className={cn('font-semibold tabular-nums', dims.score, style.textClass)}>
+          // The figure is `--fg-muted`, not the band's ink (HIVE-7.7, #5324): the solid chip
+          // beside it carries the tone, and the same measurement applies as on the gauge above.
+          <span className={cn('font-semibold tabular-nums text-fg-muted', dims.score)}>
             {roundedScore}
           </span>
         ) : null}

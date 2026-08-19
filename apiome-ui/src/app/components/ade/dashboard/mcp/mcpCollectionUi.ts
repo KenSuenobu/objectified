@@ -119,9 +119,51 @@ export function mcpCollectionPublicUrl(tenantSlug: string, collectionSlug: strin
   return `${base}/mcp/${encodeURIComponent(tenantSlug)}/collections/${encodeURIComponent(collectionSlug)}`;
 }
 
-/** Endpoint ids visible in the current catalog slice. */
-export function mcpVisibleEndpointIds(
-  groups: Array<{ endpoints: Array<{ id: string }> }>,
-): string[] {
-  return groups.flatMap((group) => group.endpoints.map((endpoint) => endpoint.id));
+/** The least an endpoint has to be for a collection to name it (HIVE-7.7, #5324). */
+export interface McpCatalogEndpointRef {
+  id: string;
+  name: string;
+}
+
+/**
+ * The endpoints visible in the current catalog slice, in the order the page draws them.
+ *
+ * This returned bare ids (`mcpVisibleEndpointIds`) while the create dialog only *counted* them.
+ * HIVE-7.7 (#5324) needed their names too: the dialog now shows *which* endpoints are about to be
+ * frozen into the collection, which is what makes "membership is fixed at creation" checkable
+ * before pressing Create.
+ *
+ * @param groups The host groups currently on screen.
+ * @returns One ref per visible endpoint.
+ */
+export function mcpVisibleEndpoints(
+  groups: Array<{ endpoints: Array<McpCatalogEndpointRef> }>,
+): McpCatalogEndpointRef[] {
+  return groups.flatMap((group) => group.endpoints.map(({ id, name }) => ({ id, name })));
+}
+
+/** How many member names the create dialog spells before it summarises the rest. */
+export const MCP_COLLECTION_HINT_NAMES = 5;
+
+/**
+ * The create dialog's membership sentence.
+ *
+ * Names up to {@link MCP_COLLECTION_HINT_NAMES} endpoints and counts the remainder, so a
+ * collection built from a wide view still produces one readable line rather than forty names.
+ *
+ * @param endpoints The endpoints the collection would be created from.
+ * @returns The sentence, including the "no endpoints" case — a collection may be created empty
+ *   and filled from the endpoints' own pages, so this states the fact rather than blocking.
+ */
+export function mcpCollectionMembershipHint(
+  endpoints: readonly McpCatalogEndpointRef[],
+): string {
+  if (endpoints.length === 0) {
+    return 'The current catalog view has no endpoints, so this collection starts empty.';
+  }
+  const shown = endpoints.slice(0, MCP_COLLECTION_HINT_NAMES).map((e) => e.name);
+  const rest = endpoints.length - shown.length;
+  const names = rest > 0 ? `${shown.join(', ')} and ${rest} more` : shown.join(', ');
+  const count = endpoints.length === 1 ? '1 endpoint' : `${endpoints.length} endpoints`;
+  return `Includes ${count} from the current catalog view: ${names}.`;
 }

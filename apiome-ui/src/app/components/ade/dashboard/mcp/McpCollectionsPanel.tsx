@@ -1,12 +1,53 @@
 'use client';
 
+/**
+ * Curated MCP collections (V2-MCP-36.4 / MCAT-22.4; redesigned HIVE-7.7, #5324).
+ *
+ * Authority: `docs/mockups/sources/mcp-servers.html` — the right half of the strips row, whose
+ * **Notes → Keeps (1:1)** list fixes the contract: *New collection*, a `Collections (n)`
+ * disclosure, rows carrying a published tag, the member count and the description, and
+ * Rename / Publish-Unpublish / Copy share link / View ↗ / Delete per row; plus a *Create
+ * collection* dialog with the "Includes n endpoint(s) from the current catalog view" hint and
+ * *Publish immediately*.
+ *
+ * ### The contract this keeps: membership is fixed at creation
+ *
+ * A collection is a **list of endpoints**, not a saved filter. It is created from whatever the
+ * catalog view is showing at that moment and then never moves: narrowing the filters afterwards
+ * does not shrink it, and registering a new server does not join it. That is the difference
+ * between this panel and the saved searches beside it, and it is the one thing about a collection
+ * a reader can get wrong — so the create dialog now *names the endpoints* it is about to freeze
+ * in, and says in a sentence that the list does not follow the view. Nothing about the behaviour
+ * changed; what changed is that the screen admits to it.
+ *
+ * ### What the redesign changed
+ *
+ * 1. **The strip had no panel.** Same as the saved searches: a bare row inside a page-drawn
+ *    `border-b border-gray-200 bg-white` band, now a `ui/Card` with a titled header.
+ * 2. **"published" was a green word** (`text-emerald-600 dark:text-emerald-400`) and the View
+ *    link was `text-indigo-600 … hover:bg-indigo-50`. They are `Badge status="published"` and
+ *    `Button variant="ghost" asChild`, so both take the tones the rest of the product uses.
+ * 3. **Delete was ghost red text** (`text-red-600 hover:text-red-700`); the row's danger action
+ *    is `.mcp-strip__danger`, one rule rather than a palette pair per button. The confirm itself
+ *    is unchanged — it already named the collection and its consequence.
+ * 4. **Errors were a red sentence.** They are `ui/Alert`.
+ * 5. **The create dialog's hint was a bare count.** It lists the members (up to a cap, then
+ *    "and n more"), which is what the mockup shows and what makes the fixed-at-creation rule
+ *    checkable before pressing Create.
+ */
+
 import * as React from 'react';
 import Link from 'next/link';
-import { Copy, FolderOpen, Globe, Plus, Trash2, X } from 'lucide-react';
+import { ArrowUpRight, Copy, Globe, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@lib/utils';
+import { Alert } from '../../../ui/Alert';
+import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
+import { Card } from '../../../ui/Card';
+import { Checkbox } from '../../../ui/Checkbox';
+import { FormField } from '../../../ui/FormField';
 import { Input } from '../../../ui/Input';
+import { Label } from '../../../ui/Label';
 import {
   Dialog,
   DialogContent,
@@ -19,15 +60,31 @@ import { useDialog } from '../../../providers/DialogProvider';
 import { destructiveConfirm } from '../../../dialogs/destructiveConfirm';
 import {
   mcpCollectionCreateBody,
+  mcpCollectionMembershipHint,
   mcpCollectionPublicUrl,
   mcpCollectionsFromPayload,
+  type McpCatalogEndpointRef,
   type McpCollection,
 } from './mcpCollectionUi';
 
 export interface McpCollectionsPanelProps {
-  /** Endpoint ids currently visible in the catalog (used when creating from selection). */
-  selectedEndpointIds?: string[];
+  /**
+   * The endpoints currently visible in the catalog — the list a new collection is frozen from.
+   *
+   * The *view*, not the whole catalog: creating from a filtered view is how an operator builds
+   * "the four geo servers" without ticking four boxes.
+   */
+  visibleEndpoints?: readonly McpCatalogEndpointRef[];
 }
+
+/** What the panel says while it is reading, and when the workspace has no collections. */
+export const COLLECTIONS_LOADING = 'Loading collections…';
+export const COLLECTIONS_EMPTY =
+  'No collections yet. Group related endpoints into a named list for navigation and sharing.';
+
+/** The sentence that states the contract, printed in the create dialog. */
+export const COLLECTIONS_FIXED_MEMBERSHIP_NOTE =
+  'Membership is fixed when the collection is created — changing the filters later does not change it.';
 
 async function fetchCollections(): Promise<{ collections: McpCollection[]; tenantSlug: string }> {
   const res = await fetch('/api/mcp/collections', { credentials: 'include' });
@@ -41,11 +98,8 @@ async function fetchCollections(): Promise<{ collections: McpCollection[]; tenan
   };
 }
 
-/**
- * Curated collections — create, publish, and manage named endpoint lists for the tenant catalog.
- */
 export function McpCollectionsPanel({
-  selectedEndpointIds = [],
+  visibleEndpoints = [],
 }: McpCollectionsPanelProps): React.ReactElement {
   const { confirm, prompt } = useDialog();
   const [collections, setCollections] = React.useState<McpCollection[]>([]);
@@ -58,6 +112,11 @@ export function McpCollectionsPanel({
   const [createDescription, setCreateDescription] = React.useState('');
   const [createPublished, setCreatePublished] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
+
+  const selectedEndpointIds = React.useMemo(
+    () => visibleEndpoints.map((endpoint) => endpoint.id),
+    [visibleEndpoints],
+  );
 
   const reload = React.useCallback(async () => {
     setLoading(true);
@@ -126,7 +185,7 @@ export function McpCollectionsPanel({
       title: `Rename "${collection.name}"`,
       label: 'Collection name',
       defaultValue: collection.name,
-      helperText: 'Shown wherever this collection is published.',
+      helperText: 'Members and publish state are unchanged.',
       confirmLabel: 'Rename collection',
       validate: (next) =>
         next === collection.name ? 'That is already the name of this collection.' : null,
@@ -175,7 +234,7 @@ export function McpCollectionsPanel({
         name: collection.name,
         consequence:
           'The collection and its public URL stop working. The endpoints it groups stay in the catalog.',
-      })
+      }),
     );
     if (!confirmed) return;
     setError(null);
@@ -210,88 +269,72 @@ export function McpCollectionsPanel({
   };
 
   return (
-    <>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-9"
-          onClick={() => setCreateOpen(true)}
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          New collection
-        </Button>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-9"
-          aria-expanded={panelOpen}
-          onClick={() => setPanelOpen((v) => !v)}
-        >
-          <FolderOpen className="h-4 w-4" aria-hidden />
-          Collections ({collections.length})
-        </Button>
+    <Card className="mcp-strip" data-testid="mcp-collections">
+      <div className="mcp-strip__head">
+        <div className="mcp-strip__lead">
+          <p className="mcp-strip__label">Collections</p>
+          <p className="mcp-strip__note">Curated lists you can publish to Browse</p>
+        </div>
+        <div className="mcp-strip__actions">
+          <Button type="button" variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus aria-hidden />
+            New collection
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-expanded={panelOpen}
+            onClick={() => setPanelOpen((v) => !v)}
+          >
+            Collections ({collections.length})
+          </Button>
+        </div>
       </div>
 
       {panelOpen ? (
-        <div className="border-t border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
-          {error ? (
-            <p className="mb-3 text-sm text-red-600 dark:text-red-400" role="alert">
-              {error}
-            </p>
-          ) : null}
+        <div className="mcp-strip__body">
+          {error ? <Alert variant="danger">{error}</Alert> : null}
           {loading ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">Loading collections…</p>
+            <p className="mcp-strip__note">{COLLECTIONS_LOADING}</p>
           ) : collections.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              No collections yet. Group related endpoints into a named list for navigation and sharing.
-            </p>
+            <p className="mcp-strip__note">{COLLECTIONS_EMPTY}</p>
           ) : (
-            <ul className="divide-y divide-gray-200 rounded-md border border-gray-200 dark:divide-gray-700 dark:border-gray-700">
+            <ul className="mcp-strip__list">
               {collections.map((collection) => (
-                <li
-                  key={collection.id}
-                  className="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                <li key={collection.id} className="mcp-strip__row">
+                  <div className="mcp-strip__row-main">
+                    <div className="mcp-strip__row-title">
                       {collection.name}
                       {collection.isPublished ? (
-                        <span className="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">
-                          published
-                        </span>
+                        <Badge status="published">published</Badge>
                       ) : null}
-                    </p>
-                    <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                    </div>
+                    <p className="mcp-strip__row-sub">
                       {collection.memberCount} endpoint{collection.memberCount === 1 ? '' : 's'}
                       {collection.description ? ` · ${collection.description}` : ''}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="mcp-strip__row-actions">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8"
-                      title="Rename collection"
                       onClick={() => void handleRename(collection)}
                     >
                       Rename
+                      <span className="sr-only"> {collection.name}</span>
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8"
                       title={collection.isPublished ? 'Unpublish collection' : 'Publish collection'}
                       onClick={() => void handleTogglePublish(collection)}
                     >
-                      <Globe className="h-4 w-4" aria-hidden />
+                      <Globe aria-hidden />
                       <span className="sr-only">
-                        {collection.isPublished ? 'Unpublish' : 'Publish'}
+                        {collection.isPublished ? 'Unpublish' : 'Publish'} {collection.name}
                       </span>
                     </Button>
                     {collection.isPublished && tenantSlug ? (
@@ -299,37 +342,36 @@ export function McpCollectionsPanel({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-8"
                         title="Copy public share link"
                         onClick={() => void handleCopyShareLink(collection)}
                       >
-                        <Copy className="h-4 w-4" aria-hidden />
-                        <span className="sr-only">Copy share link</span>
+                        <Copy aria-hidden />
+                        <span className="sr-only">Copy share link for {collection.name}</span>
                       </Button>
                     ) : null}
                     {tenantSlug ? (
-                      <Link
-                        href={mcpCollectionPublicUrl(tenantSlug, collection.slug)}
-                        className={cn(
-                          'inline-flex h-8 items-center rounded-md px-2 text-xs font-medium text-indigo-600',
-                          'hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-900/30',
-                        )}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View
-                      </Link>
+                      <Button asChild variant="ghost" size="sm">
+                        <Link
+                          href={mcpCollectionPublicUrl(tenantSlug, collection.slug)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          View
+                          <span className="sr-only"> {collection.name}</span>
+                          <ArrowUpRight aria-hidden />
+                        </Link>
+                      </Button>
                     ) : null}
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 text-red-600 hover:text-red-700 dark:text-red-400"
+                      className="mcp-strip__danger"
                       title="Delete collection"
                       onClick={() => void handleDelete(collection)}
                     >
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                      <span className="sr-only">Delete</span>
+                      <Trash2 aria-hidden />
+                      <span className="sr-only">Delete {collection.name}</span>
                     </Button>
                   </div>
                 </li>
@@ -340,53 +382,49 @@ export function McpCollectionsPanel({
       ) : null}
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Create collection</DialogTitle>
             <DialogDescription>
-              Group related MCP endpoints into a named list. You can publish it later for a shareable
-              browse view that only shows public endpoints.
+              Group related MCP endpoints into a named list. You can publish it later for a
+              shareable browse view that only shows public endpoints.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="collection-name">
-              Name
-            </label>
-            <Input
-              id="collection-name"
-              value={createName}
-              onChange={(e) => setCreateName(e.target.value)}
-              placeholder="e.g. Approved geo tools"
-              autoFocus
-            />
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="collection-description">
-              Description (optional)
-            </label>
-            <Input
-              id="collection-description"
-              value={createDescription}
-              onChange={(e) => setCreateDescription(e.target.value)}
-              placeholder="Short note for your team"
-            />
-            {selectedEndpointIds.length > 0 ? (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Includes {selectedEndpointIds.length} endpoint
-                {selectedEndpointIds.length === 1 ? '' : 's'} from the current catalog view.
-              </p>
-            ) : null}
-            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              <input
-                type="checkbox"
-                checked={createPublished}
-                onChange={(e) => setCreatePublished(e.target.checked)}
-                className="rounded border-gray-300"
+          <div className="mcp-dialog__body">
+            <FormField label="Name" htmlFor="collection-name" required>
+              <Input
+                id="collection-name"
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+                placeholder="e.g. Approved geo tools"
+                autoFocus
               />
-              Publish immediately (public endpoints only on browse)
-            </label>
+            </FormField>
+            <FormField label="Description" htmlFor="collection-description">
+              <Input
+                id="collection-description"
+                value={createDescription}
+                onChange={(e) => setCreateDescription(e.target.value)}
+                placeholder="Short note for your team"
+              />
+            </FormField>
+            <Alert variant="info" data-testid="mcp-collection-membership">
+              <p>{mcpCollectionMembershipHint(visibleEndpoints)}</p>
+              <p>{COLLECTIONS_FIXED_MEMBERSHIP_NOTE}</p>
+            </Alert>
+            <div className="mcp-dialog__check">
+              <Checkbox
+                id="collection-publish"
+                checked={createPublished}
+                onCheckedChange={(next) => setCreatePublished(next === true)}
+              />
+              <Label htmlFor="collection-publish">
+                Publish immediately (public endpoints only on browse)
+              </Label>
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>
-              <X className="h-4 w-4" aria-hidden />
               Cancel
             </Button>
             <Button
@@ -399,6 +437,6 @@ export function McpCollectionsPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </Card>
   );
 }
