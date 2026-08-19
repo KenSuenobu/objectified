@@ -5461,7 +5461,7 @@ __metadata:
     babel-plugin-react-compiler: "npm:^1.0.0"
     baseline-browser-mapping: "npm:^2.10.19"
     bcrypt: "npm:^6.0.0"
-    better-auth: "npm:^1.6.25"
+    better-auth: "npm:1.6.25"
     class-variance-authority: "npm:^0.7.1"
     clsx: "npm:^2.1.1"
     cmdk: "npm:^1.1.1"
@@ -5889,7 +5889,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-auth@npm:^1.6.25":
+"better-auth@npm:1.6.25":
   version: 1.6.25
   resolution: "better-auth@npm:1.6.25"
   dependencies:
