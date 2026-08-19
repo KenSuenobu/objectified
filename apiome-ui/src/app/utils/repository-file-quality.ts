@@ -12,6 +12,22 @@
  */
 
 import { getNumericScoreTier, type NumericScoreTierStyle } from '@/app/utils/numeric-score-tier';
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
+
+/**
+ * Score band → a tone in the shared status vocabulary (HIVE-7.5, #5322).
+ *
+ * `docs/mockups/sources/repository-detail.html` draws the Quality column as `badge--ok` at 86
+ * and 78, `badge--warn` at 61 and `badge--danger` at 39 — three tones over four bands, so
+ * *excellent* and *good* share `ok`. A file at 78 is not a problem, and colouring it amber
+ * files it in a queue it does not belong to.
+ */
+const QUALITY_BAND_TONE: Readonly<Record<NumericScoreTierStyle['band'], StatusTone>> = {
+  excellent: 'ok',
+  good: 'ok',
+  fair: 'warn',
+  poor: 'danger',
+};
 
 /** The quality fields a Files-listing row carries. */
 export interface RepositoryFileQualityFields {
@@ -27,8 +43,20 @@ export interface RepositoryFileQualityBadge {
   label: string;
   /** Hover text explaining the score or why there is none. */
   title: string;
-  /** Tailwind classes for the badge, from the shared score-tier scale when scored. */
+  /**
+   * Tailwind classes for the badge, from the shared score-tier scale when scored.
+   *
+   * @deprecated Since HIVE-7.5 (#5322): the Files tab renders `ui/Badge` with {@link tone}
+   *   instead, so the score follows the reader's theme. Kept for the surfaces still on the
+   *   palette pill until their own redesign tickets land.
+   */
   className: string;
+  /**
+   * The badge's tone in the shared status vocabulary, or `outline` when the row is unscored —
+   * an unscored file is *set aside*, not a failure, and the outline chip is the tone the
+   * vocabulary spends on exactly that.
+   */
+  tone: StatusTone;
   /** The score tier, when the row is scored — lets callers reuse bars/gauges. */
   tier: NumericScoreTierStyle | null;
 }
@@ -72,6 +100,7 @@ export function repositoryFileQualityBadge(
       label: String(Math.round(score)),
       title: `Quality ${Math.round(score)}/100${grade} — ${tier.shortLabel}: ${tier.detailLabel}. Informational only; it does not gate import or sync.`,
       className: `bg-gray-100 dark:bg-gray-700 ${tier.textClass}`,
+      tone: QUALITY_BAND_TONE[tier.band],
       tier,
     };
   }
@@ -82,6 +111,7 @@ export function repositoryFileQualityBadge(
       label: '—',
       title: REASON_LABELS[reason] || `Not scored: ${reason}`,
       className: NEUTRAL_CLASS,
+      tone: 'outline',
       tier: null,
     };
   }
@@ -90,6 +120,7 @@ export function repositoryFileQualityBadge(
     label: '—',
     title: 'Not scored yet. Classified specs are scored in the background after a scan.',
     className: NEUTRAL_CLASS,
+    tone: 'outline',
     tier: null,
   };
 }

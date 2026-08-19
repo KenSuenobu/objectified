@@ -85,11 +85,25 @@ export const POLICY_COPY: Record<
   },
 };
 
-/** Panel/badge accent per tone, so the consequence reads before the text does. */
-export const POLICY_TONE_CLASSES: Record<'good' | 'neutral' | 'warn', string> = {
-  good: 'border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-300',
-  neutral: 'border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300',
-  warn: 'border-amber-300 text-amber-800 dark:border-amber-700 dark:text-amber-300',
+/**
+ * The mark beside a policy's name, so its consequence reads before the sentence does.
+ *
+ * A *word* rather than a colour (HIVE-7.5, #5322): `docs/mockups/sources/repository-detail.html`
+ * labels the safe default "recommended" and the lossy one "destructive", which is the fact a
+ * reader needs and which a hairline hue cannot carry on its own — DESIGN.md §6. `neutral` gets
+ * no mark at all: "New branch" is neither recommended nor dangerous, and a chip reading
+ * "neutral" would be noise.
+ *
+ * This replaces `POLICY_TONE_CLASSES`, whose three `border-emerald-200 dark:border-emerald-800`
+ * triples froze the panel on one light palette and one dark one out of nine.
+ */
+export const POLICY_TONE_BADGE: Record<
+  'good' | 'neutral' | 'warn',
+  { label: string; tone: 'ok' | 'warn' } | null
+> = {
+  good: { label: 'recommended', tone: 'ok' },
+  neutral: null,
+  warn: { label: 'destructive', tone: 'warn' },
 };
 
 /**

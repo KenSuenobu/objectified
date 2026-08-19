@@ -1,5 +1,24 @@
 'use client';
 
+/**
+ * The *Visualize* pane: component schemas and the `$ref` edges between them (HIVE-7.5, #5322).
+ *
+ * Authority: `docs/mockups/sources/repository-detail.html` §File detail → Visualize, whose
+ * page-local `<style>` block (`.flow-node`, `.flow-edge`, `.flow-text`, `.flow-sub`) this
+ * replaces — every one of those rules is a token, and so is every rule below.
+ *
+ * What it replaces named colour outright in eleven places: `border-indigo-400`,
+ * `bg-purple-50 dark:bg-purple-900/30`, `!bg-indigo-500` handles, and four literal hex values
+ * (`#6366f1` twice for the edge and its arrowhead, `#4338ca` for the edge label, `#6366f1`
+ * again for the minimap). A diagram that keeps an indigo edge on a Nord canvas is the one
+ * place in the app where the theme visibly stops applying.
+ *
+ * React Flow takes colours as strings rather than classes for the edge, its label and the
+ * minimap, so those are `var(--token)` expressions: a custom property resolves in an inline
+ * style and in an SVG presentation attribute alike, and it is what lets a graph follow a theme
+ * swap without re-rendering.
+ */
+
 import { useMemo } from 'react';
 import {
   Background,
@@ -16,7 +35,18 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { buildRelationshipDiagramEdges } from '@/app/utils/schema-tree-utils';
+import { Badge } from '@/app/components/ui/Badge';
+import { EmptyState } from '@/app/components/ui/EmptyState';
 import { SVG_TEXT_SIZE } from '@/app/components/ui/svgTypography';
+
+/** The ink every edge, arrowhead and minimap node takes — the theme's own quiet line colour. */
+const FLOW_EDGE_INK = 'var(--fg-faint)';
+
+/** The ink an edge's `$ref` label takes: readable against the surface it sits on. */
+const FLOW_LABEL_INK = 'var(--fg-muted)';
+
+/** What an edge label is drawn on, so the line behind it does not run through the text. */
+const FLOW_LABEL_GROUND = 'var(--bg-surface)';
 
 function countSchemaProperties(schema: unknown): number {
   if (!schema || typeof schema !== 'object') return 0;
@@ -80,38 +110,22 @@ function PreviewClassNode({
   };
 }) {
   return (
-    <div
-      className={`min-w-[120px] max-w-[180px] rounded-lg border-2 bg-white shadow-md dark:bg-gray-800 ${
-        data.selected
-          ? 'border-indigo-400 dark:border-indigo-500'
-          : 'border-gray-300 opacity-50 dark:border-gray-600'
-      }`}
-    >
-      <Handle type="target" position={Position.Top} className="h-2 w-2 !bg-indigo-500" />
-      <Handle type="target" position={Position.Left} className="h-2 w-2 !bg-indigo-500" />
+    <div className="repo-flow-node" data-composed={data.hasComposition ? 'true' : undefined}>
+      <Handle type="target" position={Position.Top} className="repo-flow-node__handle" />
+      <Handle type="target" position={Position.Left} className="repo-flow-node__handle" />
 
-      <div
-        className={`rounded-t-lg border-b border-gray-200 px-3 py-2 dark:border-gray-600 ${
-          data.hasComposition ? 'bg-purple-50 dark:bg-purple-900/30' : 'bg-indigo-50 dark:bg-indigo-900/30'
-        }`}
-      >
-        <div className="flex items-center gap-1.5">
-          {data.hasComposition && data.compositionType ? (
-            <span className="rounded bg-purple-200 px-1 py-0.5 text-2xs text-purple-700 dark:bg-purple-800 dark:text-purple-300">
-              {data.compositionType}
-            </span>
-          ) : null}
-          <span className="truncate text-xs font-semibold text-gray-800 dark:text-gray-200">{data.label}</span>
-        </div>
+      <div className="repo-flow-node__head">
+        {data.hasComposition && data.compositionType ? (
+          <Badge variant="violet">{data.compositionType}</Badge>
+        ) : null}
+        <span className="repo-flow-node__name mono">{data.label}</span>
       </div>
-      <div className="px-3 py-2">
-        <div className="text-2xs text-gray-500 dark:text-gray-400">
-          {data.propertyCount} {data.propertyCount === 1 ? 'property' : 'properties'}
-        </div>
-      </div>
+      <p className="repo-flow-node__count">
+        {data.propertyCount} {data.propertyCount === 1 ? 'property' : 'properties'}
+      </p>
 
-      <Handle type="source" position={Position.Right} className="h-2 w-2 !bg-indigo-500" />
-      <Handle type="source" position={Position.Bottom} className="h-2 w-2 !bg-indigo-500" />
+      <Handle type="source" position={Position.Right} className="repo-flow-node__handle" />
+      <Handle type="source" position={Position.Bottom} className="repo-flow-node__handle" />
     </div>
   );
 }
@@ -185,14 +199,14 @@ export function RepositoryFileSpecRelationshipFlow({ document }: { document: unk
       type: 'smoothstep',
       animated: false,
       label,
-      labelStyle: { fill: '#4338ca', fontSize: SVG_TEXT_SIZE.label, fontWeight: 500 },
-      labelBgStyle: { fill: 'white', fillOpacity: 0.9 },
+      labelStyle: { fill: FLOW_LABEL_INK, fontSize: SVG_TEXT_SIZE.label, fontWeight: 500 },
+      labelBgStyle: { fill: FLOW_LABEL_GROUND, fillOpacity: 0.9 },
       labelBgPadding: [4, 2] as [number, number],
       labelBgBorderRadius: 4,
-      style: { stroke: '#6366f1', strokeWidth: 1.5 },
+      style: { stroke: FLOW_EDGE_INK, strokeWidth: 1.25 },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: '#6366f1',
+        color: FLOW_EDGE_INK,
         width: 15,
         height: 15,
       },
@@ -203,16 +217,16 @@ export function RepositoryFileSpecRelationshipFlow({ document }: { document: unk
 
   if (nodes.length === 0) {
     return (
-      <div className="flex h-[min(520px,70vh)] min-h-[240px] items-center justify-center px-4 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-        No <span className="mx-1 font-mono">components.schemas</span> or{' '}
-        <span className="mx-1 font-mono">definitions</span> map found in this document, so there is nothing to plot.
-        OpenAPI and Swagger bundles with model schemas produce the relationship view.
-      </div>
+      <EmptyState
+        variant="compact"
+        title="Nothing to plot"
+        description="No components.schemas or definitions map was found in this document. OpenAPI and Swagger bundles with model schemas produce the relationship view."
+      />
     );
   }
 
   return (
-    <div className="h-[min(520px,70vh)] min-h-[320px] w-full">
+    <div className="repo-flow">
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}
@@ -230,9 +244,9 @@ export function RepositoryFileSpecRelationshipFlow({ document }: { document: unk
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
           <Controls showInteractive={false} />
           <MiniMap
-            nodeColor={() => '#6366f1'}
-            maskColor="rgba(0, 0, 0, 0.1)"
-            className="bg-gray-100 dark:bg-gray-700"
+            nodeColor={() => FLOW_EDGE_INK}
+            maskColor="color-mix(in srgb, var(--fg) 10%, transparent)"
+            className="repo-flow__minimap"
           />
         </ReactFlow>
       </ReactFlowProvider>

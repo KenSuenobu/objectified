@@ -1,7 +1,47 @@
 'use client';
 
+/**
+ * Map & import — one repository file into the catalog (HIVE-7.5, #5322).
+ *
+ * Authority: `docs/mockups/sources/repository-detail.html` §Map & import wizard — an overlay
+ * carrying *Target project* (existing or create-new), *Version to create*, *Import options*,
+ * a diff placeholder, the source facts, and the run itself.
+ *
+ * ### It is an overlay now, not a page
+ *
+ * What this replaces returned a full-width pane *instead of* the Files tab. Opening it
+ * unmounted the browser, so a reader lost their branch, their filters, their page and their
+ * selection; `onBack` put them back at the top of an unfiltered list. It is a `dialog--full`
+ * over the tab now — the mockup's own frame, and the same `.imp-wizard*` shell HIVE-6.4 built
+ * for the catalog importer, so the two wizards are one object rather than two that resemble
+ * each other. Closing returns to the row that opened it.
+ *
+ * ### The scoped choice control
+ *
+ * *Target project* is two radio cards, and the first of them contains a project `Select`, a
+ * read-only slug field and a *Clear selection* button. The screen this replaces expressed that
+ * as a `role="button" tabIndex={0}` `<div>` with `onKeyDown` handling Enter and Space, and an
+ * `onClick={(e) => e.stopPropagation()}` on every nested control to stop the card swallowing
+ * the click. That is an axe `nested-interactive` violation, and the `stopPropagation` calls
+ * are the symptom rather than the fix.
+ *
+ * The card is now a plain `<div>` whose radio carries a `<label>` scoped to the choice's
+ * *title* — the ticket's third acceptance criterion, and the HIVE-2.1 scoped choice-control
+ * pattern. The nested fields are ordinary siblings: clickable, reachable by Tab, and no longer
+ * inside a label that would toggle the radio when they are used. The card still paints as
+ * chosen, still shows one focus ring and still moves under the arrow keys, because all three
+ * are `:has()` selectors on the radio rather than markup wrapped around it.
+ *
+ * ### The import job is unchanged
+ *
+ * Every field this collects goes to the same `startImport` call, with the same
+ * `repositorySource` descriptor and the same options object, as before — the ticket's second
+ * acceptance criterion. The execution and summary phases are the shared
+ * `ImportExecutionPanel` / `ImportCompletePanel`, drawn inside the overlay rather than in
+ * place of it.
+ */
+
 import {
-  ArrowLeft,
   CheckCircle2,
   Download,
   FolderOpen,
@@ -21,7 +61,10 @@ import ImportExecutionPanel from '@/app/components/ade/dashboard/ImportExecution
 import ImportCompletePanel from '@/app/components/ade/dashboard/ImportCompletePanel';
 import type { ImportOptions } from '@/app/components/ade/dashboard/PreviewPanel';
 import { ImportOptionsForm } from '@/app/components/ade/dashboard/ImportOptionsForm';
+import { Alert } from '@/app/components/ui/Alert';
+import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
+import { Card, CardContent } from '@/app/components/ui/Card';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +75,8 @@ import {
 } from '@/app/components/ui/Dialog';
 import { Input } from '@/app/components/ui/Input';
 import { Label } from '@/app/components/ui/Label';
+import { Segmented, SegmentedItem } from '@/app/components/ui/Segmented';
+import { MAP_IMPORT_DIFF_STUB_COPY } from '@/app/components/ade/repositories';
 import {
   Select,
   SelectContent,
@@ -40,8 +85,6 @@ import {
   SelectValue,
 } from '@/app/components/ui/Select';
 import { Skeleton } from '@/app/components/ui/Skeleton';
-import { cn } from '@lib/utils';
-import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
 import {
   getRepositoryFileImportableVerdict,
   parseRepositoryFileSpecMetadata,
@@ -197,7 +240,8 @@ export function RepositoryFileImportMapping({
   repositoryFullName,
   branch,
   file,
-  onBack,
+  open,
+  onOpenChange,
   onStagedImportTargetChange,
 }: {
   repositoryId: string;
@@ -206,7 +250,10 @@ export function RepositoryFileImportMapping({
   repositoryFullName: string;
   branch: string;
   file: RepositoryFileDetailRow;
-  onBack: () => void;
+  /** Whether the overlay is showing. */
+  open: boolean;
+  /** Close (or re-open) the overlay. */
+  onOpenChange: (open: boolean) => void;
   /** Fired when the user has mapped this file to a project (or cleared mapping), while import has not started. */
   onStagedImportTargetChange?: (target: RepositoryFileStagedImportTarget | null) => void;
 }) {
@@ -704,277 +751,191 @@ export function RepositoryFileImportMapping({
   const closeNewProjectDraft = () => {
     setFlowStep('mapping');
     setNewProjectDialogView('form');
-  };
+  };  /** The wizard's own dismissal, used by Cancel and by the corner close. */
+  const closeWizard = () => onOpenChange(false);
 
-  if (catalogImportPhase === 'executing' && catalogImportJobId) {
-    return (
-      <div className="space-y-6" aria-busy>
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-          <div className="border-b border-gray-200 px-6 pb-4 pt-5 dark:border-gray-700">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Catalog import</h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Same import job engine as Projects → Import. This panel updates live until the run finishes.
-            </p>
-          </div>
-          <div className="px-6 py-6">
-            <ImportExecutionPanel
-              jobId={catalogImportJobId}
-              selectedSchemas={catalogImportSchemas}
-              isReviewing={catalogImportExecutionComplete}
-              onComplete={handleCatalogImportExecutionComplete}
-              onRetry={(newJobId) => {
-                setCatalogImportJobId(newJobId);
-                setCatalogImportExecutionComplete(false);
-              }}
-            />
-          </div>
+  /**
+   * The run itself, or the mapping form.
+   *
+   * All three are the dialog's body rather than three different screens, so the head — which
+   * names the file being imported — stays put while the job runs. The panel this replaces
+   * swapped the whole pane for an execution card that did not say what it was importing.
+   */
+  const body =
+    catalogImportPhase === 'executing' && catalogImportJobId ? (
+      <div className="flex flex-col gap-3" data-testid="repository-import-executing">
+        <h3 className="repo-det-card__title">Catalog import</h3>
+        <p className="repo-det-note">
+          Same import job engine as Projects → Import. This panel updates live until the run
+          finishes.
+        </p>
+        <ImportExecutionPanel
+          jobId={catalogImportJobId}
+          selectedSchemas={catalogImportSchemas}
+          isReviewing={catalogImportExecutionComplete}
+          onComplete={handleCatalogImportExecutionComplete}
+          onRetry={(newJobId) => {
+            setCatalogImportJobId(newJobId);
+            setCatalogImportExecutionComplete(false);
+          }}
+        />
+      </div>
+    ) : catalogImportPhase === 'summary' && catalogImportJobId ? (
+      <div className="flex flex-col gap-3" data-testid="repository-import-summary">
+        <h3 className="repo-det-card__title">Import summary</h3>
+        <p className="repo-det-note">
+          Results from the catalog import job — the same completion view as the Projects
+          dashboard.
+        </p>
+        <ImportCompletePanel jobId={catalogImportJobId} />
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" onClick={resetCatalogImportFlow}>
+            Back to mapping
+          </Button>
+          <Button type="button" variant="outline" onClick={closeWizard}>
+            Back to file
+          </Button>
         </div>
       </div>
-    );
-  }
+    ) : (
+      <div className="repo-map-grid">
+        <div className="repo-map-column">
+          {importableVerdict.status !== 'importable' && !loading ? (
+            <Alert variant="warn" data-testid="repository-import-unavailable">
+              {importableVerdict.status === 'content_unavailable' ? (
+                <>Content unavailable — {importableVerdict.loadError}</>
+              ) : importableVerdict.status === 'parse_failed' ? (
+                <>Could not parse as YAML/JSON: {importableVerdict.parseError}</>
+              ) : importableVerdict.notImportableMessage ? (
+                <>{importableVerdict.notImportableMessage}</>
+              ) : (
+                <>
+                  This file is not recognised as an importable spec from the loaded content.
+                  Map &amp; import is meant for OpenAPI 3.x, AsyncAPI, Arazzo, JSON Schema, or
+                  GraphQL SDL.
+                </>
+              )}
+            </Alert>
+          ) : null}
 
-  if (catalogImportPhase === 'summary' && catalogImportJobId) {
-    return (
-      <div className="space-y-6">
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-          <div className="border-b border-gray-200 px-6 pb-4 pt-5 dark:border-gray-700">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Import summary</h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Results from the catalog import job (same completion view as the Projects dashboard).
-            </p>
-          </div>
-          <div className="px-6 py-6">
-            <ImportCompletePanel jobId={catalogImportJobId} />
-          </div>
-          <div className="flex flex-wrap gap-2 border-t border-gray-200 px-6 py-4 dark:border-gray-700">
-            <Button type="button" variant="outline" onClick={resetCatalogImportFlow}>
-              Back to mapping
-            </Button>
-            <Button type="button" variant="outline" onClick={onBack}>
-              Back to file
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6" aria-busy={loading}>
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-        <div className="border-b border-gray-200 px-6 pb-5 pt-6 dark:border-gray-700">
-          <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center gap-1 text-indigo-600 hover:underline dark:text-indigo-400"
-            >
-              <ArrowLeft className="h-3 w-3 shrink-0" aria-hidden />
-              Back to file
-            </button>
-          </div>
-          <div className="flex flex-wrap items-start gap-4">
-            <span className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 text-white">
-              <GitPullRequestArrow className="h-6 w-6" aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Map &amp; import</h2>
-                {stagedImportTargetForParent ? (
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-2xs font-semibold uppercase tracking-wide text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200"
-                    data-testid="repository-file-ready-to-import-badge"
-                  >
-                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                    Ready to Import
-                  </span>
-                ) : null}
-              </div>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-                Choose how{' '}
-                <span className="font-mono text-gray-700 dark:text-gray-200">{file.path}</span> from{' '}
-                <span className="font-mono text-gray-700 dark:text-gray-200">
-                  {repositoryName}@{commitSha}
-                </span>{' '}
-                should land in the catalog.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 px-6 py-6 lg:grid-cols-3">
-          <div className="space-y-4 lg:col-span-2">
-            {importableVerdict.status !== 'importable' && !loading ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-900/25 dark:text-amber-100">
-                {importableVerdict.status === 'content_unavailable' ? (
-                  <>Content unavailable — {importableVerdict.loadError}</>
-                ) : importableVerdict.status === 'parse_failed' ? (
-                  <>Could not parse as YAML/JSON: {importableVerdict.parseError}</>
-                ) : importableVerdict.notImportableMessage ? (
-                  <>{importableVerdict.notImportableMessage}</>
-                ) : (
-                  <>
-                    This file is not recognised as an importable spec from the loaded content. Map &amp; import is
-                    meant for OpenAPI 3.x, AsyncAPI, Arazzo, JSON Schema, or GraphQL SDL.
-                  </>
-                )}
-              </div>
-            ) : null}
-
-            <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-              <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">Target project</h3>
+          <Card variant="flat">
+            <CardContent className="flex flex-col gap-3">
+              <h3 className="repo-det-card__title">Target project</h3>
               {loading ? (
-                <div className="space-y-3" aria-hidden>
-                  <Skeleton className="h-[4.5rem] w-full rounded-lg" />
-                  <Skeleton className="h-[4.5rem] w-full rounded-lg" />
+                <div className="flex flex-col gap-3" aria-hidden>
+                  <Skeleton className="h-[4.5rem] w-full rounded-md" />
+                  <Skeleton className="h-[4.5rem] w-full rounded-md" />
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className={cn(
-                      'cursor-pointer rounded-lg border-2 p-3 text-left outline-none transition-colors',
-                      'focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900',
-                      targetMode === 'existing'
-                        ? 'border-indigo-500 bg-indigo-50/40 dark:border-indigo-500 dark:bg-indigo-900/10'
-                        : 'border-gray-200 hover:border-indigo-300 dark:border-gray-700 dark:hover:border-indigo-600'
-                    )}
-                    onClick={() => {
-                      setTargetMode('existing');
-                      setStagedNewProject(null);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setTargetMode('existing');
-                        setStagedNewProject(null);
-                      }
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="radio"
-                        name="tgt"
-                        className="mt-1"
-                        checked={targetMode === 'existing'}
-                        onChange={() => {
-                          setTargetMode('existing');
-                          setStagedNewProject(null);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                          <FolderOpen className="h-4 w-4 shrink-0 text-indigo-500" aria-hidden />
-                          Existing project
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          Suggested mapping rule: <span className="font-mono">{suggestedRule}</span>. Pick a catalog
-                          project before importing; nothing is saved until you click Import.
-                        </p>
-                        {!stagedProject ? (
-                          <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
-                            Select a project from the dropdown below to map this file.
-                          </p>
-                        ) : null}
-                        <div className="mt-3 space-y-3" onClick={(e) => e.stopPropagation()}>
-                          <div className="space-y-1.5">
-                            <Label
-                              htmlFor="repo-import-project-select"
-                              className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-                            >
-                              Map to existing project
-                            </Label>
-                            {projectsLoading ? (
-                              <Skeleton className="h-10 w-full rounded-md" />
-                            ) : projectsError ? (
-                              <p className="text-xs text-rose-600 dark:text-rose-400">{projectsError}</p>
-                            ) : (
-                              <Select
-                                value={stagedProject?.id}
-                                onValueChange={(id) => {
-                                  const p = projectsList.find((x) => x.id === id);
-                                  if (p) setStagedProject(p);
-                                }}
-                                disabled={projectsList.length === 0}
-                              >
-                                <SelectTrigger
-                                  id="repo-import-project-select"
-                                  className="h-auto min-h-10 items-start py-2 text-left dark:border-gray-600 dark:bg-gray-900/40"
-                                >
-                                  <SelectValue placeholder="Select a project…" />
-                                </SelectTrigger>
-                                <SelectContent className="max-h-72 max-w-lg">
-                                  {projectsList.map((p) => (
-                                    <SelectItem
-                                      key={p.id}
-                                      value={p.id}
-                                      className="items-start py-2 pl-8 [&>span:last-child]:w-full [&>span:last-child]:min-w-0"
-                                    >
-                                      <span className="flex w-full min-w-0 flex-col gap-0.5 text-left">
-                                        <span className="truncate font-medium leading-snug text-slate-900 dark:text-slate-100">
-                                          {p.name}
-                                        </span>
-                                        <span className="font-mono text-2xs leading-snug text-slate-500 dark:text-slate-400">
-                                          {p.slug}
-                                        </span>
-                                      </span>
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                            {projectsList.length === 0 && !projectsLoading && !projectsError ? (
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                No projects in this workspace yet. Create one under Projects, or choose &quot;Create a
-                                new project&quot; above.
-                              </p>
-                            ) : null}
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label
-                              htmlFor="repo-import-project-slug"
-                              className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-                            >
-                              Project slug
-                            </Label>
-                            <Input
-                              id="repo-import-project-slug"
-                              readOnly
-                              aria-readonly="true"
-                              value={stagedProject?.slug ?? ''}
-                              placeholder="Select a project to fill slug"
-                              className="font-mono text-sm dark:border-gray-600 dark:bg-gray-900/50"
-                            />
-                          </div>
-                          {stagedProject ? (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 px-0 text-xs text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-                              onClick={() => setStagedProject(null)}
-                            >
-                              Clear selection
-                            </Button>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <label
-                    className={cn(
-                      'flex cursor-pointer items-start gap-3 rounded-lg border p-3',
-                      targetMode === 'new'
-                        ? 'border-2 border-indigo-500 bg-indigo-50/40 dark:border-indigo-500 dark:bg-indigo-900/10'
-                        : 'border-gray-200 hover:border-indigo-300 dark:border-gray-700 dark:hover:border-indigo-600'
-                    )}
-                  >
+                <div
+                  role="radiogroup"
+                  aria-label="Target project"
+                  className="flex flex-col gap-2"
+                >
+                  {/* The scoped choice control: a `<div>`, not a `<label>`, because it holds
+                      controls of its own. Only `.repo-map-choice__title` is the radio's
+                      label. */}
+                  <div className="repo-map-choice" data-testid="repository-import-target-existing">
                     <input
                       type="radio"
-                      name="tgt"
-                      className="mt-1"
+                      id="repo-import-target-existing"
+                      name="repo-import-target"
+                      checked={targetMode === 'existing'}
+                      onChange={() => {
+                        setTargetMode('existing');
+                        setStagedNewProject(null);
+                      }}
+                    />
+                    <div className="repo-map-choice__body">
+                      <label
+                        htmlFor="repo-import-target-existing"
+                        className="repo-map-choice__title"
+                      >
+                        <FolderOpen aria-hidden />
+                        Existing project
+                      </label>
+                      <p className="repo-map-choice__desc">
+                        Suggested mapping rule: <span className="mono">{suggestedRule}</span>.
+                        Pick a catalog project before importing; nothing is saved until you
+                        click Import.
+                      </p>
+
+                      <div className="repo-map-choice__fields">
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="repo-import-project-select">
+                            Map to existing project
+                          </Label>
+                          {projectsLoading ? (
+                            <Skeleton className="h-10 w-full rounded-md" />
+                          ) : projectsError ? (
+                            <p className="repo-file-verdict__detail text-danger-fg">
+                              {projectsError}
+                            </p>
+                          ) : (
+                            <Select
+                              value={stagedProject?.id}
+                              onValueChange={(projectId) => {
+                                const p = projectsList.find((x) => x.id === projectId);
+                                if (p) {
+                                  setTargetMode('existing');
+                                  setStagedProject(p);
+                                }
+                              }}
+                              disabled={projectsList.length === 0}
+                            >
+                              <SelectTrigger id="repo-import-project-select">
+                                <SelectValue placeholder="Select a project…" />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-72 max-w-lg">
+                                {projectsList.map((p) => (
+                                  <SelectItem key={p.id} value={p.id}>
+                                    {p.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="repo-import-project-slug">Project slug</Label>
+                          <Input
+                            id="repo-import-project-slug"
+                            readOnly
+                            aria-readonly="true"
+                            value={stagedProject?.slug ?? ''}
+                            placeholder="Select a project to fill slug"
+                            className="mono"
+                          />
+                        </div>
+                      </div>
+
+                      {projectsList.length === 0 && !projectsLoading && !projectsError ? (
+                        <p className="repo-map-choice__desc">
+                          No projects in this workspace yet. Create one under Projects, or
+                          choose &quot;Create a new project&quot; below.
+                        </p>
+                      ) : null}
+
+                      {stagedProject ? (
+                        <div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setStagedProject(null)}
+                          >
+                            Clear selection
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="repo-map-choice" data-testid="repository-import-target-new">
+                    <input
+                      type="radio"
+                      id="repo-import-target-new"
+                      name="repo-import-target"
                       checked={targetMode === 'new'}
                       onChange={() => {
                         setTargetMode('new');
@@ -982,32 +943,27 @@ export function RepositoryFileImportMapping({
                         setStagedNewProject(null);
                       }}
                     />
-                    <div className="min-w-0 flex-1">
-                      <p className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        <FolderPlus className="h-4 w-4 shrink-0 text-emerald-500" aria-hidden />
+                    <div className="repo-map-choice__body">
+                      <label htmlFor="repo-import-target-new" className="repo-map-choice__title">
+                        <FolderPlus aria-hidden />
                         Create a new project
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Open the form with <strong className="font-medium text-gray-700 dark:text-gray-300">Set up new project…</strong>, then{' '}
-                        <strong className="font-medium text-gray-700 dark:text-gray-300">Map to This Project</strong> to confirm. When that is done, use{' '}
-                        <strong className="font-medium text-gray-700 dark:text-gray-300">Import</strong> in the panel on the right — the catalog project is
-                        created on import (version ingest is still to be wired).
+                      </label>
+                      <p className="repo-map-choice__desc">
+                        Set up the project this file should create, then import into it. The
+                        catalog project is created when you click Import.
                       </p>
                       {stagedNewProject ? (
-                        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-xs dark:border-emerald-800 dark:bg-emerald-900/20">
-                          <p className="font-medium text-emerald-900 dark:text-emerald-100">
+                        <>
+                          <p className="repo-map-choice__desc">
                             Mapped:{' '}
                             <span className="font-semibold">{stagedNewProject.projectName}</span>{' '}
-                            <span className="font-mono text-emerald-800 dark:text-emerald-200">
-                              ({stagedNewProject.projectSlug})
-                            </span>
+                            <span className="mono">({stagedNewProject.projectSlug})</span>
                           </p>
-                          <div className="mt-2 flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button
                               type="button"
                               size="sm"
                               variant="outline"
-                              className="h-8 text-xs"
                               onClick={() => openNewProjectDialog(stagedNewProject)}
                             >
                               Edit mapping
@@ -1016,87 +972,73 @@ export function RepositoryFileImportMapping({
                               type="button"
                               size="sm"
                               variant="ghost"
-                              className="h-8 text-xs text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
                               onClick={() => setStagedNewProject(null)}
                             >
                               Clear mapping
                             </Button>
                           </div>
-                        </div>
+                        </>
                       ) : (
-                        <div className="mt-3 space-y-2">
+                        <div>
                           <Button
                             type="button"
                             size="sm"
-                            className="h-9 bg-emerald-600 text-white hover:bg-emerald-700"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
+                            variant="outline"
+                            onClick={() => {
+                              setTargetMode('new');
+                              setStagedProject(null);
                               openNewProjectDialog(null);
                             }}
+                            data-testid="repository-import-setup-new-project"
                           >
                             Set up new project…
                           </Button>
-                          <p className="text-xs text-amber-800 dark:text-amber-200">
-                            Fill the form, then <strong className="font-medium">Map to This Project</strong>. After that,
-                            click <strong className="font-medium">Import</strong> to create the catalog project (version
-                            ingest is still to be wired).
-                          </p>
                         </div>
                       )}
                     </div>
-                  </label>
+                  </div>
                 </div>
               )}
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-              <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">Version to create</h3>
+          <Card variant="flat">
+            <CardContent className="flex flex-col gap-3">
+              <h3 className="repo-det-card__title">Version to create</h3>
               {loading ? (
-                <div className="grid grid-cols-3 gap-3" aria-hidden>
+                <div className="repo-map-facts" aria-hidden>
                   {Array.from({ length: 3 }).map((_, i) => (
                     <Skeleton key={i} className="h-14 w-full rounded-md" />
                   ))}
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+                  <div className="repo-map-facts">
                     <div>
-                      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        From spec
-                      </p>
-                      <p className="mt-1 font-mono">{specVersionLabel ?? '—'}</p>
+                      <p className="repo-map-fact__label">From spec</p>
+                      <p className="repo-map-fact__value mono">{specVersionLabel ?? '—'}</p>
                     </div>
                     <div>
-                      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Latest existing
-                      </p>
-                      <p className="mt-1 font-mono text-gray-500 dark:text-gray-400">—</p>
+                      <p className="repo-map-fact__label">Latest existing</p>
+                      <p className="repo-map-fact__value mono">—</p>
                     </div>
                     <div>
-                      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Will create
-                      </p>
-                      <p className="mt-1 font-mono font-semibold text-indigo-600 dark:text-indigo-400">
-                        {willCreateLabel}
-                        {specVersionLabel ? <span className="ml-1 font-normal text-gray-500 dark:text-gray-400">(from spec)</span> : null}
-                      </p>
+                      <p className="repo-map-fact__label">Will create</p>
+                      <p className="repo-map-fact__value mono">{willCreateLabel}</p>
                     </div>
                   </div>
-                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                  <div className="repo-files-filters__switches">
+                    <label className="repo-files-check">
                       <input
                         type="checkbox"
-                        className="rounded border-gray-300 dark:border-gray-600"
                         checked={markDraft}
                         onChange={(e) => setMarkDraft(e.target.checked)}
                       />
                       Mark as draft (don&apos;t promote)
                     </label>
-                    <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                    <label className="repo-files-check">
                       <input
                         type="checkbox"
-                        className="rounded border-gray-300 dark:border-gray-600"
                         checked={autoLinkBranch}
                         onChange={(e) => setAutoLinkBranch(e.target.checked)}
                       />
@@ -1105,16 +1047,17 @@ export function RepositoryFileImportMapping({
                   </div>
                 </>
               )}
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-              <h3 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">Import options</h3>
-              <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                How classes and properties are named and generated when this file is imported. These options are saved
-                with the import and replayed when the file is auto-refreshed.
+          <Card variant="flat">
+            <CardContent className="flex flex-col gap-3">
+              <h3 className="repo-det-card__title">Import options</h3>
+              <p className="repo-det-note">
+                Saved with the import and replayed when the file is auto-refreshed.
               </p>
               {loading ? (
-                <div className="space-y-3" aria-hidden>
+                <div className="flex flex-col gap-3" aria-hidden>
                   <Skeleton className="h-10 w-full rounded-md" />
                   <Skeleton className="h-10 w-full rounded-md" />
                 </div>
@@ -1123,219 +1066,225 @@ export function RepositoryFileImportMapping({
                   <ImportOptionsForm options={importOptions} onOptionChange={updateImportOption} />
                 </div>
               ) : (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Load an importable spec (OpenAPI, Swagger, JSON Schema, Arazzo, GraphQL SDL) to adjust import options.
+                <p className="repo-det-note">
+                  Load an importable spec (OpenAPI, Swagger, JSON Schema, Arazzo, GraphQL SDL)
+                  to adjust import options.
                 </p>
               )}
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-              <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                Diff vs current {suggestedTitle}
-              </h3>
-              <p className="mb-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                Unified structural diff vs the last catalog version imported from this repository path needs{' '}
-                <span className="font-mono">repository_import</span> rows joined to blob SHAs. Until that API exists,
-                counts and line items are not shown.
-              </p>
-              <div className="grid grid-cols-3 gap-3 text-xs">
-                <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2 text-center dark:border-emerald-800 dark:bg-emerald-900/20">
-                  <p className="text-lg font-semibold text-emerald-700 dark:text-emerald-300">—</p>
-                  <p className="text-emerald-700 dark:text-emerald-300">added</p>
-                </div>
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-center dark:border-amber-800 dark:bg-amber-900/20">
-                  <p className="text-lg font-semibold text-amber-700 dark:text-amber-300">—</p>
-                  <p className="text-amber-700 dark:text-amber-300">modified</p>
-                </div>
-                <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-center dark:border-rose-800 dark:bg-rose-900/20">
-                  <p className="text-lg font-semibold text-rose-700 dark:text-rose-300">—</p>
-                  <p className="text-rose-700 dark:text-rose-300">removed</p>
-                </div>
+          <Card variant="flat">
+            <CardContent className="flex flex-col gap-3">
+              <h3 className="repo-det-card__title">Diff vs current {suggestedTitle}</h3>
+              <p className="repo-det-note">{MAP_IMPORT_DIFF_STUB_COPY}</p>
+              {/* Deliberately untinted: three coloured tiles reading "—" would claim a
+                  measurement that does not exist yet. */}
+              <div className="repo-map-tiles">
+                {(['added', 'modified', 'removed'] as const).map((label) => (
+                  <div key={label} className="repo-map-tile">
+                    <span className="repo-map-tile__value">—</span>
+                    <span className="repo-map-tile__label">{label}</span>
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+        </div>
 
-          <div className="space-y-4">
-            <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-              <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">Source</h3>
-              <dl className="space-y-1.5 text-sm">
-                <div>
-                  <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Repository
-                  </dt>
-                  <dd className="break-all font-mono text-xs text-gray-800 dark:text-gray-200">{sourceRepoDisplay}</dd>
-                </div>
-                <div>
-                  <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Branch
-                  </dt>
-                  <dd className="font-mono text-xs text-gray-800 dark:text-gray-200">{branch}</dd>
-                </div>
-                <div>
-                  <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Path
-                  </dt>
-                  <dd className="break-all font-mono text-xs text-gray-800 dark:text-gray-200">{file.path}</dd>
-                </div>
-                <div>
-                  <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Commit
-                  </dt>
-                  <dd className="font-mono text-xs text-gray-800 dark:text-gray-200">
-                    {loading ? (
-                      <span className="inline-flex items-center gap-1 text-gray-400">
-                        <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-                      </span>
-                    ) : (
-                      commitSha
-                    )}
-                  </dd>
-                </div>
+        <div className="repo-map-column">
+          {/* `flat`, not `soft`: on `--bg-subtle` the quiet `--fg-muted` step measures
+              4.34:1 in Solarized, which axe reports. A hairline over the plain surface reads
+              the same and is 5.45 worst-of-nine. */}
+          <Card variant="flat">
+            <CardContent className="flex flex-col gap-2">
+              <p className="repo-det-caps">Source</p>
+              <dl className="imp-kv">
+                <dt>Repository</dt>
+                <dd>{sourceRepoDisplay}</dd>
+                <dt>Branch</dt>
+                <dd>{branch}</dd>
+                <dt>Path</dt>
+                <dd>{file.path}</dd>
+                <dt>Commit</dt>
+                <dd>
+                  {loading ? (
+                    <Loader2 className="size-3 animate-spin" aria-hidden />
+                  ) : (
+                    commitSha
+                  )}
+                </dd>
               </dl>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/20">
-              <p className="text-xs text-indigo-800 dark:text-indigo-200">
-                On import, Apiome will record a row in <code className="font-mono">repository_imports</code> and
-                link the new project version&apos;s <code className="font-mono">source_ref</code> back to{' '}
-                <span className="font-mono">
-                  {repositoryName}@{commitSha}:{file.path}
-                </span>
-                .
+          <Alert variant="info">
+            On import, Apiome records a row in <span className="mono">repository_imports</span>{' '}
+            and links the new project version&apos;s <span className="mono">source_ref</span>{' '}
+            back to{' '}
+            <span className="mono">
+              {sourceRepoDisplay}@{commitSha}:{file.path}
+            </span>
+            .
+          </Alert>
+
+          <div className="repo-map-actions">
+            <Button
+              type="button"
+              className="w-full"
+              disabled={!importButtonEnabled}
+              title={
+                importableVerdict.summary === 'unsupported_openapi_version'
+                  ? importableVerdict.notImportableMessage
+                  : undefined
+              }
+              onClick={onImport}
+              data-testid="repository-import-submit"
+            >
+              {importSubmitting ? (
+                <Loader2 className="animate-spin" aria-hidden />
+              ) : (
+                <Download aria-hidden />
+              )}
+              {importSubmitting ? 'Starting import…' : primaryActionLabel}
+            </Button>
+            <Button type="button" variant="outline" className="w-full" onClick={closeWizard}>
+              Cancel
+            </Button>
+            {canAttemptImport && targetMode === 'existing' && !stagedProject ? (
+              <p className="repo-map-actions__help">
+                Select an existing project in the dropdown to enable import.
               </p>
-            </div>
-
-            <div className="space-y-2">
-              <Button
-                type="button"
-                className="w-full gap-1.5 bg-indigo-600 hover:bg-indigo-700"
-                disabled={!importButtonEnabled}
-                title={
-                  importableVerdict.summary === 'unsupported_openapi_version'
-                    ? importableVerdict.notImportableMessage
-                    : undefined
-                }
-                onClick={onImport}
-              >
-                {importSubmitting ? (
-                  <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden />
-                ) : (
-                  <Download className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                )}
-                {importSubmitting ? 'Starting import…' : primaryActionLabel}
-              </Button>
-              <Button type="button" variant="outline" className="w-full" onClick={onBack}>
-                Cancel
-              </Button>
-              {canAttemptImport && targetMode === 'existing' && !stagedProject ? (
-                <p className="text-2xs text-gray-500 dark:text-gray-400">
-                  Select an existing project in the dropdown to enable import.
-                </p>
-              ) : null}
-              {canAttemptImport && targetMode === 'new' && !stagedNewProject ? (
-                <p className="text-2xs text-gray-500 dark:text-gray-400">
-                  Use <span className="font-medium">Set up new project…</span> under Create a new project, then{' '}
-                  <span className="font-medium">Map to This Project</span>. <span className="font-medium">Import</span>{' '}
-                  runs after the project is configured there.
-                </p>
-              ) : null}
-              {canAttemptImport && targetMode === 'existing' && stagedProject ? (
-                <p className="inline-flex items-center gap-1 text-2xs text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            ) : null}
+            {canAttemptImport && targetMode === 'new' && !stagedNewProject ? (
+              <p className="repo-map-actions__help">
+                Use <span className="font-medium">Set up new project…</span>, then{' '}
+                <span className="font-medium">Map to this project</span>. Import runs after the
+                project is configured there.
+              </p>
+            ) : null}
+            {canAttemptImport && targetMode === 'existing' && stagedProject ? (
+              <p className="repo-map-actions__help" data-tone="ok">
+                <CheckCircle2 aria-hidden />
+                <span>
                   Ready to import into{' '}
-                  <span className="font-medium">{stagedProject.name}</span>
-                  <span className="font-mono text-gray-600 dark:text-gray-400"> ({stagedProject.slug})</span>.
-                </p>
-              ) : null}
-              {canAttemptImport && targetMode === 'new' && stagedNewProject ? (
-                <p className="inline-flex items-center gap-1 text-2xs text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span className="font-medium">{stagedProject.name}</span>{' '}
+                  <span className="mono">({stagedProject.slug})</span>.
+                </span>
+              </p>
+            ) : null}
+            {canAttemptImport && targetMode === 'new' && stagedNewProject ? (
+              <p className="repo-map-actions__help" data-tone="ok">
+                <CheckCircle2 aria-hidden />
+                <span>
                   Import will create{' '}
-                  <span className="font-medium">{stagedNewProject.projectName}</span>
-                  <span className="font-mono text-gray-600 dark:text-gray-400">
-                    {' '}
-                    ({stagedNewProject.projectSlug})
-                  </span>
-                  .
-                </p>
-              ) : null}
-            </div>
+                  <span className="font-medium">{stagedNewProject.projectName}</span>{' '}
+                  <span className="mono">({stagedNewProject.projectSlug})</span>.
+                </span>
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
+    );
 
-      <Dialog
-        open={flowStep === 'newProjectDraft'}
-        onOpenChange={(open) => {
-          if (!open) closeNewProjectDraft();
-        }}
-      >
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="flex h-[min(90vh,880px)] max-h-[90vh] w-[1280px] max-w-[95vw] flex-col gap-0 p-0"
+          size="full"
+          className="imp-wizard"
+          closeLabel={
+            catalogImportPhase === 'executing' ? 'Close (the job keeps running)' : 'Close'
+          }
           aria-describedby={undefined}
+          data-testid="repository-map-import"
         >
-          <DialogHeader className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <DialogTitle className="flex items-center gap-2 text-xl">
-                  <span className="rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 p-1.5 dark:from-purple-900/30 dark:to-indigo-900/30">
-                    <FolderOpen className="h-5 w-5 text-purple-600 dark:text-purple-400" aria-hidden />
-                  </span>
-                  Create New Project
-                </DialogTitle>
-                <DialogDescription className="text-left text-sm text-gray-600 dark:text-gray-400">
-                  Same manual form as Projects → New Project. Fill from scratch, copy fields from this specification,
-                  or clear and start over. Click <span className="font-medium">Map to This Project</span> to lock in
-                  this mapping; the catalog project is created later when you click Import on the previous screen.
-                  Cancel closes without saving the mapping.
-                </DialogDescription>
-              </div>
-              <div
-                className={cn(TAB_LIST_CLASS, 'shrink-0 flex-nowrap')}
-                role="tablist"
-                aria-label="Create project view"
-              >
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={newProjectDialogView === 'form'}
-                  className={tabTriggerClass({ active: newProjectDialogView === 'form' })}
-                  onClick={() => setNewProjectDialogView('form')}
-                >
-                  Form
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={newProjectDialogView === 'metadata'}
-                  className={tabTriggerClass({ active: newProjectDialogView === 'metadata' })}
-                  onClick={() => setNewProjectDialogView('metadata')}
-                >
-                  Metadata
-                </button>
-              </div>
+          <DialogHeader className="imp-wizard__head">
+            <span className="tnt-icon-tile" data-tone="accent" aria-hidden>
+              <GitPullRequestArrow />
+            </span>
+            <div className="imp-wizard__heading">
+              <DialogTitle className="flex flex-wrap items-center gap-2 text-lg">
+                Map &amp; import
+                {stagedImportTargetForParent ? (
+                  <Badge variant="ok" data-testid="repository-file-ready-to-import-badge">
+                    <CheckCircle2 aria-hidden />
+                    Ready to import
+                  </Badge>
+                ) : null}
+              </DialogTitle>
+              <DialogDescription>
+                Choose how <span className="mono">{file.path}</span> from{' '}
+                <span className="mono">
+                  {sourceRepoDisplay}@{commitSha}
+                </span>{' '}
+                should land in the catalog.
+              </DialogDescription>
             </div>
           </DialogHeader>
 
-          {newProjectDialogView === 'form' ? (
-            <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 px-6 py-3 dark:border-gray-700">
-              <Button type="button" variant="outline" size="sm" onClick={copyNewProjectFormFromSpecification}>
-                Copy from specification
-              </Button>
-              <Button type="button" variant="outline" size="sm" onClick={clearNewProjectForm}>
-                Clear form
-              </Button>
-            </div>
-          ) : null}
+          <div className="imp-wizard__body" aria-busy={loading || undefined}>
+            {body}
+          </div>
+        </DialogContent>
+      </Dialog>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+      <Dialog
+        open={flowStep === 'newProjectDraft'}
+        onOpenChange={(next) => {
+          if (!next) closeNewProjectDraft();
+        }}
+      >
+        <DialogContent size="full" className="imp-wizard" aria-describedby={undefined}>
+          <DialogHeader className="imp-wizard__head">
+            <span className="tnt-icon-tile" data-tone="honey" aria-hidden>
+              <FolderPlus />
+            </span>
+            <div className="imp-wizard__heading">
+              <DialogTitle className="text-lg">Create new project</DialogTitle>
+              <DialogDescription>
+                The same manual form as Projects → New project. Fill it from scratch, copy the
+                fields from this specification, or clear and start over. Nothing is created
+                until you run the import.
+              </DialogDescription>
+            </div>
+            <div className="imp-wizard__head-actions">
+              <Segmented
+                value={newProjectDialogView}
+                onValueChange={(v) => setNewProjectDialogView(v as NewProjectDialogView)}
+                aria-label="Create project view"
+                size="sm"
+              >
+                <SegmentedItem value="form">Form</SegmentedItem>
+                <SegmentedItem value="metadata">Metadata</SegmentedItem>
+              </Segmented>
+            </div>
+          </DialogHeader>
+
+          <div className="imp-wizard__body">
             {newProjectDialogView === 'form' ? (
-              <CreateProjectManualFormFields
-                fieldIdPrefix="repo-import-new-project-"
-                model={newProjectForm}
-                onChange={(patch) => setNewProjectForm((prev) => ({ ...prev, ...patch }))}
-                showStartTemplatePicker={false}
-              />
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={copyNewProjectFormFromSpecification}
+                  >
+                    Copy from specification
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={clearNewProjectForm}>
+                    Clear form
+                  </Button>
+                </div>
+                <CreateProjectManualFormFields
+                  fieldIdPrefix="repo-import-new-project-"
+                  model={newProjectForm}
+                  onChange={(patch) => setNewProjectForm((prev) => ({ ...prev, ...patch }))}
+                  showStartTemplatePicker={false}
+                />
+              </div>
             ) : typeof payload?.content === 'string' ? (
               <RepositoryImportSpecMetadataPanel
                 content={payload.content}
@@ -1344,22 +1293,20 @@ export function RepositoryFileImportMapping({
                 truncated={payload.truncated === true}
               />
             ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Load the repository file to view original metadata.
-              </p>
+              <p className="repo-det-note">Load the repository file to view original metadata.</p>
             )}
           </div>
 
-          <DialogFooter className="flex flex-col-reverse gap-2 border-t border-gray-200 px-6 py-4 sm:flex-row sm:justify-end dark:border-gray-700">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={closeNewProjectDraft}>
               Cancel
             </Button>
-            <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={commitMapToNewProject}>
-              Map to This Project
+            <Button type="button" onClick={commitMapToNewProject}>
+              Map to this project
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

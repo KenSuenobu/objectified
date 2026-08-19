@@ -3,15 +3,12 @@
 import { useAuthSession } from '@lib/auth/session-client';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import {
-  GitBranch,
-  Github,
-  Globe,
-  Loader2,
-  RefreshCw,
-  Plus,
-} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Eye, Files, History, RefreshCw, Settings2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+import PageHeader from '@/app/components/shell/PageHeader';
+import { Page, PageBody } from '@/app/components/shell/pageChrome';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -21,11 +18,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/app/components/ui/AlertDialog';
-import { Button, buttonVariants } from '@/app/components/ui/Button';
+import { Avatar } from '@/app/components/ui/Avatar';
+import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import { Card, CardHeader } from '@/app/components/ui/Card';
 import { GatedState } from '@/app/components/ui/EmptyState';
-import { Input } from '@/app/components/ui/Input';
+import { ErrorState } from '@/app/components/ui/ErrorState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
-import { Switch } from '@/app/components/ui/Switch';
 import {
   Select,
   SelectContent,
@@ -33,170 +32,100 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/app/components/ui/Select';
-import { toast } from 'sonner';
-import { cn } from '@lib/utils';
-import { tabTriggerClass } from '@/app/components/ui/tabStyles';
+import { TAB_COUNT_CLASS, TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
 import {
-  type DashboardRepository,
-  type RepositoryStatus,
-  RepositoryKpiCard,
   REPOSITORY_STATUS_POLL_MS,
   dashboardRepositoryFromApi,
   estimatedImportableMixForRepo,
   formatLastScan,
-  repoInitials,
   repositoryStatusNeedsPolling,
+  type DashboardRepository,
 } from '@/app/components/ade/dashboard/repositories/repositoryStoreUi';
 import { RepositoryConflictPolicy } from '@/app/components/ade/dashboard/repositories/RepositoryConflictPolicy';
 import { RepositoryHealthBadge } from '@/app/components/ade/dashboard/repositories/RepositoryHealthBadge';
 import { RepositoryFilesBrowser } from '@/app/components/ade/dashboard/repositories/RepositoryFilesBrowser';
 import { RepositorySpecsTab } from '@/app/components/ade/dashboard/repositories/RepositorySpecsTab';
+import {
+  DASHBOARD_HREF,
+  REPOSITORIES_LIST_HREF,
+  REPOSITORY_DETAIL_TABS,
+  REPOSITORY_DETAIL_TAB_LABEL,
+  REPOSITORY_LOADING,
+  REPOSITORY_NO_TENANT,
+  REPOSITORY_STATUS_LABEL,
+  REPOSITORY_UNAVAILABLE,
+  RESCAN_IN_PROGRESS_TITLE,
+  RESCAN_STUB_TOAST,
+  RepositoryDetailKpiStrip,
+  RepositoryImportsTable,
+  RepositoryPreviewTab,
+  RepositorySettingsTab,
+  SCAN_HISTORY_STUB_TOAST,
+  removeRepositoryPrompt,
+  repositoryDescriptionLine,
+  repositoryDetailTabFromParams,
+  repositoryDetailTabHref,
+  repositoryProviderSlug,
+  repositoryWebUrl,
+  readRepositoryFileDeepLink,
+  type RepositoryDetailTab,
+  type RepositoryImportRow,
+} from '@/app/components/ade/repositories';
 
-type RepoTab = 'preview' | 'files' | 'specs' | 'imports' | 'settings';
-
-type RepositoryImportMetricApiRow = {
-  id: string;
-  path: string;
-  branch: string;
-  blob_sha: string | null;
-  created_at: string;
-  project_id: string;
-  project_name: string;
-  project_slug: string;
-  catalog_version_label: string;
-  version_uuid: string;
-  imported_by: string | null;
-  imported_by_name: string | null;
-  imported_by_email: string | null;
+/** The glyph each tab leads with, matching the mockup's tab row. */
+const TAB_ICON: Readonly<Record<RepositoryDetailTab, typeof Eye>> = {
+  preview: Eye,
+  files: Files,
+  specs: RefreshCw,
+  imports: History,
+  settings: Settings2,
 };
 
-function shortBlobRef(sha: string | null | undefined): string {
-  if (!sha?.trim()) return '';
-  const s = sha.trim();
-  return s.length > 10 ? `${s.slice(0, 7)}…` : s;
-}
-
-function formatImportedByActor(row: {
-  imported_by_name: string | null;
-  imported_by_email: string | null;
-}): string {
-  const n = row.imported_by_name?.trim();
-  if (n) return n;
-  const e = row.imported_by_email?.trim();
-  if (e) return e;
-  return '—';
-}
-
-function formatRelativeWhen(iso: string): string {
-  const t = new Date(iso).getTime();
-  if (Number.isNaN(t)) return iso;
-  const sec = Math.floor((Date.now() - t) / 1000);
-  if (sec < 45) return 'just now';
-  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
-  if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
-  if (sec < 604800) return `${Math.floor(sec / 86400)}d ago`;
-  return new Date(iso).toLocaleString();
-}
-
-/** Deep-link into Files tab and open the indexed path on the recorded branch. */
-function repositoryImportedFileHref(repositoryId: string, path: string, branch: string): string {
-  const qs = new URLSearchParams();
-  qs.set('tab', 'files');
-  qs.set('path', path);
-  qs.set('branch', branch);
-  return `/ade/dashboard/repositories/${encodeURIComponent(repositoryId)}/preview?${qs.toString()}`;
-}
-
-function providerSlug(repo: DashboardRepository): string {
-  if (repo.provider === 'github' && repo.full_name && !repo.full_name.includes('://')) {
-    return `github.com/${repo.full_name}`;
-  }
-  if (repo.clone_url) {
-    try {
-      const u = new URL(repo.clone_url);
-      const path = u.pathname.replace(/\.git\/?$/i, '') || '/';
-      return `${u.hostname}${path === '/' ? '' : path}`;
-    } catch {
-      /* ignore */
-    }
-  }
-  return repo.full_name || '—';
-}
-
-function statusPill(status: RepositoryStatus) {
-  switch (status) {
-    case 'ready':
-      return (
-        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-2xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-          Active
-        </span>
-      );
-    case 'scanning':
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-2xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-          <Loader2 className="h-3 w-3 shrink-0 animate-spin" aria-hidden />
-          Scanning
-        </span>
-      );
-    case 'pending':
-      return (
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-          Pending
-        </span>
-      );
-    case 'error':
-      return (
-        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-2xs font-semibold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
-          Error
-        </span>
-      );
-    case 'archived':
-      return (
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-          Archived
-        </span>
-      );
-    default:
-      return null;
-  }
-}
-
-function TabBtn({
-  active,
-  onClick,
-  children,
-  badge,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-  badge?: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={tabTriggerClass({ active })}
-    >
-      {children}
-      {badge !== undefined ? (
-        <span
-          className={cn(
-            'rounded-full px-1.5 py-0.5 text-2xs',
-            active
-              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
-              : 'bg-gray-200 dark:bg-gray-700'
-          )}
-        >
-          {badge}
-        </span>
-      ) : null}
-    </button>
-  );
-}
-
+/**
+ * Bring in → Repositories → one repository (HIVE-7.5, #5322).
+ *
+ * Authority: `docs/mockups/sources/repository-detail.html`, whose **Notes → Keeps (1:1)** list
+ * is this ticket's acceptance criteria; DESIGN.md §5.3 (page header), §8 (detail page: header →
+ * stat strip → tabs) and §3.1 (status vocabulary).
+ *
+ * ### What this screen is
+ *
+ * One registered repository, the tree the scanner indexed from it, and everything the workspace
+ * has brought *in* from that tree. Five sections: what it is (Preview), what is in it (Files),
+ * what has been imported and whether those imports are current (Specs), what was imported and
+ * by whom (Imports), and how it behaves (Settings).
+ *
+ * ### What it owns, and what it no longer does
+ *
+ * It owns the repository read, the status poll, the two writes (auto-refresh, remove), which
+ * tab is showing and which branch the Files tab is on. It owns none of the rules: which tab a
+ * URL names, what the KPI figures and their footnotes are, what a stub says, what the remove
+ * confirm reads — all of that is `repositoryDetailModel`, where it is tested without rendering
+ * a screen. The 1,094-line client this replaces had every one of them inline, and drew the
+ * imports table twice in two different spellings.
+ *
+ * ### Four things this fixes rather than restyles
+ *
+ * 1. **Two branch controls could disagree.** The header carried a `Select` with exactly one
+ *    option and no handler; the Files tab carried a popover that actually switched branches.
+ *    Both are the same state now, so the header always names the branch the table is showing —
+ *    and the header's control does something, which is what "visually honest" asks of it.
+ * 2. **A failed read looked like a missing repository.** The screen rendered a hand-rolled
+ *    rose panel with the raw message and no way to retry. It is an `ErrorState` with a retry
+ *    and a way back to the list.
+ * 3. **The tab strip lost its selection on reload.** `?tab=` was read into state but never
+ *    written back, so a reader who opened Settings and refreshed landed on Preview. Selecting
+ *    a tab now replaces the URL, which is also what makes a tab linkable.
+ * 4. **The KPI figures were `text-indigo-600` when known and `text-gray-400` when not.** A
+ *    figure's *colour* was the only signal that it was a placeholder, which DESIGN.md §6
+ *    forbids. Each stat now carries `data-unwired` and a footnote that says so in words.
+ *
+ * ### The poll
+ *
+ * A repository that is `pending` or `scanning` is still changing, so the record re-reads every
+ * two seconds while it is — silently, so the header does not flash a skeleton at a reader every
+ * two seconds. Unchanged from what it replaces, including the constant.
+ */
 export function RepositoryDetailClient() {
   const params = useParams();
   const router = useRouter();
@@ -208,82 +137,99 @@ export function RepositoryDetailClient() {
   const [repo, setRepo] = useState<DashboardRepository | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<RepoTab>('preview');
+  const [tab, setTab] = useState<RepositoryDetailTab>('preview');
   const [removing, setRemoving] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [savingAutoRefresh, setSavingAutoRefresh] = useState(false);
-  const [repoImports, setRepoImports] = useState<RepositoryImportMetricApiRow[]>([]);
+  const [repoImports, setRepoImports] = useState<RepositoryImportRow[]>([]);
   const [importsLoading, setImportsLoading] = useState(false);
   const [importsError, setImportsError] = useState<string | null>(null);
-  const [stats30d, setStats30d] = useState<{ totalImports: number; distinctProjects: number } | null>(null);
+  const [stats30d, setStats30d] = useState<
+    { totalImports: number; distinctProjects: number } | null
+  >(null);
 
-  const filesDeepLink = useMemo(() => {
-    const path = searchParams.get('path')?.trim();
-    const branch = searchParams.get('branch')?.trim();
-    if (!path || !branch) return null;
-    const t = searchParams.get('tab');
-    if (t != null && t !== '' && t !== 'files') return null;
-    return { path, branch };
-  }, [searchParams]);
+  // The branch the Files tab is reading, lifted here so the header's control and the tab's own
+  // popover are one state rather than two that can disagree. `branches` is what the last files
+  // read discovered; before that read there is only the registration's default.
+  const [branch, setBranch] = useState('');
+  const [branches, setBranches] = useState<string[]>([]);
+
+  const filesDeepLink = useMemo(
+    () => readRepositoryFileDeepLink(new URLSearchParams(searchParams.toString())),
+    [searchParams]
+  );
 
   useEffect(() => {
-    const path = searchParams.get('path')?.trim();
-    const branch = searchParams.get('branch')?.trim();
-    if (path && branch) {
-      setTab('files');
-      return;
-    }
-    const t = searchParams.get('tab');
-    if (t === 'files' || t === 'specs' || t === 'imports' || t === 'settings' || t === 'preview') {
-      setTab(t as RepoTab);
-    }
+    setTab(repositoryDetailTabFromParams(new URLSearchParams(searchParams.toString())));
   }, [searchParams]);
+
+  /** Select a tab, and record it in the URL so a reload and a shared link both land on it. */
+  const selectTab = useCallback(
+    (next: RepositoryDetailTab) => {
+      setTab(next);
+      if (!id) return;
+      router.replace(repositoryDetailTabHref(id, next), { scroll: false });
+    },
+    [id, router]
+  );
 
   const consumeFilesDeepLink = useCallback(() => {
     if (!id) return;
-    router.replace(`/ade/dashboard/repositories/${encodeURIComponent(id)}/preview?tab=files`, { scroll: false });
+    router.replace(repositoryDetailTabHref(id, 'files'), { scroll: false });
   }, [id, router]);
 
-  const load = useCallback(async (opts?: { silent?: boolean }) => {
-    const silent = opts?.silent === true;
-    if (!currentTenantId || !id) {
-      setRepo(null);
-      if (!silent) setLoading(false);
-      return;
-    }
-    if (!silent) {
-      setLoading(true);
-      setError(null);
-    }
-    try {
-      const res = await fetch(`/api/repositories/${encodeURIComponent(id)}`, { credentials: 'include' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(typeof data.error === 'string' ? data.error : res.statusText);
-      }
-      const raw = data && typeof data === 'object' ? (data as { repository?: unknown }).repository : null;
-      const parsed = dashboardRepositoryFromApi(raw);
-      if (!parsed) {
-        throw new Error('Invalid response from server');
-      }
-      setRepo(parsed);
-      if (!silent) setError(null);
-    } catch (e) {
-      console.error(e);
-      if (!silent) {
+  const load = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      const silent = opts?.silent === true;
+      if (!currentTenantId || !id) {
         setRepo(null);
-        const msg = e instanceof Error ? e.message : 'Could not load repository';
-        setError(msg);
-        toast.error(msg);
+        if (!silent) setLoading(false);
+        return;
       }
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [currentTenantId, id]);
+      if (!silent) {
+        setLoading(true);
+        setError(null);
+      }
+      try {
+        const res = await fetch(`/api/repositories/${encodeURIComponent(id)}`, {
+          credentials: 'include',
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(typeof data.error === 'string' ? data.error : res.statusText);
+        }
+        const raw =
+          data && typeof data === 'object' ? (data as { repository?: unknown }).repository : null;
+        const parsed = dashboardRepositoryFromApi(raw);
+        if (!parsed) throw new Error('Invalid response from server');
+        setRepo(parsed);
+        if (!silent) setError(null);
+      } catch (e) {
+        console.error(e);
+        if (!silent) {
+          setRepo(null);
+          const msg = e instanceof Error ? e.message : 'Could not load repository';
+          setError(msg);
+          toast.error(msg);
+        }
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [currentTenantId, id]
+  );
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // The branch state follows the registration's default until the reader picks another.
+  useEffect(() => {
+    const fallback = repo?.default_branch;
+    if (!fallback) return;
+    setBranch((prev) => prev || fallback);
+    setBranches((prev) => (prev.length > 0 ? prev : [fallback]));
+  }, [repo?.default_branch]);
 
   const fetchImports = useCallback(async () => {
     if (!currentTenantId || !id) return;
@@ -295,7 +241,7 @@ export function RepositoryDetailClient() {
       });
       const data = (await res.json().catch(() => ({}))) as {
         success?: boolean;
-        imports?: RepositoryImportMetricApiRow[];
+        imports?: RepositoryImportRow[];
         stats30d?: { totalImports: number; distinctProjects: number };
         error?: string;
       };
@@ -353,7 +299,7 @@ export function RepositoryDetailClient() {
       }
       setRemoveDialogOpen(false);
       toast.success('Repository removed.');
-      router.replace('/ade/dashboard/repositories');
+      router.replace(REPOSITORIES_LIST_HREF);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not remove repository.');
     } finally {
@@ -362,9 +308,11 @@ export function RepositoryDetailClient() {
   };
 
   /**
-   * Toggle this repository's auto-refresh opt-out (RAR-3.3). Optimistically flips
-   * the local switch, PATCHes the repo, and reconciles to the server's returned
-   * value — rolling back on error so the UI never lies about persisted state.
+   * Toggle this repository's auto-refresh opt-out (RAR-3.3). Optimistically flips the local
+   * switch, PATCHes the repo, and reconciles to the server's returned value — rolling back on
+   * error so the UI never lies about persisted state.
+   *
+   * @param next The state the reader asked for.
    */
   const performToggleAutoRefresh = async (next: boolean) => {
     if (!id || !repo || savingAutoRefresh) return;
@@ -383,7 +331,7 @@ export function RepositoryDetailClient() {
         throw new Error(typeof data.error === 'string' ? data.error : res.statusText);
       }
       const parsed = dashboardRepositoryFromApi(
-        data && typeof data === 'object' ? (data as { repository?: unknown }).repository : null,
+        data && typeof data === 'object' ? (data as { repository?: unknown }).repository : null
       );
       if (parsed) setRepo(parsed);
       toast.success(next ? 'Auto-refresh enabled.' : 'Auto-refresh disabled.');
@@ -395,672 +343,262 @@ export function RepositoryDetailClient() {
     }
   };
 
-  const filesTotal = repo?.total_files ?? 0;
-  const importable = repo?.importable_count ?? null;
-
   const importableMix = useMemo(() => {
     if (!repo || typeof repo.importable_count !== 'number') return null;
     return estimatedImportableMixForRepo(repo.importable_count, repo.id);
   }, [repo]);
 
-  const recentScanRows = useMemo(() => repo?.recent_scans ?? [], [repo]);
-
-  const webUrl = useMemo(() => {
-    if (!repo?.clone_url) return null;
-    const u = repo.clone_url.replace(/\.git$/i, '');
-    if (repo.provider === 'github' && u.includes('github.com')) {
-      return u;
-    }
-    return null;
-  }, [repo]);
-
-  const lastScanValue =
-    repo?.last_scanned_at != null
-      ? formatLastScan(repo.last_scanned_at, repo.status === 'error')
-      : 'Never';
-
-  const lastScanSubtitle =
-    repo?.last_scanned_at != null
-      ? repo.status === 'error'
-        ? 'Last job reported an error; details will map from scan job records.'
-        : 'From `last_scanned_at` on this repository row (full diff summaries require scan job API).'
-      : '`last_scanned_at` is unset until the first completed indexing job writes it.';
+  const webUrl = useMemo(() => repositoryWebUrl(repo), [repo]);
 
   if (!currentTenantId) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="flex-1 overflow-y-auto p-6">
-          <GatedState
-            className="mx-auto max-w-3xl"
-            description="Repositories are registered against one workspace."
-          />
-        </div>
-      </div>
+      <Page>
+        <PageBody>
+          <GatedState className="mx-auto max-w-3xl" description={REPOSITORY_NO_TENANT} />
+        </PageBody>
+      </Page>
     );
   }
 
-  return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-gray-50 dark:bg-gray-900">
-      <div
-        className={cn(
-          'shrink-0 border-b border-gray-200 bg-white px-6 pb-0 pt-6 dark:border-gray-700 dark:bg-gray-800',
-          (loading || error || !repo) && 'pb-6'
-        )}
-      >
-        <div className="mb-4 flex flex-wrap items-start gap-3">
-          <Link
-            href="/ade/dashboard/repositories"
-            className={cn(
-              buttonVariants({ variant: 'ghost', size: 'sm' }),
-              'shrink-0 gap-1 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
-            )}
-          >
-            ← Repositories
-          </Link>
-        </div>
+  if (loading) {
+    return (
+      <Page>
+        <PageBody>
+          <LoadingState className="min-h-[40vh]" message={REPOSITORY_LOADING} />
+        </PageBody>
+      </Page>
+    );
+  }
 
-        {loading ? (
-          <LoadingState message="Loading repository…" />
-        ) : error || !repo ? (
-          <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-6 dark:border-rose-800/50 dark:bg-rose-950/30">
-            <h2 className="text-lg font-semibold text-rose-900 dark:text-rose-100">Repository unavailable</h2>
-            <p className="mt-1 text-sm text-rose-800 dark:text-rose-200">{error ?? 'Not found'}</p>
-            <Link href="/ade/dashboard/repositories" className={cn(buttonVariants({ size: 'sm' }), 'mt-4')}>
-              Back to list
-            </Link>
-          </div>
-        ) : (
-          <>
-            <div className="mb-3 flex flex-wrap items-start gap-4">
-              <span className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 font-mono text-lg font-bold text-white">
-                {repoInitials(repo.name)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="truncate text-2xl font-bold">{repo.name}</h1>
-                  {/* REPO-6.5: health leads the header pills — "is it fine?" before "what
-                      is it doing?" — and its tooltip names the most recent problem. */}
-                  <RepositoryHealthBadge health={repo.health} />
-                  {statusPill(repo.status)}
-                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                    {repo.provider === 'github' ? (
-                      <Github className="h-3 w-3 shrink-0" aria-hidden />
-                    ) : (
-                      <Globe className="h-3 w-3 shrink-0 text-indigo-500" aria-hidden />
-                    )}
-                    {providerSlug(repo)}
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 font-mono text-2xs text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
-                    <GitBranch className="h-3 w-3 shrink-0" aria-hidden />
-                    {repo.default_branch}
-                  </span>
-                </div>
-                <p className="mt-1.5 max-w-3xl text-sm text-gray-500 dark:text-gray-400">
-                  {repo.description?.trim()
-                    ? repo.description
-                    : 'No description from the provider metadata on this registration.'}
-                </p>
-              </div>
-              <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  disabled={repo.status === 'scanning'}
-                  title={repo.status === 'scanning' ? 'A scan is already in progress.' : undefined}
-                  onClick={() => toast.message('Rescan runs when scan jobs are wired to the API.')}
-                >
-                  <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-                  Rescan
-                </Button>
-                <Select defaultValue={repo.default_branch}>
-                  <SelectTrigger className="h-9 w-[140px] gap-1 border-gray-200 dark:border-gray-700">
-                    <GitBranch className="h-3.5 w-3.5 shrink-0 text-gray-500" aria-hidden />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={repo.default_branch}>{repo.default_branch}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 border-t border-gray-100 py-4 md:grid-cols-3 xl:grid-cols-5 dark:border-gray-700">
-              <RepositoryKpiCard
-                label="Files indexed"
-                value={filesTotal.toLocaleString()}
-                subtitle="From `total_files` after tree indexing; directory counts need scan metadata (not stored yet)."
-                valuePending={repo.status === 'scanning'}
-              />
-              <RepositoryKpiCard
-                label="IMPORTABLE ESTIMATE"
-                value={importable != null ? importable.toLocaleString() : '—'}
-                subtitle={
-                  importable != null && importableMix
-                    ? `Estimated mix from this repo’s total: OpenAPI ${importableMix.openapi.toLocaleString()}, Arazzo ${importableMix.arazzo.toLocaleString()}, JSON Schema ${importableMix.jsonSchema.toLocaleString()}. Split is a placeholder until indexed paths return real per-kind tallies.`
-                    : '`importable_count` is null until detection runs and persists per-repo totals.'
-                }
-                valueClassName={
-                  importable != null ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'
-                }
-                valuePending={repo.status === 'scanning'}
-              />
-              <RepositoryKpiCard
-                label="Branches"
-                value={repo.branch_count != null ? repo.branch_count.toLocaleString() : '—'}
-                subtitle={
-                  repo.provider === 'github'
-                    ? '`branch_count` from GitHub at registration (paginated list-branches). Non-GitHub providers are not counted yet.'
-                    : 'Branch totals are only filled for GitHub registrations today; other providers return no count.'
-                }
-                valueClassName={
-                  repo.branch_count != null ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'
-                }
-                valuePending={repo.status === 'scanning'}
-              />
-              <RepositoryKpiCard
-                label="Imports (30d)"
-                value={
-                  importsLoading && stats30d == null ? '—' : (stats30d?.totalImports ?? 0).toLocaleString()
-                }
-                subtitle={
-                  importsLoading && stats30d == null
-                    ? 'Loading import metrics…'
-                    : stats30d != null && stats30d.totalImports > 0
-                      ? `${stats30d.distinctProjects.toLocaleString()} distinct project(s) in the last 30 days.`
-                      : 'Catalog imports from this repo’s Files tab in the last 30 days.'
-                }
-                valuePending={repo.status === 'scanning'}
-              />
-              <RepositoryKpiCard
-                label="Last scan"
-                value={lastScanValue}
-                subtitle={lastScanSubtitle}
-                valueClassName={
-                  repo.last_scanned_at == null || repo.status === 'error'
-                    ? 'text-gray-400 dark:text-gray-500'
-                    : undefined
-                }
-                valuePending={repo.status === 'scanning'}
-              />
-            </div>
-
-            {/* The header card's own bottom rule is this strip's tab underline, so the list carries
-                only the separator above it (cf. TAB_LIST_CLASS, which supplies its own rule). */}
-            <div
-              role="tablist"
-              aria-label="Repository sections"
-              className="-mx-6 flex flex-wrap items-center gap-1 border-t border-gray-200 px-6 dark:border-gray-700"
-            >
-              <TabBtn active={tab === 'preview'} onClick={() => setTab('preview')}>
-                Preview
-              </TabBtn>
-              <TabBtn active={tab === 'files'} onClick={() => setTab('files')} badge={filesTotal.toLocaleString()}>
-                Files
-              </TabBtn>
-              <TabBtn active={tab === 'specs'} onClick={() => setTab('specs')}>
-                Specs
-              </TabBtn>
-              <TabBtn active={tab === 'imports'} onClick={() => setTab('imports')}>
-                Imports
-              </TabBtn>
-              <TabBtn active={tab === 'settings'} onClick={() => setTab('settings')}>
-                Settings
-              </TabBtn>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-      {!loading && repo && tab === 'preview' && (
-        <div className="space-y-6 px-6 py-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Snapshot of this repository&apos;s registration, scan posture, and import activity. More detail appears here
-            as scan jobs and import history are exposed through the API.
-          </p>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-stretch">
-            <div className="flex min-h-48 flex-col rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800 lg:col-span-2 lg:h-full lg:min-h-0">
-              <div className="mb-3 flex shrink-0 items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Recent scans</h3>
-                <button
-                  type="button"
-                  className="text-2xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
-                  onClick={() => toast.message('Scan history needs a `tenant_repository_scan_jobs` (or similar) collection exposed over REST.')}
-                >
-                  View scan history →
-                </button>
-              </div>
-              {recentScanRows.length === 0 ? (
-                <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-2 py-6">
-                  <p className="m-0 text-center text-sm leading-normal text-gray-900 dark:text-gray-100">
-                    No recent scans
-                  </p>
-                </div>
-              ) : (
-                <div className="min-h-0 flex-1 space-y-2">
-                  {recentScanRows.map((row) => (
-                    <div
-                      key={`${row.branch}:${row.finished_at}`}
-                      className="flex items-center justify-between border-b border-gray-100 pb-2 text-sm dark:border-gray-700"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            'h-2 w-2 shrink-0 rounded-full',
-                            row.failed ? 'bg-rose-500' : 'bg-emerald-500'
-                          )}
-                        />
-                        <span>{row.branch}</span>
-                        <span className="font-mono text-xs text-gray-500 dark:text-gray-400">—</span>
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatLastScan(row.finished_at, row.failed)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800 lg:h-full">
-              <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">Importable mix</h3>
-              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
-                <li className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    OpenAPI
-                  </span>
-                  <span className="font-mono text-xs font-semibold text-gray-700 dark:text-gray-200">
-                    {importableMix != null ? importableMix.openapi.toLocaleString() : '—'}
-                  </span>
-                </li>
-                <li className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
-                    Arazzo
-                  </span>
-                  <span className="font-mono text-xs font-semibold text-gray-700 dark:text-gray-200">
-                    {importableMix != null ? importableMix.arazzo.toLocaleString() : '—'}
-                  </span>
-                </li>
-                <li className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-purple-500" />
-                    JSON Schema
-                  </span>
-                  <span className="font-mono text-xs font-semibold text-gray-700 dark:text-gray-200">
-                    {importableMix != null ? importableMix.jsonSchema.toLocaleString() : '—'}
-                  </span>
-                </li>
-                <li className="flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
-                  <span className="inline-flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
-                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
-                    Total importable (row)
-                  </span>
-                  <span className="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                    {importable != null ? importable.toLocaleString() : '—'}
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Recent imports from this repo</h3>
-              <button
-                type="button"
-                className="text-2xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
-                onClick={() => setTab('imports')}
-              >
-                See all →
-              </button>
-            </div>
-            <table className="w-full text-sm">
-              <thead className="border-b border-gray-200 text-2xs uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                <tr>
-                  <th className="py-2 align-middle text-left font-semibold">File</th>
-                  <th className="py-2 align-middle text-left font-semibold">Project</th>
-                  <th className="py-2 align-middle text-left font-semibold">Version</th>
-                  <th className="py-2 align-middle text-left font-semibold">Imported by</th>
-                  <th className="py-2 align-middle text-left font-semibold">When</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {importsError ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 align-middle text-center text-sm text-rose-600 dark:text-rose-400">
-                      {importsError}
-                    </td>
-                  </tr>
-                ) : importsLoading && repoImports.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-10 align-middle text-center text-sm text-gray-500 dark:text-gray-400">
-                      Loading imports…
-                    </td>
-                  </tr>
-                ) : repoImports.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-10 align-middle text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-                      No imports yet. Open the Files tab, select a spec, and complete a catalog import to record activity
-                      here.
-                    </td>
-                  </tr>
-                ) : (
-                  repoImports.slice(0, 8).map((row) => {
-                    const blob = shortBlobRef(row.blob_sha);
-                    return (
-                      <tr key={row.id}>
-                        <td className="max-w-[200px] py-2 align-middle">
-                          <Link
-                            href={repositoryImportedFileHref(id, row.path, row.branch)}
-                            className="break-all font-mono text-xs text-indigo-600 hover:underline dark:text-indigo-400"
-                          >
-                            {row.path}
-                          </Link>
-                          {blob ? (
-                            <span className="mt-0.5 block text-2xs text-gray-500 dark:text-gray-400">
-                              blob {blob} · {row.branch}
-                            </span>
-                          ) : (
-                            <span className="mt-0.5 block text-2xs text-gray-500 dark:text-gray-400">
-                              {row.branch}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-2 align-middle">
-                          <Link
-                            href={`/ade/dashboard/versions?projectId=${encodeURIComponent(row.project_id)}`}
-                            className="text-indigo-600 hover:underline dark:text-indigo-400"
-                          >
-                            {row.project_name}
-                          </Link>
-                        </td>
-                        <td className="py-2 align-middle font-mono text-xs text-gray-800 dark:text-gray-200">
-                          {row.catalog_version_label}
-                        </td>
-                        <td className="py-2 align-middle text-gray-700 dark:text-gray-300">
-                          {formatImportedByActor(row)}
-                        </td>
-                        <td className="whitespace-nowrap py-2 align-middle text-gray-600 dark:text-gray-400">
-                          {formatRelativeWhen(row.created_at)}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {!loading && repo && tab === 'files' && (
-        <div className="px-6 py-6">
-          <RepositoryFilesBrowser
-            repositoryId={id}
-            defaultBranch={repo.default_branch}
-            repositoryName={repo.name}
-            repositoryFullName={repo.full_name}
-            githubWebBase={webUrl}
-            filesDeepLink={filesDeepLink}
-            onFilesDeepLinkConsumed={consumeFilesDeepLink}
+  if (error || !repo) {
+    return (
+      <Page>
+        <PageBody>
+          <ErrorState
+            className="mx-auto max-w-3xl"
+            title={REPOSITORY_UNAVAILABLE}
+            description={error ?? 'This repository is not registered to the current workspace.'}
+            onRetry={() => void load()}
+            action={
+              <Link href={REPOSITORIES_LIST_HREF} className="repo-det-link">
+                Back to list
+              </Link>
+            }
           />
-        </div>
-      )}
+        </PageBody>
+      </Page>
+    );
+  }
 
-      {!loading && repo && tab === 'specs' && (
-        <div className="space-y-4 px-6 py-6">
-          <RepositorySpecsTab repositoryId={id} />
-        </div>
-      )}
+  const filesTotal = repo.total_files ?? 0;
+  const lastScanLabel =
+    repo.last_scanned_at != null
+      ? formatLastScan(repo.last_scanned_at, repo.status === 'error')
+      : 'Never';
+  const scanning = repo.status === 'scanning';
+  const activeBranch = branch || repo.default_branch;
+  const branchOptions = branches.length > 0 ? branches : [repo.default_branch];
 
-      {!loading && repo && tab === 'imports' && (
-        <div className="space-y-4 px-6 py-6">
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Import history</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Successful catalog imports from this repository&apos;s files.
-              </p>
-            </div>
-            <table className="w-full text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-2xs uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
-                <tr>
-                  <th className="px-4 py-2 align-middle text-left font-semibold">When</th>
-                  <th className="px-4 py-2 align-middle text-left font-semibold">File · blob</th>
-                  <th className="px-4 py-2 align-middle text-left font-semibold">Project · version</th>
-                  <th className="px-4 py-2 align-middle text-left font-semibold">Outcome</th>
-                  <th className="px-4 py-2 align-middle text-left font-semibold">By</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {importsError ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-12 align-middle text-center text-sm text-rose-600 dark:text-rose-400">
-                      {importsError}
-                    </td>
-                  </tr>
-                ) : importsLoading && repoImports.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-12 align-middle text-center text-sm text-gray-500 dark:text-gray-400">
-                      Loading imports…
-                    </td>
-                  </tr>
-                ) : repoImports.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-12 align-middle text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-                      No imports recorded yet. Use the Files tab to open a specification and run an import.
-                    </td>
-                  </tr>
-                ) : (
-                  repoImports.map((row) => {
-                    const blob = shortBlobRef(row.blob_sha);
-                    return (
-                      <tr key={row.id} className="hover:bg-gray-50/80 dark:hover:bg-gray-900/40">
-                        <td className="whitespace-nowrap px-4 py-2 align-middle text-gray-600 dark:text-gray-400">
-                          {formatRelativeWhen(row.created_at)}
-                        </td>
-                        <td className="max-w-[240px] px-4 py-2 align-middle">
-                          <Link
-                            href={repositoryImportedFileHref(id, row.path, row.branch)}
-                            className="break-all font-mono text-xs text-indigo-600 hover:underline dark:text-indigo-400"
-                          >
-                            {row.path}
-                          </Link>
-                          <div className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
-                            {blob ? `blob ${blob} · ${row.branch}` : row.branch}
-                          </div>
-                        </td>
-                        <td className="px-4 py-2 align-middle">
-                          <Link
-                            href={`/ade/dashboard/versions?projectId=${encodeURIComponent(row.project_id)}`}
-                            className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-                          >
-                            {row.project_name}
-                          </Link>
-                          <div className="mt-0.5 font-mono text-xs text-gray-600 dark:text-gray-400">
-                            v{row.catalog_version_label}
-                          </div>
-                        </td>
-                        <td className="px-4 py-2 align-middle text-gray-700 dark:text-gray-300">Completed</td>
-                        <td className="px-4 py-2 align-middle text-gray-700 dark:text-gray-300">{formatImportedByActor(row)}</td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+  const tabs = (
+    <div role="tablist" aria-label="Repository sections" className={TAB_LIST_CLASS}>
+      {REPOSITORY_DETAIL_TABS.map((name) => {
+        const Icon = TAB_ICON[name];
+        return (
+          <button
+            key={name}
+            type="button"
+            role="tab"
+            id={`repository-tab-${name}`}
+            aria-selected={tab === name}
+            aria-controls={`repository-panel-${name}`}
+            data-testid={`repository-tab-${name}`}
+            className={tabTriggerClass({ active: tab === name })}
+            onClick={() => selectTab(name)}
+          >
+            <Icon className="repo-tab__glyph" aria-hidden />
+            {REPOSITORY_DETAIL_TAB_LABEL[name]}
+            {name === 'files' ? (
+              <span className={TAB_COUNT_CLASS}>{filesTotal.toLocaleString()}</span>
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <Page>
+      <PageHeader
+        breadcrumb={[
+          { label: 'Home', href: DASHBOARD_HREF },
+          { label: 'Repositories', href: REPOSITORIES_LIST_HREF },
+          { label: repo.name },
+        ]}
+        leading={
+          <Avatar size="xl" shape="hex" name={repo.name} seed={repo.id} className="mt-6" />
+        }
+        title={repo.name}
+        truncateTitle
+        badge={
+          <>
+            {/* REPO-6.5: health leads the header pills — "is it fine?" before "what is it
+                doing?" — and its tooltip names the most recent problem. */}
+            <RepositoryHealthBadge health={repo.health} />
+            <Badge status={repo.status}>{REPOSITORY_STATUS_LABEL[repo.status]}</Badge>
+          </>
+        }
+        description={repositoryDescriptionLine(repo)}
+        meta={
+          <div className="repo-det-chips">
+            <Badge
+              variant="outline"
+              mono
+              data-provider={repo.provider}
+              className="repo-provider"
+              data-testid="repository-provider-slug"
+            >
+              {repositoryProviderSlug(repo)}
+            </Badge>
+            <Badge variant="outline" mono data-testid="repository-default-branch-chip">
+              {repo.default_branch}
+            </Badge>
           </div>
-        </div>
-      )}
-
-      {!loading && repo && tab === 'settings' && (
-        <div className="max-w-3xl space-y-4 px-6 py-6">
-          <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-            <h3 className="border-b border-gray-100 pb-2 text-sm font-semibold dark:border-gray-700 dark:text-gray-100">Source</h3>
-            <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-              <div>
-                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  Provider
-                </label>
-                <p className="mt-1 inline-flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                  {repo.provider === 'github' ? <Github className="h-4 w-4" aria-hidden /> : <Globe className="h-4 w-4 text-indigo-500" />}
-                  <span className="capitalize">{repo.provider.replace('_', ' ')}</span>
-                  {repo.source === 'linked_account' ? (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">(linked account)</span>
-                  ) : repo.source === 'public_url' ? (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">(public URL)</span>
-                  ) : null}
-                </p>
-              </div>
-              <div>
-                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Clone URL</label>
-                <p className="mt-1 break-all font-mono text-xs text-gray-900 dark:text-gray-100">{repo.clone_url ?? '—'}</p>
-                {webUrl ? (
-                  <a
-                    href={webUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-block text-xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400"
-                  >
-                    Open in browser →
-                  </a>
-                ) : null}
-              </div>
-              <div>
-                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  Default branch
-                </label>
-                <Input readOnly value={repo.default_branch} className="mt-1 font-mono text-sm" />
-              </div>
-              <div>
-                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  Subpath glob (optional)
-                </label>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Not stored on <span className="font-mono">tenant_repositories</span> yet; future column or child table to
-                  limit scan roots.
-                </p>
-                <Input disabled placeholder="e.g. specs/**" className="mt-2 font-mono text-sm" />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-            <h3 className="border-b border-gray-100 pb-2 text-sm font-semibold dark:border-gray-700 dark:text-gray-100">Scan cadence</h3>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-1">
-                <label
-                  htmlFor="auto-refresh-toggle"
-                  className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-                >
-                  Auto-refresh
-                </label>
-                <p className="max-w-md text-xs text-gray-500 dark:text-gray-400">
-                  When on, this repository is rescanned on its cadence and changed files are re-imported automatically.
-                  Turn it off to pause auto-refresh for this repo. Manual “Refresh now” is unaffected.
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Switch
-                  id="auto-refresh-toggle"
-                  checked={repo.auto_refresh_enabled ?? true}
-                  disabled={savingAutoRefresh}
-                  onCheckedChange={(next) => void performToggleAutoRefresh(next)}
-                  aria-label="Toggle auto-refresh for this repository"
-                />
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                  {(repo.auto_refresh_enabled ?? true) ? 'Enabled' : 'Disabled'}
-                </span>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Scheduling + webhook secrets are product decisions: poll interval vs GitHub/GitLab push hooks. Persist on a
-              repo settings extension once requirements settle.
-            </p>
-            <fieldset disabled className="grid grid-cols-1 gap-4 text-sm opacity-70 sm:grid-cols-2">
-              <div>
-                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Schedule</label>
-                <select className="mt-1 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
-                  <option>Not configured</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Webhook</label>
-                <p className="mt-2 inline-flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                  <span className="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-600" />
-                  Inactive — delivery logs will mirror webhook worker tables when added.
-                </p>
-              </div>
-            </fieldset>
-          </div>
-
-          {/* RAR-4.5 (#3531): what a refresh does when it meets a hand-edited version. */}
-          <RepositoryConflictPolicy repositoryId={repo.id} defaultBranch={repo.default_branch} />
-
-          <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-            <h3 className="border-b border-gray-100 pb-2 text-sm font-semibold dark:border-gray-700 dark:text-gray-100">
-              Default importer mappings
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Maps glob → detected kind → default project/version hints for the import wizard. Requires persistence (likely
-              JSON on repo settings or normalized mapping rows).
-            </p>
-            <table className="w-full text-sm">
-              <thead className="border-b border-gray-200 text-2xs uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                <tr>
-                  <th className="py-2 text-left font-semibold">Path glob</th>
-                  <th className="text-left font-semibold">Detected kind</th>
-                  <th className="text-left font-semibold">Default project</th>
-                  <th className="text-right font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colSpan={4} className="py-10 text-center text-sm text-gray-500 dark:text-gray-400">
-                    No mappings saved for this repository yet.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+        }
+        actions={
+          <>
+            <Select
+              value={activeBranch}
+              onValueChange={(next) => {
+                setBranch(next);
+                selectTab('files');
+              }}
+            >
+              <SelectTrigger
+                aria-label="Branch"
+                className="w-[10rem]"
+                data-testid="repository-header-branch"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {branchOptions.map((b) => (
+                  <SelectItem key={b} value={b}>
+                    {b}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="gap-1.5 text-xs"
-              disabled
+              disabled={scanning}
+              title={scanning ? RESCAN_IN_PROGRESS_TITLE : undefined}
+              onClick={() => toast.message(RESCAN_STUB_TOAST)}
+              data-testid="repository-rescan"
             >
-              <Plus className="h-3 w-3" aria-hidden />
-              Add mapping
+              <RefreshCw aria-hidden />
+              Rescan
             </Button>
-          </div>
+          </>
+        }
+        tabs={tabs}
+      />
 
-          <div className="space-y-3 rounded-xl border border-rose-200 bg-rose-50 p-5 dark:border-rose-800 dark:bg-rose-900/20">
-            <h3 className="text-sm font-semibold text-rose-800 dark:text-rose-200">Danger zone</h3>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-rose-700 dark:text-rose-300">
-                Removes this repository from the tenant list (soft-delete). You can register the same clone URL again
-                later if needed.
-              </p>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                className="shrink-0 text-xs"
-                disabled={removing}
-                onClick={() => setRemoveDialogOpen(true)}
-              >
-                Remove repository
-              </Button>
-            </div>
-          </div>
+      <PageBody>
+        <RepositoryDetailKpiStrip
+          repository={repo}
+          stats30d={stats30d}
+          importsLoading={importsLoading}
+          importableMix={importableMix}
+          lastScanLabel={lastScanLabel}
+        />
+
+        <div
+          role="tabpanel"
+          id={`repository-panel-${tab}`}
+          aria-labelledby={`repository-tab-${tab}`}
+          tabIndex={-1}
+          className="focus-visible:outline-none"
+        >
+          {tab === 'preview' ? (
+            <RepositoryPreviewTab
+              repositoryId={id}
+              scans={repo.recent_scans ?? []}
+              mix={importableMix}
+              importableTotal={repo.importable_count ?? null}
+              imports={repoImports}
+              importsLoading={importsLoading}
+              importsError={importsError}
+              formatScanTime={formatLastScan}
+              onViewScanHistory={() => toast.message(SCAN_HISTORY_STUB_TOAST)}
+              onSeeAllImports={() => selectTab('imports')}
+            />
+          ) : null}
+
+          {tab === 'files' ? (
+            <RepositoryFilesBrowser
+              repositoryId={id}
+              defaultBranch={repo.default_branch}
+              repositoryName={repo.name}
+              repositoryFullName={repo.full_name}
+              githubWebBase={webUrl}
+              branch={activeBranch}
+              branches={branchOptions}
+              onBranchChange={setBranch}
+              onBranchesDiscovered={setBranches}
+              filesDeepLink={filesDeepLink}
+              onFilesDeepLinkConsumed={consumeFilesDeepLink}
+            />
+          ) : null}
+
+          {tab === 'specs' ? <RepositorySpecsTab repositoryId={id} /> : null}
+
+          {tab === 'imports' ? (
+            <Card className="overflow-hidden" data-testid="repository-imports-tab">
+              <CardHeader>
+                <h2 className="repo-det-card__title">
+                  <History aria-hidden />
+                  Import history
+                </h2>
+                <p className="repo-det-note">
+                  Successful catalog imports from this repository’s files.
+                </p>
+              </CardHeader>
+              <RepositoryImportsTable
+                repositoryId={id}
+                rows={repoImports}
+                loading={importsLoading}
+                error={importsError}
+                emptyCopy="history"
+              />
+              <div className="repo-det-table__foot">
+                <span>
+                  {repoImports.length.toLocaleString()} import
+                  {repoImports.length === 1 ? '' : 's'}
+                </span>
+              </div>
+            </Card>
+          ) : null}
+
+          {tab === 'settings' ? (
+            <RepositorySettingsTab
+              repository={repo}
+              webUrl={webUrl}
+              savingAutoRefresh={savingAutoRefresh}
+              onToggleAutoRefresh={(next) => void performToggleAutoRefresh(next)}
+              onRemove={() => setRemoveDialogOpen(true)}
+              removing={removing}
+              conflictPolicy={
+                /* RAR-4.5 (#3531): what a refresh does when it meets a hand-edited version. */
+                <RepositoryConflictPolicy
+                  repositoryId={repo.id}
+                  defaultBranch={repo.default_branch}
+                />
+              }
+            />
+          ) : null}
         </div>
-      )}
-      </div>
+      </PageBody>
 
       <AlertDialog
         open={removeDialogOpen}
@@ -1072,9 +610,7 @@ export function RepositoryDetailClient() {
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove repository?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {`Remove "${repo?.name ?? 'this repository'}" from this workspace? You can add it again later from Repositories → Add repository.`}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{removeRepositoryPrompt(repo.name)}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={removing}>Cancel</AlertDialogCancel>
@@ -1089,6 +625,6 @@ export function RepositoryDetailClient() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </Page>
   );
 }

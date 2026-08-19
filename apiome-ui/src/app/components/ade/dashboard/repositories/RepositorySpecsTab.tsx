@@ -27,12 +27,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
-import { cn } from '@lib/utils';
-import {
-  getRefreshStatusPresentation,
-  refreshStatusChipToneClasses,
-} from './repository-refresh-status-chip-copy';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import { Card, CardHeader } from '@/app/components/ui/Card';
+import { ErrorState } from '@/app/components/ui/ErrorState';
+import { LoadingState } from '@/app/components/ui/LoadingState';
+import { REFRESH_STATUS_TONE } from '@/app/components/ade/repositories/repositoriesModel';
+import { getRefreshStatusPresentation } from './repository-refresh-status-chip-copy';
 import { computeNextDue, computeRefreshStatus } from './repository-refresh-status';
 
 /** One per-file refresh row as returned by the refresh-specs endpoint. */
@@ -120,9 +122,20 @@ export const REPO_REFRESH_KEY = '__repo__';
 export type RefreshNotice = { kind: 'success' | 'error'; text: string };
 
 /**
- * Small "Refresh now"/"Refresh" button used at the repo and file level. Shows a
- * spinner and disables itself while its own action is in flight, and stays
- * disabled while any other refresh action runs so a user cannot double-fire.
+ * The "Refresh now" / "Refresh" action, at the repository and the file level.
+ *
+ * Shows a spinner and disables itself while its own action is in flight, and stays disabled
+ * while any other refresh runs so a reader cannot double-fire. HIVE-7.5 (#5322) made it the
+ * shared {@link Button}: the hand-rolled one carried `border-indigo-200 text-indigo-700
+ * hover:bg-indigo-50 dark:…`, which was the only indigo left on this tab.
+ *
+ * @param props.label What the button says.
+ * @param props.busy Whether *this* action is the one in flight.
+ * @param props.disabled Whether any refresh is in flight.
+ * @param props.onClick Run it.
+ * @param props.testId The row's test hook.
+ * @param props.ariaLabel What it is called for a screen reader.
+ * @returns The button.
  */
 function RefreshNowButton({
   label,
@@ -140,35 +153,39 @@ function RefreshNowButton({
   ariaLabel: string;
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="sm"
       data-testid={testId}
       onClick={onClick}
       disabled={disabled || busy}
       aria-label={ariaLabel}
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-        'border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800/60 dark:text-indigo-300 dark:hover:bg-indigo-950/40',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-      )}
     >
-      <RefreshCw className={cn('h-3.5 w-3.5 shrink-0', busy && 'animate-spin')} aria-hidden />
+      <RefreshCw className={busy ? 'animate-spin' : undefined} aria-hidden />
       {label}
-    </button>
+    </Button>
   );
 }
 
-/** A single refresh-status chip for a spec row. */
+/**
+ * One row's refresh state, as the shared status pill.
+ *
+ * @param props.status The computed refresh status code.
+ * @returns The chip.
+ */
 function RefreshStatusChip({ status }: { status: string }) {
   const presentation = getRefreshStatusPresentation(status);
   return (
-    <span
-      className={refreshStatusChipToneClasses(presentation.tone)}
+    <Badge
+      variant={REFRESH_STATUS_TONE[presentation.tone]}
+      dot
+      className="repo-specs-chip"
       title={presentation.description}
       aria-label={`Refresh status: ${presentation.label}. ${presentation.description}`}
     >
       {presentation.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -205,12 +222,16 @@ export function RepositorySpecsTable({
   const anyBusy = busyKey !== null;
   const showActions = typeof onRefreshFile === 'function';
   const columnCount = showActions ? 5 : 4;
+
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Imported specs</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+    <Card className="overflow-hidden" data-testid="repository-specs-table">
+      <CardHeader className="repo-det-card__head">
+        <div className="flex flex-col gap-1">
+          <h3 className="repo-det-card__title">
+            <RefreshCw aria-hidden />
+            Imported specs
+          </h3>
+          <p className="repo-det-note">
             Per-file auto-refresh status, last refresh, and next due.
           </p>
         </div>
@@ -224,140 +245,126 @@ export function RepositorySpecsTable({
             onClick={onRefreshRepo}
           />
         ) : null}
-      </div>
+      </CardHeader>
+
       {notice ? (
-        <div
+        <p
           data-testid="repository-refresh-notice"
           role="status"
-          className={cn(
-            'border-b px-4 py-2 text-xs',
-            notice.kind === 'success'
-              ? 'border-emerald-200 bg-emerald-50/70 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300'
-              : 'border-rose-200 bg-rose-50/70 text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300',
-          )}
+          className="repo-specs-notice"
+          data-tone={notice.kind === 'success' ? 'ok' : 'danger'}
         >
           {notice.text}
-        </div>
+        </p>
       ) : null}
-      <table className="w-full text-sm">
-        <thead className="border-b border-gray-200 bg-gray-50 text-2xs uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
-          <tr>
-            <th className="px-4 py-2 align-middle text-left font-semibold">File</th>
-            <th className="px-4 py-2 align-middle text-left font-semibold">Status</th>
-            <th className="px-4 py-2 align-middle text-left font-semibold">Last refreshed</th>
-            <th className="px-4 py-2 align-middle text-left font-semibold">Next due</th>
-            {showActions ? (
-              <th className="px-4 py-2 align-middle text-right font-semibold">Actions</th>
-            ) : null}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-          {specs.length === 0 ? (
+
+      <div className="repo-det-table-scroll">
+        <table className="repo-det-table repo-specs-table table-density table-dense">
+          <thead>
             <tr>
-              <td
-                colSpan={columnCount}
-                className="px-4 py-12 align-middle text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400"
-              >
-                No imported specs yet. Open the Files tab, import a specification, and its
-                refresh status will appear here.
-              </td>
+              <th scope="col">File</th>
+              <th scope="col">Status</th>
+              <th scope="col">Last refreshed</th>
+              <th scope="col">Next due</th>
+              {showActions ? (
+                <th scope="col">
+                  <span className="sr-only">Actions</span>
+                </th>
+              ) : null}
             </tr>
-          ) : (
-            specs.map((spec) => {
-              const status = computeRefreshStatus({
-                remoteCommittedAt: spec.remote_committed_at,
-                lastImportedCommittedAt: spec.last_imported_committed_at,
-                remoteChecksum: spec.remote_blob_sha,
-                lastImportedChecksum: spec.last_imported_blob_sha,
-                isRefreshing: spec.is_refreshing,
-                lastRefreshFailed: spec.last_refresh_failed,
-                // No persisted divergence column yet (RAR-4.4 dispatcher wiring
-                // pending); rendered when a future signal supplies it.
-                diverged: false,
-              });
-              const isDiverged = status === 'diverged';
-              const nextDue = computeNextDue(
-                spec.repo_last_refreshed_at,
-                spec.refresh_interval_seconds,
-                spec.auto_refresh_enabled,
-              );
-              const lastRefreshed = spec.last_refreshed_at ?? spec.spec_updated_at;
-              const reviewHref = repositorySpecReviewHref(repositoryId, spec.path, spec.branch);
-              return (
-                <tr
-                  key={spec.id}
-                  data-testid="repository-spec-row"
-                  data-status={status}
-                  className={cn(
-                    'hover:bg-gray-50/80 dark:hover:bg-gray-900/40',
-                    isDiverged && 'bg-purple-50/60 dark:bg-purple-950/20',
-                  )}
-                >
-                  <td className="max-w-[260px] px-4 py-2 align-middle">
-                    <Link
-                      href={reviewHref}
-                      className="break-all font-mono text-xs text-indigo-600 hover:underline dark:text-indigo-400"
-                    >
-                      {spec.path}
-                    </Link>
-                    <div className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
-                      {spec.project_name ? (
-                        <span>
-                          {spec.project_name} · {spec.branch}
-                        </span>
-                      ) : (
-                        spec.branch
-                      )}
-                    </div>
-                    {spec.backfilled ? (
-                      <span
-                        data-testid="repository-spec-backfilled"
-                        title="This file was imported before import-spec capture existed; a default spec was seeded so it stays refresh-eligible. Re-importing the file records your actual options."
-                        className="mt-1 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-medium text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300"
-                      >
-                        Imported before spec capture
+          </thead>
+          <tbody>
+            {specs.length === 0 ? (
+              <tr>
+                <td colSpan={columnCount} className="repo-det-table__state">
+                  No imported specs yet. Open the Files tab, import a specification, and its
+                  refresh status will appear here.
+                </td>
+              </tr>
+            ) : (
+              specs.map((spec) => {
+                const status = computeRefreshStatus({
+                  remoteCommittedAt: spec.remote_committed_at,
+                  lastImportedCommittedAt: spec.last_imported_committed_at,
+                  remoteChecksum: spec.remote_blob_sha,
+                  lastImportedChecksum: spec.last_imported_blob_sha,
+                  isRefreshing: spec.is_refreshing,
+                  lastRefreshFailed: spec.last_refresh_failed,
+                  // No persisted divergence column yet (RAR-4.4 dispatcher wiring pending);
+                  // rendered when a future signal supplies it.
+                  diverged: false,
+                });
+                const isDiverged = status === 'diverged';
+                const nextDue = computeNextDue(
+                  spec.repo_last_refreshed_at,
+                  spec.refresh_interval_seconds,
+                  spec.auto_refresh_enabled,
+                );
+                const lastRefreshed = spec.last_refreshed_at ?? spec.spec_updated_at;
+                const reviewHref = repositorySpecReviewHref(repositoryId, spec.path, spec.branch);
+                return (
+                  <tr key={spec.id} data-testid="repository-spec-row" data-status={status}>
+                    <td>
+                      <Link href={reviewHref} className="repo-files-table__link mono">
+                        {spec.path}
+                      </Link>
+                      <span className="repo-det-subcell">
+                        {spec.project_name ? `${spec.project_name} · ${spec.branch}` : spec.branch}
                       </span>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-2 align-middle">
-                    <div className="flex flex-col items-start gap-1">
-                      <RefreshStatusChip status={status} />
-                      {isDiverged ? (
-                        <Link
-                          href={reviewHref}
-                          className="inline-flex items-center gap-1 text-2xs font-medium text-purple-700 hover:underline dark:text-purple-300"
+                      {spec.backfilled ? (
+                        <Badge
+                          variant="warn"
+                          className="mt-1"
+                          data-testid="repository-spec-backfilled"
+                          title="This file was imported before import-spec capture existed; a default spec was seeded so it stays refresh-eligible. Re-importing the file records your actual options."
                         >
-                          <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
-                          Review divergence
-                        </Link>
+                          Imported before spec capture
+                        </Badge>
                       ) : null}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-2 align-middle text-gray-600 dark:text-gray-400">
-                    {formatRefreshedAgo(lastRefreshed, now)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-2 align-middle text-gray-600 dark:text-gray-400">
-                    {formatNextDue(nextDue, now)}
-                  </td>
-                  {showActions ? (
-                    <td className="whitespace-nowrap px-4 py-2 align-middle text-right">
-                      <RefreshNowButton
-                        label="Refresh"
-                        testId="repository-refresh-file"
-                        ariaLabel={`Refresh ${spec.path} now`}
-                        busy={busyKey === spec.id}
-                        disabled={anyBusy}
-                        onClick={() => onRefreshFile?.(spec)}
-                      />
                     </td>
-                  ) : null}
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-    </div>
+                    <td>
+                      <div className="flex flex-col items-start gap-1">
+                        <RefreshStatusChip status={status} />
+                        {isDiverged ? (
+                          <Link href={reviewHref} className="repo-det-link inline-flex items-center gap-1">
+                            <AlertTriangle className="size-3 shrink-0" aria-hidden />
+                            Review divergence
+                          </Link>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="repo-det-quiet-cell whitespace-nowrap">
+                      {formatRefreshedAgo(lastRefreshed, now)}
+                    </td>
+                    <td className="repo-det-quiet-cell whitespace-nowrap">
+                      {formatNextDue(nextDue, now)}
+                    </td>
+                    {showActions ? (
+                      <td className="whitespace-nowrap">
+                        <RefreshNowButton
+                          label="Refresh"
+                          testId="repository-refresh-file"
+                          ariaLabel={`Refresh ${spec.path} now`}
+                          busy={busyKey === spec.id}
+                          disabled={anyBusy}
+                          onClick={() => onRefreshFile?.(spec)}
+                        />
+                      </td>
+                    ) : null}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="repo-det-table__foot">
+        <span>
+          {specs.length.toLocaleString()} imported spec{specs.length === 1 ? '' : 's'}
+        </span>
+      </div>
+    </Card>
   );
 }
 
@@ -467,19 +474,16 @@ export function RepositorySpecsTab({ repositoryId }: { repositoryId: string }) {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-6 text-sm text-rose-700 dark:border-rose-800/50 dark:bg-rose-950/30 dark:text-rose-300">
-        {error}
-      </div>
+      <ErrorState
+        title="Could not load refresh status"
+        description={error}
+        onRetry={() => void fetchSpecs()}
+      />
     );
   }
 
   if (loading && specs.length === 0) {
-    return (
-      <div className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-12 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-        Loading refresh status…
-      </div>
-    );
+    return <LoadingState message="Loading refresh status…" />;
   }
 
   return (
