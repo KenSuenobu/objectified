@@ -18,7 +18,7 @@ exports[`BarSeries matches its snapshot 1`] = `
       tools: 18, prompts: 3
     </desc>
     <rect
-      class="fill-indigo-500 dark:fill-indigo-400 transition-all duration-500"
+      class="fill-accent transition-all duration-500"
       height="100"
       rx="1.5"
       width="41"
@@ -30,7 +30,7 @@ exports[`BarSeries matches its snapshot 1`] = `
       </title>
     </rect>
     <rect
-      class="fill-indigo-500 dark:fill-indigo-400 transition-all duration-500"
+      class="fill-accent transition-all duration-500"
       height="16.666666666666664"
       rx="1.5"
       width="41"
@@ -42,7 +42,7 @@ exports[`BarSeries matches its snapshot 1`] = `
       </title>
     </rect>
     <line
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       stroke-width="0.5"
       vector-effect="non-scaling-stroke"
       x1="0"
@@ -103,7 +103,7 @@ exports[`Donut matches its snapshot 1`] = `
       http: 12 (60%), sse: 8 (40%)
     </desc>
     <circle
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       cx="60"
       cy="60"
       fill="none"
@@ -111,7 +111,7 @@ exports[`Donut matches its snapshot 1`] = `
       stroke-width="20"
     />
     <path
-      class="fill-indigo-500 dark:fill-indigo-400"
+      class="fill-accent"
       d="M 60.00 6.00 A 54 54 0 1 1 28.26 103.69 L 40.02 87.51 A 34 34 0 1 0 60.00 26.00 Z"
     >
       <title>
@@ -119,7 +119,7 @@ exports[`Donut matches its snapshot 1`] = `
       </title>
     </path>
     <path
-      class="fill-emerald-500 dark:fill-emerald-400"
+      class="fill-ok"
       d="M 28.26 103.69 A 54 54 0 0 1 60.00 6.00 L 60.00 26.00 A 34 34 0 0 0 40.02 87.51 Z"
     >
       <title>
@@ -179,7 +179,7 @@ exports[`Gauge matches its snapshot 1`] = `
       61 of 0–100
     </desc>
     <path
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       d="M 27.47 92.53 A 46 46 0 1 1 92.53 92.53"
       fill="none"
       stroke-linecap="round"
@@ -194,7 +194,7 @@ exports[`Gauge matches its snapshot 1`] = `
       stroke-width="10"
     />
     <text
-      class="font-bold fill-gray-700 dark:fill-gray-200"
+      class="font-bold fill-fg"
       dominant-baseline="central"
       font-size="22"
       text-anchor="middle"
@@ -258,7 +258,7 @@ exports[`Heatmap matches its snapshot 1`] = `
       2×3 grid, max 5
     </desc>
     <rect
-      class="fill-gray-100 dark:fill-gray-800"
+      class="fill-inset"
       height="16"
       rx="2"
       width="16"
@@ -270,7 +270,7 @@ exports[`Heatmap matches its snapshot 1`] = `
       </title>
     </rect>
     <rect
-      class="fill-indigo-500 dark:fill-indigo-400"
+      class="fill-accent"
       fill-opacity="0.44800000000000006"
       height="16"
       rx="2"
@@ -283,7 +283,7 @@ exports[`Heatmap matches its snapshot 1`] = `
       </title>
     </rect>
     <rect
-      class="fill-indigo-500 dark:fill-indigo-400"
+      class="fill-accent"
       fill-opacity="0.8160000000000001"
       height="16"
       rx="2"
@@ -296,7 +296,7 @@ exports[`Heatmap matches its snapshot 1`] = `
       </title>
     </rect>
     <rect
-      class="fill-indigo-500 dark:fill-indigo-400"
+      class="fill-accent"
       fill-opacity="0.264"
       height="16"
       rx="2"
@@ -309,7 +309,7 @@ exports[`Heatmap matches its snapshot 1`] = `
       </title>
     </rect>
     <rect
-      class="fill-indigo-500 dark:fill-indigo-400"
+      class="fill-accent"
       fill-opacity="0.632"
       height="16"
       rx="2"
@@ -322,7 +322,7 @@ exports[`Heatmap matches its snapshot 1`] = `
       </title>
     </rect>
     <rect
-      class="fill-indigo-500 dark:fill-indigo-400"
+      class="fill-accent"
       fill-opacity="1"
       height="16"
       rx="2"
@@ -399,35 +399,35 @@ exports[`Radar matches its snapshot 1`] = `
       Docs: 82, Safety: 90, Simplicity: 70
     </desc>
     <polygon
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       fill="none"
       points="70.00,57.00 81.26,76.50 58.74,76.50"
       stroke-width="0.5"
       vector-effect="non-scaling-stroke"
     />
     <polygon
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       fill="none"
       points="70.00,44.00 92.52,83.00 47.48,83.00"
       stroke-width="0.5"
       vector-effect="non-scaling-stroke"
     />
     <polygon
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       fill="none"
       points="70.00,31.00 103.77,89.50 36.23,89.50"
       stroke-width="0.5"
       vector-effect="non-scaling-stroke"
     />
     <polygon
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       fill="none"
       points="70.00,18.00 115.03,96.00 24.97,96.00"
       stroke-width="0.5"
       vector-effect="non-scaling-stroke"
     />
     <line
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       stroke-width="0.5"
       vector-effect="non-scaling-stroke"
       x1="70"
@@ -436,7 +436,7 @@ exports[`Radar matches its snapshot 1`] = `
       y2="18"
     />
     <line
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       stroke-width="0.5"
       vector-effect="non-scaling-stroke"
       x1="70"
@@ -445,7 +445,7 @@ exports[`Radar matches its snapshot 1`] = `
       y2="96"
     />
     <line
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       stroke-width="0.5"
       vector-effect="non-scaling-stroke"
       x1="70"
@@ -454,7 +454,7 @@ exports[`Radar matches its snapshot 1`] = `
       y2="96"
     />
     <polygon
-      class="fill-indigo-500 dark:fill-indigo-400 stroke-indigo-500 dark:stroke-indigo-400"
+      class="fill-accent stroke-accent"
       fill-opacity="0.25"
       points="70.00,27.36 110.53,93.40 38.48,88.20"
       stroke-width="1.5"
@@ -523,7 +523,7 @@ exports[`Sparkline matches its snapshot 1`] = `
       5 points, latest 80, max 80
     </desc>
     <g
-      class="text-emerald-500 dark:text-emerald-400"
+      class="text-ok"
     >
       <defs>
         <lineargradient
@@ -644,7 +644,7 @@ exports[`StackedTimeline matches its snapshot 1`] = `
     </desc>
     <g>
       <rect
-        class="fill-indigo-500 dark:fill-indigo-400"
+        class="fill-accent"
         height="80"
         width="44"
         x="4"
@@ -657,7 +657,7 @@ exports[`StackedTimeline matches its snapshot 1`] = `
     </g>
     <g>
       <rect
-        class="fill-indigo-500 dark:fill-indigo-400"
+        class="fill-accent"
         height="40"
         width="44"
         x="52"
@@ -668,7 +668,7 @@ exports[`StackedTimeline matches its snapshot 1`] = `
         </title>
       </rect>
       <rect
-        class="fill-emerald-500 dark:fill-emerald-400"
+        class="fill-ok"
         height="60"
         width="44"
         x="52"
@@ -680,7 +680,7 @@ exports[`StackedTimeline matches its snapshot 1`] = `
       </rect>
     </g>
     <line
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       stroke-width="0.5"
       vector-effect="non-scaling-stroke"
       x1="0"
@@ -766,7 +766,7 @@ exports[`TrendLine matches its snapshot 1`] = `
       3 of 4 points measured, latest 91, max 91, 1 gap, 1 marker
     </desc>
     <g
-      class="text-red-500 dark:text-red-400"
+      class="text-danger"
     >
       <g>
         <line
@@ -787,7 +787,7 @@ exports[`TrendLine matches its snapshot 1`] = `
       </g>
     </g>
     <g
-      class="text-emerald-500 dark:text-emerald-400"
+      class="text-ok"
     >
       <defs>
         <lineargradient
@@ -852,7 +852,7 @@ exports[`TrendLine matches its snapshot 1`] = `
       />
     </g>
     <line
-      class="stroke-gray-200 dark:stroke-gray-700"
+      class="stroke-border-strong"
       stroke-width="1"
       vector-effect="non-scaling-stroke"
       x1="6"

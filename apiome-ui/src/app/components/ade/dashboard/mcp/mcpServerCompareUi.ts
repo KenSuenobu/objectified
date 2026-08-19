@@ -493,3 +493,122 @@ export function mcpCompareModel(servers: McpCompareServer[]): McpCompareModel {
     protocol: mcpCompareProtocolVersions(servers),
   };
 }
+
+// --- Screen copy and limits (HIVE-7.9, #5326) ------------------------------------------------
+// The strings and the two bounds `docs/mockups/sources/mcp-compare.html` fixes, kept here rather
+// than in the page so the picker, the panel and their suites read one definition of each.
+
+/** How many servers may be compared at once — the roadmap's 2–3, and the picker's cap. */
+export const MCP_COMPARE_MAX_SELECTION = 3;
+
+/** How few make a comparison. Below this the panel renders its "pick two or three" state. */
+export const MCP_COMPARE_MIN_SELECTION = 2;
+
+/** The page's `h1`. */
+export const MCP_COMPARE_TITLE = 'Server comparison';
+
+/** The one line under it — DESIGN.md §5.3 asks for fourteen words or fewer. */
+export const MCP_COMPARE_DESCRIPTION =
+  'Pick 2–3 discovered servers and compare surface, quality, safety, docs, latency and trust.';
+
+/** The picker card's heading. */
+export const MCP_COMPARE_PICKER_TITLE = 'Choose servers to compare';
+
+/**
+ * The picker's footer note.
+ *
+ * It states both rules at once, because both surprise a reader who meets only one: two is the
+ * floor, and an endpoint that has never been discovered has no surface to align so it is not in
+ * the list at all.
+ */
+export const MCP_COMPARE_PICKER_HINT =
+  'Select at least two servers. Only servers with a current version are listed.';
+
+/** What a picker row's `title` says when the cap has been reached. */
+export const MCP_COMPARE_AT_CAP_HINT = `Up to ${MCP_COMPARE_MAX_SELECTION} servers`;
+
+/** The picker's own empty state — the catalog holds nothing that can be compared. */
+export const MCP_COMPARE_PICKER_EMPTY_TITLE = 'No discovered MCP servers to compare yet';
+
+/** Its body copy. */
+export const MCP_COMPARE_PICKER_EMPTY_DESC =
+  'Register and discover servers in the catalog first — a server with no current version has no surface to align.';
+
+/** Shown while the catalog behind the picker is in flight. */
+export const MCP_COMPARE_CATALOG_LOADING = 'Loading the MCP catalog…';
+
+/** The catalog read's error heading. */
+export const MCP_COMPARE_CATALOG_ERROR_TITLE = 'Could not load the MCP catalog';
+
+/** Used when that read carries no message of its own. */
+export const MCP_COMPARE_CATALOG_ERROR_FALLBACK = 'Could not load the MCP catalog.';
+
+/** Shown while the three per-endpoint reads behind a comparison are in flight. */
+export const MCP_COMPARE_RUNNING = 'Comparing servers…';
+
+/** The comparison's error heading. */
+export const MCP_COMPARE_ERROR_TITLE = 'Comparison unavailable';
+
+/** Used when a failed comparison carries no message of its own. */
+export const MCP_COMPARE_ERROR_FALLBACK = 'Could not compare the selected servers.';
+
+/** The state before a comparison has been run with enough servers selected. */
+export const MCP_COMPARE_PROMPT_TITLE = 'Select two or three servers to compare';
+
+/** Its body copy. */
+export const MCP_COMPARE_PROMPT_DESC =
+  'Tick servers in the picker, then run Compare to see surface counts, grade, safety, documentation, latency and trust side by side.';
+
+/** Shown in place of the screen when the session has no workspace to read a catalog for. */
+export const MCP_COMPARE_NO_TENANT = 'Switch to a workspace to compare the MCP servers in it.';
+
+/** The overlap card's heading. */
+export const MCP_COMPARE_OVERLAP_TITLE = 'Capability overlap';
+
+/** What the overlap card says when the servers have no tool name in common. */
+export const MCP_COMPARE_NO_SHARED = 'No tools are shared between these servers.';
+
+/** What a "Unique to …" card says when every one of its tools is shared. */
+export const MCP_COMPARE_NO_UNIQUE = 'No unique tools.';
+
+/**
+ * The sentence under the metric table.
+ *
+ * It states the two conventions a reader would otherwise have to infer from the tint and the
+ * dashes — which is the ticket's "highlights only genuinely differing rows" criterion said in
+ * words, so the highlight is never the only way to learn what it means.
+ */
+export const MCP_COMPARE_TABLE_FOOT =
+  'Rows whose cells differ are tinted · “—” marks a figure this server has not recorded';
+
+/**
+ * The protocol banner's headline when the servers negotiated different revisions.
+ *
+ * The versions themselves are appended by the panel, which has them.
+ */
+export const MCP_COMPARE_PROTOCOL_DIFFER_TITLE = 'Protocol versions differ.';
+
+/** The quieter note when the versions agree but at least one server never reported one. */
+export const MCP_COMPARE_PROTOCOL_UNKNOWN = 'At least one server’s MCP protocol version is unknown.';
+
+/**
+ * How the picker labels one row's second line.
+ *
+ * @param host The host serving the endpoint.
+ * @param toolCount How many tools its current snapshot exposes.
+ * @returns `"mcp.acme.dev · 12 tools"`.
+ */
+export function mcpCompareEndpointSubtitle(host: string, toolCount: number): string {
+  return `${host} · ${toolCount} tool${toolCount === 1 ? '' : 's'}`;
+}
+
+/**
+ * The one-sentence summary above the shared-tool matrix.
+ *
+ * @param overlap The overlap projection.
+ * @returns `"31 distinct tools across these servers — 1 shared by all, 3 shared by two or more."`
+ */
+export function mcpCompareOverlapSummary(overlap: McpToolOverlap): string {
+  const distinct = `${overlap.totalDistinct} distinct tool${overlap.totalDistinct === 1 ? '' : 's'}`;
+  return `${distinct} across these servers — ${overlap.sharedByAllCount} shared by all, ${overlap.shared.length} shared by two or more.`;
+}

@@ -332,6 +332,13 @@ export interface DataTableProps<Row>
    * arrives as an alert with a retry beside it.
    */
   error?: React.ReactNode;
+  /**
+   * What the failure is called, when "this list" is not specific enough.
+   *
+   * A screen whose mockup fixes its own wording — "Could not load the capability directory" —
+   * says it here; everything else keeps the app-wide phrasing.
+   */
+  errorTitle?: string;
   /** Called by the error state's retry button. Without it, no retry is offered. */
   onRetry?: () => void;
   /**
@@ -376,6 +383,7 @@ function DataTable<Row>({
   skeletonRows = DEFAULT_SKELETON_ROWS,
   loadingLabel = 'Loading…',
   error,
+  errorTitle = "Couldn't load this list",
   onRetry,
   empty,
   toolbar,
@@ -609,7 +617,7 @@ function DataTable<Row>({
                     <ErrorState
                       variant="compact"
                       surface={false}
-                      title="Couldn't load this list"
+                      title={errorTitle}
                       description={error}
                       onRetry={onRetry}
                     />

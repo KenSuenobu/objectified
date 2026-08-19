@@ -77,7 +77,7 @@ export function ChartFrame({
         role="img"
         aria-label={`${title}: ${emptyLabel}`}
         className={cn(
-          'flex items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-xs font-medium text-gray-400 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-500',
+          'flex items-center justify-center rounded-lg border border-dashed border-border-strong bg-subtle text-xs font-medium text-fg-muted',
           className,
         )}
       >

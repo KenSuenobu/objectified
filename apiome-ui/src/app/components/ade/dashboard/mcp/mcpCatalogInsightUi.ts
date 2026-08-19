@@ -221,3 +221,197 @@ export function mcpCatalogBars(
 ): BarDatum[] {
   return buckets.map((bucket) => ({ label: bucket.label, value: bucket.count, tone }));
 }
+
+// --- Screen copy (HIVE-7.9, #5326) -----------------------------------------------------------
+// The strings `docs/mockups/sources/mcp-analytics.html` fixes, kept here rather than in the
+// component so the page, the dashboard and the suites all read one definition of each.
+
+/** The page's `h1`. */
+export const MCP_ANALYTICS_TITLE = 'Catalog analytics';
+
+/** The one line under it — DESIGN.md §5.3 asks for fourteen words or fewer. */
+export const MCP_ANALYTICS_DESCRIPTION =
+  'How the workspace’s MCP servers break down — category, transport, protocol, grade, health, churn and reach.';
+
+/** Shown while the roll-up is in flight. */
+export const MCP_ANALYTICS_LOADING = 'Loading catalog analytics…';
+
+/** The error state's heading; the message itself is whatever the read failed with. */
+export const MCP_ANALYTICS_ERROR_TITLE = 'Catalog analytics unavailable';
+
+/** Used when a failed read carries no message of its own. */
+export const MCP_ANALYTICS_ERROR_FALLBACK = 'Could not load catalog analytics.';
+
+/** The first-run state: the catalog itself is empty, which is not an error. */
+export const MCP_ANALYTICS_EMPTY_TITLE = 'No servers in the catalog yet';
+
+/** Its body copy. */
+export const MCP_ANALYTICS_EMPTY_DESC =
+  'Register and discover MCP servers to populate catalog-wide analytics — category, transport, grade and health mixes appear once the first snapshot lands.';
+
+/** Shown in place of the screen when the session has no workspace to read a catalog for. */
+export const MCP_ANALYTICS_NO_TENANT =
+  'Switch to a workspace to see how its MCP catalog breaks down.';
+
+/** A donut whose breakdown came back empty prints this in place of its legend. */
+export const MCP_ANALYTICS_NO_DATA = 'No data yet.';
+
+/** The change-frequency leaderboard's empty copy. */
+export const MCP_ANALYTICS_NO_CHANGES = 'No surface changes recorded yet.';
+
+/** The capability leaderboard's empty copy. */
+export const MCP_ANALYTICS_NO_CAPABILITIES = 'No capabilities discovered yet.';
+
+/**
+ * What the capability leaderboard is actually ranked by.
+ *
+ * The roadmap asked for "most-searched capabilities" and there is no search-query log to rank by,
+ * so this ranks by reach instead. The panel prints the sentence rather than leaving a reader to
+ * assume the other meaning.
+ */
+export const MCP_ANALYTICS_TOP_CAPABILITIES_NOTE =
+  'Ranked by how many endpoints expose each capability.';
+
+// --- Derived tallies -------------------------------------------------------------------------
+
+/** How many endpoints have never been discovered — the gap the "Discovered" stat sits against. */
+export function mcpCatalogUndiscoveredCount(insight: McpCatalogInsight): number {
+  return Math.max(0, insight.endpointCount - insight.discoveredCount);
+}
+
+/** How many endpoints carry no score — the gap the "Scored" stat sits against. */
+export function mcpCatalogUnscoredCount(insight: McpCatalogInsight): number {
+  return Math.max(0, insight.endpointCount - insight.scoredCount);
+}
+
+/** `"1 endpoint"` / `"4 endpoints"` — the singular every footnote and leaderboard row needs. */
+export function mcpCatalogPlural(count: number, noun: string, plural = `${noun}s`): string {
+  return `${count} ${count === 1 ? noun : plural}`;
+}
+
+/**
+ * The footnote under the **Discovered** stat, or `null` when every endpoint has been discovered.
+ *
+ * A footnote that reads "0 never discovered" is noise; the absence of the line is the same
+ * statement made quietly.
+ */
+export function mcpCatalogDiscoveredFootnote(insight: McpCatalogInsight): string | null {
+  const gap = mcpCatalogUndiscoveredCount(insight);
+  return gap === 0 ? null : `${gap} never discovered`;
+}
+
+/** The footnote under the **Scored** stat, or `null` when every endpoint carries a score. */
+export function mcpCatalogScoredFootnote(insight: McpCatalogInsight): string | null {
+  const gap = mcpCatalogUnscoredCount(insight);
+  return gap === 0 ? null : `${gap} unscored`;
+}
+
+/**
+ * The footnote under the **Published** stat: the public/private split.
+ *
+ * `publicCount` and `privateCount` have been in the payload since MCAT-18.1 and were parsed but
+ * never rendered — the mockup's "Adds" list calls that out, and this is the line it asks for.
+ */
+export function mcpCatalogPublishedFootnote(insight: McpCatalogInsight): string {
+  return `${insight.publicCount} public · ${insight.privateCount} private`;
+}
+
+// --- CSV export ------------------------------------------------------------------------------
+
+/** One row of the exported dashboard: which block it came from, what it counts, and the figure. */
+interface McpCatalogCsvRow {
+  section: string;
+  label: string;
+  value: string;
+}
+
+/**
+ * One CSV field, quoted per RFC 4180.
+ *
+ * Everything is quoted rather than only the fields that need it: a capability name is arbitrary
+ * user text, and the alternative is a rule about *when* to quote that a reader of this file has to
+ * re-derive. A literal `"` doubles.
+ *
+ * @param value The raw field text.
+ * @returns The quoted field.
+ */
+function csvField(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+/**
+ * The whole dashboard as a CSV document — the mockup's **Export CSV** action.
+ *
+ * Long rather than wide: one row per figure, tagged with the block it came from, so the six
+ * breakdowns and the two leaderboards (which have different shapes and different row counts) land
+ * in one sheet a reader can pivot. The header row is `Section,Label,Value`.
+ *
+ * Pure and React-free so the exported numbers can be asserted directly against the same
+ * {@link McpCatalogInsight} the tiles render, which is what stops the sheet and the screen
+ * disagreeing.
+ *
+ * @param insight The parsed catalog roll-up.
+ * @returns The CSV text, CRLF-terminated per RFC 4180.
+ */
+export function mcpCatalogInsightCsv(insight: McpCatalogInsight): string {
+  const rows: McpCatalogCsvRow[] = [
+    { section: 'Totals', label: 'Endpoints', value: String(insight.endpointCount) },
+    { section: 'Totals', label: 'Published', value: String(insight.publishedCount) },
+    { section: 'Totals', label: 'Public', value: String(insight.publicCount) },
+    { section: 'Totals', label: 'Private', value: String(insight.privateCount) },
+    { section: 'Totals', label: 'Discovered', value: String(insight.discoveredCount) },
+    { section: 'Totals', label: 'Scored', value: String(insight.scoredCount) },
+    {
+      section: 'Totals',
+      label: 'Average score',
+      value: insight.averageScore !== null ? insight.averageScore.toFixed(1) : '',
+    },
+    { section: 'Capabilities', label: 'Tools', value: String(insight.typeCounts.tools) },
+    { section: 'Capabilities', label: 'Resources', value: String(insight.typeCounts.resources) },
+    {
+      section: 'Capabilities',
+      label: 'Resource templates',
+      value: String(insight.typeCounts.resourceTemplates),
+    },
+    { section: 'Capabilities', label: 'Prompts', value: String(insight.typeCounts.prompts) },
+    { section: 'Capabilities', label: 'Total', value: String(insight.typeCounts.total) },
+  ];
+
+  const breakdowns: ReadonlyArray<readonly [string, readonly McpCatalogBucket[]]> = [
+    ['Category mix', insight.categoryDistribution],
+    ['Transport mix', insight.transportDistribution],
+    ['Grade distribution', insight.gradeDistribution],
+    ['Protocol version adoption', insight.protocolVersionDistribution],
+    ['Tool-count distribution', insight.toolCountDistribution],
+    ['Discovery health', insight.discoveryHealth],
+  ];
+  for (const [section, buckets] of breakdowns) {
+    for (const bucket of buckets) {
+      rows.push({ section, label: bucket.label, value: String(bucket.count) });
+    }
+  }
+
+  for (const leader of insight.changeLeaders) {
+    rows.push({
+      section: 'Change-frequency leaders',
+      label: leader.name,
+      value: String(leader.changeCount),
+    });
+  }
+  for (const capability of insight.topCapabilities) {
+    rows.push({
+      section: 'Top capabilities',
+      label: `${capability.itemType || 'item'} ${capability.itemName}`.trim(),
+      value: String(capability.endpointCount),
+    });
+  }
+
+  const lines = [
+    ['Section', 'Label', 'Value'].map(csvField).join(','),
+    ...rows.map((row) => [row.section, row.label, row.value].map(csvField).join(',')),
+  ];
+  return `${lines.join('\r\n')}\r\n`;
+}
+
+/** The filename the CSV download is offered under. */
+export const MCP_ANALYTICS_CSV_FILENAME = 'mcp-catalog-analytics.csv';
