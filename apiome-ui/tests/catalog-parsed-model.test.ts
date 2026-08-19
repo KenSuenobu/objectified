@@ -41,19 +41,22 @@ function entity(
 
 describe('parsedTagToneClass', () => {
   it('maps known tags to their tone (case-insensitive)', () => {
-    expect(parsedTagToneClass('QUERY')).toContain('bg-blue-100');
-    expect(parsedTagToneClass('mutation')).toContain('bg-amber-100');
-    expect(parsedTagToneClass('Subscription')).toContain('bg-violet-100');
-    expect(parsedTagToneClass('SERVICE')).toContain('bg-emerald-100');
-    expect(parsedTagToneClass('CHANNEL')).toContain('bg-violet-100');
-    expect(parsedTagToneClass('DELETE')).toContain('bg-rose-100');
+    // HIVE-7.1 (#5318): a tag that says what an operation *does* takes a status tone, and the
+    // five HTTP verbs take the fixed `.method--*` hue, because a verb's colour is an identity.
+    expect(parsedTagToneClass('QUERY')).toContain('bg-accent-soft');
+    expect(parsedTagToneClass('mutation')).toContain('bg-warn-soft');
+    expect(parsedTagToneClass('Subscription')).toContain('bg-violet-soft');
+    expect(parsedTagToneClass('SERVICE')).toContain('bg-ok-soft');
+    expect(parsedTagToneClass('CHANNEL')).toContain('bg-violet-soft');
+    expect(parsedTagToneClass('DELETE')).toBe('method--delete');
+    expect(parsedTagToneClass('get')).toBe('method--get');
   });
 
-  it('falls back to slate for unknown or empty tags', () => {
-    expect(parsedTagToneClass('WIDGET')).toContain('bg-slate-100');
-    expect(parsedTagToneClass('')).toContain('bg-slate-100');
-    expect(parsedTagToneClass(null)).toContain('bg-slate-100');
-    expect(parsedTagToneClass(undefined)).toContain('bg-slate-100');
+  it('falls back to the neutral tone for unknown or empty tags', () => {
+    expect(parsedTagToneClass('WIDGET')).toContain('bg-neutral-soft');
+    expect(parsedTagToneClass('')).toContain('bg-neutral-soft');
+    expect(parsedTagToneClass(null)).toContain('bg-neutral-soft');
+    expect(parsedTagToneClass(undefined)).toContain('bg-neutral-soft');
   });
 });
 

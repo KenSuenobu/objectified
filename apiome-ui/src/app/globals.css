@@ -19364,3 +19364,1271 @@ html[data-motion='reduce'] .prm-spin {
   color: var(--fg-muted);
   overflow-wrap: anywhere;
 }
+
+/* ==========================================================================
+   CATALOG  (HIVE-7.1, #5318)
+   --------------------------------------------------------------------------
+   `docs/mockups/sources/catalog.html`, whose page-local `<style>` block this
+   replaces (`.cat-card`, `.orbs`, `.orb`, `.fmt-slot`, `.group-hd`,
+   `.fmt-chip`, `.fmt--generic`) together with the inline `style=` attributes
+   its cards, its deleted-card footer and its stats row carry.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 and Epic-6 blocks above give. Every rule
+   leans on the density and font-scale tokens; the card, the card grid and the
+   four-column format gallery are real grids that a utility string spells
+   badly; and the quiet lines and the group headings have to sit *after* the
+   unlayered `h1`–`h4` and `p` base rules near line 2497, which outrank
+   anything in `@layer utilities`.
+
+   The mockup froze eight things in pixels that must not be frozen: the 230px
+   filter field, the three 116–136px selects, the 14px orb gap, the 8/10px chip
+   padding, the 7×7 format tile, the 66px tree kind column and the 22px finding
+   rank. All are `rem` or a token here, so they follow all six font scales.
+
+   No hue is named below — with one deliberate exception. Every colour is a
+   token, so the surface follows all nine themes, *except* where a **format's**
+   colour is involved: `.fmt--*` (the fixed identity block near line 2216) is
+   what the gallery's tiles and the collapsed header's preview pills carry, and
+   that is the point of the gallery — it teaches the colour the table below it
+   then uses. A status, a grade and a tier are the opposite and are never named
+   here either: the lifecycle pill takes its tone from `ui/statusVocabulary.ts`
+   and the rings take theirs from `ui/metrics/metricTiers.ts`.
+
+   Four measured deviations from the mockup, three of them ones the Epic-5 and
+   Epic-6 tickets already made:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+     about 3.1:1 against the canvas at these sizes;
+   * a card that needs attention is marked by an inset `--warn` hairline and a
+     tinted footer, *not* by the mockup's `opacity:.9`. Fading a card fades its
+     text with it, and an amber card's text is the text most likely to be read;
+   * the `Deleted` pill is `--danger` in both views. The mockup paints it
+     `--warn` on the card and `--danger` in the table; one word cannot be two
+     colours, and the amber the card loses is what the frame already says;
+   * the non-publishable note is the `info` tone rather than the neutral one.
+     `neutral` is `--fg-muted` on `--bg-subtle`, 4.35:1 in Solarized — the same
+     serious `color-contrast` finding HIVE-5.4 and HIVE-5.6 measured.
+
+   Three classes are borrowed rather than restated: `.tnt-menu` (the row and
+   facet menus), `.fmt` (the format pill's geometry) and `.mono` (HIVE-1.4).
+   ========================================================================== */
+
+/* ---- Shared quiet type --------------------------------------------------
+   The muted lines every part of the screen draws — a provenance cell with
+   nothing in it, "Format pending", a legend's second half. */
+.cat-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.cat-stamp {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* A menu row that destroys something. The same rule the projects block states:
+   no red in the token layer clears AA as 13px ink on the menu surface, so the
+   row reads as an ordinary row until it is the one under the pointer or the
+   keyboard, and then it takes the designed soft/ink pair. The words are what
+   say what it does at rest, which DESIGN.md §9 prefers to colour alone. */
+.cat-menu__item--danger[data-highlighted],
+.cat-menu__item--danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+.cat-menu__item--danger[data-highlighted] > svg,
+.cat-menu__item--danger:hover > svg {
+  color: currentColor;
+}
+
+/* The direction mark beside the sort menu's current column. Pushed to the far
+   end so six rows of different label lengths still line their marks up. */
+.cat-sort-mark {
+  margin-inline-start: auto;
+  padding-inline-start: var(--space-4);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The header's Show-deleted switch and its label, as one control. */
+.cat-deleted-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-end: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.cat-deleted-switch label {
+  cursor: pointer;
+}
+
+/* A glyph inside a filter chip — the attention triangle, the identity-group
+   link and its dismiss cross. Sized from the chip's own type so it keeps its
+   proportion through all six font scales. */
+.cat-chip-glyph {
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  flex-shrink: 0;
+}
+
+/* ---- The toolbar's quick filters ----------------------------------------
+   Three `Select`s over three different vocabularies. `rem` rather than the
+   mockup's 136/116px, and one width for all three: a row of selects that are
+   almost but not quite the same width reads as a mistake. */
+.cat-filter {
+  inline-size: 9.5rem;
+  block-size: var(--control-h-sm);
+  font-size: var(--fs-xs);
+}
+
+/* A filter that is narrowing the list must not look like one that is not. The
+   accent hairline is the same mark `DataTableFilterChip` uses for an active
+   facet, at the weight a field can carry without becoming a second primary. */
+.cat-filter[data-active] {
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--accent-fg);
+}
+
+/* ---- The format facet ---------------------------------------------------- */
+.cat-facet__trigger[data-active] {
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--accent-fg);
+}
+
+/* The count of ticked families.
+   The ink pair rather than the accent one, measured: `--fg-on-accent` on
+   `--accent` is the app's solid accent fill, calibrated for the ≥14pt-bold
+   large-text floor a button's label sits at — this figure is 11px, where the
+   pair lands between 3.5:1 and 4.4:1 across the nine themes. `--fg` on
+   `--bg-surface` is the same pair `DataTableFilterChip` inks an active chip
+   with, and it clears AA everywhere. */
+.cat-facet__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 1.25rem;
+  padding: 0 0.25rem;
+  border-radius: var(--r-full);
+  background: var(--fg);
+  color: var(--bg-surface);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cat-facet__menu {
+  max-block-size: 20rem;
+  min-inline-size: 15rem;
+  overflow-y: auto;
+}
+
+.cat-facet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2) var(--space-2);
+}
+
+.cat-facet__title {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.cat-facet__clear {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.cat-facet__clear:hover {
+  color: var(--accent-fg);
+}
+
+.cat-facet__clear > svg {
+  inline-size: var(--fs-2xs);
+  block-size: var(--fs-2xs);
+}
+
+.cat-facet__option {
+  padding-inline-start: var(--space-2);
+}
+
+/* The tick box. A real box rather than a leading check glyph, because a
+   multi-select menu has to say it is multi-select *before* anything is
+   ticked — an empty row with no box looks like a radio list. */
+.cat-facet__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex-shrink: 0;
+  border-radius: var(--r-xs);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  color: var(--fg-on-accent);
+}
+
+.cat-facet__option[data-state="checked"] .cat-facet__box {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.cat-facet__box > span > svg,
+.cat-facet__box svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+.cat-facet__label {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat-facet__n {
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* ---- The cards view -----------------------------------------------------
+   The panel is the same `.card` the table draws into, so switching views does
+   not change the shape of the page — only what is inside it. */
+.cat-cards-panel {
+  overflow: hidden;
+}
+
+.cat-cards-panel__empty {
+  padding: var(--space-4);
+}
+
+/* `auto-fit` at a `rem` minimum rather than the mockup's fixed `grid-3`: a card
+   whose minimum is stated in `rem` keeps three columns at the default font
+   scale and drops to two and then one as the scale grows, which is what stops
+   the Largest scale pushing a horizontal scrollbar onto the document. 18rem is
+   the measurement HIVE-6.1 took against the 16.5rem rail at 1280px. */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+/* Inside a paradigm section the heading already carries the top padding. */
+.cat-grid--grouped {
+  padding-block-start: 0;
+}
+
+@media (max-width: 30rem) {
+  .cat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- Paradigm sections ---------------------------------------------------
+   `GRAPH · 2 items` with a rule running to the edge — the mockup's
+   `.group-hd`. A real `h2` rather than a styled `div`, so the card grid a
+   reader lands in has a heading they can navigate to. */
+.cat-group__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4) 0;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.cat-group__count {
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.cat-group__head::after {
+  content: "";
+  flex: 1;
+  block-size: 1px;
+  background: var(--border);
+}
+
+/* ---- The card ------------------------------------------------------------ */
+.cat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border), var(--shadow-sm);
+  transition:
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.cat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px var(--border-strong), var(--shadow-md);
+}
+
+/* An item that cannot be used — disabled, or soft-deleted. The frame carries
+   it, so the card's own text keeps full contrast. */
+.cat-card[data-lifecycle="disabled"],
+.cat-card[data-lifecycle="deleted"] {
+  box-shadow: inset 0 0 0 1px var(--warn), var(--shadow-sm);
+}
+
+/* The placeholder card the grid draws while the first read is in flight —
+   `DataTable` skeletons the table, and the two waits should look alike. */
+.cat-card--skeleton {
+  min-block-size: 17rem;
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.cat-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  padding-block-end: var(--space-3);
+}
+
+.cat-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.cat-card__identity {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.cat-card__name {
+  min-inline-size: 0;
+  overflow: hidden;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--fg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The stretched link: one tab stop, one accessible name, the whole card as its
+   hit area. Everything that has to stay clickable is `.cat-card__above`. */
+.cat-card__link {
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.cat-card__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cat-card__link:hover {
+  color: var(--accent-fg);
+}
+
+/* The focus ring belongs to the card, not to the words inside it: the whole
+   card is what the link activates. */
+.cat-card__link:focus-visible::after {
+  box-shadow: var(--shadow-focus);
+}
+
+.cat-card__id {
+  margin-block-start: 0.125rem;
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Two lines, always the same height, so a grid of cards keeps its rhythm
+   whether an item has a summary or not. */
+.cat-card__summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-block-size: calc(var(--fs-sm) * var(--lh-normal) * 2);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* The mockup's `.fmt-slot`: what the item *is*, fenced off from what it scores
+   by a dashed rule. Dashed rather than solid on purpose — it separates two
+   kinds of fact inside one card, where a solid rule would read as the card's
+   own edge. */
+.cat-card__formats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block-end: var(--space-3);
+  border-block-end: 1px dashed var(--border-strong);
+}
+
+.cat-card__meter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-start: auto;
+}
+
+.cat-card__scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.cat-card__versions {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.cat-card__promotion {
+  display: flex;
+  min-inline-size: 0;
+}
+
+/* Above the stretched link, so the orbs, the promotion link, the menu and the
+   recovery buttons are reachable by pointer as well as by keyboard. */
+.cat-card__above {
+  position: relative;
+  z-index: 1;
+}
+
+.cat-card__actions {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+  z-index: 1;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.cat-card:hover .cat-card__actions,
+.cat-card:focus-within .cat-card__actions {
+  opacity: 1;
+}
+
+/* Never hidden from the keyboard: `opacity` keeps the button in the tab order
+   and its name in the accessibility tree, which `display:none` would not. */
+@media (hover: none) {
+  .cat-card__actions {
+    opacity: 1;
+  }
+}
+
+.cat-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-block-start: 1px solid var(--border);
+  border-end-start-radius: var(--r-lg);
+  border-end-end-radius: var(--r-lg);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The amber footer of a card that needs attention — the ground the mockup gives
+   the two recovery verbs, and the pair those inks were chosen for. */
+.cat-card[data-lifecycle="deleted"] .cat-card__footer {
+  justify-content: flex-start;
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+  border-block-start-color: var(--warn);
+}
+
+.cat-card__creator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.cat-card__creator-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat-card__stamp {
+  white-space: nowrap;
+}
+
+/* ---- The three orbs ------------------------------------------------------
+   Ring then word, side by side, as the mockup's `.orb` draws them. An orb with
+   a dialog behind it is a button; one with nothing behind it is a `span`,
+   which is why the hover ground is on the modifier rather than on the base. */
+.cat-orb {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  margin: calc(var(--space-1) * -1);
+  border-radius: var(--r-sm);
+  background: transparent;
+}
+
+.cat-orb__label {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.cat-orb--action {
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.cat-orb--action:hover {
+  background: var(--bg-subtle);
+}
+
+.cat-orb--action:hover .cat-orb__label {
+  color: var(--fg);
+}
+
+/* ---- The promotion back-link -------------------------------------------- */
+.cat-converted {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+}
+
+.cat-converted__link {
+  min-inline-size: 0;
+  overflow: hidden;
+  font-weight: 600;
+  color: var(--accent-fg);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat-converted__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* The project this item was converted into has since been deleted. The
+   conversion still happened, so the name stays — struck through, and not a
+   link, because there is nowhere for it to go. */
+.cat-converted__gone {
+  min-inline-size: 0;
+  overflow: hidden;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-decoration: line-through;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Table cells --------------------------------------------------------- */
+.cat-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.cat-identity__text {
+  display: block;
+  min-inline-size: 0;
+}
+
+.cat-identity__link {
+  min-inline-size: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cat-identity__link:hover {
+  color: var(--accent-fg);
+}
+
+.cat-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* The Quality and Grade cells, which open the two dialogs the card's orbs do.
+   The same padded, negatively-margined hit area the orbs use, so a score in a
+   row and a score on a card behave alike. */
+.cat-score {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1);
+  margin: calc(var(--space-1) * -1);
+  border-radius: var(--r-sm);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.cat-score:hover {
+  background: var(--bg-subtle);
+}
+
+.cat-score__value {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* A deleted row does not open, so it must not offer the pointer that says it
+   would. `DataTable` sets `cursor: pointer` on every row of a table that has an
+   activate handler; this is the row-level opt-out. */
+.cat-row--deleted {
+  cursor: default;
+}
+
+/* The Undelete glyph, in the mockup's `--ok`. A button whose only content is an
+   icon: the mark is what has to be visible, and WCAG 1.4.11 asks 3:1 of it
+   rather than the 4.5:1 a word needs. */
+.cat-restore {
+  color: var(--ok);
+}
+
+/* ---- The stat strip ------------------------------------------------------ */
+.cat-stat__badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* `B · 82` — the letter at the figure's size in its band's ink, the score
+   quieter beside it. The band comes from `ui/statusVocabulary.ts`, so the
+   colour is never named here. */
+.cat-stat__grade {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.cat-stat__grade > small {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* Four format names and an ellipsis have to fit the stat's own width. */
+.cat-stat__formats {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- The non-publishable note ------------------------------------------- */
+.cat-note__link {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---- The supported-formats gallery -------------------------------------- */
+.cat-formats {
+  overflow: hidden;
+}
+
+.cat-formats__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: 0;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.cat-formats__head:hover {
+  background: var(--bg-subtle);
+}
+
+.cat-formats__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+}
+
+.cat-formats__tile > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}
+
+.cat-formats__heading {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.cat-formats__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.cat-formats__counts {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The collapsed header's preview: a few of the pills the list below uses, so
+   the panel says what it holds without being opened. Hidden on a narrow
+   viewport, where the two counts beside it are the whole message. */
+.cat-formats__preview {
+  display: none;
+  margin-inline-start: auto;
+  gap: var(--space-2);
+}
+
+@media (min-width: 60rem) {
+  .cat-formats__preview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+
+/* The `+39` pill. Not a format, so it takes the neutral surface rather than
+   borrowing one format's identity hue. */
+.cat-formats__more {
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+}
+
+.cat-formats__chevron {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  color: var(--fg-muted);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.cat-formats__head[aria-expanded="true"] .cat-formats__chevron {
+  transform: rotate(180deg);
+}
+
+/* The preview takes the elastic margin when it is drawn, so the chevron must
+   give it up or the two fight over the same space. */
+@media (min-width: 60rem) {
+  .cat-formats__chevron {
+    margin-inline-start: 0;
+  }
+}
+
+.cat-formats__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  border-block-start: 1px solid var(--border);
+}
+
+.cat-formats__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: var(--space-3);
+}
+
+.cat-formats__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--space-2);
+}
+
+/* The "nothing is waiting on the roadmap" line, drawn as the mockup's
+   `.empty--inline .empty--dashed` — an outline where rows would be. */
+.cat-formats__none {
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.cat-fmt-chip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  padding: var(--space-2);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+/* Only the chips that go somewhere react to the pointer. */
+a.cat-fmt-chip:hover {
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* A format the registry recognises but cannot import. The *frame* is what
+   dims — the words stay at full contrast, because the line that says why is
+   the one most worth reading. */
+.cat-fmt-chip--dim {
+  box-shadow: inset 0 0 0 1px var(--border);
+  border-style: dashed;
+}
+
+.cat-fmt-chip--dim .cat-fmt-chip__tile {
+  opacity: 0.6;
+}
+
+/* A format that *is* importable but whose adapter cannot run in this
+   deployment. It takes the amber ground so its reason line has the ground
+   `--warn-fg` was calibrated against: measured, that ink on the plain surface
+   is 3.4:1–4.4:1 in five of the nine themes, which is a serious `color-contrast`
+   finding at this size. */
+.cat-fmt-chip--unavailable {
+  background: var(--warn-soft);
+  box-shadow: inset 0 0 0 1px var(--warn);
+}
+
+.cat-fmt-chip__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+}
+
+.cat-fmt-chip__tile > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}
+
+.cat-fmt-chip__text {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.cat-fmt-chip__name {
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat-fmt-chip__desc {
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-snug);
+  color: var(--fg-muted);
+}
+
+.cat-fmt-chip__note {
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+  color: var(--warn-fg);
+}
+
+/* ---- The catalog importer (HIVE-7.1, #5318) ------------------------------
+   `docs/mockups/build/import-wizard.html` gave HIVE-6.4 the frame — the head,
+   the rail, the one scrolling body and the pinned footer — and this wizard
+   now sits inside it (`.imp-wizard`, §HIVE-6.4 above). What is below is only
+   what the Catalog's five steps hold that the Projects importer's do not: the
+   destination guide, the detection facts, the routing card and the two
+   commit states.
+
+   The routing card is the one that mattered. It carried four hand-written
+   `border-indigo-200 bg-indigo-50 text-indigo-900 dark:…` quads, one per
+   destination, which is a palette encoding a *state* — so it resolves through
+   the shared vocabulary now (`catalogRoutingTone`), and the four rules below
+   are a lookup rather than four colour schemes. */
+.cat-imp-source {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 64rem) {
+  .cat-imp-source {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.9fr);
+  }
+}
+
+.cat-imp-source__main {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cat-imp-guide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.cat-imp-guide__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.cat-imp-guide__list > dt {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.cat-imp-guide__list > dd {
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.cat-imp-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.cat-imp-form > * {
+  inline-size: 100%;
+}
+
+.cat-imp-form__pair {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 40rem) {
+  .cat-imp-form__pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The quiet second line under a detection fact, a provenance line or a form. */
+.cat-imp-note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.cat-imp-detect {
+  display: flex;
+  min-block-size: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cat-imp-file {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.cat-imp-file__name {
+  display: flex;
+  min-inline-size: 0;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.cat-imp-file__name > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.cat-imp-file__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cat-imp-card {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.cat-imp-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.cat-imp-card__title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.cat-imp-skipped {
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.cat-imp-skipped > summary {
+  cursor: pointer;
+}
+
+.cat-imp-skipped ul {
+  margin-block-start: var(--space-1);
+  padding-inline-start: var(--space-4);
+  list-style: disc;
+}
+
+/* ---- The routing card ----------------------------------------------------
+   One shape, four tones, and the tone is a *state* — where this document is
+   headed — so it comes from the same table `Badge` and `Alert` read. */
+.cat-imp-routing {
+  --cat-route-soft: var(--neutral-soft);
+  --cat-route-fg: var(--neutral-fg);
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--cat-route-soft);
+  color: var(--cat-route-fg);
+}
+
+.cat-imp-routing[data-tone="accent"] {
+  --cat-route-soft: var(--accent-soft);
+  --cat-route-fg: var(--accent-fg);
+}
+
+.cat-imp-routing[data-tone="ok"] {
+  --cat-route-soft: var(--ok-soft);
+  --cat-route-fg: var(--ok-fg);
+}
+
+.cat-imp-routing[data-tone="warn"] {
+  --cat-route-soft: var(--warn-soft);
+  --cat-route-fg: var(--warn-fg);
+}
+
+.cat-imp-routing > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+}
+
+.cat-imp-routing__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+/* The body is the *same* ink as the title rather than the mockup's
+   `opacity: .9`. A tone's `-fg` is calibrated against its `-soft` at full
+   strength; fading it is exactly the move that puts a pair under AA. */
+.cat-imp-routing__body,
+.cat-imp-routing__note {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+}
+
+.cat-imp-routing__note {
+  font-weight: 500;
+}
+
+/* ---- The source preview -------------------------------------------------- */
+.cat-imp-preview {
+  display: flex;
+  min-block-size: 12rem;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.cat-imp-preview__empty {
+  display: flex;
+  block-size: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+/* ---- Options ------------------------------------------------------------- */
+.cat-imp-options {
+  display: flex;
+  min-block-size: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cat-imp-choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+
+.cat-imp-choice__option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  cursor: pointer;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.cat-imp-choice__option:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.cat-imp-choice__option:has(input:checked) {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.cat-imp-choice__title {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.cat-imp-choice__desc {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The commit step ----------------------------------------------------- */
+.cat-imp-terminal {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding-block: var(--space-10);
+  text-align: center;
+}
+
+.cat-imp-terminal p {
+  max-inline-size: 34rem;
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* The skip-quality preference, in the footer beside the forward verb. */
+.cat-imp-skip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+/* The conversion preview's headline grade. Geometry only — the band's fill and
+   ink come from `ui/statusVocabulary`'s `gradeBand`, so the letter here is the
+   same colour as the Lint orb on the card the click came from. */
+.cnv-grade {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--r-md);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}

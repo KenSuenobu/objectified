@@ -262,7 +262,7 @@ export function CatalogImportProjectionGraph({
       <section className="projection-panel" data-testid="import-projection-graph">
         <SectionHeading />
         <p
-          className="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
+          className="rounded-lg border border-dashed border-border px-3 py-4 text-xs text-fg-subtle"
           data-testid="import-projection-empty"
         >
           The manifest carried no projection evidence for this candidate.
@@ -368,7 +368,7 @@ export function CatalogImportProjectionGraph({
 
       {view.aggregated && (
         <p
-          className="text-2xs text-gray-500 dark:text-gray-400"
+          className="text-2xs text-fg-muted"
           data-testid="import-projection-aggregated-note"
         >
           Clean rows are aggregated to keep the map readable; expand them in the table below.
@@ -380,7 +380,7 @@ export function CatalogImportProjectionGraph({
       {drawnSelection.truncated && (
         <p
           role="status"
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+          className="rounded-lg border border-warn bg-warn-soft px-3 py-2 text-2xs text-warn-fg"
           data-testid="import-projection-draw-cap"
         >
           Drawing {drawnSelection.drawnRowCount.toLocaleString()} of{' '}
@@ -390,7 +390,7 @@ export function CatalogImportProjectionGraph({
       )}
 
       {/* The graph. Its accessible name is the table caption — the text alternative. */}
-      <div className="max-h-80 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
+      <div className="max-h-80 overflow-auto rounded-lg border border-border">
         <svg
           data-testid="import-projection-svg"
           role="group"
@@ -410,7 +410,7 @@ export function CatalogImportProjectionGraph({
                 x={layout.columns.source}
                 y={lane.headerY}
                 fontSize={SVG_TEXT_SIZE.label}
-                className="fill-gray-500 font-semibold uppercase tracking-wide dark:fill-gray-400"
+                className="fill-fg-muted font-semibold uppercase tracking-wide"
               >
                 {lane.label} ({lane.count})
               </text>
@@ -493,7 +493,7 @@ export function CatalogImportProjectionGraph({
           aggregates, windowed above the budget with truthful aria-rowcount/rowindex. */}
       <div
         className={cn(
-          'overflow-auto rounded-lg border border-gray-100 dark:border-gray-800',
+          'overflow-auto rounded-lg border border-border',
           tableVirtualized ? 'h-72' : 'max-h-72',
         )}
         style={
@@ -520,7 +520,7 @@ export function CatalogImportProjectionGraph({
           <thead>
             <tr
               aria-rowindex={1}
-              className="border-b border-gray-200 text-2xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
+              className="border-b border-border text-2xs uppercase tracking-wide text-fg-muted"
             >
               <th scope="col" className="px-2 py-1.5">Status</th>
               <th scope="col" className="px-2 py-1.5">Source construct</th>
@@ -533,7 +533,7 @@ export function CatalogImportProjectionGraph({
         </table>
       </div>
       {tableVirtualized && (
-        <p className="text-2xs text-gray-500 dark:text-gray-400" data-testid="import-projection-table-windowed">
+        <p className="text-2xs text-fg-muted" data-testid="import-projection-table-windowed">
           The table is windowed — every one of its {tableRows.length.toLocaleString()} rows is
           reachable by scrolling.
         </p>
@@ -545,7 +545,7 @@ export function CatalogImportProjectionGraph({
 /** The section heading shared by the populated and empty states. */
 function SectionHeading() {
   return (
-    <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+    <h4 className="text-xs font-semibold uppercase tracking-wide text-fg">
       What the source lost coming in
     </h4>
   );
@@ -569,7 +569,7 @@ function EvidenceCard({
   if (entry.kind === 'aggregate') {
     return (
       <div
-        className="rounded-lg border border-gray-200 p-3 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300"
+        className="rounded-lg border border-border p-3 text-xs text-fg-muted"
         data-testid="import-projection-evidence"
       >
         <StatusText presentation={presentation} /> {entry.members?.length ?? 0} constructs,
@@ -587,7 +587,7 @@ function EvidenceCard({
 
   return (
     <div
-      className="space-y-2 rounded-lg border border-gray-200 p-3 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-200"
+      className="space-y-2 rounded-lg border border-border p-3 text-xs text-fg"
       data-testid="import-projection-evidence"
     >
       <div className="flex flex-wrap items-center gap-2">
@@ -603,7 +603,7 @@ function EvidenceCard({
         </span>
         {row.reason && (
           <span
-            className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="rounded bg-inset px-1.5 py-0.5 font-mono text-2xs text-fg-muted"
             data-testid="import-projection-reason"
           >
             {row.reason}
@@ -613,7 +613,7 @@ function EvidenceCard({
 
       <p>{row.reasonSummary}</p>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-gray-500 dark:text-gray-400">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-fg-muted">
         {row.sourceLabel && row.sourceLabel !== row.construct && (
           <span>
             Source name: <span className="font-mono">{row.sourceLabel}</span>
@@ -625,7 +625,7 @@ function EvidenceCard({
               type="button"
               data-testid="import-projection-source-link"
               onClick={() => onSelectSourceLine(location.line)}
-              className="font-mono text-indigo-600 underline decoration-dotted underline-offset-2 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+              className="font-mono text-accent underline decoration-dotted underline-offset-2 hover:text-accent-fg"
             >
               Source line {row.sourceLocation}
             </button>
@@ -636,7 +636,7 @@ function EvidenceCard({
 
       {capabilityRef && (
         <div
-          className="rounded-md bg-gray-50 p-2 text-2xs text-gray-600 dark:bg-gray-900/50 dark:text-gray-300"
+          className="rounded-md bg-subtle p-2 text-2xs text-fg-muted"
           data-testid="import-projection-capability"
         >
           Capability: <span className="font-mono">{capabilityRef.format}</span> ·{' '}
@@ -648,7 +648,7 @@ function EvidenceCard({
         </div>
       )}
 
-      <p className="text-2xs text-gray-500 dark:text-gray-400" data-testid="import-projection-remediation">
+      <p className="text-2xs text-fg-muted" data-testid="import-projection-remediation">
         {REMEDIATION[row.coverage]}
       </p>
     </div>
@@ -675,8 +675,8 @@ function EvidenceTableRow({
     <tr
       aria-rowindex={ariaRowIndex}
       className={cn(
-        'h-9 whitespace-nowrap border-b border-gray-100 last:border-0 dark:border-gray-800',
-        selected && 'bg-indigo-50 dark:bg-indigo-950/30',
+        'h-9 whitespace-nowrap border-b border-border last:border-0',
+        selected && 'bg-accent-soft',
       )}
       data-testid={`import-projection-table-row-${entry.key}`}
     >
@@ -690,18 +690,18 @@ function EvidenceTableRow({
           onFocus={onFocusRow}
           aria-pressed={selected}
           aria-label={importEntryAriaLabel(entry)}
-          className="max-w-56 truncate font-mono text-gray-800 underline-offset-2 hover:underline dark:text-gray-100"
+          className="max-w-56 truncate font-mono text-fg underline-offset-2 hover:underline"
         >
           {row.sourceLabel ?? row.construct}
         </button>
       </td>
-      <td className="max-w-56 truncate px-2 py-1.5 font-mono text-gray-600 dark:text-gray-300">
+      <td className="max-w-56 truncate px-2 py-1.5 font-mono text-fg-muted">
         {row.canonicalKind ? row.construct : '—'}
       </td>
-      <td className="px-2 py-1.5 text-gray-600 dark:text-gray-300">
+      <td className="px-2 py-1.5 text-fg-muted">
         {familyLabel(entry.lane)}
       </td>
-      <td className="px-2 py-1.5 text-gray-600 dark:text-gray-300">
+      <td className="px-2 py-1.5 text-fg-muted">
         <span className="block max-w-md truncate">
           {row.reason ? <span className="font-mono">{row.reason}</span> : null}
           {row.reason ? ' — ' : ''}
@@ -729,7 +729,7 @@ function AggregateToggleRow({
   const presentation = statusPresentation(entry.status);
   const members = entry.members ?? [];
   return (
-    <tr aria-rowindex={ariaRowIndex} className="h-9 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
+    <tr aria-rowindex={ariaRowIndex} className="h-9 whitespace-nowrap border-b border-border">
       <td className="px-2 py-1.5">
         <StatusText presentation={presentation} />
       </td>
@@ -741,7 +741,7 @@ function AggregateToggleRow({
           onFocus={onFocusRow}
           aria-label={importEntryAriaLabel(entry)}
           data-testid={`import-projection-aggregate-toggle-${entry.lane}-${entry.status}`}
-          className="text-gray-700 underline-offset-2 hover:underline dark:text-gray-200"
+          className="text-fg underline-offset-2 hover:underline"
         >
           {members.length} construct{members.length === 1 ? '' : 's'}{' '}
           {presentation.label.toLowerCase()} in {familyLabel(entry.lane)} (aggregated) —{' '}
@@ -768,20 +768,20 @@ function MemberRow({
     <tr
       aria-rowindex={ariaRowIndex}
       onFocus={onFocusRow}
-      className="h-9 whitespace-nowrap border-b border-gray-50 bg-gray-50/50 dark:border-gray-800/50 dark:bg-gray-900/30"
+      className="h-9 whitespace-nowrap border-b border-border bg-subtle"
       data-testid={`import-projection-aggregate-member-${member.id}`}
     >
       <td className="px-2 py-1" />
-      <td className="max-w-56 truncate px-2 py-1 font-mono text-gray-600 dark:text-gray-300">
+      <td className="max-w-56 truncate px-2 py-1 font-mono text-fg-muted">
         {member.sourceLabel ?? member.construct}
       </td>
-      <td className="max-w-56 truncate px-2 py-1 font-mono text-gray-600 dark:text-gray-300">
+      <td className="max-w-56 truncate px-2 py-1 font-mono text-fg-muted">
         {member.construct}
       </td>
-      <td className="px-2 py-1 text-gray-500 dark:text-gray-400">
+      <td className="px-2 py-1 text-fg-muted">
         {familyLabel(entry.lane)}
       </td>
-      <td className="px-2 py-1 text-gray-500 dark:text-gray-400">
+      <td className="px-2 py-1 text-fg-muted">
         <span className="block max-w-md truncate">{member.reasonSummary}</span>
       </td>
     </tr>

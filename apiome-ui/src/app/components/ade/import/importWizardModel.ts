@@ -580,3 +580,151 @@ export function isAcceptedImportFile(name: string): boolean {
   if (dot < 0) return false;
   return IMPORT_FILE_EXTENSIONS.includes(name.slice(dot).toLowerCase());
 }
+
+/* -------------------------------------------------------------------------
+   The Catalog importer (HIVE-7.1, #5318)
+   ------------------------------------------------------------------------- */
+
+/**
+ * The Catalog runs a *second* importer (MFI-23.12) over the alternative, non-OpenAPI formats.
+ *
+ * Its rail and its verbs are not the Projects importer's — it detects and routes rather than
+ * analysing and previewing, and it has a pre-flight quality gate the Projects one does not —
+ * but its *frame* is the same, and HIVE-7.1's acceptance criterion is that it shares the frame
+ * rather than carrying a copy. So the two wizards' rules live in one module: the chrome takes
+ * whichever rail it is handed, and both footers are the same four slots.
+ */
+export type CatalogImportStepId = 'source' | 'detect' | 'options' | 'quality' | 'import';
+
+/** The Catalog importer's five stops, in order, as `ui/Stepper` wants them. */
+export const CATALOG_IMPORT_STEPS: ReadonlyArray<{ id: CatalogImportStepId; label: string }> = [
+  { id: 'source', label: 'Source' },
+  { id: 'detect', label: 'Detect & route' },
+  { id: 'options', label: 'Options' },
+  { id: 'quality', label: 'Quality' },
+  { id: 'import', label: 'Import' },
+];
+
+/** Where a detected document is headed. Mirrors `catalog-import-formats`' decision. */
+export type CatalogImportDestination =
+  | 'catalog'
+  | 'project'
+  | 'json-schema-choice'
+  | 'not-importable';
+
+/**
+ * The status tone the routing card takes.
+ *
+ * A destination is a *state* of this import, not an identity, so it resolves through the
+ * shared vocabulary rather than through a hue: accent for "this is where it goes", ok for the
+ * publishable route, warn for the one that asks a question, neutral for the dead end. This
+ * replaces four hand-written `border-indigo-200 bg-indigo-50 … dark:` quads.
+ *
+ * @param destination The routing decision.
+ * @returns The tone name — a key of `ui/statusVocabulary`'s tone tables.
+ */
+export function catalogRoutingTone(destination: CatalogImportDestination): string {
+  switch (destination) {
+    case 'catalog':
+      return 'accent';
+    case 'project':
+      return 'ok';
+    case 'json-schema-choice':
+      return 'warn';
+    default:
+      return 'neutral';
+  }
+}
+
+/** What the Catalog importer needs to know to choose its footer. */
+export interface CatalogImportFooterState {
+  /** Which stop it is on. */
+  step: CatalogImportStepId;
+  /** A commit is in flight. */
+  storing: boolean;
+  /** The commit landed. */
+  done: boolean;
+  /** Detection produced something importable. */
+  canContinueFromDetect: boolean;
+  /** The chosen format's adapter cannot run in this deployment. */
+  adapterUnavailable: boolean;
+  /** Where the document is headed. */
+  destination: CatalogImportDestination;
+  /** Everything the catalog commit needs is present. */
+  canStoreCatalog: boolean;
+}
+
+/**
+ * The Catalog importer's footer for a state.
+ *
+ * Three rules, and each one is a thing the JSX used to decide in a different place:
+ *
+ *   - **Continue is refused, not hidden.** A document that routes to Projects, or one whose
+ *     adapter is missing in this runtime, leaves the button drawn and disabled — a footer that
+ *     loses its forward verb between steps reads as a layout jump, and the routing card above
+ *     is what says *why*.
+ *   - **Cancel says what closing costs.** *Cancel* while nothing has been written, *Close*
+ *     once the item is in the catalog.
+ *   - **Back exists everywhere except the first and last stops**, and is refused while a
+ *     commit is in flight for the same reason the Projects importer refuses it: a running
+ *     write owns rows that nothing would be watching.
+ *
+ * The `quality` step is deliberately absent: it owns its own footer, because all three of its
+ * exits — Cancel, Import anyway, Import — belong on one row with the gate that governs them
+ * (IXH-2.2).
+ *
+ * @param state Where the wizard is and what it holds — see {@link CatalogImportFooterState}.
+ * @returns The four slots; `null` for a slot this step does not fill.
+ */
+export function catalogImportFooterFor(state: CatalogImportFooterState): ImportFooter {
+  const { step, storing, done, destination } = state;
+  const cancel: ImportFooterAction = {
+    label: done ? 'Close' : 'Cancel',
+    disabled: storing,
+  };
+
+  if (step === 'source') {
+    return {
+      back: null,
+      cancel,
+      // The tiles navigate on click, so the grid's forward button never acts.
+      primary: { label: 'Continue', disabled: true },
+      keepAnyway: null,
+    };
+  }
+
+  if (step === 'detect') {
+    return {
+      back: { label: '← Back', disabled: false },
+      cancel,
+      primary: {
+        label: 'Continue',
+        disabled: !state.canContinueFromDetect || state.adapterUnavailable,
+      },
+      keepAnyway: null,
+    };
+  }
+
+  if (step === 'options') {
+    const asks = destination === 'catalog' || destination === 'json-schema-choice';
+    return {
+      back: { label: '← Back', disabled: false },
+      cancel,
+      primary: asks
+        ? {
+            label: 'Continue',
+            disabled: destination === 'catalog' && (!state.canStoreCatalog || storing),
+          }
+        : { label: 'Continue', disabled: true },
+      keepAnyway: null,
+    };
+  }
+
+  // `import`: the commit is running or has landed. There is nowhere back to.
+  return {
+    back: null,
+    cancel,
+    primary: done ? { label: 'Done', disabled: false } : null,
+    keepAnyway: null,
+  };
+}

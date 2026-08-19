@@ -44,7 +44,7 @@ import {
 import { AlertTriangle, ChevronRight, Filter, Loader2, RefreshCw, X } from 'lucide-react';
 import { cn } from '@lib/utils';
 import { Button } from '../../../ui/Button';
-import { gradeChipClass } from '@/app/utils/version-lint-report';
+import { gradeBand } from '../../../ui/statusVocabulary';
 import { parsedTagToneClass } from './CatalogParsedModel';
 import { CatalogImportProjectionGraph } from './CatalogImportProjectionGraph';
 import { CatalogImportReimportDelta } from './CatalogImportReimportDelta';
@@ -112,7 +112,7 @@ function CoverageBadge({ coverage, count }: { coverage: string; count?: number }
     : coverage;
   const tone = known
     ? PREVIEW_COVERAGE_TONE[coverage as (typeof PREVIEW_COVERAGE_CLASSES)[number]]
-    : 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300';
+    : 'bg-inset text-fg-muted';
   return (
     <span
       data-testid="import-preview-coverage"
@@ -132,8 +132,8 @@ function CoverageBadge({ coverage, count }: { coverage: string; count?: number }
 function SummaryFact({ label, value }: { label: string; value: string }) {
   return (
     <span className="inline-flex items-baseline gap-1 text-xs">
-      <span className="text-gray-500 dark:text-gray-400">{label}</span>
-      <span className="font-medium text-gray-900 dark:text-gray-100">{value}</span>
+      <span className="text-fg-muted">{label}</span>
+      <span className="font-medium text-fg">{value}</span>
     </span>
   );
 }
@@ -494,16 +494,16 @@ export function CatalogImportPreviewPanel({
           className={cn(
             'flex h-8 w-full items-center gap-2 rounded-md pr-2 text-left text-xs motion-safe:transition',
             'pl-[calc(0.5rem+(var(--tree-depth)-1)*1.125rem)]',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent',
             selected
-              ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-100'
-              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+              ? 'bg-accent-soft text-accent-fg'
+              : 'text-fg hover:bg-inset',
           )}
         >
           {row.hasChildren ? (
             <ChevronRight
               className={cn(
-                'h-3.5 w-3.5 shrink-0 text-gray-400 motion-safe:transition-transform',
+                'h-3.5 w-3.5 shrink-0 text-fg-subtle motion-safe:transition-transform',
                 row.expanded && 'rotate-90',
               )}
               aria-hidden
@@ -513,11 +513,11 @@ export function CatalogImportPreviewPanel({
           )}
           {row.kind === 'section' ? (
             <>
-              <span className="font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+              <span className="font-semibold uppercase tracking-wide text-fg-muted">
                 {row.label}
               </span>
               {row.count !== null ? (
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
+                <span className="rounded-full bg-inset px-2 py-0.5 font-mono text-2xs font-semibold tabular-nums text-fg-muted">
                   {row.count.toLocaleString()}
                 </span>
               ) : null}
@@ -541,7 +541,7 @@ export function CatalogImportPreviewPanel({
                 {row.label}
               </span>
               {row.entity!.deprecated ? (
-                <span className="shrink-0 rounded bg-slate-100 px-1 py-0.5 text-2xs font-semibold uppercase text-slate-500 dark:bg-slate-700/60 dark:text-slate-300">
+                <span className="shrink-0 rounded bg-inset px-1 py-0.5 text-2xs font-semibold uppercase text-fg-muted">
                   deprecated
                 </span>
               ) : null}
@@ -559,12 +559,12 @@ export function CatalogImportPreviewPanel({
                         setSelectedKey(row.key);
                         onSelectSourceLine(line);
                       }}
-                      className="font-mono text-2xs tabular-nums text-indigo-600 underline decoration-dotted underline-offset-2 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      className="font-mono text-2xs tabular-nums text-accent underline decoration-dotted underline-offset-2 hover:text-accent-fg"
                     >
                       {row.entity!.source_location}
                     </span>
                   ) : (
-                    <span className="font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500">
+                    <span className="font-mono text-2xs tabular-nums text-fg-subtle">
                       {row.entity!.source_location}
                     </span>
                   )
@@ -579,15 +579,15 @@ export function CatalogImportPreviewPanel({
 
   return (
     <section
-      className="rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+      className="rounded-xl border border-border p-4"
       data-testid="import-preview-panel"
     >
       <div className="mb-3 flex items-center gap-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-fg">
           What this import would add
         </h3>
         {virtualized && (
-          <span className="text-2xs font-normal text-gray-500 dark:text-gray-400">windowed</span>
+          <span className="text-2xs font-normal text-fg-muted">windowed</span>
         )}
       </div>
 
@@ -596,14 +596,14 @@ export function CatalogImportPreviewPanel({
           className="flex flex-col items-center justify-center gap-2 py-8 text-center"
           data-testid="import-preview-loading"
         >
-          <Loader2 className="h-6 w-6 motion-safe:animate-spin text-indigo-500" aria-hidden />
-          <span className="text-xs text-gray-600 dark:text-gray-300">
+          <Loader2 className="h-6 w-6 motion-safe:animate-spin text-accent" aria-hidden />
+          <span className="text-xs text-fg-muted">
             Building the entity preview — nothing has been written yet.
           </span>
         </div>
       ) : transportError ? (
         <div
-          className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 p-3 text-sm text-amber-800 dark:border-amber-700 dark:text-amber-200"
+          className="flex flex-wrap items-center gap-3 rounded-lg border border-warn p-3 text-sm text-warn-fg"
           data-testid="import-preview-error"
         >
           <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
@@ -619,7 +619,7 @@ export function CatalogImportPreviewPanel({
         </div>
       ) : !response?.ok || !manifest ? (
         <div
-          className="rounded-lg border border-gray-200 p-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300"
+          className="rounded-lg border border-border p-3 text-sm text-fg-muted"
           data-testid="import-preview-unavailable"
         >
           This source cannot be previewed
@@ -628,7 +628,7 @@ export function CatalogImportPreviewPanel({
       ) : (
         <div className="space-y-3">
           <div
-            className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2 dark:border-gray-700/60 dark:bg-gray-900/40"
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-border bg-subtle px-3 py-2"
             data-testid="import-preview-summary"
           >
             <SummaryFact label="Format" value={format ?? '—'} />
@@ -645,7 +645,7 @@ export function CatalogImportPreviewPanel({
               ).map(([kind, count]) => (
                 <span
                   key={kind}
-                  className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-2xs font-medium text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+                  className="inline-flex items-center gap-1 rounded-md bg-inset px-2 py-0.5 text-2xs font-medium text-fg-muted"
                 >
                   <span className="font-mono tabular-nums">{(count ?? 0).toLocaleString()}</span>
                   {kind}
@@ -655,14 +655,14 @@ export function CatalogImportPreviewPanel({
             {grade ? (
               <span
                 className={cn(
-                  'inline-flex items-center rounded-md border px-2 py-0.5 text-2xs font-semibold',
-                  gradeChipClass(grade),
+                  'inline-flex items-center rounded-md px-2 py-0.5 text-2xs font-semibold',
+                  gradeBand(grade).solidClass,
                 )}
               >
                 Grade {grade}
               </span>
             ) : null}
-            <span className="text-2xs text-gray-400 dark:text-gray-500">
+            <span className="text-2xs text-fg-subtle">
               via {manifest.adapter.adapter_label}
             </span>
           </div>
@@ -680,7 +680,7 @@ export function CatalogImportPreviewPanel({
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative min-w-0 flex-1 sm:max-w-xs">
               <Filter
-                className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400"
+                className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-subtle"
                 aria-hidden
               />
               <input
@@ -690,7 +690,7 @@ export function CatalogImportPreviewPanel({
                 onChange={(event) => setFilter(event.target.value)}
                 placeholder="Filter entities…"
                 aria-label="Filter preview entities by name, kind, or source name"
-                className="w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-8 pr-8 text-xs text-gray-700 placeholder:text-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                className="w-full rounded-lg border border-border bg-surface py-1.5 pl-8 pr-8 text-xs text-fg placeholder:text-fg-subtle focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               />
               {filtering ? (
                 <button
@@ -698,7 +698,7 @@ export function CatalogImportPreviewPanel({
                   data-testid="import-preview-filter-clear"
                   onClick={() => setFilter('')}
                   aria-label="Clear entity filter"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 motion-safe:transition-colors hover:text-gray-700 dark:hover:text-gray-200"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-fg-subtle motion-safe:transition-colors hover:text-fg"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
@@ -707,7 +707,7 @@ export function CatalogImportPreviewPanel({
             {filtering ? (
               <span
                 data-testid="import-preview-filter-count"
-                className="shrink-0 font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
+                className="shrink-0 font-mono text-2xs tabular-nums text-fg-subtle"
               >
                 {entityRowCount} of {manifest.entities.length}
               </span>
@@ -718,7 +718,7 @@ export function CatalogImportPreviewPanel({
             <div
               role="status"
               data-testid="import-preview-truncation"
-              className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+              className="flex flex-wrap items-center gap-3 rounded-lg border border-warn bg-warn-soft px-3 py-2 text-xs text-warn-fg"
             >
               <span className="min-w-0 flex-1">
                 Showing {manifest.entities.length.toLocaleString()} of{' '}
@@ -752,7 +752,7 @@ export function CatalogImportPreviewPanel({
               ref={listRef}
               onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
               onKeyDown={handleTreeKeyDown}
-              className="h-[380px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+              className="h-[380px] overflow-y-auto rounded-lg border border-border"
               style={viewportHeight !== TREE_HEIGHT ? { height: viewportHeight } : undefined}
             >
               <ul role="tree" aria-label="Entities this import would add" className="relative">
@@ -773,7 +773,7 @@ export function CatalogImportPreviewPanel({
           ) : (
             <p
               data-testid="import-preview-no-matches"
-              className="rounded-lg border border-dashed border-gray-200 px-3 py-6 text-center text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
+              className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-fg-subtle"
             >
               {filtering
                 ? `No entities match “${filter.trim()}”.`
@@ -783,7 +783,7 @@ export function CatalogImportPreviewPanel({
 
           {selectedEntity ? (
             <div
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-gray-500 dark:text-gray-400"
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-fg-muted"
               data-testid="import-preview-provenance"
             >
               {selectedEntity.native_name && selectedEntity.native_name !== selectedEntity.name ? (

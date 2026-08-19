@@ -137,21 +137,31 @@ export function partitionChecklist(items: ChecklistItem[]): {
   return { provided, missing };
 }
 
-/** CSS utility classes for a coverage badge, keyed by tag. */
-const COVERAGE_BADGE_CLASSES: Record<Coverage, string> = {
-  present:
-    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-  inferred: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
-  partial: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  missing: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
-  'n/a': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+/**
+ * The status tone a coverage tag reads in (HIVE-7.1, #5318).
+ *
+ * How much of a construct survived the projection is a *state*, so it resolves through the
+ * shared vocabulary — `ui/statusVocabulary.ts` — rather than through the five hand-written
+ * `bg-emerald-100 text-emerald-800 dark:…` triples this replaces. `Badge status={…}` is what
+ * paints it, so a "partial" here is the same amber as a "partial" anywhere else in the app.
+ */
+const COVERAGE_TONE: Record<Coverage, string> = {
+  present: 'ok',
+  inferred: 'accent',
+  partial: 'warn',
+  missing: 'danger',
+  'n/a': 'neutral',
 };
 
-const COVERAGE_BADGE_FALLBACK = 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
-
-/** Return the badge CSS classes for a coverage tag (defensive fallback for unknown tags). */
-export function coverageBadgeClass(coverage: string): string {
-  return COVERAGE_BADGE_CLASSES[coverage as Coverage] ?? COVERAGE_BADGE_FALLBACK;
+/**
+ * The tone for a coverage tag.
+ *
+ * @param coverage The tag off the fidelity report.
+ * @returns A `ui/statusVocabulary` tone; `neutral` for a tag this build does not know, so an
+ *   unrecognised tag reads as "no opinion" rather than borrowing another tag's colour.
+ */
+export function coverageTone(coverage: string): string {
+  return COVERAGE_TONE[coverage as Coverage] ?? 'neutral';
 }
 
 /** Short human label for a coverage tag, used in badges and column headers. */
@@ -229,29 +239,42 @@ export function tierWarning(tier: FidelityTier): TierWarning {
   }
 }
 
-/** CSS utility classes for the warning banner container, keyed by tier severity. */
-export function tierBannerClass(severity: TierWarning['severity']): string {
+/**
+ * The `Alert` variant the tier's warning banner takes (HIVE-7.1, #5318).
+ *
+ * The three severities map onto three of the banner tones the design language already has, so
+ * the banner is an `Alert` rather than a bordered box with its own three-colour palette.
+ *
+ * @param severity The tier's severity, from {@link tierWarning}.
+ * @returns An `Alert` variant name.
+ */
+export function tierBannerVariant(severity: TierWarning['severity']): 'danger' | 'warn' | 'ok' {
   switch (severity) {
     case 'critical':
-      return 'border-rose-300 bg-rose-50 text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
+      return 'danger';
     case 'warning':
-      return 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200';
+      return 'warn';
     case 'info':
     default:
-      return 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
+      return 'ok';
   }
 }
 
-/** CSS utility classes for the tier pill in the dialog header, keyed by tier. */
-export function tierPillClass(tier: FidelityTier): string {
+/**
+ * The status tone of the tier pill in the dialog header.
+ *
+ * @param tier The fidelity tier.
+ * @returns A `ui/statusVocabulary` tone for `Badge status={…}`.
+ */
+export function tierTone(tier: FidelityTier): 'ok' | 'warn' | 'danger' {
   switch (tier) {
     case 'high':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
+      return 'ok';
     case 'medium':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+      return 'warn';
     case 'low':
     default:
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300';
+      return 'danger';
   }
 }
 

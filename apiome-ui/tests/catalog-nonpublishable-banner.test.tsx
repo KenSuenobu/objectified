@@ -1,5 +1,6 @@
 /**
- * Render tests for the persistent non-publishable banner (MFI-24.3, #4083).
+ * Render tests for the persistent non-publishable banner (MFI-24.3, #4083; re-skinned
+ * HIVE-7.1, #5318).
  *
  * Confirms the info banner renders with an accessible `role="note"` landmark and that its copy
  * matches the mockup intent — items are non-publishable, the only path is "Convert to OpenAPI", and
@@ -9,7 +10,7 @@ import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import { CatalogNonPublishableBanner } from '../src/app/components/ade/dashboard/catalog/CatalogNonPublishableBanner';
+import { CatalogNonPublishableBanner } from '../src/app/components/ade/catalog';
 
 /** The copy uses non-breaking spaces (U+00A0); normalise them to plain spaces before asserting. */
 function normalisedText(el: HTMLElement): string {

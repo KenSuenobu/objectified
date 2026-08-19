@@ -123,12 +123,12 @@ const MAX_POLLS = 150;
 /** Colour treatment for a row's state chip. */
 function stateTone(state: string): string {
   if (state === 'completed') {
-    return 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100';
+    return 'border-ok bg-ok-soft text-ok-fg';
   }
   if (state === 'failed' || state === 'canceled' || state === 'rolled-back' || state === 'not-found') {
-    return 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-100';
+    return 'border-danger bg-danger-soft text-danger-fg';
   }
-  return 'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200';
+  return 'border-border bg-subtle text-fg';
 }
 
 /** Render a taxonomy error as the sentence the user can act on. */
@@ -249,13 +249,13 @@ export function CatalogBulkImportPanel({ source, plan, onSuccess }: CatalogBulkI
       className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto"
       data-testid="catalog-bulk-import-panel"
     >
-      <div className="flex shrink-0 items-center gap-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+      <div className="flex shrink-0 items-center gap-2 rounded-lg border border-border p-3">
         {done ? (
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden />
+          <CheckCircle2 className="h-4 w-4 text-ok" aria-hidden />
         ) : (
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
+          <Loader2 className="h-4 w-4 animate-spin text-accent" aria-hidden />
         )}
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+        <span className="text-sm font-medium text-fg">
           {done
             ? `Bulk import finished: ${counts.completed} imported${
                 counts.failed > 0 ? `, ${counts.failed} failed` : ''
@@ -274,19 +274,19 @@ export function CatalogBulkImportPanel({ source, plan, onSuccess }: CatalogBulkI
         {rows.map((row) => (
           <li
             key={row.key}
-            className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+            className="rounded-lg border border-border p-3"
             data-testid={`catalog-bulk-import-item-${row.key}`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
-                <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                <span className="truncate text-sm font-medium text-fg">
                   {row.name}
                 </span>
                 <FormatPill format={row.format ?? null} />
               </div>
               <div className="flex items-center gap-2">
                 {row.target && (
-                  <span className="rounded-full border border-gray-200 px-2 py-0.5 text-2xs text-gray-600 dark:border-gray-700 dark:text-gray-300">
+                  <span className="rounded-full border border-border px-2 py-0.5 text-2xs text-fg-muted">
                     {row.target}
                   </span>
                 )}
@@ -295,14 +295,14 @@ export function CatalogBulkImportPanel({ source, plan, onSuccess }: CatalogBulkI
                 </span>
               </div>
             </div>
-            <div className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">{row.key}</div>
+            <div className="mt-1 truncate text-xs text-fg-muted">{row.key}</div>
             {row.projectSlug && (
-              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <div className="mt-1 text-xs text-fg-muted">
                 Created {row.projectSlug}
               </div>
             )}
             {row.error && (
-              <div className="mt-1 flex items-start gap-1 text-xs text-red-600 dark:text-red-300">
+              <div className="mt-1 flex items-start gap-1 text-xs text-danger">
                 <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
                 <span>{errorText(row.error)}</span>
               </div>
@@ -313,7 +313,7 @@ export function CatalogBulkImportPanel({ source, plan, onSuccess }: CatalogBulkI
 
       {plan.skipped.length > 0 && (
         <details
-          className="shrink-0 text-xs text-gray-500 dark:text-gray-400"
+          className="shrink-0 text-xs text-fg-muted"
           data-testid="catalog-bulk-import-skipped"
         >
           <summary className="cursor-pointer">
@@ -358,24 +358,24 @@ export function CatalogBulkImportBanner({
     .join(', ');
   return (
     <div
-      className="shrink-0 rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-950/40"
+      className="shrink-0 rounded-lg border border-accent bg-accent-soft p-4"
       data-testid="catalog-bulk-import-banner"
     >
       <div className="flex items-start gap-2">
-        <Layers className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" aria-hidden />
+        <Layers className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+          <div className="text-sm font-semibold text-accent-fg">
             This source holds {plan.items.length} independent spec
             {plan.items.length === 1 ? '' : 's'}
           </div>
-          <div className="mt-1 text-xs text-indigo-800 dark:text-indigo-200">
+          <div className="mt-1 text-xs text-accent-fg">
             Import them all at once — each one is detected, routed, and imported separately
             {targets ? ` (${targets})` : ''}.
             {plan.truncated
               ? ` Only the first ${plan.items.length} of ${plan.total_items} can be imported in one batch.`
               : ''}
           </div>
-          <ul className="mt-2 space-y-0.5 text-xs text-indigo-900 dark:text-indigo-100">
+          <ul className="mt-2 space-y-0.5 text-xs text-accent-fg">
             {plan.items.slice(0, 6).map((item) => (
               <li key={item.key} className="truncate">
                 {item.suggested_name} — {item.format ?? 'unrecognised'} → {item.predicted_target}

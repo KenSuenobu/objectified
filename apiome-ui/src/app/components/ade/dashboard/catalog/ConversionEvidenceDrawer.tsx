@@ -119,11 +119,11 @@ export function ConversionEvidenceDrawer({
     <section
       data-testid="conversion-projection-evidence"
       aria-label="Selected construct evidence"
-      className="mt-3 space-y-2 rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 text-xs text-gray-700 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-gray-200"
+      className="mt-3 space-y-2 rounded-lg border border-accent bg-accent-soft p-3 text-xs text-fg"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <code className="break-all font-mono text-xs font-semibold text-gray-900 dark:text-gray-100">
+          <code className="break-all font-mono text-xs font-semibold text-fg">
             {row ? row.construct : sanitizeProjectionLabel(entry.label)}
           </code>
           <StatusText presentation={presentation} />
@@ -135,12 +135,12 @@ export function ConversionEvidenceDrawer({
             </span>
           )}
           {row && (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            <span className="rounded bg-inset px-1.5 py-0.5 text-2xs font-semibold text-fg-muted">
               {CONVERSION_SCOPE_LABEL[row.scope]} evidence
             </span>
           )}
           {row && row.edgeCount > 1 && (
-            <span className="text-2xs text-gray-500 dark:text-gray-400">
+            <span className="text-2xs text-fg-muted">
               stands for {row.edgeCount.toLocaleString()} instances
             </span>
           )}
@@ -150,14 +150,14 @@ export function ConversionEvidenceDrawer({
           data-testid="conversion-projection-evidence-close"
           aria-label="Close evidence detail"
           onClick={onClose}
-          className="rounded-md p-1 text-gray-500 hover:bg-white hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+          className="rounded-md p-1 text-fg-muted hover:bg-surface hover:text-fg"
         >
           <X className="h-3.5 w-3.5" aria-hidden />
         </button>
       </div>
 
       {entry.kind === 'aggregate' ? (
-        <p className="text-xs text-gray-600 dark:text-gray-300">
+        <p className="text-xs text-fg-muted">
           {entry.members?.length ?? 0} constructs, aggregated to keep the graph readable.
           Expand the aggregate row in the table below to list every member.
         </p>
@@ -216,7 +216,7 @@ function DrawerBody({
           )}
           {row.reason && (
             <span
-              className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              className="rounded bg-inset px-1.5 py-0.5 font-mono text-2xs text-fg-muted"
               data-testid="conversion-projection-reason"
             >
               {row.reason}
@@ -224,7 +224,7 @@ function DrawerBody({
           )}
         </div>
         {categoryView && (
-          <p className="mt-1 font-medium text-gray-800 dark:text-gray-100">
+          <p className="mt-1 font-medium text-fg">
             {categoryView.distinction}
           </p>
         )}
@@ -235,9 +235,9 @@ function DrawerBody({
       {finding && (
         <p
           data-testid="conversion-projection-finding"
-          className="rounded-md bg-white/60 p-2 text-2xs text-gray-600 dark:bg-gray-900/40 dark:text-gray-300"
+          className="rounded-md bg-surface p-2 text-2xs text-fg-muted"
         >
-          <span className="font-semibold text-gray-700 dark:text-gray-200">
+          <span className="font-semibold text-fg">
             Fidelity finding ({finding.kind === 'checklist' ? 'checklist' : 'loss'}):
           </span>{' '}
           {finding.label} — {finding.badge}. {finding.text}
@@ -248,7 +248,7 @@ function DrawerBody({
       <dl className="space-y-1 text-2xs">
         {(row.constructKey || row.canonicalKind) && (
           <div data-testid="conversion-projection-canonical">
-            <dt className="inline font-medium text-gray-500 dark:text-gray-400">
+            <dt className="inline font-medium text-fg-muted">
               Canonical object:{' '}
             </dt>
             <dd className="inline">
@@ -256,7 +256,7 @@ function DrawerBody({
                 <code className="break-all font-mono">{sanitizeProjectionLabel(row.constructKey)}</code>
               )}
               {row.canonicalKind && (
-                <span className="text-gray-500 dark:text-gray-400">
+                <span className="text-fg-muted">
                   {row.constructKey ? ' ' : ''}({sanitizeProjectionLabel(row.canonicalKind)})
                 </span>
               )}
@@ -265,20 +265,20 @@ function DrawerBody({
         )}
         {(row.sourceLabel || row.sourceLocation) && (
           <div data-testid="conversion-projection-source">
-            <dt className="inline font-medium text-gray-500 dark:text-gray-400">
+            <dt className="inline font-medium text-fg-muted">
               From the source:{' '}
             </dt>
             <dd className="inline">
               {row.sourceLabel}
               {row.sourceLocation ? (
-                <span className="text-gray-500 dark:text-gray-400"> ({row.sourceLocation})</span>
+                <span className="text-fg-muted"> ({row.sourceLocation})</span>
               ) : null}
             </dd>
           </div>
         )}
         {row.targetLocation && (
           <div data-testid="conversion-projection-pointer">
-            <dt className="inline font-medium text-gray-500 dark:text-gray-400">
+            <dt className="inline font-medium text-fg-muted">
               In the OpenAPI document:{' '}
             </dt>
             <dd className="inline">
@@ -291,7 +291,7 @@ function DrawerBody({
       {/* Evidence references — structured paths and ranges only, never source content. */}
       {row.conversionEdge.evidence.length > 0 && (
         <ul
-          className="space-y-0.5 rounded-md bg-gray-50 p-2 text-2xs text-gray-600 dark:bg-gray-900/50 dark:text-gray-300"
+          className="space-y-0.5 rounded-md bg-subtle p-2 text-2xs text-fg-muted"
           data-testid="conversion-projection-evidence-refs"
         >
           {row.conversionEdge.evidence.slice(0, 5).map((ref) => {
@@ -299,7 +299,7 @@ function DrawerBody({
             return (
               <li key={`${ref.kind}:${ref.ref}`}>
                 {ref.kind}: <span className="font-mono">{sanitizeProjectionLabel(ref.ref)}</span>
-                {location && <span className="text-gray-500 dark:text-gray-400"> — {location}</span>}
+                {location && <span className="text-fg-muted"> — {location}</span>}
               </li>
             );
           })}
@@ -313,9 +313,9 @@ function DrawerBody({
       {(remediationText || safeDefault) && (
         <div
           data-testid="conversion-projection-remediation"
-          className="rounded-md border border-indigo-200 bg-white/60 p-2 dark:border-indigo-900 dark:bg-gray-900/40"
+          className="rounded-md border border-accent bg-surface p-2"
         >
-          <div className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <div className="text-2xs font-semibold uppercase tracking-wide text-fg-muted">
             What you can do
           </div>
           {remediationText && <p className="mt-1">{remediationText}</p>}
@@ -335,7 +335,7 @@ function DrawerBody({
       {(toolVersions || summary) && (
         <p
           data-testid="conversion-projection-provenance"
-          className="text-2xs text-gray-500 dark:text-gray-400"
+          className="text-2xs text-fg-muted"
         >
           {toolVersions ? `Evidence produced by ${toolVersions}` : 'Evidence'}
           {summary ? ` · snapshot ${summary.manifest_hash.slice(0, 12)}` : ''}.
@@ -380,7 +380,7 @@ function SafeDefaultForm({
 
   return (
     <div className="mt-1.5" data-testid="conversion-projection-safe-default">
-      <label className="flex flex-col gap-1 text-2xs text-gray-600 dark:text-gray-300">
+      <label className="flex flex-col gap-1 text-2xs text-fg-muted">
         {remediation.label}
         <input
           type="text"
@@ -389,10 +389,10 @@ function SafeDefaultForm({
           placeholder={remediation.placeholder}
           disabled={recomputing}
           data-testid="conversion-projection-safe-default-input"
-          className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+          className="rounded-md border border-border-strong bg-surface px-2 py-1 text-sm text-fg disabled:opacity-50"
         />
       </label>
-      <p className="mt-1 text-2xs text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-2xs text-fg-muted">
         {remediation.description} Applying recomputes the fidelity report and this graph
         together and re-asks for acknowledgement; cancelling changes nothing.
       </p>
@@ -402,7 +402,7 @@ function SafeDefaultForm({
           data-testid="conversion-projection-safe-default-apply"
           disabled={recomputing || !dirty}
           onClick={() => onApply(applySafeDefault(currentDefaults, remediation.field, draft))}
-          className="flex items-center gap-1 rounded-md border border-indigo-300 px-2 py-1 text-2xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+          className="flex items-center gap-1 rounded-md border border-accent px-2 py-1 text-2xs font-medium text-accent-fg hover:bg-accent-soft disabled:opacity-50"
         >
           {recomputing && <Loader2 className="h-3 w-3 motion-safe:animate-spin" aria-hidden />}
           {recomputing ? 'Recomputing…' : 'Apply & recompute'}
@@ -412,7 +412,7 @@ function SafeDefaultForm({
           data-testid="conversion-projection-safe-default-cancel"
           disabled={recomputing || !dirty}
           onClick={() => setDraft(applied)}
-          className="rounded-md border border-gray-200 px-2 py-1 text-2xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="rounded-md border border-border px-2 py-1 text-2xs font-medium text-fg-muted hover:bg-subtle disabled:opacity-50"
         >
           Cancel
         </button>

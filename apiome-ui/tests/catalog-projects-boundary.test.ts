@@ -29,7 +29,12 @@ const projectsModelSrc = fs.readFileSync(
   'utf8',
 );
 const versionsSrc = fs.readFileSync(path.join(APP, 'ade', 'dashboard', 'versions', 'page.tsx'), 'utf8');
-const catalogSrc = fs.readFileSync(path.join(APP, 'ade', 'dashboard', 'catalog', 'page.tsx'), 'utf8');
+// The list screen moved into a client component in HIVE-7.1 (#5318); `page.tsx` is now a thin
+// server wrapper, and the row menu that carries Export lives with the card and the table.
+const catalogSrc = [
+  fs.readFileSync(path.join(APP, 'ade', 'dashboard', 'catalog', 'CatalogClient.tsx'), 'utf8'),
+  fs.readFileSync(path.join(APP, 'components', 'ade', 'catalog', 'CatalogCard.tsx'), 'utf8'),
+].join('\n');
 const detailSrc = fs.readFileSync(
   path.join(APP, 'ade', 'dashboard', 'catalog', '[id]', 'CatalogItemDetailClient.tsx'),
   'utf8',
@@ -116,7 +121,7 @@ describe('Catalog list export entry (MFX-41.2, #4349)', () => {
 
   it('leaves Convert untouched (Export must not replace it)', () => {
     expect(catalogSrc).toContain('convertActionLabel(item.conversion, item.sourceFormat)');
-    expect(catalogSrc).toContain('onConvert={handleConvert}');
+    expect(catalogSrc).toContain('data-testid="catalog-action-convert"');
   });
 });
 

@@ -31,6 +31,7 @@ import { cn } from '@lib/utils';
 import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import { catalogEntityAnchorId } from '@/app/utils/catalog-lint-panel';
 import { JsonViewer } from '@/app/components/ui/code';
+import { STATUS_TONE_SOFT_CLASS } from '@/app/components/ui/statusVocabulary';
 
 /** One field row on a parsed entity (mockup `.frow`): name / rendered type / description. */
 export interface CatalogParsedField {
@@ -60,41 +61,66 @@ export interface CatalogParsedGroup {
 }
 
 /**
- * Tailwind tone classes per entity tag, mirroring the mockup's `tone-*` palette. Every string is a
- * full literal (never concatenated) so Tailwind keeps them; unknown tags fall back to slate.
+ * The colour of an entity tag, keyed by tag (HIVE-7.1, #5318).
+ *
+ * Twenty-four hand-written `bg-emerald-100 text-emerald-700 dark:…` pairs used to live here,
+ * which is a palette standing in for a taxonomy: two tags with the same hue by accident read
+ * as related, and none of them followed a theme. Every entry is now one of two things, and
+ * which one is the interesting part:
+ *
+ *  - a **status tone** (`ui/statusVocabulary`) where the tag describes what an operation or a
+ *    type *does* — a read, a write, a stream, a name for something else;
+ *  - a **fixed verb hue** (`.method--*`, HIVE-2.4) for the five HTTP methods, because a
+ *    method's colour is an identity rather than a state.
+ *
+ * Every value is a full literal, never concatenated, so Tailwind keeps them. The geometry —
+ * radius, padding, size — belongs to the caller.
  */
 const PARSED_TAG_TONE: Record<string, string> = {
-  // GraphQL operations / gRPC + AsyncAPI verbs
-  QUERY: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  MUTATION: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  SUBSCRIPTION: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
-  SEND: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  RECEIVE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  // HTTP verbs (REST / data-schema fallback)
-  GET: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  POST: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  PUT: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-  PATCH: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
-  DELETE: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
-  OPERATION: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  // GraphQL operations / gRPC + AsyncAPI verbs — what the operation *does*, which is a
+  // state-shaped distinction, so it takes a status tone: reads accent, writes warn, streams
+  // violet.
+  QUERY: STATUS_TONE_SOFT_CLASS.accent,
+  MUTATION: STATUS_TONE_SOFT_CLASS.warn,
+  SUBSCRIPTION: STATUS_TONE_SOFT_CLASS.violet,
+  SEND: STATUS_TONE_SOFT_CLASS.warn,
+  RECEIVE: STATUS_TONE_SOFT_CLASS.ok,
+  // HTTP verbs (REST / data-schema fallback). These take the *fixed* verb hues instead —
+  // DESIGN.md §2 and HIVE-2.4: a method's colour is an identity, not a state, so GET is the
+  // same blue here as on every operation row in the product. `.method--*` sets fill and ink
+  // only; the geometry comes from the caller, as it does for every other entry in this table.
+  GET: 'method--get',
+  POST: 'method--post',
+  PUT: 'method--put',
+  PATCH: 'method--patch',
+  DELETE: 'method--delete',
+  OPERATION: STATUS_TONE_SOFT_CLASS.accent,
   // GraphQL / gRPC / generic type kinds
-  OBJECT: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  INPUT: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  INTERFACE: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-  UNION: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
-  ENUM: 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300',
-  SCALAR: 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300',
-  ALIAS: 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300',
-  MAP: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+  OBJECT: STATUS_TONE_SOFT_CLASS.ok,
+  INPUT: STATUS_TONE_SOFT_CLASS.accent,
+  INTERFACE: STATUS_TONE_SOFT_CLASS.accent,
+  UNION: STATUS_TONE_SOFT_CLASS.violet,
+  ENUM: STATUS_TONE_SOFT_CLASS.neutral,
+  SCALAR: STATUS_TONE_SOFT_CLASS.neutral,
+  ALIAS: STATUS_TONE_SOFT_CLASS.neutral,
+  MAP: STATUS_TONE_SOFT_CLASS.ok,
   // gRPC / AsyncAPI structural kinds
-  SERVICE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  MESSAGE: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
-  CHANNEL: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+  SERVICE: STATUS_TONE_SOFT_CLASS.ok,
+  MESSAGE: STATUS_TONE_SOFT_CLASS.ok,
+  CHANNEL: STATUS_TONE_SOFT_CLASS.violet,
 };
 
-const PARSED_TAG_TONE_FALLBACK = 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300';
+const PARSED_TAG_TONE_FALLBACK = STATUS_TONE_SOFT_CLASS.neutral;
 
-/** Tailwind tone classes for an entity tag (case-insensitive; slate for anything unmapped). */
+/**
+ * The soft tone classes for an entity tag (case-insensitive; neutral for anything unmapped).
+ *
+ * The tags come from the shared status vocabulary (HIVE-2.4) since HIVE-7.1 (#5318): this
+ * table used to carry twelve hand-written `bg-emerald-100 … dark:` pairs, which is a palette
+ * standing in for a taxonomy. What survived the collapse is the distinction the reader
+ * actually uses — *a thing you can call* (ok), *a thing you pass in* (accent), *a choice
+ * between shapes* (violet), *a name for something else* (neutral).
+ */
 export function parsedTagToneClass(tag: string | null | undefined): string {
   if (!tag) return PARSED_TAG_TONE_FALLBACK;
   return PARSED_TAG_TONE[tag.trim().toUpperCase()] ?? PARSED_TAG_TONE_FALLBACK;

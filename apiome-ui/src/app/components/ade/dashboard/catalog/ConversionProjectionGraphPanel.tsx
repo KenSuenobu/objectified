@@ -330,20 +330,20 @@ export function ConversionProjectionGraphPanel({
           key={row.key}
           aria-rowindex={ariaRowIndex}
           onFocus={() => setFocusedTableIndex(index)}
-          className="h-9 whitespace-nowrap border-b border-gray-50 bg-gray-50/50 dark:border-gray-800/50 dark:bg-gray-900/30"
+          className="h-9 whitespace-nowrap border-b border-border bg-subtle"
           data-testid={`conversion-projection-aggregate-member-${member.id}`}
         >
           <td className="px-2 py-1" />
-          <td className="max-w-56 truncate px-2 py-1 font-mono text-gray-600 dark:text-gray-300">
+          <td className="max-w-56 truncate px-2 py-1 font-mono text-fg-muted">
             {member.construct}
           </td>
-          <td className="max-w-56 truncate px-2 py-1 font-mono text-gray-500 dark:text-gray-400">
+          <td className="max-w-56 truncate px-2 py-1 font-mono text-fg-muted">
             {member.targetLocation ?? '—'}
           </td>
-          <td className="px-2 py-1 text-gray-500 dark:text-gray-400">
+          <td className="px-2 py-1 text-fg-muted">
             {CONVERSION_SCOPE_LABEL[member.scope]}
           </td>
-          <td className="px-2 py-1 text-gray-500 dark:text-gray-400">
+          <td className="px-2 py-1 text-fg-muted">
             <span className="block max-w-md truncate">{member.reasonSummary}</span>
           </td>
         </tr>
@@ -361,7 +361,7 @@ export function ConversionProjectionGraphPanel({
         <tr
           key={row.key}
           aria-rowindex={ariaRowIndex}
-          className="h-9 whitespace-nowrap border-b border-gray-100 dark:border-gray-800"
+          className="h-9 whitespace-nowrap border-b border-border"
         >
           <td className="px-2 py-1.5">
             <StatusText presentation={presentation} />
@@ -374,7 +374,7 @@ export function ConversionProjectionGraphPanel({
               onFocus={() => setFocusedTableIndex(index)}
               aria-label={conversionEntryAriaLabel(entry)}
               data-testid={`conversion-projection-aggregate-toggle-${entry.lane}-${entry.status}`}
-              className="text-gray-700 underline-offset-2 hover:underline dark:text-gray-200"
+              className="text-fg underline-offset-2 hover:underline"
             >
               {members.length} construct{members.length === 1 ? '' : 's'}{' '}
               {presentation.label.toLowerCase()} in {conversionLaneLabel(entry.lane)} (aggregated)
@@ -393,8 +393,8 @@ export function ConversionProjectionGraphPanel({
         key={row.key}
         aria-rowindex={ariaRowIndex}
         className={cn(
-          'h-9 whitespace-nowrap border-b border-gray-100 last:border-0 dark:border-gray-800',
-          selected && 'bg-indigo-50 dark:bg-indigo-950/30',
+          'h-9 whitespace-nowrap border-b border-border last:border-0',
+          selected && 'bg-accent-soft',
         )}
         data-testid={`conversion-projection-table-row-${entry.key}`}
       >
@@ -408,18 +408,18 @@ export function ConversionProjectionGraphPanel({
             onFocus={() => setFocusedTableIndex(index)}
             aria-pressed={selected}
             aria-label={conversionEntryAriaLabel(entry)}
-            className="max-w-56 truncate font-mono text-gray-800 underline-offset-2 hover:underline dark:text-gray-100"
+            className="max-w-56 truncate font-mono text-fg underline-offset-2 hover:underline"
           >
             {entryRow.construct}
           </button>
         </td>
-        <td className="max-w-56 truncate px-2 py-1.5 font-mono text-gray-600 dark:text-gray-300">
+        <td className="max-w-56 truncate px-2 py-1.5 font-mono text-fg-muted">
           {entryRow.targetLocation ?? '—'}
         </td>
-        <td className="px-2 py-1.5 text-gray-600 dark:text-gray-300">
+        <td className="px-2 py-1.5 text-fg-muted">
           {CONVERSION_SCOPE_LABEL[entryRow.scope]}
         </td>
-        <td className="px-2 py-1.5 text-gray-600 dark:text-gray-300">
+        <td className="px-2 py-1.5 text-fg-muted">
           <span className="block max-w-md truncate">
             {entryRow.reason ? <span className="font-mono">{entryRow.reason}</span> : null}
             {entryRow.reason ? ' — ' : ''}
@@ -460,7 +460,7 @@ export function ConversionProjectionGraphPanel({
     <section
       data-testid="conversion-projection-panel"
       aria-label="Projection graph"
-      className="projection-panel space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+      className="projection-panel space-y-3 rounded-xl border border-border p-4"
       onKeyDown={(event) => {
         if (event.key === 'Escape') {
           event.stopPropagation();
@@ -469,21 +469,21 @@ export function ConversionProjectionGraphPanel({
       }}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-          <Network className="h-4 w-4 text-indigo-500" aria-hidden />
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-fg">
+          <Network className="h-4 w-4 text-accent" aria-hidden />
           Projection graph
         </div>
         {summary && (
           <span
             data-testid="conversion-projection-snapshot"
             title={`Projection snapshot ${summary.manifest_hash}`}
-            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="rounded-full bg-inset px-2 py-0.5 font-mono text-2xs text-fg-muted"
           >
             snapshot {summary.manifest_hash.slice(0, 12)}
           </span>
         )}
       </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400">
+      <p className="text-xs text-fg-muted">
         Which source construct becomes which OpenAPI construct, and why anything does not, from
         the server&apos;s projection manifest. The table below is the accessible source of truth
         — both show the same evidence.
@@ -492,9 +492,9 @@ export function ConversionProjectionGraphPanel({
       {loading && rows.length === 0 && (
         <div
           data-testid="conversion-projection-loading"
-          className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300"
+          className="flex items-center gap-2 text-sm text-fg-muted"
         >
-          <Loader2 className="h-4 w-4 motion-safe:animate-spin text-indigo-500" aria-hidden />
+          <Loader2 className="h-4 w-4 motion-safe:animate-spin text-accent" aria-hidden />
           Loading the projection graph…
         </div>
       )}
@@ -502,7 +502,7 @@ export function ConversionProjectionGraphPanel({
       {error && (
         <div
           data-testid="conversion-projection-error"
-          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+          className="rounded-lg border border-warn bg-warn-soft p-3 text-sm text-warn-fg"
         >
           <AlertTriangle className="mr-1.5 inline h-4 w-4 align-text-bottom" aria-hidden />
           The projection graph could not be loaded — the fidelity report above still reflects
@@ -521,7 +521,7 @@ export function ConversionProjectionGraphPanel({
       {integrityIssues.length > 0 && (
         <div
           data-testid="conversion-projection-integrity-error"
-          className="rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200"
+          className="rounded-lg border border-danger bg-danger-soft p-3 text-sm text-danger-fg"
         >
           <ShieldAlert className="mr-1.5 inline h-4 w-4 align-text-bottom" aria-hidden />
           The projection evidence failed its integrity check and was not rendered (
@@ -535,7 +535,7 @@ export function ConversionProjectionGraphPanel({
           {snapshotMismatch && (
             <div
               data-testid="conversion-projection-mismatch"
-              className="rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+              className="rounded-lg border border-warn bg-warn-soft p-2.5 text-xs text-warn-fg"
             >
               This graph describes snapshot{' '}
               <code className="font-mono">{summary.manifest_hash.slice(0, 12)}</code>, but the
@@ -548,7 +548,7 @@ export function ConversionProjectionGraphPanel({
           {reconciliation.length > 0 && (
             <div
               data-testid="conversion-projection-reconciliation"
-              className="rounded-lg border border-rose-300 bg-rose-50 p-2.5 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200"
+              className="rounded-lg border border-danger bg-danger-soft p-2.5 text-xs text-danger-fg"
             >
               The loaded evidence does not reconcile with the manifest&apos;s own counts:{' '}
               {reconciliation.join('; ')}.
@@ -558,7 +558,7 @@ export function ConversionProjectionGraphPanel({
           {summary.truncated && (
             <p
               data-testid="conversion-projection-server-truncation"
-              className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+              className="rounded-lg border border-warn bg-warn-soft px-3 py-2 text-2xs text-warn-fg"
               role="status"
             >
               The server bounded this manifest: {summary.dropped_edge_count.toLocaleString()}{' '}
@@ -597,7 +597,7 @@ export function ConversionProjectionGraphPanel({
             <p
               role="status"
               data-testid="conversion-projection-partial"
-              className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+              className="rounded-lg border border-warn bg-warn-soft px-3 py-2 text-2xs text-warn-fg"
             >
               Loaded {rows.length.toLocaleString()} of {summary.edge_count.toLocaleString()}{' '}
               evidence rows — this view is incomplete.{' '}
@@ -615,7 +615,7 @@ export function ConversionProjectionGraphPanel({
 
           {complete && rows.length === 0 && (
             <p
-              className="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
+              className="rounded-lg border border-dashed border-border px-3 py-4 text-xs text-fg-subtle"
               data-testid="conversion-projection-empty"
             >
               The manifest carried no projection evidence for this conversion.
@@ -626,7 +626,7 @@ export function ConversionProjectionGraphPanel({
             <>
               {view.aggregated && (
                 <p
-                  className="text-2xs text-gray-500 dark:text-gray-400"
+                  className="text-2xs text-fg-muted"
                   data-testid="conversion-projection-aggregated-note"
                 >
                   Clean rows are aggregated to keep the graph readable; expand them in the table
@@ -638,7 +638,7 @@ export function ConversionProjectionGraphPanel({
               {drawnSelection.truncated && (
                 <p
                   role="status"
-                  className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+                  className="rounded-lg border border-warn bg-warn-soft px-3 py-2 text-2xs text-warn-fg"
                   data-testid="conversion-projection-draw-cap"
                 >
                   Drawing {drawnSelection.drawnRowCount.toLocaleString()} of{' '}
@@ -648,7 +648,7 @@ export function ConversionProjectionGraphPanel({
               )}
 
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Graph</span>
+                <span className="text-xs font-medium text-fg">Graph</span>
                 <div className="flex items-center gap-1">
                   <div className="flex items-center gap-1" role="group" aria-label="Graph zoom">
                     <button
@@ -657,7 +657,7 @@ export function ConversionProjectionGraphPanel({
                       aria-label="Zoom out"
                       disabled={zoom <= MIN_ZOOM}
                       onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP))}
-                      className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                      className="rounded-md border border-border p-1 text-fg-muted hover:bg-subtle disabled:opacity-40"
                     >
                       <ZoomOut className="h-3.5 w-3.5" aria-hidden />
                     </button>
@@ -667,7 +667,7 @@ export function ConversionProjectionGraphPanel({
                       aria-label="Zoom in"
                       disabled={zoom >= MAX_ZOOM}
                       onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP))}
-                      className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                      className="rounded-md border border-border p-1 text-fg-muted hover:bg-subtle disabled:opacity-40"
                     >
                       <ZoomIn className="h-3.5 w-3.5" aria-hidden />
                     </button>
@@ -676,7 +676,7 @@ export function ConversionProjectionGraphPanel({
                       data-testid="conversion-projection-reset-view"
                       aria-label="Reset view"
                       onClick={resetView}
-                      className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                      className="rounded-md border border-border p-1 text-fg-muted hover:bg-subtle"
                     >
                       <RotateCcw className="h-3.5 w-3.5" aria-hidden />
                     </button>
@@ -685,7 +685,7 @@ export function ConversionProjectionGraphPanel({
                     type="button"
                     data-testid="conversion-projection-copy-mermaid"
                     onClick={copyMermaid}
-                    className="flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-2xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-2xs font-medium text-fg-muted hover:bg-subtle"
                   >
                     {copied ? (
                       <Check className="h-3.5 w-3.5" aria-hidden />
@@ -699,7 +699,7 @@ export function ConversionProjectionGraphPanel({
                     data-testid="conversion-projection-download-mermaid"
                     aria-label="Download Mermaid text"
                     onClick={downloadMermaid}
-                    className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="rounded-md border border-border p-1 text-fg-muted hover:bg-subtle"
                   >
                     <Download className="h-3.5 w-3.5" aria-hidden />
                   </button>
@@ -713,7 +713,7 @@ export function ConversionProjectionGraphPanel({
                 tabIndex={0}
                 role="region"
                 aria-label="Projection graph viewport. Scroll to pan; Tab into the graph, then arrow keys move between constructs; Enter selects; Escape resets the view."
-                className="max-h-80 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800"
+                className="max-h-80 overflow-auto rounded-lg border border-border"
                 data-testid="conversion-projection-viewport"
               >
                 <svg
@@ -735,7 +735,7 @@ export function ConversionProjectionGraphPanel({
                         x={layout.columns.source}
                         y={lane.headerY}
                         fontSize={SVG_TEXT_SIZE.label}
-                        className="fill-gray-500 font-semibold uppercase tracking-wide dark:fill-gray-400"
+                        className="fill-fg-muted font-semibold uppercase tracking-wide"
                       >
                         {lane.label} ({lane.count})
                       </text>
@@ -833,7 +833,7 @@ export function ConversionProjectionGraphPanel({
                   aggregates, windowed above the budget with truthful aria-rowcount/rowindex. */}
               <div
                 className={cn(
-                  'overflow-auto rounded-lg border border-gray-100 dark:border-gray-800',
+                  'overflow-auto rounded-lg border border-border',
                   tableVirtualized ? 'h-72' : 'max-h-72',
                 )}
                 style={
@@ -860,7 +860,7 @@ export function ConversionProjectionGraphPanel({
                   <thead>
                     <tr
                       aria-rowindex={1}
-                      className="border-b border-gray-200 text-2xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
+                      className="border-b border-border text-2xs uppercase tracking-wide text-fg-muted"
                     >
                       <th scope="col" className="px-2 py-1.5">Status</th>
                       <th scope="col" className="px-2 py-1.5">Construct</th>
@@ -874,7 +874,7 @@ export function ConversionProjectionGraphPanel({
               </div>
               {tableVirtualized && (
                 <p
-                  className="text-2xs text-gray-500 dark:text-gray-400"
+                  className="text-2xs text-fg-muted"
                   data-testid="conversion-projection-table-windowed"
                 >
                   The table is windowed — every one of its {tableRows.length.toLocaleString()}{' '}
