@@ -194,3 +194,252 @@ export function mcpCapabilityDirectoryKindBadge(kind: McpCapabilityDirectoryKind
 export function mcpCapabilityDirectoryDisplayName(entry: McpCapabilityDirectoryEntry): string {
   return entry.itemTitle?.trim() || entry.itemName;
 }
+
+// --- Screen copy (HIVE-7.9, #5326) -----------------------------------------------------------
+// The strings `docs/mockups/sources/mcp-capabilities.html` fixes, kept here rather than in the
+// component so the page and its suites read one definition of each.
+
+/** The page's `h1`. */
+export const MCP_CAPABILITY_DIRECTORY_TITLE = 'Capability directory';
+
+/** The one line under it — DESIGN.md §5.3 asks for fourteen words or fewer. */
+export const MCP_CAPABILITY_DIRECTORY_DESCRIPTION =
+  'Every tool, resource, and prompt across your catalog — a “what can be done” index.';
+
+/** Shown while a page of the directory is in flight. */
+export const MCP_CAPABILITY_DIRECTORY_LOADING = 'Loading capabilities…';
+
+/** The error state's heading. */
+export const MCP_CAPABILITY_DIRECTORY_ERROR_TITLE = 'Could not load the capability directory';
+
+/** Used when a failed read carries no message of its own. */
+export const MCP_CAPABILITY_DIRECTORY_ERROR_FALLBACK = 'Could not load the capability directory.';
+
+/** The empty state's heading — no rows matched, which filters can cause. */
+export const MCP_CAPABILITY_DIRECTORY_EMPTY_TITLE = 'No capabilities found';
+
+/** Its body copy. */
+export const MCP_CAPABILITY_DIRECTORY_EMPTY_DESC =
+  'Try clearing a filter or discover MCP servers so their tools, resources, and prompts appear here.';
+
+/** Shown in place of the screen when the session has no workspace to read a catalog for. */
+export const MCP_CAPABILITY_DIRECTORY_NO_TENANT =
+  'Switch to a workspace to browse the capabilities its MCP servers expose.';
+
+/** What one row of this table is, for the range sentence and the pager. */
+export const MCP_CAPABILITY_DIRECTORY_NOUN = 'capability';
+
+/** Its plural — English does not derive this one by suffixing `s`. */
+export const MCP_CAPABILITY_DIRECTORY_NOUN_PLURAL = 'capabilities';
+
+// --- Presets ---------------------------------------------------------------------------------
+
+/**
+ * One preset tile — a named view of the directory, applied in a single click.
+ *
+ * ### Why these four and not the mockup's four
+ *
+ * `sources/mcp-capabilities.html` proposes *Destructive tools*, *Read-only tools*, *Prompts* and
+ * *Shadowed names*. Two of those cannot be honoured without changing the API, and inventing them
+ * in the browser would break the ticket's third acceptance criterion outright:
+ *
+ * - **Destructive / read-only** read a tool's `annotations` (`destructiveHint`, `readOnlyHint`).
+ *   `GET /v1/mcp/{slug}/capabilities` neither filters on them nor returns them —
+ *   `list_mcp_capability_directory` selects `kind, item_id, item_name, item_title, description,
+ *   ordinal` and the owning endpoint's columns, and nothing else. A client-side filter over a
+ *   *paged* response would filter the fifty rows in hand rather than the catalog, so page 2 of
+ *   "destructive tools" would be a different question from page 1.
+ * - **Shadowed names** is a *set* of names (`GET …/data-quality/shadowing` returns one group per
+ *   collision); the directory's `name` filter is a single case-insensitive substring, so there is
+ *   no query that means "any of these". The signal itself is not lost — the catalog screen already
+ *   draws `ShadowedNamesPanel` for it, which is the surface that can express a set.
+ *
+ * What is left is the set of one-click views the API can actually serve, which is what a preset
+ * has to be: each of these is one request with one extra query parameter, sorted and paged by the
+ * server exactly as the unfiltered directory is.
+ */
+export interface McpCapabilityDirectoryPreset {
+  /** Stable id — the React key and the tile's `data-testid` suffix. */
+  id: string;
+  /** The tile's name. */
+  label: string;
+  /** One line under it saying what the view contains. */
+  description: string;
+  /** The filter patch it applies over {@link MCP_CAPABILITY_DIRECTORY_DEFAULT_FILTERS}. */
+  filters: Partial<McpCapabilityDirectoryFilters>;
+  /** The status-vocabulary tone its icon tile takes. */
+  tone: 'accent' | 'ok' | 'violet' | 'warn';
+}
+
+/** The four preset tiles, in display order. */
+export const MCP_CAPABILITY_DIRECTORY_PRESETS: readonly McpCapabilityDirectoryPreset[] = [
+  {
+    id: 'tools',
+    label: 'Tools',
+    description: 'Operations an assistant can call',
+    filters: { type: 'tool' },
+    tone: 'accent',
+  },
+  {
+    id: 'resources',
+    label: 'Resources',
+    description: 'Context to read, not actions to run',
+    filters: { type: 'resource' },
+    tone: 'ok',
+  },
+  {
+    id: 'prompts',
+    label: 'Prompts',
+    description: 'Reusable prompt templates',
+    filters: { type: 'prompt' },
+    tone: 'violet',
+  },
+  {
+    id: 'public',
+    label: 'Public surface',
+    description: 'Exposed beyond this workspace',
+    filters: { visibility: 'public' },
+    tone: 'warn',
+  },
+];
+
+/**
+ * The filters a preset tile produces when it is clicked.
+ *
+ * A preset is a *view*, not a refinement: it replaces the whole filter set rather than merging
+ * into whatever was there, so clicking "Prompts" while a host filter is active gives the prompts
+ * of the whole catalog — which is what the tile's own caption promises. Clicking the active preset
+ * again clears back to the unfiltered directory.
+ *
+ * @param preset The tile that was clicked.
+ * @param current The filters in force.
+ * @returns The filters to apply.
+ */
+export function mcpCapabilityDirectoryApplyPreset(
+  preset: McpCapabilityDirectoryPreset,
+  current: McpCapabilityDirectoryFilters,
+): McpCapabilityDirectoryFilters {
+  if (mcpCapabilityDirectoryPresetIsActive(preset, current)) {
+    return { ...MCP_CAPABILITY_DIRECTORY_DEFAULT_FILTERS };
+  }
+  return { ...MCP_CAPABILITY_DIRECTORY_DEFAULT_FILTERS, ...preset.filters };
+}
+
+/**
+ * Whether a preset is the view currently on screen.
+ *
+ * True only when the filters are *exactly* the preset's — its own keys match and every other
+ * filter is at its default. A tile that stayed lit while a host filter narrowed it further would
+ * be claiming to describe a set it no longer describes.
+ *
+ * @param preset The tile.
+ * @param filters The filters in force.
+ * @returns Whether the tile should read as selected.
+ */
+export function mcpCapabilityDirectoryPresetIsActive(
+  preset: McpCapabilityDirectoryPreset,
+  filters: McpCapabilityDirectoryFilters,
+): boolean {
+  const target: McpCapabilityDirectoryFilters = {
+    ...MCP_CAPABILITY_DIRECTORY_DEFAULT_FILTERS,
+    ...preset.filters,
+  };
+  return (Object.keys(target) as Array<keyof McpCapabilityDirectoryFilters>).every(
+    (key) => filters[key].trim() === target[key].trim(),
+  );
+}
+
+/**
+ * The query that counts a preset's rows without fetching them.
+ *
+ * `limit=1` because only `total` is read — the count beside a tile is a `COUNT(*)` on the server,
+ * and pulling fifty rows to print one number would be the expensive way to ask.
+ *
+ * @param preset The tile to count.
+ * @returns The query string.
+ */
+export function mcpCapabilityDirectoryPresetCountParams(
+  preset: McpCapabilityDirectoryPreset,
+): URLSearchParams {
+  return mcpCapabilityDirectoryQueryParams(
+    { ...MCP_CAPABILITY_DIRECTORY_DEFAULT_FILTERS, ...preset.filters },
+    'server',
+    'asc',
+    0,
+    1,
+  );
+}
+
+// --- Range, sort and foot lines --------------------------------------------------------------
+
+/**
+ * The `start–end of total` line above the table, or `No capabilities` when nothing matched.
+ *
+ * @param offset How many rows were skipped.
+ * @param count How many rows this page holds.
+ * @param total How many matched in all.
+ * @returns The sentence.
+ */
+export function mcpCapabilityDirectoryRange(
+  offset: number,
+  count: number,
+  total: number,
+): string {
+  if (total === 0) return `No ${MCP_CAPABILITY_DIRECTORY_NOUN_PLURAL}`;
+  const start = offset + 1;
+  const end = Math.min(offset + count, total);
+  return `${start}–${end} of ${total}`;
+}
+
+/** The label a sort key reads as in the foot line. */
+const SORT_LABEL: Readonly<Record<McpCapabilityDirectorySort, string>> = {
+  server: 'server',
+  name: 'capability',
+  type: 'type',
+};
+
+/**
+ * The sentence under the table: what matched, how big a page is, and how it is ordered.
+ *
+ * The mockup prints `8 capabilities match “search” · page size 50 · sorted by server ↑`. The
+ * arrow is `aria-hidden` in the markup; this string carries the direction in words as well so the
+ * sentence still says which way it points when the glyph is not announced.
+ *
+ * @param total How many rows matched.
+ * @param filters The filters in force — the name term is quoted back when there is one.
+ * @param sort The sorted column.
+ * @param direction Which way it points.
+ * @returns The sentence.
+ */
+export function mcpCapabilityDirectoryFootLine(
+  total: number,
+  filters: McpCapabilityDirectoryFilters,
+  sort: McpCapabilityDirectorySort,
+  direction: McpCapabilityDirectorySortDirection,
+): string {
+  const noun = total === 1 ? MCP_CAPABILITY_DIRECTORY_NOUN : MCP_CAPABILITY_DIRECTORY_NOUN_PLURAL;
+  const name = filters.name.trim();
+  const matching = name ? `${total} ${noun} match “${name}”` : `${total} ${noun}`;
+  const order = `sorted by ${SORT_LABEL[sort]} ${direction === 'asc' ? 'ascending' : 'descending'}`;
+  return `${matching} · page size ${MCP_CAPABILITY_DIRECTORY_PAGE_SIZE} · ${order}`;
+}
+
+/**
+ * The next sort after a header click, in the two states this table has.
+ *
+ * `ui/DataTable` cycles asc → desc → **unsorted**, because a client-sorted list has a natural
+ * order to fall back to. This one does not: `GET …/capabilities` always orders by one of
+ * server / name / type, so "unsorted" would still be `server ascending` — it would simply be a
+ * click that appeared to do nothing. The third state therefore resolves to the default column
+ * rather than to no column, and the table's `aria-sort` never reads `none` on a loaded page.
+ *
+ * @param next What `nextSortState` produced, which may be `null`.
+ * @returns The column and direction to request.
+ */
+export function mcpCapabilityDirectorySortFromTable(
+  next: { column: string; direction: McpCapabilityDirectorySortDirection } | null,
+): { sort: McpCapabilityDirectorySort; direction: McpCapabilityDirectorySortDirection } {
+  if (!next) return { sort: 'server', direction: 'asc' };
+  const sort = MCP_CAPABILITY_DIRECTORY_SORTS.find((option) => option.key === next.column);
+  return { sort: sort ? sort.key : 'server', direction: next.direction };
+}

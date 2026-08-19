@@ -26730,3 +26730,859 @@ button.cid-entity__head {
   grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
   gap: var(--space-3);
 }
+
+/* ==========================================================================
+   MCP ANALYTICS · CAPABILITIES · COMPARE  (HIVE-7.9, #5326)
+   --------------------------------------------------------------------------
+   `docs/mockups/sources/mcp-analytics.html`, `sources/mcp-capabilities.html`
+   and `sources/mcp-compare.html`, whose three page-local `<style>` blocks this
+   replaces (`.donut`, `.legend`, `.rank`, `.grade`, `.preset`, `.cmp`,
+   `.picker-row`) together with the palette classes the three screens had
+   grown: the analytics tiles' `rounded-xl border border-gray-200 bg-white
+   dark:border-gray-700 dark:bg-gray-800` frame repeated eight times and their
+   `text-gray-800 dark:text-gray-100` headings, the leaderboards'
+   `text-indigo-600 hover:underline dark:text-indigo-400` names and
+   `bg-gray-100 dark:bg-gray-700` type chips, the directory's
+   `text-indigo-600 dark:text-indigo-400` sort headers over a
+   `divide-gray-200 dark:divide-gray-700` table, its
+   `text-gray-300 group-hover:text-gray-400` chevrons and its
+   `text-gray-400 dark:text-gray-500` mono identifiers, the comparison's
+   `bg-amber-50/60 dark:bg-amber-900/10` differing row, its `border-amber-300
+   bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40`
+   protocol banner, its `text-emerald-600 dark:text-emerald-400` presence
+   check and `text-gray-300 dark:text-gray-600` absence dot, and the picker's
+   `accent-indigo-600` boxes over `border-indigo-300 bg-indigo-50
+   dark:border-indigo-700 dark:bg-indigo-900/20` selected rows.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons every Epic-5 to Epic-7.8 block above gives. Every
+   rule leans on the density and font-scale tokens; the analytics grids, the
+   compare split and the preset row are real grids that a utility string spells
+   badly; and the quiet lines have to sit *after* the unlayered `h1`-`h4` and
+   `p` base rules near line 2497, which outrank anything in `@layer utilities`.
+
+   The mockups froze eleven things in pixels that must not be frozen: the
+   112px donut, its 14px hole and the 10px legend swatch, the 22px rank
+   medallion, the 96px bar strip, the 22px grade letter, the compare aside's
+   340px column with its `top: 150px` sticky offset and its 16rem scroller,
+   the 24% metric column, the 28% metric-label column and the 120px radar.
+   All are `rem`, `em`, `%`, a token or an intrinsic grid here, so all six font
+   scales and both densities hold.
+
+   No hue is named below. Every colour is a token or a `color-mix()` of two, so
+   the three surfaces follow all nine themes. No status is named either: the
+   grade glyph, the transport chip and the capability-kind badge all resolve
+   through `ui/statusVocabulary`, and the charts through
+   `ui/mcp/charts/chartTokens.ts`, which this ticket re-pointed at the same
+   role tokens.
+
+   Four measured deviations, and one stated limit:
+
+   * quiet text is `--fg-muted`, not the mockups' `--fg-subtle`, which measures
+     about 3.1:1 against the canvas at these sizes - the call HIVE-3.5 and
+     every Epic-5 block already made. `--fg-faint` survives on one mark only:
+     the "absent" cell of the shared-tool matrix, which is decorative (the cell
+     carries `aria-label="absent"` and the table's own caption says what the
+     column means);
+   * a hovered preset tile and a hovered picker row land on `--bg-inset`, not
+     the mockups' `--bg-subtle`. Both carry a `--fg-muted` second line, which
+     measures 4.35:1 on `--bg-subtle` in Solarized and 5.02:1 on `--bg-inset` -
+     the finding HIVE-6.5 recorded and HIVE-7.4, HIVE-7.7 and HIVE-7.8 each hit
+     again on their own hover;
+   * a selected preset tile and a ticked picker row are an `--accent` *hairline*
+     over the surface, not the mockups' accent fill. `--fg-muted` on
+     `--accent-soft` measures 3.86:1 in Solarized, so a row whose host line
+     stayed muted on a tinted ground would fail; the hairline is 4.07:1 as a
+     mark in every theme, and both states are announced in words as well
+     (`aria-pressed` on the tile, the checkbox's own state on the row);
+   * the differing-row tint is a `color-mix()` of `--warn` into `--bg-surface`
+     rather than the mockup's `color-mix(in srgb, var(--warn) 9%, transparent)`
+     over an unknown ground. Mixed into the surface it is a known colour in
+     every theme, which is what lets the row's `--fg` text be measured against
+     it at all;
+   * the "Unique to ..." cards are `Card variant="flat"` - a hairline on the
+     surface - not the mockup's `card--soft`. Their tool names are `--fg-muted`,
+     which measures 4.35:1 on `--bg-subtle` in Solarized; the same finding that
+     moved both hovers above, applied to a card rather than to a row;
+   * the metric table's own header strip and its section rules are `--bg-inset`
+     rather than the mockup's `--bg-subtle`, for the third time in the same
+     block: both carry `--fg-muted` (the endpoint subtitle under a server's
+     name, and the section label), and Solarized measures 4.34:1 there. This
+     one was found by `e2e/hive-mcp-analytics.spec.ts` rather than by the
+     stylesheet suite, which had not been told those two grounds existed;
+     `tests/mcp-analytics-compare-css.test.ts` now walks them.
+
+   One stated limit:
+
+   * the tint is a *9% wash*, which is a 1.1:1 mark against the untinted row
+     beside it in every appearance - far under the 3:1 a non-text signal is
+     asked for. It cannot be raised without failing the `--fg` text on top of
+     it in the dark palettes, so it is emphasis and never the only signal: the
+     table's foot prints "Rows whose cells differ are tinted" in words, and
+     every differing row also carries `data-differs`, which
+     `e2e/hive-mcp-compare.spec.ts` reads rather than sampling the fill.
+
+   Six classes are borrowed rather than restated: `.mono` (HIVE-1.4),
+   `.hive-stat` / `.hive-stat-grid` (HIVE-2.6), `.table-density` (HIVE-1.6),
+   `.tnt-icon-tile` (HIVE-6.1, the tinted square at the head of a card),
+   `ui/Card`'s surface and `ui/Alert`'s tinted strip.
+   ========================================================================== */
+
+/* ---- Catalog analytics: the page's own column ---------------------------
+   The dashboard is one child of `PageBody`, so the rhythm between its five
+   blocks is its own. Same gap the body uses between sections. */
+.mcpa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* An auto-fit row of tiles. Intrinsic rather than `repeat(3, 1fr)`: a tile
+   narrower than its own donut plus legend is unreadable, so the track folds
+   to two and then to one on its own, at every font scale, with no breakpoint
+   to keep in step with the type. */
+.mcpa-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--space-4);
+}
+
+/* The leaderboards want to fold at a wider cell than the chart tiles: their
+   rows are a name and a figure, which read badly in a narrow column. */
+.mcpa-row--pair {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+}
+
+/* A tile's heading: glyph, name, and the quiet note that says what the
+   figures are a share of. */
+.mcpa-tile__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+}
+
+/* A descendant selector, as `.hive-stat__label > svg` is and for the same
+   reason: the tile sizes and tints its own glyph, so a call site cannot get
+   it wrong by passing classes on the icon. */
+.mcpa-tile__title > svg {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  flex: none;
+  color: var(--fg-muted);
+}
+
+.mcpa-tile__unit {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* The card header the two leaderboards use: title on one line, note under it
+   at narrow widths rather than squeezed beside it. */
+.mcpa-card__head {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* ---- Donut tiles -------------------------------------------------------- */
+.mcpa-donut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin-block-start: var(--space-3);
+}
+
+/* The mockup's 112px ring, in `rem` so it keeps its proportion to the legend
+   beside it at all six font scales. */
+.mcpa-donut__ring {
+  inline-size: 7rem;
+  block-size: 7rem;
+  flex: none;
+}
+
+.mcpa-legend {
+  display: grid;
+  gap: calc(var(--space-1) * 1.5);
+  flex: 1 1 10rem;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-xs);
+}
+
+.mcpa-legend__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.mcpa-legend__empty {
+  color: var(--fg-muted);
+}
+
+/* The mockup's 10px chip, in `em` so it scales with the line it labels. The
+   fill arrives as a `bg-*` role class from `CHART_TONE_ROLE`, which is the
+   same table the ring's own segment paints from. */
+.mcpa-legend__swatch {
+  inline-size: 0.75em;
+  block-size: 0.75em;
+  flex: none;
+  border-radius: var(--r-xs);
+}
+
+.mcpa-legend__label {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg);
+}
+
+.mcpa-legend__value {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.mcpa-legend__pct {
+  margin-inline-start: var(--space-1);
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+/* ---- Bar tiles ---------------------------------------------------------- */
+/* The mockup's 96px strip, in `rem`. */
+.mcpa-bars {
+  inline-size: 100%;
+  block-size: 6rem;
+  margin-block-start: var(--space-3);
+}
+
+/* The axis under the bars. `aria-hidden` in the markup — the chart's own
+   `sr-only` table already states every bucket — so this is purely the label
+   row a sighted reader needs to tell six columns apart. */
+.mcpa-axis {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-1);
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.mcpa-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.mcpa-counts__value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* ---- Leaderboards ------------------------------------------------------- */
+.mcpa-ranks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Rules *between* rows, not around them — the mockup's `.rank` with its
+   `border-top: 0` on the first child. */
+.mcpa-rank {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--fs-sm);
+  min-inline-size: 0;
+}
+
+.mcpa-rank:first-child {
+  border-block-start: 0;
+  padding-block-start: 0;
+}
+
+/* The mockup's 22px medallion, in `em` so it stays proportional to the row's
+   own type. */
+.mcpa-rank__pos {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 1.5em;
+  block-size: 1.5em;
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.mcpa-rank__name {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* `--accent-fg` rather than the saturated `--accent`: a link is body text, and
+   the saturated step measures 4.07:1 where the ink measures 7.00:1. */
+a.mcpa-rank__name,
+.mcpa-link {
+  color: var(--accent-fg);
+  text-decoration: none;
+}
+
+a.mcpa-rank__name:hover,
+.mcpa-link:hover {
+  text-decoration: underline;
+}
+
+.mcpa-rank__value {
+  flex: none;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.mcpa-note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Capability directory ------------------------------------------------
+   The mockup's `.section-title`: a heading with a quiet note beside it. */
+.mcpc-section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-block-end: var(--space-3);
+}
+
+.mcpc-section-title > h2 {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  color: var(--fg);
+}
+
+.mcpc-section-title > span {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Preset tiles ------------------------------------------------------- */
+.mcpc-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-3);
+}
+
+/* A hairline over the surface, never a fill: see the block banner's third
+   deviation — the caption under each label is `--fg-muted`, which does not
+   clear AA on `--accent-soft` in Solarized. */
+.mcpc-preset {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  text-align: start;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.mcpc-preset:hover {
+  background: var(--bg-inset);
+}
+
+.mcpc-preset[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.mcpc-preset__body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) * 0.5);
+  min-inline-size: 0;
+}
+
+.mcpc-preset__label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.mcpc-preset__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The directory table ------------------------------------------------ */
+/* The mockup's filter row, inside the table's own card. `flex-end` so the
+   five labelled controls sit on one baseline and the range sentence is pushed
+   to the far end; it wraps to as many lines as the viewport needs. */
+.mcpc-toolbar {
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.mcpc-toolbar > * {
+  flex: 1 1 10rem;
+  min-inline-size: 0;
+}
+
+.mcpc-toolbar__pair {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.mcpc-toolbar__range {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* A capability's three lines. The first two wrap; the mono identifier is the
+   one that has no spaces to break at, so it breaks anywhere rather than being
+   what makes the card scroll sideways. */
+.mcpc-name {
+  white-space: normal;
+}
+
+.mcpc-desc {
+  overflow-wrap: anywhere;
+}
+
+.mcpc-server {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  color: var(--accent-fg);
+  text-decoration: none;
+}
+
+.mcpc-server:hover {
+  text-decoration: underline;
+}
+
+.mcpc-server__name {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.mcpc-host {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Server comparison ---------------------------------------------------
+   One column until there is room for two, so the document never scrolls
+   sideways at any font scale. The aside is `rem`, not the mockup's 340px. */
+.mcpx-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 64rem) {
+  .mcpx-layout {
+    grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+  }
+
+  /* Sticky from the page's own top edge rather than the mockup's `top: 150px`:
+     `.page` already begins under the sticky page header, so a second header's
+     worth of offset would push the picker's first row off screen at Compact
+     density. */
+  .mcpx-picker {
+    position: sticky;
+    inset-block-start: var(--space-4);
+  }
+}
+
+.mcpx-picker {
+  min-inline-size: 0;
+}
+
+/* The mockup's 16rem scroller, kept — a picker taller than this pushes the
+   comparison it belongs to off screen. */
+.mcpx-picker__body {
+  max-block-size: 16rem;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.mcpx-picker__foot {
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+}
+
+.mcpx-picks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Hairline-when-chosen, `--bg-inset`-when-hovered: both calls are the block
+   banner's second and third deviations, and this row is exactly the case they
+   were measured for — it carries a `--fg-muted` host line under its name. */
+.mcpx-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.mcpx-pick:hover {
+  background: var(--bg-inset);
+}
+
+.mcpx-pick[data-selected] {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* The cap, said twice: the box is genuinely `disabled`, and the row carries
+   the mockup's own `title`. Opacity alone is not a state a reader can query. */
+.mcpx-pick[data-at-cap] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mcpx-pick__body {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.mcpx-pick__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.mcpx-pick__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.mcpx-results {
+  min-inline-size: 0;
+}
+
+.mcpx-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+/* ---- The aligned metric table ------------------------------------------- */
+.mcpx-table-card {
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* The one element allowed to scroll sideways on this route, and it is a card
+   rather than the document (DESIGN.md §5). */
+.mcpx-scroll {
+  overflow-x: auto;
+  min-inline-size: 0;
+}
+
+.mcpx-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  text-align: start;
+}
+
+.mcpx-table th,
+.mcpx-table td {
+  padding: var(--space-2) var(--space-3);
+  text-align: start;
+  vertical-align: top;
+  border-block-start: 1px solid var(--border);
+}
+
+/* `--bg-inset`, not the mockup's `--bg-subtle`: the column header carries the
+   endpoint's name under the server's in `--fg-muted`, which measures 4.34:1 on
+   `--bg-subtle` in Solarized and 5.02:1 on `--bg-inset`. The browser sweep is
+   what found it — the same finding HIVE-6.5 recorded for a hovered row, on a
+   ground no earlier block had put muted text on. */
+.mcpx-table thead th {
+  border-block-start: 0;
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-inset);
+}
+
+/* The mockup's 28% metric column and 24% server columns, kept as
+   percentages — a proportion is not a frozen size, and it is what keeps three
+   columns of figures aligned when one server's name is twice another's. */
+.mcpx-metric {
+  inline-size: 28%;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.mcpx-metric--head {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.mcpx-value {
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.mcpx-col {
+  inline-size: 24%;
+  min-inline-size: 9rem;
+}
+
+.mcpx-col__id {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.mcpx-col__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.mcpx-col__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.mcpx-col__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block-start: var(--space-2);
+}
+
+/* A section rule inside the table, in the caps step §3.2 gives to meta text.
+   On `--bg-inset` for the reason the header above gives: its label is
+   `--fg-muted`, and `--bg-subtle` is the one ground that fails under it. */
+.mcpx-section > th {
+  background: var(--bg-inset);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* The differing-row wash. Mixed into `--bg-surface` rather than the mockup's
+   mix into `transparent`: over a known ground it is a known colour, which is
+   what lets `--fg` on top of it be measured in all nine appearances. See the
+   block banner's stated limit — this is emphasis, never the only signal. */
+.mcpx-differs > th,
+.mcpx-differs > td {
+  background: color-mix(in srgb, var(--warn) 9%, var(--bg-surface));
+}
+
+/* The mockup's 120px radar, in `rem`. */
+.mcpx-radar {
+  inline-size: 7rem;
+  block-size: 7rem;
+}
+
+.mcpx-gap {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.mcpx-table-foot {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Capability overlap ------------------------------------------------- */
+.mcpx-card__head {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.mcpx-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+}
+
+.mcpx-card__title > svg {
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  flex: none;
+  color: var(--fg-muted);
+}
+
+.mcpx-card__note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.mcpx-overlap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.mcpx-matrix {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.mcpx-matrix th,
+.mcpx-matrix td {
+  padding: var(--space-1) var(--space-2);
+  text-align: start;
+  border-block-start: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.mcpx-matrix thead th {
+  border-block-start: 0;
+  border-block-end: 1px solid var(--border);
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.mcpx-matrix__server {
+  max-inline-size: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.mcpx-matrix__cell {
+  text-align: center;
+}
+
+/* `--ok` is 3.15:1 as a mark on the surface in the worst of the nine, which
+   clears the non-text floor; the cell's `aria-label` carries the fact in words
+   regardless. */
+.mcpx-present {
+  display: inline-block;
+  inline-size: 1em;
+  block-size: 1em;
+  color: var(--ok);
+}
+
+/* The one `--fg-faint` on this route. Decorative: "absent" is announced. */
+.mcpx-absent {
+  color: var(--fg-faint);
+}
+
+.mcpx-note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.mcpx-unique {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-3);
+}
+
+.mcpx-unique__card {
+  padding: var(--space-3);
+  min-inline-size: 0;
+}
+
+.mcpx-unique__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-block-end: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.mcpx-unique__list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) * 0.5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}

@@ -1,37 +1,72 @@
 'use client';
 
 /**
- * Side-by-side server comparison panel (V2-MCP-32.2 / MCAT-18.2).
+ * Side-by-side server comparison panel (V2-MCP-32.2 / MCAT-18.2; redesigned HIVE-7.9, #5326).
+ *
+ * Authority: `docs/mockups/sources/mcp-compare.html`, whose **Notes → Keeps (1:1)** list is this
+ * panel's acceptance criteria.
  *
  * The evaluator's decision screen: 2–3 servers aligned column-by-column. From the pure
  * {@link mcpCompareModel} it renders:
  *
- * - a **protocol cross-check** banner — highlighted when the servers negotiated different MCP
- *   protocol versions (the "differing protocol versions handled" criterion);
- * - one **column header** per server — its name, endpoint subtitle, transport / category chips, and
+ * - a **protocol cross-check** banner — amber when the servers negotiated different MCP protocol
+ *   revisions, quiet when they agree but one never reported a version;
+ * - one **column header** per server — its name, endpoint subtitle, transport / category chips and
  *   its {@link GradeGlyph};
  * - an **aligned metric table** — surface counts, quality, safety posture, documentation coverage,
- *   tool latency, and composite trust, one section at a time, with every *differing* row highlighted
- *   so a reader's eye lands on what actually separates the servers;
+ *   tool latency and composite trust, one section at a time, with every *differing* row tinted so
+ *   a reader's eye lands on what actually separates the servers;
  * - a **trust radar** per column, toned by its overall band; and
- * - the **capability-overlap** view — a shared-tool presence matrix plus each server's unique tools.
+ * - the **capability-overlap** view — a shared-tool presence matrix plus each server's unique
+ *   tools.
  *
- * Every projection comes from the pure, unit-tested `mcpServerCompareUi`, so the table, the radars,
+ * Every projection comes from the pure, unit-tested `mcpServerCompareUi`, so the table, the radars
  * and the overlap can never disagree. The component owns its loading / error / too-few-selected
- * states, and every colour resolves from a token via the shared badge/glyph/chart kit — no colour
- * literal appears here.
+ * states.
+ *
+ * ### "Only genuinely differing rows"
+ *
+ * The tint is not a per-cell comparison in this file — it is {@link McpCompareRow.differs}, which
+ * `cellsDiffer` derives from the cells' *comparable* values and falls back to their display text
+ * only where there is no number (a grade letter, an auth label). Two consequences the mockup draws
+ * and this panel keeps: a row where every server reports `0` is **not** tinted, because zero is a
+ * real agreement; and a row where every server reports `—` is not tinted either, because "none of
+ * them measured this" is also an agreement. Only a row whose columns actually disagree is marked,
+ * and the table's foot says so in words so the tint is never the only signal.
+ *
+ * ### What the redesign changed
+ *
+ * 1. **The tint was `bg-amber-50/60 dark:bg-amber-900/10`** — one light palette and one dark one,
+ *    which meant seven of the nine themes drew a differing row in a colour nothing else on the
+ *    page used. It is `.mcpx-differs`, a `color-mix()` of `--warn` into the surface, which every
+ *    theme recalibrates.
+ * 2. **The protocol banner was a hand-built box** with eight amber classes on one branch and six
+ *    greys on the other. Both are `ui/Alert`, which is the banner every other warning in the
+ *    product draws.
+ * 3. **The table had no foot.** The two conventions it relies on — the tint and the em dash — were
+ *    left to be inferred; they are stated now, as the mockup states them.
+ * 4. **The check and the absence marker were `text-emerald-600` and `text-gray-300`.** They are
+ *    `--ok` and `--fg-faint`, and both keep the `aria-label` that carries the fact in words: the
+ *    mark is decoration over an announced value, not the value itself.
+ * 5. **The unique-tool cards were `border-gray-100 bg-gray-50 dark:bg-gray-800/50`.** They are
+ *    `Card variant="flat"` — a hairline on the surface, which is the design language's "panel
+ *    inside a panel". Not `soft`, whose `--bg-subtle` ground measures 4.35:1 under the
+ *    `--fg-muted` tool names in Solarized; `mcp-analytics-compare-css.test.ts` measures it.
+ * 6. **Every string was inline.** They live in `mcpServerCompareUi` beside the model, so the page
+ *    header's own copy and the panel's cannot drift.
  */
 
 import * as React from 'react';
 import { ArrowLeftRight, Check, GitCompareArrows, Layers, ServerOff } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/Card';
+import { Alert } from '@/app/components/ui/Alert';
 import { EmptyState } from '@/app/components/ui/EmptyState';
+import { ErrorState } from '@/app/components/ui/ErrorState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
 import { McpBadge } from '@/app/components/ui/mcp/McpBadge';
 import { GradeGlyph } from '@/app/components/ui/mcp/GradeGlyph';
 import { Radar } from '@/app/components/ui/mcp/charts';
-import {
-  mcpTransportBadge,
-} from '@/app/components/ade/dashboard/mcp/mcpUiPrimitives';
+import { mcpTransportBadge } from '@/app/components/ade/dashboard/mcp/mcpUiPrimitives';
 import {
   mcpTrustRadarAxes,
   mcpTrustBand,
@@ -40,7 +75,19 @@ import {
   MCP_TRUST_BAND_TONE,
 } from '@/app/components/ade/dashboard/mcp/mcpTrustUi';
 import {
+  MCP_COMPARE_ERROR_TITLE,
+  MCP_COMPARE_NO_SHARED,
+  MCP_COMPARE_NO_UNIQUE,
+  MCP_COMPARE_OVERLAP_TITLE,
+  MCP_COMPARE_PROMPT_DESC,
+  MCP_COMPARE_PROMPT_TITLE,
+  MCP_COMPARE_PROTOCOL_DIFFER_TITLE,
+  MCP_COMPARE_PROTOCOL_UNKNOWN,
+  MCP_COMPARE_RUNNING,
+  MCP_COMPARE_TABLE_FOOT,
+  MCP_COMPARE_MIN_SELECTION,
   mcpCompareModel,
+  mcpCompareOverlapSummary,
   type McpCompareServer,
   type McpCompareRow,
 } from '@/app/components/ade/dashboard/mcp/mcpServerCompareUi';
@@ -50,38 +97,31 @@ interface Props {
   servers: McpCompareServer[] | null;
   loading: boolean;
   error: string | null;
+  /** Re-run the comparison. Wired to the error state's retry. */
+  onRetry?: () => void;
 }
-
-/** The tint a differing metric row gets so real differences stand out from matching rows. */
-const DIFF_ROW_CLASS = 'bg-amber-50/60 dark:bg-amber-900/10';
 
 /** One column-header cell: server identity, transport/category chips, and its grade glyph. */
 function ColumnHeader({ server }: { server: McpCompareServer }) {
   const transport = mcpTransportBadge(server.transport);
   return (
-    <th scope="col" className="min-w-[9rem] px-3 py-3 text-left align-top">
-      <div className="flex items-start gap-2">
+    <th scope="col" className="mcpx-col">
+      <div className="mcpx-col__id">
         <GradeGlyph grade={server.grade} score={server.score} size="sm" showScore={false} />
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-gray-900 dark:text-white" title={server.displayName}>
+          <div className="mcpx-col__name" title={server.displayName}>
             {server.displayName}
           </div>
           {server.endpointName && server.endpointName !== server.displayName ? (
-            <div className="truncate text-xs text-gray-500 dark:text-gray-400" title={server.endpointName}>
+            <div className="mcpx-col__sub" title={server.endpointName}>
               {server.endpointName}
             </div>
           ) : null}
-          <div className="mt-1 flex flex-wrap gap-1">
-            <McpBadge tone={transport.tone} className="px-1.5 py-0 text-2xs">
-              {transport.label}
-            </McpBadge>
-            {server.category ? (
-              <McpBadge tone="indigo" className="px-1.5 py-0 text-2xs">
-                {server.category}
-              </McpBadge>
-            ) : null}
-          </div>
         </div>
+      </div>
+      <div className="mcpx-col__chips">
+        <McpBadge tone={transport.tone}>{transport.label}</McpBadge>
+        {server.category ? <McpBadge tone="indigo">{server.category}</McpBadge> : null}
       </div>
     </th>
   );
@@ -90,18 +130,12 @@ function ColumnHeader({ server }: { server: McpCompareServer }) {
 /** One aligned metric row: label + one cell per server; differing rows are tinted. */
 function MetricRow({ row }: { row: McpCompareRow }) {
   return (
-    <tr className={row.differs ? DIFF_ROW_CLASS : undefined}>
-      <th
-        scope="row"
-        className="whitespace-nowrap px-3 py-1.5 text-left text-xs font-medium text-gray-600 dark:text-gray-300"
-      >
+    <tr className={row.differs ? 'mcpx-differs' : undefined} data-differs={row.differs || undefined}>
+      <th scope="row" className="mcpx-metric">
         {row.label}
       </th>
       {row.cells.map((cell, index) => (
-        <td
-          key={index}
-          className="px-3 py-1.5 text-sm tabular-nums text-gray-900 dark:text-gray-100"
-        >
+        <td key={index} className="mcpx-value">
           {cell.display}
         </td>
       ))}
@@ -110,201 +144,206 @@ function MetricRow({ row }: { row: McpCompareRow }) {
 }
 
 /**
- * The server-comparison panel. Owns its loading / error / too-few-selected states; every populated
- * region renders straight from the pure model, so the aligned metrics, the radars, and the overlap
- * are one source of truth.
+ * The server-comparison panel.
+ *
+ * Owns its loading / error / too-few-selected states; every populated region renders straight from
+ * the pure model, so the aligned metrics, the radars and the overlap are one source of truth.
+ *
+ * @param props See {@link Props}.
+ * @returns The comparison, or the one state that stands in for it.
  */
-export function ServerComparisonPanel({ servers, loading, error }: Props) {
+export function ServerComparisonPanel({ servers, loading, error, onRetry }: Props) {
   if (loading && (!servers || servers.length === 0)) {
-    return <LoadingState minHeightClassName="min-h-[320px]" message="Comparing servers…" />;
+    return <LoadingState minHeightClassName="min-h-[320px]" message={MCP_COMPARE_RUNNING} />;
   }
   if (error) {
     return (
-      <EmptyState
+      <ErrorState
         variant="compact"
-        icon={<ServerOff className="h-8 w-8 text-white" aria-hidden />}
-        title="Comparison unavailable"
+        icon={<ServerOff aria-hidden />}
+        title={MCP_COMPARE_ERROR_TITLE}
         description={error}
+        onRetry={onRetry}
+        data-testid="mcp-compare-error"
       />
     );
   }
   if (!servers) return null;
 
-  if (servers.length < 2) {
+  if (servers.length < MCP_COMPARE_MIN_SELECTION) {
     return (
       <EmptyState
         variant="compact"
-        icon={<GitCompareArrows className="h-8 w-8 text-white" aria-hidden />}
-        title="Select two or three servers to compare"
-        description="Pick 2–3 discovered MCP servers from the catalog above, then compare their surface, grade, safety posture, documentation coverage, tool latency, and composite trust side by side — with the tools they share and the tools unique to each highlighted."
+        tone="neutral"
+        icon={<GitCompareArrows aria-hidden />}
+        title={MCP_COMPARE_PROMPT_TITLE}
+        description={MCP_COMPARE_PROMPT_DESC}
+        data-testid="mcp-compare-prompt"
       />
     );
   }
 
-  const model = mcpCompareModel(servers);
-  const { sections, overlap, protocol } = model;
+  const { sections, overlap, protocol } = mcpCompareModel(servers);
   const colCount = servers.length;
 
   return (
-    <div className="space-y-5" aria-busy={loading}>
+    <div className="mcpx-panel" aria-busy={loading} data-testid="mcp-compare-panel">
       {/* Protocol cross-check. */}
       {!protocol.allMatch ? (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-          <Layers className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+        <Alert variant="warn" data-testid="mcp-compare-protocol">
           <span>
-            <span className="font-semibold">Protocol versions differ.</span> These servers negotiated
-            different MCP protocol revisions ({protocol.distinct.join(', ')})
+            <strong>{MCP_COMPARE_PROTOCOL_DIFFER_TITLE}</strong> These servers negotiated different
+            MCP protocol revisions ({protocol.distinct.join(', ')})
             {protocol.hasUnknown ? ', and at least one is unknown' : ''} — some capabilities and
             annotations may not be comparable like-for-like.
           </span>
-        </div>
+        </Alert>
       ) : protocol.hasUnknown ? (
-        <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-          <Layers className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-          <span>At least one server&apos;s MCP protocol version is unknown.</span>
-        </div>
+        <Alert variant="neutral" icon={<Layers aria-hidden />} data-testid="mcp-compare-protocol">
+          <span>{MCP_COMPARE_PROTOCOL_UNKNOWN}</span>
+        </Alert>
       ) : null}
 
       {/* Aligned metric table. */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60">
-              <th scope="col" className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Metric
-              </th>
-              {servers.map((server) => (
-                <ColumnHeader key={server.endpointId} server={server} />
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {sections.map((section) => (
-              <React.Fragment key={section.key}>
-                <tr className="bg-gray-50/70 dark:bg-gray-800/40">
-                  <th
-                    scope="colgroup"
-                    colSpan={colCount + 1}
-                    className="px-3 py-1.5 text-left text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-                  >
-                    {section.title}
-                  </th>
-                </tr>
-                {section.rows.map((row) => (
-                  <MetricRow key={row.key} row={row} />
+      <div className="mcpx-table-card">
+        <div className="mcpx-scroll">
+          <table className="mcpx-table table-density" data-testid="mcp-compare-table">
+            <caption className="sr-only">
+              Compared servers, metric by metric. Rows whose cells differ are marked.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col" className="mcpx-metric mcpx-metric--head">
+                  Metric
+                </th>
+                {servers.map((server) => (
+                  <ColumnHeader key={server.endpointId} server={server} />
                 ))}
-                {section.key === 'trust' ? (
-                  <tr>
-                    <th scope="row" className="px-3 py-2 align-top text-xs font-medium text-gray-600 dark:text-gray-300">
-                      Trust radar
+              </tr>
+            </thead>
+            <tbody>
+              {sections.map((section) => (
+                <React.Fragment key={section.key}>
+                  <tr className="mcpx-section">
+                    <th scope="colgroup" colSpan={colCount + 1}>
+                      {section.title}
                     </th>
-                    {servers.map((server) => (
-                      <td key={server.endpointId} className="px-3 py-2">
-                        {server.trust ? (
-                          <Radar
-                            axes={mcpTrustRadarAxes(server.trust)}
-                            max={MCP_TRUST_AXIS_MAX}
-                            tone={MCP_TRUST_BAND_TONE[mcpTrustBand(server.trust.overall)]}
-                            title={`Trust radar — ${server.displayName}, overall ${mcpTrustFormatValue(server.trust.overall)} of 100`}
-                            className="h-28 w-28"
-                          />
-                        ) : (
-                          <span className="text-xs text-gray-400 dark:text-gray-500">Not measured</span>
-                        )}
-                      </td>
-                    ))}
                   </tr>
-                ) : null}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
+                  {section.rows.map((row) => (
+                    <MetricRow key={row.key} row={row} />
+                  ))}
+                  {section.key === 'trust' ? (
+                    <tr>
+                      <th scope="row" className="mcpx-metric">
+                        Trust radar
+                      </th>
+                      {servers.map((server) => (
+                        <td key={server.endpointId} className="mcpx-value">
+                          {server.trust ? (
+                            <Radar
+                              axes={mcpTrustRadarAxes(server.trust)}
+                              max={MCP_TRUST_AXIS_MAX}
+                              tone={MCP_TRUST_BAND_TONE[mcpTrustBand(server.trust.overall)]}
+                              title={`Trust radar — ${server.displayName}, overall ${mcpTrustFormatValue(server.trust.overall)} of 100`}
+                              className="mcpx-radar"
+                            />
+                          ) : (
+                            <span className="mcpx-gap">Not measured</span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ) : null}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mcpx-table-foot">{MCP_COMPARE_TABLE_FOOT}</p>
       </div>
 
       {/* Capability overlap. */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-        <h3 className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-800 dark:text-gray-100">
-          <ArrowLeftRight className="h-4 w-4 text-gray-400 dark:text-gray-500" aria-hidden />
-          Capability overlap
-        </h3>
-        <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-          {overlap.totalDistinct} distinct tool{overlap.totalDistinct === 1 ? '' : 's'} across these
-          servers — {overlap.sharedByAllCount} shared by all, {overlap.shared.length} shared by two or
-          more.
-        </p>
-
-        {/* Shared presence matrix. */}
-        {overlap.shared.length === 0 ? (
-          <p className="text-xs text-gray-500 dark:text-gray-400">No tools are shared between these servers.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th scope="col" className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    Shared tool
-                  </th>
-                  {servers.map((server) => (
-                    <th
-                      key={server.endpointId}
-                      scope="col"
-                      className="px-2 py-1.5 text-center text-xs font-semibold text-gray-500 dark:text-gray-400"
-                      title={server.displayName}
-                    >
-                      <span className="block max-w-[7rem] truncate">{server.displayName}</span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {overlap.shared.map((entry) => (
-                  <tr key={entry.name}>
-                    <td className="px-2 py-1.5 font-mono text-xs text-gray-800 dark:text-gray-100">
-                      {entry.name}
-                    </td>
-                    {servers.map((server) => {
-                      const present = entry.presentIn.includes(server.endpointId);
-                      return (
-                        <td key={server.endpointId} className="px-2 py-1.5 text-center">
-                          {present ? (
-                            <Check className="mx-auto h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-label="present" />
-                          ) : (
-                            <span className="text-gray-300 dark:text-gray-600" aria-label="absent">
-                              ·
-                            </span>
-                          )}
-                        </td>
-                      );
-                    })}
+      <Card data-testid="mcp-compare-overlap">
+        <CardHeader className="mcpx-card__head">
+          <CardTitle className="mcpx-card__title">
+            <ArrowLeftRight aria-hidden />
+            {MCP_COMPARE_OVERLAP_TITLE}
+          </CardTitle>
+          <span className="mcpx-card__note">{mcpCompareOverlapSummary(overlap)}</span>
+        </CardHeader>
+        <CardContent className="mcpx-overlap">
+          {/* Shared presence matrix. */}
+          {overlap.shared.length === 0 ? (
+            <p className="mcpx-note">{MCP_COMPARE_NO_SHARED}</p>
+          ) : (
+            <div className="mcpx-scroll">
+              <table className="mcpx-matrix table-density">
+                <caption className="sr-only">
+                  Which of the compared servers expose each shared tool.
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Shared tool</th>
+                    {servers.map((server) => (
+                      <th
+                        key={server.endpointId}
+                        scope="col"
+                        className="mcpx-matrix__server"
+                        title={server.displayName}
+                      >
+                        {server.displayName}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Per-server unique tools. */}
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {overlap.uniqueByServer.map((group) => (
-            <div key={group.endpointId} className="rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
-              <div className="mb-1.5 truncate text-xs font-semibold text-gray-700 dark:text-gray-200" title={group.displayName}>
-                Unique to {group.displayName}
-              </div>
-              {group.tools.length === 0 ? (
-                <p className="text-xs text-gray-400 dark:text-gray-500">No unique tools.</p>
-              ) : (
-                <ul className="space-y-0.5">
-                  {group.tools.map((tool) => (
-                    <li key={tool} className="truncate font-mono text-xs text-gray-700 dark:text-gray-200" title={tool}>
-                      {tool}
-                    </li>
+                </thead>
+                <tbody>
+                  {overlap.shared.map((entry) => (
+                    <tr key={entry.name}>
+                      <td className="mono">{entry.name}</td>
+                      {servers.map((server) => {
+                        const present = entry.presentIn.includes(server.endpointId);
+                        return (
+                          <td key={server.endpointId} className="mcpx-matrix__cell">
+                            {present ? (
+                              <Check className="mcpx-present" aria-label="present" />
+                            ) : (
+                              <span className="mcpx-absent" aria-label="absent">
+                                ·
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
                   ))}
-                </ul>
-              )}
+                </tbody>
+              </table>
             </div>
-          ))}
-        </div>
-      </section>
+          )}
+
+          {/* Per-server unique tools. */}
+          <div className="mcpx-unique">
+            {overlap.uniqueByServer.map((group) => (
+              <Card key={group.endpointId} variant="flat" className="mcpx-unique__card">
+                <div className="mcpx-unique__title" title={group.displayName}>
+                  Unique to {group.displayName}
+                </div>
+                {group.tools.length === 0 ? (
+                  <p className="mcpx-note">{MCP_COMPARE_NO_UNIQUE}</p>
+                ) : (
+                  <ul className="mcpx-unique__list">
+                    {group.tools.map((tool) => (
+                      <li key={tool} className="mono" title={tool}>
+                        {tool}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

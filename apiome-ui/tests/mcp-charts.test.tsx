@@ -278,8 +278,9 @@ describe('Gauge', () => {
   it('supports a custom domain and label without score-band coloring', () => {
     const { container } = render(<Gauge value={420} min={0} max={1000} tone="blue" centerLabel="420ms" />);
     expect(screen.getByText('420ms')).toBeInTheDocument();
-    // the value arc uses the blue token stroke
-    expect(container.querySelector('.stroke-blue-500')).toBeInTheDocument();
+    // The value arc paints the role the `blue` tone resolves to. Since HIVE-7.9 (#5326) that is
+    // `--accent` — the one azure DESIGN.md §0 leaves standing — rather than a Tailwind ramp.
+    expect(container.querySelector('.stroke-accent')).toBeInTheDocument();
   });
 
   it('renders an empty state for a non-finite value', () => {

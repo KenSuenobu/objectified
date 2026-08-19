@@ -1,18 +1,26 @@
 /**
- * Unit tests for the pure catalog-analytics client helpers (V2-MCP-32.1 / MCAT-18.1).
+ * Unit tests for the pure catalog-analytics client helpers (V2-MCP-32.1 / MCAT-18.1; the stat
+ * footnotes and the CSV export added in HIVE-7.9, #5326).
  *
  * Exercises `mcpCatalogInsightUi` in isolation (no React): the defensive parser (scalar tallies,
  * type counts, the grade map → sorted buckets, the composition breakdowns, and the malformed/empty
- * paths), and the presentation projections (empty detection, percentages, grade tones, donut/bar
- * projections).
+ * paths), the presentation projections (empty detection, percentages, grade tones, donut/bar
+ * projections), and the CSV the Export action hands over.
  */
 import {
   mcpCatalogBars,
+  mcpCatalogDiscoveredFootnote,
   mcpCatalogDonutSegments,
   mcpCatalogGradeTone,
+  mcpCatalogInsightCsv,
   mcpCatalogInsightFromPayload,
   mcpCatalogIsEmpty,
   mcpCatalogPercent,
+  mcpCatalogPlural,
+  mcpCatalogPublishedFootnote,
+  mcpCatalogScoredFootnote,
+  mcpCatalogUndiscoveredCount,
+  mcpCatalogUnscoredCount,
 } from '../src/app/components/ade/dashboard/mcp/mcpCatalogInsightUi';
 
 function populatedPayload(extra: Record<string, unknown> = {}) {
@@ -170,5 +178,142 @@ describe('presentation helpers', () => {
   it('projects buckets onto uniformly-toned bar data', () => {
     const bars = mcpCatalogBars([{ label: '0', count: 2 }], 'indigo');
     expect(bars).toEqual([{ label: '0', value: 2, tone: 'indigo' }]);
+  });
+});
+
+
+// ---------------------------------------------------------------------------------------
+// The stat footnotes (HIVE-7.9, #5326)
+// ---------------------------------------------------------------------------------------
+
+describe('the headline footnotes', () => {
+  const insight = mcpCatalogInsightFromPayload(populatedPayload())!;
+
+  it('derives the discovery and scoring gaps from the tallies beside them', () => {
+    expect(mcpCatalogUndiscoveredCount(insight)).toBe(
+      insight.endpointCount - insight.discoveredCount,
+    );
+    expect(mcpCatalogUnscoredCount(insight)).toBe(insight.endpointCount - insight.scoredCount);
+  });
+
+  it('never reports a negative gap, however the server counted', () => {
+    // `discovered_count` can exceed `endpoint_count` mid-deletion; "-1 never discovered" is worse
+    // than saying nothing.
+    const skewed = mcpCatalogInsightFromPayload(
+      populatedPayload({ endpoint_count: 2, discovered_count: 5, scored_count: 5 }),
+    )!;
+    expect(mcpCatalogUndiscoveredCount(skewed)).toBe(0);
+    expect(mcpCatalogUnscoredCount(skewed)).toBe(0);
+  });
+
+  it('drops the gap footnote entirely rather than printing a zero', () => {
+    const complete = mcpCatalogInsightFromPayload(
+      populatedPayload({ discovered_count: 12, scored_count: 12, endpoint_count: 12 }),
+    )!;
+    expect(mcpCatalogDiscoveredFootnote(complete)).toBeNull();
+    expect(mcpCatalogScoredFootnote(complete)).toBeNull();
+  });
+
+  it('prints the gap when there is one', () => {
+    const partial = mcpCatalogInsightFromPayload(
+      populatedPayload({ endpoint_count: 6, discovered_count: 5, scored_count: 4 }),
+    )!;
+    expect(mcpCatalogDiscoveredFootnote(partial)).toBe('1 never discovered');
+    expect(mcpCatalogScoredFootnote(partial)).toBe('2 unscored');
+  });
+
+  it('renders the public/private split the payload always carried', () => {
+    const split = mcpCatalogInsightFromPayload(
+      populatedPayload({ public_count: 2, private_count: 4 }),
+    )!;
+    expect(mcpCatalogPublishedFootnote(split)).toBe('2 public · 4 private');
+  });
+});
+
+describe('mcpCatalogPlural', () => {
+  it('agrees with the count', () => {
+    expect(mcpCatalogPlural(1, 'change')).toBe('1 change');
+    expect(mcpCatalogPlural(0, 'change')).toBe('0 changes');
+    expect(mcpCatalogPlural(11, 'change')).toBe('11 changes');
+  });
+
+  it('takes an explicit plural for the nouns English does not suffix', () => {
+    expect(mcpCatalogPlural(65, 'capability', 'capabilities')).toBe('65 capabilities');
+    expect(mcpCatalogPlural(1, 'capability', 'capabilities')).toBe('1 capability');
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// The CSV export
+// ---------------------------------------------------------------------------------------
+
+describe('mcpCatalogInsightCsv', () => {
+  const insight = mcpCatalogInsightFromPayload(populatedPayload())!;
+  const csv = mcpCatalogInsightCsv(insight);
+  const lines = csv.trimEnd().split('\r\n');
+
+  it('opens with the header row and terminates every line per RFC 4180', () => {
+    expect(lines[0]).toBe('"Section","Label","Value"');
+    expect(csv.endsWith('\r\n')).toBe(true);
+  });
+
+  it('is long rather than wide, so eight differently-shaped blocks land in one sheet', () => {
+    const sections = new Set(lines.slice(1).map((line) => line.split(',')[0]));
+    expect(sections).toEqual(
+      new Set([
+        '"Totals"',
+        '"Capabilities"',
+        '"Category mix"',
+        '"Transport mix"',
+        '"Grade distribution"',
+        '"Protocol version adoption"',
+        '"Tool-count distribution"',
+        '"Discovery health"',
+        '"Change-frequency leaders"',
+        '"Top capabilities"',
+      ]),
+    );
+  });
+
+  it('carries the same figures the tiles render', () => {
+    expect(lines).toContain(`"Totals","Endpoints","${insight.endpointCount}"`);
+    expect(lines).toContain(`"Totals","Public","${insight.publicCount}"`);
+    expect(lines).toContain(`"Capabilities","Total","${insight.typeCounts.total}"`);
+    for (const bucket of insight.categoryDistribution) {
+      expect(lines).toContain(`"Category mix","${bucket.label}","${bucket.count}"`);
+    }
+  });
+
+  it('states the average to one decimal, and leaves it blank when nothing is scored', () => {
+    expect(lines).toContain(`"Totals","Average score","${insight.averageScore!.toFixed(1)}"`);
+    const unscored = mcpCatalogInsightCsv(
+      mcpCatalogInsightFromPayload(populatedPayload({ scored_count: 0, average_score: null }))!,
+    );
+    expect(unscored).toContain('"Totals","Average score",""');
+  });
+
+  it('quotes every field and doubles an embedded quote', () => {
+    const quoted = mcpCatalogInsightCsv(
+      mcpCatalogInsightFromPayload(
+        populatedPayload({
+          change_leaders: [{ endpoint_id: 'e1', name: 'The "Loud" server, mk2', change_count: 4 }],
+        }),
+      )!,
+    );
+    // A name with a comma and a quote in it must not become two columns.
+    expect(quoted).toContain('"Change-frequency leaders","The ""Loud"" server, mk2","4"');
+  });
+
+  it('survives an empty catalog rather than emitting a header-only file with holes', () => {
+    const empty = mcpCatalogInsightCsv(
+      mcpCatalogInsightFromPayload({
+        success: true,
+        endpoint_count: 0,
+        type_counts: {},
+        grade_distribution: {},
+      })!,
+    );
+    expect(empty.split('\r\n')[0]).toBe('"Section","Label","Value"');
+    expect(empty).toContain('"Totals","Endpoints","0"');
   });
 });

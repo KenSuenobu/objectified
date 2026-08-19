@@ -180,8 +180,8 @@ export function StackedTimeline({
                 }}
                 className={cn(
                   'cursor-pointer outline-none transition-colors',
-                  'hover:fill-gray-500/10 focus-visible:fill-gray-500/15',
-                  pi === activeIndex ? 'fill-indigo-500/10' : 'fill-transparent',
+                  'hover:fill-fg/5 focus-visible:fill-fg/10',
+                  pi === activeIndex ? 'fill-accent/10' : 'fill-transparent',
                 )}
               >
                 <title>{hitLabel(p, pi)}</title>
