@@ -12,9 +12,22 @@
  * severity — a hard requirement) and SHOULD (a `warning` — a recommendation), with `info`
  * findings surfaced as advisories. Each finding carries a `path` (e.g. `tools.search`) that this
  * module resolves back to the offending capability item so the UI can deep-link to it.
+ *
+ * HIVE-7.8 (#5325) moved the tier's *paint* onto `ui/statusVocabulary`, the same move HIVE-2.4
+ * made for the grade bands and HIVE-7.7 for `McpBadge`'s tones. A MUST finding was
+ * `border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20`, which froze it on one light palette
+ * and one dark one; it names the vocabulary string it *is* (`failed`) now, and the table answers
+ * with the tone every other failure on the screen wears. The tinted row went with it — see
+ * {@link McpLintTierMeta.rowClass}.
  */
 
 import type { McpBadgeVariant } from './mcpBrowseUi';
+import {
+  STATUS_TONE_BORDER_CLASS,
+  STATUS_TONE_DOT_CLASS,
+  statusTone,
+  type StatusTone,
+} from '../../../ui/statusVocabulary';
 
 /** Lint finding severities as emitted by the scorer. */
 export type McpLintSeverity = 'error' | 'warning' | 'info';
@@ -153,41 +166,74 @@ export interface McpLintTierMeta {
   label: string;
   severity: McpLintSeverity;
   badgeVariant: McpBadgeVariant;
-  /** Tailwind classes for a finding row (left border + tinted background). */
+  /**
+   * The tone this tier *is*, in the shared status vocabulary.
+   *
+   * Added by HIVE-7.8 (#5325), and the reason the three class fields below no longer name a
+   * palette: a MUST finding and a failed job are the same danger, because the same table
+   * answered both.
+   */
+  tone: StatusTone;
+  /**
+   * The leading edge a finding row is marked with.
+   *
+   * A *rule*, not a fill. It was `border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20` — a
+   * tinted row — and a list of eight of those is a wall of colour in which nothing stands out;
+   * the tier's badge is where a reader looks, and it carries the tone already.
+   */
   rowClass: string;
-  /** Tailwind background class for a count bar / chip. */
+  /** The tone as a solid bar fill, for a count bar or a meter. */
   barClass: string;
   description: string;
 }
 
+/** Build one tier's metadata, taking every colour from the shared vocabulary. */
+function lintTierMeta(
+  key: McpLintTier,
+  label: string,
+  severity: McpLintSeverity,
+  badgeVariant: McpBadgeVariant,
+  vocabulary: string,
+  description: string,
+): McpLintTierMeta {
+  const tone = statusTone(vocabulary);
+  return {
+    key,
+    label,
+    severity,
+    badgeVariant,
+    tone,
+    rowClass: `border-l-2 ${STATUS_TONE_BORDER_CLASS[tone]}`,
+    barClass: STATUS_TONE_DOT_CLASS[tone],
+    description,
+  };
+}
+
 const MCP_LINT_TIER_META: Record<McpLintTier, McpLintTierMeta> = {
-  must: {
-    key: 'must',
-    label: 'MUST',
-    severity: 'error',
-    badgeVariant: 'error',
-    rowClass: 'border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20',
-    barClass: 'bg-red-500',
-    description: 'Hard requirements — fix these to raise the grade.',
-  },
-  should: {
-    key: 'should',
-    label: 'SHOULD',
-    severity: 'warning',
-    badgeVariant: 'warning',
-    rowClass: 'border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-900/20',
-    barClass: 'bg-amber-500',
-    description: 'Recommendations — address these to polish the surface.',
-  },
-  advisory: {
-    key: 'advisory',
-    label: 'Advisory',
-    severity: 'info',
-    badgeVariant: 'secondary',
-    rowClass: 'border-l-4 border-gray-400 bg-gray-50 dark:bg-gray-900/30',
-    barClass: 'bg-gray-400',
-    description: 'Informational notes about the surface.',
-  },
+  must: lintTierMeta(
+    'must',
+    'MUST',
+    'error',
+    'error',
+    'failed',
+    'Hard requirements — fix these to raise the grade.',
+  ),
+  should: lintTierMeta(
+    'should',
+    'SHOULD',
+    'warning',
+    'warning',
+    'degraded',
+    'Recommendations — address these to polish the surface.',
+  ),
+  advisory: lintTierMeta(
+    'advisory',
+    'Advisory',
+    'info',
+    'secondary',
+    'unknown',
+    'Informational notes about the surface.',
+  ),
 };
 
 /** The requirement tiers in display order (strongest first). */

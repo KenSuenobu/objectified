@@ -1,8 +1,39 @@
 "use client";
 
+/**
+ * Endpoint-detail "Versions" tab (V2-MCP-24.3 / MCAT-10.3; re-skinned by HIVE-7.8, #5325).
+ *
+ * An endpoint's snapshot timeline beside the diff between any two of them. Ticking two rows —
+ * or picking a base and a target from the selectors — computes the compare through
+ * `/api/mcp/endpoints/{id}/versions/compare`, which auto-orders older → newer whichever way they
+ * were picked. The layout switch (side-by-side / unified) is remembered across visits.
+ *
+ * ### What HIVE-7.8 changed
+ *
+ * Authority: `docs/mockups/sources/mcp-endpoint.html`'s Versions panel.
+ *
+ * 1. **The layout switch was a hand-rolled radiogroup** with `bg-indigo-100 text-indigo-700` on
+ *    the selected segment. It is `ui/Segmented`, which is the mockup's `.segmented` and already
+ *    owns the roving-focus and arrow-key behaviour this one re-implemented in `onClick`.
+ * 2. **Each change row was a tinted band** — `border-l-4 border-green-500 bg-green-50` and its
+ *    two siblings — so a twelve-change diff was a wall of colour. The tone lives on the kind
+ *    badge and on a 2 px leading rule now (see `mcpVersionsUi`), and the row itself is a
+ *    hairline card.
+ * 3. **The timeline's +/−/~ counts were `text-green-600` / `text-red-600` / `text-blue-600`.**
+ *    They resolve through the shared vocabulary, which is what makes them the same three
+ *    colours as the digest panel's on the Insight tab.
+ * 4. **A ticked row was `border-indigo-400 bg-indigo-50`.** It is `.mcp-timeline__row
+ *    [data-selected]` — `--accent-soft` plus an accent hairline, the pair `ui/Card`'s
+ *    `selected` variant draws.
+ *
+ * The compare contract is untouched: the same auto-ordering, the same deep-link handling for a
+ * churn-timeline request, the same lazily-mounted Monaco diff.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlignJustify,
+  ArrowLeftRight,
   ChevronsDownUp,
   ChevronsUpDown,
   Columns2,
@@ -11,9 +42,13 @@ import {
   Loader2,
 } from "lucide-react";
 import { Badge } from "@/app/components/ui/Badge";
+import { Button } from "@/app/components/ui/Button";
+import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
 import { Checkbox } from "@/app/components/ui/Checkbox";
 import { LoadingState } from "@/app/components/ui/LoadingState";
 import { EmptyState } from "@/app/components/ui/EmptyState";
+import { FormField } from "@/app/components/ui/FormField";
+import { Segmented, SegmentedItem } from "@/app/components/ui/Segmented";
 import { McpDisclosure } from "@/app/components/ui/mcp/McpDisclosure";
 import { McpJsonViewer } from "@/app/components/ui/mcp/McpJsonViewer";
 import {
@@ -27,7 +62,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/Select";
-import { dashboardPanelPaddedClass } from "@/app/components/ade/dashboard/dashboardScreenClasses";
 import { mcpScoreLabel, mcpScoreVariant } from "@/app/components/ade/dashboard/mcp/mcpBrowseUi";
 import {
   mcpChangeBeforeAfter,
@@ -38,6 +72,7 @@ import {
   mcpDiffSelectionForVersion,
   mcpOrderedPair,
   mcpToggleSelection,
+  mcpVersionChangeCountParts,
   mcpVersionDateTag,
   mcpVersionListFromPayload,
   mcpVersionCompareFromPayload,
@@ -90,10 +125,9 @@ function ChangeDetail({
     return (
       <McpDisclosure
         label="Diff"
-        icon={<GitCompareArrows className="h-3.5 w-3.5 shrink-0 text-indigo-500" aria-hidden />}
+        icon={<GitCompareArrows className="size-3.5 shrink-0 text-fg-muted" aria-hidden />}
         meta={`${lineCount} ${lineCount === 1 ? "line" : "lines"}`}
         defaultOpen={defaultOpen}
-        className="bg-white dark:bg-gray-900/40"
       >
         <McpJsonDiffViewer
           original={before}
@@ -112,14 +146,18 @@ function ChangeDetail({
       label={before !== null ? "Removed definition" : "Added definition"}
       meta={`${lineCount} ${lineCount === 1 ? "line" : "lines"}`}
       defaultOpen={defaultOpen}
-      className="bg-white dark:bg-gray-900/40"
     >
       <McpJsonViewer value={only} className="rounded-none border-0" />
     </McpDisclosure>
   );
 }
 
-/** One color-coded change row (added=green / removed=red / modified=blue). */
+/**
+ * One change: its kind, the capability it touched, and the diff under it.
+ *
+ * The kind's tone is on the badge and on the row's 2 px leading rule — never as a fill behind
+ * the JSON, which is the thing a reader is actually here to read.
+ */
 function ChangeRow({
   change,
   diffMode,
@@ -135,33 +173,44 @@ function ChangeRow({
   const style = mcpChangeStyle(change.change_type);
   const fields = change.change_type === "modified" ? change.detail.fields ?? [] : [];
   return (
-    <div className={`rounded-md p-3 ${style.rowClass}`}>
-      <div className="flex flex-wrap items-center gap-2">
+    <article
+      className={`mcp-change ${style.rowClass}`}
+      data-change-type={change.change_type}
+      data-testid={`mcp-change-${change.item_type}-${change.item_name}`}
+    >
+      <div className="mcp-change__head">
         <Badge variant={style.badgeVariant} title={style.label}>
           <span aria-hidden>{style.sign}</span> {style.label}
         </Badge>
-        <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
-          {mcpChangeItemPath(change)}
-        </span>
+        <span className="mcp-change__path mono">{mcpChangeItemPath(change)}</span>
         {fields.length > 0 ? (
-          <span className="text-xs text-gray-600 dark:text-gray-300">
+          <span className="mcp-change__fields">
             {fields.map((field) => field.field).join(", ")} changed
           </span>
         ) : null}
       </div>
-      <div className="mt-2">
-        <ChangeDetail
-          key={detailKey}
-          change={change}
-          diffMode={diffMode}
-          defaultOpen={detailDefaultOpen}
-        />
-      </div>
-    </div>
+      <ChangeDetail
+        key={detailKey}
+        change={change}
+        diffMode={diffMode}
+        defaultOpen={detailDefaultOpen}
+      />
+    </article>
   );
 }
 
-/** The side-by-side / unified layout switch for the diff panel. */
+/**
+ * The side-by-side / unified layout switch.
+ *
+ * `ui/Segmented` — the mockup's `.segmented` — rather than the hand-rolled radiogroup this was:
+ * a genuine *toggle* (it changes how the current pane is drawn, it does not name a destination),
+ * which is exactly the distinction `tabStyles` records for when a control keeps its segmented
+ * look instead of becoming a tab.
+ *
+ * @param props.mode     The selected layout.
+ * @param props.onChange Called with the newly selected layout.
+ * @returns The two-option switch.
+ */
 function DiffModeToggle({
   mode,
   onChange,
@@ -169,41 +218,38 @@ function DiffModeToggle({
   mode: McpDiffMode;
   onChange: (mode: McpDiffMode) => void;
 }) {
-  const options: Array<{ value: McpDiffMode; label: string; icon: typeof Columns2 }> = [
-    { value: "split", label: "Side-by-side", icon: Columns2 },
-    { value: "unified", label: "Unified", icon: AlignJustify },
-  ];
   return (
-    <div
-      role="radiogroup"
+    <Segmented
+      size="sm"
+      value={mode}
+      onValueChange={(value) => onChange(value as McpDiffMode)}
       aria-label="Diff layout"
-      className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 dark:border-gray-700 dark:bg-gray-800"
+      data-testid="mcp-diff-layout"
     >
-      {options.map((opt) => {
-        const selected = mode === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onChange(opt.value)}
-            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-              selected
-                ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            }`}
-          >
-            <opt.icon className="h-3.5 w-3.5" aria-hidden />
-            {opt.label}
-          </button>
-        );
-      })}
-    </div>
+      <SegmentedItem value="split">
+        <Columns2 aria-hidden />
+        Side-by-side
+      </SegmentedItem>
+      <SegmentedItem value="unified">
+        <AlignJustify aria-hidden />
+        Unified
+      </SegmentedItem>
+    </Segmented>
   );
 }
 
-/** One row of the version timeline with a checkbox to tick it into the compare selection. */
+/**
+ * One row of the version timeline, with a checkbox that ticks it into the compare selection.
+ *
+ * The whole row is the label, so the click target is the row rather than the 16 px box — and
+ * ticked is `--accent-soft` plus an accent hairline rather than the `border-indigo-400
+ * bg-indigo-50` pair it was.
+ *
+ * @param props.version  The snapshot.
+ * @param props.checked  Whether it is in the current selection.
+ * @param props.onToggle Called with the snapshot's id when the row is clicked.
+ * @returns The timeline row.
+ */
 function TimelineRow({
   version,
   checked,
@@ -214,14 +260,13 @@ function TimelineRow({
   onToggle: (id: string) => void;
 }) {
   const checkboxId = `mcp-version-${version.id}`;
+  const counts = mcpVersionChangeCountParts(version.change_counts);
   return (
     <label
       htmlFor={checkboxId}
-      className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
-        checked
-          ? "border-indigo-400 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-900/20"
-          : "border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800/60"
-      }`}
+      data-selected={checked ? '' : undefined}
+      data-testid={`mcp-version-row-${version.id}`}
+      className="mcp-timeline__row"
     >
       <Checkbox
         id={checkboxId}
@@ -229,36 +274,38 @@ function TimelineRow({
         onCheckedChange={() => onToggle(version.id)}
         className="mt-0.5"
       />
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-gray-900 dark:text-white">
+      <div className="mcp-timeline__main">
+        <div className="mcp-timeline__head">
+          <span className="text-sm font-semibold text-fg">
             {mcpVersionSeqLabel(version.version_seq)}
           </span>
-          {version.is_current ? <Badge variant="success">Current</Badge> : null}
+          {version.is_current ? <Badge status="published">Current</Badge> : null}
           <Badge variant={mcpScoreVariant(version.score)}>
             {mcpScoreLabel(version.score, version.grade)}
           </Badge>
         </div>
-        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {mcpVersionDateTag(version)}
-        </div>
-        <div className="mt-1 flex flex-wrap gap-x-3 text-xs">
-          <span className="text-green-600 dark:text-green-400">
-            +{version.change_counts.added}
-          </span>
-          <span className="text-red-600 dark:text-red-400">
-            −{version.change_counts.removed}
-          </span>
-          <span className="text-blue-600 dark:text-blue-400">
-            ~{version.change_counts.modified}
-          </span>
+        <div className="mcp-timeline__sub">{mcpVersionDateTag(version)}</div>
+        <div className="mcp-timeline__counts">
+          {counts.map((part) => (
+            <span key={part.key} className={`mcp-tone-figure ${part.colorClass}`}>
+              {part.label}
+            </span>
+          ))}
         </div>
       </div>
     </label>
   );
 }
 
-/** The compare-bar selectors (base / target) wired to the same selection model as the timeline. */
+/**
+ * The compare-bar selectors (base / target), wired to the same selection model as the timeline.
+ *
+ * @param props.versions Every snapshot, newest first.
+ * @param props.baseId   The chronologically older of the current pair, or `null`.
+ * @param props.targetId The newer of the pair, or `null`.
+ * @param props.onPick   Called with the slot (0 = base, 1 = target) and the chosen id.
+ * @returns The two selectors and the glyph between them.
+ */
 function CompareBar({
   versions,
   baseId,
@@ -273,13 +320,10 @@ function CompareBar({
   const optionLabel = (version: McpVersionSummary) =>
     `${mcpVersionSeqLabel(version.version_seq)} · ${mcpVersionDateTag(version)}`;
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
-      <div>
-        <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          Base version
-        </label>
+    <div className="mcp-compare-bar">
+      <FormField label="Base version" htmlFor="mcp-compare-base">
         <Select value={baseId ?? undefined} onValueChange={(value) => onPick(0, value)}>
-          <SelectTrigger aria-label="Base version">
+          <SelectTrigger id="mcp-compare-base" aria-label="Base version">
             <SelectValue placeholder="Select base…" />
           </SelectTrigger>
           <SelectContent>
@@ -290,16 +334,11 @@ function CompareBar({
             ))}
           </SelectContent>
         </Select>
-      </div>
-      <div className="hidden pb-2 text-gray-400 sm:block" aria-hidden>
-        <GitCompareArrows className="h-5 w-5" />
-      </div>
-      <div>
-        <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          Target version
-        </label>
+      </FormField>
+      <ArrowLeftRight className="mcp-compare-bar__glyph size-5" aria-hidden />
+      <FormField label="Target version" htmlFor="mcp-compare-target">
         <Select value={targetId ?? undefined} onValueChange={(value) => onPick(1, value)}>
-          <SelectTrigger aria-label="Target version">
+          <SelectTrigger id="mcp-compare-target" aria-label="Target version">
             <SelectValue placeholder="Select target…" />
           </SelectTrigger>
           <SelectContent>
@@ -310,7 +349,7 @@ function CompareBar({
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
     </div>
   );
 }
@@ -338,23 +377,27 @@ function DiffPanel({
   if (!hasSelection) {
     return (
       <EmptyState
-        variant="compact"
-        icon={<GitCompareArrows className="h-8 w-8 text-white" aria-hidden />}
+        variant="inline"
+        tone="neutral"
+        icon={<GitCompareArrows aria-hidden />}
         title="Pick two versions"
         description="Choose a base and a target — from the selectors or by ticking two versions in the timeline — to see exactly what changed."
+        data-testid="mcp-diff-unselected"
       />
     );
   }
   if (comparing && !compare) {
-    return <LoadingState minHeightClassName="min-h-[160px]" message="Computing diff…" />;
+    return <LoadingState minHeightClassName="min-h-[10rem]" message="Computing diff…" />;
   }
   if (error) {
     return (
       <EmptyState
-        variant="compact"
-        icon={<GitCompareArrows className="h-8 w-8 text-white" aria-hidden />}
+        variant="inline"
+        tone="danger"
+        icon={<GitCompareArrows aria-hidden />}
         title="Diff unavailable"
         description={error}
+        data-testid="mcp-diff-error"
       />
     );
   }
@@ -362,14 +405,12 @@ function DiffPanel({
 
   const identical = !compare.fingerprint_changed && compare.changes.length === 0;
   return (
-    <div className="space-y-3" aria-busy={comparing}>
+    <div className="flex flex-col gap-3" aria-busy={comparing}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 className="font-mono text-lg font-semibold text-gray-900 dark:text-white">
-          {mcpCompareHeader(compare)}
-        </h4>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <h4 className="mono text-base font-semibold text-fg">{mcpCompareHeader(compare)}</h4>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           {mcpChangeCountParts(compare).map((part) => (
-            <span key={part.key} className={part.colorClass}>
+            <span key={part.key} className={`mcp-tone-figure ${part.colorClass}`}>
               {part.label}
             </span>
           ))}
@@ -377,13 +418,15 @@ function DiffPanel({
       </div>
       {identical ? (
         <EmptyState
-          variant="compact"
-          icon={<GitCompareArrows className="h-8 w-8 text-white" aria-hidden />}
+          variant="inline"
+          tone="neutral"
+          icon={<GitCompareArrows aria-hidden />}
           title="Identical surface"
           description="These two versions expose the same capabilities and metadata — nothing changed between them."
+          data-testid="mcp-diff-identical"
         />
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {compare.changes.map((change) => (
             <ChangeRow
               key={`${change.item_type}:${change.item_name}`}
@@ -552,39 +595,42 @@ export default function McpVersionHistory({
   }, []);
 
   if (loading) {
-    return <LoadingState minHeightClassName="min-h-[220px]" message="Loading version history…" />;
+    return <LoadingState minHeightClassName="min-h-[14rem]" message="Loading version history…" />;
   }
   if (error || versions.length === 0) {
     return (
       <EmptyState
-        variant="compact"
-        icon={<History className="h-8 w-8 text-white" aria-hidden />}
+        icon={<History aria-hidden />}
+        tone={error ? 'danger' : 'neutral'}
         title="No version history"
         description={
           error ?? "This endpoint has no recorded version snapshots yet. Run discovery to create one."
         }
+        data-testid="mcp-versions-empty"
       />
     );
   }
 
   return (
-    <div className="space-y-6">
-      <section className={dashboardPanelPaddedClass}>
-        <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-          <GitCompareArrows className="h-4 w-4 text-indigo-500" aria-hidden />
-          Compare versions
-        </h3>
-        <CompareBar versions={versions} baseId={baseId} targetId={targetId} onPick={pickSlot} />
-      </section>
+    <div className="flex flex-col gap-4">
+      <Card>
+        <CardBody>
+          <CompareBar versions={versions} baseId={baseId} targetId={targetId} onPick={pickSlot} />
+          <p className="mt-3 text-xs text-fg-muted">
+            The selection auto-orders older → newer — pick from either control, or tick two
+            versions in the timeline.
+          </p>
+        </CardBody>
+      </Card>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-        <section>
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-            <History className="h-4 w-4 text-indigo-500" aria-hidden />
-            Timeline
-            <Badge variant="secondary">{versions.length}</Badge>
-          </h3>
-          <div className="space-y-2">
+      <div className="mcp-versions">
+        <Card data-testid="mcp-version-timeline">
+          <CardHeader className="flex-row items-center gap-2">
+            <History aria-hidden className="size-[var(--fs-md)] shrink-0 text-fg-muted" />
+            <CardTitle>Timeline</CardTitle>
+            <Badge variant="neutral">{versions.length}</Badge>
+          </CardHeader>
+          <div className="mcp-timeline">
             {versions.map((version) => (
               <TimelineRow
                 key={version.id}
@@ -594,37 +640,36 @@ export default function McpVersionHistory({
               />
             ))}
           </div>
-        </section>
+        </Card>
 
-        <section>
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-              {comparing ? (
-                <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
-              ) : (
-                <GitCompareArrows className="h-4 w-4 text-indigo-500" aria-hidden />
-              )}
-              Diff
-            </h3>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
+        <Card className="min-w-0" data-testid="mcp-version-diff">
+          <CardHeader className="flex-row flex-wrap items-center gap-2">
+            {comparing ? (
+              <Loader2 aria-hidden className="size-[var(--fs-md)] shrink-0 animate-spin text-fg-muted" />
+            ) : (
+              <GitCompareArrows aria-hidden className="size-[var(--fs-md)] shrink-0 text-fg-muted" />
+            )}
+            <CardTitle>Diff</CardTitle>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={toggleExpandAll}
                 disabled={!compare || compare.changes.length === 0}
                 title={expandAll ? "Collapse every change's detail" : "Expand every change's detail"}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100"
               >
                 {expandAll ? (
-                  <ChevronsDownUp className="h-3.5 w-3.5" aria-hidden />
+                  <ChevronsDownUp aria-hidden />
                 ) : (
-                  <ChevronsUpDown className="h-3.5 w-3.5" aria-hidden />
+                  <ChevronsUpDown aria-hidden />
                 )}
-                {expandAll ? "Collapse all" : "Expand all"}
-              </button>
+                {expandAll ? 'Collapse all' : 'Expand all'}
+              </Button>
               <DiffModeToggle mode={diffMode} onChange={changeDiffMode} />
             </div>
-          </div>
-          <div className={dashboardPanelPaddedClass}>
+          </CardHeader>
+          <CardBody>
             <DiffPanel
               compare={compare}
               comparing={comparing}
@@ -634,8 +679,8 @@ export default function McpVersionHistory({
               expandAll={expandAll}
               expandGeneration={expandGeneration}
             />
-          </div>
-        </section>
+          </CardBody>
+        </Card>
       </div>
     </div>
   );

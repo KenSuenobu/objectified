@@ -23,6 +23,7 @@ import * as React from 'react';
 import { BookOpen, Check, ChevronRight } from 'lucide-react';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
+import { STATUS_TONE_SOFT_CLASS } from '@/app/components/ui/statusVocabulary';
 import { Gauge } from '@/app/components/ui/mcp/charts';
 import type { McpCapabilityItem } from '@/app/components/ade/dashboard/mcp/mcpBrowseUi';
 import {
@@ -56,16 +57,16 @@ function OffenderRow({ offender }: { offender: McpDocOffender }) {
   return (
     <li className="flex items-center justify-between gap-2 py-1">
       <span className="flex min-w-0 items-center gap-2">
-        <ChevronRight className="h-3 w-3 shrink-0 text-gray-400 dark:text-gray-500" aria-hidden />
-        <span className="truncate font-mono text-xs text-gray-800 dark:text-gray-200" title={offender.displayName}>
+        <ChevronRight className="h-3 w-3 shrink-0 text-fg-subtle" aria-hidden />
+        <span className="truncate font-mono text-xs text-fg" title={offender.displayName}>
           {offender.displayName}
         </span>
-        <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+        <span className="shrink-0 rounded-full bg-inset px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wider text-fg-muted">
           {kindLabel(offender.itemType)}
         </span>
       </span>
       {typeof offender.undocumentedParams === 'number' && typeof offender.totalParams === 'number' ? (
-        <span className="shrink-0 text-xs tabular-nums text-amber-600 dark:text-amber-400">
+        <span className={`mcp-tone-figure shrink-0 text-xs ${STATUS_TONE_SOFT_CLASS.warn}`}>
           {offender.undocumentedParams} of {offender.totalParams} undocumented
         </span>
       ) : null}
@@ -77,8 +78,8 @@ function OffenderRow({ offender }: { offender: McpDocOffender }) {
 function CoverageGauge({ meter }: { meter: McpDocCoverageMeter }) {
   const missing = meter.offenders.length;
   return (
-    <div className="flex flex-col rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800/40">
-      <div className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+    <div className="flex flex-col rounded-lg bg-surface p-4 shadow-[inset_0_0_0_1px_var(--border)]">
+      <div className="text-xs font-medium uppercase tracking-wider text-fg-muted">
         {meter.label}
       </div>
 
@@ -92,7 +93,7 @@ function CoverageGauge({ meter }: { meter: McpDocCoverageMeter }) {
           />
         ) : (
           <div
-            className="flex h-24 w-24 items-center justify-center rounded-full border border-dashed border-gray-200 text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500"
+            className="flex size-24 items-center justify-center rounded-full border border-dashed border-border text-xs font-medium text-fg-subtle"
             role="img"
             aria-label={`${meter.label}: not applicable — no ${meter.unit}`}
           >
@@ -101,9 +102,9 @@ function CoverageGauge({ meter }: { meter: McpDocCoverageMeter }) {
         )}
       </div>
 
-      <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">{meter.hint}</p>
+      <p className="mt-2 text-center text-xs text-fg-muted">{meter.hint}</p>
 
-      <div className="mt-2 text-center text-xs tabular-nums text-gray-600 dark:text-gray-300">
+      <div className="mt-2 text-center text-xs tabular-nums text-fg-muted">
         {meter.applicable ? (
           <>
             {meter.have} / {meter.of} {meter.unit}
@@ -115,19 +116,19 @@ function CoverageGauge({ meter }: { meter: McpDocCoverageMeter }) {
 
       {/* Drill-down: expand to the specific under-documented items behind the percentage. */}
       {missing > 0 ? (
-        <details className="mt-3 border-t border-gray-100 pt-2 dark:border-gray-700/60">
-          <summary className="cursor-pointer list-none text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 [&::-webkit-details-marker]:hidden">
+        <details className="mt-3 border-t border-border pt-2">
+          <summary className="cursor-pointer list-none rounded-sm text-xs font-medium text-accent-fg hover:underline [&::-webkit-details-marker]:hidden">
             {missing} under-documented →
           </summary>
-          <ul className="mt-1 max-h-48 divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700/60">
+          <ul className="mt-1 max-h-48 divide-y divide-border overflow-y-auto">
             {meter.offenders.map((offender) => (
               <OffenderRow key={`${offender.index}-${offender.name}`} offender={offender} />
             ))}
           </ul>
         </details>
       ) : meter.applicable ? (
-        <div className="mt-3 flex items-center justify-center gap-1 border-t border-gray-100 pt-2 text-xs font-medium text-emerald-600 dark:border-gray-700/60 dark:text-emerald-400">
-          <Check className="h-3.5 w-3.5" aria-hidden />
+        <div className="mt-3 flex items-center justify-center gap-1 border-t border-border pt-2 text-xs font-medium text-fg-muted">
+          <Check className="size-3.5 text-ok" aria-hidden />
           All documented
         </div>
       ) : null}
@@ -150,7 +151,7 @@ export function DocCoveragePanel({ items, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<BookOpen className="h-8 w-8 text-white" aria-hidden />}
+        icon={<BookOpen className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Coverage unavailable"
         description={error}
       />
@@ -162,7 +163,7 @@ export function DocCoveragePanel({ items, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<BookOpen className="h-8 w-8 text-white" aria-hidden />}
+        icon={<BookOpen className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No capabilities"
         description="This snapshot declares no tools, resources, or prompts whose documentation to measure."
       />

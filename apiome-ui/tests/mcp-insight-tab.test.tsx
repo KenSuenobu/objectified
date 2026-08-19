@@ -133,6 +133,23 @@ async function openInsightView(label: string) {
   await userEvent.click(screen.getByRole('tab', { name: label }));
 }
 
+/**
+ * Pick a snapshot from the version selector.
+ *
+ * The selector was a native `<select>` until HIVE-7.8 (#5325) and is `ui/Select` now, which is
+ * Radix — so it is a `combobox` button rather than a form control, and it opens on `pointerdown`
+ * (which jsdom does not synthesise) or on Enter. Driving it by keyboard is what works in jsdom
+ * and is also the path a keyboard user takes.
+ *
+ * @param optionName Accessible name of the option to choose, as a substring or a matcher.
+ */
+async function pickSnapshot(optionName: RegExp) {
+  const trigger = screen.getByLabelText('Snapshot');
+  fireEvent.keyDown(trigger, { key: 'Enter' });
+  const option = await screen.findByRole('option', { name: optionName });
+  await userEvent.click(option);
+}
+
 function jsonResponse(body: unknown, ok = true, status = 200) {
   return {
     ok,
@@ -479,6 +496,78 @@ describe('McpEndpointInsight — scaffold', () => {
     );
   });
 
+  /**
+   * The ticket's first acceptance criterion: **all 14 insight views render**.
+   *
+   * The rail's fourteen entries, in the four groups the roadmap arc gives them, each mounting a
+   * panel of its own when selected — asserted as a set rather than one by one, so a view that is
+   * *added* or *dropped* fails here instead of quietly changing what "all fourteen" means.
+   * Whether each panel then draws the right chart is its own suite's job (there are fourteen of
+   * them); this pins the rail and the mounting.
+   */
+  it('exposes all fourteen insight views, and mounts one panel at a time (HIVE-7.8)', async () => {
+    routeFetch({
+      versions: () => jsonResponse(versionsPayload()),
+      surface: (vid) => jsonResponse(surfacePayload(vid ?? V3, 3, 4)),
+    });
+
+    render(
+      <McpEndpointInsight
+        endpointId={ENDPOINT_ID}
+        currentVersionId={V3}
+        endpoint={endpointRecord()}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('tab', { name: 'Overview' })).toBeInTheDocument(),
+    );
+
+    const rail = screen.getByRole('tablist', { name: 'Insight views' });
+    const views = within(rail)
+      .getAllByRole('tab')
+      .map((tab) => (tab.textContent ?? '').trim());
+
+    expect(views).toEqual([
+      // Summary
+      'Overview',
+      // Capability surface
+      'Capability counts',
+      'Relationship graph',
+      'Schema complexity',
+      'Safety posture',
+      'Documentation',
+      // Surface evolution
+      'Churn timeline',
+      'Lifespan & presence',
+      'Grade & size trend',
+      // Reliability & trust
+      'Discovery health',
+      'Tool latency',
+      'Score breakdown',
+      'Trust profile',
+      'Peer ranking',
+    ]);
+    expect(views).toHaveLength(14);
+
+    // The four group labels the rail files them under.
+    for (const group of ['Capability surface', 'Surface evolution', 'Reliability & trust']) {
+      expect(within(rail).getByText(group)).toBeInTheDocument();
+    }
+
+    // Exactly one panel is mounted at a time — the whole point of the rail, since the alternative
+    // is the ~18k-px stack of charts it replaced.
+    for (const label of views) {
+      await openInsightView(label);
+      expect(
+        within(rail)
+          .getAllByRole('tab')
+          .filter((tab) => tab.getAttribute('data-state') === 'active')
+          .map((tab) => (tab.textContent ?? '').trim()),
+      ).toEqual([label]);
+    }
+  });
+
   it('shows a helpful empty state for a never-discovered endpoint', async () => {
     routeFetch({
       versions: () => jsonResponse({ success: true, versions: [] }),
@@ -541,8 +630,7 @@ describe('McpEndpointInsight — scaffold', () => {
     expect(screen.getByText('Use search for queries.')).toBeInTheDocument();
 
     // Switching to a historical snapshot drops the (current-only) instructions.
-    const select = screen.getByLabelText('Snapshot') as HTMLSelectElement;
-    fireEvent.change(select, { target: { value: V2 } });
+    await pickSnapshot(/v2/);
     await waitFor(() =>
       expect(screen.queryByText('Use search for queries.')).not.toBeInTheDocument(),
     );
@@ -569,8 +657,7 @@ describe('McpEndpointInsight — scaffold', () => {
       expect(screen.getByText(headlineMatcher(7))).toBeInTheDocument(),
     );
 
-    const select = screen.getByLabelText('Snapshot') as HTMLSelectElement;
-    fireEvent.change(select, { target: { value: V2 } });
+    await pickSnapshot(/v2/);
 
     // The older snapshot's larger surface (total 12) is fetched and rendered.
     await waitFor(() =>

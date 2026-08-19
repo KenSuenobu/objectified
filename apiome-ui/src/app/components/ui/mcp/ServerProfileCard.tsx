@@ -61,15 +61,15 @@ function ServerIdentityGlyph({ iconUrl, name }: { iconUrl: string | null; name: 
     );
   }
   return (
-    <Server className="h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
+    <Server className="h-5 w-5 shrink-0 text-accent-fg" aria-hidden />
   );
 }
 
 /** One compact capability-count chip (kind → count), rendered from the surface metrics. */
 function CountChip({ label, value }: { label: string; value: number }) {
   return (
-    <span className="inline-flex items-baseline gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-gray-700/60 dark:text-gray-300">
-      <span className="font-semibold tabular-nums text-gray-900 dark:text-white">{value}</span>
+    <span className="inline-flex items-baseline gap-1 rounded-md bg-inset px-2 py-1 text-xs text-fg-muted">
+      <span className="font-semibold tabular-nums text-fg">{value}</span>
       {label}
     </span>
   );
@@ -103,7 +103,7 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
         ref={ref}
         aria-label={`Server profile — ${profile.displayName}`}
         className={cn(
-          'rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800',
+          'rounded-lg bg-surface p-5 shadow-sm',
           className,
         )}
         {...props}
@@ -119,22 +119,22 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
               className="mt-0.5"
             />
             <div className="min-w-0">
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-fg">
                 <ServerIdentityGlyph iconUrl={profile.iconUrl} name={profile.displayName} />
                 <span className="truncate">{profile.displayName}</span>
                 {profile.serverVersion ? (
-                  <span className="shrink-0 text-sm font-medium text-gray-400 dark:text-gray-500">
+                  <span className="shrink-0 text-sm font-medium text-fg-subtle">
                     {profile.serverVersion}
                   </span>
                 ) : null}
               </h3>
               {showEndpointSubtitle ? (
-                <div className="mt-0.5 truncate text-sm text-gray-500 dark:text-gray-400">
+                <div className="mt-0.5 truncate text-sm text-fg-muted">
                   {profile.endpointName}
                 </div>
               ) : null}
               {profile.endpointUrl ? (
-                <div className="mt-0.5 truncate font-mono text-xs text-gray-500 dark:text-gray-400">
+                <div className="mt-0.5 truncate font-mono text-xs text-fg-muted">
                   {profile.endpointUrl}
                 </div>
               ) : null}
@@ -144,7 +144,7 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
                   target="_blank"
                   rel="noopener noreferrer nofollow"
                   referrerPolicy="no-referrer"
-                  className="mt-0.5 inline-flex max-w-full items-center gap-1 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                  className="mt-0.5 inline-flex max-w-full items-center gap-1 rounded-sm text-xs font-medium text-accent-fg hover:underline"
                 >
                   <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
                   <span className="truncate">{profile.websiteUrl}</span>
@@ -157,7 +157,7 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
                     MCP {profile.protocolVersion}
                   </McpBadge>
                 ) : (
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                  <span className="text-xs text-fg-subtle">
                     protocol unknown
                   </span>
                 )}
@@ -186,7 +186,7 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
         {counts ? (
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <CountChip label="capabilities" value={counts.total} />
-            <span className="text-gray-300 dark:text-gray-600" aria-hidden>
+            <span className="text-fg-faint" aria-hidden>
               ·
             </span>
             {countTiles.map((tile) => (
@@ -202,10 +202,10 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
         {profile.addedVia !== null ? (
           <div
             data-testid="provenance-strip"
-            className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500 dark:border-gray-700/60 dark:text-gray-400"
+            className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs text-fg-muted"
           >
-            <GitBranch className="h-3.5 w-3.5 text-indigo-400" aria-hidden />
-            <span className="font-medium text-gray-600 dark:text-gray-300">Provenance</span>
+            <GitBranch className="h-3.5 w-3.5 text-fg-muted" aria-hidden />
+            <span className="font-medium text-fg-muted">Provenance</span>
             <McpBadge
               tone={mcpProvenanceAddedViaBadge(profile.addedVia).tone}
               title="How this endpoint entered the catalog"
@@ -214,7 +214,7 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
             </McpBadge>
             {profile.versionSeq !== null ? (
               <>
-                <span className="text-gray-300 dark:text-gray-600" aria-hidden>
+                <span className="text-fg-faint" aria-hidden>
                   ·
                 </span>
                 <span>this snapshot via</span>
@@ -230,12 +230,12 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
         ) : null}
 
         {/* Compact trust snapshot — a teaser for the composite trust radar (MCAT-17.4). */}
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500 dark:border-gray-700/60 dark:text-gray-400">
-          <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" aria-hidden />
-          <span className="font-medium text-gray-600 dark:text-gray-300">Trust</span>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs text-fg-muted">
+          <ShieldCheck className="h-3.5 w-3.5 text-fg-muted" aria-hidden />
+          <span className="font-medium text-fg-muted">Trust</span>
           <span>
             Quality grade{' '}
-            <span className="font-semibold text-gray-700 dark:text-gray-200">
+            <span className="font-semibold text-fg">
               {profile.grade ?? '—'}
             </span>
             {profile.score !== null ? ` (${Math.round(profile.score)}/100)` : ''}
@@ -244,19 +244,19 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
             <button
               type="button"
               onClick={onNavigateTrust}
-              className="ml-auto font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+              className="ml-auto rounded-sm font-medium text-accent-fg hover:underline"
             >
               Composite trust radar →
             </button>
           ) : trustHref ? (
             <a
               href={trustHref}
-              className="ml-auto font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+              className="ml-auto rounded-sm font-medium text-accent-fg hover:underline"
             >
               Composite trust radar →
             </a>
           ) : (
-            <span className="ml-auto text-gray-400 dark:text-gray-500">
+            <span className="ml-auto text-fg-subtle">
               Composite trust radar coming soon
             </span>
           )}
@@ -265,12 +265,12 @@ export const ServerProfileCard = React.forwardRef<HTMLElement, ServerProfileCard
         {/* Server instructions, rendered prominently when present. */}
         {profile.instructions ? (
           <div className="mt-4">
-            <h4 className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-gray-900 dark:text-white">
-              <FileText className="h-4 w-4 text-indigo-500" aria-hidden />
+            <h4 className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-fg">
+              <FileText className="h-4 w-4 text-fg-muted" aria-hidden />
               Instructions
             </h4>
-            <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/40">
-              <p className="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-300">
+            <div className="rounded-lg bg-inset p-3">
+              <p className="whitespace-pre-wrap text-sm text-fg-muted">
                 {profile.instructions}
               </p>
             </div>

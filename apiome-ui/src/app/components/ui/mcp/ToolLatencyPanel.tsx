@@ -22,6 +22,7 @@ import * as React from 'react';
 import { AlertTriangle, Gauge, Timer } from 'lucide-react';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
+import { STATUS_TONE_SOFT_CLASS } from '@/app/components/ui/statusVocabulary';
 import { BarSeries, type BarDatum } from '@/app/components/ui/mcp/charts';
 import {
   mcpErrorRateKind,
@@ -42,19 +43,19 @@ interface Props {
 
 /** The endpoint-wide error-rate figure's colour by band — token classes only, no literals in JSX. */
 const ERROR_RATE_TONE: Record<ReturnType<typeof mcpErrorRateKind>, string> = {
-  healthy: 'text-emerald-600 dark:text-emerald-400',
-  watch: 'text-amber-600 dark:text-amber-400',
-  poor: 'text-red-600 dark:text-red-400',
+  healthy: STATUS_TONE_SOFT_CLASS.ok,
+  watch: STATUS_TONE_SOFT_CLASS.warn,
+  poor: STATUS_TONE_SOFT_CLASS.danger,
 };
 
 /** A single latency percentile cell (label + value) in a ranking row. */
 function PercentileCell({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="text-right">
-      <div className="text-2xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+      <div className="text-2xs font-medium uppercase tracking-wider text-fg-subtle">
         {label}
       </div>
-      <div className="tabular-nums text-gray-700 dark:text-gray-200">{mcpFormatMs(value)}</div>
+      <div className="tabular-nums text-fg">{mcpFormatMs(value)}</div>
     </div>
   );
 }
@@ -62,12 +63,12 @@ function PercentileCell({ label, value }: { label: string; value: number | null 
 /** One row of the "slowest tools" ranking: the tool name, its call count, and p50/p95/p99. */
 function SlowestRow({ tool }: { tool: McpToolLatency }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded-md border border-gray-100 bg-white px-3 py-2 text-xs dark:border-gray-800 dark:bg-gray-900/40">
+    <li className="flex items-center justify-between gap-3 rounded-md bg-surface px-3 py-2 text-xs shadow-[inset_0_0_0_1px_var(--border)]">
       <div className="min-w-0">
-        <div className="truncate font-medium text-gray-900 dark:text-gray-100" title={tool.tool_name}>
+        <div className="truncate font-medium text-fg" title={tool.tool_name}>
           {tool.tool_name}
         </div>
-        <div className="text-2xs text-gray-500 dark:text-gray-400">
+        <div className="text-2xs text-fg-muted">
           <span className="tabular-nums">{tool.call_count}</span>{' '}
           {tool.call_count === 1 ? 'call' : 'calls'}
         </div>
@@ -84,12 +85,12 @@ function SlowestRow({ tool }: { tool: McpToolLatency }) {
 /** One row of the "flakiest tools" ranking: the tool name and its error rate + error/call tally. */
 function FlakiestRow({ tool }: { tool: McpToolLatency }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded-md border border-gray-100 bg-white px-3 py-2 text-xs dark:border-gray-800 dark:bg-gray-900/40">
+    <li className="flex items-center justify-between gap-3 rounded-md bg-surface px-3 py-2 text-xs shadow-[inset_0_0_0_1px_var(--border)]">
       <div className="min-w-0">
-        <div className="truncate font-medium text-gray-900 dark:text-gray-100" title={tool.tool_name}>
+        <div className="truncate font-medium text-fg" title={tool.tool_name}>
           {tool.tool_name}
         </div>
-        <div className="text-2xs text-gray-500 dark:text-gray-400">
+        <div className="text-2xs text-fg-muted">
           <span className="tabular-nums">{tool.error_count}</span> of{' '}
           <span className="tabular-nums">{tool.call_count}</span> errored
         </div>
@@ -114,7 +115,7 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Timer className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Timer className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Tool latency unavailable"
         description={error}
       />
@@ -127,7 +128,7 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Timer className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Timer className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No tool calls yet"
         description="No tools on this server have been exercised in the test console recently, so there is no latency or error-rate data to show. Run a tool from the Test tab to start recording it."
       />
@@ -148,19 +149,19 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
       {/* Error-rate headline + call/tool totals over the window. */}
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
         <div>
-          <div className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          <div className="text-xs font-medium uppercase tracking-wider text-fg-muted">
             Error rate
           </div>
           <div className={`text-3xl font-semibold tabular-nums ${ERROR_RATE_TONE[errorRateKind]}`}>
             {mcpFormatErrorRate(reliability.error_rate)}
           </div>
-          <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-0.5 text-xs text-fg-muted">
             over{' '}
-            <span className="font-semibold tabular-nums text-gray-700 dark:text-gray-200">
+            <span className="font-semibold tabular-nums text-fg">
               {reliability.call_count}
             </span>{' '}
             tool {reliability.call_count === 1 ? 'call' : 'calls'} across{' '}
-            <span className="font-semibold tabular-nums text-gray-700 dark:text-gray-200">
+            <span className="font-semibold tabular-nums text-fg">
               {reliability.tool_count}
             </span>{' '}
             {reliability.tool_count === 1 ? 'tool' : 'tools'}
@@ -168,11 +169,11 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          <span className="text-emerald-600 dark:text-emerald-400">
-            <span className="font-semibold tabular-nums">{reliability.success_count}</span> ok
+          <span className={`mcp-tone-figure ${STATUS_TONE_SOFT_CLASS.ok}`}>
+            {reliability.success_count} ok
           </span>
-          <span className="text-red-600 dark:text-red-400">
-            <span className="font-semibold tabular-nums">{reliability.error_count}</span> errored
+          <span className={`mcp-tone-figure ${STATUS_TONE_SOFT_CLASS.danger}`}>
+            {reliability.error_count} errored
           </span>
         </div>
       </div>
@@ -180,8 +181,8 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
       {/* Latency distribution — how the server's tool calls spread across latency ranges. */}
       {hasDistribution ? (
         <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-            <Gauge className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" aria-hidden />
+          <div className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
+            <Gauge className="size-3.5 text-fg-muted" aria-hidden />
             Latency distribution
           </div>
           <BarSeries
@@ -190,7 +191,7 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
             title="Tool-call latency distribution — number of calls per latency range"
             className="h-28"
           />
-          <div className="flex flex-wrap justify-between gap-x-2 text-2xs text-gray-400 dark:text-gray-500">
+          <div className="flex flex-wrap justify-between gap-x-2 text-2xs text-fg-subtle">
             {distribution.map((bar) => (
               <span key={bar.label} className="tabular-nums">
                 {bar.label}
@@ -203,10 +204,10 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
       {/* Slowest / flakiest rankings, side by side on wide viewports. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-            <Timer className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" aria-hidden />
+          <div className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
+            <Timer className="size-3.5 text-fg-muted" aria-hidden />
             Slowest tools
-            <span className="font-normal text-gray-400 dark:text-gray-500">by p95</span>
+            <span className="font-normal text-fg-subtle">by p95</span>
           </div>
           {slowest.length > 0 ? (
             <ul className="space-y-1.5">
@@ -215,16 +216,16 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
               ))}
             </ul>
           ) : (
-            <p className="rounded-md border border-dashed border-gray-200 bg-gray-50/60 px-3 py-3 text-center text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-400">
+            <p className="rounded-md border border-dashed border-border bg-inset px-3 py-3 text-center text-xs text-fg-muted">
               No completed tool calls recorded a latency yet.
             </p>
           )}
         </div>
         <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" aria-hidden />
+          <div className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
+            <AlertTriangle className="size-3.5 text-warn" aria-hidden />
             Flakiest tools
-            <span className="font-normal text-gray-400 dark:text-gray-500">by error rate</span>
+            <span className="font-normal text-fg-subtle">by error rate</span>
           </div>
           {flakiest.length > 0 ? (
             <ul className="space-y-1.5">
@@ -233,7 +234,7 @@ export function ToolLatencyPanel({ reliability, loading, error }: Props) {
               ))}
             </ul>
           ) : (
-            <p className="rounded-md border border-dashed border-emerald-200 bg-emerald-50/60 px-3 py-3 text-center text-xs text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/10 dark:text-emerald-300">
+            <p className="rounded-md bg-ok-soft px-3 py-3 text-center text-xs text-ok-fg">
               No tool has errored in this window.
             </p>
           )}

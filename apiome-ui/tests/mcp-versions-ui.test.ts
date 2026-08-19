@@ -20,6 +20,7 @@ import {
   mcpDiffSelectionForVersion,
   mcpOrderedPair,
   mcpToggleSelection,
+  mcpVersionChangeCountParts,
   mcpVersionCompareFromPayload,
   mcpVersionDateTag,
   mcpVersionListFromPayload,
@@ -226,19 +227,56 @@ describe('mcpChangeCountParts', () => {
 });
 
 describe('mcpChangeStyle', () => {
-  it('color-codes added/removed/modified', () => {
+  // Since HIVE-7.8 (#5325) the three kinds name a *tone* from `ui/statusVocabulary` rather than a
+  // pair of palette classes, so the assertion is the tone rather than the hue: added is `ok`,
+  // removed is the danger the vocabulary answers `breaking` with, and modified is `accent` — the
+  // mockup's green / red / blue, following the reader's theme instead of one light palette.
+  it('files added / removed / modified under the shared status tones', () => {
     expect(mcpChangeStyle('added').badgeVariant).toBe('success');
-    expect(mcpChangeStyle('added').rowClass).toContain('green');
+    expect(mcpChangeStyle('added').tone).toBe('ok');
     expect(mcpChangeStyle('removed').badgeVariant).toBe('error');
-    expect(mcpChangeStyle('removed').rowClass).toContain('red');
+    expect(mcpChangeStyle('removed').tone).toBe('danger');
     expect(mcpChangeStyle('modified').badgeVariant).toBe('default');
-    expect(mcpChangeStyle('modified').rowClass).toContain('blue');
+    expect(mcpChangeStyle('modified').tone).toBe('accent');
+  });
+
+  it('marks a change row with a rule rather than tinting it', () => {
+    // A diff of twelve tinted rows is a wall of colour; the tone lives on the kind badge and on
+    // a 2px leading rule, which is what keeps the JSON under it legible.
+    for (const kind of ['added', 'removed', 'modified'] as const) {
+      const { rowClass } = mcpChangeStyle(kind);
+      expect(rowClass).toContain('border-l-2');
+      expect(rowClass).not.toMatch(/\bbg-/);
+    }
   });
 
   it('falls back to neutral styling for an unknown direction', () => {
     const style = mcpChangeStyle('exploded');
     expect(style.label).toBe('Changed');
     expect(style.badgeVariant).toBe('secondary');
+    expect(style.tone).toBe('neutral');
+  });
+});
+
+describe('mcpVersionChangeCountParts', () => {
+  it('prints the compact +N −N ~N triple, zeros included', () => {
+    const parts = mcpVersionChangeCountParts({ added: 3, removed: 0, modified: 2, total: 5 });
+    expect(parts.map((p) => p.label)).toEqual(['+3', '−0', '~2']);
+  });
+
+  it('takes the same three tones the compare header uses', () => {
+    const counts = { added: 1, removed: 1, modified: 1, total: 3 };
+    const compare = mcpVersionCompareFromPayload({
+      base: { id: 'b', version_seq: 1 },
+      target: { id: 't', version_seq: 2 },
+      fingerprint_changed: false,
+      counts,
+      changes: [],
+    }) as McpVersionCompare;
+    const header = Object.fromEntries(mcpChangeCountParts(compare).map((p) => [p.key, p.colorClass]));
+    for (const part of mcpVersionChangeCountParts(counts)) {
+      expect(part.colorClass).toBe(header[part.key]);
+    }
   });
 });
 

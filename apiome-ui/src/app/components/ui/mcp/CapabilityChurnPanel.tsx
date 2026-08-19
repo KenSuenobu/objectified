@@ -46,7 +46,7 @@ function LegendSwatch({ toneKey, label }: { toneKey: string; label: string }) {
     toneKey === 'added' ? 'green' : toneKey === 'removed' ? 'red' : 'blue',
   );
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
+    <span className="inline-flex items-center gap-1.5 text-xs text-fg-muted">
       <svg viewBox="0 0 10 10" className="h-2.5 w-2.5" aria-hidden>
         <rect x={0} y={0} width={10} height={10} rx={2} className={style.fillClass} />
       </svg>
@@ -68,7 +68,7 @@ export function CapabilityChurnPanel({ series, loading, error, onSelectVersion }
     return (
       <EmptyState
         variant="compact"
-        icon={<GitCompareArrows className="h-8 w-8 text-white" aria-hidden />}
+        icon={<GitCompareArrows className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Churn timeline unavailable"
         description={error}
       />
@@ -79,7 +79,7 @@ export function CapabilityChurnPanel({ series, loading, error, onSelectVersion }
     return (
       <EmptyState
         variant="compact"
-        icon={<GitCompareArrows className="h-8 w-8 text-white" aria-hidden />}
+        icon={<GitCompareArrows className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No history yet"
         description="This endpoint has no recorded snapshots to chart. Run discovery to start building its evolution history."
       />
@@ -98,12 +98,12 @@ export function CapabilityChurnPanel({ series, loading, error, onSelectVersion }
           <LegendSwatch toneKey="removed" label="Removed" />
           <LegendSwatch toneKey="modified" label="Modified" />
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          <span className="font-semibold tabular-nums text-gray-900 dark:text-white">
+        <span className="text-xs text-fg-muted">
+          <span className="font-semibold tabular-nums text-fg">
             {timeline.totalChurn}
           </span>{' '}
           {timeline.totalChurn === 1 ? 'change' : 'changes'} across{' '}
-          <span className="font-semibold tabular-nums text-gray-900 dark:text-white">
+          <span className="font-semibold tabular-nums text-fg">
             {series.length}
           </span>{' '}
           {series.length === 1 ? 'snapshot' : 'snapshots'}
@@ -124,7 +124,7 @@ export function CapabilityChurnPanel({ series, loading, error, onSelectVersion }
         <button
           type="button"
           onClick={() => onSelectVersion(busiest.version_id)}
-          className="flex w-full items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-800 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-200 dark:hover:bg-amber-900/30"
+          className="flex w-full items-center gap-2 rounded-md bg-warn-soft px-3 py-2 text-left text-xs text-warn-fg transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warn"
         >
           <Zap className="h-3.5 w-3.5 shrink-0" aria-hidden />
           <span>
@@ -137,8 +137,8 @@ export function CapabilityChurnPanel({ series, loading, error, onSelectVersion }
         </button>
       ) : null}
 
-      <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-        <MousePointerClick className="h-3.5 w-3.5 shrink-0 text-indigo-400" aria-hidden />
+      <p className="flex items-center gap-1.5 text-xs text-fg-muted">
+        <MousePointerClick className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden />
         Select a version to open its diff in the version history.
       </p>
     </div>

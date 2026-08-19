@@ -43,15 +43,15 @@ function GraphLegend({ graph }: { graph: McpCapabilityGraph }) {
       {entries.map((entry) => {
         const style = GRAPH_KIND_STYLES[entry.kind];
         return (
-          <li key={entry.kind} className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
+          <li key={entry.kind} className="flex items-center gap-1.5 text-xs text-fg-muted">
             <span
               className="inline-block h-3 w-3 rounded-sm border"
               // Legend swatches use the same per-kind palette the Mermaid nodes do (see module note).
               style={{ backgroundColor: style.fillLight, borderColor: style.strokeLight }}
               aria-hidden
             />
-            <span className="font-medium text-gray-700 dark:text-gray-200">{entry.label}</span>
-            <span className="tabular-nums text-gray-400 dark:text-gray-500">{entry.count}</span>
+            <span className="font-medium text-fg">{entry.label}</span>
+            <span className="tabular-nums text-fg-subtle">{entry.count}</span>
           </li>
         );
       })}
@@ -134,7 +134,7 @@ export function CapabilityGraphPanel({ graph, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Share2 className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Share2 className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Graph unavailable"
         description={error}
       />
@@ -146,7 +146,7 @@ export function CapabilityGraphPanel({ graph, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<Share2 className="h-8 w-8 text-white" aria-hidden />}
+        icon={<Share2 className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No capabilities to map"
         description="This snapshot declares no tools, resources, or prompts, so there is nothing to relate."
       />
@@ -157,19 +157,19 @@ export function CapabilityGraphPanel({ graph, loading, error }: Props) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <GraphLegend graph={graph} />
-        <p className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+        <p className="text-xs text-fg-muted tabular-nums">
           {graph.node_count} {graph.node_count === 1 ? 'node' : 'nodes'} · {graph.edge_count}{' '}
           {graph.edge_count === 1 ? 'edge' : 'edges'}
         </p>
       </div>
 
       {renderError ? (
-        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+        <div className="flex items-center gap-2 rounded-lg bg-danger-soft p-3 text-sm text-danger-fg">
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
           <span>{renderError}</span>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+        <div className="overflow-x-auto rounded-lg bg-inset p-4 shadow-[inset_0_0_0_1px_var(--border)]">
           {/* Mermaid emits a self-contained SVG; render it inline. Source is sanitized + securityLevel:strict. */}
           <div
             className="flex min-w-fit justify-center [&_svg]:h-auto [&_svg]:max-w-none"
@@ -181,13 +181,13 @@ export function CapabilityGraphPanel({ graph, loading, error }: Props) {
       )}
 
       {graph.edge_count === 0 ? (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-fg-muted">
           No relationships were inferred — every capability stands on its own. Edges appear only when a
           concrete signal (a prompt naming a tool, a tool referencing a resource URI, or a shared schema
           type) is present.
         </p>
       ) : graph.isolated_count > 0 ? (
-        <p className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+        <p className="text-xs text-fg-muted tabular-nums">
           {graph.isolated_count}{' '}
           {graph.isolated_count === 1 ? 'capability is isolated' : 'capabilities are isolated'} — shown
           with no edges because no concrete relationship signal was found.

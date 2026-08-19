@@ -14,7 +14,18 @@
  * 2. **Skipped-rule visibility.** A rule with no evidence was *not* evaluated. {@link parsePostureReport}
  *    keeps `skippedRules` / `skipReasons` so the panel can show the coverage gaps instead of letting
  *    an unscanned lane read as clean.
+ *
+ * HIVE-7.8 (#5325) moved the two chip helpers onto `ui/statusVocabulary`. They were six pairs of
+ * Tailwind palette classes, so a posture `error` was a different red from the lint tab's MUST and
+ * from the discovery job that failed on the tab beside it; each now names the tone it *is* and
+ * the shared table answers.
  */
+
+import {
+  STATUS_TONE_SOFT_CLASS,
+  statusTone,
+  type StatusTone,
+} from '@/app/components/ui/statusVocabulary';
 
 export type PostureExploitability = 'static_signal' | 'proven' | string;
 export type PostureOrigin = 'metadata' | 'source' | 'dependency' | 'protocol' | string;
@@ -145,30 +156,54 @@ export function exploitabilityLabel(exploitability: PostureExploitability): stri
 
 /** CSS classes for a severity chip (token utilities only — no hard-coded colors). */
 export function severityChipClass(severity: PostureSeverity): string {
-  switch (severity) {
-    case 'error':
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300';
-    case 'warning':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-    case 'info':
+  return STATUS_TONE_SOFT_CLASS[postureSeverityTone(severity)];
+}
+
+/**
+ * The tone a posture finding's severity resolves to (HIVE-7.8, #5325).
+ *
+ * The three severities are already vocabulary strings — `error`, `warning`, `info` — so the
+ * shared table answers all three, which is what makes a posture error the same red as a lint
+ * MUST and a failed discovery job two tabs away. They were three pairs of palette classes
+ * (`bg-rose-100 text-rose-800 dark:bg-rose-900/40 …`) until this ticket.
+ *
+ * @param severity The finding's severity.
+ * @returns The status tone.
+ */
+export function postureSeverityTone(severity: PostureSeverity): StatusTone {
+  return statusTone(severity);
+}
+
+/**
+ * The tone a finding's evidence lane resolves to.
+ *
+ * Not a status — a *kind* — so it does not come from the vocabulary table; what it does take
+ * from the vocabulary is the token layer, so the four lanes follow the reader's theme. Source
+ * is violet for the reason `private` and `false_positive` are: it records where a claim came
+ * from, not how bad it is. Protocol is accent, the tone the vocabulary spends on
+ * "informational, observed"; a dependency is `ok`'s green because it is the one lane that
+ * reads a real manifest; and metadata — what the server said about itself — is neutral.
+ *
+ * @param origin The evidence lane.
+ * @returns The status tone.
+ */
+export function postureOriginTone(origin: PostureOrigin): StatusTone {
+  switch (origin) {
+    case 'source':
+      return 'violet';
+    case 'dependency':
+      return 'ok';
+    case 'protocol':
+      return 'accent';
+    case 'metadata':
     default:
-      return 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300';
+      return 'neutral';
   }
 }
 
 /** CSS classes for an origin chip, so a reader can tell a claim from code at a glance. */
 export function originChipClass(origin: PostureOrigin): string {
-  switch (origin) {
-    case 'source':
-      return 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300';
-    case 'dependency':
-      return 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300';
-    case 'protocol':
-      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300';
-    case 'metadata':
-    default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
-  }
+  return STATUS_TONE_SOFT_CLASS[postureOriginTone(origin)];
 }
 
 /** Normalize the REST / proxy trust-posture payload into a typed report. */

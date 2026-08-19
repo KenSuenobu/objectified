@@ -86,7 +86,7 @@ export function TrustDriftAlertsPanel({ endpointId }: Props) {
   if (state.noBaseline) {
     return (
       <EmptyState
-        icon={<ShieldQuestion className="h-8 w-8 text-white" aria-hidden />}
+        icon={<ShieldQuestion className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No approved baseline yet"
         description="Approve a trust baseline for this endpoint to start catching drift, shadowing, and trust regressions against what you blessed."
       />
@@ -95,7 +95,7 @@ export function TrustDriftAlertsPanel({ endpointId }: Props) {
   if (state.error || !state.report) {
     return (
       <EmptyState
-        icon={<ShieldAlert className="h-8 w-8 text-white" aria-hidden />}
+        icon={<ShieldAlert className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Drift unavailable"
         description={state.error ?? 'The drift report could not be loaded.'}
       />
@@ -106,7 +106,7 @@ export function TrustDriftAlertsPanel({ endpointId }: Props) {
   if (report.unchanged || report.changes.length === 0) {
     return (
       <EmptyState
-        icon={<ShieldCheck className="h-8 w-8 text-white" aria-hidden />}
+        icon={<ShieldCheck className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No drift from the approved baseline"
         description="Nothing trust-relevant has moved since this endpoint's baseline was approved."
       />
@@ -136,17 +136,17 @@ export function TrustDriftAlertsPanel({ endpointId }: Props) {
         {report.changes.map((change, index) => (
           <li
             key={`${change.component}:${change.path}:${index}`}
-            className="rounded-md border border-gray-200 p-2 dark:border-gray-800"
+            className="rounded-md p-2 shadow-[inset_0_0_0_1px_var(--border)]"
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className={`${CHIP_BASE} ${driftCategoryClass(change.category)}`}>
                 {driftCategoryLabel(change.category)}
               </span>
-              <span className="font-mono text-xs text-gray-600 dark:text-gray-400">
+              <span className="font-mono text-xs text-fg-muted">
                 {change.component}:{change.path}
               </span>
             </div>
-            <p className="mt-1 text-sm text-gray-800 dark:text-gray-200">{change.summary}</p>
+            <p className="mt-1 text-sm text-fg">{change.summary}</p>
           </li>
         ))}
       </ul>

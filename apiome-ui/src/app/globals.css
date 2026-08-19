@@ -25876,3 +25876,857 @@ button.cid-entity__head {
     display: inline-flex;
   }
 }
+
+/* ==========================================================================
+   MCP ENDPOINT DETAIL  (HIVE-7.8, #5325)
+   --------------------------------------------------------------------------
+   `docs/mockups/sources/mcp-endpoint.html`, whose page-local `<style>` block
+   this replaces (`.cap-card`, `.disclosure`, `.insight-rail`, `.matrix`,
+   `.cell-mark`, `.stack-col`, `.kv-row`, `.diff-grid`, `.settings-grid`)
+   together with the palette classes the six screens on this route had grown:
+   the capability card's `border-indigo-400 bg-indigo-50 ring-2
+   ring-indigo-400` deep-link ring over a `border-gray-200 bg-white
+   dark:bg-gray-800` frame, the insight rail's `text-gray-400
+   group-data-[state=active]:text-indigo-600` glyphs and its `border-gray-200`
+   edge, the export menu's `hover:bg-indigo-50` items, the version timeline's
+   `border-indigo-400 bg-indigo-50` ticked row and its `text-green-600` /
+   `text-red-600` / `text-blue-600` change counts, the diff toggle's
+   `bg-indigo-100 text-indigo-700` segment, the lint bars' `bg-gray-200`
+   track, the settings form's `text-red-500` requirement stars, its
+   `text-amber-600` unsaved dot and the `border-red-200 bg-red-50/60` danger
+   panel, the notes panel's fourteen amber classes, and the trust-posture
+   panel's `border-sky-200 bg-sky-50 text-sky-900` note.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons every Epic-5 to Epic-7.7 block above gives. Every
+   rule leans on the density and font-scale tokens; the insight rail, the
+   settings grid, the versions split, the lint split and the diff pair are
+   real grids that a utility string spells badly; and the quiet lines have to
+   sit *after* the unlayered `h1`-`h4` and `p` base rules near line 2497,
+   which outrank anything in `@layer utilities`.
+
+   The mockup froze eight things in pixels that must not be frozen: the 240px
+   insight rail, its `top: 140px` sticky offset, the 300px lint category rail
+   with its own `top: 150px`, the 360px version timeline, the 320px complexity
+   column, the 22px cell mark, the 130px trust-axis label and the 110px lint
+   meter label. All are `rem`, a token or an intrinsic grid here, so all six
+   font scales and both densities hold.
+
+   No hue is named below. Every colour is a token, so the surface follows all
+   nine themes. No status is named either: the grade, the health pill, the
+   change kinds and the finding tiers all resolve through
+   `ui/statusVocabulary`, and the marks that carry a tone take the class the
+   component passes in.
+
+   Four measured deviations, and one stated limit:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which
+     measures about 3.1:1 against the canvas at these sizes - the call
+     HIVE-3.5 and every Epic-5 block already made. `--fg-faint` survives on
+     one mark only: the "absent" cell of the presence matrix, which is
+     decorative (the row's own legend and its `sr-only` cell text both say
+     "absent" in words);
+   * a hovered capability card and a hovered timeline row land on
+     `--bg-inset`, not the mockup's `--bg-subtle`. Both carry `--fg-muted`
+     sub-lines, which measure 4.35:1 on `--bg-subtle` in Solarized and 5.02:1
+     on `--bg-inset` - the finding HIVE-6.5 recorded and HIVE-7.4, HIVE-7.7
+     each hit again on their own hover;
+   * the deep-linked capability card is an `--accent` *hairline* over the
+     surface, not the mockup's `box-shadow: 0 0 0 2px var(--accent) inset`
+     over an accent fill. `--fg-muted` on `--accent-soft` measures 3.86:1 in
+     Solarized, so a card whose mono identifier stayed muted on a tinted
+     ground would fail; the hairline is 4.07:1 as a mark in every theme, and
+     the card announces itself in words as well (`aria-current`);
+   * the "Proposed" marker on the trust-posture tab is honey, which is the one
+     place on this route honey is spent. DESIGN.md §3.1 gives honey to `new`
+     and accent to `preview`; a tab that exists as a *proposal* is neither
+     shipped nor previewable, so it takes the brand-ornament tone the mockup
+     draws (`badge--honey`) rather than borrowing `preview`'s accent.
+
+   Two stated limits, both measured by the browser sweep this ticket adds:
+
+   * `.mcp-ep-danger`'s frame measures 2.46:1 in Nord as a 1px inset against
+     the surface, the figure HIVE-7.5 recorded for its own danger zone and
+     HIVE-7.7 for its unreachable card. So it is emphasis and never the only
+     signal - the panel's heading prints "Danger zone" in words, its button is
+     `variant="destructive"`, and deleting still requires the word DELETE typed
+     into a dialog;
+   * that button's own fill is the one blocking axe node on this route, and it
+     belongs to `ui/Button` rather than here. `VARIANT_DANGER` is `bg-danger
+     text-fg-on-accent`, and `--fg-on-accent` is a fixed `#FFFFFF` in every
+     appearance while `--danger` is a *light* red in the dark ones: white on it
+     is 2.99:1 in Dark, 2.50:1 in High contrast, 4.09:1 in Nord and 2.77:1 in
+     Darcula. Swapping the ink does not fix it either - no single on-fill ink
+     clears AA on every role fill in every theme (in Nord `--danger` is 4.09:1
+     against white and 3.05:1 against that theme's own dark ink; in Solarized
+     `--violet` is 5.62:1 against white and 2.67:1 against it). A correct answer
+     is a per-role, per-theme ink token that nothing in the interface has yet,
+     which is the conclusion `.rol-perm` above already records for its granted
+     permission cell. `e2e/hive-mcp-endpoint.spec.ts` allows that one node by
+     name and nothing else, so the limit stays bounded and visible.
+
+   Nine classes are borrowed rather than restated: `.mono` (HIVE-1.4),
+   `.hive-stat` / `.hive-stat-grid` / `.hive-progress` (HIVE-2.6),
+   `.table-density` (HIVE-1.6), `ui/Card`'s surface, `ui/Segmented`'s track,
+   `ui/Badge`'s pill, `ui/Alert`'s tinted strip and `ui/code/Disclosure`'s
+   frame.
+   ========================================================================== */
+
+/* ---- The page header's meta row ----------------------------------------
+   `PageHeader`'s own `meta` slot is already a wrapping flex row, so the only
+   thing left to state is the endpoint URL that leads it. `anywhere`, because
+   a long path has no spaces to break at and this line must never be what
+   makes the document scroll sideways at 1280px. */
+.mcp-ep-meta__url {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The selected tab's panel. A column with the body's own inner rhythm, so a
+   panel that stacks four cards spaces them exactly as the page does. */
+.mcp-ep-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+/* ---- Cataloger commentary ----------------------------------------------
+   The one honey moment on this route (DESIGN.md §2: honey is a brand
+   ornament). It is spent here deliberately - these notes are the only thing
+   on the screen a *human* wrote, and the wash is what separates them from the
+   surface the MCP server reported. `ui/Card`'s `honey` variant draws the
+   gradient; what follows is the layout inside it. */
+.mcp-notes__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--card-pad);
+  border-block-end: 1px solid var(--border);
+}
+
+.mcp-notes__title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+/* The sticky-note glyph. `--fg-muted`, not honey: the brand moment on this
+   panel is `ui/Card`'s `honey` variant, whose wash is behind everything here,
+   and honey drawn *on* that wash measures 1.70:1 in the light theme and
+   2.15:1 in Blueprint - under even the 3:1 a non-text mark is held to. One
+   honey per panel, and it is the ground rather than the glyph. */
+.mcp-notes__glyph {
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  color: var(--fg-muted);
+}
+
+.mcp-notes__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--card-pad);
+}
+
+/* One note: the surface lifted out of the wash, so the note itself reads as
+   the object and the honey as the region it sits in. */
+.mcp-note {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.mcp-note__text {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mcp-note__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.mcp-note__actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-1);
+}
+
+/* The composer's action row, right-aligned as the mockup draws it. */
+.mcp-note__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+/* ---- A figure that carries a tone ---------------------------------------
+   The measurement behind this class, and the reason it is a chip rather than
+   coloured text.
+
+   Only `:root` and `[data-theme="dark"]` recalibrate the semantic
+   `-soft`/`-fg` pairs; the other seven appearances inherit the *light* inks.
+   So `--ok-fg` drawn straight onto a card measures 3.22:1 in High contrast,
+   2.32:1 in Blueprint, 1.99:1 in Solarized, 1.54:1 in Nord and 1.94:1 in
+   Darcula — the same exposure HIVE-7.7 recorded for the health pill. The
+   saturated step is no better: `--danger` on a surface is 2.81:1 in Solarized
+   and 2.46:1 in Nord, under even the 3:1 floor a non-text mark is held to.
+
+   There is therefore no red, amber or green in the token layer that reads as
+   *text* on a plain surface in all nine appearances. A `-fg` ink on its own
+   `-soft` ground clears AA in every one of them, which is what
+   `.badge[data-status]` has always been — so a figure that carries a tone
+   wears the pair, exactly as `.lw-tile__callout` (HIVE-5.8) does.
+
+   The caller supplies the pair; this supplies the shape. */
+.mcp-tone-figure {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-inline: var(--space-1);
+  border-radius: var(--r-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The headline form — the availability percentage, the error rate, a band
+   score. Same pair, one step of air and the stat type scale. */
+.mcp-tone-figure--lead {
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-2xl);
+}
+
+/* ---- Capability items ---------------------------------------------------
+   The mockup's `.cap-card`: not cards at all, but rows of one card separated
+   by hairlines. Keeping them as one surface is what lets twelve tools read as
+   a list rather than as twelve competing objects.
+
+   `overflow: hidden` on the list, not on the card: the last row's hover fill
+   would otherwise square off the corners its card has rounded. */
+.mcp-cap-list {
+  overflow: hidden;
+  border-end-start-radius: var(--r-lg);
+  border-end-end-radius: var(--r-lg);
+}
+
+.mcp-cap-list > * + * {
+  border-block-start: 1px solid var(--border);
+}
+
+.mcp-cap-item {
+  padding: var(--space-3) var(--card-pad);
+  scroll-margin-block-start: 6rem;
+  transition: background-color var(--dur-fast) ease-out, box-shadow var(--dur-fast) ease-out;
+}
+
+.mcp-cap-item:hover {
+  background: var(--bg-inset);
+}
+
+/* Followed from a lint finding or a score breakdown. An accent hairline over
+   the surface, not the mockup's accent *fill* - see the block header. The
+   ring retires itself after a few seconds; `aria-current` carries the same
+   fact to a reader who cannot see it. */
+.mcp-cap-item[data-highlighted] {
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.mcp-cap-item__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mcp-cap-item__name {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+/* The tool's dotted name or the resource's URI. `anywhere` for the same
+   reason the header's URL takes it. */
+.mcp-cap-item__id {
+  margin-block-start: 0.125rem;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.mcp-cap-item__desc {
+  margin: var(--space-2) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.mcp-cap-item__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+}
+
+/* Resources / templates / prompts sit two-up beside the tools list on a wide
+   viewport, one column below it. Intrinsic, so there is no breakpoint to
+   maintain and the Largest scale folds on its own. */
+.mcp-cap-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  align-items: start;
+  gap: var(--space-4);
+}
+
+/* ---- The insight rail ---------------------------------------------------
+   Fourteen views is far too many for a tab strip, so they stack in a rail on
+   a wide viewport and scroll as a strip on a narrow one. The rail sticks, so
+   a reader three screens down a churn timeline can still reach Peer ranking.
+
+   `--space-4` rather than the mockup's `top: 140px`: the offset is measured
+   from the *scroller*, which is `.page` and already begins under the sticky
+   page header, so a second header's worth of offset would push the rail's
+   first item off the top at the Compact density. */
+.mcp-insight {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.mcp-insight__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.mcp-insight__rail {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  border-block-end: 1px solid var(--border);
+}
+
+/* A group of rail items. `contents` on a narrow viewport, so its buttons flow
+   straight into the horizontal strip and the group's label drops out. */
+.mcp-insight__group {
+  display: contents;
+}
+
+.mcp-insight__group-label {
+  display: none;
+  margin: var(--space-3) 0 var(--space-1);
+  padding-inline: var(--space-3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* The rail item's leading glyph. Sized from the item's own type so it keeps
+   its proportion through all six font scales. */
+.mcp-insight__glyph {
+  flex-shrink: 0;
+  inline-size: var(--fs-md);
+  block-size: var(--fs-md);
+  color: var(--fg-muted);
+}
+
+[data-state='active'] > .mcp-insight__glyph {
+  color: var(--accent);
+}
+
+.mcp-insight__panel {
+  min-inline-size: 0;
+}
+
+@media (min-width: 64rem) {
+  .mcp-insight {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  }
+
+  .mcp-insight__head {
+    grid-column: 1 / -1;
+  }
+
+  .mcp-insight__rail {
+    position: sticky;
+    inset-block-start: var(--space-4);
+    flex-direction: column;
+    align-items: stretch;
+    overflow: visible;
+    border-block-end: 0;
+    border-inline-start: 1px solid var(--border);
+  }
+
+  .mcp-insight__group {
+    display: block;
+  }
+
+  .mcp-insight__group-label {
+    display: block;
+  }
+}
+
+/* ---- The export-report menu --------------------------------------------
+   hive.css §16 `.menu`, as the Insight tab's report export needs it. It was a
+   `<details>` with an absolutely positioned `<div>`, which is a menu that does
+   not trap focus, does not close on Escape and does not answer the arrow keys;
+   this is Radix's, on the same surface `.tnt-menu` (HIVE-5.1) draws. */
+.mcp-menu {
+  z-index: 50;
+  min-inline-size: 16rem;
+  padding: var(--space-1);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border), var(--shadow-lg);
+}
+
+.mcp-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.375rem var(--space-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.mcp-menu__item > svg {
+  flex-shrink: 0;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--fg-muted);
+}
+
+.mcp-menu__item[data-highlighted],
+.mcp-menu__item:hover {
+  background: var(--bg-subtle);
+}
+
+.mcp-menu__item[data-disabled] {
+  color: var(--fg-faint);
+  cursor: not-allowed;
+}
+
+/* The "include cataloger commentary" checkbox row, which is a *setting* the
+   three download items read rather than an action of its own. */
+.mcp-menu__note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-block-end: 1px solid var(--border);
+  margin-block-end: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+/* An export that failed. The sentence is the message; see
+   `.mcp-ep-danger__title` for why it is not red text. */
+.mcp-menu__error {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-1) var(--space-2);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+/* ---- Key/value rows ----------------------------------------------------
+   The mockup's `.kv-row`: a divided list used by the digest, the trust drift
+   alerts, the trust axes and the peer ranking. One rule, four panels. */
+.mcp-kv {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mcp-kv__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) 0;
+  border-block-start: 1px solid var(--border);
+  font-size: var(--fs-sm);
+}
+
+.mcp-kv__row:first-child {
+  border-block-start: 0;
+}
+
+/* The axis name in the trust and peer lists. `rem`, not the mockup's 130px /
+   140px, so the column grows with the font-size preference. */
+.mcp-kv__term {
+  flex-shrink: 0;
+  inline-size: 9rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.mcp-kv__note {
+  flex: 1 1 12rem;
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Matrix cells ------------------------------------------------------
+   The presence matrix and the safety-annotation matrix both draw a grid of
+   one-glyph cells. The mark carries a tone; the cell's own `sr-only` text
+   carries the same fact in words, because a coloured square is never the only
+   signal (DESIGN.md §6). */
+.mcp-matrix th,
+.mcp-matrix td {
+  text-align: center;
+}
+
+.mcp-matrix th:first-child,
+.mcp-matrix td:first-child {
+  text-align: start;
+}
+
+/* `em`, not the mockup's 22px: the mark scales with the table's own type. */
+.mcp-cell-mark {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.75em;
+  block-size: 1.75em;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+}
+
+/* Present: no fill at all, and the page's quiet ink. A capability that is
+   merely *still there* should not shout as loudly as one that arrived, and the
+   mockup's answer - the added tone at a third of its tint - puts an `-fg` ink
+   on a ground far weaker than the `-soft` it is calibrated against (1.5-3.2:1
+   in the seven appearances that inherit the light pairs; see
+   `.mcp-tone-figure`). The glyph is the difference: `+` arrived, dot is still
+   here, and each cell states which in its own `sr-only` text. */
+.mcp-cell-mark[data-mark='present'] {
+  color: var(--fg-muted);
+}
+
+/* Not declared / absent. The one surviving `--fg-faint` on this route, and
+   decorative: the legend and the cell's own `sr-only` label both say it. */
+.mcp-cell-mark[data-mark='absent'] {
+  color: var(--fg-faint);
+}
+
+/* Declared false - an outline, so "the server said no" reads differently from
+   "the server said nothing". */
+.mcp-cell-mark[data-mark='false'] {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* ---- Versions: the timeline beside the diff ---------------------------- */
+.mcp-versions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
+}
+
+@media (min-width: 64rem) {
+  .mcp-versions {
+    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+  }
+}
+
+/* Same rounding trick as `.mcp-cap-list`, for the same reason. */
+.mcp-timeline {
+  overflow: hidden;
+  border-end-start-radius: var(--r-lg);
+  border-end-end-radius: var(--r-lg);
+}
+
+.mcp-timeline > * + * {
+  border-block-start: 1px solid var(--border);
+}
+
+.mcp-timeline__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--card-pad);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease-out;
+}
+
+.mcp-timeline__row:hover {
+  background: var(--bg-inset);
+}
+
+/* Ticked into the compare selection: an accent hairline over the surface, not
+   the mockup's accent *fill* and not `ui/Card`'s `selected` tint. The row
+   carries a `--fg-muted` sub-line, which measures 3.86:1 on `--accent-soft` in
+   Solarized — the figure HIVE-7.7 recorded for the same pair and the browser
+   sweep caught here. The hairline is 4.07:1 as a mark in every appearance, and
+   the row's checkbox says the same thing to a reader who cannot see it. */
+.mcp-timeline__row[data-selected] {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.mcp-timeline__main {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.mcp-timeline__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mcp-timeline__sub {
+  margin-block-start: 0.125rem;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The +N -N ~N triple. Tabular, so five rows of counts line up as a column. */
+.mcp-timeline__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The compare bar: base, a glyph, target. One column below the width at which
+   either select would have to truncate its longest option. */
+.mcp-compare-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.mcp-compare-bar__glyph {
+  display: none;
+  padding-block-end: var(--space-2);
+  color: var(--fg-muted);
+}
+
+@media (min-width: 40rem) {
+  .mcp-compare-bar {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .mcp-compare-bar__glyph {
+    display: block;
+  }
+}
+
+/* One change in the diff: its kind, its path, and the disclosure under it. */
+.mcp-change {
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.mcp-change__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+.mcp-change__path {
+  min-inline-size: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.mcp-change__fields {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Lint & score: the category rail beside the findings ---------------- */
+.mcp-lint {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
+}
+
+@media (min-width: 64rem) {
+  .mcp-lint {
+    grid-template-columns: minmax(0, 19rem) minmax(0, 1fr);
+  }
+
+  .mcp-lint__rail {
+    position: sticky;
+    inset-block-start: var(--space-4);
+  }
+}
+
+/* One lint finding. The tier's tone is on its badge, not on the row: a wall
+   of tinted rows is unreadable, and the badge is where a reader looks. */
+.mcp-finding {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.mcp-finding__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mcp-finding__message {
+  margin: var(--space-1) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* ---- Settings: the label column beside the panel ------------------------
+   The mockup's `.settings-grid`, at `minmax(0,1fr) minmax(0,2fr)`. */
+.mcp-settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 64rem) {
+  .mcp-settings-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: var(--space-6);
+  }
+}
+
+/* The identity form: two columns of fields, one below `sm`. */
+.mcp-settings-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+}
+
+.mcp-settings-fields__wide {
+  grid-column: 1 / -1;
+}
+
+.mcp-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--border);
+}
+
+/* "Unsaved changes", pushed to the leading edge as the mockup draws it. The
+   dot carries the tone and the words carry the message, for the reason
+   `.mcp-ep-danger__title` records. */
+.mcp-settings-actions__dirty {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-end: auto;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* The danger zone's frame. Emphasis, never the only signal - see the block
+   header's stated limit. */
+.mcp-ep-danger {
+  box-shadow: inset 0 0 0 1px var(--danger), var(--shadow-sm);
+}
+
+/* The heading is `--fg` with a `--danger` glyph, not the mockup's `t-danger`
+   text. `--danger-fg` on the canvas measures 3.06:1 in High contrast, 2.43:1
+   in Blueprint, 2.19:1 in Solarized, 1.82:1 in Nord and 2.06:1 in Darcula, and
+   the saturated step is no better as text - see `.mcp-tone-figure`. The words
+   "Danger zone" are the message; the colour is emphasis, exactly as
+   `.prm-error` and `.prm-caution` (HIVE-6.2) settled it. */
+.mcp-ep-danger__title {
+  color: var(--fg);
+}
+
+.mcp-ep-danger__title > svg {
+  color: var(--danger);
+}
+
+/* A row of "one fact, one action", used by the lifecycle and danger panels. */
+.mcp-ep-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* ---- Trust posture (the proposed tab) ---------------------------------- */
+.mcp-posture__finding {
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.mcp-posture__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mcp-posture__message {
+  margin: var(--space-2) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.mcp-posture__remediation {
+  margin: var(--space-2) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The two coverage cards under the findings. */
+.mcp-posture__coverage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-3);
+}

@@ -23,6 +23,8 @@ import * as React from 'react';
 import { AlertTriangle, Check, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
+import { STATUS_TONE_SOFT_CLASS } from '@/app/components/ui/statusVocabulary';
+import { STATUS_TONE_SOLID_CLASS } from '@/app/components/ui/statusVocabulary';
 import { McpBadge } from '@/app/components/ui/mcp/McpBadge';
 import type { McpBadgeTone } from '@/app/components/ade/dashboard/mcp/mcpUiPrimitives';
 import type { McpCapabilityItem } from '@/app/components/ade/dashboard/mcp/mcpBrowseUi';
@@ -47,13 +49,13 @@ interface Props {
 
 /** Solid fill classes for an *asserted* matrix cell, keyed by the hint's tone token. */
 const CELL_ASSERTED_CLASS: Record<McpBadgeTone, string> = {
-  green: 'bg-emerald-500 text-white dark:bg-emerald-500',
-  red: 'bg-red-500 text-white dark:bg-red-500',
-  blue: 'bg-blue-500 text-white dark:bg-blue-500',
-  amber: 'bg-amber-500 text-white dark:bg-amber-500',
-  indigo: 'bg-indigo-500 text-white dark:bg-indigo-500',
-  violet: 'bg-violet-500 text-white dark:bg-violet-500',
-  slate: 'bg-slate-500 text-white dark:bg-slate-500',
+  green: STATUS_TONE_SOLID_CLASS.ok,
+  red: STATUS_TONE_SOLID_CLASS.danger,
+  blue: STATUS_TONE_SOLID_CLASS.accent,
+  amber: STATUS_TONE_SOLID_CLASS.warn,
+  indigo: STATUS_TONE_SOLID_CLASS.accent,
+  violet: STATUS_TONE_SOLID_CLASS.violet,
+  slate: STATUS_TONE_SOLID_CLASS.neutral,
 };
 
 /** Human phrasing for a cell's tri-state, used in each cell's `aria-label` for screen readers. */
@@ -87,7 +89,7 @@ function MatrixCell({
   if (state === 'denied') {
     return (
       <span
-        className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500"
+        className="inline-flex size-6 items-center justify-center rounded-md text-xs font-medium text-fg-faint shadow-[inset_0_0_0_1px_var(--border)]"
         role="img"
         aria-label={label}
         title={label}
@@ -98,7 +100,7 @@ function MatrixCell({
   }
   return (
     <span
-      className="inline-flex h-6 w-6 items-center justify-center text-gray-300 dark:text-gray-600"
+      className="inline-flex h-6 w-6 items-center justify-center text-fg-faint"
       role="img"
       aria-label={label}
       title={label}
@@ -118,10 +120,10 @@ function HintMatrix({ rows }: { rows: readonly McpToolSafetyRow[] }) {
           declared.
         </caption>
         <thead>
-          <tr className="border-b border-gray-200 dark:border-gray-700">
+          <tr className="border-b border-border">
             <th
               scope="col"
-              className="py-2 pr-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+              className="py-2 pr-3 text-left text-xs font-medium uppercase tracking-wider text-fg-muted"
             >
               Tool
             </th>
@@ -129,7 +131,7 @@ function HintMatrix({ rows }: { rows: readonly McpToolSafetyRow[] }) {
               <th
                 key={column.key}
                 scope="col"
-                className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider text-fg-muted"
               >
                 {column.label}
               </th>
@@ -140,16 +142,16 @@ function HintMatrix({ rows }: { rows: readonly McpToolSafetyRow[] }) {
           {rows.map((row) => (
             <tr
               key={`${row.index}-${row.name}`}
-              className="border-b border-gray-100 last:border-0 dark:border-gray-800"
+              className="border-b border-border last:border-0"
             >
               <th
                 scope="row"
-                className="max-w-[16rem] truncate py-2 pr-3 text-left font-mono text-xs font-medium text-gray-900 dark:text-white"
+                className="max-w-[16rem] truncate py-2 pr-3 text-left font-mono text-xs font-medium text-fg"
                 title={row.displayName}
               >
                 {row.displayName}
                 {row.unannotated ? (
-                  <span className="ml-2 font-sans text-2xs font-normal uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                  <span className={`mcp-tone-figure ml-2 font-sans text-2xs font-normal uppercase tracking-wider ${STATUS_TONE_SOFT_CLASS.warn}`}>
                     unannotated
                   </span>
                 ) : null}
@@ -186,7 +188,7 @@ export function SafetyPosturePanel({ items, authType, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<ShieldAlert className="h-8 w-8 text-white" aria-hidden />}
+        icon={<ShieldAlert className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Safety posture unavailable"
         description={error}
       />
@@ -198,7 +200,7 @@ export function SafetyPosturePanel({ items, authType, loading, error }: Props) {
     return (
       <EmptyState
         variant="compact"
-        icon={<ShieldAlert className="h-8 w-8 text-white" aria-hidden />}
+        icon={<ShieldAlert className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="No tools"
         description="This snapshot declares no tools, so there is no safety posture to summarize."
       />
@@ -213,7 +215,7 @@ export function SafetyPosturePanel({ items, authType, loading, error }: Props) {
       {/* Headline: annotated-tool count, per-hint posture chips, and the endpoint's auth badge. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+          <span className="text-xs text-fg-muted tabular-nums">
             {posture.annotatedTools} of {posture.totalTools}{' '}
             {posture.totalTools === 1 ? 'tool' : 'tools'} annotated
           </span>
@@ -235,16 +237,16 @@ export function SafetyPosturePanel({ items, authType, loading, error }: Props) {
       {/* Destructive + no-auth: the combination that most warrants caution, surfaced explicitly. */}
       {posture.destructiveWithoutAuth.length > 0 ? (
         <div
-          className="flex gap-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20"
+          className="flex gap-3 rounded-lg bg-danger-soft p-3"
           role="alert"
         >
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" aria-hidden />
+          <AlertTriangle className="mt-0.5 size-5 shrink-0" aria-hidden />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-red-800 dark:text-red-200">
+            <p className="text-sm font-semibold text-danger-fg">
               {posture.destructiveWithoutAuth.length} destructive{' '}
               {posture.destructiveWithoutAuth.length === 1 ? 'tool' : 'tools'} reachable with no auth
             </p>
-            <p className="mt-0.5 text-xs text-red-700 dark:text-red-300">
+            <p className="mt-0.5 text-xs text-danger-fg">
               This endpoint is anonymous (no auth), yet these tools declare{' '}
               <code className="font-mono">destructiveHint</code>. Anyone who can reach the server can
               invoke them:
@@ -253,7 +255,7 @@ export function SafetyPosturePanel({ items, authType, loading, error }: Props) {
               {posture.destructiveWithoutAuth.map((row) => (
                 <code
                   key={`${row.index}-${row.name}`}
-                  className="rounded bg-red-100 px-1.5 py-0.5 font-mono text-xs text-red-800 dark:bg-red-900/40 dark:text-red-200"
+                  className="mono rounded-sm bg-danger-soft px-1.5 py-0.5 text-xs text-danger-fg"
                 >
                   {row.displayName}
                 </code>
@@ -266,15 +268,15 @@ export function SafetyPosturePanel({ items, authType, loading, error }: Props) {
       {/* Fully-unannotated surface: an explicit caution, since "no hints" is not "safe". */}
       {posture.fullyUnannotated ? (
         <div
-          className="flex gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20"
+          className="flex gap-3 rounded-lg bg-warn-soft p-3"
           role="note"
         >
-          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+          <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+            <p className="text-sm font-semibold text-warn-fg">
               Unannotated — treat with caution
             </p>
-            <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-300">
+            <p className="mt-0.5 text-xs text-warn-fg">
               None of this server&apos;s {posture.totalTools}{' '}
               {posture.totalTools === 1 ? 'tool declares' : 'tools declare'} a behavioural hint, so
               their read-only vs destructive nature is unknown. Absence of a hint is not a guarantee
@@ -287,21 +289,21 @@ export function SafetyPosturePanel({ items, authType, loading, error }: Props) {
       <HintMatrix rows={rows} />
 
       {/* Legend for the tri-state cells so the matrix reads without hovering. */}
-      <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+      <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-fg-muted">
         <li className="flex items-center gap-1.5">
-          <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-gray-400 text-white dark:bg-gray-500">
+          <span className="inline-flex size-4 items-center justify-center rounded-sm bg-neutral text-fg-on-accent">
             <Check className="h-2.5 w-2.5" aria-hidden />
           </span>
           Asserted
         </li>
         <li className="flex items-center gap-1.5">
-          <span className="inline-flex h-4 w-4 items-center justify-center rounded border border-gray-200 text-2xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
+          <span className="inline-flex size-4 items-center justify-center rounded-sm text-2xs font-medium text-fg-faint shadow-[inset_0_0_0_1px_var(--border)]">
             false
           </span>
           Declared false
         </li>
         <li className="flex items-center gap-1.5">
-          <span className="inline-flex h-4 w-4 items-center justify-center text-gray-300 dark:text-gray-600">
+          <span className="inline-flex h-4 w-4 items-center justify-center text-fg-faint">
             <span className="h-1 w-1 rounded-full bg-current" aria-hidden />
           </span>
           Not declared

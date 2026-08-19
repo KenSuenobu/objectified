@@ -69,13 +69,13 @@ function CategoryCostRow({ category }: { category: McpLintScoreCategory }) {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-        <span className="font-medium text-gray-700 dark:text-gray-300">{category.label}</span>
-        <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+        <span className="font-medium text-fg-muted">{category.label}</span>
+        <span className="flex items-center gap-1.5 text-fg-muted">
           <span className="tabular-nums">
             {category.findingCount} {category.findingCount === 1 ? 'finding' : 'findings'}
           </span>
           <span
-            className="font-semibold tabular-nums text-gray-700 dark:text-gray-200"
+            className="font-semibold tabular-nums text-fg"
             title={
               category.capped
                 ? `−${category.points} pts (capped from −${category.rawPoints})`
@@ -88,7 +88,7 @@ function CategoryCostRow({ category }: { category: McpLintScoreCategory }) {
         </span>
       </div>
       <div
-        className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+        className="relative h-2 w-full overflow-hidden rounded-full bg-inset"
         role="presentation"
       >
         <div
@@ -114,24 +114,24 @@ function FindingLinkRow({
   return (
     <div className={`rounded-md p-2.5 ${rowClass}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-900/40 dark:text-gray-300">
+        <span className="mono rounded-sm bg-inset px-1.5 py-0.5 text-2xs text-fg-muted">
           {finding.rule}
         </span>
         {target && onNavigateToItem ? (
           <button
             type="button"
             onClick={() => onNavigateToItem(target.item_type, target.name)}
-            className="inline-flex items-center gap-1 font-mono text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            className="mono inline-flex items-center gap-1 rounded-sm text-2xs font-medium text-accent-fg hover:underline"
             title={`Jump to ${finding.path} in Capabilities`}
           >
             {finding.path}
             <ArrowUpRight className="h-3 w-3" aria-hidden />
           </button>
         ) : (
-          <span className="font-mono text-2xs text-gray-700 dark:text-gray-300">{finding.path}</span>
+          <span className="font-mono text-2xs text-fg-muted">{finding.path}</span>
         )}
       </div>
-      <p className="mt-1 text-xs text-gray-700 dark:text-gray-200">{finding.message}</p>
+      <p className="mt-1 text-xs text-fg">{finding.message}</p>
     </div>
   );
 }
@@ -149,7 +149,7 @@ export function ScoreBreakdownPanel({ report, loading, error, onNavigateToItem }
     return (
       <EmptyState
         variant="compact"
-        icon={<ShieldCheck className="h-8 w-8 text-white" aria-hidden />}
+        icon={<ShieldCheck className="h-8 w-8 text-fg-on-accent" aria-hidden />}
         title="Score breakdown unavailable"
         description={
           error ??
@@ -184,16 +184,16 @@ export function ScoreBreakdownPanel({ report, loading, error, onNavigateToItem }
             <div className={`text-sm font-semibold ${tier.textClass}`}>
               {tier.shortLabel} — {tier.detailLabel}
             </div>
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-0.5 text-xs text-fg-muted">
               {clean ? (
                 'A clean surface — no rule deducted any points.'
               ) : (
                 <>
-                  <span className="font-semibold tabular-nums text-gray-700 dark:text-gray-200">
+                  <span className="font-semibold tabular-nums text-fg">
                     −{breakdown.totalPenalty}
                   </span>{' '}
                   {breakdown.totalPenalty === 1 ? 'point' : 'points'} deducted across{' '}
-                  <span className="font-semibold tabular-nums text-gray-700 dark:text-gray-200">
+                  <span className="font-semibold tabular-nums text-fg">
                     {breakdown.categories.length}
                   </span>{' '}
                   {breakdown.categories.length === 1 ? 'rule group' : 'rule groups'}
@@ -212,7 +212,7 @@ export function ScoreBreakdownPanel({ report, loading, error, onNavigateToItem }
       {clean ? (
         <EmptyState
           variant="compact"
-          icon={<CheckCircle2 className="h-8 w-8 text-white" aria-hidden />}
+          icon={<CheckCircle2 className="h-8 w-8 text-fg-on-accent" aria-hidden />}
           title="No findings"
           description="This snapshot's surface passes every lint rule — a clean bill of health, nothing deducted the grade."
         />
@@ -221,11 +221,11 @@ export function ScoreBreakdownPanel({ report, loading, error, onNavigateToItem }
           {/* Points lost by rule group — which categories cost the most points. */}
           {breakdown.categories.length > 0 ? (
             <div className="space-y-2.5">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-                <Gauge className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" aria-hidden />
+              <div className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
+                <Gauge className="size-3.5 text-fg-muted" aria-hidden />
                 Points lost by rule group
                 {breakdown.categories.some((c) => c.capped) ? (
-                  <span className="font-normal text-gray-400 dark:text-gray-500">
+                  <span className="font-normal text-fg-subtle">
                     * capped per rule
                   </span>
                 ) : null}
@@ -240,8 +240,8 @@ export function ScoreBreakdownPanel({ report, loading, error, onNavigateToItem }
 
           {/* Findings by severity — the MUST / SHOULD / advisory distribution. */}
           <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-              <ListChecks className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" aria-hidden />
+            <div className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
+              <ListChecks className="size-3.5 text-fg-muted" aria-hidden />
               Findings by severity
             </div>
             <BarSeries
@@ -249,7 +249,7 @@ export function ScoreBreakdownPanel({ report, loading, error, onNavigateToItem }
               title="Findings by severity — MUST, SHOULD, and advisory counts"
               className="h-24"
             />
-            <div className="flex justify-between gap-x-2 text-2xs text-gray-400 dark:text-gray-500">
+            <div className="flex justify-between gap-x-2 text-2xs text-fg-subtle">
               {severityBars.map((bar) => (
                 <span key={bar.label} className="tabular-nums">
                   {bar.label}
@@ -266,7 +266,7 @@ export function ScoreBreakdownPanel({ report, loading, error, onNavigateToItem }
                 <div key={group.meta.key} className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <FindingSeverity tier={group.meta.key} count={group.findings.length} />
-                    <span className="text-2xs text-gray-500 dark:text-gray-400">
+                    <span className="text-2xs text-fg-muted">
                       {group.meta.description}
                     </span>
                   </div>

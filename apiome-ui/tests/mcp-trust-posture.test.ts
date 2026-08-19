@@ -14,6 +14,7 @@ import {
   parsePostureReport,
   severityChipClass,
 } from '@/app/utils/mcp-trust-posture';
+import { STATUS_TONE_SOFT_CLASS } from '@/app/components/ui/statusVocabulary';
 
 const REPORT = {
   success: true,
@@ -122,8 +123,26 @@ describe('hasProvenFindings', () => {
 });
 
 describe('chip class helpers', () => {
-  it('return theme-aware token classes for both light and dark', () => {
-    expect(severityChipClass('error')).toContain('dark:');
-    expect(originChipClass('source')).toContain('dark:');
+  /**
+   * Since HIVE-7.8 (#5325) the chips resolve through `ui/statusVocabulary` instead of naming a
+   * palette pair, so a posture `error` is the same red as a lint MUST and as a failed discovery
+   * job. `mcp-dark-theme-tokens.test.ts` holds the stronger no-palette-literal property over all
+   * nine themes; what this pins is that the helpers are the vocabulary's classes and nothing else.
+   */
+  it('returns the shared soft pair for every severity', () => {
+    expect(severityChipClass('error')).toBe(STATUS_TONE_SOFT_CLASS.danger);
+    expect(severityChipClass('warning')).toBe(STATUS_TONE_SOFT_CLASS.warn);
+    expect(severityChipClass('info')).toBe(STATUS_TONE_SOFT_CLASS.accent);
+  });
+
+  it('gives each evidence lane its own tone', () => {
+    expect(originChipClass('source')).toBe(STATUS_TONE_SOFT_CLASS.violet);
+    expect(originChipClass('dependency')).toBe(STATUS_TONE_SOFT_CLASS.ok);
+    expect(originChipClass('protocol')).toBe(STATUS_TONE_SOFT_CLASS.accent);
+    expect(originChipClass('metadata')).toBe(STATUS_TONE_SOFT_CLASS.neutral);
+  });
+
+  it('treats an unrecognized lane as metadata rather than inventing a tone', () => {
+    expect(originChipClass('something-new')).toBe(STATUS_TONE_SOFT_CLASS.neutral);
   });
 });
