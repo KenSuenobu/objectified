@@ -1,8 +1,8 @@
 import {
   getRefreshStatusPresentation,
-  refreshStatusChipToneClasses,
   type RefreshStatusCode,
 } from '@/app/components/ade/dashboard/repositories/repository-refresh-status-chip-copy';
+import { REFRESH_STATUS_TONE } from '@/app/components/ade/repositories/repositoriesModel';
 
 describe('getRefreshStatusPresentation', () => {
   const cases: Array<[RefreshStatusCode, string]> = [
@@ -31,17 +31,20 @@ describe('getRefreshStatusPresentation', () => {
   });
 });
 
-describe('refreshStatusChipToneClasses', () => {
-  test('every tone yields a distinct, non-empty class string', () => {
-    const tones: RefreshStatusCode[] = [
+describe('REFRESH_STATUS_TONE', () => {
+  test('every refresh state resolves to a tone in the shared vocabulary', () => {
+    // HIVE-7.5 (#5322) retired `refreshStatusChipToneClasses`, which returned a frozen
+    // Tailwind palette string per state. The tone table replaced it; what has to hold is that
+    // it still covers all five states and still tells them apart.
+    const codes: RefreshStatusCode[] = [
       'up-to-date',
       'stale',
       'refreshing',
       'failed',
       'diverged',
     ];
-    const classStrings = tones.map(refreshStatusChipToneClasses);
-    classStrings.forEach((c) => expect(c).toContain('inline-flex'));
-    expect(new Set(classStrings).size).toBe(tones.length);
+    const tones = codes.map((code) => REFRESH_STATUS_TONE[code]);
+    tones.forEach((tone) => expect(typeof tone).toBe('string'));
+    expect(new Set(tones).size).toBe(codes.length);
   });
 });

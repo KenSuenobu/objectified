@@ -70,28 +70,14 @@ export function getRefreshStatusPresentation(
   return { ...copy, tone };
 }
 
-/**
- * Tailwind utility classes for a refresh-status chip, keyed by tone. Mirrors the
- * glass/border styling used by the branch divergence chip so the two read as a
- * family.
+/*
+ * `refreshStatusChipToneClasses` was here until HIVE-7.5 (#5322).
  *
- * @param tone The tone returned by {@link getRefreshStatusPresentation}.
- * @returns A class string for the chip element.
+ * It returned a glass/border palette string per tone — `border-amber-300/60 bg-amber-50/50
+ * text-amber-950 dark:border-amber-700/45 …` — which froze the chip on one light palette and
+ * one dark one out of the nine the app ships. Both surfaces that drew it (the Specs tab and
+ * the list page's refresh-activity panel) now render `ui/Badge` with the tone from
+ * `REFRESH_STATUS_TONE` in `repositoriesModel`, so a refresh state is the same object as
+ * every other status pill in the product. The copy above stays: a label and its explanation
+ * are not presentation.
  */
-export function refreshStatusChipToneClasses(tone: RefreshStatusTone): string {
-  const base =
-    'inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium shadow-sm backdrop-blur-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30';
-  switch (tone) {
-    case 'up-to-date':
-      return `${base} border-emerald-300/60 bg-emerald-50/50 text-emerald-900 dark:border-emerald-700/45 dark:bg-emerald-950/35 dark:text-emerald-100`;
-    case 'stale':
-      return `${base} border-amber-300/60 bg-amber-50/50 text-amber-950 dark:border-amber-700/45 dark:bg-amber-950/40 dark:text-amber-100`;
-    case 'refreshing':
-      return `${base} border-indigo-300/60 bg-indigo-50/50 text-indigo-950 dark:border-indigo-700/45 dark:bg-indigo-950/40 dark:text-indigo-100`;
-    case 'failed':
-      return `${base} border-rose-300/60 bg-rose-50/50 text-rose-950 dark:border-rose-700/45 dark:bg-rose-950/40 dark:text-rose-100`;
-    case 'diverged':
-    default:
-      return `${base} border-purple-300/60 bg-purple-50/50 text-purple-950 dark:border-purple-700/45 dark:bg-purple-950/40 dark:text-purple-100`;
-  }
-}

@@ -22840,3 +22840,1380 @@ button.cid-entity__head {
     flex-basis: 100%;
   }
 }
+
+/* ==========================================================================
+   REPOSITORY DETAIL  (HIVE-7.5, #5322)
+   --------------------------------------------------------------------------
+   `docs/mockups/sources/repository-detail.html`, whose page-local `<style>`
+   block this replaces (`.refresh-chip`, `.flow-node`, `.flow-edge`,
+   `.flow-text`, `.flow-sub`) together with the ~1,250 palette classes the five
+   components of this screen had grown — a `from-emerald-500 to-teal-500`
+   header medallion, `bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40`
+   status pills, `bg-indigo-50/60 dark:bg-indigo-900/10` selected rows,
+   `border-amber-200 bg-amber-50 text-amber-950` advisories, a
+   `bg-purple-50/60 dark:bg-purple-950/20` diverged row, `border-rose-200
+   bg-rose-50` danger zone and three `text-emerald-700`/`text-amber-700`/
+   `text-rose-700` diff tiles.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 to Epic-7.4 blocks above give. Every rule
+   leans on the density and font-scale tokens; the branch bar, the filter
+   toolbar, the file table, the file-detail split and the wizard's two columns
+   are real grids that a utility string spells badly; and the quiet lines and
+   the `h2`/`h3` card titles have to sit *after* the unlayered `h1`–`h4` and
+   `p` base rules near line 2497, which outrank anything in `@layer utilities`.
+
+   Plus one reason particular to this ticket: **the same five surfaces draw the
+   same table.** Preview's recent imports, the Files listing, the Specs refresh
+   list, the Imports history and Settings' importer mappings were five
+   hand-written tables with five different header inks, five paddings and three
+   different empty-row treatments. One `.repo-det-table` here is what makes
+   them one object, and it is why the row that says "nothing here yet" now
+   reads the same on all five.
+
+   The mockup froze nine things in pixels that must not be frozen: the 130px
+   branch select, the 250/220/180px filter fields, the 300px branch popover,
+   the 220px row menu, the 20px refresh chip, the 320px source viewer, the
+   56px empty-state art and the 160px metadata code well. All are `rem` or a
+   token here, so they follow all six font scales.
+
+   No hue is named below. Every colour is a token, so the surface follows all
+   nine themes. A status, a health level, a refresh state and a conflict policy
+   are never named here either: all four resolve through
+   `ui/statusVocabulary.ts`, and the marks that carry a tone take it from the
+   class the component passes in.
+
+   Four measured deviations from the mockup:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+     about 3.1:1 against the canvas at these sizes — the call HIVE-3.5 and
+     every Epic-5 to Epic-7.4 block already made;
+   * the importable verdict and the "Ready to import" banner are **tinted
+     strips** (`-soft` ground, `-fg` ink), not the mockup's bare `--ok-fg` on
+     the card. The six themes that inherit the light semantic pairs read a
+     `-fg` ink on their own surface at 1.5–3.5:1 — the exposure HIVE-7.3
+     recorded and this block does not repeat;
+   * a selected file row is the accent tint **plus** an accent hairline, not
+     the tint alone: `--accent-soft` against `--bg-surface` is under 1.3:1 in
+     four themes, so the fill alone is not a signal a reader can see, and
+     DESIGN.md §6 forbids colour as the only channel. The row's ticked checkbox
+     is the third channel. A selected row also raises its quiet cells from
+     `--fg-muted` to `--fg`, for the reason HIVE-7.4 recorded: on
+     `--accent-soft` the muted step measures 3.86:1 in Solarized;
+   * a diverged spec row is a `color-mix` wash of `--violet` into the surface,
+     not the mockup's flat `--violet` at 6 %. A flat tint that assumes a light
+     ground inverts into a bruise on the four dark appearances, and the wash
+     resolves against whatever surface it lands on. The row still carries its
+     violet chip and its "Review divergence" link, so the wash is decoration
+     and never the only signal.
+
+   One measured limit, stated rather than hidden: the danger-zone card's frame
+   is `--danger` at full strength, which measures 2.46:1 in Nord and 2.81 in
+   Solarized against the surface — under the 3:1 WCAG 1.4.11 asks of a non-text
+   mark in two of the nine appearances. It is therefore an emphasis mark and
+   never the only signal: the card carries "Danger zone" as a `--danger-soft`
+   chip whose ink clears AA in all nine, and the only thing inside it that can
+   be pressed is a `destructive` button. The heading is that chip rather than
+   ink on the card because `--danger-fg` on `--bg-surface` measures 1.47:1 in
+   Nord. `tests/repository-detail-css.test.ts` pins both figures.
+
+   Seven classes are borrowed rather than restated: `.hive-stat*` (the KPI
+   strip), `.mono` (HIVE-1.4), `.input-wrap` (HIVE-2.1's leading-icon field),
+   `.tnt-menu` + `.tnt-menu__item` (the row and branch menus), `.repo-provider`
+   + `data-provider` (HIVE-7.3's provider tint table), `.repo-quiet` (HIVE-7.3)
+   and the whole `.imp-wizard*` frame (HIVE-6.4), which the Map & import
+   overlay is a second instance of rather than a copy.
+   ========================================================================== */
+
+/* ---- Shared page furniture ----------------------------------------------
+   The quiet line every card on this screen draws — a hint, a provenance note,
+   a state sentence — and the two headings above them. */
+.repo-det-note {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.repo-det-note--tight {
+  margin-block-start: var(--space-1);
+}
+
+/* A card's own title. An `h3`/`h4` here rather than a `text-sm font-semibold`
+   utility, because the unlayered `h3`/`h4` base rules outrank `@layer
+   utilities` whatever the utility's specificity. */
+.repo-det-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  color: var(--fg);
+}
+
+.repo-det-card__title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+  color: var(--fg-subtle);
+}
+
+/* The head of a card that carries an action beside its title.
+
+   `flex-direction: row` is stated rather than assumed: `ui/Card`'s own header is
+   `flex flex-col`, and a class that only changes `justify-content` would leave
+   the action stacked under the title. Unlayered, so it outranks the utility. */
+.repo-det-card__head {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* A link-styled control — "View scan history →", "See all →", "Back to X",
+   "Open in browser →", "Review divergence".
+
+   `--accent-fg`, not the `text-accent` `ui/Button`'s `link` variant inks: the
+   saturated hue measures 4.14:1 at this size on the light surface and 3.80:1
+   on the canvas, which axe reports as a serious `color-contrast` finding. The
+   same call HIVE-7.4 made for `.repo-new-link`, restated here rather than
+   borrowed so this screen's links are one class rather than two. Retiring the
+   primitive's own ink is `ui/Button`'s ticket, not this one. */
+.repo-det-link {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--accent-fg);
+  text-underline-offset: 2px;
+}
+
+.repo-det-link:hover {
+  text-decoration: underline;
+}
+
+.repo-det-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* A section eyebrow inside a card — "Per-file overrides", "Classes · 42 rows". */
+.repo-det-caps {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* ---- The header's meta row ----------------------------------------------
+   The provider slug and the branch, as monospace chips beside the title. */
+.repo-det-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ---- Preview ------------------------------------------------------------
+   Recent scans beside the importable mix: two thirds and one third, one column
+   once the pair cannot hold its own measure. */
+.repo-det-split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* A list of rows with a hairline between, inside a card — the recent-scans
+   list and the per-file override list are the same object. */
+.repo-det-rows > * + * {
+  border-block-start: 1px solid var(--border);
+}
+
+.repo-det-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  font-size: var(--fs-sm);
+  min-inline-size: 0;
+}
+
+/* The trailing half of a row: pushed right, and never the thing that grows. */
+.repo-det-row__end {
+  margin-inline-start: auto;
+  flex: none;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* One line of the importable mix: a format pill, then its tally. */
+.repo-det-mix {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.repo-det-mix__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--fs-sm);
+}
+
+.repo-det-mix__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* ---- The shared table ---------------------------------------------------
+   One skin for all five tables on this screen. The wrapper owns the frame and
+   the scroll, so a wide table scrolls inside itself and never takes the
+   document with it — the "no horizontal document scroll" criterion, which a
+   table of eight columns cannot meet any other way. */
+.repo-det-table-wrap {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.repo-det-table-scroll {
+  min-inline-size: 0;
+  overflow-x: auto;
+}
+
+.repo-det-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.repo-det-table thead th {
+  position: relative;
+  text-align: start;
+  white-space: nowrap;
+  padding-inline: var(--space-4);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  /* `--bg-inset`, not the `--bg-subtle` a table head would reach for first: `--fg-muted` on
+     `--bg-subtle` measures 4.35:1 in Solarized, and 5.02:1 worst-of-nine on `--bg-inset` —
+     the same pair HIVE-7.4 landed on for its untested state. */
+  background: var(--bg-inset);
+  border-block-end: 1px solid var(--border);
+}
+
+.repo-det-table tbody td {
+  padding-inline: var(--space-4);
+  vertical-align: middle;
+  color: var(--fg);
+}
+
+.repo-det-table tbody tr + tr td {
+  border-block-start: 1px solid var(--border);
+}
+
+.repo-det-table tbody tr:hover td {
+  background: var(--bg-inset);
+}
+
+/* A cell that carries a figure: tabular, and never wrapped mid-number. */
+.repo-det-table .repo-det-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: end;
+}
+
+/* The quiet second line under a path — "blob 9f31ac2 · main". */
+.repo-det-subcell {
+  display: block;
+  margin-block-start: 0.125rem;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The whole-width row a table draws when it has nothing, is loading, or could
+   not be read. One treatment for all three, distinguished by its `data-tone`
+   rather than by three different paddings. */
+.repo-det-table__state {
+  padding-block: var(--space-10);
+  text-align: center;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+/* A read that failed. A tinted strip, not red ink on the surface: `--danger-fg` on
+   `--bg-surface` measures 1.47:1 in Nord — the finding HIVE-7.2 recorded and every block
+   since has honoured. */
+.repo-det-table__state[data-tone='danger'] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+/* The strip under a table: what it is showing on the left, the pager on the
+   right. Wraps, so a long phrase never pushes the buttons off the edge. */
+.repo-det-table__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The strip above a table: a count line, then the actions that apply to what
+   is ticked. */
+.repo-det-table__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: 1px solid var(--border);
+}
+
+.repo-det-table__bar-end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+/* ---- Files: the branch bar ---------------------------------------------- */
+
+.repo-files-branchbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+}
+
+/* The two provenance notes. `min-inline-size: 0` so a long branch name
+   ellipsises inside the note rather than holding the bar open. */
+.repo-files-branchbar__note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.repo-files-branchbar__note > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+}
+
+.repo-files-branchbar__end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-inline-start: auto;
+}
+
+/* The trigger. The word BRANCH is a caps label inside the control, so the
+   branch name itself is the only thing a reader has to parse. */
+.repo-files-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.repo-files-branch__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.repo-files-branch__name {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The popover. A `rem` width, so at the Largest font scale the list of branch
+   names grows with the type instead of clipping it. */
+.repo-files-branch-menu {
+  inline-size: min(calc(100vw - 2rem), 21rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+
+.repo-files-branch-menu__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-inline: var(--space-2);
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--border);
+}
+
+/* The list scrolls inside the popover; `overscroll-behavior` keeps a flick at
+   its end from scrolling the page behind it. */
+.repo-files-branch-menu__list {
+  max-block-size: 15rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.repo-files-branch-menu__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-inline: var(--space-2);
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}
+
+/* One branch. The tick reserves its space whether or not it is drawn, so the
+   names stay in one column. */
+.repo-files-branch-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.repo-files-branch-menu__tick {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+  color: var(--accent);
+}
+
+.repo-files-branch-menu__tick[data-checked='false'] {
+  visibility: hidden;
+}
+
+.repo-files-branch-menu__name {
+  min-inline-size: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Files: the filter toolbar ------------------------------------------
+   Four fields that each keep a usable measure and drop to their own line
+   before the row can scroll. `auto-fit` rather than the mockup's four fixed
+   widths, so the fold follows the font scale. */
+.repo-files-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.repo-files-filters__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.repo-files-filters__switches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.repo-files-filters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+/* One checkbox and its label, as one hit area. */
+.repo-files-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.repo-files-check:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.repo-files-check > input {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+  accent-color: var(--accent);
+}
+
+/* ---- Files: the table ---------------------------------------------------
+   The path column takes what is left; every other column is sized by its own
+   content, which is what stops a 200-character path from squeezing the Blob
+   column into two characters. */
+.repo-files-table .repo-files-table__path {
+  inline-size: 100%;
+  min-inline-size: 16rem;
+}
+
+.repo-files-table .repo-files-table__check {
+  inline-size: 1px;
+  white-space: nowrap;
+}
+
+/* The path itself: a button, because it opens a pane rather than navigating.
+   It wraps rather than ellipsising — a path a reader cannot finish reading is
+   a path they cannot recognise. */
+.repo-files-table__link {
+  display: block;
+  inline-size: 100%;
+  text-align: start;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+  color: var(--accent-fg);
+}
+
+.repo-files-table__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.repo-files-table__link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* A ticked row. The tint alone is under 1.3:1 in four themes, so it is joined
+   by an accent hairline drawn as an inset shadow on the first and last cell —
+   a `box-shadow` on the `<tr>` is not painted by any engine. */
+.repo-files-table tbody tr[data-selected='true'] td {
+  background: var(--accent-soft);
+}
+
+.repo-files-table tbody tr[data-selected='true']:hover td {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-surface));
+}
+
+.repo-files-table tbody tr[data-selected='true'] td:first-child {
+  box-shadow: inset 2px 0 0 0 var(--accent);
+}
+
+/* On the accent tint the muted step measures 3.86:1 in Solarized, so a chosen
+   row re-inks its quiet cells with the page's strongest ink. */
+.repo-files-table tbody tr[data-selected='true'] .repo-det-quiet-cell {
+  color: var(--fg);
+}
+
+.repo-det-quiet-cell {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* While a read is in flight the table dims rather than disappearing: the rows
+   under the dim are still the last true answer, and swapping them for a
+   skeleton on every keystroke of a debounced filter is a flicker, not
+   feedback. */
+.repo-files-table[data-loading='true'] {
+  opacity: 0.6;
+}
+
+/* ---- File detail --------------------------------------------------------
+   The metadata column beside the viewer: one third and two thirds, one column
+   once neither can hold its measure. */
+.repo-file-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* A file with no recognised structure has no metadata column at all, so the
+   viewer takes the whole width rather than sitting beside an empty third. */
+.repo-file-split--source-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.repo-file-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+/* The file's own head: the glyph, the path, its marks, and the one action. */
+.repo-file-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.repo-file-head__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 18rem;
+  min-inline-size: 0;
+}
+
+.repo-file-head__path {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  overflow-wrap: anywhere;
+  color: var(--fg);
+}
+
+.repo-file-head__marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The definition list every metadata card draws. Two columns at the default
+   measure, stacked once the value would have nowhere to go. */
+.repo-file-kv {
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--fs-xs);
+  align-items: baseline;
+}
+
+.repo-file-kv > dt {
+  color: var(--fg-muted);
+}
+
+.repo-file-kv > dd {
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  color: var(--fg);
+}
+
+/* The importable verdict. A tinted strip rather than coloured text on the
+   card: the six themes that inherit the light semantic pairs read a `-fg` ink
+   on their own surface at 1.5–3.5:1. The tone comes in as `data-tone`, so the
+   component never spells a colour. */
+.repo-file-verdict {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  background: var(--neutral-soft);
+  color: var(--neutral-fg);
+}
+
+.repo-file-verdict[data-tone='ok'] {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.repo-file-verdict[data-tone='warn'] {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.repo-file-verdict[data-tone='danger'] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+/* The detail line under a verdict — a parse error, a truncation note. Inherits
+   the strip's ink rather than taking `--fg-muted`, which is calibrated for the
+   surface and not for a tint. */
+.repo-file-verdict__detail {
+  font-size: var(--fs-xs);
+  opacity: 0.9;
+  overflow-wrap: anywhere;
+}
+
+/* The two standing facts under the verdict. */
+.repo-file-verdict-facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.repo-file-verdict-facts li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.repo-file-verdict-facts svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+}
+
+/* The viewer's own chrome: the segmented switch, then the provider link. */
+.repo-file-viewer {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.repo-file-viewer__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid var(--border);
+}
+
+/* The syntax strip above the editor. */
+.repo-file-viewer__syntax {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-block-end: 1px solid var(--border);
+  /* Same pair as the table head above, and for the same measurement. */
+  background: var(--bg-inset);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The editor's own well. A `vh`-capped `rem` height so the viewer is a
+   readable page of code at every font scale and never taller than the
+   viewport. */
+.repo-file-viewer__code {
+  block-size: min(32.5rem, 70vh);
+  min-block-size: 15rem;
+  inline-size: 100%;
+  overflow: hidden;
+}
+
+/* The Details tab's tables, which are the shared table in a scrolling well. */
+.repo-file-tables {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  max-block-size: min(60rem, 92vh);
+  overflow-y: auto;
+}
+
+.repo-file-tables__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+/* A sortable header. The whole cell is the target, the glyph says which way. */
+.repo-file-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-inline-size: 100%;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.repo-file-sort:hover {
+  color: var(--fg);
+}
+
+.repo-file-sort:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+.repo-file-sort > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+}
+
+/* The idle glyph is the neutral both-ways arrow at reduced weight; the sorted
+   one takes the accent so the column in force is findable at a glance. */
+.repo-file-sort[data-sorted='none'] > svg {
+  opacity: 0.4;
+}
+
+.repo-file-sort[data-sorted='asc'] > svg,
+.repo-file-sort[data-sorted='desc'] > svg {
+  color: var(--accent-fg);
+}
+
+/* ---- The relationship diagram (hive.css `.flow-node` / `.flow-edge`) -----
+   The React Flow graph in the Visualize pane. The library owns the layout and
+   the transforms; what is here is only the skin, so the graph follows the
+   theme the way everything else on the page does. */
+.repo-flow {
+  block-size: min(32.5rem, 70vh);
+  min-block-size: 20rem;
+  inline-size: 100%;
+}
+
+.repo-flow__minimap {
+  background: var(--bg-subtle);
+}
+
+/* One schema. The hairline is an inset shadow rather than a border so the node
+   keeps its exact size whatever state it is in — React Flow measures nodes to
+   route the edges, and a border that appears on selection would move them. */
+.repo-flow-node {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 7.5rem;
+  max-inline-size: 11.25rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border-strong), var(--shadow-sm);
+}
+
+/* A composed schema (`allOf` / `oneOf` / `anyOf`) is a different *kind* of node,
+   not a worse one, so it takes the violet the vocabulary spends on a judgement
+   rather than the amber it spends on a problem. The badge inside says which
+   keyword, so the tint is never the only signal. */
+.repo-flow-node[data-composed='true'] {
+  box-shadow: inset 0 0 0 1px var(--violet), var(--shadow-sm);
+}
+
+.repo-flow-node__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.repo-flow-node__name {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.repo-flow-node__count {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The connection points. Small, quiet, and never the thing a reader looks at —
+   this graph is read-only, so a handle is a routing anchor rather than a
+   control. */
+.repo-flow-node__handle {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  background: var(--fg-faint);
+  border: 0;
+}
+
+/* ---- Map & import -------------------------------------------------------
+   The wizard's body: the decisions on the left, the source facts and the run
+   on the right. Same proportion as the mockup, and it collapses. */
+.repo-map-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.repo-map-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+/* One target choice.
+
+   **This is the scoped choice control** (HIVE-2.1, #5280) the ticket's third
+   acceptance criterion asks for. The card is a `<div>`, not a `<label>`: it
+   holds a project select, a read-only slug field and two buttons, and a
+   `<label>` wrapped around interactive content is both an axe
+   `nested-interactive` finding and a real trap — a click that lands on the
+   nested control also activates the label's own control in several engines.
+
+   So the radio has a `<label>` of its own, scoped to the choice's title, and
+   everything else in the card is an ordinary sibling. The card still reads as
+   chosen, still shows one focus ring, and the arrow keys still move between
+   the two choices, because all three of those are `:has()` on the radio rather
+   than markup around it. What the screen this replaces did instead —
+   `role="button" tabIndex={0}` on the card with `stopPropagation` on every
+   nested control — is exactly the finding. */
+.repo-map-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.repo-map-choice:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.repo-map-choice:has(input[type='radio']:checked) {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* The ring is on the card, because the card is what the reader is choosing —
+   but only the radio's own focus raises it, so tabbing into the nested select
+   does not light the whole card up. */
+.repo-map-choice:has(> input[type='radio']:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.repo-map-choice > input[type='radio'] {
+  margin-block-start: 0.1875rem;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.repo-map-choice__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+/* The title is the radio's `<label>` — the one part of the card that toggles
+   it, and the reason the fields below can be clicked at all. */
+.repo-map-choice__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.repo-map-choice__title > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+}
+
+.repo-map-choice__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* On the chosen card the ground is `--accent-soft`, where `--fg-muted`
+   measures 3.86:1 in Solarized. Both lines take the ink the vocabulary
+   calibrated for that tint — the same call HIVE-2.5's scope cards made. */
+.repo-map-choice:has(input[type='radio']:checked) .repo-map-choice__title,
+.repo-map-choice:has(input[type='radio']:checked) .repo-map-choice__desc {
+  color: var(--accent-fg);
+}
+
+/* The nested fields. A grid, because they are a pair of labelled controls and
+   not prose, and it collapses before the card can scroll sideways. */
+.repo-map-choice__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+}
+
+/* A field inside a chosen card sits on the tint, so its own surface has to be
+   restated — a `--bg-surface` control on a `--bg-surface` card is invisible,
+   and on `--accent-soft` it is what tells the reader the control is a control. */
+.repo-map-choice:has(input[type='radio']:checked) .repo-map-choice__fields :is(input, button, select) {
+  background: var(--bg-surface);
+}
+
+/* The three "Version to create" facts. */
+.repo-map-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--space-3);
+}
+
+.repo-map-fact__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.repo-map-fact__value {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* The diff placeholder's three tiles. Deliberately *not* tinted green / amber
+   / red: there is no measurement behind them, and three coloured tiles reading
+   "—" claim one. They are the neutral inset well until the API exists. */
+.repo-map-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+  gap: var(--space-3);
+}
+
+.repo-map-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  text-align: center;
+}
+
+.repo-map-tile__value {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-faint);
+}
+
+.repo-map-tile__label {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The run column's primary action and the helper line under it. */
+.repo-map-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.repo-map-actions__help {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The "Ready to import into X" line. Grounded for the same measurement as the failure row
+   above: `--ok-fg` on `--bg-surface` is 1.54:1 in Nord and 1.99 in Solarized. */
+.repo-map-actions__help[data-tone='ok'] {
+  padding: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.repo-map-actions__help > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+  margin-block-start: 0.0625rem;
+}
+
+/* ---- Specs --------------------------------------------------------------
+   The refresh chip. A pill that takes its ground and ink from the tone class
+   the component passes in, so the five states are five entries in the shared
+   vocabulary rather than five palettes here. */
+.repo-specs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-inline: var(--space-2);
+  min-block-size: calc(var(--fs-2xs) * 2);
+  border-radius: var(--r-full);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* A diverged row. A `color-mix` wash rather than a flat tint, so it resolves
+   against whatever surface it lands on instead of assuming a light one. The
+   row's violet chip and its review link are the signals; this is the mark that
+   makes the group findable while scrolling. */
+.repo-specs-table tbody tr[data-status='diverged'] td {
+  background: color-mix(in srgb, var(--violet) 8%, transparent);
+}
+
+.repo-specs-table tbody tr[data-status='diverged']:hover td {
+  background: color-mix(in srgb, var(--violet) 14%, transparent);
+}
+
+/* The notice bar a refresh leaves behind. */
+.repo-specs-notice {
+  padding: var(--space-2) var(--space-4);
+  border-block-end: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  background: var(--neutral-soft);
+  color: var(--neutral-fg);
+}
+
+.repo-specs-notice[data-tone='ok'] {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.repo-specs-notice[data-tone='danger'] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+/* ---- Settings -----------------------------------------------------------
+   The source card's facts, and the switch row above the disabled fieldset. */
+.repo-set-kv {
+  display: grid;
+  grid-template-columns: minmax(8rem, auto) minmax(0, 1fr);
+  gap: var(--space-3);
+  font-size: var(--fs-sm);
+  align-items: baseline;
+}
+
+.repo-set-kv > dt {
+  color: var(--fg-muted);
+}
+
+.repo-set-kv > dd {
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  color: var(--fg);
+}
+
+.repo-set-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.repo-set-switch__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 20rem;
+  min-inline-size: 0;
+}
+
+/* A fieldset whose controls exist but cannot be operated yet. The dimming is
+   the standing signal for "drawn, not wired"; the note beside it is what says
+   why, because opacity alone is not a sentence. */
+.repo-set-stub {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  opacity: 0.6;
+}
+
+.repo-set-stub__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3);
+}
+
+/* One conflict policy. The same scoped choice control as the wizard's target
+   cards, minus the nested fields: the card is the `<label>` here, because it
+   contains nothing that can be pressed. */
+.repo-set-policy {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  cursor: pointer;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.repo-set-policy:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.repo-set-policy[data-selected='true'] {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.repo-set-policy:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.repo-set-policy:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.repo-set-policy > input {
+  margin-block-start: 0.1875rem;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.repo-set-policy__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.repo-set-policy__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.repo-set-policy__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* Same recalibration as the wizard's cards: on `--accent-soft` the muted step
+   is a serious finding, so a chosen policy re-inks both its lines. */
+.repo-set-policy[data-selected='true'] .repo-set-policy__title,
+.repo-set-policy[data-selected='true'] .repo-set-policy__desc {
+  color: var(--accent-fg);
+}
+
+/* The per-file override form: a branch, a path and a policy, then the save. */
+.repo-set-override-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+}
+
+/* The danger zone, and one measured limit stated rather than hidden.
+
+   The frame is `--danger` at full strength. Measured against `--bg-surface` it
+   is 2.46:1 in Nord, 2.81 in Solarized and 3.36 in blueprint — under the 3:1
+   WCAG 1.4.11 asks of a non-text mark in two of the nine appearances. So the
+   frame is an *emphasis* mark and never the only signal: the card says "Danger
+   zone" in a `--danger-soft` chip whose `--danger-fg` ink clears AA in all
+   nine, and the one thing that can be pressed inside it is a `destructive`
+   button. A reader who cannot see the frame loses nothing.
+
+   The heading is that chip rather than ink on the card for the reason the
+   measurement gives directly: `--danger-fg` on `--bg-surface` is 1.47:1 in
+   Nord, 1.85 in Darcula and 1.90 in Solarized. `tests/repository-detail-css.test.ts`
+   pins both figures. */
+.repo-set-danger {
+  box-shadow:
+    inset 0 0 0 1px var(--danger),
+    var(--shadow-sm);
+}
+
+.repo-set-danger__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--danger-fg);
+}
+
+.repo-set-danger__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.repo-set-danger__copy {
+  max-inline-size: 56ch;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Narrow viewports ---------------------------------------------------
+   Every multi-column row on this route collapses before the document can
+   scroll sideways — the ticket's "no horizontal document scroll at ≥1280 px"
+   criterion, measured at every font scale rather than only at the default one.
+   The breakpoints are `rem`, so a fold moves with the reader's type rather
+   than staying put while the text grows past it. */
+@media (max-width: 64rem) {
+  .repo-det-split,
+  .repo-file-split,
+  .repo-map-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 40rem) {
+  .repo-files-branchbar__end,
+  .repo-files-filters__actions,
+  .repo-det-table__bar-end {
+    margin-inline-start: 0;
+  }
+
+  .repo-file-kv,
+  .repo-set-kv {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .repo-file-kv > dt,
+  .repo-set-kv > dt {
+    margin-block-start: var(--space-2);
+  }
+}

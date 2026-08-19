@@ -144,7 +144,10 @@ describe('acceptance criteria', () => {
     expect(screen.getByTestId('conflict-policy-no-overrides')).toBeInTheDocument();
 
     await userEvent.type(screen.getByLabelText('File path'), 'specs/petstore.yaml');
-    await userEvent.selectOptions(screen.getByLabelText('Policy'), 'hold-for-review');
+    // HIVE-7.5 (#5322) put the field on `ui/Select`, so the control is a listbox trigger
+    // rather than a native `<select>` — the same shape every other field on the screen has.
+    await userEvent.click(screen.getByRole('combobox', { name: /policy/i }));
+    await userEvent.click(screen.getByRole('option', { name: 'Hold for review' }));
     await userEvent.click(screen.getByRole('button', { name: /save file override/i }));
 
     await waitFor(() => expect(screen.getByTestId('conflict-policy-overrides')).toBeInTheDocument());
@@ -216,7 +219,9 @@ describe('degradations', () => {
 
     await screen.findByTestId('conflict-policy-error');
     expect(screen.getByText('Repository API unavailable')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+    // `ui/ErrorState`'s retry verb, which HIVE-7.5 (#5322) adopted in place of the panel's
+    // hand-rolled rose box: one word for one action, app-wide.
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
   });
 
   test('a rejected write leaves the panel showing what is actually stored', async () => {

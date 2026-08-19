@@ -3,20 +3,18 @@
 /**
  * The repository wire contract, shared by every repository screen.
  *
- * What is left here after HIVE-7.4 (#5321) is the payload parser, the types it produces, the
- * polling constants and the small presentational pieces the **repository detail** still draws.
+ * After HIVE-7.5 (#5322) this file draws nothing at all: what is left is the payload parser,
+ * the types it produces, the polling constants and the three pure rules every repository
+ * screen reads — the importable split, the initials and the last-scan phrase.
+ *
  * The list screen's own card, index snapshot, provider badge and status palette moved to
  * `components/ade/repositories/*` in HIVE-7.3 (#5320); the Add-repository screen's
- * `SourceOptionCard`, `LinkedAccountIcon` and `ManageLinkedAccountsLink` — the last three
- * palette-class components in this file — went the same way in HIVE-7.4, replaced by
- * `AddRepositorySourceChoice`, `ProviderGlyph` and a plain link in the card's header.
- * HIVE-7.5 will take what is left.
+ * `SourceOptionCard`, `LinkedAccountIcon` and `ManageLinkedAccountsLink` went the same way in
+ * HIVE-7.4 (#5321); and `RepositoryKpiCard`, the last component here, was retired by HIVE-7.5
+ * when the detail screen's strip moved onto `ui/metrics`'s `StatGrid`. There is no `'use
+ * client'`-only code left in it, and no colour named anywhere.
  */
 
-import type { ReactNode } from 'react';
-import { Loader2 } from 'lucide-react';
-import { cn } from '@lib/utils';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/ui/Tooltip';
 import { type RepositoryHealth, parseRepositoryHealth } from './repositoryHealth';
 
 export type RepositoryProvider = 'github' | 'gitlab' | 'bitbucket' | 'public_url';
@@ -204,77 +202,24 @@ export function aggregateEstimatedImportableMix(
   return { openapi, arazzo, jsonSchema, total };
 }
 
-export function formatEstimatedImportableMixInline(mix: EstimatedImportableMix): string {
-  return `OpenAPI ${mix.openapi} · Arazzo ${mix.arazzo} · JSON Schema ${mix.jsonSchema}`;
-}
-
-/** Summary metric card — label + value; `subtitle` is shown as a hover tooltip only. */
-export function RepositoryKpiCard({
-  label,
-  value,
-  subtitle,
-  footnote,
-  valueClassName,
-  valuePending = false,
-}: {
-  label: string;
-  value: ReactNode;
-  subtitle: string;
-  /** Optional short text shown under the value (not only in the tooltip). */
-  footnote?: string;
-  valueClassName?: string;
-  /** When true (e.g. repository scan in progress), show a spinner beside the value. */
-  valuePending?: boolean;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div
-          className={cn(
-            'rounded-lg border border-gray-200 bg-white p-4 text-left outline-none transition-colors',
-            'cursor-default hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600',
-            'focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900'
-          )}
-          aria-busy={valuePending}
-          tabIndex={0}
-        >
-          <p className="break-words text-2xs uppercase leading-tight tracking-wider text-gray-500 dark:text-gray-400">
-            {label}
-          </p>
-          <div
-            className={cn(
-              'mt-1',
-              valuePending
-                ? 'inline-flex min-h-8 items-center gap-2'
-                : 'font-mono text-2xl font-bold tabular-nums tracking-tight',
-              !valuePending && valueClassName
-            )}
-          >
-            {valuePending ? (
-              <>
-                <Loader2
-                  className="h-6 w-6 shrink-0 animate-spin text-indigo-500 dark:text-indigo-400"
-                  aria-hidden
-                />
-                <span className={cn('font-mono text-2xl font-bold tabular-nums tracking-tight', valueClassName)}>
-                  {value}
-                </span>
-              </>
-            ) : (
-              value
-            )}
-          </div>
-          {footnote ? (
-            <p className="mt-2 text-xs leading-snug text-gray-500 dark:text-gray-400">{footnote}</p>
-          ) : null}
-        </div>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" align="start" className="max-w-xs text-left leading-snug">
-        {subtitle}
-      </TooltipContent>
-    </Tooltip>
-  );
-}
+/*
+ * `formatEstimatedImportableMixInline` and `RepositoryKpiCard` were here until
+ * HIVE-7.5 (#5322).
+ *
+ * The card was a bordered `border-gray-200 bg-white … dark:border-gray-700 dark:bg-gray-800`
+ * tile whose figure took a caller-supplied `valueClassName` — in practice `text-indigo-600
+ * dark:text-indigo-400` when a value was known and `text-gray-400 dark:text-gray-500` when it
+ * was not, which made a figure's *colour* the only signal that it was a placeholder. Both of
+ * its call sites are gone: HIVE-7.3 moved the list page's strip onto `ui/metrics`'s `StatGrid`
+ * and this ticket moved the detail page's, where an unmeasured figure carries `data-unwired`
+ * and a footnote that says so in words.
+ *
+ * `formatEstimatedImportableMixInline` rendered the split as one sentence for that card's
+ * tooltip; `repositoryDetailKpis` composes its own now.
+ *
+ * `estimatedImportableMixForRepo` and `aggregateEstimatedImportableMix` above are unchanged —
+ * they are the rule, not the paint, and both screens still read them.
+ */
 
 export function repoInitials(name: string): string {
   const parts = name.replace(/[/_-]+/g, ' ').trim().split(/\s+/).filter(Boolean);

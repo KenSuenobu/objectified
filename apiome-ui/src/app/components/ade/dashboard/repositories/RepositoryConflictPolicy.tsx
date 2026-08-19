@@ -26,15 +26,25 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, GitBranch, Plus, Trash2 } from 'lucide-react';
+import { GitBranch, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@lib/utils';
+import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
+import { Card, CardContent } from '@/app/components/ui/Card';
+import { ErrorState } from '@/app/components/ui/ErrorState';
 import { Input } from '@/app/components/ui/Input';
+import { Label } from '@/app/components/ui/Label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/Select';
 import {
   CONFLICT_POLICIES,
   POLICY_COPY,
-  POLICY_TONE_CLASSES,
+  POLICY_TONE_BADGE,
   type ConflictPolicy,
   type ConflictPolicyResponse,
   asConflictPolicy,
@@ -42,19 +52,20 @@ import {
   parseConflictPolicyResponse,
 } from '@/app/components/ade/dashboard/repositories/repositoryConflictPolicy';
 
-/** Shared shell for the panel's cards, matching the surrounding settings tab. */
-const panelClass =
-  'space-y-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800';
-
-const sectionHeadingClass =
-  'border-b border-gray-100 pb-2 text-sm font-semibold dark:border-gray-700 dark:text-gray-100';
-
-const fieldLabelClass =
-  'text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400';
-
-const mutedTextClass = 'text-xs text-gray-500 dark:text-gray-400';
-
-/** One selectable policy: the label, its consequence, and the radio that picks it. */
+/**
+ * One selectable policy: the label, the consequence of choosing it, and the radio that picks
+ * it.
+ *
+ * The card *is* the `<label>` here, unlike the Map & import wizard's target cards
+ * (HIVE-7.5): this one contains nothing that can be pressed, so wrapping it is the right
+ * shape — the whole rectangle is the hit area and the browser owns the arrow keys.
+ *
+ * @param props.policy Which policy this row offers.
+ * @param props.selected Whether it is the repository's current policy.
+ * @param props.disabled Whether a write is in flight.
+ * @param props.onSelect Choose it.
+ * @returns The choice row.
+ */
 function PolicyOption({
   policy,
   selected,
@@ -67,31 +78,27 @@ function PolicyOption({
   onSelect: (policy: ConflictPolicy) => void;
 }) {
   const copy = POLICY_COPY[policy];
+  const mark = POLICY_TONE_BADGE[copy.tone];
   return (
     <label
-      className={cn(
-        'flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors',
-        selected
-          ? POLICY_TONE_CLASSES[copy.tone]
-          : 'border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300',
-        selected && 'bg-gray-50 dark:bg-gray-900/40',
-        disabled && 'cursor-not-allowed opacity-60'
-      )}
+      className="repo-set-policy"
       data-testid={`conflict-policy-option-${policy}`}
       data-selected={selected ? 'true' : 'false'}
     >
       <input
         type="radio"
         name="repository-conflict-policy"
-        className="mt-1 h-4 w-4 shrink-0"
         value={policy}
         checked={selected}
         disabled={disabled}
         onChange={() => onSelect(policy)}
       />
-      <span className="space-y-1">
-        <span className="block text-sm font-medium">{copy.label}</span>
-        <span className={cn('block', mutedTextClass)}>{copy.detail}</span>
+      <span className="repo-set-policy__body">
+        <span className="repo-set-policy__title">
+          {copy.label}
+          {mark ? <Badge variant={mark.tone}>{mark.label}</Badge> : null}
+        </span>
+        <span className="repo-set-policy__desc">{copy.detail}</span>
       </span>
     </label>
   );
@@ -201,151 +208,150 @@ export function RepositoryConflictPolicy({
 
   if (loading && !data) {
     return (
-      <div className={panelClass} data-testid="conflict-policy-loading">
-        <h3 className={sectionHeadingClass}>Refresh conflicts</h3>
-        <p className={mutedTextClass}>Loading conflict policy…</p>
-      </div>
+      <Card data-testid="conflict-policy-loading">
+        <CardContent className="flex flex-col gap-2">
+          <h3 className="repo-det-card__title">Refresh conflicts</h3>
+          <p className="repo-det-note">Loading conflict policy…</p>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error && !data) {
     return (
-      <div className={panelClass} data-testid="conflict-policy-error">
-        <h3 className={sectionHeadingClass}>Refresh conflicts</h3>
-        <p className="flex items-center gap-2 text-xs text-rose-600 dark:text-rose-300">
-          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-          {error}
-        </p>
-        <Button type="button" variant="outline" size="sm" onClick={() => void load()}>
-          Retry
-        </Button>
-      </div>
+      <ErrorState
+        data-testid="conflict-policy-error"
+        title="Refresh conflicts"
+        description={error}
+        onRetry={() => void load()}
+      />
     );
   }
 
   if (!data) return null;
 
   return (
-    <section className={panelClass} aria-label="Refresh conflict policy" data-testid="conflict-policy">
-      <h3 className={sectionHeadingClass}>Refresh conflicts</h3>
-      <p className={mutedTextClass}>
-        When auto-refresh re-imports a file whose version was edited in Apiome after the original
-        import, this decides what happens. Files with their own policy are listed below.
-      </p>
-      <p className="text-xs font-medium text-gray-700 dark:text-gray-200" data-testid="conflict-policy-summary">
-        {conflictPolicySummary(data.policy, data.overrides.length)}
-      </p>
-
-      <fieldset className="space-y-2" disabled={saving}>
-        <legend className={fieldLabelClass}>Repository policy</legend>
-        {CONFLICT_POLICIES.map((policy) => (
-          <PolicyOption
-            key={policy}
-            policy={policy}
-            selected={data.policy === policy}
-            disabled={saving}
-            onSelect={selectPolicy}
-          />
-        ))}
-      </fieldset>
-
-      <div className="space-y-3 border-t border-gray-100 pt-4 dark:border-gray-700">
-        <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-          <GitBranch className="h-3.5 w-3.5 shrink-0" aria-hidden />
-          Per-file overrides
-        </h4>
-
-        {data.overrides.length === 0 ? (
-          <p className={mutedTextClass} data-testid="conflict-policy-no-overrides">
-            No exceptions — every file follows the repository policy.
+    <Card data-testid="conflict-policy">
+      <CardContent
+        className="flex flex-col gap-4"
+        role="group"
+        aria-label="Refresh conflict policy"
+      >
+        <div className="flex flex-col gap-1">
+          <h3 className="repo-det-card__title">Refresh conflicts</h3>
+          <p className="repo-det-note">
+            When auto-refresh re-imports a file whose version was edited in Apiome after the
+            original import, this decides what happens.
           </p>
-        ) : (
-          <ul className="space-y-2" data-testid="conflict-policy-overrides">
-            {data.overrides.map((o) => (
-              <li
-                key={`${o.branch}:${o.path}`}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700"
-              >
-                <span className="min-w-0 space-y-0.5">
-                  <span className="block truncate font-mono text-xs text-gray-800 dark:text-gray-100">
-                    {o.path}
-                  </span>
-                  <span className={cn('block', mutedTextClass)}>
+          <p className="text-xs font-medium text-fg" data-testid="conflict-policy-summary">
+            {conflictPolicySummary(data.policy, data.overrides.length)}
+          </p>
+        </div>
+
+        <fieldset className="flex flex-col gap-2" disabled={saving}>
+          <legend className="repo-det-caps">Repository policy</legend>
+          {CONFLICT_POLICIES.map((policy) => (
+            <PolicyOption
+              key={policy}
+              policy={policy}
+              selected={data.policy === policy}
+              disabled={saving}
+              onSelect={selectPolicy}
+            />
+          ))}
+        </fieldset>
+
+        <div className="flex flex-col gap-3">
+          <h4 className="repo-det-caps flex items-center gap-2">
+            <GitBranch className="size-3.5 shrink-0" aria-hidden />
+            Per-file overrides
+          </h4>
+
+          {data.overrides.length === 0 ? (
+            <p className="repo-det-note" data-testid="conflict-policy-no-overrides">
+              No exceptions — every file follows the repository policy.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2" data-testid="conflict-policy-overrides">
+              {data.overrides.map((o) => (
+                <li key={`${o.branch}:${o.path}`} className="repo-det-row">
+                  <span className="mono min-w-0 truncate text-xs">{o.path}</span>
+                  <span className="repo-det-note truncate">
                     {o.branch} · {POLICY_COPY[o.policy].label}
                   </span>
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={saving}
-                  onClick={() => clearOverride(o.branch, o.path)}
-                  aria-label={`Remove override for ${o.path}`}
-                >
-                  <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                  Clear
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div>
-            <label className={fieldLabelClass} htmlFor="conflict-override-branch">
-              Branch
-            </label>
-            <Input
-              id="conflict-override-branch"
-              value={overrideBranch}
-              disabled={saving}
-              onChange={(e) => setOverrideBranch(e.target.value)}
-              className="mt-1 font-mono text-sm"
-            />
-          </div>
-          <div>
-            <label className={fieldLabelClass} htmlFor="conflict-override-path">
-              File path
-            </label>
-            <Input
-              id="conflict-override-path"
-              value={overridePath}
-              placeholder="specs/petstore.yaml"
-              disabled={saving}
-              onChange={(e) => setOverridePath(e.target.value)}
-              className="mt-1 font-mono text-sm"
-            />
-          </div>
-          <div>
-            <label className={fieldLabelClass} htmlFor="conflict-override-policy">
-              Policy
-            </label>
-            <select
-              id="conflict-override-policy"
-              value={overridePolicy}
-              disabled={saving}
-              onChange={(e) => setOverridePolicy(asConflictPolicy(e.target.value))}
-              className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100"
-            >
-              {CONFLICT_POLICIES.map((policy) => (
-                <option key={policy} value={policy}>
-                  {POLICY_COPY[policy].label}
-                </option>
+                  <span className="repo-det-row__end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={saving}
+                      onClick={() => clearOverride(o.branch, o.path)}
+                      aria-label={`Remove override for ${o.path}`}
+                    >
+                      <Trash2 aria-hidden />
+                      Clear
+                    </Button>
+                  </span>
+                </li>
               ))}
-            </select>
+            </ul>
+          )}
+
+          <div className="repo-set-override-form">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="conflict-override-branch">Branch</Label>
+              <Input
+                id="conflict-override-branch"
+                value={overrideBranch}
+                disabled={saving}
+                onChange={(e) => setOverrideBranch(e.target.value)}
+                className="mono"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="conflict-override-path">File path</Label>
+              <Input
+                id="conflict-override-path"
+                value={overridePath}
+                placeholder="specs/petstore.yaml"
+                disabled={saving}
+                onChange={(e) => setOverridePath(e.target.value)}
+                className="mono"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="conflict-override-policy">Policy</Label>
+              <Select
+                value={overridePolicy}
+                disabled={saving}
+                onValueChange={(value) => setOverridePolicy(asConflictPolicy(value))}
+              >
+                <SelectTrigger id="conflict-override-policy">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CONFLICT_POLICIES.map((policy) => (
+                    <SelectItem key={policy} value={policy}>
+                      {POLICY_COPY[policy].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={saving}
+                onClick={() => void addOverride()}
+              >
+                <Plus aria-hidden />
+                Save file override
+              </Button>
+            </div>
           </div>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={saving}
-          onClick={() => void addOverride()}
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden />
-          Save file override
-        </Button>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 }
