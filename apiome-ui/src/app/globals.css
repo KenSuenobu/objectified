@@ -27586,3 +27586,346 @@ a.mcpa-rank__name:hover,
   color: var(--fg-muted);
   overflow-wrap: anywhere;
 }
+
+/* ==========================================================================
+   PUBLISHED VERSIONS  (HIVE-8.1, #5327)
+   --------------------------------------------------------------------------
+   `docs/mockups/ship/published.html`, whose page-local `<style>` block this
+   replaces (`.url-code`, `.mock-cell`, `.pub-table`, `.flyout`) together with
+   the palette classes the 707-line screen had grown: a
+   `text-indigo-600 dark:text-indigo-400` version label, a
+   `bg-blue-100 dark:bg-blue-900/30` lock chip, a
+   `bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700` URL code
+   box, a `from-amber-500 to-yellow-500` no-tenant card and eleven
+   `text-gray-500 dark:text-gray-400` quiet lines. Every one of those froze the
+   surface on one light palette and one dark one; the nine themes had no say.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 to Epic-7 blocks above give. Every rule
+   leans on the density and font-scale tokens; the version cell and the key
+   dialog are real column layouts that a utility string spells badly; and the
+   quiet lines have to sit *after* the unlayered `h1`–`h4` and `p` base rules
+   near line 2497, which outrank anything in `@layer utilities`.
+
+   The mockup froze five things in pixels that must not be frozen: the 260px
+   URL chip, the 150px mock cell, the 185px mock URL, the 210px first column
+   and the 220px description clip. All are `rem` or a token here, so they
+   follow all six font scales.
+
+   Six classes are borrowed rather than restated: `.tnt-menu` and
+   `.tnt-menu__item` (the row menu's surface), `.tnt-icon-tile` (the tinted
+   square at the head of the key dialog), `.mono` (the font-family preference)
+   and the `.badge` chrome, which the visibility toggle wears through
+   `badgeVariants` rather than through a class of its own — a button and a
+   badge that look alike must not be two declarations that can drift.
+
+   No hue is named below. Every colour is a token, so the surface follows all
+   nine appearances, and no `-fg` ink is ever painted as text on the plain
+   surface: `--danger-fg` measures 1.47:1 there in Nord (HIVE-7.2's finding),
+   so the visibility failure is an `Alert`, which carries its own `-soft`
+   ground, rather than a red sentence under the table.
+   ========================================================================== */
+
+/* ---- Column widths ------------------------------------------------------
+   The mockup's `min-width` on the first column, in rem so a reader at the
+   Largest font scale gets a wider column rather than a clipped one. The table
+   is `scrollX`, so these are the widths it scrolls *to* — never a reason for
+   the document to scroll. */
+.pub-col-version {
+  inline-size: 15.5rem;
+  min-inline-size: 13.125rem;
+}
+
+.pub-col-visibility {
+  inline-size: 7rem;
+}
+
+.pub-col-access {
+  inline-size: 17rem;
+}
+
+.pub-col-mock {
+  inline-size: 11.5rem;
+}
+
+.pub-col-published {
+  inline-size: 9.5rem;
+}
+
+.pub-col-actions {
+  inline-size: 6rem;
+}
+
+/* The mockup: `td { vertical-align: top; padding-top: 10px; }`. `DataTable`
+   centres single-line rows on `--row-h`; the version and mock cells are three
+   and four lines, and top alignment is what keeps the chip line, the toggle
+   and the stamp reading as one row. Unlayered, so it wins over the
+   primitive's utility class without the primitive learning a prop for one
+   screen — the same call HIVE-6.2 made for the revisions table. */
+.pub-table td {
+  vertical-align: top;
+  padding-block: calc(var(--space-2) + 0.125rem);
+}
+
+.pub-table td[data-row-actions],
+.pub-table [data-row-actions] {
+  padding-block-start: 0;
+}
+
+/* ---- Project / Version --------------------------------------------------- */
+.pub-version {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.pub-version__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* The mono version label. `--accent-fg`, not `--accent`: measured on the plain
+   surface, `--accent` is 4.15:1 in the light theme, 4.12:1 in Solarized and
+   4.07:1 in Darcula — all under the 4.5:1 floor for normal-size text, which a
+   600-weight `--fs-sm` label is. `--accent-fg` clears it in all nine (7.0:1 at
+   worst). The mockup's indigo is the `--accent` step; this is the same hue one
+   ink darker, and `published-css.test.ts` measures both. */
+.pub-version__label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--accent-fg);
+}
+
+/* The lifecycle pill is a link to the sunset timeline, so it must not carry a
+   link's underline or its own colour — the badge inside it is the visible
+   thing, and this only makes the whole chip the hit area. */
+.pub-version__lifecycle {
+  display: inline-flex;
+  border-radius: var(--r-full);
+  color: inherit;
+  text-decoration: none;
+}
+
+.pub-version__lifecycle:hover {
+  filter: brightness(0.97);
+}
+
+/* The mockup clips the revision note at 220px. On the *inner* block, so an
+   auto-layout table cannot widen the column instead (the trap HIVE-5.8
+   measured and HIVE-6.2 restated). */
+.pub-version__desc {
+  max-inline-size: 13.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Visibility ---------------------------------------------------------- */
+.pub-visibility {
+  display: inline-flex;
+}
+
+/* The badge *is* the button. Its fill and ink come from `badgeVariants`; what
+   is added here is the pointer, the focus ring and the in-flight state. */
+.pub-visibility__button {
+  cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+
+.pub-visibility__button:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.pub-visibility__button:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* ---- Access URL ---------------------------------------------------------- */
+/* The mockup's `.url-code` chip, made the copy control. The glyph is quiet
+   until the row is hovered or the button focused, so a column of four rows is
+   not a column of four icons. */
+.pub-url {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  /* The mockup's 260px chip, in rem, and never wider than its column. Both halves
+     matter: without the cap one long access URL widens the table's own scroll
+     width instead of ellipsising, and without `100%` the chip would overhang a
+     narrow column. The full URL stays reachable through the `title` and the copy
+     the chip itself performs. */
+  max-inline-size: min(100%, 16.25rem);
+  padding: 0.1875rem var(--space-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+  cursor: pointer;
+  text-align: start;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.pub-url:hover {
+  background: var(--bg-subtle);
+  color: var(--fg);
+}
+
+/* `min-inline-size: 0` is the half that is easy to leave out: a flex child's
+   automatic minimum size is its *content*, so without it the code holds the
+   capped chip open at its intrinsic width and `text-overflow` never fires. */
+.pub-url__code {
+  min-inline-size: 0;
+  overflow: hidden;
+  font-size: var(--fs-2xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pub-url__glyph {
+  flex-shrink: 0;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.pub-url:hover .pub-url__glyph,
+.pub-url:focus-visible .pub-url__glyph,
+tr:hover .pub-url__glyph,
+tr:focus-within .pub-url__glyph {
+  opacity: 1;
+}
+
+/* The copied state — the mockup's foot names the two seconds it lasts. The
+   `--ok` mark is the tick, not the words, so nothing here is a tone ink read
+   as text on the plain surface. */
+.pub-url[data-copied] .pub-url__glyph {
+  opacity: 1;
+  color: var(--ok);
+}
+
+/* ---- Published stamp ----------------------------------------------------- */
+.pub-stamp {
+  display: block;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.pub-stamp__author {
+  display: block;
+  margin-block-start: 0.0625rem;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The row menu and its fly-out ---------------------------------------- */
+/* `.tnt-menu` carries the surface; this widens it to the mockup's 208px, in
+   rem, and declares the separator `.tnt-menu` never did. */
+.pub-menu {
+  min-inline-size: 13rem;
+  max-inline-size: min(20rem, calc(100vw - 1rem));
+}
+
+.pub-menu--flyout {
+  min-inline-size: 11.875rem;
+}
+
+.pub-menu__item[data-disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pub-menu__item[data-state="open"] {
+  background: var(--bg-subtle);
+}
+
+/* The fly-out marker. `margin-inline-start: auto` puts it on the trailing
+   edge; the glyph itself points the way the sub-menu opens on a wide viewport,
+   where the menu is already flush right. */
+.pub-menu__chevron {
+  margin-inline-start: auto;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}
+
+.pub-menu__sep {
+  block-size: 1px;
+  margin: var(--space-1);
+  background: var(--border);
+}
+
+/* Make private / Make public is a state change, not a destruction, so it is an
+   ordinary row with an accent glyph rather than a danger row. */
+.pub-menu__item--visibility > svg {
+  color: var(--accent);
+}
+
+/* ---- The foot ------------------------------------------------------------ */
+/* The mockup inks `(filtered)` blue. `--accent-fg` rather than `--accent` for
+   the reason the version label above records: this is `--fs-xs` text, and the
+   mark-strength step is under the text floor in three appearances. */
+.pub-foot__filtered {
+  color: var(--accent-fg);
+  font-weight: 600;
+}
+
+.pub-foot__hint {
+  color: var(--fg-muted);
+}
+
+/* ---- The API-key dialog -------------------------------------------------- */
+.pub-dialog__head {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.pub-dialog__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.pub-key-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+}
+
+.pub-key-dialog__remember {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.pub-key-dialog__remember-label {
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+/* The escape hatch is a link-weight button. The mockup inks it `--warn-fg`;
+   measured on the dialog's plain surface that ink is 1.59:1 in Nord, 2.00:1 in
+   Darcula, 2.05:1 in Solarized, 2.40:1 in Blueprint and 3.32:1 in High
+   contrast — the `-fg` steps are calibrated against their own `-soft` grounds,
+   not against the surface (HIVE-7.2's finding). So the words are `--fg-muted`,
+   which clears AA in all nine, and the eraser glyph plus the sentence carry the
+   meaning instead of the hue. */
+.pub-key-dialog__clear {
+  align-self: flex-start;
+  padding-inline: 0;
+  color: var(--fg-muted);
+}

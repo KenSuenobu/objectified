@@ -170,6 +170,38 @@ export function versionLifecycle(version: Pick<Version, 'lifecycle'>): VersionLi
     : 'stable';
 }
 
+/**
+ * A revision's lifecycle read from its stored `metadata` (HIVE-8.1, #5327).
+ *
+ * The API's `lifecycle` field is *derived*, not a column: `apiome.versions` stores only
+ * `metadata` (V076), and REST's `effective_lifecycle` computes the tag from it — an explicit
+ * `metadata.lifecycle` when it is one of the four `#739` values, otherwise `deprecated` when
+ * the `#507` flag is set, otherwise `stable`. A screen that reads the `versions` row directly
+ * (the Published surface does) therefore has to apply the same rule, and this is it, spelled
+ * once so the two cannot disagree about which revisions are deprecated.
+ *
+ * The `deprecated` flag is accepted in every spelling the flag has been written in — a real
+ * JSON `true`, and the `'true'` / `'1'` / `'yes'` strings the SQL expression also matches.
+ *
+ * @param metadata The revision's `metadata` object, absent or `null` for a revision that has
+ *   none.
+ * @returns One of the four lifecycles.
+ */
+export function lifecycleFromMetadata(
+  metadata: Record<string, unknown> | null | undefined
+): VersionLifecycle {
+  const meta = metadata ?? {};
+  const explicit = typeof meta.lifecycle === 'string' ? meta.lifecycle.trim().toLowerCase() : '';
+  if ((VERSION_LIFECYCLES as readonly string[]).includes(explicit)) {
+    return explicit as VersionLifecycle;
+  }
+  const flag = meta.deprecated;
+  const deprecated =
+    flag === true ||
+    (typeof flag === 'string' && ['true', '1', 'yes'].includes(flag.trim().toLowerCase()));
+  return deprecated ? 'deprecated' : 'stable';
+}
+
 /** The publication state a revision is in — the second badge in the Status column. */
 export type VersionStatus = 'published' | 'draft';
 
