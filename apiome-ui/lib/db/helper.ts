@@ -1291,6 +1291,17 @@ export async function unpublishVersion(versionRecordId: string, userId: string) 
   }
 }
 
+/**
+ * Every published, undeleted revision in one tenant, newest publication first.
+ *
+ * Returns a JSON envelope rather than a bare array (HIVE-8.1, #5327): the previous shape
+ * reported a failed query as `[]`, so a database outage reached the Published screen as
+ * "you have not published anything yet" — the one sentence guaranteed to be wrong at that
+ * moment. The screen now draws the read's failure as the table's error state, with a retry.
+ *
+ * @param tenantId The workspace's id.
+ * @returns `{"success": true, "versions": [...]}`, or `{"success": false, "error": "..."}`.
+ */
 export async function getPublishedVersionsForTenant(tenantId: string) {
   try {
     const result = await connectionPool.query(
@@ -1302,6 +1313,9 @@ export async function getPublishedVersionsForTenant(tenantId: string) {
         v.published_at,
         v.created_at,
         v.mock_enabled,
+        -- Revision JSON (#507, #748, V076): the Published surface reads lifecycle,
+        -- deprecated and sunsetAt out of it to draw the Deprecated pill (HIVE-8.1, #5327).
+        v.metadata,
         p.id as project_id,
         p.name as project_name,
         p.slug as project_slug,
@@ -1323,21 +1337,40 @@ export async function getPublishedVersionsForTenant(tenantId: string) {
       [tenantId]
     );
 
-    return JSON.stringify(result.rows);
+    return JSON.stringify({ success: true, versions: result.rows });
   } catch (error: any) {
     console.error('Error fetching published versions:', error);
-    return JSON.stringify([]);
+    return JSON.stringify({ success: false, error: error?.message ?? 'Unknown database error' });
   }
 }
 
+/**
+ * Flip one published revision between `public` and `private`.
+ *
+ * A statement that matched no row is reported as a failure (HIVE-8.1, #5327), not as a
+ * success: the revision was deleted or unpublished under the reader, and answering "done" to
+ * a change that did not happen leaves the table showing a visibility the database does not
+ * hold.
+ *
+ * @param versionRecordId The `versions.id` UUID.
+ * @param visibility The visibility to move to.
+ * @returns `{"success": true}`, or `{"success": false, "error": "..."}`.
+ */
 export async function updateVersionVisibility(versionRecordId: string, visibility: 'public' | 'private') {
   try {
-    await connectionPool.query(
-      `UPDATE apiome.versions 
+    const result = await connectionPool.query(
+      `UPDATE apiome.versions
        SET visibility = $1, updated_at = CURRENT_TIMESTAMP
        WHERE id = $2 AND deleted_at IS NULL AND published = true`,
       [visibility, versionRecordId]
     );
+
+    if (result.rowCount === 0) {
+      return JSON.stringify({
+        success: false,
+        error: 'This version is no longer published, so its visibility cannot be changed.',
+      });
+    }
 
     return JSON.stringify({ success: true });
   } catch (error: any) {

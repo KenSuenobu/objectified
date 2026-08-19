@@ -195,6 +195,11 @@ export const STATUS_TONE: Readonly<Record<string, StatusTone>> = {
   sunsetting: 'orange',
   sunset: 'danger',
   archived: 'outline',
+  // A published revision is immutable (#2586): `locked` is the chip the Published surface
+  // draws on every row (HIVE-8.1, #5327). `accent` is the mockup's `badge--info` — a
+  // statement of fact about the artefact, not a step on a health scale. (`stable` and `beta`,
+  // the other two `#739` lifecycle tags, are already spelled under *Maturity* below.)
+  locked: 'accent',
 
   // ---- Visibility ----------------------------------------------------------
   private: 'violet',

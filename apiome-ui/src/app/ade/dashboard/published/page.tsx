@@ -10,6 +10,14 @@ import PublishedVersions from './PublishedVersions';
 // (and frozen) at build time.
 export const dynamic = 'force-dynamic';
 
+/**
+ * Ship → Published versions.
+ *
+ * The route is a thin server shell: it resolves the two base URLs the client cannot, and
+ * hands them to {@link PublishedVersions}, which is the screen (HIVE-8.1, #5327).
+ *
+ * @returns The published-versions surface.
+ */
 export default function PublishedVersionsPage() {
   const restApiBaseUrl =
     process.env.NEXT_PUBLIC_REST_API_BASE_URL || 'http://localhost:8000/v1';
