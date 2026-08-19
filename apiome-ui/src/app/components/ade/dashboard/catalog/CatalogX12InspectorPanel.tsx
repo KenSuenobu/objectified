@@ -58,18 +58,18 @@ export interface CatalogX12InspectorPanelProps {
 /** Badge tone classes. Text always carries the meaning; colour only reinforces it. */
 const TONE: Record<'positive' | 'caution' | 'neutral', string> = {
   positive:
-    'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300',
+    'border-ok bg-ok-soft text-ok-fg',
   caution:
-    'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300',
+    'border-warn bg-warn-soft text-warn-fg',
   neutral:
-    'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300',
+    'border-border bg-subtle text-fg',
 };
 
 const BADGE_BASE =
   'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-medium';
 
 const SECTION_HEADING =
-  'text-2xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
+  'text-2xs font-medium uppercase tracking-wider text-fg-muted';
 
 const CELL = 'px-2 py-1.5 text-left align-top';
 
@@ -107,8 +107,8 @@ function Fact({ label, value }: { label: string; value: string | null }) {
         className={cn(
           'mt-0.5 break-words font-mono text-2xs',
           value === null
-            ? 'italic text-gray-400 dark:text-gray-500'
-            : 'text-gray-700 dark:text-gray-300',
+            ? 'italic text-fg-muted'
+            : 'text-fg',
         )}
       >
         {value ?? 'not recorded'}
@@ -128,16 +128,16 @@ function ControlTotal({ total }: { total: X12ControlTotal }) {
     <div
       data-testid="x12-control-total"
       data-mismatched={total.mismatched}
-      className="min-w-0 rounded-lg border border-gray-100 bg-gray-50/60 px-2.5 py-2 dark:border-gray-700/60 dark:bg-gray-900/30"
+      className="cid-inset min-w-0 px-2.5 py-2"
     >
       <dt className={SECTION_HEADING}>{total.label}</dt>
       <dd className="mt-1 flex flex-wrap items-center gap-1.5">
-        <span className="font-mono text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
+        <span className="font-mono text-sm font-semibold tabular-nums text-fg">
           {total.observed.toLocaleString()}
         </span>
-        <span className="text-2xs text-gray-500 dark:text-gray-400">observed</span>
+        <span className="text-2xs text-fg-muted">observed</span>
         {total.declared === null ? (
-          <span className="text-2xs italic text-gray-400 dark:text-gray-500">
+          <span className="text-2xs italic text-fg-muted">
             · {total.declaredBy} declared nothing readable
           </span>
         ) : (
@@ -165,16 +165,16 @@ function Separator({ separator }: { separator: X12Separator }) {
         {separator.character === null ? (
           <span
             data-testid="x12-separator-absent"
-            className="text-2xs italic leading-snug text-gray-500 dark:text-gray-400"
+            className="text-2xs italic leading-snug text-fg-muted"
           >
             {separator.absence}
           </span>
         ) : (
           <>
-            <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800 dark:bg-gray-700/60 dark:text-gray-200">
+            <code className="rounded bg-subtle px-1.5 py-0.5 font-mono text-xs text-fg">
               {separator.character}
             </code>
-            <span className="font-mono text-2xs text-gray-500 dark:text-gray-400">
+            <span className="font-mono text-2xs text-fg-muted">
               {separator.codePoint}
             </span>
           </>
@@ -198,11 +198,11 @@ function Group({
     <li
       data-testid="x12-functional-group"
       data-group-id={group.node.id}
-      className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+      className="rounded-lg border border-border p-3"
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <h4 className="text-xs font-semibold text-gray-900 dark:text-gray-100">
-          <span className="text-gray-500 dark:text-gray-400">Functional group {index + 1} · </span>
+        <h4 className="text-xs font-semibold text-fg">
+          <span className="text-fg-muted">Functional group {index + 1} · </span>
           <span className="font-mono">{group.functionalId ?? 'unnamed'}</span>
         </h4>
         {group.version ? (
@@ -230,7 +230,7 @@ function Group({
       {group.transactions.length === 0 ? (
         <p
           data-testid="x12-group-no-transactions"
-          className="mt-2 text-2xs text-gray-500 dark:text-gray-400"
+          className="mt-2 text-2xs text-fg-muted"
         >
           No transaction set is recorded under this group. The analyzer&apos;s node budget bounds
           leaves before envelopes, so this means the record has none — not that the source had none.
@@ -242,7 +242,7 @@ function Group({
               Transaction sets in functional group {group.functionalId ?? index + 1}
             </caption>
             <thead>
-              <tr className="border-b border-gray-200 text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              <tr className="border-b border-border text-fg-muted">
                 <th scope="col" className={cn(CELL, SECTION_HEADING)}>
                   Set
                 </th>
@@ -260,7 +260,7 @@ function Group({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700/60">
+            <tbody className="divide-y divide-border">
               {group.transactions.map((transaction) => (
                 <tr
                   key={transaction.node.id}
@@ -268,13 +268,13 @@ function Group({
                   data-node-id={transaction.node.id}
                   data-converted={transaction.converted}
                 >
-                  <th scope="row" className={cn(CELL, 'font-mono font-semibold text-gray-900 dark:text-white')}>
+                  <th scope="row" className={cn(CELL, 'font-mono font-semibold text-fg')}>
                     {onRevealNode ? (
                       <button
                         type="button"
                         data-testid="x12-transaction-reveal"
                         onClick={() => onRevealNode(transaction.node.id)}
-                        className="rounded text-indigo-700 underline decoration-dotted underline-offset-2 hover:decoration-solid focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-indigo-300"
+                        className="rounded text-accent-fg underline decoration-dotted underline-offset-2 hover:decoration-solid focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       >
                         {transaction.setId ?? 'unnamed'}
                         <span className="sr-only"> — show this transaction set in the structure tree</span>
@@ -293,16 +293,16 @@ function Group({
                       </span>
                     ) : null}
                   </th>
-                  <td className={cn(CELL, 'font-mono text-gray-700 dark:text-gray-300')}>
+                  <td className={cn(CELL, 'font-mono text-fg')}>
                     {transaction.controlNumber ?? '—'}
                   </td>
-                  <td className={cn(CELL, 'font-mono text-gray-700 dark:text-gray-300')}>
+                  <td className={cn(CELL, 'font-mono text-fg')}>
                     {transaction.implementationConvention ?? (
-                      <span className="italic text-gray-400 dark:text-gray-500">none declared</span>
+                      <span className="italic text-fg-muted">none declared</span>
                     )}
                   </td>
                   <td className={CELL}>
-                    <span className="font-mono tabular-nums text-gray-700 dark:text-gray-300">
+                    <span className="font-mono tabular-nums text-fg">
                       {transaction.segmentTotal.observed.toLocaleString()}
                     </span>
                     {transaction.segmentTotal.declared === null ? null : transaction.segmentTotal
@@ -316,21 +316,21 @@ function Group({
                         />
                       </span>
                     ) : (
-                      <span className="ml-1 text-2xs text-gray-500 dark:text-gray-400">
+                      <span className="ml-1 text-2xs text-fg-muted">
                         matches SE01
                       </span>
                     )}
                   </td>
                   <td className={CELL}>
                     {transaction.repeatedSegments.length === 0 ? (
-                      <span className="italic text-gray-400 dark:text-gray-500">none</span>
+                      <span className="italic text-fg-muted">none</span>
                     ) : (
                       <ul className="flex flex-wrap gap-1">
                         {transaction.repeatedSegments.map((repeat) => (
                           <li
                             key={repeat.segmentId}
                             data-testid="x12-repeated-segment"
-                            className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:bg-gray-700/60 dark:text-gray-300"
+                            className="inline-flex items-center gap-1 rounded bg-subtle px-1.5 py-0.5 font-mono text-2xs text-fg"
                           >
                             {repeat.segmentId}
                             <span className="tabular-nums font-semibold">×{repeat.count}</span>
@@ -380,19 +380,19 @@ export function CatalogX12InspectorPanel({
       data-testid="catalog-x12-inspector"
       aria-labelledby="catalog-x12-inspector-heading"
       className={cn(
-        'rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800',
+        'rounded-lg border border-border bg-surface p-3',
         className,
       )}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3
           id="catalog-x12-inspector-heading"
-          className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100"
+          className="flex items-center gap-2 text-sm font-semibold text-fg"
         >
-          <Layers className="h-4 w-4 text-indigo-500" aria-hidden />
+          <Layers className="h-4 w-4 text-accent" aria-hidden />
           Interchange
           {envelope.controlNumber ? (
-            <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
+            <span className="font-mono text-xs text-fg-muted">
               {envelope.controlNumber}
             </span>
           ) : null}
@@ -434,7 +434,7 @@ export function CatalogX12InspectorPanel({
         </h4>
         <dl
           data-testid="x12-separators"
-          className="mt-1.5 grid grid-cols-2 gap-3 rounded-lg border border-gray-100 bg-gray-50/60 p-2.5 sm:grid-cols-4 dark:border-gray-700/60 dark:bg-gray-900/30"
+          className="cid-inset mt-1.5 grid grid-cols-2 gap-3 p-2.5 sm:grid-cols-4"
         >
           {envelope.separators.map((separator) => (
             <Separator key={separator.label} separator={separator} />
@@ -456,7 +456,7 @@ export function CatalogX12InspectorPanel({
         {groups.length === 0 ? (
           <p
             data-testid="x12-no-groups"
-            className="mt-1.5 text-2xs text-gray-500 dark:text-gray-400"
+            className="mt-1.5 text-2xs text-fg-muted"
           >
             This record carries no functional group. A bounded analysis keeps envelopes before
             leaves, so an interchange with groups would still show them here.
@@ -476,14 +476,14 @@ export function CatalogX12InspectorPanel({
       </section>
 
       {/* What the conversion was derived from — the statement no other screen makes. */}
-      <p
+      <div
         data-testid="x12-conversion-scope"
         data-subset={scope.isSubset}
         className={cn(
           'mt-3 flex items-start gap-1.5 rounded-lg border px-3 py-2 text-xs',
           scope.isSubset
-            ? 'border-amber-200 bg-amber-50/60 text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/20 dark:text-amber-300'
-            : 'border-gray-200 bg-gray-50/60 text-gray-700 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-300',
+            ? 'border-warn bg-warn-soft text-warn-fg'
+            : 'border-border bg-subtle text-fg',
         )}
       >
         {scope.isSubset ? (
@@ -492,16 +492,16 @@ export function CatalogX12InspectorPanel({
           <FileWarning className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
         )}
         <span>{scope.statement}</span>
-      </p>
+      </div>
 
       {/* Observed, not validated. Rendered on every X12 record without exception. */}
-      <p
+      <div
         data-testid="x12-conformance-statement"
-        className="mt-2 flex items-start gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-xs text-indigo-800 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-300"
+        className="mt-2 flex items-start gap-1.5 rounded-lg border border-accent bg-accent-soft px-3 py-2 text-xs text-accent-fg"
       >
         <ShieldQuestion className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
         <span>{x12ConformanceStatement()}</span>
-      </p>
+      </div>
     </section>
   );
 }

@@ -42,8 +42,11 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { Alert } from '@/app/components/ui/Alert';
+import { Stat } from '@/app/components/ui/metrics';
+import { STATUS_TONE_DOT_CLASS } from '@/app/components/ui/statusVocabulary';
 import { Switch } from '@/app/components/ui/Switch';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
+import { Card } from '@/app/components/ui/Card';
 import { LintViolationFindingMeta } from '@/app/components/ade/dashboard/lint/LintViolationFindingMeta';
 import { LintViolationFindingsList } from '@/app/components/ade/dashboard/lint/LintViolationFindingsList';
 import { useLintViolationContext } from '@/app/components/ade/dashboard/lint/useLintViolationContext';
@@ -77,6 +80,7 @@ import { lintAxisEvaluationFromLintReport } from '@/app/utils/lint-axis-ui';
 import { LintAxisCoveragePanel } from '@/app/components/ade/dashboard/lint/LintAxisCoveragePanel';
 import { SourceFormatChecksPanel } from '@/app/components/ade/dashboard/lint/SourceFormatChecksPanel';
 import { LintDecisionBadge } from '@/app/utils/lint-policy-ui';
+import { useReportedCount } from './useReportedCount';
 
 interface CatalogLintPanelProps {
   /** The catalog item id to lint (a project id). */
@@ -111,6 +115,8 @@ interface CatalogLintPanelProps {
   sourceHref?: string | null;
   /** Whether the raw source can be retrieved at all (the item's `source.downloadable`). */
   sourceAvailable?: boolean;
+  /** Report how many findings the report carries, for the shell's tab count (HIVE-7.2). */
+  onCountChange?: (count: number) => void;
 }
 
 /** The fetch lifecycle of the lint report (`idle`/`loading` render the spinner). */
@@ -121,9 +127,9 @@ const BREAKDOWN_SEGMENTS: readonly {
   key: keyof Pick<CategorySeverityBreakdown, 'error' | 'warning' | 'info'>;
   fillClass: string;
 }[] = [
-  { key: 'error', fillClass: 'bg-rose-500' },
-  { key: 'warning', fillClass: 'bg-amber-500' },
-  { key: 'info', fillClass: 'bg-sky-500' },
+  { key: 'error', fillClass: 'bg-danger' },
+  { key: 'warning', fillClass: 'bg-warn' },
+  { key: 'info', fillClass: 'bg-accent' },
 ];
 
 /**
@@ -137,10 +143,10 @@ function ScoreSummaryCard({ score, grade, children }: { score: number; grade: st
   return (
     <div
       data-testid="catalog-lint-gauge"
-      className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+      className="rounded-xl border border-border bg-surface p-3"
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
           Lint score
         </span>
         <span
@@ -152,15 +158,15 @@ function ScoreSummaryCard({ score, grade, children }: { score: number; grade: st
       </div>
       <div className="mt-1 font-mono text-xl font-bold tabular-nums">
         <span className={tier.textClass}>{score}</span>
-        <span className="text-sm font-medium text-gray-400 dark:text-gray-500">/100</span>
+        <span className="text-sm font-medium text-fg-muted">/100</span>
       </div>
-      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-subtle">
         <div
           className={cn('h-full rounded-full transition-all duration-500', tier.barSolidClass)}
           style={{ width: `${score}%` }}
         />
       </div>
-      <p className="mt-1 text-2xs text-gray-400 dark:text-gray-500">
+      <p className="mt-1 text-2xs text-fg-muted">
         {tier.shortLabel} · deterministic lint
       </p>
       {children}
@@ -174,10 +180,10 @@ function CategoryScoreBar({ name, score }: { name: string; score: number }) {
   return (
     <div data-testid="catalog-lint-category-bar">
       <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="text-gray-700 dark:text-gray-300">{humanizeCategory(name)}</span>
-        <span className="font-mono tabular-nums text-gray-500 dark:text-gray-400">{score}</span>
+        <span className="text-fg">{humanizeCategory(name)}</span>
+        <span className="font-mono tabular-nums text-fg-muted">{score}</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+      <div className="h-2 overflow-hidden rounded-full bg-subtle">
         <div
           className={cn('h-full rounded-full transition-all duration-500', tier.barSolidClass)}
           style={{ width: `${score}%` }}
@@ -195,8 +201,8 @@ function CategoryBreakdownBar({ row }: { row: CategorySeverityBreakdown }) {
   return (
     <div data-testid="catalog-lint-category-breakdown">
       <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="text-gray-700 dark:text-gray-300">{humanizeCategory(row.category)}</span>
-        <span className="flex items-center gap-1.5 font-mono tabular-nums text-gray-500 dark:text-gray-400">
+        <span className="text-fg">{humanizeCategory(row.category)}</span>
+        <span className="flex items-center gap-1.5 font-mono tabular-nums text-fg-muted">
           {BREAKDOWN_SEGMENTS.filter((s) => row[s.key] > 0).map((s) => (
             <span key={s.key}>
               {row[s.key]} {s.key}
@@ -204,7 +210,7 @@ function CategoryBreakdownBar({ row }: { row: CategorySeverityBreakdown }) {
           ))}
         </span>
       </div>
-      <div className="flex h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+      <div className="flex h-2 overflow-hidden rounded-full bg-subtle">
         {BREAKDOWN_SEGMENTS.map((s) =>
           row[s.key] > 0 ? (
             <div
@@ -220,35 +226,44 @@ function CategoryBreakdownBar({ row }: { row: CategorySeverityBreakdown }) {
 }
 
 /** One tile in the severity summary strip (count + label + caption). */
+/**
+ * One tile of the severity strip (HIVE-7.2, #5319).
+ *
+ * The shared `Stat` rather than a hand-rolled bordered box, and — the part that changed — the
+ * **figure is never tinted**. The mockup paints MUST's label `--danger-fg` and SHOULD's
+ * `--warn-fg`; measured across the nine appearances that ink lands between 1.47:1 and 3.32:1
+ * on the plain surface in five of them, well under the 4.5:1 a word needs. So the tone moves
+ * to a dot beside a label that says the same thing in words — the deviation HIVE-6.6 recorded
+ * and this ticket inherits — and the count stays `--fg`.
+ *
+ * @param props.label The severity's name.
+ * @param props.count How many findings it holds.
+ * @param props.tone The severity's tone, for the dot; omitted for a tile with no severity.
+ * @param props.caption The quiet line under the figure.
+ * @returns The tile.
+ */
 function SummaryTile({
   label,
   count,
-  countClass,
+  tone,
   caption,
 }: {
   label: string;
   count: number;
-  /** Tint for a non-zero count (e.g. rose for MUST); zero stays neutral. */
-  countClass?: string;
+  tone?: 'danger' | 'warn';
   caption: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          {label}
-        </span>
-        <span
-          className={cn(
-            'font-mono text-xl font-bold tabular-nums text-gray-900 dark:text-white',
-            countClass,
-          )}
-        >
-          {count}
-        </span>
-      </div>
-      <p className="mt-1 text-2xs text-gray-400 dark:text-gray-500">{caption}</p>
-    </div>
+    <Stat
+      label={label}
+      value={count}
+      footnote={caption}
+      icon={
+        tone && count > 0 ? (
+          <span className={cn('cid-sev-dot', STATUS_TONE_DOT_CLASS[tone])} aria-hidden />
+        ) : undefined
+      }
+    />
   );
 }
 
@@ -272,11 +287,11 @@ function ProvenanceCell({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <dt className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <dt className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wider text-fg-muted">
         {icon}
         {label}
       </dt>
-      <dd className="min-w-0 text-xs text-gray-700 dark:text-gray-300">{children}</dd>
+      <dd className="min-w-0 text-xs text-fg">{children}</dd>
     </div>
   );
 }
@@ -298,10 +313,10 @@ function ProvenanceStrip({
   return (
     <dl
       data-testid="catalog-lint-provenance"
-      className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-gray-200 bg-gray-50/60 px-4 py-2.5 dark:border-gray-700 dark:bg-gray-900/30"
+      className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-border bg-subtle px-4 py-2.5"
     >
       <ProvenanceCell label="Version">
-        <span className="font-mono text-gray-900 dark:text-white">{report.versionId}</span>
+        <span className="font-mono text-fg">{report.versionId}</span>
       </ProvenanceCell>
       {scored ? (
         <ProvenanceCell label="Scored" icon={<Clock className="h-3 w-3" aria-hidden />}>
@@ -314,8 +329,8 @@ function ProvenanceStrip({
           className={cn(
             'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
             provenance.stale
-              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
-              : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+              ? 'bg-warn-soft text-warn-fg'
+              : 'bg-inset text-fg',
           )}
           title="Whether the score shown is the one persisted at import or a live recompute"
         >
@@ -326,7 +341,7 @@ function ProvenanceStrip({
       {report.reportFingerprint ? (
         <ProvenanceCell label="Fingerprint" icon={<Fingerprint className="h-3 w-3" aria-hidden />}>
           <span
-            className="block max-w-[10rem] truncate font-mono text-gray-500 dark:text-gray-400"
+            className="block max-w-[10rem] truncate font-mono text-fg-muted"
             title={`Report fingerprint: ${report.reportFingerprint}`}
           >
             {report.reportFingerprint}
@@ -377,7 +392,7 @@ function FindingRow({
         'rounded-lg p-3 transition-shadow',
         rowClass,
         onSelect && 'cursor-pointer',
-        selected && 'ring-2 ring-indigo-400 dark:ring-indigo-500',
+        selected && 'ring-2 ring-accent',
       )}
       data-testid="catalog-lint-finding-row"
       data-selected={selected || undefined}
@@ -401,8 +416,8 @@ function FindingRow({
               className={cn(
                 'inline-flex items-center gap-1 font-mono text-2xs font-medium',
                 selected
-                  ? 'text-indigo-700 dark:text-indigo-300'
-                  : 'text-indigo-600 hover:underline dark:text-indigo-400',
+                  ? 'text-accent-fg'
+                  : 'text-accent-fg hover:underline',
               )}
             >
               <Code className="h-3 w-3" aria-hidden />
@@ -416,7 +431,7 @@ function FindingRow({
             <button
               type="button"
               data-testid="catalog-lint-waive-button"
-              className="text-2xs font-medium text-amber-700 hover:underline dark:text-amber-400"
+              className="text-2xs font-medium text-accent-fg hover:underline"
               onClick={(event) => {
                 event.stopPropagation();
                 onWaive(finding);
@@ -434,7 +449,7 @@ function FindingRow({
               type="button"
               data-testid="catalog-lint-finding-link"
               onClick={() => onNavigateToEntity!(entityName!)}
-              className="inline-flex max-w-full items-center gap-1 font-mono text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+              className="inline-flex max-w-full items-center gap-1 font-mono text-2xs font-medium text-accent-fg hover:underline"
               title={`Jump to ${entityName} in Overview`}
             >
               <span className="truncate">{finding.path}</span>
@@ -442,7 +457,7 @@ function FindingRow({
             </button>
           ) : (
             <span
-              className="block truncate font-mono text-2xs text-gray-400 dark:text-gray-500"
+              className="block truncate font-mono text-2xs text-fg-muted"
               title={finding.path}
             >
               {finding.path}
@@ -450,9 +465,9 @@ function FindingRow({
           )}
         </div>
       ) : null}
-      <p className="mt-1 truncate text-sm text-gray-700 dark:text-gray-200" title={finding.message}>
+      <div className="mt-1 truncate text-sm text-fg" title={finding.message}>
         {finding.message}
-      </p>
+      </div>
     </li>
   );
 }
@@ -488,7 +503,7 @@ function TierSection({
   return (
     <section data-testid={`catalog-lint-tier-${meta.key}`}>
       <div className="mb-2 flex flex-wrap items-baseline gap-2">
-        <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
+        <h4 className="flex items-center gap-2 text-sm font-semibold text-fg">
           <span
             className={cn(
               'inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wide',
@@ -504,7 +519,7 @@ function TierSection({
             </span>
           </span>
         </h4>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{meta.description}</p>
+        <p className="text-xs text-fg-muted">{meta.description}</p>
       </div>
       <ul className="space-y-2">
         {findings.map((f) => (
@@ -544,6 +559,7 @@ export function CatalogLintPanel({
   sourceFormat,
   sourceHref = null,
   sourceAvailable = false,
+  onCountChange,
 }: CatalogLintPanelProps) {
   const [status, setStatus] = useState<LintStatus>('idle');
   const [report, setReport] = useState<VersionLintReport | null>(null);
@@ -716,6 +732,7 @@ export function CatalogLintPanel({
   }, [loadReport]);
 
   const findings = useMemo(() => (report ? sortLintFindings(report.findings) : []), [report]);
+  useReportedCount(status === 'loaded', findings.length, onCountChange);
   const displayLint = useMemo(
     () => (report ? catalogDisplayLintScore(report) : null),
     [report],
@@ -823,7 +840,7 @@ export function CatalogLintPanel({
             type="button"
             data-testid="catalog-lint-finding-link"
             onClick={() => onNavigateToEntity!(entityName!)}
-            className="inline-flex items-center gap-1 font-mono text-2xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            className="inline-flex items-center gap-1 font-mono text-2xs font-medium text-accent-fg hover:underline"
             title={`Jump to ${entityName} in Overview`}
           >
             {finding.path}
@@ -832,16 +849,16 @@ export function CatalogLintPanel({
         );
       }
       return (
-        <span className="font-mono text-2xs text-gray-400 dark:text-gray-500">{finding.path}</span>
+        <span className="font-mono text-2xs text-fg-muted">{finding.path}</span>
       );
     },
     [entityNameSet, onNavigateToEntity],
   );
 
   return (
-    <section className={`${dashboardPanelClass} p-6`} data-testid="catalog-detail-lint">
+    <Card className="cid-panel" data-testid="catalog-detail-lint">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-fg-muted">
           Lint &amp; score
         </h2>
         <div className="flex flex-wrap items-center gap-2">
@@ -850,17 +867,17 @@ export function CatalogLintPanel({
             data-testid="catalog-detail-quality-history"
             onClick={onOpenQualityHistory}
             disabled={!qualityAvailable}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:disabled:hover:bg-gray-800"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-fg transition-colors hover:bg-subtle disabled:cursor-not-allowed disabled:text-fg disabled:hover:bg-white"
           >
-            <History className="h-4 w-4 text-indigo-500" /> Quality history
+            <History className="h-4 w-4 text-accent" /> Quality history
           </button>
           <button
             type="button"
             data-testid="catalog-detail-lint-report"
             onClick={onOpenReport}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-fg transition-colors hover:bg-subtle"
           >
-            <FileSearch className="h-4 w-4 text-indigo-500" /> Open full report
+            <FileSearch className="h-4 w-4 text-accent" /> Open full report
           </button>
         </div>
       </div>
@@ -868,16 +885,16 @@ export function CatalogLintPanel({
       {status === 'idle' || status === 'loading' ? (
         <p
           data-testid="catalog-lint-loading"
-          className="mt-6 text-sm text-gray-500 dark:text-gray-400"
+          className="mt-6 text-sm text-fg-muted"
         >
           Loading lint report…
         </p>
       ) : status === 'error' ? (
         <div
           data-testid="catalog-lint-error"
-          className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 p-4 text-sm dark:border-rose-900 dark:bg-rose-950/30"
+          className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-danger bg-danger-soft p-4 text-sm"
         >
-          <span className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
+          <span className="flex items-center gap-2 text-danger-fg">
             <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
             {errorMessage || 'Failed to load lint report.'}
           </span>
@@ -885,7 +902,7 @@ export function CatalogLintPanel({
             type="button"
             data-testid="catalog-lint-retry"
             onClick={retry}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-fg transition-colors hover:bg-subtle"
           >
             <RefreshCw className="h-4 w-4" /> Retry
           </button>
@@ -920,13 +937,13 @@ export function CatalogLintPanel({
           <SummaryTile
             label="MUST"
             count={mustCount}
-            countClass={mustCount > 0 ? 'text-rose-600 dark:text-rose-400' : undefined}
+            tone="danger"
             caption="Hard requirements (errors)"
           />
           <SummaryTile
             label="SHOULD"
             count={shouldCount}
-            countClass={shouldCount > 0 ? 'text-amber-600 dark:text-amber-400' : undefined}
+            tone="warn"
             caption="Recommendations (warnings)"
           />
           <SummaryTile label="Advisory" count={advisoryCount} caption="Informational notes" />
@@ -941,7 +958,7 @@ export function CatalogLintPanel({
               report.scoreIsStale &&
               (report.score !== displayLint.score || report.grade !== displayLint.grade) ? (
                 <p
-                  className="mt-1 text-2xs text-gray-500 dark:text-gray-400"
+                  className="mt-1 text-2xs text-fg-muted"
                   data-testid="catalog-lint-live-recompute-note"
                 >
                   Converted OpenAPI lint: {report.grade} · {report.score}/100
@@ -958,10 +975,10 @@ export function CatalogLintPanel({
           {/* Left rail (30%): categories, then the findings list filling the remaining height. Both
               columns share one fixed height, so selecting findings never shifts the layout — the
               list and the source each scroll inside their own static frame. */}
-          <div className="flex h-[900px] min-w-0 flex-col gap-4 lg:col-span-3">
-            <div className="max-h-[200px] shrink-0 overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+          <div className="cid-lint-col flex min-w-0 flex-col gap-4 lg:col-span-3">
+            <div className="cid-lint-well shrink-0 overflow-y-auto rounded-xl border border-border bg-surface p-4">
             <div data-testid="catalog-lint-categories">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-fg-muted">
                 Categories
               </h3>
               {categoryScores ? (
@@ -977,31 +994,31 @@ export function CatalogLintPanel({
                       <CategoryBreakdownBar key={row.category} row={row} />
                     ))}
                   </div>
-                  <p className="mt-3 text-2xs text-gray-400 dark:text-gray-500">
+                  <p className="mt-3 text-2xs text-fg-muted">
                     Severity breakdown by category — per-category 0–100 scores arrive with the lint
                     rollup enrichment (MFI-25.6).
                   </p>
                 </>
               ) : (
-                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-3 text-sm text-fg-muted">
                   No category findings.
                 </p>
               )}
             </div>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 px-4 py-2.5 dark:border-gray-700">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-surface">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-fg-muted">
                 Findings
                 {findings.length > 0 ? (
-                  <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 font-mono text-2xs font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
+                  <span className="ml-1.5 rounded-full bg-subtle px-1.5 py-0.5 font-mono text-2xs font-semibold tabular-nums text-fg">
                     {findings.length}
                   </span>
                 ) : null}
               </h3>
               {findings.length > 0 ? (
-                <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                <label className="flex items-center gap-2 text-xs text-fg-muted">
                   <Switch
                     checked={groupByRule}
                     onCheckedChange={onGroupByRuleChange}
@@ -1019,7 +1036,7 @@ export function CatalogLintPanel({
             {findings.length === 0 ? (
               <p
                 data-testid="catalog-lint-no-findings"
-                className="text-sm text-gray-600 dark:text-gray-300"
+                className="text-sm text-fg-muted"
               >
                 No findings — clean bill of health.
               </p>
@@ -1064,19 +1081,19 @@ export function CatalogLintPanel({
 
           {/* The source pane: the selected finding's line highlighted and centred in a bounded
               window of the raw source (the import quality step's raw viewer, IXH-3.2). */}
-          <div className="h-[900px] min-w-0 lg:col-span-7">
+          <div className="cid-lint-col min-w-0 lg:col-span-7">
             <div
-              className="flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+              className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface"
               data-testid="catalog-lint-source-pane"
             >
-              <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-2.5 dark:border-gray-700">
-                <Code className="h-4 w-4 shrink-0 text-indigo-500" aria-hidden />
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-4 py-2.5">
+                <Code className="h-4 w-4 shrink-0 text-accent" aria-hidden />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-fg-muted">
                   Source{selectedLine !== null ? ` · line ${selectedLine}` : ''}
                 </h3>
                 {selectedFinding ? (
                   <span
-                    className="ml-auto min-w-0 truncate font-mono text-2xs text-gray-400 dark:text-gray-500"
+                    className="ml-auto min-w-0 truncate font-mono text-2xs text-fg-muted"
                     title={selectedFinding.rule}
                   >
                     {selectedFinding.rule}
@@ -1085,45 +1102,46 @@ export function CatalogLintPanel({
               </div>
               <div
                 ref={sourceViewerRef}
-                className="relative min-h-0 flex-1 overflow-auto bg-gray-50 dark:bg-gray-900"
+                className="relative min-h-0 flex-1 overflow-auto bg-subtle"
                 data-testid="catalog-lint-source-viewer"
               >
                 {!sourceAvailable ? (
                   <p
                     data-testid="catalog-lint-source-unavailable"
-                    className="p-4 text-xs text-gray-500 dark:text-gray-400"
+                    className="p-4 text-xs text-fg-muted"
                   >
                     The raw source was not captured at import, so findings cannot be linked to
                     source lines here.
                   </p>
                 ) : sourceState.status === 'error' ? (
-                  <p
+                  <Alert
+                    variant="danger"
+                    className="m-3 text-xs"
                     data-testid="catalog-lint-source-error"
-                    className="p-4 text-xs text-rose-600 dark:text-rose-400"
                   >
                     {sourceState.error || 'The raw source could not be loaded.'}
-                  </p>
+                  </Alert>
                 ) : sourceState.status !== 'loaded' ? (
-                  <p className="p-4 text-xs text-gray-500 dark:text-gray-400">Loading source…</p>
+                  <p className="p-4 text-xs text-fg-muted">Loading source…</p>
                 ) : rawAllLines.length === 0 ? (
-                  <p className="p-4 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="p-4 text-xs text-fg-muted">
                     The captured source is empty.
                   </p>
                 ) : (
                   <>
                     {selectedFinding && selectedLine === null ? (
-                      <p
+                      <div
                         data-testid="catalog-lint-source-unresolved"
-                        className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+                        className="border-b border-warn bg-warn-soft px-4 py-2 text-xs text-warn-fg"
                       >
                         Could not locate{' '}
                         <span className="font-mono">{selectedFinding.path || 'this finding'}</span>{' '}
                         in the source — showing the document head.
-                      </p>
+                      </div>
                     ) : null}
                     {rawRange.start > 0 ? (
                       <p
-                        className="px-4 py-1 font-mono text-2xs text-gray-400 dark:text-gray-500"
+                        className="px-4 py-1 font-mono text-2xs text-fg-muted"
                         data-testid="catalog-lint-source-clipped-before"
                       >
                         … {rawRange.start.toLocaleString()} earlier{' '}
@@ -1142,11 +1160,11 @@ export function CatalogLintPanel({
                             className={cn(
                               'flex gap-3 px-4',
                               isTarget
-                                ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                : 'text-gray-700 dark:text-gray-300',
+                                ? 'bg-accent-soft text-accent-fg'
+                                : 'text-fg',
                             )}
                           >
-                            <span className="w-10 shrink-0 select-none text-right tabular-nums text-gray-400">
+                            <span className="w-10 shrink-0 select-none text-right tabular-nums text-fg-muted">
                               {lineNumber}
                             </span>
                             <span className="whitespace-pre-wrap break-all">{text}</span>
@@ -1156,7 +1174,7 @@ export function CatalogLintPanel({
                     </ol>
                     {rawRange.end < rawAllLines.length ? (
                       <p
-                        className="px-4 py-1 font-mono text-2xs text-gray-400 dark:text-gray-500"
+                        className="px-4 py-1 font-mono text-2xs text-fg-muted"
                         data-testid="catalog-lint-source-clipped-after"
                       >
                         … {(rawAllLines.length - rawRange.end).toLocaleString()} later{' '}
@@ -1180,40 +1198,42 @@ export function CatalogLintPanel({
           aria-modal="true"
           aria-label="Waive lint finding"
         >
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <div className="w-full max-w-md rounded-xl border border-border bg-surface p-5 shadow-lg">
+            <h3 className="text-sm font-semibold text-fg">
               Waive finding
             </h3>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs text-fg-muted">
               Raw severity stays visible; this records an audited policy decision with
               rationale and expiry.
             </p>
-            <p className="mt-3 font-mono text-2xs text-gray-500">{waiveTarget.id}</p>
-            <label className="mt-3 block text-xs font-medium text-gray-700 dark:text-gray-300">
+            <p className="mt-3 font-mono text-2xs text-fg-muted">{waiveTarget.id}</p>
+            <label className="mt-3 block text-xs font-medium text-fg">
               Rationale
               <textarea
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                 rows={3}
                 value={waiveRationale}
                 onChange={(e) => setWaiveRationale(e.target.value)}
               />
             </label>
-            <label className="mt-3 block text-xs font-medium text-gray-700 dark:text-gray-300">
+            <label className="mt-3 block text-xs font-medium text-fg">
               Expires
               <input
                 type="date"
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                 value={waiveExpiry}
                 onChange={(e) => setWaiveExpiry(e.target.value)}
               />
             </label>
             {waiveError ? (
-              <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">{waiveError}</p>
+              <Alert variant="danger" className="mt-2 text-xs">
+                {waiveError}
+              </Alert>
             ) : null}
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-slate-800"
+                className="rounded-lg px-3 py-1.5 text-sm text-fg hover:bg-subtle"
                 onClick={() => setWaiveTarget(null)}
                 disabled={waiveSaving}
               >
@@ -1221,7 +1241,7 @@ export function CatalogLintPanel({
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-500 disabled:opacity-50"
+                className="rounded-lg bg-warn px-3 py-1.5 text-sm font-medium text-white hover:bg-warn disabled:opacity-50"
                 onClick={() => void submitWaive()}
                 disabled={waiveSaving || !waiveRationale.trim() || !waiveExpiry}
               >
@@ -1231,6 +1251,6 @@ export function CatalogLintPanel({
           </div>
         </div>
       ) : null}
-    </section>
+    </Card>
   );
 }

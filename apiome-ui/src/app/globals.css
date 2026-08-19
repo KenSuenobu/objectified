@@ -20632,3 +20632,902 @@ a.cat-fmt-chip:hover {
   font-size: var(--fs-lg);
   font-weight: 700;
 }
+
+/* ==========================================================================
+   CATALOG ITEM DETAIL  (HIVE-7.2, #5319)
+   --------------------------------------------------------------------------
+   `docs/mockups/sources/catalog-item.html`, whose page-local `<style>` block
+   this replaces (`.fmt`, `.orb-btn`, `.tile`, `.compbar`, `.entity`,
+   `.field-row`, `.tree-row`, `.finding`, `.rail-step`, `.diff-grid`) together
+   with the ~1,100 palette classes the eight panes on this route had grown
+   across eleven components.
+
+   Why these live in the stylesheet rather than in the components
+   -----------------------------------------------------------------
+   The same three reasons the Epic-5 to Epic-7.1 blocks above give. Every rule
+   leans on the density and font-scale tokens; the surface tiles, the main/aside
+   split, the three-column field row and the provenance rail are real grids that
+   a utility string spells badly; and the quiet lines have to sit *after* the
+   unlayered `h1`–`h4` and `p` base rules near line 2497, which outrank anything
+   in `@layer utilities`.
+
+   The mockup froze nine things in pixels that must not be frozen: the 380px
+   related-artifacts column, the 200/140/1fr field row, the 28px entity row, the
+   36px rail tile and its 34px connector, the 8px composition bar, the 380px
+   tree pane and the 288px projection table. All are `rem` or a token here, so
+   they follow all six font scales.
+
+   No hue is named below. Every colour is a token, so the surface follows all
+   nine themes — and the four surface tones (`--ok`, `--accent`, `--violet`,
+   `--rose`) are the one place a colour is an *identity* rather than a state:
+   Services is the same green in the tile, in the bar slice and in the legend,
+   which is the whole point of drawing the three together.
+
+   Four measured deviations from the mockup, all four inherited from the Epic-5
+   to Epic-7.1 tickets and re-measured for this screen:
+
+   * quiet text is `--fg-muted`, not the mockup's `--fg-subtle`, which measures
+     2.9:1–3.9:1 against the surface in eight of the nine appearances;
+   * **a tone never paints a word on the plain surface.** `--warn-fg` measures
+     3.32:1 in High contrast, 2.05:1 in Solarized and 1.59:1 in Nord there, and
+     `--danger-fg` 1.47:1 in Nord — so the mockup's `t-warn` axis score, its
+     `--danger-fg` MUST label and its amber "varies"/"unknown" cells are either
+     `--fg-muted` here or take the soft ground the pair was calibrated against.
+     Measured on the *pair* they land at 4.5:1 or better in all nine;
+   * a tone that lands on a **mark** — the severity dot, the composition bar —
+     is only ever beside words saying the same thing, because `--warn` is
+     2.82:1 and `--danger` 2.46:1 on the surface, under WCAG 1.4.11's 3:1. The
+     two that do clear it everywhere, `--accent` (4.07:1) and `--ok` (3.15:1),
+     are the ones used alone;
+   * the converted strip is an `Alert` in the `ok` tone rather than the
+     mockup's hand-tinted banner, so a re-conversion reads the same as every
+     other "this finished and it worked" statement in the product.
+
+   Three classes are borrowed rather than restated: `.tnt-icon-tile` from the
+   tenants drawer (the provenance rail's four tinted glyph tiles and the source
+   snapshot's), `.mono` from HIVE-1.4, and `.fmt` from the fixed format
+   identity block near line 2216.
+   ========================================================================== */
+
+/* ---- Shared quiet type --------------------------------------------------
+   The four registers this screen writes in: a quiet line beside a heading, a
+   note under a figure, the 11px meta line, and a caps label. Stated once here
+   because eleven components draw them and the pre-Hive spelling of each was a
+   different four-class string in every one. */
+.cid-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.cid-note {
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+.cid-note--icon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cid-note--icon > svg {
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+  flex-shrink: 0;
+}
+
+.cid-micro {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.cid-caps {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  color: var(--fg-muted);
+}
+
+/* A figure the analyzer could not compute — "varies", "not computed",
+   "unknown". Italic and quiet rather than the mockup's amber: it is an absence,
+   and an absence is not a warning. */
+.cid-absent {
+  font-style: italic;
+  color: var(--fg-muted);
+}
+
+/* A caution the reader should notice but that has not broken anything. The
+   glyph carries the tone, the sentence carries `--fg-muted`, and the two say
+   the same thing — the deviation recorded in the banner above. */
+.cid-caution {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-snug);
+  color: var(--fg-muted);
+}
+
+.cid-caution--sm {
+  font-size: var(--fs-xs);
+}
+
+.cid-caution > svg {
+  margin-block-start: 0.125em;
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  flex-shrink: 0;
+  color: var(--warn);
+}
+
+/* ---- The page header ----------------------------------------------------
+   The identity line under the title, the pill row beneath it, and the two
+   orbs in the action cluster. */
+.cid-idline {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.cid-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The orbs sit *before* the CTAs in the action cluster and must not stretch
+   with it — `align-self: start` keeps them on the title's line when the
+   cluster wraps to two rows. */
+.cid-orbs {
+  display: flex;
+  align-self: flex-start;
+  gap: var(--space-4);
+  margin-inline-end: var(--space-3);
+}
+
+.cid-orb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--r-sm);
+}
+
+.cid-orb__label {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+button.cid-orb {
+  cursor: pointer;
+}
+
+button.cid-orb:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* The tab row's glyph. A tab is a destination, so its icon takes the label's
+   ink rather than a tone of its own. */
+.cid-tab__glyph {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+}
+
+.cid-tabs {
+  margin-block-start: var(--space-3);
+}
+
+/* ---- The page body ------------------------------------------------------
+   The converted strip and Related artifacts share one row above the panes;
+   below `--page-narrow` the aside drops under the strip rather than squeezing
+   it, which is what keeps the document from scrolling sideways. */
+.cid-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 23.75rem);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.cid-top__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+/* A pane. Its children stack; the pane itself is the tabpanel, so it carries
+   no visible chrome of its own. */
+.cid-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.cid-pane[hidden] {
+  display: none;
+}
+
+.cid-pane:focus {
+  outline: none;
+}
+
+/* ---- The Overview pane --------------------------------------------------
+   Main column and aside, the mockup's `.grid-main-aside`. */
+.cid-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 21.25rem);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.cid-overview__main,
+.cid-overview__aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-inline-size: 0;
+}
+
+/* A padded panel in the aside — a card whose content is prose rather than a
+   header/body/footer stack. */
+.cid-panel {
+  padding: var(--card-pad);
+}
+
+.cid-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.cid-panel__title {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  color: var(--fg);
+}
+
+/* The "Open Lint & score →" / "View source →" verbs beside an aside heading.
+   `Button variant="link"` paints `--accent`, which measures 4.14:1 on the surface
+   in the light appearance — under the 4.5:1 a 12px word needs — so at *this* size
+   the link takes the darker `--accent-fg` of the pair, which clears AA in all nine
+   (7.69:1 light, 7.00:1 at its worst in Nord). A fifth measured deviation, and the
+   only one this ticket adds rather than inherits. */
+.cid-panel__link {
+  color: var(--accent-fg);
+}
+
+/* The four API-surface tiles. `auto-fit` rather than a fixed four, so the row
+   collapses to two and then to one instead of scrolling. */
+.cid-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-3);
+}
+
+.cid-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.cid-tile__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.cid-tile__label > svg {
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+  flex-shrink: 0;
+}
+
+.cid-tile__value {
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.cid-tile__value--absent {
+  color: var(--fg-muted);
+}
+
+.cid-tile__foot {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The four surface identities. A tone here names *what kind of thing this is*,
+   not how it is doing, which is why they are fixed rather than derived. */
+.cid-surface-glyph--ok {
+  color: var(--ok);
+}
+
+.cid-surface-glyph--accent {
+  color: var(--accent);
+}
+
+.cid-surface-glyph--violet {
+  color: var(--violet);
+}
+
+.cid-surface-glyph--rose {
+  color: var(--rose);
+}
+
+/* The composition bar under the tiles. Its height is `rem` so it keeps its
+   proportion to the tiles at every scale. */
+.cid-compbar {
+  display: flex;
+  block-size: 0.5rem;
+  margin-block-start: var(--space-3);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  background: var(--bg-inset);
+}
+
+.cid-compbar__slice {
+  display: block;
+  block-size: 100%;
+}
+
+.cid-compbar__slice--ok {
+  background: var(--ok);
+}
+
+.cid-compbar__slice--accent {
+  background: var(--accent);
+}
+
+.cid-compbar__slice--violet {
+  background: var(--violet);
+}
+
+.cid-compbar__slice--rose {
+  background: var(--rose);
+}
+
+/* The Quality snapshot's ring and figure. */
+.cid-score {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-3);
+}
+
+.cid-score__value {
+  margin: 0;
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.cid-score__max {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+/* The Source snapshot's tile + name. */
+.cid-source {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-3);
+}
+
+.cid-source__name {
+  margin: 0;
+  min-inline-size: 0;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cid-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-start: var(--space-3);
+}
+
+/* A chip carrying a URI. It clips rather than holding the aside open — the
+   full value is on the `title`, and the aside's width is what the main column
+   is measured against. */
+.cid-chip--uri {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+/* A coverage meter with its own count line. */
+.cid-coverage {
+  margin-block-start: var(--space-3);
+}
+
+/* The meter's printed share.
+
+   `ui/metrics/Meter` paints the figure in its tone's ink (`METRIC_TONE_INK_CLASS`), which is
+   right on a tinted ground and wrong on this one: axe measured `--warn-fg` on the plain
+   surface at 11px in five of the nine appearances and it fails AA in all five (1.59:1 in
+   Nord). Inside this pane the figure is `--fg` and the *bar* beside it carries the tone —
+   the same "a tone lands on a mark, never on a word" rule the rest of the block follows.
+   Scoped here rather than fixed in the primitive because that ink table is shared with the
+   rings and the badges, where the pair *is* calibrated; the primitive-level finding is
+   recorded on the ticket instead. */
+.cid-coverage .hive-meter__value {
+  color: var(--fg);
+}
+
+.cid-coverage__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-end: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+/* ---- A tinted region inside a pane --------------------------------------
+   The envelope facts, the declared delimiters, the analyzer metrics, the
+   capability tiles: blocks that are a *region of* a card rather than an object
+   on it, so they take the subtle ground and a hairline instead of elevation.
+
+   The second rule is the one worth explaining. `--fg-muted` on `--bg-subtle`
+   measures 4.34:1 in Solarized — the serious `color-contrast` finding HIVE-5.4,
+   HIVE-5.6 and HIVE-7.1 each measured, and which the nine-theme browser sweep
+   caught again here, on the two inspectors' quiet labels. Inside one of these
+   regions the quiet ink is therefore `--fg`: the tint is what already sets the
+   region apart, and the label is a type step down from the figure beside it, so
+   nothing is lost by making it legible. It reaches for the utility class by name
+   because that is what the panes spell — the label helpers are shared with the
+   *untinted* parts of the same panes, where `--fg-muted` is correct. */
+.cid-inset {
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border);
+  color: var(--fg);
+}
+
+.cid-inset .text-fg-muted {
+  color: var(--fg);
+}
+
+/* ---- The parsed-model group cards --------------------------------------- */
+.cid-group__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cid-group__glyph {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.cid-group__subtitle {
+  margin-inline-start: auto;
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cid-group__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+}
+
+.cid-group__body {
+  margin-block-start: var(--space-3);
+}
+
+.cid-entities {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* The filter box. Its width is a `rem` maximum rather than the mockup's 220px,
+   and it grows to fill whatever the toolbar leaves it. */
+.cid-filter {
+  position: relative;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  max-inline-size: 18rem;
+}
+
+.cid-filter__glyph {
+  position: absolute;
+  inset-inline-start: var(--space-2);
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+  pointer-events: none;
+  color: var(--fg-muted);
+}
+
+.cid-filter__input {
+  padding-inline: calc(var(--space-2) + var(--fs-sm) + var(--space-2)) var(--space-8);
+}
+
+.cid-filter__clear {
+  position: absolute;
+  inset-inline-end: var(--space-2);
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--r-xs);
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.cid-filter__clear > svg {
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+}
+
+.cid-filter__clear:hover {
+  color: var(--fg);
+}
+
+/* One parsed entity. `scroll-margin` keeps a deep-linked entity clear of the
+   sticky page header when a lint finding scrolls it into view. */
+.cid-entity {
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+  scroll-margin-block-start: var(--space-12);
+  transition: box-shadow var(--dur-base) var(--ease-out);
+}
+
+.cid-entity:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.cid-entity[data-highlighted="true"] {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.cid-entity__head {
+  display: flex;
+  inline-size: 100%;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  text-align: start;
+}
+
+button.cid-entity__head {
+  cursor: pointer;
+}
+
+.cid-entity__chevron {
+  inline-size: var(--fs-sm);
+  block-size: var(--fs-sm);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.cid-entity__name {
+  min-inline-size: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cid-entity__meta {
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cid-entity__count {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* An entity's paradigm tag. Geometry only — the fill and ink come from
+   `ui/statusVocabulary` (or `.method--*` for the five HTTP verbs). */
+.cid-tag {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--r-full);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+}
+
+.cid-fields {
+  border-block-start: 1px solid var(--border);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+/* The mockup's three-column field row. It collapses to a stack below the
+   narrow breakpoint rather than clipping the description. */
+.cid-field {
+  display: grid;
+  grid-template-columns: minmax(0, 12.5rem) minmax(0, 8.75rem) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding-block: var(--space-1);
+  font-size: var(--fs-xs);
+  border-block-start: 1px dashed var(--border);
+}
+
+.cid-field:first-child {
+  border-block-start: 0;
+}
+
+.cid-field > span {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cid-field__name {
+  color: var(--fg);
+}
+
+.cid-field__type {
+  color: var(--fg-muted);
+}
+
+/* The required marker. A mark, not a word — the `title` says "required" — so
+   the 3:1 mark floor applies and `--danger` clears it beside the type it
+   qualifies. */
+.cid-field__req {
+  color: var(--danger);
+}
+
+.cid-field__desc {
+  color: var(--fg-muted);
+}
+
+/* The "no entities match" note. */
+.cid-empty {
+  padding: var(--space-6) var(--space-3);
+  border-radius: var(--r-md);
+  border: 1px dashed var(--border-strong);
+  text-align: center;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The Provenance rail ------------------------------------------------
+   Four steps, each a tinted glyph tile beside its facts, joined by a connector
+   drawn on the tile itself. The connector is `::after` on the tile rather than
+   an absolutely-positioned hairline with four magic offsets, so it cannot
+   drift when the font scale changes a step's height. */
+.cid-rail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-inline-size: 51.25rem;
+}
+
+.cid-step {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+.cid-step + .cid-step {
+  margin-block-start: var(--space-5);
+}
+
+.cid-step__tile {
+  position: relative;
+}
+
+.cid-step__tile::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: 100%;
+  inline-size: 2px;
+  block-size: var(--space-5);
+  background: var(--border);
+}
+
+.cid-step:last-child .cid-step__tile::after {
+  display: none;
+}
+
+.cid-step__caption {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.cid-step__body {
+  margin-block-start: var(--space-2);
+}
+
+.cid-step__name {
+  min-inline-size: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cid-step__uri {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The Catalog-record step's fact list. Two columns where there is room; the
+   label column is `max-content` so a long value never pushes it out of line. */
+.cid-kv {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  font-size: var(--fs-xs);
+}
+
+.cid-kv > dt {
+  color: var(--fg-muted);
+}
+
+.cid-kv > dd {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  min-inline-size: 0;
+  color: var(--fg);
+}
+
+.cid-kv__glyph {
+  inline-size: var(--fs-xs);
+  block-size: var(--fs-xs);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+/* ---- The converted strip ------------------------------------------------ */
+.cid-converted__title {
+  font-weight: 600;
+}
+
+.cid-converted__body {
+  font-size: var(--fs-sm);
+}
+
+.cid-converted__link {
+  font-weight: 600;
+  text-underline-offset: 2px;
+}
+
+.cid-converted__link:hover {
+  text-decoration: underline;
+}
+
+/* A conversion whose target project was deleted. Struck through and quiet, so
+   the row still names what was converted without offering a dead link. */
+.cid-converted__deleted {
+  font-weight: 600;
+  text-decoration: line-through;
+  color: var(--fg-muted);
+}
+
+/* ---- Panes measured in type, not in pixels ------------------------------
+   Three boxes on this route were frozen in `px`: the Lint pane's two 900px
+   columns, its 200px category well, and the Source viewer's 520px editor. A
+   height frozen in pixels stops growing when the reader raises the font scale,
+   so the same box holds three fewer lines at `2xl` than at `md` — which is the
+   opposite of what the preference is for. Each is the same length in `rem`.
+
+   The one box that stays in pixels is the native-structure tree's viewport
+   (`ANALYSIS_TREE_HEIGHT`): it is not a style, it is an operand — the windowing
+   arithmetic divides it by the row height to decide how many rows to mount, and
+   both have to be the same unit. It is the documented pixel exemption on this
+   route, alongside Monaco's own type. */
+.cid-lint-col {
+  block-size: 56.25rem;
+}
+
+.cid-lint-well {
+  max-block-size: 12.5rem;
+}
+
+.cid-code-pane {
+  block-size: 32.5rem;
+}
+
+/* ---- The Lint & score pane ---------------------------------------------
+   The severity dot beside a MUST / SHOULD label. A mark beside words that say
+   the same thing — see the fourth deviation in the banner above. */
+.cid-sev-dot {
+  display: inline-block;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--r-full);
+}
+
+/* ---- Narrow viewports ---------------------------------------------------
+   Every multi-column grid on this route collapses before the document can
+   scroll sideways, which is the ticket's "no horizontal document scroll at
+   ≥1280 px" criterion measured at every font scale rather than only at the
+   default one. Every breakpoint is `rem`, so the fold moves with the reader's
+   type rather than staying put while the text grows past it. */
+@media (max-width: 75rem) {
+  .cid-top,
+  .cid-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 40rem) {
+  .cid-field {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .cid-kv {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .cid-orbs {
+    margin-inline-end: 0;
+  }
+}

@@ -10,6 +10,7 @@
 
 import * as React from 'react';
 import { cn } from '@lib/utils';
+import { Badge } from '@/app/components/ui/Badge';
 import {
   buildGovernanceDocsHref,
   lintAxisBand,
@@ -20,11 +21,21 @@ import {
   type LintAxisEvaluation,
 } from '@/app/utils/lint-axis-ui';
 
-const BAND_TEXT: Record<LintAxisBand, string> = {
-  strong: 'text-emerald-700 dark:text-emerald-300',
-  fair: 'text-amber-700 dark:text-amber-300',
-  weak: 'text-rose-700 dark:text-rose-300',
-  gap: 'text-gray-500 dark:text-gray-400',
+/**
+ * The tone each band's score chip takes (HIVE-7.2, #5319).
+ *
+ * The mockup paints the figure itself — `<td class="t-num t-warn">61</td>` — and that is the
+ * one thing the nine-theme sweep will not allow: `--warn-fg` measures 3.32:1 on the plain
+ * surface in High contrast, 2.05:1 in Solarized and 1.59:1 in Nord, all under the 4.5:1 a
+ * word needs. So the figure keeps the *pair* the tone was calibrated against — ink on its own
+ * soft ground — as a `Badge`, which is the same move HIVE-7.1 made for the unavailable-format
+ * chip. A gap has no tone at all: "Not assessed" is a state, not a grade.
+ */
+const BAND_TONE: Record<LintAxisBand, 'ok' | 'warn' | 'danger' | 'neutral'> = {
+  strong: 'ok',
+  fair: 'warn',
+  weak: 'danger',
+  gap: 'neutral',
 };
 
 interface Props {
@@ -38,18 +49,15 @@ function AxisScoreCell({ axis }: { axis: LintAxis }) {
   const band = lintAxisBand(axis);
   if (!axis.assessed) {
     return (
-      <span
-        className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-gray-500 dark:bg-gray-700 dark:text-gray-300"
-        title={axis.notAssessedReason ?? undefined}
-      >
+      <Badge variant="outline" title={axis.notAssessedReason ?? undefined}>
         Not assessed
-      </span>
+      </Badge>
     );
   }
   return (
-    <span className={cn('font-mono text-sm font-semibold tabular-nums', BAND_TEXT[band])}>
+    <Badge variant={BAND_TONE[band]} mono square>
       {lintAxisScoreLabel(axis)}
-    </span>
+    </Badge>
   );
 }
 
@@ -68,26 +76,26 @@ export function LintAxisCoveragePanel({
       aria-label={title}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <h3 className="cid-panel__title">{title}</h3>
+        <p className="text-xs text-fg-muted">
           {assessedCount} of {evaluation.axes.length} axes assessed
           {composite ? (
             <>
               {' '}
-              · composite <span className="font-mono font-medium text-gray-700 dark:text-gray-200">{composite}</span>
+              · composite <span className="font-mono font-medium text-fg">{composite}</span>
             </>
           ) : (
             <> · composite withheld (required coverage incomplete)</>
           )}
         </p>
       </div>
-      <p className="text-2xs text-gray-500 dark:text-gray-400">
+      <p className="text-2xs text-fg-muted">
         Algorithm{' '}
         <a
           href={buildGovernanceDocsHref(evaluation.algorithmDocsPage)}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-mono text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
+          className="font-mono text-accent-fg underline-offset-2 hover:underline"
           data-testid="lint-axis-algorithm-docs-link"
         >
           {evaluation.algorithmId}
@@ -96,10 +104,10 @@ export function LintAxisCoveragePanel({
         score.
       </p>
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+      <div className="overflow-x-auto rounded-xl border border-border">
         <table className="min-w-full border-collapse text-left text-sm">
           <caption className="sr-only">{title}</caption>
-          <thead className="bg-gray-50 text-2xs font-semibold uppercase tracking-wider text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
+          <thead className="bg-subtle text-2xs font-semibold uppercase tracking-wider text-fg">
             <tr>
               <th scope="col" className="px-3 py-2">
                 Axis
@@ -115,22 +123,22 @@ export function LintAxisCoveragePanel({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <tbody className="divide-y divide-border">
             {evaluation.axes.map((axis) => (
               <tr key={axis.key} data-testid={`lint-axis-row-${axis.key}`}>
                 <th
                   scope="row"
-                  className="whitespace-nowrap px-3 py-2.5 font-medium text-gray-800 dark:text-gray-100"
+                  className="whitespace-nowrap px-3 py-2.5 font-medium text-fg"
                 >
                   {axis.label}
                 </th>
                 <td className="px-3 py-2.5">
                   <AxisScoreCell axis={axis} />
                 </td>
-                <td className="px-3 py-2.5 font-mono text-xs uppercase text-gray-500 dark:text-gray-400">
+                <td className="px-3 py-2.5 font-mono text-xs uppercase text-fg-muted">
                   {axis.coverageState}
                 </td>
-                <td className="px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400">
+                <td className="px-3 py-2.5 text-xs text-fg-muted">
                   {axis.assessed
                     ? `w=${axis.weight}`
                     : axis.notAssessedReason}

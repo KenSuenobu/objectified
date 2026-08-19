@@ -9,6 +9,7 @@
  */
 
 import * as React from 'react';
+import { Alert } from '@/app/components/ui/Alert';
 import { cn } from '@lib/utils';
 import {
   capabilityForSourceFormat,
@@ -76,14 +77,14 @@ export function SourceFormatChecksPanel({
       aria-label="Source-format checks"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-sm font-semibold text-fg">
           Source-format checks
         </h3>
         {sourceFormat ? (
-          <p className="font-mono text-xs text-gray-500 dark:text-gray-400">{sourceFormat}</p>
+          <p className="font-mono text-xs text-fg-muted">{sourceFormat}</p>
         ) : null}
       </div>
-      <p className="text-2xs text-gray-500 dark:text-gray-400">
+      <p className="text-2xs text-fg-muted">
         Scanners expected for this format. Not run / unavailable is never shown as a clean
         score.
       </p>
@@ -91,25 +92,25 @@ export function SourceFormatChecksPanel({
       {loading ? (
         <p
           data-testid="source-format-checks-loading"
-          className="text-sm text-gray-500 dark:text-gray-400"
+          className="text-sm text-fg-muted"
         >
           Loading checks…
         </p>
       ) : null}
 
       {error ? (
-        <p
-          data-testid="source-format-checks-error"
-          className="text-sm text-rose-700 dark:text-rose-300"
-        >
+        /* An `Alert` rather than a red sentence: `--danger-fg` on the plain surface measures
+           1.47:1 in Nord, so a failure states itself on the ground the pair was calibrated
+           against. */
+        <Alert variant="danger" data-testid="source-format-checks-error">
           {error}
-        </p>
+        </Alert>
       ) : null}
 
       {unsupported ? (
         <div
           data-testid="source-format-checks-unsupported"
-          className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200"
+          className="rounded-lg border border-border bg-subtle px-3 py-2 text-sm text-fg"
         >
           <p>
             No format-specific lint pack is registered for{' '}
@@ -117,14 +118,14 @@ export function SourceFormatChecksPanel({
             {capability?.commonPackOnly ? ' (common pack only)' : ''}.
           </p>
           {capability?.relatedIssues && capability.relatedIssues.length > 0 ? (
-            <ul className="mt-1 list-inside list-disc text-xs text-gray-600 dark:text-gray-400">
+            <ul className="mt-1 list-inside list-disc text-xs text-fg-muted">
               {capability.relatedIssues.map((url) => (
                 <li key={url}>
                   <a
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
+                    className="text-accent-fg underline-offset-2 hover:underline"
                   >
                     Planned pack issue
                   </a>
@@ -144,9 +145,9 @@ export function SourceFormatChecksPanel({
             <li
               key={entry.scannerId}
               data-testid={`source-format-check-${entry.scannerId}`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs dark:border-gray-700 dark:bg-gray-800"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs"
             >
-              <span className="font-medium text-gray-800 dark:text-gray-100">
+              <span className="font-medium text-fg">
                 {scannerLabel(entry.scannerId)}
               </span>
               <span
@@ -158,7 +159,7 @@ export function SourceFormatChecksPanel({
                 {entry.outcome.replace(/_/g, ' ')}
               </span>
               {entry.coverage?.state ? (
-                <span className="font-mono text-2xs uppercase text-gray-500 dark:text-gray-400">
+                <span className="font-mono text-2xs uppercase text-fg-muted">
                   {String(entry.coverage.state)}
                 </span>
               ) : null}
@@ -170,7 +171,7 @@ export function SourceFormatChecksPanel({
       {!loading && !error && coverage && coverage.length === 0 && !unsupported ? (
         <p
           data-testid="source-format-checks-empty"
-          className="text-sm text-gray-500 dark:text-gray-400"
+          className="text-sm text-fg-muted"
         >
           No scanner evidence recorded for this revision yet.
         </p>

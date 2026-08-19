@@ -150,7 +150,9 @@ describe('CatalogParsedGroups explorer (MFI-28.3)', () => {
     // …the deep-linked entity is pinned in anyway, with its highlight ring.
     const placeOrder = document.getElementById(highlighted)!;
     expect(placeOrder).toBeInTheDocument();
-    expect(placeOrder.className).toContain('ring-2');
+    // HIVE-7.2: the highlight is `.cid-entity[data-highlighted]`, one attribute rather than
+    // six palette classes and their dark twins.
+    expect(placeOrder.getAttribute('data-highlighted')).toBe('true');
   });
 
   it('force-expands a deep-linked entity so its fields are visible', () => {

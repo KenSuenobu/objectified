@@ -26,7 +26,7 @@ import { FormatPill } from '@/app/components/ui/catalog/FormatPill';
 import { SourceBadge } from '@/app/components/ui/catalog/SourceBadge';
 import { monacoLanguageForCatalogFormat } from '@/app/utils/catalog-source-language';
 import type { CatalogSource } from '@/app/utils/catalog-format-registry';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
+import { Card } from '@/app/components/ui/Card';
 import { cn } from '@lib/utils';
 import { CODE_EDITOR_FONT_SIZE } from '@/app/components/ui/code/editorTypography';
 
@@ -39,11 +39,13 @@ function OfflineSourceFallback({ value }: { value?: string }) {
   return (
     <div
       data-testid="catalog-detail-source-fallback"
-      className="h-full overflow-auto p-4 text-xs text-gray-700 dark:text-gray-300"
+      className="h-full overflow-auto p-4 text-xs text-fg"
     >
-      <p className="mb-2 font-medium text-rose-600 dark:text-rose-400">
+      {/* `--fg`, not `--danger-fg`: the sentence sits on the plain surface, where that ink
+          measures 1.47:1 in Nord. The words are what say something went wrong. */}
+      <div className="mb-2 font-medium text-fg">
         The code editor could not be loaded (offline?). Raw source:
-      </p>
+      </div>
       <pre className="whitespace-pre-wrap break-words font-mono">{value ?? ''}</pre>
     </div>
   );
@@ -62,7 +64,7 @@ const MonacoEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex h-full items-center justify-center text-sm text-fg-muted">
         Loading source…
       </div>
     ),
@@ -258,8 +260,8 @@ export function CatalogSourceViewer({
   const language = monacoLanguageForCatalogFormat(sourceFormat, status === 'loaded' ? raw : null);
 
   return (
-    <section className={`${dashboardPanelClass} p-6`} data-testid="catalog-detail-source">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+    <Card className="cid-panel" data-testid="catalog-detail-source">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-fg-muted">
         Source &amp; code
       </h2>
 
@@ -269,14 +271,14 @@ export function CatalogSourceViewer({
             {resolvedSource ? (
               <SourceBadge source={resolvedSource} />
             ) : (
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-fg-muted">
                 Original source provenance was not recorded for this item.
               </span>
             )}
           </div>
           <p
             data-testid="catalog-detail-no-source"
-            className="mt-4 text-sm text-gray-500 dark:text-gray-400"
+            className="mt-4 text-sm text-fg-muted"
           >
             The raw source was not captured at import, so it cannot be viewed or downloaded here.
           </p>
@@ -289,7 +291,7 @@ export function CatalogSourceViewer({
             {resolvedSource ? <SourceBadge source={resolvedSource} /> : null}
             <span
               data-testid="catalog-detail-source-lang"
-              className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+              className="inline-flex items-center rounded-md bg-subtle px-2 py-0.5 font-mono text-xs text-fg"
             >
               language: {language}
             </span>
@@ -297,12 +299,12 @@ export function CatalogSourceViewer({
               <a
                 href={sourceHref}
                 data-testid="catalog-detail-download"
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-fg transition-colors hover:bg-subtle"
                 {...(hasContent
                   ? { download: '' }
                   : { target: '_blank', rel: 'noopener noreferrer' })}
               >
-                <Download className="h-4 w-4 text-indigo-500" />{' '}
+                <Download className="h-4 w-4 text-accent" />{' '}
                 {hasContent ? 'Download raw source' : 'View source'}
               </a>
               <button
@@ -313,8 +315,8 @@ export function CatalogSourceViewer({
                 className={cn(
                   'inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
                   wrap
-                    ? 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300'
-                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
+                    ? 'border-accent bg-accent-soft text-accent-fg hover:bg-accent-soft'
+                    : 'border-border bg-surface text-fg hover:bg-subtle',
                 )}
               >
                 <WrapText className="h-4 w-4" /> Wrap
@@ -324,24 +326,24 @@ export function CatalogSourceViewer({
                   href={sourceUri}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-fg transition-colors hover:bg-subtle"
                 >
-                  <ExternalLink className="h-4 w-4 text-indigo-500" /> Open source URL
+                  <ExternalLink className="h-4 w-4 text-accent" /> Open source URL
                 </a>
               ) : null}
             </div>
           </div>
 
           {/* Read-only notice (mockup) — catalog items are never editable here. */}
-          <p className="mt-3 flex items-start gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-xs text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-300">
+          <div className="mt-3 flex items-start gap-1.5 rounded-lg border border-accent bg-accent-soft px-3 py-2 text-xs text-accent-fg">
             <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden /> Read-only view of the raw
             imported source.
-          </p>
+          </div>
 
           {(typeof highlightLine === 'number' && highlightLine > 0) || highlightRange ? (
             <p
               data-testid="catalog-detail-source-highlight"
-              className="catalog-source-highlight-note mt-2 text-xs text-gray-600 dark:text-gray-400"
+              className="catalog-source-highlight-note mt-2 text-xs text-fg-muted"
             >
               {highlightOrigin === 'format-analysis'
                 ? 'Format details construct'
@@ -378,7 +380,7 @@ export function CatalogSourceViewer({
           {/* Editor host: Monaco (or the offline `<pre>` fallback), an error note, or a spinner. */}
           <div
             data-testid="catalog-detail-source-editor"
-            className="mt-3 h-[520px] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700"
+            className="cid-code-pane mt-3 overflow-hidden rounded-xl border border-border"
           >
             {status === 'loaded' ? (
               <MonacoEditor
@@ -407,18 +409,18 @@ export function CatalogSourceViewer({
             ) : status === 'error' ? (
               <div
                 data-testid="catalog-detail-source-error"
-                className="flex h-full items-center justify-center p-6 text-center text-sm text-gray-500 dark:text-gray-400"
+                className="flex h-full items-center justify-center p-6 text-center text-sm text-fg-muted"
               >
                 {errorMessage || 'The raw source could not be loaded.'}
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex h-full items-center justify-center text-sm text-fg-muted">
                 Loading source…
               </div>
             )}
           </div>
         </>
       )}
-    </section>
+    </Card>
   );
 }

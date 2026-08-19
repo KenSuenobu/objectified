@@ -100,11 +100,11 @@ const LIMIT_LABEL: Record<string, string> = {
 
 /** Tone classes per badge state. Text always carries the meaning; colour only reinforces it. */
 const NEUTRAL_BADGE =
-  'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300';
+  'border-border bg-subtle text-fg';
 const POSITIVE_BADGE =
-  'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300';
+  'border-ok bg-ok-soft text-ok-fg';
 const CAUTION_BADGE =
-  'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300';
+  'border-warn bg-warn-soft text-warn-fg';
 
 const BADGE_BASE =
   'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-medium';
@@ -145,13 +145,13 @@ function Facet({
   note: string;
 }) {
   return (
-    <div className="rounded-md border border-gray-100 bg-gray-50/60 p-3 dark:border-gray-700/60 dark:bg-gray-900/30">
-      <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-gray-100">
-        <Icon className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" aria-hidden />
+    <div className="cid-inset p-3">
+      <h4 className="flex items-center gap-1.5 text-xs font-semibold text-fg">
+        <Icon className="h-3.5 w-3.5 text-fg-muted" aria-hidden />
         {title}
       </h4>
-      <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300">{statement}</p>
-      <p className="mt-1 text-2xs leading-snug text-gray-500 dark:text-gray-400">{note}</p>
+      <div className="mt-1 text-xs font-medium text-fg">{statement}</div>
+      <p className="mt-1 text-2xs leading-snug text-fg-muted">{note}</p>
     </div>
   );
 }
@@ -178,19 +178,19 @@ function ConstructList({
     <section aria-labelledby={headingId} className="min-w-0">
       <h4
         id={headingId}
-        className="text-xs font-semibold text-gray-900 dark:text-gray-100"
+        className="text-xs font-semibold text-fg"
       >
         {title}
       </h4>
-      <p className="mt-0.5 text-2xs leading-snug text-gray-500 dark:text-gray-400">{caption}</p>
+      <p className="mt-0.5 text-2xs leading-snug text-fg-muted">{caption}</p>
       {constructs.length === 0 ? (
-        <p className="mt-2 text-2xs italic text-gray-500 dark:text-gray-400">{emptyNote}</p>
+        <p className="mt-2 text-2xs italic text-fg-muted">{emptyNote}</p>
       ) : (
         <ul className="mt-2 flex flex-wrap gap-1.5">
           {constructs.map((construct) => (
             <li
               key={construct}
-              className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300"
+              className="rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-2xs text-fg"
             >
               {construct}
             </li>
@@ -223,14 +223,14 @@ export function FormatCapabilityPanel({
     <section
       aria-labelledby={headingId}
       className={cn(
-        'rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800',
+        'rounded-lg border border-border bg-surface p-4',
         className,
       )}
     >
       <header className="flex flex-wrap items-center gap-2">
         <h3
           id={headingId}
-          className="text-sm font-semibold text-gray-900 dark:text-gray-100"
+          className="text-sm font-semibold text-fg"
         >
           {capability.label} — what apiome records
         </h3>
@@ -247,7 +247,7 @@ export function FormatCapabilityPanel({
       </header>
 
       {capability.unavailable_reason ? (
-        <p className="mt-2 flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+        <p className="cid-caution cid-caution--sm">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
           {capability.unavailable_reason}
         </p>
@@ -257,28 +257,28 @@ export function FormatCapabilityPanel({
         <div
           role="note"
           aria-label="Why this detail is missing"
-          className="mt-3 rounded-md border border-indigo-200 bg-indigo-50/60 p-3 dark:border-indigo-800/60 dark:bg-indigo-950/20"
+          className="mt-3 rounded-md border border-accent bg-accent-soft p-3"
         >
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-indigo-900 dark:text-indigo-200">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-accent-fg">
             <Info className="h-3.5 w-3.5" aria-hidden />
             {absence.category_label}
-          </p>
-          <p className="mt-1 text-xs leading-snug text-indigo-900/90 dark:text-indigo-200/90">
+          </div>
+          <div className="mt-1 text-xs leading-snug text-accent-fg">
             {renderAbsence(absence, absenceConstruct ?? null)}
-          </p>
-          <p className="mt-1 text-2xs leading-snug text-indigo-800/80 dark:text-indigo-300/80">
+          </div>
+          <div className="mt-1 text-2xs leading-snug text-accent-fg">
             {absence.remediation}
-          </p>
+          </div>
           {/*
            * Gated on the flag, never on the status: exactly one category means the customer's
            * source material is genuinely absent. Every other cause renders the counter-statement
            * instead, so a parser limit can never be read as missing data.
            */}
-          <p className="mt-1.5 text-2xs font-medium text-indigo-800 dark:text-indigo-300">
+          <div className="mt-1.5 text-2xs font-medium text-accent-fg">
             {absence.source_missing
               ? 'No source material was captured for this revision.'
               : 'The source material is unaffected — this describes what apiome recorded, not what the source contains.'}
-          </p>
+          </div>
         </div>
       ) : null}
 
@@ -326,19 +326,19 @@ export function FormatCapabilityPanel({
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <section
           aria-labelledby={`${headingId}-projection`}
-          className="rounded-md border border-gray-100 bg-gray-50/60 p-3 dark:border-gray-700/60 dark:bg-gray-900/30"
+          className="cid-inset p-3"
         >
           <h4
             id={`${headingId}-projection`}
-            className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-gray-100"
+            className="flex items-center gap-1.5 text-xs font-semibold text-fg"
           >
-            <FileSearch className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" aria-hidden />
+            <FileSearch className="h-3.5 w-3.5 text-fg-muted" aria-hidden />
             Canonical projection
           </h4>
-          <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+          <div className="mt-1 text-xs font-medium text-fg">
             {COVERAGE_LABEL[capability.canonical_projection.coverage]}
-          </p>
-          <p className="mt-1 text-2xs leading-snug text-gray-500 dark:text-gray-400">
+          </div>
+          <p className="mt-1 text-2xs leading-snug text-fg-muted">
             {capability.canonical_projection.note}
           </p>
           {capability.canonical_projection.dropped_constructs.length > 0 ? (
@@ -346,7 +346,7 @@ export function FormatCapabilityPanel({
               {capability.canonical_projection.dropped_constructs.map((construct) => (
                 <li
                   key={construct}
-                  className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300"
+                  className="rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-2xs text-fg"
                 >
                   {construct}
                 </li>
@@ -357,18 +357,18 @@ export function FormatCapabilityPanel({
 
         <section
           aria-labelledby={`${headingId}-conversion`}
-          className="rounded-md border border-gray-100 bg-gray-50/60 p-3 dark:border-gray-700/60 dark:bg-gray-900/30"
+          className="cid-inset p-3"
         >
           <h4
             id={`${headingId}-conversion`}
-            className="text-xs font-semibold text-gray-900 dark:text-gray-100"
+            className="text-xs font-semibold text-fg"
           >
             Conversion
           </h4>
-          <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+          <div className="mt-1 text-xs font-medium text-fg">
             {CONVERSION_LABEL[capability.conversion.support]}
-          </p>
-          <p className="mt-1 text-2xs leading-snug text-gray-500 dark:text-gray-400">
+          </div>
+          <p className="mt-1 text-2xs leading-snug text-fg-muted">
             {capability.conversion.note}
           </p>
         </section>
@@ -378,11 +378,11 @@ export function FormatCapabilityPanel({
         <section aria-labelledby={`${headingId}-limits`} className="mt-3">
           <h4
             id={`${headingId}-limits`}
-            className="text-xs font-semibold text-gray-900 dark:text-gray-100"
+            className="text-xs font-semibold text-fg"
           >
             Parsing limits
           </h4>
-          <dl className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-2xs text-gray-600 dark:text-gray-400">
+          <dl className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-2xs text-fg-muted">
             {limits.map(([name, value]) => (
               <div key={name} className="flex items-baseline gap-1">
                 <dt className="font-medium">{LIMIT_LABEL[name] ?? name}</dt>
@@ -397,11 +397,11 @@ export function FormatCapabilityPanel({
         <section aria-labelledby={`${headingId}-notes`} className="mt-3">
           <h4
             id={`${headingId}-notes`}
-            className="text-xs font-semibold text-gray-900 dark:text-gray-100"
+            className="text-xs font-semibold text-fg"
           >
             Boundaries
           </h4>
-          <ul className="mt-1 list-disc space-y-1 pl-4 text-2xs leading-snug text-gray-600 dark:text-gray-400">
+          <ul className="mt-1 list-disc space-y-1 pl-4 text-2xs leading-snug text-fg-muted">
             {capability.notes.map((note) => (
               <li key={note}>{note}</li>
             ))}
@@ -409,7 +409,7 @@ export function FormatCapabilityPanel({
         </section>
       ) : null}
 
-      <footer className="mt-3 border-t border-gray-100 pt-2 text-2xs text-gray-500 dark:border-gray-700/60 dark:text-gray-400">
+      <footer className="mt-3 border-t border-border pt-2 text-2xs text-fg-muted">
         <p>
           Analyzer{' '}
           <span className="font-mono">

@@ -28,7 +28,10 @@
 import { useMemo, useState } from 'react';
 import { Box, Braces, ChevronRight, Filter, X } from 'lucide-react';
 import { cn } from '@lib/utils';
-import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
+import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
+import { Card } from '@/app/components/ui/Card';
+import { Input } from '@/app/components/ui/Input';
 import { catalogEntityAnchorId } from '@/app/utils/catalog-lint-panel';
 import { JsonViewer } from '@/app/components/ui/code';
 import { STATUS_TONE_SOFT_CLASS } from '@/app/components/ui/statusVocabulary';
@@ -217,31 +220,28 @@ export function parsedGroupToJson(group: CatalogParsedGroup): string {
   );
 }
 
-/** A single field row (mockup `.frow`): name / type (+ required marker) / description. */
+/**
+ * A single field row (mockup `.field-row`): name / type (+ required marker) / description.
+ *
+ * The three-column grid is `.cid-field` rather than a flex string with two `sm:w-*` pins: the
+ * mockup's 200/140/1fr proportions are a real grid, and at the largest font scale the pinned
+ * widths clipped a type name mid-word.
+ */
 function ParsedFieldRow({ field }: { field: CatalogParsedField }) {
   return (
-    <div
-      data-testid="catalog-detail-parsed-field"
-      className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-xs sm:flex-nowrap"
-    >
-      <span className="truncate font-mono text-gray-700 dark:text-gray-300 sm:w-40 sm:shrink-0" title={field.name}>
+    <div data-testid="catalog-detail-parsed-field" className="cid-field">
+      <span className="cid-field__name mono" title={field.name}>
         {field.name}
       </span>
-      <span
-        className="truncate font-mono text-indigo-600 dark:text-indigo-400 sm:w-48 sm:shrink-0"
-        title={field.type}
-      >
+      <span className="cid-field__type mono" title={field.type}>
         {field.type}
         {field.required ? (
-          <span className="text-rose-500" title="required">
+          <span className="cid-field__req" title="required">
             {' *'}
           </span>
         ) : null}
       </span>
-      <span
-        className="min-w-0 flex-1 truncate text-gray-500 dark:text-gray-400"
-        title={field.description ?? undefined}
-      >
+      <span className="cid-field__desc" title={field.description ?? undefined}>
         {field.description ?? ''}
       </span>
     </div>
@@ -254,19 +254,12 @@ function ParsedEntityHeading({ entity }: { entity: CatalogParsedEntity }) {
     <>
       <span
         data-testid="catalog-detail-parsed-tag"
-        className={cn(
-          'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-2xs font-bold uppercase tracking-wider',
-          parsedTagToneClass(entity.tag),
-        )}
+        className={cn('cid-tag', parsedTagToneClass(entity.tag))}
       >
         {entity.tag}
       </span>
-      <span className="truncate font-mono text-sm font-semibold text-gray-900 dark:text-white">
-        {entity.name}
-      </span>
-      {entity.meta ? (
-        <span className="truncate text-xs text-gray-400 dark:text-gray-500">{entity.meta}</span>
-      ) : null}
+      <span className="cid-entity__name mono">{entity.name}</span>
+      {entity.meta ? <span className="cid-entity__meta">{entity.meta}</span> : null}
     </>
   );
 }
@@ -308,13 +301,11 @@ function ParsedEntityDisclosure({
     <div
       id={anchorId}
       data-testid="catalog-detail-parsed-entity"
-      className={cn(
-        // `scroll-mt-24` keeps the entity clear of the sticky header when scrolled into view.
-        'scroll-mt-24 overflow-hidden rounded-lg border transition-colors',
-        highlighted
-          ? 'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-400 dark:border-indigo-500 dark:bg-indigo-900/20 dark:ring-indigo-500'
-          : 'border-gray-200 bg-white hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-indigo-800',
-      )}
+      /* `.cid-entity` carries the scroll margin that keeps a deep-linked entity clear of the
+         sticky page header, and `data-highlighted` is the accent ring a just-followed lint
+         link draws — one attribute rather than six palette classes and their dark twins. */
+      className="cid-entity"
+      data-highlighted={highlighted ? 'true' : undefined}
     >
       {hasFields ? (
         <button
@@ -325,33 +316,24 @@ function ParsedEntityDisclosure({
             setOpen((prev) => !prev);
             setEverOpened(true);
           }}
-          className="flex w-full items-center gap-2 p-3 text-left"
+          className="cid-entity__head"
         >
           <ChevronRight
-            className={cn(
-              'h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform',
-              effectiveOpen && 'rotate-90',
-            )}
+            className={cn('cid-entity__chevron', effectiveOpen && 'rotate-90')}
             aria-hidden
           />
           <ParsedEntityHeading entity={entity} />
-          <span className="ml-auto shrink-0 whitespace-nowrap font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500">
+          <span className="cid-entity__count mono">
             {entity.fields.length} {entity.fields.length === 1 ? 'field' : 'fields'}
           </span>
         </button>
       ) : (
-        <div className="flex items-center gap-2 p-3">
+        <div className="cid-entity__head">
           <ParsedEntityHeading entity={entity} />
         </div>
       )}
       {mountFields ? (
-        <div
-          className={
-            effectiveOpen
-              ? 'space-y-1 border-t border-gray-100 px-3 pb-3 pt-2 dark:border-gray-700'
-              : 'hidden'
-          }
-        >
+        <div className={effectiveOpen ? 'cid-fields' : 'hidden'}>
           {entity.fields.map((field, i) => (
             <ParsedFieldRow key={`${field.name}-${i}`} field={field} />
           ))}
@@ -395,31 +377,22 @@ function ParsedGroupCard({
   const filtering = query.trim() !== '';
 
   return (
-    <section data-testid="catalog-detail-parsed-group" className={`${dashboardPanelClass} p-6`}>
-      <div className="flex items-center gap-2">
-        <Box className="h-4 w-4 shrink-0 text-indigo-500" aria-hidden />
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          {group.title}
-        </h2>
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
+    <Card data-testid="catalog-detail-parsed-group" className="cid-panel">
+      <div className="cid-group__head">
+        <Box aria-hidden className="cid-group__glyph" />
+        <h2 className="cid-panel__title">{group.title}</h2>
+        <Badge variant="neutral" mono>
           {total}
-        </span>
-        {group.subtitle ? (
-          <span className="ml-auto min-w-0 truncate text-xs text-gray-400 dark:text-gray-500">
-            {group.subtitle}
-          </span>
-        ) : null}
+        </Badge>
+        {group.subtitle ? <span className="cid-group__subtitle">{group.subtitle}</span> : null}
       </div>
 
       {total > 0 ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="cid-group__tools">
           {/* Live filter (name/tag). Disabled while the raw model is shown — it has no entity rows. */}
-          <div className="relative min-w-0 flex-1 sm:max-w-xs">
-            <Filter
-              className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400"
-              aria-hidden
-            />
-            <input
+          <div className="cid-filter">
+            <Filter aria-hidden className="cid-filter__glyph" />
+            <Input
               type="text"
               data-testid="catalog-detail-parsed-filter"
               value={query}
@@ -427,7 +400,7 @@ function ParsedGroupCard({
               disabled={rawOpen}
               placeholder="Filter by name or tag…"
               aria-label={`Filter ${group.title} by name or tag`}
-              className="w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-8 pr-8 text-xs text-gray-700 placeholder:text-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+              className="cid-filter__input"
             />
             {filtering ? (
               <button
@@ -435,40 +408,33 @@ function ParsedGroupCard({
                 data-testid="catalog-detail-parsed-filter-clear"
                 onClick={() => setQuery('')}
                 aria-label="Clear filter"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200"
+                className="cid-filter__clear"
               >
-                <X className="h-3.5 w-3.5" aria-hidden />
+                <X aria-hidden />
               </button>
             ) : null}
           </div>
           {filtering && !rawOpen ? (
-            <span
-              data-testid="catalog-detail-parsed-filter-count"
-              className="shrink-0 font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
-            >
+            <span data-testid="catalog-detail-parsed-filter-count" className="cid-quiet mono">
               {visible.length} of {total}
             </span>
           ) : null}
-          <button
-            type="button"
+          <Button
+            variant={rawOpen ? 'soft' : 'outline'}
+            size="sm"
             data-testid="catalog-detail-parsed-raw-toggle"
             aria-pressed={rawOpen}
             onClick={() => setRawOpen((prev) => !prev)}
-            className={cn(
-              'ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors',
-              rawOpen
-                ? 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300'
-                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
-            )}
+            className="ml-auto"
           >
-            <Braces className="h-3.5 w-3.5" aria-hidden />
+            <Braces aria-hidden />
             {rawOpen ? 'Hide raw model' : 'Raw model'}
-          </button>
+          </Button>
         </div>
       ) : null}
 
       {rawOpen ? (
-        <div data-testid="catalog-detail-parsed-raw" className="mt-3">
+        <div data-testid="catalog-detail-parsed-raw" className="cid-group__body">
           <JsonViewer
             value={parsedGroupToJson(group)}
             label={`${group.title} — normalized model`}
@@ -476,7 +442,7 @@ function ParsedGroupCard({
           />
         </div>
       ) : (
-        <div className="mt-3 space-y-3">
+        <div className="cid-group__body cid-entities">
           {visible.length > 0 ? (
             visible.map((entity, ei) => {
               const anchorId = catalogEntityAnchorId(entity.name);
@@ -491,16 +457,13 @@ function ParsedGroupCard({
               );
             })
           ) : (
-            <p
-              data-testid="catalog-detail-parsed-no-matches"
-              className="rounded-lg border border-dashed border-gray-200 px-3 py-6 text-center text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
-            >
+            <p data-testid="catalog-detail-parsed-no-matches" className="cid-empty">
               No entities match “{query.trim()}”.
             </p>
           )}
         </div>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -520,15 +483,12 @@ export function CatalogParsedGroups({
 }) {
   if (!parsed || parsed.length === 0) {
     return (
-      <section
-        data-testid="catalog-detail-parsed-empty"
-        className={`${dashboardPanelClass} p-6`}
-      >
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+      <Card data-testid="catalog-detail-parsed-empty" className="cid-panel">
+        <p className="cid-note">
           No parsed model is available for this item — the normalized entities could not be
           reconstructed from the captured source.
         </p>
-      </section>
+      </Card>
     );
   }
 
