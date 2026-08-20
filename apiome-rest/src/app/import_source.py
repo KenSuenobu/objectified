@@ -1129,6 +1129,10 @@ def load_builtin_import_sources() -> None:
     # effect of its own imports, the WIT normalizer under ``wit``.
     from . import wit_import_source as _wit  # noqa: F401
 
+    # ``mcp_import_source`` (FMT-1.7) self-registers the ``mcp`` adapter and, as a side
+    # effect of its own imports, the MCP manifest normalizer under ``mcp``.
+    from . import mcp_import_source as _mcp  # noqa: F401
+
 
 # ===========================================================================
 # Shared canonical fingerprint + diff

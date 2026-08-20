@@ -131,6 +131,7 @@ const FORMAT_LABELS: Readonly<Record<string, string>> = {
   iso8583: 'ISO 8583',
   fix: 'FIX',
   'llm-tools': 'LLM Tools',
+  mcp: 'MCP Server Manifest',
 };
 
 /**

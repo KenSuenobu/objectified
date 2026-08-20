@@ -55,6 +55,7 @@ from .mcp_credential_crypto import validate_credential_encryption_keys
 from .mcp_endpoint_note_routes import router as mcp_endpoint_note_router
 from .mcp_feed_routes import router as mcp_feed_router
 from .mcp_key_routes import router as mcp_key_router
+from .mcp_manifest_routes import router as mcp_manifest_router
 from .mcp_policy_routes import router as mcp_policy_router
 from .mcp_probe_routes import router as mcp_probe_router
 from .mcp_saved_search_routes import router as mcp_saved_search_router
@@ -130,7 +131,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.133.0",
+    version="1.134.0",
 )
 
 
@@ -392,6 +393,9 @@ app.include_router(mock_data_router)
 app.include_router(mcp_endpoints_router)
 # MCP dynamic probes (CLX-3.3, #4857): consent-gated, sandboxed, audited active probing.
 app.include_router(mcp_probe_router)
+# MCP static manifests (FMT-1.7, #5418): catalog a server from a declared descriptor and
+# attribute every surface fact to the manifest, the probe, or both.
+app.include_router(mcp_manifest_router)
 # MCP trust baselines, drift, and shadowing (CLX-3.4, #4858): diff each rediscovery/release against
 # an approved baseline; classify normal/quality/security/coverage-loss deltas; detect shadowed names.
 app.include_router(mcp_trust_baseline_router)

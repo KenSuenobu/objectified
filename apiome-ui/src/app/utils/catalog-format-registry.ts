@@ -46,6 +46,7 @@ import {
   Waypoints,
   Route,
   Component,
+  Plug,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -206,6 +207,7 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
 
   // ---- Agent ----
   { id: 'llm-tools', label: 'LLM Tools', icon: Bot, tone: 'amber', importable: true, aliases: ['llmtools', 'function-calling', 'openai-tools', 'anthropic-tools'], description: 'OpenAI / Anthropic / bare LLM tool or function-calling schema bundle.' },
+  { id: 'mcp', label: 'MCP Server Manifest', icon: Plug, tone: 'violet', importable: true, aliases: ['mcp-manifest', 'modelcontextprotocol', 'model-context-protocol'], description: 'Static Model Context Protocol server descriptor — tools, resources, templates and prompts, catalogued without probing the server.' },
 
   // ---- Data schema ----
   { id: 'jsonschema', label: 'JSON Schema', icon: Braces, tone: 'indigo', importable: true, aliases: ['json'], description: 'JSON Schema type definitions.' },

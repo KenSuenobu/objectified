@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.133.0
+  version: 1.134.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -48017,6 +48017,236 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for list probe runsresponse422.
+  /v1/mcp/{tenant_slug}/endpoints/manifest-import:
+    post:
+      tags:
+      - mcp-manifest
+      summary: Catalog an MCP server from a static manifest
+      description: 'Import a static MCP server descriptor — tools, resources, resource
+        templates and prompts with their JSON Schemas — without probing the server
+        (FMT-1.7). The declared surface is normalized and fingerprinted by the same
+        code a live discovery uses, so it is directly comparable with an observed
+        one.
+
+
+        **Never creates a duplicate.** When the manifest names a server the catalog
+        already holds — by normalized endpoint URL, or by an identical declared surface
+        fingerprint — the declaration attaches to that endpoint. Only an unrecognised
+        server registers a new one, stamped `added_via: import`.
+
+
+        A declaration is *not* a version snapshot: it never becomes `current_version_id`
+        and never appears in the change feed. Where a manifest and a probe disagree,
+        both values are kept and reported by the surface-provenance report.'
+      operationId: import_mcp_manifest_v1_mcp__tenant_slug__endpoints_manifest_import_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Catalogan Mcpserverfromastaticmanifestauthorization schema.
+          - type: 'null'
+            description: Catalogan Mcpserverfromastaticmanifestauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Catalogan Mcpserverfromastaticmanifest Xapikey schema.
+          - type: 'null'
+            description: Catalogan Mcpserverfromastaticmanifest Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/McpManifestImportRequest'
+              description: Request body for catalogan mcpserverfromastaticmanifestrequest.
+        description: Request body for catalog an mcp server from a static manifest.
+      responses:
+        '200':
+          description: Successful response for catalog an mcp server from a static
+            manifest.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpManifestImportResponse'
+                description: Response payload for catalogan mcpserverfromastaticmanifestresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for catalogan mcpserverfromastaticmanifestresponse422.
+  /v1/mcp/{tenant_slug}/endpoints/{endpoint_id}/manifests:
+    get:
+      tags:
+      - mcp-manifest
+      summary: List an endpoint's declared manifests
+      description: Every static manifest attached to this endpoint, newest first (FMT-1.7).
+        Superseded declarations are excluded unless `include_retired` is set — they
+        stay readable so an attribution made against one remains interpretable.
+      operationId: list_mcp_endpoint_manifests_v1_mcp__tenant_slug__endpoints__endpoint_id__manifests_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: endpoint_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Endpoint Id
+          description: Endpoint Id schema.
+        description: MCP endpoint identifier.
+      - name: include_retired
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Include superseded declarations.
+          default: false
+          title: Include Retired
+        description: Include superseded declarations.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listanendpointsdeclaredmanifestsauthorization schema.
+          - type: 'null'
+            description: Listanendpointsdeclaredmanifestsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listanendpointsdeclaredmanifests Xapikey schema.
+          - type: 'null'
+            description: Listanendpointsdeclaredmanifests Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list an endpoint's declared manifests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpDeclaredManifestListResponse'
+                description: Response payload for listanendpointsdeclaredmanifestsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for listanendpointsdeclaredmanifestsresponse422.
+  /v1/mcp/{tenant_slug}/endpoints/{endpoint_id}/surface-provenance:
+    get:
+      tags:
+      - mcp-manifest
+      summary: Attribute an endpoint's surface facts to declared / observed sources
+      description: 'For every fact on this endpoint''s surface — protocol version,
+        server identity, declared capabilities, and each tool / resource / resource
+        template / prompt — say whether it came from a **declared** manifest, an **observed**
+        probe, or **both** (FMT-1.7).
+
+
+        Where both carry a fact and their values differ, the fact reads `conflicts`
+        and both values are returned; nothing here picks a winner. An endpoint with
+        no manifest reads as `observed_only`, never as agreement.'
+      operationId: get_mcp_surface_provenance_v1_mcp__tenant_slug__endpoints__endpoint_id__surface_provenance_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: endpoint_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Endpoint Id
+          description: Endpoint Id schema.
+        description: MCP endpoint identifier.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Attributeanendpointssurfacefactstodeclarauthorization schema.
+          - type: 'null'
+            description: Attributeanendpointssurfacefactstodeclarauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Attributeanendpointssurfacefactstodeclar Xapikey schema.
+          - type: 'null'
+            description: Attributeanendpointssurfacefactstodeclar Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for attribute an endpoint's surface facts
+            to declared / observed sources.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpSurfaceProvenanceResponse'
+                description: Response payload for attributeanendpointssurfacefactstodeclarresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for attributeanendpointssurfacefactstodeclarresponse422.
   /v1/mcp/{tenant_slug}/endpoints/{endpoint_id}/trust-baseline:
     post:
       tags:
@@ -57087,7 +57317,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: a47339fa-41d0-4507-b9b6-6423905959e5
+          example: ce42db9f-dd00-4d5b-8e92-28f6cdd45bb4
         method:
           type: string
           title: Method
@@ -59079,7 +59309,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-20T20:52:02Z'
+          example: '2026-08-20T21:50:18Z'
         envelope:
           additionalProperties: true
           type: object
@@ -71959,6 +72189,137 @@ components:
       - visibility
       title: McpCrossServerCapabilityServerGroup
       description: Matching capabilities from one cataloged server (MCAT-21.2).
+    McpDeclaredManifestListResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Always true for a 2xx response.
+          default: true
+          example: false
+        manifests:
+          items:
+            $ref: '#/components/schemas/McpDeclaredManifestOut'
+          type: array
+          title: Manifests
+          description: Declarations, newest first.
+          maxItems: 1000
+      type: object
+      title: McpDeclaredManifestListResponse
+      description: Every declaration attached to one endpoint.
+    McpDeclaredManifestOut:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: The declaration's id.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        endpoint_id:
+          type: string
+          title: Endpoint Id
+          description: The endpoint it describes.
+          example: endpoint_01h2xcejqtf3fz5y5j0v8k9m2p
+        source_label:
+          anyOf:
+          - type: string
+            description: Response payload for mcp declared manifest.
+          - type: 'null'
+            description: Response payload for mcp declared manifest.
+          title: Source Label
+          description: Where the declaration came from.
+        surface_fingerprint:
+          type: string
+          title: Surface Fingerprint
+          description: The declared surface's fingerprint — the same hash a probe's
+            surface produces.
+          example: a1b2c3d4e5f6789012345678901234ab
+        protocol_version:
+          anyOf:
+          - type: string
+            description: Response payload for mcp declared manifest.
+          - type: 'null'
+            description: Response payload for mcp declared manifest.
+          title: Protocol Version
+          description: Declared MCP protocol version.
+        server_name:
+          anyOf:
+          - type: string
+            description: Response payload for mcp declared manifest.
+          - type: 'null'
+            description: Response payload for mcp declared manifest.
+          title: Server Name
+          description: Declared server name.
+        server_title:
+          anyOf:
+          - type: string
+            description: Response payload for mcp declared manifest.
+          - type: 'null'
+            description: Response payload for mcp declared manifest.
+          title: Server Title
+          description: Declared server title.
+        server_version:
+          anyOf:
+          - type: string
+            description: Response payload for mcp declared manifest.
+          - type: 'null'
+            description: Response payload for mcp declared manifest.
+          title: Server Version
+          description: Declared server version.
+        tool_count:
+          type: integer
+          title: Tool Count
+          description: Declared tool count.
+          example: 1
+        resource_count:
+          type: integer
+          title: Resource Count
+          description: Declared resource count.
+          example: 1
+        resource_template_count:
+          type: integer
+          title: Resource Template Count
+          description: Declared resource-template count.
+          example: 1
+        prompt_count:
+          type: integer
+          title: Prompt Count
+          description: Declared prompt count.
+          example: 1
+        retired_at:
+          anyOf:
+          - type: string
+            description: Response payload for mcp declared manifest.
+          - type: 'null'
+            description: Response payload for mcp declared manifest.
+          title: Retired At
+          description: When this declaration was superseded, if it was.
+        created_at:
+          anyOf:
+          - type: string
+            description: Response payload for mcp declared manifest.
+          - type: 'null'
+            description: Response payload for mcp declared manifest.
+          title: Created At
+          description: When it was attached.
+        updated_at:
+          anyOf:
+          - type: string
+            description: Response payload for mcp declared manifest.
+          - type: 'null'
+            description: Response payload for mcp declared manifest.
+          title: Updated At
+          description: When it was last refreshed.
+      type: object
+      required:
+      - id
+      - endpoint_id
+      - surface_fingerprint
+      - tool_count
+      - resource_count
+      - resource_template_count
+      - prompt_count
+      title: McpDeclaredManifestOut
+      description: One declared capability surface attached to an endpoint.
     McpDigestConfigResponse:
       properties:
         enabled:
@@ -75470,6 +75831,108 @@ components:
         timestamp (only
 
         present when the report came from / was written to storage).'
+    McpManifestImportRequest:
+      properties:
+        manifest:
+          type: string
+          title: Manifest
+          description: The manifest document as text (JSON). The same bytes the `mcp`
+            import adapter accepts.
+          example: example
+        endpoint_url:
+          anyOf:
+          - type: string
+            description: Request body for mcp manifest import.
+          - type: 'null'
+            description: Request body for mcp manifest import.
+          title: Endpoint Url
+          description: Where this server is reached, overriding the manifest's `transport`
+            block. Required when the manifest declares no transport.
+        transport:
+          anyOf:
+          - type: string
+            description: Request body for mcp manifest import.
+          - type: 'null'
+            description: Request body for mcp manifest import.
+          title: Transport
+          description: 'Transport override: `streamable_http`, `sse`, or `stdio`.
+            Defaults to the manifest''s declared transport.'
+        source_label:
+          anyOf:
+          - type: string
+            description: Request body for mcp manifest import.
+          - type: 'null'
+            description: Request body for mcp manifest import.
+          title: Source Label
+          description: Where the manifest came from (filename / URL). Recorded, never
+            fetched.
+      type: object
+      required:
+      - manifest
+      title: McpManifestImportRequest
+      description: A static MCP server manifest to catalog.
+    McpManifestImportResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Always true for a 2xx response.
+          default: true
+          example: false
+        endpoint:
+          $ref: '#/components/schemas/McpEndpointOut'
+          description: The endpoint the manifest now describes.
+        manifest:
+          $ref: '#/components/schemas/McpDeclaredManifestOut'
+          description: The declaration that was attached.
+        endpoint_created:
+          type: boolean
+          title: Endpoint Created
+          description: True when no catalogued endpoint matched and one was registered.
+          example: false
+        match:
+          type: string
+          title: Match
+          description: 'How the endpoint was recognised: `address` (same normalized
+            endpoint URL), `surface` (same declared surface fingerprint), or `none`
+            (created).'
+          example: example
+        surface_conflict:
+          type: boolean
+          title: Surface Conflict
+          description: True when the endpoint has been probed and its observed surface
+            fingerprint differs from the declared one. Not an error — see the surface-provenance
+            report.
+          example: false
+        observed_fingerprint:
+          anyOf:
+          - type: string
+            description: Response payload for mcp manifest import.
+          - type: 'null'
+            description: Response payload for mcp manifest import.
+          title: Observed Fingerprint
+          description: The endpoint's current observed surface fingerprint, if any.
+        superseded_manifests:
+          type: integer
+          title: Superseded Manifests
+          description: How many earlier declarations this import retired.
+          default: 0
+          example: 1
+        reason:
+          type: string
+          title: Reason
+          description: One sentence explaining where the manifest landed and why.
+          example: example
+      type: object
+      required:
+      - endpoint
+      - manifest
+      - endpoint_created
+      - match
+      - surface_conflict
+      - reason
+      title: McpManifestImportResponse
+      description: The outcome of cataloguing a server from a manifest.
     McpOwaspRiskOut:
       properties:
         riskId:
@@ -77030,6 +77493,68 @@ components:
       - source
       title: McpSourceResponse
       description: 'A single linked source association (CLX-3.2, #4856).'
+    McpSurfaceFactOut:
+      properties:
+        scope:
+          type: string
+          title: Scope
+          description: '`surface`, or the capability kind the fact belongs to.'
+          example: example
+        key:
+          type: string
+          title: Key
+          description: Stable identifier within the scope.
+          example: example
+        label:
+          type: string
+          title: Label
+          description: What a reader sees for this fact.
+          example: example
+        kind_label:
+          type: string
+          title: Kind Label
+          description: Human label for the fact's scope.
+          example: example
+        origin:
+          type: string
+          title: Origin
+          description: '`declared`, `observed`, or `both`.'
+          example: example
+        origin_label:
+          type: string
+          title: Origin Label
+          description: Human label for the origin.
+          example: example
+        agreement:
+          type: string
+          title: Agreement
+          description: '`uncontested`, `agrees`, or `conflicts`.'
+          example: example
+        declared:
+          anyOf:
+          - description: Response payload for mcp surface fact.
+          - type: 'null'
+            description: Response payload for mcp surface fact.
+          title: Declared
+          description: The declared value, when any.
+        observed:
+          anyOf:
+          - description: Response payload for mcp surface fact.
+          - type: 'null'
+            description: Response payload for mcp surface fact.
+          title: Observed
+          description: The observed value, when any.
+      type: object
+      required:
+      - scope
+      - key
+      - label
+      - kind_label
+      - origin
+      - origin_label
+      - agreement
+      title: McpSurfaceFactOut
+      description: One attributable fact about an endpoint's surface.
     McpSurfaceLintRuleOut:
       properties:
         ruleId:
@@ -77194,6 +77719,72 @@ components:
       title: McpSurfaceMetricsOut
       description: The full :class:`app.mcp_surface_metrics.SurfaceMetrics` roll-up
         as a typed response body.
+    McpSurfaceProvenanceResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Always true for a 2xx response.
+          default: true
+          example: false
+        endpoint_id:
+          type: string
+          title: Endpoint Id
+          description: The endpoint the report describes.
+          example: endpoint_01h2xcejqtf3fz5y5j0v8k9m2p
+        surface_match:
+          type: string
+          title: Surface Match
+          description: '`none`, `declared_only`, `observed_only`, `identical` (the
+            two fingerprints agree), or `divergent`.'
+          example: example
+        declared_fingerprint:
+          anyOf:
+          - type: string
+            description: Response payload for mcp surface provenance.
+          - type: 'null'
+            description: Response payload for mcp surface provenance.
+          title: Declared Fingerprint
+          description: The declared surface's fingerprint, when one is attached.
+        observed_fingerprint:
+          anyOf:
+          - type: string
+            description: Response payload for mcp surface provenance.
+          - type: 'null'
+            description: Response payload for mcp surface provenance.
+          title: Observed Fingerprint
+          description: The observed surface's fingerprint, when discovery has run.
+        fingerprints_match:
+          type: boolean
+          title: Fingerprints Match
+          description: True only when both surfaces exist and fingerprint identically.
+          example: false
+        origin_counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Origin Counts
+          description: Fact count per origin.
+        conflict_count:
+          type: integer
+          title: Conflict Count
+          description: How many facts the two sources disagree on.
+          example: 1
+        facts:
+          items:
+            $ref: '#/components/schemas/McpSurfaceFactOut'
+          type: array
+          title: Facts
+          description: Every attributable fact, identity first then items.
+          maxItems: 1000
+      type: object
+      required:
+      - endpoint_id
+      - surface_match
+      - fingerprints_match
+      - conflict_count
+      title: McpSurfaceProvenanceResponse
+      description: The declared-vs-observed attribution for one endpoint's surface.
     McpToolCatalogItem:
       properties:
         id:
@@ -86878,7 +87469,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-20T20:52:02Z'
+          example: '2026-08-20T21:50:18Z'
       additionalProperties: false
       type: object
       required:
@@ -98292,13 +98883,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-20T20:52:02Z'
+          example: '2026-08-20T21:50:18Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-20T20:52:02Z'
+          example: '2026-08-20T21:50:18Z'
         outcome:
           anyOf:
           - type: string

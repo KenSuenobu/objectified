@@ -527,6 +527,12 @@ def reordered_source(entry: CorpusEntry) -> Optional[str]:
     source (proto, GraphQL SDL, an IDL) has no key order to permute, and a binary
     entry (IXH-7.5 descriptor set / buf image) has no text at all.
 
+    The reordered document is re-emitted **in the entry's own serialization**: a
+    ``.json`` fixture comes back as JSON, everything else as YAML. Re-emitting a JSON
+    fixture as YAML would hand a format whose documents are JSON by definition — an MCP
+    server manifest, whose parser deliberately has no YAML fallback (FMT-1.7) — a document
+    it must reject, turning the invariance check into a skip that proves nothing.
+
     Args:
         entry: The manifest entry.
 
@@ -543,7 +549,10 @@ def reordered_source(entry: CorpusEntry) -> Optional[str]:
         return None
     if not isinstance(document, dict) or not document:
         return None
-    return yaml.safe_dump(_reverse_keys(document), sort_keys=False, allow_unicode=True)
+    reordered = _reverse_keys(document)
+    if entry.path.lower().endswith(".json"):
+        return json.dumps(reordered, indent=2, ensure_ascii=False)
+    return yaml.safe_dump(reordered, sort_keys=False, allow_unicode=True)
 
 
 def _reverse_keys(node: Any) -> Any:

@@ -1,0 +1,1123 @@
+{
+  "adapter": "mcp",
+  "canonical": {
+    "channels": [],
+    "description": "Access is restricted to the directories listed in roots; every path argument is resolved against them.",
+    "extras": {
+      "mcp_capabilities": {
+        "resources": {
+          "listChanged": true
+        },
+        "tools": {
+          "listChanged": true
+        }
+      },
+      "mcp_endpoint_target": "npx -y @modelcontextprotocol/server-filesystem /srv/data",
+      "mcp_protocol_version": "2025-06-18",
+      "mcp_surface_fingerprint": "230a4a5a8e3dd2023ddd34d01fb4094f20b48be0529ab77e559670202de249d0",
+      "mcp_transport": "stdio",
+      "prompt_count": 0,
+      "provenance": "declared",
+      "resource_count": 1,
+      "resource_template_count": 0,
+      "tool_count": 9
+    },
+    "format": "mcp",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "filesystem",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "mcp",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Where this MCP server is reached live, as the manifest declares it.",
+        "extras": {
+          "provenance": "declared"
+        },
+        "name": "stdio",
+        "protocol": "stdio",
+        "url": "npx -y @modelcontextprotocol/server-filesystem /srv/data",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": "Resources and resource templates the MCP server exposes for reading.",
+        "extras": {
+          "mcp_kind": "resource",
+          "provenance": "declared"
+        },
+        "key": "Filesystem.resources",
+        "name": "resources",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "The single allowed root of this server.",
+            "extras": {
+              "annotations": null,
+              "mcp_kind": "resource",
+              "mime_type": "inode/directory",
+              "provenance": "declared",
+              "title": null,
+              "uri": "file:///srv/data"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.resources.data-root",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "inode/directory"
+                ],
+                "description": "Resource contents returned by `resources/read`.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.resources.data-root#response.contents",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "contents"
+              }
+            ],
+            "name": "data-root",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": "Tools the MCP server declares it can execute.",
+        "extras": {
+          "mcp_kind": "tool",
+          "provenance": "declared"
+        },
+        "key": "Filesystem.tools",
+        "name": "tools",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create a new directory, creating parents as needed.",
+            "extras": {
+              "annotations": {
+                "idempotentHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.tools.create_directory",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.tools.create_directory#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolcreate_directoryInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "create_directory",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Apply line-based edits to a text file.",
+            "extras": {
+              "annotations": {
+                "destructiveHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.tools.edit_file",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.tools.edit_file#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Tooledit_fileInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "dryRun": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "edits": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "newText": {
+                            "type": "string"
+                          },
+                          "oldText": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "oldText",
+                          "newText"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "path": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "edits"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "edit_file",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Retrieve detailed metadata about a file or directory.",
+            "extras": {
+              "annotations": {
+                "readOnlyHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.tools.get_file_info",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.tools.get_file_info#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolget_file_infoInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "get_file_info",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Return the list of directories this server may access.",
+            "extras": {
+              "annotations": {
+                "idempotentHint": true,
+                "readOnlyHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.tools.list_allowed_directories",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.tools.list_allowed_directories#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toollist_allowed_directoriesInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {},
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "list_allowed_directories",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Get a detailed listing of all files and directories in a path.",
+            "extras": {
+              "annotations": {
+                "readOnlyHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.tools.list_directory",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.tools.list_directory#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toollist_directoryInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "list_directory",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Read the complete contents of a file from the file system.",
+            "extras": {
+              "annotations": {
+                "readOnlyHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.tools.read_file",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.tools.read_file#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolread_fileInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "head": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "tail": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "path"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "read_file",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Read the contents of multiple files simultaneously.",
+            "extras": {
+              "annotations": {
+                "readOnlyHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.tools.read_multiple_files",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.tools.read_multiple_files#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolread_multiple_filesInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "paths": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "paths"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "read_multiple_files",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Recursively search for files and directories matching a pattern.",
+            "extras": {
+              "annotations": {
+                "readOnlyHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.tools.search_files",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.tools.search_files#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolsearch_filesInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "excludePatterns": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "pattern": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "pattern"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "search_files",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create a new file or completely overwrite an existing file.",
+            "extras": {
+              "annotations": {
+                "destructiveHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Filesystem.tools.write_file",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Filesystem.tools.write_file#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolwrite_fileInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "write_file",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Filesystem",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcreate_directoryInput.path",
+            "name": "path",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolcreate_directoryInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolcreate_directoryInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Tooledit_fileInput.dryRun",
+            "name": "dryRun",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Tooledit_fileInput.edits",
+            "name": "edits",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": null,
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Tooledit_fileInput.path",
+            "name": "path",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Tooledit_fileInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Tooledit_fileInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolget_file_infoInput.path",
+            "name": "path",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolget_file_infoInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolget_file_infoInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "Toollist_allowed_directoriesInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toollist_allowed_directoriesInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toollist_directoryInput.path",
+            "name": "path",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toollist_directoryInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toollist_directoryInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolread_fileInput.head",
+            "name": "head",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolread_fileInput.path",
+            "name": "path",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolread_fileInput.tail",
+            "name": "tail",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Toolread_fileInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolread_fileInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolread_multiple_filesInput.paths",
+            "name": "paths",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolread_multiple_filesInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolread_multiple_filesInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolsearch_filesInput.excludePatterns",
+            "name": "excludePatterns",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolsearch_filesInput.path",
+            "name": "path",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolsearch_filesInput.pattern",
+            "name": "pattern",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolsearch_filesInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolsearch_filesInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolwrite_fileInput.content",
+            "name": "content",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolwrite_fileInput.path",
+            "name": "path",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolwrite_fileInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolwrite_fileInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "0.6.2"
+  },
+  "corpus_path": "mcp/05-real-world-filesystem-server.json",
+  "counts": {
+    "channels": 0,
+    "operations": 10,
+    "servers": 1,
+    "services": 2,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "mcp"
+  },
+  "fingerprint": "sha256:d6745810e3886b2862c42aeeb745b04267e64aa911cfeb3233154fd6288054b8",
+  "lint": {
+    "findings": 24,
+    "grade": "D",
+    "report_fingerprint": "00676c4418fb38abc48921869ac02eff5c8a1136b0fd046d7f284ea9f7bddb24",
+    "score": 65,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 9
+    }
+  },
+  "snapshot_version": 1
+}
