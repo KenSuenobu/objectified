@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **1410 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **1411 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -106,7 +106,7 @@ The corpus holds **1410 files** across **103 format directories**. Every file ha
 | `json-schema/` | JSON Schema | data_schema | `$schema` / `type` + `properties` | 17 |
 | `jsonld/` | JSON-LD contexts (pending #5471) | data_schema | top-level `@context` with term definitions (`@id`/`@type`/`@container`) | 14 |
 | `jtd/` | JSON Type Definition | data_schema | `properties`/`optionalProperties` | 11 |
-| `k8s-crd/` | Kubernetes CRD | data_schema | `apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition` | 11 |
+| `k8s-crd/` | Kubernetes CRD | data_schema | `apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition` | 12 |
 | `kafka-connect/` | Kafka Connect schema (pending #5441) | data_schema | `"type": "struct"` + `fields[].field` | 15 |
 | `lwm2m/` | LwM2M / IPSO objects (pending #5472) | data_schema | `<LWM2M>` root with `<Object ObjectType="MODefinition">` and `Resources/Item` | 15 |
 | `matter/` | Matter clusters and device types (pending #5472) | rpc | `<configurator>` root with `<cluster>` (name/code/define) or `<deviceType>` | 15 |
@@ -1237,6 +1237,7 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `04-x-kubernetes-extensions.yaml` | stress | `k8s-crd` ≥ 0.95 | valid | `crd`, `x-kubernetes`, `int-or-string`, `list-type`, `map-type`, `preserve-unknown-fields` |
 | `05-cert-manager-like.yaml` | real-world | `k8s-crd` ≥ 0.95 | valid | `crd`, `real-world`, `nested-objects`, `enums` |
 | `06-multi-crd-stream.yaml` ⚠ | typical | `k8s-crd` ≥ 0.95 | valid | `crd`, `multi-document`, `multiple-services` |
+| `07-status-subresource.yaml` | composition | `k8s-crd` ≥ 0.95 | valid | `crd`, `status-subresource`, `scale-subresource`, `printer-columns`, `spec-status` |
 | `negative/01-syntactic-unclosed-mapping.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-mapping` |
 | `negative/02-semantic-missing-group.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `semantic`, `missing-group` |
 | `negative/03-truncated-mid-doc.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `truncated`, `mid-doc-cut` |
@@ -2579,7 +2580,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 1410 | `Apache-2.0` |
+| `hand-authored` | 1411 | `Apache-2.0` |
 
 ## Trying an import
 

@@ -1209,11 +1209,11 @@
         "k8s-crd"
       ],
       "fixtures": {
-        "valid": 6,
+        "valid": 7,
         "negative": 5,
         "adversarial": 0,
         "scale": 0,
-        "total": 11
+        "total": 12
       },
       "rungs": [
         "composition",
@@ -1225,13 +1225,20 @@
       "rung_waivers": [
         "multi-file"
       ],
-      "goldens": 6,
+      "goldens": 7,
       "golden_directories": [
         "k8s-crd"
       ],
-      "emit_key": null,
+      "emit_key": "k8s-crd",
       "roundtrip_row": true,
-      "roundtrip_cells": [],
+      "roundtrip_cells": [
+        {
+          "source_format": "k8s-crd",
+          "emit_key": "k8s-crd",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
       "capability_provenance": "derived",
       "requirements": {
         "valid-examples": "satisfied",

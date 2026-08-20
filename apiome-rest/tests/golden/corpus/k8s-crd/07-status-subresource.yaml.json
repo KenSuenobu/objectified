@@ -1,0 +1,133 @@
+{
+  "adapter": "k8s-crd",
+  "canonical": {
+    "channels": [],
+    "description": "CustomResourceDefinition queues.messaging.example.io",
+    "extras": {
+      "k8s_crd_count": 1,
+      "k8s_crd_names": [
+        "queues.messaging.example.io"
+      ]
+    },
+    "format": "k8s-crd",
+    "identity": {
+      "extras": {},
+      "id": "queues.messaging.example.io",
+      "name": "Queue",
+      "namespace": "messaging.example.io"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Kubernetes CustomResourceDefinition queues.messaging.example.io",
+        "extras": {
+          "k8s_crd_api_version": "apiextensions.k8s.io/v1",
+          "k8s_crd_group": "messaging.example.io",
+          "k8s_crd_kind": "Queue",
+          "k8s_crd_name": "queues.messaging.example.io",
+          "k8s_crd_plural": "queues",
+          "k8s_crd_scope": "Namespaced",
+          "k8s_crd_short_names": [
+            "q"
+          ],
+          "k8s_crd_singular": "queue"
+        },
+        "key": "queues.messaging.example.io",
+        "name": "Queue",
+        "operations": []
+      }
+    ],
+    "title": "Queue",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Queue is a durable message queue managed by a controller.",
+        "enum_values": [],
+        "extras": {
+          "deprecated": false,
+          "k8s_crd_group": "messaging.example.io",
+          "k8s_crd_kind": "Queue",
+          "k8s_crd_version": "v1",
+          "required_names": [
+            "spec"
+          ],
+          "served": true,
+          "storage": true,
+          "version_status": "served"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "messaging.example.io/v1.Queue.spec",
+            "name": "spec",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "messaging.example.io/v1.Queue.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "messaging.example.io/v1.Queue",
+        "key_type": null,
+        "kind": "record",
+        "name": "Queue",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "k8s-crd/07-status-subresource.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "k8s-crd"
+  },
+  "fingerprint": "sha256:96aba3dd34ebca59124e61b40ec79fcd175712f3dc25d32dfc3f2db1ab9e86e5",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "15b8faa4f7406a2926e3c53610f25009749ecbfd596dbbbf5ed40a6d772f0f3d",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

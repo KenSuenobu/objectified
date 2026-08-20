@@ -1,0 +1,74 @@
+# Status subresource — /status split off, printer columns, and a scale subresource.
+# The shape a controller-backed resource takes once it reports status separately
+# from spec; the CRD emitter (FMT-2.1) re-emits `subresources.status` from a
+# resource whose schema declares an object `status` property.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: queues.messaging.example.io
+spec:
+  group: messaging.example.io
+  scope: Namespaced
+  names:
+    plural: queues
+    singular: queue
+    kind: Queue
+    shortNames:
+      - q
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+        scale:
+          specReplicasPath: .spec.replicas
+          statusReplicasPath: .status.replicas
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+          description: Current lifecycle phase of the queue.
+        - name: Replicas
+          type: integer
+          jsonPath: .status.replicas
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: Queue is a durable message queue managed by a controller.
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - topic
+              properties:
+                topic:
+                  type: string
+                  description: Topic the queue subscribes to.
+                replicas:
+                  type: integer
+                  minimum: 1
+                  maximum: 50
+                  default: 1
+                retention:
+                  type: string
+                  format: duration
+                  description: How long messages are retained.
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - Pending
+                    - Ready
+                    - Degraded
+                replicas:
+                  type: integer
+                observedGeneration:
+                  type: integer
