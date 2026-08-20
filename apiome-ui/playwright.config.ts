@@ -7,6 +7,12 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
 
+  /* The HIVE-10.1 visual-parity harness runs under `playwright.visual.config.ts`: it needs a
+     project per theme (its tests read the theme off `project.metadata`) and a server pinned
+     to its own port, neither of which this config provides. Running it from here would
+     measure the right pages against the wrong setup. */
+  testIgnore: ['**/visual/**'],
+
   /* Run tests in files in parallel */
   fullyParallel: true,
 
