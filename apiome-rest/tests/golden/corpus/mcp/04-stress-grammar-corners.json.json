@@ -1,0 +1,968 @@
+{
+  "adapter": "mcp",
+  "canonical": {
+    "channels": [],
+    "description": "Every tool in this server is metered; prefer batch calls.",
+    "extras": {
+      "mcp_capabilities": {
+        "completions": {},
+        "experimental": {
+          "acme.batching": {
+            "maxBatch": 25
+          }
+        },
+        "logging": {},
+        "prompts": {
+          "listChanged": true
+        },
+        "resources": {
+          "listChanged": true,
+          "subscribe": true
+        },
+        "tools": {
+          "listChanged": true
+        }
+      },
+      "mcp_endpoint_target": "acme-lab-mcp --profile readonly",
+      "mcp_protocol_version": "2025-06-18",
+      "mcp_surface_fingerprint": "01b6e8248193120e1fb70c197ffa865c05ead13ddeeef32a374802b5218b81ea",
+      "mcp_transport": "stdio",
+      "prompt_count": 2,
+      "provenance": "declared",
+      "resource_count": 2,
+      "resource_template_count": 1,
+      "tool_count": 2
+    },
+    "format": "mcp",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "acme-lab",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "mcp",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Where this MCP server is reached live, as the manifest declares it.",
+        "extras": {
+          "provenance": "declared"
+        },
+        "name": "stdio",
+        "protocol": "stdio",
+        "url": "acme-lab-mcp --profile readonly",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": "Prompt templates the MCP server offers.",
+        "extras": {
+          "mcp_kind": "prompt",
+          "provenance": "declared"
+        },
+        "key": "Acme Laboratory.prompts",
+        "name": "prompts",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Draft a protocol from a free-text goal.",
+            "extras": {
+              "mcp_kind": "prompt",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Laboratory.prompts.draft_protocol",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Prompt messages returned by `prompts/get`.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Laboratory.prompts.draft_protocol#response.messages",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "messages"
+              }
+            ],
+            "name": "draft_protocol",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "declared"
+                },
+                "key": "Acme Laboratory.prompts.draft_protocol#query.goal",
+                "location": "query",
+                "name": "goal",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Explain an assay result to a non-specialist.",
+            "extras": {
+              "mcp_kind": "prompt",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Laboratory.prompts.explain_result",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Prompt messages returned by `prompts/get`.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Laboratory.prompts.explain_result#response.messages",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "messages"
+              }
+            ],
+            "name": "explain_result",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "declared"
+                },
+                "key": "Acme Laboratory.prompts.explain_result#query.includeRawValues",
+                "location": "query",
+                "name": "includeRawValues",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "declared"
+                },
+                "key": "Acme Laboratory.prompts.explain_result#query.readingLevel",
+                "location": "query",
+                "name": "readingLevel",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "declared"
+                },
+                "key": "Acme Laboratory.prompts.explain_result#query.runId",
+                "location": "query",
+                "name": "runId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": "Resources and resource templates the MCP server exposes for reading.",
+        "extras": {
+          "mcp_kind": "resource",
+          "provenance": "declared"
+        },
+        "key": "Acme Laboratory.resources",
+        "name": "resources",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Current instrument calibration table.",
+            "extras": {
+              "annotations": {
+                "audience": [
+                  "assistant"
+                ],
+                "priority": 0.3
+              },
+              "mcp_kind": "resource",
+              "mime_type": "text/csv",
+              "provenance": "declared",
+              "title": null,
+              "uri": "lab://calibration/current"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Laboratory.resources.calibration",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "text/csv"
+                ],
+                "description": "Resource contents returned by `resources/read`.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Laboratory.resources.calibration#response.contents",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "contents"
+              }
+            ],
+            "name": "calibration",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Standard operating procedure, ELISA.",
+            "extras": {
+              "annotations": null,
+              "mcp_kind": "resource",
+              "mime_type": "application/pdf",
+              "provenance": "declared",
+              "title": null,
+              "uri": "lab://sop/elisa.pdf"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Laboratory.resources.elisa-sop",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/pdf"
+                ],
+                "description": "Resource contents returned by `resources/read`.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Laboratory.resources.elisa-sop#response.contents",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "contents"
+              }
+            ],
+            "name": "elisa-sop",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Report for one assay run; format defaults to json.",
+            "extras": {
+              "annotations": null,
+              "mcp_kind": "resource_template",
+              "mime_type": "application/json",
+              "provenance": "declared",
+              "title": null,
+              "uri": "lab://run/{runId}/report{?format}"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Laboratory.resources.run-report",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Resource contents returned by `resources/read`.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Laboratory.resources.run-report#response.contents",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "contents"
+              }
+            ],
+            "name": "run-report",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "`runId` from the resource template.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "key": "Acme Laboratory.resources.run-report#path.runId",
+                "location": "path",
+                "name": "runId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "`format` from the resource template.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "key": "Acme Laboratory.resources.run-report#query.format",
+                "location": "query",
+                "name": "format",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": "Tools the MCP server declares it can execute.",
+        "extras": {
+          "mcp_kind": "tool",
+          "provenance": "declared"
+        },
+        "key": "Acme Laboratory.tools",
+        "name": "tools",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Cancel a queued or running assay.",
+            "extras": {
+              "annotations": {
+                "destructiveHint": true,
+                "idempotentHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Laboratory.tools.cancel_run",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Laboratory.tools.cancel_run#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolcancel_runInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "properties": {
+                    "runId": {
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "runId"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "cancel_run",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Queue an assay run against a sample plate.",
+            "extras": {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false,
+                "readOnlyHint": false,
+                "title": "Run an assay"
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": "Run an assay"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Laboratory.tools.run_assay",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Laboratory.tools.run_assay#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolrun_assayInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "notify": {
+                      "anyOf": [
+                        {
+                          "format": "email",
+                          "type": "string"
+                        },
+                        {
+                          "items": {
+                            "format": "email",
+                            "type": "string"
+                          },
+                          "type": "array",
+                          "uniqueItems": true
+                        }
+                      ]
+                    },
+                    "options": {
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean"
+                        ]
+                      },
+                      "type": "object"
+                    },
+                    "plate": {
+                      "oneOf": [
+                        {
+                          "pattern": "^PLT-[0-9]{5}$",
+                          "type": "string"
+                        },
+                        {
+                          "properties": {
+                            "barcode": {
+                              "type": "string"
+                            },
+                            "wells": {
+                              "items": {
+                                "properties": {
+                                  "column": {
+                                    "maximum": 24,
+                                    "minimum": 1,
+                                    "type": "integer"
+                                  },
+                                  "row": {
+                                    "pattern": "^[A-P]$",
+                                    "type": "string"
+                                  },
+                                  "sampleId": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "row",
+                                  "column"
+                                ],
+                                "type": "object"
+                              },
+                              "maxItems": 384,
+                              "minItems": 1,
+                              "type": "array"
+                            }
+                          },
+                          "required": [
+                            "barcode",
+                            "wells"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "protocol": {
+                      "enum": [
+                        "elisa",
+                        "pcr",
+                        "hplc",
+                        "mass-spec",
+                        "flow-cytometry"
+                      ],
+                      "type": "string"
+                    },
+                    "replicates": {
+                      "default": 3,
+                      "maximum": 8,
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "plate",
+                    "protocol"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": "Structured tool result.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Laboratory.tools.run_assay#response.result",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolrun_assayOutput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "properties": {
+                    "estimatedMinutes": {
+                      "exclusiveMinimum": 0,
+                      "type": "number"
+                    },
+                    "queuedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "runId": {
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "runId",
+                    "queuedAt"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "response",
+                "status_code": "result"
+              }
+            ],
+            "name": "run_assay",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Acme Laboratory",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcancel_runInput.runId",
+            "name": "runId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolcancel_runInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolcancel_runInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolrun_assayInput.notify",
+            "name": "notify",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolrun_assayInput.options",
+            "name": "options",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolrun_assayInput.plate",
+            "name": "plate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "elisa",
+                "pcr",
+                "hplc",
+                "mass-spec",
+                "flow-cytometry"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolrun_assayInput.protocol",
+            "name": "protocol",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 8.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": 3,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolrun_assayInput.replicates",
+            "name": "replicates",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Toolrun_assayInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolrun_assayInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": 0.0,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolrun_assayOutput.estimatedMinutes",
+            "name": "estimatedMinutes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolrun_assayOutput.queuedAt",
+            "name": "queuedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolrun_assayOutput.runId",
+            "name": "runId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolrun_assayOutput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolrun_assayOutput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "0.9.0-rc.3"
+  },
+  "corpus_path": "mcp/04-stress-grammar-corners.json",
+  "counts": {
+    "channels": 0,
+    "operations": 7,
+    "servers": 1,
+    "services": 3,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "mcp"
+  },
+  "fingerprint": "sha256:5616cfd41b0a66405f808bf1c08f58bebdc068b457f09eddc267fdd4eac141b6",
+  "lint": {
+    "findings": 12,
+    "grade": "C",
+    "report_fingerprint": "af79ff979ecb6e0c1b7bfda255bdb8a6bda46157fabe4a18aa814319a05fd9f7",
+    "score": 79,
+    "severity_counts": {
+      "error": 0,
+      "info": 9,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

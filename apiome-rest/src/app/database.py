@@ -20602,6 +20602,7 @@ class Database:
         category: Optional[str] = None,
         visibility: str = "private",
         discovery_cadence_seconds: Optional[int] = None,
+        added_via: str = "manual",
     ) -> Dict[str, Any]:
         """Insert a catalog endpoint, resolving a tenant-unique slug (MCAT-3.1).
 
@@ -20616,6 +20617,9 @@ class Database:
             category: Optional catalog category.
             visibility: ``private`` (default) or ``public``.
             discovery_cadence_seconds: Optional positive re-discovery cadence.
+            added_via: How the endpoint entered the catalog (the V148 ``added_via`` domain):
+                ``manual`` for the registration route, ``registry`` for a registry-driven
+                import, ``import`` for a file/manifest import (FMT-1.7).
 
         Returns:
             The inserted row projected onto :attr:`_MCP_ENDPOINT_COLUMNS`.
@@ -20623,9 +20627,9 @@ class Database:
         q = f"""
             INSERT INTO apiome.mcp_endpoints (
                 tenant_id, creator_id, name, slug, endpoint_url, transport,
-                description, category, visibility, discovery_cadence_seconds
+                description, category, visibility, discovery_cadence_seconds, added_via
             ) VALUES (
-                %s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, %s, %s
+                %s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
             RETURNING {self._MCP_ENDPOINT_COLUMNS}
         """
@@ -20646,6 +20650,7 @@ class Database:
                         category,
                         visibility,
                         discovery_cadence_seconds,
+                        added_via,
                     ),
                 )
                 row = cursor.fetchone()
@@ -21844,6 +21849,182 @@ class Database:
             (source_id, endpoint_id),
         )
         return bool(rows)
+
+    # --- MCP declared manifests (FMT-1.7, #5418) ---------------------------------------------
+
+    _MCP_MANIFEST_COLUMNS = """
+        id, tenant_id, endpoint_id, source_label, surface_fingerprint, protocol_version,
+        server_name, server_title, server_version, instructions, capabilities, surface,
+        tool_count, resource_count, resource_template_count, prompt_count, imported_by,
+        retired_at, created_at, updated_at
+    """
+
+    def upsert_mcp_endpoint_manifest(
+        self,
+        *,
+        tenant_id: str,
+        endpoint_id: str,
+        manifest: Dict[str, Any],
+        imported_by: Optional[str],
+    ) -> Optional[Dict[str, Any]]:
+        """Attach a declared capability surface to an endpoint (``mcp_endpoint_manifests``, V245).
+
+        The ``manifest`` dict is exactly what
+        :meth:`app.mcp_manifest_store.DeclaredManifest.as_row` emits, so the surface projection and
+        the fingerprint are computed by one pure module and this method only persists the result.
+
+        Re-importing an unchanged manifest must not pile up rows, so the live partial unique index
+        on ``(endpoint_id, surface_fingerprint)`` drives an upsert: the same declared surface
+        refreshes the existing row's label, importer and ``updated_at`` rather than inserting a
+        duplicate. A *revised* manifest has a different fingerprint and so gets its own row; the
+        caller retires the superseded one (:meth:`retire_other_mcp_endpoint_manifests`).
+
+        Args:
+            tenant_id: The owning tenant (denormalized onto the row for scoped listing).
+            endpoint_id: The endpoint this manifest declares.
+            manifest: The declared-surface row payload.
+            imported_by: The acting user id, or ``None`` when unattributable.
+
+        Returns:
+            The inserted or refreshed row.
+        """
+        query = f"""
+            INSERT INTO apiome.mcp_endpoint_manifests (
+                tenant_id, endpoint_id, source_label, surface_fingerprint, protocol_version,
+                server_name, server_title, server_version, instructions, capabilities, surface,
+                tool_count, resource_count, resource_template_count, prompt_count, imported_by
+            )
+            VALUES (
+                %s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb,
+                %s, %s, %s, %s, %s::uuid
+            )
+            ON CONFLICT (endpoint_id, surface_fingerprint) WHERE retired_at IS NULL
+            DO UPDATE SET
+                source_label = EXCLUDED.source_label,
+                imported_by = COALESCE(EXCLUDED.imported_by, mcp_endpoint_manifests.imported_by),
+                updated_at = CURRENT_TIMESTAMP
+            RETURNING {self._MCP_MANIFEST_COLUMNS}
+        """
+        rows = self.execute_query(
+            query,
+            (
+                tenant_id,
+                endpoint_id,
+                manifest.get("source_label"),
+                manifest["surface_fingerprint"],
+                manifest.get("protocol_version"),
+                manifest.get("server_name"),
+                manifest.get("server_title"),
+                manifest.get("server_version"),
+                manifest.get("instructions"),
+                Json(manifest.get("capabilities") or {}),
+                Json(manifest.get("surface") or {}),
+                int(manifest.get("tool_count") or 0),
+                int(manifest.get("resource_count") or 0),
+                int(manifest.get("resource_template_count") or 0),
+                int(manifest.get("prompt_count") or 0),
+                imported_by,
+            ),
+        )
+        return dict(rows[0]) if rows else None
+
+    def list_mcp_endpoint_manifests(
+        self, endpoint_id: str, *, include_retired: bool = False
+    ) -> List[Dict[str, Any]]:
+        """List an endpoint's declared manifests, newest first.
+
+        Args:
+            endpoint_id: The endpoint whose declarations to list.
+            include_retired: When ``False`` (default), superseded declarations are excluded. They
+                stay in the table so an attribution made against one remains interpretable, but they
+                no longer describe the endpoint.
+
+        Returns:
+            The manifest rows.
+        """
+        clause = "" if include_retired else "AND retired_at IS NULL"
+        rows = self.execute_query(
+            f"""
+            SELECT {self._MCP_MANIFEST_COLUMNS}
+            FROM apiome.mcp_endpoint_manifests
+            WHERE endpoint_id = %s::uuid {clause}
+            ORDER BY created_at DESC
+            """,
+            (endpoint_id,),
+        )
+        return [dict(r) for r in rows]
+
+    def get_current_mcp_endpoint_manifest(self, endpoint_id: str) -> Optional[Dict[str, Any]]:
+        """Fetch an endpoint's live declared manifest, if it has one.
+
+        Args:
+            endpoint_id: The endpoint to read.
+
+        Returns:
+            The newest live manifest row, or ``None`` when nothing has been declared. ``None``
+            reads as "no declared source" — never as "the manifest agrees with the probe".
+        """
+        rows = self.execute_query(
+            f"""
+            SELECT {self._MCP_MANIFEST_COLUMNS}
+            FROM apiome.mcp_endpoint_manifests
+            WHERE endpoint_id = %s::uuid AND retired_at IS NULL
+            ORDER BY created_at DESC
+            LIMIT 1
+            """,
+            (endpoint_id,),
+        )
+        return dict(rows[0]) if rows else None
+
+    def retire_other_mcp_endpoint_manifests(self, endpoint_id: str, keep_id: str) -> int:
+        """Supersede every live declaration for an endpoint except ``keep_id``.
+
+        One endpoint has one current declaration, the way it has one current version. A revised
+        manifest replaces its predecessor by *retiring* it rather than overwriting it, so the older
+        declaration stays readable.
+
+        Args:
+            endpoint_id: The owning endpoint.
+            keep_id: The declaration that stays live.
+
+        Returns:
+            How many declarations were retired.
+        """
+        rows = self.execute_query(
+            """
+            UPDATE apiome.mcp_endpoint_manifests
+            SET retired_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+            WHERE endpoint_id = %s::uuid AND id <> %s::uuid AND retired_at IS NULL
+            RETURNING id
+            """,
+            (endpoint_id, keep_id),
+        )
+        return len(rows)
+
+    def map_mcp_endpoint_surface_fingerprints(self, tenant_id: str) -> Dict[str, Optional[str]]:
+        """Map every live endpoint of a tenant to its current observed surface fingerprint.
+
+        Read in one query because the manifest-attach rule needs it for *every* candidate endpoint
+        at once (:func:`app.mcp_manifest_attach.plan_manifest_attach`); per-endpoint reads would make
+        the cost of an import scale with the size of the catalog.
+
+        Args:
+            tenant_id: The tenant whose endpoints to map.
+
+        Returns:
+            Endpoint id → its current version's ``surface_fingerprint``. ``None`` for an endpoint
+            that has never been discovered — an absence, not a mismatch.
+        """
+        rows = self.execute_query(
+            """
+            SELECT e.id::text AS endpoint_id, v.surface_fingerprint
+            FROM apiome.mcp_endpoints e
+            LEFT JOIN apiome.mcp_endpoint_versions v ON v.id = e.current_version_id
+            WHERE e.tenant_id = %s::uuid AND e.deleted_at IS NULL
+            """,
+            (tenant_id,),
+        )
+        return {str(r["endpoint_id"]): r.get("surface_fingerprint") for r in rows}
 
     def record_mcp_source_sbom(self, sbom: Dict[str, Any]) -> Optional[str]:
         """Insert a write-once SBOM for a source artifact (``mcp_source_sboms``, V172).

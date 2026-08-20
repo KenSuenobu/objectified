@@ -1330,6 +1330,49 @@
       "waivers": {}
     },
     {
+      "format_key": "mcp",
+      "label": "MCP Server Manifest",
+      "paradigm": "agent",
+      "corpus_formats": [
+        "mcp"
+      ],
+      "corpus_directories": [
+        "mcp"
+      ],
+      "fixtures": {
+        "valid": 7,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 12
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 6,
+      "golden_directories": [
+        "mcp"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
       "format_key": "odata",
       "label": "OData",
       "paradigm": "rest",
@@ -2130,7 +2173,6 @@
     "kafka-connect",
     "lwm2m",
     "matter",
-    "mcp",
     "nacha",
     "natural-ddm",
     "ncpdp",

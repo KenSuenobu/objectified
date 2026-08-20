@@ -48003,6 +48003,3323 @@
       "unexplained": []
     },
     {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 15,
+      "emit_format": "apiblueprint",
+      "emit_key": "apiblueprint",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 3,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'GET /', changed root '', added service 'Acme Support Tickets', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Acme Support Tickets"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 19,
+      "emit_format": "arazzo",
+      "emit_key": "arazzo",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'Acme Support Tickets.prompts#summarize_ticket', removed operation 'Acme Support Tickets.prompts.summarize_ticket', added operation 'Acme Support Tickets.resources#frontline-queue', added operation 'Acme Support Tickets.resources#ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', added operation 'Acme Support Tickets.tools#close_ticket', added operation 'Acme Support Tickets.tools#create_ticket', added operation 'Acme Support Tickets.tools#search_tickets', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', changed root '', changed service 'Acme Support Tickets.prompts', changed service 'Acme Support Tickets.resources', changed service 'Acme Support Tickets.tools', removed type 'Toolclose_ticketInput', removed type 'Toolcreate_ticketInput', removed type 'Toolsearch_ticketsInput'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts#summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources#frontline-queue"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources#ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools#close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools#create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools#search_tickets"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "changed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "changed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "changed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolclose_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolcreate_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInput"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "asn1",
+      "emit_key": "asn1",
+      "loss_approx": 6,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: Malformed ASN.1 module: Invalid ASN.1 syntax at line 3, column 1: '>!<acmetickets DEFINITIONS AUTOMATIC TAGS ::= BEGIN': Expected modulereference. (observed: Re-import failed: Malformed ASN.1 module: Invalid ASN.1 syntax at line 3, column 1: '>!<acmetickets DEFINITIONS AUTOMATIC TAGS ::= BEGIN': Expected modulereference.)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "asyncapi-3",
+      "emit_key": "asyncapi",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 3,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: Property \"provenance\" is not expected to be here (observed: Re-import failed: Property \"provenance\" is not expected to be here)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 13,
+      "emit_format": "avro",
+      "emit_key": "avro",
+      "loss_approx": 3,
+      "loss_drop": 12,
+      "loss_ok": 3,
+      "loss_synth": 1,
+      "matched_count": 9,
+      "overclaims": [
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Apache Avro",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Apache Avro",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to Apache Avro",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools'; overclaim: OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 22,
+      "emit_format": "capnproto",
+      "emit_key": "capnproto",
+      "loss_approx": 12,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 3,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'prompts.summarize_ticket', added operation 'resources.queue', added operation 'resources.ticket', added operation 'tools.close_ticket', added operation 'tools.create_ticket', added operation 'tools.search_tickets', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'prompts', added service 'resources', added service 'tools'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "prompts.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "resources.queue"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "resources.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "tools.close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "tools.create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "tools.search_tickets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "prompts"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "resources"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "tools"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "cloudevents",
+      "emit_key": "cloudevents",
+      "loss_approx": 6,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: type object 'LossKind' has no attribute 'DROP' (observed: Emit failed: type object 'LossKind' has no attribute 'DROP')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "cobolcopybook",
+      "emit_key": "cobolcopybook",
+      "loss_approx": 12,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: COBOL copybook export requires `cobolcopybook_tree` extras from import (observed: Emit failed: COBOL copybook export requires `cobolcopybook_tree` extras from import)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "connectrpc",
+      "emit_key": "connectrpc",
+      "loss_approx": 15,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-9b36dg8_/Acme_Support_Tickets.proto:4:14:syntax error: expecting ';'\n/tmp/apiome-proto-9b36dg8_/Acme_Support_Tickets.proto:4:14:syntax error: unexpected identifier\n/tmp/apiome-proto-9b36dg8_/api.proto:17:3:field Toolsearch_ticketsInput.limit: unknown type .integer)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 25,
+      "emit_format": "corbaidl",
+      "emit_key": "corbaidl",
+      "loss_approx": 12,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'Exported.prompts.summarize_ticket', added operation 'Exported.resources.frontline-queue', added operation 'Exported.resources.ticket', added operation 'Exported.tools.close_ticket', added operation 'Exported.tools.create_ticket', added operation 'Exported.tools.search_tickets', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'Exported.prompts', added service 'Exported.resources', added service 'Exported.tools', added type 'Exported.Toolclose_ticketInput', added type 'Exported.Toolcreate_ticketInput', added type 'Exported.Toolsearch_ticketsInput', removed type 'Toolclose_ticketInput', removed type 'Toolcreate_ticketInput', removed type 'Toolsearch_ticketsInput'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Exported.prompts.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Exported.resources.frontline-queue"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Exported.resources.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Exported.tools.close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Exported.tools.create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Exported.tools.search_tickets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Exported.prompts"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Exported.resources"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Exported.tools"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Toolclose_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Toolcreate_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Toolsearch_ticketsInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolclose_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolcreate_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInput"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "edix12",
+      "emit_key": "edix12",
+      "loss_approx": 12,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: EDI X12 export requires `x12_transactions` extras from import (observed: Emit failed: EDI X12 export requires `x12_transactions` extras from import)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 18,
+      "emit_format": "fhir",
+      "emit_key": "fhir",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'GET /Toolclose_ticketInput', added operation 'GET /Toolclose_ticketInput/{id}', added operation 'POST /Toolclose_ticketInput', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'Toolclose_ticketInput.Toolclose_ticketInput', removed type 'Toolclose_ticketInput', added type 'Toolclose_ticketInput.Toolclose_ticketInput', removed type 'Toolcreate_ticketInput', removed type 'Toolsearch_ticketsInput'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /Toolclose_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /Toolclose_ticketInput/{id}"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /Toolclose_ticketInput"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Toolclose_ticketInput.Toolclose_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolclose_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Toolclose_ticketInput.Toolclose_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolcreate_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInput"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "fix",
+      "emit_key": "fix",
+      "loss_approx": 12,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: FIX export requires `fix_fields` extras from import (observed: Emit failed: FIX export requires `fix_fields` extras from import)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 13,
+      "emit_format": "flatbuffers",
+      "emit_key": "flatbuffers",
+      "loss_approx": 12,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 9,
+      "overclaims": [
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to FlatBuffers",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to FlatBuffers",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to FlatBuffers",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools'; overclaim: OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 25,
+      "emit_format": "graphql",
+      "emit_key": "graphql",
+      "loss_approx": 9,
+      "loss_drop": 0,
+      "loss_ok": 6,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to GraphQL SDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to GraphQL SDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to GraphQL SDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to GraphQL SDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to GraphQL SDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to GraphQL SDL",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'Mutation.close_ticket', added operation 'Mutation.create_ticket', added operation 'Mutation.frontline_queue', added operation 'Mutation.search_tickets', added operation 'Mutation.summarize_ticket', added operation 'Mutation.ticket', added operation 'Query._', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'Mutation', added service 'Query', removed type 'Toolclose_ticketInput', added type 'Toolclose_ticketInputInput', removed type 'Toolcreate_ticketInput', added type 'Toolcreate_ticketInputInput', removed type 'Toolsearch_ticketsInput', added type 'Toolsearch_ticketsInputInput'; overclaim: OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Mutation.close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Mutation.create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Mutation.frontline_queue"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Mutation.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Mutation.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Mutation.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Query._"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Mutation"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Query"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolclose_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Toolclose_ticketInputInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolcreate_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Toolcreate_ticketInputInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInputInput"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "hl7v2",
+      "emit_key": "hl7v2",
+      "loss_approx": 12,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: HL7 v2 export requires `hl7v2_segments` extras from import (observed: Emit failed: HL7 v2 export requires `hl7v2_segments` extras from import)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "iso20022",
+      "emit_key": "iso20022",
+      "loss_approx": 12,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: ISO 20022 export requires `iso20022_tree` extras from import (observed: Emit failed: ISO 20022 export requires `iso20022_tree` extras from import)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "iso8583",
+      "emit_key": "iso8583",
+      "loss_approx": 12,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: ISO 8583 export requires `iso8583_data_elements` extras from import (observed: Emit failed: ISO 8583 export requires `iso8583_data_elements` extras from import)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 14,
+      "emit_format": "json-schema",
+      "emit_key": "json-schema",
+      "loss_approx": 6,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 9,
+      "overclaims": [
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to JSON Schema",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to JSON Schema",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to JSON Schema",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added type 'Acme Support Tickets'; overclaim: OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Acme Support Tickets"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 14,
+      "emit_format": "jtd",
+      "emit_key": "jtd",
+      "loss_approx": 6,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 9,
+      "overclaims": [
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to JSON Type Definition",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to JSON Type Definition",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to JSON Type Definition",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added type 'Acme Support Tickets'; overclaim: OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Acme Support Tickets"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 28,
+      "emit_format": "odata",
+      "emit_key": "odata",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'GET /prompts', added operation 'GET /prompts({key})', added operation 'GET /resources', added operation 'GET /resources({key})', added operation 'GET /tools', added operation 'GET /tools({key})', added operation 'POST /prompts', added operation 'POST /resources', added operation 'POST /tools', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'acme-tickets.prompts', added service 'acme-tickets.resources', added service 'acme-tickets.tools', removed type 'Toolclose_ticketInput', removed type 'Toolcreate_ticketInput', removed type 'Toolsearch_ticketsInput', added type 'acme-tickets.Toolclose_ticketInput', added type 'acme-tickets.Toolcreate_ticketInput', added type 'acme-tickets.Toolsearch_ticketsInput'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /prompts"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /prompts({key})"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /resources"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /resources({key})"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /tools"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /tools({key})"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /prompts"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /resources"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /tools"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "acme-tickets.prompts"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "acme-tickets.resources"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "acme-tickets.tools"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolclose_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolcreate_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "acme-tickets.Toolclose_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "acme-tickets.Toolcreate_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "acme-tickets.Toolsearch_ticketsInput"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 21,
+      "emit_format": "oncrpc",
+      "emit_key": "oncrpc",
+      "loss_approx": 12,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'prompts.prompts.summarize_ticket', added operation 'prompts.resources.ticket', added operation 'prompts.tools.close_ticket', added operation 'prompts.tools.create_ticket', added operation 'prompts.tools.search_tickets', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'prompts.prompts', added service 'prompts.resources', added service 'prompts.tools', removed type 'Toolclose_ticketInput', removed type 'Toolcreate_ticketInput', removed type 'Toolsearch_ticketsInput'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "prompts.prompts.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "prompts.resources.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "prompts.tools.close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "prompts.tools.create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "prompts.tools.search_tickets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "prompts.prompts"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "prompts.resources"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "prompts.tools"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolclose_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolcreate_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInput"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 17,
+      "emit_format": "openapi-3.1",
+      "emit_key": "openapi",
+      "loss_approx": 0,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'POST /Acme_Support_Tickets.prompts.summarize_ticket', added operation 'POST /Acme_Support_Tickets.resources.frontline-queue', added operation 'POST /Acme_Support_Tickets.resources.ticket', added operation 'POST /Acme_Support_Tickets.tools.close_ticket', added operation 'POST /Acme_Support_Tickets.tools.create_ticket', added operation 'POST /Acme_Support_Tickets.tools.search_tickets', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'default'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /Acme_Support_Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /Acme_Support_Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /Acme_Support_Tickets.resources.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /Acme_Support_Tickets.tools.close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /Acme_Support_Tickets.tools.create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /Acme_Support_Tickets.tools.search_tickets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "default"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 17,
+      "emit_format": "openrpc",
+      "emit_key": "openrpc",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to OpenRPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to OpenRPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to OpenRPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to OpenRPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to OpenRPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to OpenRPC",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'Acme Support Tickets.close_ticket', added operation 'Acme Support Tickets.create_ticket', added operation 'Acme Support Tickets.frontline-queue', removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', added operation 'Acme Support Tickets.search_tickets', added operation 'Acme Support Tickets.summarize_ticket', added operation 'Acme Support Tickets.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', changed root '', added service 'Acme Support Tickets', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Acme Support Tickets.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Acme Support Tickets"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "postman",
+      "emit_key": "postman",
+      "loss_approx": 6,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: No Postman requests found in collection (mcp->postman) (observed: Re-import failed: No Postman requests found in collection (mcp->postman))",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "proto3",
+      "emit_key": "protobuf",
+      "loss_approx": 15,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-jjv88v8c/Acme_Support_Tickets.proto:3:14:syntax error: expecting ';'\n/tmp/apiome-proto-jjv88v8c/Acme_Support_Tickets.proto:3:14:syntax error: unexpected identifier\n/tmp/apiome-proto-jjv88v8c/api.proto:16:3:field Toolsearch_ticketsInput.limit: unknown type .integer)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 15,
+      "emit_format": "raml",
+      "emit_key": "raml",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 3,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'GET /', changed root '', added service 'Acme Support Tickets', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Acme Support Tickets"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 21,
+      "emit_format": "smithy",
+      "emit_key": "smithy",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 0,
+      "matched_count": 3,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'prompts.summarize_ticket', added operation 'resources.ticket', added operation 'tools.close_ticket', added operation 'tools.create_ticket', added operation 'tools.search_tickets', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'prompts', added service 'resources', added service 'tools'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "prompts.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "resources.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "tools.close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "tools.create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "tools.search_tickets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "prompts"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "resources"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "tools"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 22,
+      "emit_format": "thrift",
+      "emit_key": "thrift",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 3,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'prompts.summarize_ticket', added operation 'resources.frontline-queue', added operation 'resources.ticket', added operation 'tools.close_ticket', added operation 'tools.create_ticket', added operation 'tools.search_tickets', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'prompts', added service 'resources', added service 'tools'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "prompts.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "resources.frontline-queue"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "resources.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "tools.close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "tools.create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "tools.search_tickets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "prompts"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "resources"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "tools"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 21,
+      "emit_format": "typespec",
+      "emit_key": "typespec",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'GET /', added operation 'GET /{ticketId}', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'Exported.prompts', added service 'Exported.resources', added service 'Exported.tools', added type 'Exported.Toolclose_ticketInput', added type 'Exported.Toolcreate_ticketInput', added type 'Exported.Toolsearch_ticketsInput', removed type 'Toolclose_ticketInput', removed type 'Toolcreate_ticketInput', removed type 'Toolsearch_ticketsInput'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /{ticketId}"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Exported.prompts"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Exported.resources"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Exported.tools"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Toolclose_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Toolcreate_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Toolsearch_ticketsInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolclose_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolcreate_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInput"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "wadl",
+      "emit_key": "wadl",
+      "loss_approx": 12,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: Content does not appear to be a WADL document (observed: Re-import failed: Content does not appear to be a WADL document)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 25,
+      "emit_format": "wsdl",
+      "emit_key": "wsdl",
+      "loss_approx": 12,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'http://example.com/service.prompts.summarize_ticket', added operation 'http://example.com/service.resources.frontline-queue', added operation 'http://example.com/service.resources.ticket', added operation 'http://example.com/service.tools.close_ticket', added operation 'http://example.com/service.tools.create_ticket', added operation 'http://example.com/service.tools.search_tickets', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'http://example.com/service.prompts', added service 'http://example.com/service.resources', added service 'http://example.com/service.tools', removed type 'Toolclose_ticketInput', removed type 'Toolcreate_ticketInput', removed type 'Toolsearch_ticketsInput', added type 'http://example.com/service.Toolclose_ticketInput', added type 'http://example.com/service.Toolcreate_ticketInput', added type 'http://example.com/service.Toolsearch_ticketsInput'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.prompts.summarize_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.resources.frontline-queue"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.resources.ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.tools.close_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.tools.create_ticket"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.tools.search_tickets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "http://example.com/service.prompts"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "http://example.com/service.resources"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "http://example.com/service.tools"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolclose_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolcreate_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "http://example.com/service.Toolclose_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "http://example.com/service.Toolcreate_ticketInput"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "http://example.com/service.Toolsearch_ticketsInput"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 15,
+      "emit_format": "xmlrpc",
+      "emit_key": "xmlrpc",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Acme Support Tickets.prompts.summarize_ticket",
+          "kind": "ok",
+          "message": "operation carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.frontline-queue",
+          "kind": "ok",
+          "message": "operation carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.resources.ticket",
+          "kind": "ok",
+          "message": "operation carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.close_ticket",
+          "kind": "ok",
+          "message": "operation carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.create_ticket",
+          "kind": "ok",
+          "message": "operation carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Acme Support Tickets.tools.search_tickets",
+          "kind": "ok",
+          "message": "operation carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'Acme Support Tickets.prompts.summarize_ticket', removed operation 'Acme Support Tickets.resources.frontline-queue', removed operation 'Acme Support Tickets.resources.ticket', removed operation 'Acme Support Tickets.tools.close_ticket', removed operation 'Acme Support Tickets.tools.create_ticket', removed operation 'Acme Support Tickets.tools.search_tickets', added operation 'summarize_ticket.summarize_ticket', changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools', added service 'summarize_ticket', removed type 'Toolclose_ticketInput', removed type 'Toolcreate_ticketInput', removed type 'Toolsearch_ticketsInput'; overclaim: OK 'Acme Support Tickets.prompts.summarize_ticket', OK 'Acme Support Tickets.resources.frontline-queue', OK 'Acme Support Tickets.resources.ticket', OK 'Acme Support Tickets.tools.close_ticket', OK 'Acme Support Tickets.tools.create_ticket', OK 'Acme Support Tickets.tools.search_tickets', OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.prompts.summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.frontline-queue"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.resources.ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.close_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.create_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "Acme Support Tickets.tools.search_tickets"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "summarize_ticket.summarize_ticket"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "summarize_ticket"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolclose_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolcreate_ticketInput"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Toolsearch_ticketsInput"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 13,
+      "emit_format": "xsd",
+      "emit_key": "xsd",
+      "loss_approx": 6,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 9,
+      "overclaims": [
+        {
+          "construct": "Toolclose_ticketInput",
+          "kind": "ok",
+          "message": "object carried to XSD",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolcreate_ticketInput",
+          "kind": "ok",
+          "message": "object carried to XSD",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Toolsearch_ticketsInput",
+          "kind": "ok",
+          "message": "object carried to XSD",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'Acme Support Tickets.prompts', removed service 'Acme Support Tickets.resources', removed service 'Acme Support Tickets.tools'; overclaim: OK 'Toolclose_ticketInput', OK 'Toolcreate_ticketInput', OK 'Toolsearch_ticketsInput')",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.prompts"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.resources"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Acme Support Tickets.tools"
+        }
+      ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "zosconnect",
+      "emit_key": "zosconnect",
+      "loss_approx": 12,
+      "loss_drop": 6,
+      "loss_ok": 3,
+      "loss_synth": 9,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: z/OS Connect export requires `zosconnect_descriptor` extras from import (observed: Emit failed: z/OS Connect export requires `zosconnect_descriptor` extras from import)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
       "corpus_path": "odata/02-orders.edmx",
       "diff_count": 12,
       "emit_format": "apiblueprint",
@@ -85809,6 +89126,7 @@
     "k8s-crd",
     "kong",
     "llm-tools",
+    "mcp",
     "odata",
     "oncrpc",
     "openapi",

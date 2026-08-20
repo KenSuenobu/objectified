@@ -1,0 +1,158 @@
+{
+  "adapter": "mcp",
+  "canonical": {
+    "channels": [],
+    "description": "Imported static MCP server manifest (declared capability surface)",
+    "extras": {
+      "mcp_capabilities": {
+        "tools": {}
+      },
+      "mcp_endpoint_target": null,
+      "mcp_protocol_version": "2025-06-18",
+      "mcp_surface_fingerprint": "bce3930a47c9d53a6fb25e93bda5c8c91cf5cbf50c8867207727efd62d3ba7d4",
+      "mcp_transport": null,
+      "prompt_count": 0,
+      "provenance": "declared",
+      "resource_count": 0,
+      "resource_template_count": 0,
+      "tool_count": 1
+    },
+    "format": "mcp",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "echo",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "mcp",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Tools the MCP server declares it can execute.",
+        "extras": {
+          "mcp_kind": "tool",
+          "provenance": "declared"
+        },
+        "key": "echo.tools",
+        "name": "tools",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Return the supplied message unchanged.",
+            "extras": {
+              "annotations": null,
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "echo.tools.echo",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "echo.tools.echo#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ToolechoInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "echo",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "echo",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ToolechoInput.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ToolechoInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "ToolechoInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "mcp/01-minimal-echo-tool.json",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "mcp"
+  },
+  "fingerprint": "sha256:1b9b17c7923cc9f34d2d9a6d5ef7e4c969ab41257d54f7e8ecb88b733ae5124f",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "7be910d26469ec934480d2deb37e4179b44b89580ff87ccc7e1e576e78a39109",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

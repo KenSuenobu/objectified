@@ -1,0 +1,788 @@
+{
+  "adapter": "mcp",
+  "canonical": {
+    "channels": [],
+    "description": "Imported static MCP server manifest (declared capability surface)",
+    "extras": {
+      "mcp_capabilities": {
+        "logging": {},
+        "prompts": {},
+        "resources": {
+          "listChanged": true,
+          "subscribe": true
+        },
+        "tools": {
+          "listChanged": true
+        }
+      },
+      "mcp_endpoint_target": "https://mcp.example.com/tickets",
+      "mcp_protocol_version": "2025-06-18",
+      "mcp_surface_fingerprint": "bd805956b6472cce8653ae6bd7a7e79a4b169ecce0fd864e4a2f5e1c5e8d1e07",
+      "mcp_transport": "streamable_http",
+      "prompt_count": 1,
+      "provenance": "declared",
+      "resource_count": 1,
+      "resource_template_count": 1,
+      "tool_count": 3
+    },
+    "format": "mcp",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "acme-tickets",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "mcp",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Where this MCP server is reached live, as the manifest declares it.",
+        "extras": {
+          "provenance": "declared"
+        },
+        "name": "streamable_http",
+        "protocol": "streamable_http",
+        "url": "https://mcp.example.com/tickets",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": "Prompt templates the MCP server offers.",
+        "extras": {
+          "mcp_kind": "prompt",
+          "provenance": "declared"
+        },
+        "key": "Acme Support Tickets.prompts",
+        "name": "prompts",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Summarize a ticket thread for a handover note.",
+            "extras": {
+              "mcp_kind": "prompt",
+              "provenance": "declared",
+              "title": "Summarize a ticket"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Support Tickets.prompts.summarize_ticket",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Prompt messages returned by `prompts/get`.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Support Tickets.prompts.summarize_ticket#response.messages",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "messages"
+              }
+            ],
+            "name": "summarize_ticket",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Who the summary is for.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "key": "Acme Support Tickets.prompts.summarize_ticket#query.audience",
+                "location": "query",
+                "name": "audience",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Ticket to summarize.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "key": "Acme Support Tickets.prompts.summarize_ticket#query.ticketId",
+                "location": "query",
+                "name": "ticketId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": "Resources and resource templates the MCP server exposes for reading.",
+        "extras": {
+          "mcp_kind": "resource",
+          "provenance": "declared"
+        },
+        "key": "Acme Support Tickets.resources",
+        "name": "resources",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Snapshot of the frontline ticket queue.",
+            "extras": {
+              "annotations": null,
+              "mcp_kind": "resource",
+              "mime_type": "application/json",
+              "provenance": "declared",
+              "title": "Frontline queue",
+              "uri": "tickets://queues/frontline"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Support Tickets.resources.frontline-queue",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Resource contents returned by `resources/read`.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Support Tickets.resources.frontline-queue#response.contents",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "contents"
+              }
+            ],
+            "name": "frontline-queue",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "One ticket rendered as JSON.",
+            "extras": {
+              "annotations": null,
+              "mcp_kind": "resource_template",
+              "mime_type": "application/json",
+              "provenance": "declared",
+              "title": "Single ticket",
+              "uri": "tickets://ticket/{ticketId}"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Support Tickets.resources.ticket",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Resource contents returned by `resources/read`.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Support Tickets.resources.ticket#response.contents",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "contents"
+              }
+            ],
+            "name": "ticket",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "`ticketId` from the resource template.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "key": "Acme Support Tickets.resources.ticket#path.ticketId",
+                "location": "path",
+                "name": "ticketId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": "Tools the MCP server declares it can execute.",
+        "extras": {
+          "mcp_kind": "tool",
+          "provenance": "declared"
+        },
+        "key": "Acme Support Tickets.tools",
+        "name": "tools",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Close a ticket with a resolution note.",
+            "extras": {
+              "annotations": {
+                "destructiveHint": true,
+                "idempotentHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": "Close ticket"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Support Tickets.tools.close_ticket",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Support Tickets.tools.close_ticket#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolclose_ticketInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "resolution": {
+                      "type": "string"
+                    },
+                    "ticketId": {
+                      "pattern": "^TCK-[0-9]{6}$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ticketId",
+                    "resolution"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "close_ticket",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Open a new support ticket for a customer.",
+            "extras": {
+              "annotations": {
+                "destructiveHint": false,
+                "openWorldHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": "Create ticket"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Support Tickets.tools.create_ticket",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Support Tickets.tools.create_ticket#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolcreate_ticketInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "body": {
+                      "type": "string"
+                    },
+                    "customerEmail": {
+                      "format": "email",
+                      "type": "string"
+                    },
+                    "priority": {
+                      "default": "normal",
+                      "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "urgent"
+                      ],
+                      "type": "string"
+                    },
+                    "subject": {
+                      "maxLength": 200,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "subject",
+                    "body",
+                    "customerEmail"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "create_ticket",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Full-text search across open support tickets.",
+            "extras": {
+              "annotations": {
+                "idempotentHint": true,
+                "readOnlyHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": "Search tickets"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Support Tickets.tools.search_tickets",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Support Tickets.tools.search_tickets#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolsearch_ticketsInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "limit": {
+                      "default": 20,
+                      "maximum": 100,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "query": {
+                      "description": "Free-text query.",
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": [
+                        "open",
+                        "pending",
+                        "closed"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "query"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "search_tickets",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Acme Support Tickets",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolclose_ticketInput.resolution",
+            "name": "resolution",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "^TCK-[0-9]{6}$",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolclose_ticketInput.ticketId",
+            "name": "ticketId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolclose_ticketInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolclose_ticketInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcreate_ticketInput.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "email",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcreate_ticketInput.customerEmail",
+            "name": "customerEmail",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "low",
+                "normal",
+                "high",
+                "urgent"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "normal",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcreate_ticketInput.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 200,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcreate_ticketInput.subject",
+            "name": "subject",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolcreate_ticketInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolcreate_ticketInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 100.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": 20,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolsearch_ticketsInput.limit",
+            "name": "limit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Free-text query.",
+            "extras": {},
+            "field_number": null,
+            "key": "Toolsearch_ticketsInput.query",
+            "name": "query",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "open",
+                "pending",
+                "closed"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolsearch_ticketsInput.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Toolsearch_ticketsInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolsearch_ticketsInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.4.0"
+  },
+  "corpus_path": "mcp/02-typical-tickets-server.json",
+  "counts": {
+    "channels": 0,
+    "operations": 6,
+    "servers": 1,
+    "services": 3,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "mcp"
+  },
+  "fingerprint": "sha256:60cc0ef23feacb728ee87f65734852cb05d56d788eace2fc52e946100fcf8c3c",
+  "lint": {
+    "findings": 11,
+    "grade": "B",
+    "report_fingerprint": "d5a85d7c4a19664093a18e85f69950bb9f25f85f7d79679628014d90ee45b245",
+    "score": 80,
+    "severity_counts": {
+      "error": 0,
+      "info": 8,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

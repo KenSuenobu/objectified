@@ -91,6 +91,7 @@ import McpEndpointInsight from './McpEndpointInsight';
 import McpLintReport from './McpLintReport';
 import McpEndpointSettings from './McpEndpointSettings';
 import { McpEndpointNotesPanel } from '@/app/components/ade/dashboard/mcp/McpEndpointNotesPanel';
+import { McpSurfaceProvenancePanel } from '@/app/components/ade/dashboard/mcp/McpSurfaceProvenancePanel';
 import { McpTrustPosturePanel } from '@/app/components/ade/dashboard/mcp/McpTrustPosturePanel';
 import {
   MCP_ENDPOINT_DEFAULT_TAB,
@@ -770,6 +771,11 @@ export default function McpEndpointDetailClient({ endpointId }: Props) {
 
             {/* ---- The six panels ------------------------------------------------------ */}
             <McpEndpointTabPanel value="capabilities" active={activeTab}>
+              {/* FMT-1.7 (#5418): an endpoint can be described by a manifest as well as probed,
+                  so the capabilities below are no longer all one kind of claim. This says which
+                  is which, and draws nothing when there is only one source. */}
+              <McpSurfaceProvenancePanel endpointId={endpointId} />
+
               {version?.instructions ? (
                 <Card>
                   <CardHeader className="flex-row items-center gap-2">
