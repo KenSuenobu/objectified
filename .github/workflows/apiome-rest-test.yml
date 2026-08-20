@@ -88,6 +88,18 @@ jobs:
       - name: Check generated supported-formats page is current
         run: uv run python scripts/generate_supported_formats_doc.py --check
 
+      # The FMT-1.4 corpus parity gate (#5415). Every registered adapter must carry corpus
+      # examples, negatives, golden snapshots, a round-trip matrix row and a capability entry.
+      # The pytest suite asserts the same thing; this step names the missing artifact and the
+      # command that produces it, and writes the coverage report into the job summary so the
+      # per-format fixture counts are readable without downloading anything.
+      - name: Check corpus parity (every registered adapter has examples and goldens)
+        run: uv run python scripts/generate_corpus_parity_report.py --check --fail-on-gaps
+
+      - name: Corpus parity coverage summary
+        if: always()
+        run: cat tests/golden/parity/corpus_parity.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Run tests with coverage
         run: |
           uv run pytest \
@@ -113,5 +125,18 @@ jobs:
           path: |
             apiome-rest/coverage.xml
             apiome-rest/pytest-report.xml
+          if-no-files-found: ignore
+        continue-on-error: true
+
+      # Published so the parity report is downloadable per run (FMT-1.4 acceptance criterion),
+      # not only readable in the job summary.
+      - name: Upload corpus parity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apiome-rest-corpus-parity
+          path: |
+            apiome-rest/tests/golden/parity/corpus_parity.json
+            apiome-rest/tests/golden/parity/corpus_parity.md
           if-no-files-found: ignore
         continue-on-error: true

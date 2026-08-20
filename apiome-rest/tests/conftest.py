@@ -18,6 +18,10 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     artifact (``tests/golden/roundtrip/matrix.json``); ``UPDATE_ROUNDTRIP_MATRIX=1``
     does the same.
 
+    ``--update-corpus-parity`` regenerates the FMT-1.4 corpus parity coverage report
+    (``tests/golden/parity/corpus_parity.json`` and its Markdown companion);
+    ``UPDATE_CORPUS_PARITY=1`` does the same.
+
     ``--scale`` opts this run into the IXH-1.5 scale benchmark suite, which is
     otherwise skipped because it costs minutes and hundreds of megabytes;
     ``RUN_SCALE_SUITE=1`` does the same. ``--update-scale-budgets`` rewrites its
@@ -40,6 +44,15 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help=(
             "Regenerate the round-trip conformance matrix artifact "
             "(tests/golden/roundtrip/matrix.json) instead of asserting against it."
+        ),
+    )
+    parser.addoption(
+        "--update-corpus-parity",
+        action="store_true",
+        default=False,
+        help=(
+            "Regenerate the corpus parity coverage report "
+            "(tests/golden/parity/corpus_parity.json) instead of asserting against it."
         ),
     )
     parser.addoption(

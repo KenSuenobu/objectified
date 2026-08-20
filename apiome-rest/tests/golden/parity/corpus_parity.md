@@ -1,0 +1,126 @@
+# Corpus parity report
+
+<!-- GENERATED FILE — do not edit by hand. -->
+<!-- Regenerate with: cd apiome-rest && uv run python scripts/generate_corpus_parity_report.py -->
+
+Every shipped, non-preview import adapter must carry four artifacts: corpus examples (at least one valid and one negative), a golden snapshot directory, a round-trip matrix row, and a `format_capability_registry` entry. This report is what the FMT-1.4 parity gate (`apiome-rest/tests/test_corpus_parity.py`) asserts.
+
+- **Formats gated:** 42
+- **Formats with an unwaived gap:** 0
+- **Formats with a waived requirement:** 0
+
+## Fixture counts
+
+| Format | Label | Paradigm | Valid | Negative | Adversarial | Scale | Total | Rungs | Goldens | Emitter |
+|---|---|---|---:|---:|---:|---:|---:|---|---:|---|
+| `apiblueprint` | API Blueprint | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `apiblueprint` |
+| `arazzo` | Arazzo | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `arazzo` |
+| `asn1` | ASN.1 | data_schema | 7 | 5 | 0 | 0 | 12 | 5/6 (+1 waived) | 6 | `asn1` |
+| `asyncapi` | AsyncAPI | event | 9 | 5 | 0 | 0 | 14 | 6/6 | 7 | `asyncapi` |
+| `avro` | Avro | data_schema | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `avro` |
+| `capnproto` | Cap'n Proto | rpc | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `capnproto` |
+| `cloudevents` | CloudEvents | event | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 5 | `cloudevents` |
+| `cobolcopybook` | COBOL Copybook | data_schema | 8 | 5 | 0 | 0 | 13 | 5/6 (+1 waived) | 8 | `cobolcopybook` |
+| `connectrpc` | Connect RPC | rpc | 7 | 5 | 0 | 0 | 12 | 6/6 | 6 | `connectrpc` |
+| `corbaidl` | CORBA IDL | rpc | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `corbaidl` |
+| `discovery` | Google API Discovery | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | — |
+| `edix12` | EDI X12 | data_schema | 7 | 5 | 0 | 0 | 12 | 5/6 (+1 waived) | 7 | `edix12` |
+| `fhir` | FHIR | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `fhir` |
+| `fix` | FIX | data_schema | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 5 | `fix` |
+| `flatbuffers` | FlatBuffers | data_schema | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `flatbuffers` |
+| `gateway-api` | Gateway API HTTPRoute | rest | 8 | 5 | 0 | 0 | 13 | 6/6 | 6 | — |
+| `graphql` | GraphQL | graph | 18 | 5 | 0 | 0 | 23 | 6/6 | 14 | `graphql` |
+| `grpc` | gRPC / Protobuf | rpc | 10 | 7 | 0 | 0 | 17 | 6/6 | 9 | `protobuf` |
+| `hl7v2` | HL7 v2 | data_schema | 6 | 5 | 0 | 0 | 11 | 4/6 (+2 waived) | 6 | `hl7v2` |
+| `http-file` | HTTP Request File | rest | 8 | 5 | 0 | 0 | 13 | 6/6 | 6 | — |
+| `iso20022` | ISO 20022 | data_schema | 6 | 5 | 1 | 0 | 12 | 5/6 (+1 waived) | 6 | `iso20022` |
+| `iso8583` | ISO 8583 | data_schema | 6 | 5 | 0 | 0 | 11 | 4/6 (+2 waived) | 6 | `iso8583` |
+| `json-schema` | JSON Schema | data_schema | 12 | 5 | 0 | 0 | 17 | 5/6 (+1 waived) | 12 | `json-schema` |
+| `jtd` | JSON Type Definition | data_schema | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `jtd` |
+| `k8s-crd` | Kubernetes CRD | data_schema | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | — |
+| `kong` | Kong Declarative Config | rest | 7 | 5 | 0 | 0 | 12 | 6/6 | 6 | — |
+| `llm-tools` | LLM Tools | agent | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | — |
+| `odata` | OData | rest | 6 | 5 | 1 | 0 | 12 | 5/6 (+1 waived) | 6 | `odata` |
+| `oncrpc` | ONC RPC | rpc | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `oncrpc` |
+| `openapi` | OpenAPI / Swagger | rest | 39 | 6 | 0 | 0 | 45 | 6/6 | 36 | `openapi` |
+| `openrpc` | OpenRPC | rpc | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `openrpc` |
+| `postman` | Postman | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `postman` |
+| `raml` | RAML | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `raml` |
+| `smithy` | Smithy | rpc | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `smithy` |
+| `thrift` | Thrift | rpc | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `thrift` |
+| `typespec` | TypeSpec | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `typespec` |
+| `wadl` | WADL | rest | 6 | 5 | 1 | 0 | 12 | 5/6 (+1 waived) | 6 | `wadl` |
+| `wit` | WIT (WebAssembly) | rpc | 8 | 5 | 0 | 0 | 13 | 6/6 | 6 | — |
+| `wsdl` | WSDL | rest | 6 | 5 | 2 | 0 | 13 | 5/6 (+1 waived) | 6 | `wsdl` |
+| `xmlrpc` | XML-RPC | rpc | 6 | 5 | 2 | 0 | 13 | 5/6 (+1 waived) | 6 | `xmlrpc` |
+| `xsd` | XSD | data_schema | 6 | 5 | 2 | 0 | 13 | 5/6 (+1 waived) | 6 | `xsd` |
+| `zosconnect` | z/OS Connect | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `zosconnect` |
+
+## Required artifacts
+
+✅ present · ⚠️ waived with a reason · ❌ missing (this is what fails the gate).
+
+| Format | Valid examples | Negative examples | Golden snapshots | Round-trip row | Capability entry |
+|---|:-:|:-:|:-:|:-:|:-:|
+| `apiblueprint` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `arazzo` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `asn1` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `asyncapi` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `avro` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `capnproto` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cloudevents` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cobolcopybook` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `connectrpc` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `corbaidl` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `discovery` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `edix12` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `fhir` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `fix` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `flatbuffers` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `gateway-api` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `graphql` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `grpc` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `hl7v2` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `http-file` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `iso20022` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `iso8583` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `json-schema` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `jtd` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `k8s-crd` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `kong` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `llm-tools` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `odata` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `oncrpc` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `openapi` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `openrpc` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `postman` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `raml` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `smithy` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `thrift` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `typespec` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `wadl` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `wit` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `wsdl` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `xmlrpc` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `xsd` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `zosconnect` | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+## Gaps
+
+None — every gated format carries all four artifacts.
+
+## Waived requirements
+
+None.
+
+## Not gated
+
+| Registry key | Why it is exempt |
+|---|---|
+| `sample` | internal machinery, not a format a user can import |
+
+## Corpus directories awaiting an adapter
+
+Fixtures staged ahead of the adapter that will claim them (`adapter_key: null`). They are not gated until an adapter registers, at which point every requirement above applies.
+
+`apigee`, `arazzo-1.1`, `arrow`, `avro-idl`, `aws-apigateway`, `azure-apim`, `cddl`, `cics-bms`, `consul`, `cue`, `dbt`, `dhall`, `dicom`, `dtd`, `edifact`, `envoy-xds`, `fix-orchestra`, `haproxy`, `hl7v3`, `hoppscotch`, `idoc`, `ims`, `istio`, `jsonld`, `kafka-connect`, `lwm2m`, `matter`, `mcp`, `nacha`, `natural-ddm`, `ncpdp`, `nginx`, `odata-v2`, `odcs`, `opcua-nodeset`, `owl`, `pkl`, `pli`, `postman-v2`, `protobuf-editions`, `pydantic`, `relaxng`, `ros2`, `schematron`, `sepa`, `shacl`, `soapui`, `sparkplug`, `sql-ddl`, `swagger-1.2`, `swift-mt`, `thunder-client`, `tradacoms`, `traefik`, `trpc`, `tyk`, `typescript-types`, `vsam-idcams`, `wsdl2`, `zod`
