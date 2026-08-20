@@ -9,7 +9,7 @@ import {
   filterByFacets,
   formatLabel,
   hasFacetSelection,
-  protocolLabel,
+  paradigmLabel,
   toggleFacet,
 } from '../../../../lib/browseFacets';
 import { AppShell } from '../../components/AppShell';
@@ -34,7 +34,10 @@ interface Project {
   slug: string;
   description?: string;
   created_at?: string;
-  /** Distinct protocols across the project's published public versions (MFI-6.1). */
+  /**
+   * Distinct paradigms across the project's published public versions, under the stored column's
+   * name (MFI-6.1).
+   */
   protocols?: string[] | null;
   /** Distinct source formats across the project's published public versions (MFI-6.1). */
   formats?: string[] | null;
@@ -66,7 +69,7 @@ function monogram(name: string): string {
 }
 
 /**
- * The protocol/format chips a project card shows, so a visitor can see what a project *is* without
+ * The paradigm/format chips a project card shows, so a visitor can see what a project *is* without
  * opening it — and recognise why it matched the active facet (MFI-6.1).
  */
 function projectFacetMeta(project: Project): { label: string; value?: string }[] {
@@ -74,7 +77,7 @@ function projectFacetMeta(project: Project): { label: string; value?: string }[]
   const protocols = project.protocols ?? [];
   const formats = project.formats ?? [];
   if (protocols.length > 0) {
-    meta.push({ label: 'Protocol', value: protocols.map(protocolLabel).join(', ') });
+    meta.push({ label: 'Paradigm', value: protocols.map(paradigmLabel).join(', ') });
   }
   if (formats.length > 0) {
     meta.push({ label: 'Format', value: formats.map(formatLabel).join(', ') });
@@ -115,8 +118,8 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
     );
   }, [projects, query]);
 
-  const protocolOptions = useMemo(
-    () => computeFacetOptions(searchedProjects, 'protocol'),
+  const paradigmOptions = useMemo(
+    () => computeFacetOptions(searchedProjects, 'paradigm'),
     [searchedProjects]
   );
   const formatOptions = useMemo(
@@ -170,7 +173,7 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
                 {facetsActive
                   ? `${facetedProjects.length} of ${projects.length} project${
                       projects.length === 1 ? '' : 's'
-                    } match the selected protocol/format.`
+                    } match the selected paradigm/format.`
                   : `${projects.length} project${
                       projects.length === 1 ? '' : 's'
                     } with at least one published version.`}
@@ -228,7 +231,7 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
 
           {projects.length > 0 && (
             <FacetFilter
-              protocolOptions={protocolOptions}
+              paradigmOptions={paradigmOptions}
               formatOptions={formatOptions}
               selection={facets}
               onToggle={onToggleFacet}
@@ -283,7 +286,7 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
               searchFields={['name', 'slug', 'description']}
               emptyMessage={
                 facetsActive
-                  ? 'No projects match the selected protocol/format.'
+                  ? 'No projects match the selected paradigm/format.'
                   : 'No projects with published versions available.'
               }
               columns={[
@@ -320,7 +323,7 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
                 },
                 {
                   key: 'protocols',
-                  header: 'Protocol / Format',
+                  header: 'Paradigm / Format',
                   width: 'w-48',
                   render: (project) => (
                     <FacetValueChips protocols={project.protocols} formats={project.formats} />

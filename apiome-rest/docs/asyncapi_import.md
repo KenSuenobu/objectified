@@ -51,6 +51,22 @@ An invalid document (validation errors from the parser) becomes a clean `ImportS
 the job fails with a user-facing message rather than a stack trace; an *advisory*-only document
 (warnings/hints) parses successfully and its findings flow into the lint score.
 
+## The parser is a hard dependency (FMT-1.3, #5414)
+
+`required_tools = ("asyncapi-parser",)` used to mean "this format degrades to *unavailable* when
+the Node toolchain is absent". It now means more than that: `asyncapi-parser` is listed in
+`app.toolchain_selfcheck.REQUIRED_TOOL_KEYS`, so a deployment that cannot run it **refuses to
+start** (or, with `APIOME_REQUIRE_TOOLCHAIN=0`, starts with a loud `ERROR` and reports the format
+as missing on `GET /health`). There is deliberately no pure-Python fallback parser — see
+[the fallback policy](../../docs/guide/import-a-spec.md#the-fallback-policy-stated) for why a
+reduced-capability parse was rejected. The exact `@asyncapi/parser` pin lives in
+`apiome-rest/toolchain/package.json` and is installed by the container build and by
+`scripts/install_dev_toolchain.sh`.
+
+Because the parser is now present in CI, the AsyncAPI corpus fixtures run their full
+detect → parse → normalize → fingerprint → lint pipeline against checked-in golden snapshots
+(`tests/golden/corpus/asyncapi/`) and their round-trip matrix rows execute instead of skipping.
+
 ## Normalize & lint
 
 `normalize()` accepts either the `AsyncApiParseResult` `parse()` returns or a bare dereferenced

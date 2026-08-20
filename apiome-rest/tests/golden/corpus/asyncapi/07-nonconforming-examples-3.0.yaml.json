@@ -1,0 +1,242 @@
+{
+  "adapter": "asyncapi",
+  "canonical": {
+    "channels": [
+      {
+        "address": "user/signedup",
+        "bindings": {},
+        "description": "Emitted when a user completes signup.",
+        "extras": {},
+        "key": "user/signedup",
+        "name": "userSignedUp",
+        "parameters": [],
+        "protocol": null
+      }
+    ],
+    "description": "Fixture for the example-conformance rule pack. Every example contradicts its schema.",
+    "extras": {},
+    "format": "asyncapi-3",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Non-conforming Example Events",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "default",
+        "name": "default",
+        "operations": [
+          {
+            "channel_ref": "user/signedup",
+            "deprecated": false,
+            "description": "Consume signup events.",
+            "extras": {
+              "action": "receive"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "receiveUserSignedUp",
+            "kind": "subscribe",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "A user completed signup.",
+                "extras": {
+                  "examples": [
+                    {
+                      "headers": {
+                        "correlationId": "4e9f9a52-6f0e-4f4a-9d0b-2f2b6a4b5f3e",
+                        "retryCount": 0
+                      },
+                      "name": "conforming",
+                      "payload": {
+                        "email": "ada@example.com",
+                        "plan": "pro",
+                        "userId": 7
+                      },
+                      "summary": "Satisfies both the payload and header schemas."
+                    },
+                    {
+                      "headers": {
+                        "correlationId": "4e9f9a52-6f0e-4f4a-9d0b-2f2b6a4b5f3e",
+                        "retryCount": 0
+                      },
+                      "name": "bad-payload",
+                      "payload": {
+                        "email": "ada@example.com",
+                        "plan": "platinum",
+                        "userId": "seven"
+                      },
+                      "summary": "Payload breaks enum and type."
+                    },
+                    {
+                      "headers": {
+                        "retryCount": -1
+                      },
+                      "name": "bad-headers",
+                      "payload": {
+                        "email": "ada@example.com",
+                        "plan": "pro",
+                        "userId": 7
+                      },
+                      "summary": "Headers break required and minimum."
+                    }
+                  ],
+                  "title": "User signed up"
+                },
+                "headers": [
+                  {
+                    "constraints": {
+                      "enum": null,
+                      "exclusive_maximum": null,
+                      "exclusive_minimum": null,
+                      "extras": {},
+                      "format": "uuid",
+                      "max_items": null,
+                      "max_length": null,
+                      "maximum": null,
+                      "min_items": null,
+                      "min_length": null,
+                      "minimum": null,
+                      "multiple_of": null,
+                      "pattern": null,
+                      "unique_items": null
+                    },
+                    "default": null,
+                    "deprecated": false,
+                    "description": "Correlates the event with the originating request.",
+                    "extras": {},
+                    "field_number": null,
+                    "key": "receiveUserSignedUp#event.UserSignedUp.correlationId",
+                    "name": "correlationId",
+                    "type": {
+                      "extras": {},
+                      "item": null,
+                      "name": "string",
+                      "nullable": false
+                    }
+                  },
+                  {
+                    "constraints": {
+                      "enum": null,
+                      "exclusive_maximum": null,
+                      "exclusive_minimum": null,
+                      "extras": {},
+                      "format": null,
+                      "max_items": null,
+                      "max_length": null,
+                      "maximum": null,
+                      "min_items": null,
+                      "min_length": null,
+                      "minimum": 0.0,
+                      "multiple_of": null,
+                      "pattern": null,
+                      "unique_items": null
+                    },
+                    "default": null,
+                    "deprecated": false,
+                    "description": "How many times delivery has been retried.",
+                    "extras": {},
+                    "field_number": null,
+                    "key": "receiveUserSignedUp#event.UserSignedUp.retryCount",
+                    "name": "retryCount",
+                    "type": {
+                      "extras": {},
+                      "item": null,
+                      "name": "integer",
+                      "nullable": true
+                    }
+                  }
+                ],
+                "key": "receiveUserSignedUp#event.UserSignedUp",
+                "name": "UserSignedUp",
+                "payload": null,
+                "payload_schema": {
+                  "description": "The body of a signup event.",
+                  "examples": [
+                    {
+                      "email": "ada@example.com",
+                      "plan": "free",
+                      "userId": 0
+                    }
+                  ],
+                  "properties": {
+                    "email": {
+                      "description": "The address the user signed up with.",
+                      "minLength": 3,
+                      "type": "string"
+                    },
+                    "plan": {
+                      "description": "The plan the user selected.",
+                      "enum": [
+                        "free",
+                        "pro",
+                        "enterprise"
+                      ],
+                      "type": "string"
+                    },
+                    "userId": {
+                      "description": "Identifier of the user that signed up.",
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "email"
+                  ],
+                  "type": "object",
+                  "x-expected-violation": "minimum"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "receiveUserSignedUp",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Non-conforming Example Events",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "asyncapi/07-nonconforming-examples-3.0.yaml",
+  "counts": {
+    "channels": 1,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "asyncapi-3"
+  },
+  "fingerprint": "sha256:84120d2c2629c128f98716ebda56d02a579d0446b5f0e0e542e4ba7848695330",
+  "lint": {
+    "findings": 8,
+    "grade": "C",
+    "report_fingerprint": "786dc8324a7ab6279e0e768d400b83daa0593dfe0c69583a94959fb1aa0578a6",
+    "score": 79,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

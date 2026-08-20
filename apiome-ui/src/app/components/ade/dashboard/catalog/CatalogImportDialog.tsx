@@ -213,7 +213,9 @@ export function CatalogImportDialog({
   // The source grid is data-driven from `GET /v1/import/sources` (MFI-26.1). We render the
   // `catalog` importer surface and keep only the base intake methods — File / URL / Clipboard —
   // so no reflection/introspection/registry tiles ever appear (§0.3 routing policy, #4101).
-  const { cards: sourceCards } = useImportSources(open, 'catalog');
+  // The picker's `accept` comes from the registry (FMT-1.1, #5412) rather than a hard-coded
+  // array, so every registered adapter's format is browsable here without a UI change.
+  const { cards: sourceCards, fileExtensions } = useImportSources(open, 'catalog');
   const sourceTiles = useMemo(() => baseIntakeTiles(sourceCards), [sourceCards]);
 
   const detectedFormat = detection?.detected?.format || metadata?.format || null;
@@ -813,7 +815,7 @@ export function CatalogImportDialog({
                       ref={fileInputRef}
                       type="file"
                       className="sr-only"
-                      accept=".proto,.graphql,.gql,.yaml,.yml,.json,.zip,.tar,.tar.gz,.tgz"
+                      accept={fileExtensions.join(',')}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) void handleFile(file);

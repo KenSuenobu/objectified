@@ -1,0 +1,595 @@
+{
+  "adapter": "mcp",
+  "canonical": {
+    "channels": [],
+    "description": "Imported static MCP server manifest (declared capability surface)",
+    "extras": {
+      "mcp_capabilities": {
+        "tools": {
+          "listChanged": true
+        }
+      },
+      "mcp_endpoint_target": null,
+      "mcp_protocol_version": "2025-06-18",
+      "mcp_surface_fingerprint": "cfd42ccf446ec5e7414b57722c963cbc29f884f9506ae4f363d3fe582c01468c",
+      "mcp_transport": null,
+      "prompt_count": 0,
+      "provenance": "declared",
+      "resource_count": 0,
+      "resource_template_count": 0,
+      "tool_count": 2
+    },
+    "format": "mcp",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "acme-inventory",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "mcp",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Tools the MCP server declares it can execute.",
+        "extras": {
+          "mcp_kind": "tool",
+          "provenance": "declared"
+        },
+        "key": "Acme Inventory.tools",
+        "name": "tools",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Read the on-hand quantity for a SKU in one warehouse.",
+            "extras": {
+              "annotations": {
+                "readOnlyHint": true
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Inventory.tools.check_stock",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Inventory.tools.check_stock#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolcheck_stockInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "sku": {
+                      "description": "Stock keeping unit.",
+                      "pattern": "^[A-Z]{3}-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "warehouse": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "maxLength": 3,
+                          "minLength": 3,
+                          "type": "string"
+                        },
+                        "region": {
+                          "enum": [
+                            "emea",
+                            "amer",
+                            "apac"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "sku",
+                    "warehouse"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": "Structured tool result.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Inventory.tools.check_stock#response.result",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Toolcheck_stockOutput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "properties": {
+                    "onHand": {
+                      "properties": {
+                        "amount": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "unit": {
+                          "default": "each",
+                          "enum": [
+                            "each",
+                            "case",
+                            "pallet"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "amount"
+                      ],
+                      "type": "object"
+                    },
+                    "reserved": {
+                      "properties": {
+                        "amount": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "unit": {
+                          "default": "each",
+                          "enum": [
+                            "each",
+                            "case",
+                            "pallet"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "amount"
+                      ],
+                      "type": "object"
+                    },
+                    "sku": {
+                      "description": "Stock keeping unit.",
+                      "pattern": "^[A-Z]{3}-[0-9]{4}$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "sku",
+                    "onHand"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "response",
+                "status_code": "result"
+              }
+            ],
+            "name": "check_stock",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Move stock between two warehouses.",
+            "extras": {
+              "annotations": {
+                "destructiveHint": true,
+                "idempotentHint": false
+              },
+              "mcp_kind": "tool",
+              "provenance": "declared",
+              "title": null
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Acme Inventory.tools.transfer_stock",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Tool call arguments.",
+                "extras": {
+                  "provenance": "declared"
+                },
+                "headers": [],
+                "key": "Acme Inventory.tools.transfer_stock#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Tooltransfer_stockInput",
+                  "nullable": false
+                },
+                "payload_schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "from": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "maxLength": 3,
+                          "minLength": 3,
+                          "type": "string"
+                        },
+                        "region": {
+                          "enum": [
+                            "emea",
+                            "amer",
+                            "apac"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code"
+                      ],
+                      "type": "object"
+                    },
+                    "quantity": {
+                      "properties": {
+                        "amount": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "unit": {
+                          "default": "each",
+                          "enum": [
+                            "each",
+                            "case",
+                            "pallet"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "amount"
+                      ],
+                      "type": "object"
+                    },
+                    "sku": {
+                      "description": "Stock keeping unit.",
+                      "pattern": "^[A-Z]{3}-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "to": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "maxLength": 3,
+                          "minLength": 3,
+                          "type": "string"
+                        },
+                        "region": {
+                          "enum": [
+                            "emea",
+                            "amer",
+                            "apac"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "sku",
+                    "from",
+                    "to",
+                    "quantity"
+                  ],
+                  "type": "object"
+                },
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "transfer_stock",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Acme Inventory",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "^[A-Z]{3}-[0-9]{4}$",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Stock keeping unit.",
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcheck_stockInput.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcheck_stockInput.warehouse",
+            "name": "warehouse",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolcheck_stockInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolcheck_stockInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcheck_stockOutput.onHand",
+            "name": "onHand",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcheck_stockOutput.reserved",
+            "name": "reserved",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "^[A-Z]{3}-[0-9]{4}$",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Stock keeping unit.",
+            "extras": {},
+            "field_number": null,
+            "key": "Toolcheck_stockOutput.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Toolcheck_stockOutput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Toolcheck_stockOutput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Tooltransfer_stockInput.from",
+            "name": "from",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Tooltransfer_stockInput.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "^[A-Z]{3}-[0-9]{4}$",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Stock keeping unit.",
+            "extras": {},
+            "field_number": null,
+            "key": "Tooltransfer_stockInput.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Tooltransfer_stockInput.to",
+            "name": "to",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Tooltransfer_stockInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "Tooltransfer_stockInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.2.0"
+  },
+  "corpus_path": "mcp/03-composition-shared-schemas.json",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "mcp"
+  },
+  "fingerprint": "sha256:0d36cd4a10f9badad0379bb56dcb3998498787663e7734557b992423b11f307d",
+  "lint": {
+    "findings": 9,
+    "grade": "B",
+    "report_fingerprint": "1760b9583268cc941cd8f5bbf459adf98480f45ea7ed011cb907f921cb27a628",
+    "score": 82,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

@@ -40,6 +40,9 @@ class ApiblueprintImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("apiblueprint", "api-blueprint", "apib", "blueprint")
+    # `.md` is listed because API Blueprint is a Markdown dialect and is routinely saved as
+    # plain `.md`; the `FORMAT: 1A` content marker is what actually claims the document.
+    file_extensions = (".apib", ".md")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

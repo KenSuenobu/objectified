@@ -5,7 +5,10 @@
 # import cleanly: a bad example is a lint finding, not an import failure.
 #
 # `x-expected-violation` records each site's intent; it is a vendor extension with no effect
-# on validation.
+# on validation. It is used only where the AsyncAPI 3 schema actually permits an extension:
+# a `MessageExample` object does **not** (`@asyncapi/parser` rejects the document with
+# "Property ... is not expected to be here"), so each message example states its intent in its
+# own `summary` instead.
 asyncapi: 3.0.0
 info:
   title: Non-conforming Example Events
@@ -58,6 +61,8 @@ components:
             userId: 7
             email: ada@example.com
             plan: pro
+        # Expected violation: type-and-enum (stated in `summary` — a MessageExample object
+        # takes no vendor extensions).
         - name: bad-payload
           summary: Payload breaks enum and type.
           headers:
@@ -67,7 +72,7 @@ components:
             userId: seven
             email: ada@example.com
             plan: platinum
-          x-expected-violation: type-and-enum
+        # Expected violation: required-and-minimum (stated in `summary`, same reason).
         - name: bad-headers
           summary: Headers break required and minimum.
           headers:
@@ -76,7 +81,6 @@ components:
             userId: 7
             email: ada@example.com
             plan: pro
-          x-expected-violation: required-and-minimum
   schemas:
     UserSignedUpPayload:
       type: object

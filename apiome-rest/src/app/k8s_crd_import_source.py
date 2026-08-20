@@ -50,6 +50,7 @@ class K8sCrdImportSource(ImportSource, register=True):
     )
     supports_live_discovery = False
     formats = ("k8s-crd",)
+    file_extensions = (".crd.yaml", ".crd.yml", ".yaml", ".yml")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

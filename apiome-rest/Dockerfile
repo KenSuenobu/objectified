@@ -46,7 +46,10 @@ ARG SMITHY_VERSION=1.53.0
 ARG DRAFTER_VERSION=4.0.0
 ARG AMF_VERSION=5.7.1
 ARG ASYNCAPI_VERSION=2.16.0
-ARG ASYNCAPI_PARSER_VERSION=3.6.0
+# NOTE: @asyncapi/parser is deliberately absent from this list. It is a HARD dependency
+# (FMT-1.3, #5414) and its exact pin lives in apiome-rest/toolchain/package.json — the
+# toolchain manifest this build installs from — so the version cannot be overridden per build
+# and drift away from what the startup self-check expects.
 ARG ASYNCAPI_DIFF_VERSION=0.5.0
 ARG ROVER_VERSION=0.27.0
 ARG GRAPHQL_INSPECTOR_VERSION=6.2.0
@@ -133,14 +136,21 @@ RUN curl -fsSL "https://repository-master.mulesoft.org/nexus/content/repositorie
     && printf '#!/bin/sh\nexec java -jar %s/lib/amf.jar "$@"\n' "${TOOLS_PREFIX}" > ${TOOLS_PREFIX}/bin/amf \
     && chmod +x ${TOOLS_PREFIX}/bin/amf
 
-# tsp (TypeSpec compiler) + asyncapi CLI + @asyncapi/parser + @graphql-inspector/core — Node
-# packages installed into the tools prefix and wrapped so the runtime invokes them with its own
-# node (no global npm needed at runtime). `@asyncapi/parser` backs the MFI-8.1 parse/validate/
-# dereference wrapper below; `@graphql-inspector/core` (+ its `graphql` peer) backs the MFI-10.5
-# breaking-change wrapper.
+# The toolchain manifest (FMT-1.3, #5414): the exact pins of every HARD Node dependency. It is
+# copied in first so the `npm install` below installs its `dependencies` (currently
+# `@asyncapi/parser`) alongside the optional CLIs named on the command line. Vendoring the
+# parser this way is what makes AsyncAPI a format the image cannot ship without: the build
+# smoke-tests it a few lines down, and app.toolchain_selfcheck refuses to start without it.
+COPY apiome-rest/toolchain/package.json ${TOOLS_PREFIX}/lib/node/package.json
+
+# tsp (TypeSpec compiler) + asyncapi CLI + @graphql-inspector/core — Node packages installed
+# into the tools prefix and wrapped so the runtime invokes them with its own node (no global npm
+# needed at runtime). `@asyncapi/parser` (from the manifest above) backs the MFI-8.1
+# parse/validate/dereference wrapper below; `@graphql-inspector/core` (+ its `graphql` peer)
+# backs the MFI-10.5 breaking-change wrapper.
 RUN npm install --prefix ${TOOLS_PREFIX}/lib/node --no-audit --no-fund \
       "@typespec/compiler@${TSP_VERSION}" "@asyncapi/cli@${ASYNCAPI_VERSION}" \
-      "@asyncapi/parser@${ASYNCAPI_PARSER_VERSION}" "@asyncapi/diff@${ASYNCAPI_DIFF_VERSION}" \
+      "@asyncapi/diff@${ASYNCAPI_DIFF_VERSION}" \
       "graphql@${GRAPHQL_JS_VERSION}" "@graphql-inspector/core@${GRAPHQL_INSPECTOR_VERSION}" \
       "@stoplight/spectral-cli@${SPECTRAL_VERSION}" "@redocly/cli@${REDOCLY_VERSION}" \
     && printf '#!/bin/sh\nexec node %s/lib/node/node_modules/@typespec/compiler/cmd/tsp.js "$@"\n' "${TOOLS_PREFIX}" > ${TOOLS_PREFIX}/bin/tsp \
@@ -164,6 +174,16 @@ RUN printf '#!/bin/sh\nexec node %s/lib/node/asyncapi-parse.mjs "$@"\n' "${TOOLS
     && chmod +x ${TOOLS_PREFIX}/bin/asyncapi-parser ${TOOLS_PREFIX}/lib/node/asyncapi-parse.mjs \
        ${TOOLS_PREFIX}/bin/asyncapi-diff ${TOOLS_PREFIX}/lib/node/asyncapi-diff.mjs \
        ${TOOLS_PREFIX}/bin/graphql-inspector-diff ${TOOLS_PREFIX}/lib/node/graphql-inspector-diff.mjs
+
+# Hard-dependency smoke test (FMT-1.3, #5414). The AsyncAPI adapter has no fallback parser, so a
+# broken or missing `asyncapi-parser` costs the image a shipped format. Prove *at build time*
+# that the wrapper loads `@asyncapi/parser` and parses a document, instead of discovering it on
+# the first import in production. A failure here fails the build — which is the point.
+RUN ${TOOLS_PREFIX}/bin/asyncapi-parser --version \
+    && echo '{"asyncapi":"2.6.0","info":{"title":"toolchain smoke test","version":"1.0.0"},"channels":{}}' \
+       | ${TOOLS_PREFIX}/bin/asyncapi-parser > /tmp/asyncapi-smoke.json \
+    && grep -q '"ok":true' /tmp/asyncapi-smoke.json \
+    && rm -f /tmp/asyncapi-smoke.json
 
 # drafter — API Blueprint parser; no official static binary, so build the pinned tag from
 # source and install just the resulting CLI. The `drafter` CMake target is the static library
@@ -240,7 +260,13 @@ ENV PYTHONPATH=/app/src \
     # yarn/npm being on PATH or on workspace .bin symlink hoisting. cwd for this override is the
     # repo root ("/"): node resolves the bare `tsx` loader from /node_modules, and tsx resolves
     # the worker's relative imports against /apiome-ui and its tsconfig paths.
-    SPEC_IMPORT_WORKER_ARGV='["node","--import","tsx","apiome-ui/scripts/rest-spec-import-worker.ts"]'
+    SPEC_IMPORT_WORKER_ARGV='["node","--import","tsx","apiome-ui/scripts/rest-spec-import-worker.ts"]' \
+    # Hard-dependency enforcement (FMT-1.3, #5414). This image *ships* the required toolchain,
+    # so a container where `asyncapi-parser` cannot run is broken, not merely degraded: the
+    # startup self-check logs the resolved @asyncapi/parser version and refuses to start rather
+    # than serving with a shipped format silently missing. Set APIOME_REQUIRE_TOOLCHAIN=0 only
+    # for a deliberately slimmed deployment that accepts losing AsyncAPI import.
+    APIOME_REQUIRE_TOOLCHAIN=1
 
 EXPOSE 8000
 

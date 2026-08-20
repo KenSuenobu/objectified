@@ -37,6 +37,7 @@ class WsdlImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("wsdl", "soap")
+    file_extensions = (".wsdl", ".xml")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

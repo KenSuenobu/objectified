@@ -152,7 +152,7 @@ The corpus holds **1410 files** across **103 format directories**. Every file ha
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
 | `llm-tools/` | LLM Tools | agent | OpenAI / Anthropic / bare tool-array shape | 11 |
-| `mcp/` | MCP server manifest (pending #5418) | agent | `mcpVersion` + `tools[].inputSchema` | 12 |
+| `mcp/` | MCP server manifest | agent | `mcpVersion` + `tools[].inputSchema` | 12 |
 
 ## File index
 
@@ -316,11 +316,11 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`06-payment-events-set/schemas.yaml`** — Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml.
 
-> ⚠ **`07-nonconforming-examples-3.0.yaml`** — Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py.
+> ⚠ **`07-nonconforming-examples-3.0.yaml`** — Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py. The `x-expected-violation` intent marker sits only on the schema: an AsyncAPI 3 `MessageExample` object takes no vendor extensions, so each message example states its intent in its `summary` instead (FMT-1.3, #5414 — caught the first time CI ran with the required parser installed).
 
-> ⚠ **`negative/01-syntactic-unclosed-flow-sequence.yaml`** — Verified without asyncapi-parser installed (parse raises tool-unavailable), but the flaw is broken YAML, so classification is text-grounded and tool-independent.
+> ⚠ **`negative/01-syntactic-unclosed-flow-sequence.yaml`** — The flaw is broken YAML, so classification is text-grounded and tool-independent. Originally verified without asyncapi-parser installed; re-verified with the required parser present (FMT-1.3, #5414), which now runs in CI.
 
-> ⚠ **`negative/02-semantic-channels-not-a-mapping.yaml`** — Verified without asyncapi-parser installed; the asyncapi sniffer still claims the document (detect_matched true) and the blatantly wrong `channels` type also fails validation when the tool is present.
+> ⚠ **`negative/02-semantic-channels-not-a-mapping.yaml`** — The asyncapi sniffer claims the document (detect_matched true) and the blatantly wrong `channels` type also fails parser validation. Originally verified without asyncapi-parser installed; re-verified with the required parser present (FMT-1.3, #5414), which now runs in CI.
 
 > ⚠ **`negative/03-truncated-mid-ref.yaml`** — The truncated YAML no longer parses, so the asyncapi sniffer cannot claim it; the greedy graphql sniffer claims the text at 0.9 confidence, so the pipeline classifies FORMAT_MISMATCH instead of INPUT_MALFORMED.
 
@@ -1358,22 +1358,22 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/05-encoding-utf16.xml` | — | `matter` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
 | `negative/06-unresolvable-type-reference.xml` | — | `matter` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-enum`, `missing-struct`, `pending-adapter` |
 
-### `mcp/` — MCP server manifest (pending #5418)
+### `mcp/` — MCP server manifest
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-echo-tool.json` | minimal | `mcp` ≥ 0.9 | valid | `tools`, `single-tool`, `inputSchema`, `pending-adapter` |
-| `02-typical-tickets-server.json` | typical | `mcp` ≥ 0.9 | valid | `tools`, `resources`, `resourceTemplates`, `prompts`, `annotations`, `streamable-http`, `pending-adapter` |
-| `03-composition-shared-schemas.json` | composition | `mcp` ≥ 0.9 | valid | `defs`, `ref-reuse`, `outputSchema`, `tools`, `pending-adapter` |
-| `04-stress-grammar-corners.json` | stress | `mcp` ≥ 0.9 | valid | `oneOf`, `anyOf`, `outputSchema`, `meta`, `experimental-capabilities`, `uri-template`, `stdio`, `pending-adapter` |
-| `05-real-world-filesystem-server.json` | real-world | `mcp` ≥ 0.9 | valid | `tools`, `annotations`, `resources`, `stdio`, `pending-adapter` |
-| `06-split-set/manifest.json` | multi-file (root) | `mcp` ≥ 0.9 | valid | `multi-file`, `cross-file-ref`, `tools`, `pending-adapter` |
-| `06-split-set/schemas.json` ⚠ | multi-file (member) | `mcp` (no guarantee) | valid | `multi-file`, `cross-file-ref`, `schemas`, `pending-adapter` |
-| `negative/01-syntactic-trailing-comma.json` | — | `mcp` (no guarantee) | invalid | `negative`, `syntactic`, `trailing-comma`, `pending-adapter` |
-| `negative/02-semantic-tool-without-input-schema.json` ⚠ | — | `mcp` (no guarantee) | invalid | `negative`, `semantic`, `missing-inputSchema`, `pending-adapter` |
-| `negative/03-truncated-mid-tool.json` | — | `mcp` (no guarantee) | invalid | `negative`, `truncated`, `mid-tool`, `pending-adapter` |
-| `negative/04-wrong-format-openapi.yaml` | — | `mcp` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi`, `pending-adapter` |
-| `negative/05-encoding-utf16.json` ⚠ | — | `mcp` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `01-minimal-echo-tool.json` | minimal | `mcp` ≥ 0.9 | valid | `tools`, `single-tool`, `inputSchema` |
+| `02-typical-tickets-server.json` | typical | `mcp` ≥ 0.9 | valid | `tools`, `resources`, `resourceTemplates`, `prompts`, `annotations`, `streamable-http` |
+| `03-composition-shared-schemas.json` | composition | `mcp` ≥ 0.9 | valid | `defs`, `ref-reuse`, `outputSchema`, `tools` |
+| `04-stress-grammar-corners.json` | stress | `mcp` ≥ 0.9 | valid | `oneOf`, `anyOf`, `outputSchema`, `meta`, `experimental-capabilities`, `uri-template`, `stdio` |
+| `05-real-world-filesystem-server.json` | real-world | `mcp` ≥ 0.9 | valid | `tools`, `annotations`, `resources`, `stdio` |
+| `06-split-set/manifest.json` | multi-file (root) | `mcp` ≥ 0.9 | valid | `multi-file`, `cross-file-ref`, `tools` |
+| `06-split-set/schemas.json` ⚠ | multi-file (member) | `mcp` (no guarantee) | valid | `multi-file`, `cross-file-ref`, `schemas` |
+| `negative/01-syntactic-trailing-comma.json` | — | `mcp` (no guarantee) | invalid | `negative`, `syntactic`, `trailing-comma` |
+| `negative/02-semantic-tool-without-input-schema.json` ⚠ | — | `mcp` (no guarantee) | invalid | `negative`, `semantic`, `missing-inputSchema` |
+| `negative/03-truncated-mid-tool.json` | — | `mcp` (no guarantee) | invalid | `negative`, `truncated`, `mid-tool` |
+| `negative/04-wrong-format-openapi.yaml` | — | `mcp` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi` |
+| `negative/05-encoding-utf16.json` ⚠ | — | `mcp` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
 
 > ⚠ **`06-split-set/schemas.json`** — Fileset member with no mcpVersion marker — not independently detectable; imported only through 06-split-set/manifest.json.
 

@@ -46,6 +46,7 @@ class WitImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("wit",)
+    file_extensions = (".wit",)
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

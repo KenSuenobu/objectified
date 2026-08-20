@@ -21,7 +21,7 @@ import io
 import zipfile
 from functools import lru_cache
 from pathlib import PurePosixPath
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from corpus_loader import CorpusEntry, FilesetRole, ValidityClass, load_corpus
 
@@ -199,12 +199,17 @@ def parse_native(adapter: ImportSource, entry: CorpusEntry) -> Any:
     return adapter.parse(entry.read_text(), source_label=entry.path)
 
 
-def build_fileset(entry: CorpusEntry) -> IntakeFileset:
+def build_fileset(entry: CorpusEntry, *, root_text: Optional[str] = None) -> IntakeFileset:
     """Assemble the :class:`IntakeFileset` for a multi-file set's root entry.
 
     Args:
         entry: The set's ``root`` entry; every file beside it in the per-set
             subdirectory becomes a member.
+        root_text: Replacement text for the root document, leaving every sibling
+            member as it is on disk. Used by suites that rewrite the root (the
+            fingerprint-reordering contract permutes its keys) and still need the
+            set's cross-file ``$ref`` targets present — a set root parsed alone
+            cannot resolve them.
 
     Returns:
         The fileset, rooted at the entry's own filename.
@@ -215,6 +220,8 @@ def build_fileset(entry: CorpusEntry) -> IntakeFileset:
         for path in sorted(set_dir.iterdir())
         if path.is_file()
     }
+    if root_text is not None:
+        members[entry.absolute_path.name] = root_text
     return IntakeFileset.from_members(members, root=entry.absolute_path.name)
 
 

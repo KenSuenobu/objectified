@@ -26,6 +26,7 @@
  * and a title hit outranks a summary hit, which outranks a keyword hit.
  */
 
+import { FORMAT_COUNTS } from '@/app/generated/formatCounts';
 import { buildDocsHref } from '@/app/utils/docsLinks';
 
 /**
@@ -73,7 +74,7 @@ export const GUIDE_ENTRIES: readonly GuideEntry[] = [
     id: 'import-a-spec',
     title: 'Import a specification',
     summary:
-      'Turn an OpenAPI, Swagger 2.0, Arazzo or JSON Schema document into classes, properties and paths you can edit.',
+      `Import any of ${FORMAT_COUNTS.importable} formats — and which of the two importers, Projects or Catalog, handles yours.`,
     page: 'docs/guide/import-a-spec.md',
     section: 'spine',
     keywords: ['upload', 'swagger', 'openapi', 'arazzo', 'json schema', 'job', 'raml', 'postman'],
@@ -185,6 +186,33 @@ export const GUIDE_ENTRIES: readonly GuideEntry[] = [
     page: 'docs/guide/convert-to-openapi.md',
     section: 'spine',
     keywords: ['projection graph', 'evidence', 'reason code', 'history', 'promote'],
+  },
+  {
+    id: 'supported-formats',
+    title: 'Supported formats',
+    summary:
+      'Every format Apiome imports and exports, generated from the registries — keys, input kinds, versions and extensions.',
+    page: 'docs/guide/supported-formats.md',
+    section: 'reference',
+    keywords: [
+      'protobuf',
+      'grpc',
+      'graphql',
+      'asyncapi',
+      'thrift',
+      'smithy',
+      'typespec',
+      'wsdl',
+      'xsd',
+      'odata',
+      'edi',
+      'x12',
+      'hl7',
+      'fhir',
+      'copybook',
+      'matrix',
+      'which formats',
+    ],
   },
   {
     id: 'api-reference',

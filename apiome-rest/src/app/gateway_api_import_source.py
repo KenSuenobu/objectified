@@ -60,6 +60,7 @@ class GatewayApiImportSource(ImportSource, register=True):
     )
     supports_live_discovery = False
     formats = ("gateway-api", "httproute")
+    file_extensions = (".yaml", ".yml")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

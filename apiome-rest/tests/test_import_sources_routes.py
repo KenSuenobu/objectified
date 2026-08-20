@@ -116,6 +116,72 @@ def test_new_adapter_appears_without_route_changes():
 
 
 # ---------------------------------------------------------------------------
+# file_extensions on the payload (FMT-1.1, #5412)
+# ---------------------------------------------------------------------------
+
+
+def test_source_list_publishes_file_extensions():
+    """The pickers derive `accept` from this field, so it must be on the wire."""
+    r = client.get("/v1/import/sources")
+    by_key = {s["key"]: s for s in r.json()["sources"]}
+
+    assert by_key["typespec"]["file_extensions"][0] == ".tsp"
+    assert ".cpy" in by_key["cobolcopybook"]["file_extensions"]
+    assert ".edi" in by_key["edix12"]["file_extensions"]
+    assert ".hl7" in by_key["hl7v2"]["file_extensions"]
+    # A fileset adapter's archive suffixes ride along, appended by the descriptor.
+    assert ".zip" in by_key["openapi"]["file_extensions"]
+    # Paste-only `sample` has no filename to accept, so it declares none.
+    assert by_key["sample"]["file_extensions"] == []
+
+
+def test_source_list_extensions_reach_far_past_the_old_hard_coded_ten():
+    """Thirty-three formats were built and invisible; the payload now names them."""
+    r = client.get("/v1/import/sources")
+    union = {ext for s in r.json()["sources"] for ext in s["file_extensions"]}
+    assert {".tsp", ".fbs", ".capnp", ".idl", ".x", ".wsdl", ".xsd", ".edmx"} <= union
+    assert {".cpy", ".cbl", ".edi", ".hl7", ".asn1", ".wit", ".smithy"} <= union
+    assert {".apib", ".http", ".rest"} <= union
+
+
+def test_new_adapter_widens_the_published_accept_list():
+    """Registering an adapter server-side widens every picker with no UI change."""
+
+    class _ExoticImportSource(ImportSource):  # not auto-registered
+        key = "probe-exotic"
+        label = "Probe Exotic"
+        description = "A throwaway adapter with an extension nothing else claims."
+        icon = "boxes"
+        paradigm = ApiParadigm.REST
+        input_kinds = (InputKind.FILE,)
+        formats = ("probe-exotic-1.0",)
+        file_extensions = (".probeexotic",)
+
+        def detect(self, payload):  # pragma: no cover - not exercised here
+            from app.import_source import NO_MATCH
+
+            return NO_MATCH
+
+        def parse(self, raw, *, source_label=None):  # pragma: no cover
+            return raw
+
+        def normalize(self, native_ast, *, include_raw=True):  # pragma: no cover
+            raise NotImplementedError
+
+    def _published_extensions():
+        payload = client.get("/v1/import/sources").json()
+        return {ext for s in payload["sources"] for ext in s["file_extensions"]}
+
+    assert ".probeexotic" not in _published_extensions()
+    _REGISTRY["probe-exotic"] = _ExoticImportSource
+    try:
+        assert ".probeexotic" in _published_extensions()
+    finally:
+        _REGISTRY.pop("probe-exotic", None)
+    assert ".probeexotic" not in _published_extensions()
+
+
+# ---------------------------------------------------------------------------
 # POST /v1/import/detect — format auto-detection (MFI-1.5)
 # ---------------------------------------------------------------------------
 

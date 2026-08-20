@@ -12,11 +12,38 @@ on:
     paths:
       - 'apiome-rest/**'
       - '.github/workflows/apiome-rest-test.yml'
+      # The generated supported-formats page (FMT-1.2) is drift-checked by this suite. It is
+      # listed here so a hand edit of the page alone still triggers the check that rejects it.
+      - 'docs/guide/supported-formats.md'
+      # The import corpus this suite runs (detect/import/golden/round-trip) lives here, so a
+      # fixture or manifest edit alone must trigger it — FMT-1.3 found an `asyncapi` fixture
+      # that had never been validated because the parser was absent.
+      - 'apiome-ui/examples/**'
+      # The FMT-1.6 format-count surfaces. This suite regenerates each of them and rejects a
+      # hand-typed count, so an edit to one of them alone must trigger the check that rejects it.
+      - 'README.md'
+      - 'docs/format-counts.json'
+      - 'docs/guide/**'
+      - 'apiome-browse/lib/**'
+      - 'apiome-browse/src/app/HomeClient.tsx'
+      - 'apiome-ui/src/app/generated/**'
+      - 'apiome-ui/src/app/components/ade/help/helpCatalog.ts'
+      - 'apiome-ui/src/app/components/ui/catalog/FormatPill.tsx'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'apiome-rest/**'
       - '.github/workflows/apiome-rest-test.yml'
+      - 'docs/guide/supported-formats.md'
+      - 'apiome-ui/examples/**'
+      - 'README.md'
+      - 'docs/format-counts.json'
+      - 'docs/guide/**'
+      - 'apiome-browse/lib/**'
+      - 'apiome-browse/src/app/HomeClient.tsx'
+      - 'apiome-ui/src/app/generated/**'
+      - 'apiome-ui/src/app/components/ade/help/helpCatalog.ts'
+      - 'apiome-ui/src/app/components/ui/catalog/FormatPill.tsx'
   workflow_dispatch:
 
 jobs:
@@ -51,6 +78,53 @@ jobs:
       - name: Install dependencies (incl. dev/test group)
         run: uv sync
 
+      # The AsyncAPI parser is a HARD toolchain dependency (FMT-1.3, #5414): the adapter has no
+      # fallback, so without it every asyncapi corpus/golden/round-trip row silently skips and a
+      # regression in a shipped format never goes red here. Install the exact pin from the
+      # toolchain manifest (the same one the container build uses) into apiome-rest/.tools,
+      # where app.toolchain_runner resolves bundled tools without touching PATH.
+      # npm is what installs the pinned parser; the runtime image uses node for the same wrapper.
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install the required AsyncAPI toolchain
+        run: ./scripts/install_dev_toolchain.sh asyncapi-parser
+
+      # Loud, named gate: prove the required toolchain is actually usable before spending the
+      # suite on it. A failure here says "the parser did not install", not "1,000 asyncapi
+      # tests skipped".
+      - name: Verify the required toolchain self-check passes
+        env:
+          APIOME_REQUIRE_TOOLCHAIN: "1"
+        run: uv run python -m app.toolchain_selfcheck
+
+      # An explicit, readable gate for the generated docs (FMT-1.2, #5413). The pytest suite
+      # below asserts the same thing, but a dedicated step names the failure and the one-line
+      # fix instead of burying it among thousands of test results.
+      - name: Check generated supported-formats page is current
+        run: uv run python scripts/generate_supported_formats_doc.py --check
+
+      # The FMT-1.6 format-count truth pass (#5417). Every human-facing count — README, the
+      # guide pages, the portal and the app — is written from the registries by this script.
+      # The pytest suite asserts the same thing; this step names the stale surface, and rejects
+      # a count that has been typed back in by hand instead of measured.
+      - name: Check format counts agree with the registry
+        run: uv run python scripts/generate_format_counts.py --check
+
+      # The FMT-1.4 corpus parity gate (#5415). Every registered adapter must carry corpus
+      # examples, negatives, golden snapshots, a round-trip matrix row and a capability entry.
+      # The pytest suite asserts the same thing; this step names the missing artifact and the
+      # command that produces it, and writes the coverage report into the job summary so the
+      # per-format fixture counts are readable without downloading anything.
+      - name: Check corpus parity (every registered adapter has examples and goldens)
+        run: uv run python scripts/generate_corpus_parity_report.py --check --fail-on-gaps
+
+      - name: Corpus parity coverage summary
+        if: always()
+        run: cat tests/golden/parity/corpus_parity.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Run tests with coverage
         run: |
           uv run pytest \
@@ -76,5 +150,18 @@ jobs:
           path: |
             apiome-rest/coverage.xml
             apiome-rest/pytest-report.xml
+          if-no-files-found: ignore
+        continue-on-error: true
+
+      # Published so the parity report is downloadable per run (FMT-1.4 acceptance criterion),
+      # not only readable in the job summary.
+      - name: Upload corpus parity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apiome-rest-corpus-parity
+          path: |
+            apiome-rest/tests/golden/parity/corpus_parity.json
+            apiome-rest/tests/golden/parity/corpus_parity.md
           if-no-files-found: ignore
         continue-on-error: true

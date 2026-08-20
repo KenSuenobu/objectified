@@ -9,7 +9,9 @@
  * the importer can disable an unavailable source and the gallery can flag it — instead of letting an
  * import fail at parse.
  *
- * This fetches the registry (only while `enabled`) and exposes a lookup by `source_kind`.
+ * This fetches the registry (only while `enabled`) and exposes a lookup by `source_kind`, plus the
+ * full set of registered keys — which is what the supported-formats gallery partitions on (FMT-1.2,
+ * #5413), so the gallery stops keeping its own list of which formats are importable.
  */
 
 import { useEffect, useState } from 'react';
@@ -25,10 +27,19 @@ export interface CatalogImportAvailability {
   isAvailable: (sourceKind: string) => boolean;
   /** The reason a `source_kind` is unavailable, or `null`. */
   reasonFor: (sourceKind: string) => string | null;
+  /**
+   * Every adapter key the registry reports (FMT-1.2, #5413) — empty until the fetch resolves.
+   *
+   * Membership here is what decides whether a format is importable at all, which is a different
+   * question from {@link isAvailable}: a registered adapter whose toolchain is missing is still a
+   * supported format, and must be dimmed with a reason rather than demoted to "not yet importable".
+   */
+  registeredKeys: ReadonlySet<string>;
 }
 
 export function useCatalogImportAvailability(enabled: boolean): CatalogImportAvailability {
   const [byKind, setByKind] = useState<Record<string, { available: boolean; reason: string | null }>>({});
+  const [registeredKeys, setRegisteredKeys] = useState<ReadonlySet<string>>(() => new Set<string>());
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -46,6 +57,7 @@ export function useCatalogImportAvailability(enabled: boolean): CatalogImportAva
           map[s.key] = { available: s.available !== false, reason: s.unavailable_reason ?? null };
         }
         setByKind(map);
+        setRegisteredKeys(new Set(Object.keys(map)));
         setLoaded(true);
       } catch {
         // Non-fatal: leave availability optimistic (everything importable) if the registry is unreachable.
@@ -60,5 +72,6 @@ export function useCatalogImportAvailability(enabled: boolean): CatalogImportAva
     loaded,
     isAvailable: (sourceKind: string) => byKind[sourceKind]?.available ?? true,
     reasonFor: (sourceKind: string) => byKind[sourceKind]?.reason ?? null,
+    registeredKeys,
   };
 }

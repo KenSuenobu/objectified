@@ -1,0 +1,2209 @@
+{
+  "report_version": 1,
+  "formats": [
+    {
+      "format_key": "apiblueprint",
+      "label": "API Blueprint",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "api-blueprint"
+      ],
+      "corpus_directories": [
+        "api-blueprint"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "api-blueprint"
+      ],
+      "emit_key": "apiblueprint",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "api-blueprint",
+          "emit_key": "apiblueprint",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "arazzo",
+      "label": "Arazzo",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "arazzo"
+      ],
+      "corpus_directories": [
+        "arazzo"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "arazzo"
+      ],
+      "emit_key": "arazzo",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "arazzo",
+          "emit_key": "arazzo",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "asn1",
+      "label": "ASN.1",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "asn1"
+      ],
+      "corpus_directories": [
+        "asn1"
+      ],
+      "fixtures": {
+        "valid": 7,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 12
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "asn1"
+      ],
+      "emit_key": "asn1",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "asn1",
+          "emit_key": "asn1",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "asyncapi",
+      "label": "AsyncAPI",
+      "paradigm": "event",
+      "corpus_formats": [
+        "asyncapi"
+      ],
+      "corpus_directories": [
+        "asyncapi"
+      ],
+      "fixtures": {
+        "valid": 9,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 14
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 7,
+      "golden_directories": [
+        "asyncapi"
+      ],
+      "emit_key": "asyncapi",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "asyncapi",
+          "emit_key": "asyncapi",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "avro",
+      "label": "Avro",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "avro"
+      ],
+      "corpus_directories": [
+        "avro"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "avro"
+      ],
+      "emit_key": "avro",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "avro",
+          "emit_key": "avro",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "capnproto",
+      "label": "Cap'n Proto",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "capnproto"
+      ],
+      "corpus_directories": [
+        "capnproto"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "capnproto"
+      ],
+      "emit_key": "capnproto",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "capnproto",
+          "emit_key": "capnproto",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "cloudevents",
+      "label": "CloudEvents",
+      "paradigm": "event",
+      "corpus_formats": [
+        "cloudevents"
+      ],
+      "corpus_directories": [
+        "cloudevents"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 5,
+      "golden_directories": [
+        "cloudevents"
+      ],
+      "emit_key": "cloudevents",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "cloudevents",
+          "emit_key": "cloudevents",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "cobolcopybook",
+      "label": "COBOL Copybook",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "cobolcopybook"
+      ],
+      "corpus_directories": [
+        "cobol-copybook"
+      ],
+      "fixtures": {
+        "valid": 8,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 13
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 8,
+      "golden_directories": [
+        "cobol-copybook"
+      ],
+      "emit_key": "cobolcopybook",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "cobolcopybook",
+          "emit_key": "cobolcopybook",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "reviewed",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "connectrpc",
+      "label": "Connect RPC",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "connectrpc"
+      ],
+      "corpus_directories": [
+        "connectrpc"
+      ],
+      "fixtures": {
+        "valid": 7,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 12
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 6,
+      "golden_directories": [
+        "connectrpc"
+      ],
+      "emit_key": "connectrpc",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "connectrpc",
+          "emit_key": "connectrpc",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "corbaidl",
+      "label": "CORBA IDL",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "corbaidl"
+      ],
+      "corpus_directories": [
+        "corba-idl"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "corba-idl"
+      ],
+      "emit_key": "corbaidl",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "corbaidl",
+          "emit_key": "corbaidl",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "discovery",
+      "label": "Google API Discovery",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "discovery"
+      ],
+      "corpus_directories": [
+        "discovery"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "discovery"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "edix12",
+      "label": "EDI X12",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "edix12"
+      ],
+      "corpus_directories": [
+        "edi-x12"
+      ],
+      "fixtures": {
+        "valid": 7,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 12
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 7,
+      "golden_directories": [
+        "edi-x12"
+      ],
+      "emit_key": "edix12",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "edix12",
+          "emit_key": "edix12",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "reviewed",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "fhir",
+      "label": "FHIR",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "fhir"
+      ],
+      "corpus_directories": [
+        "fhir"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "fhir"
+      ],
+      "emit_key": "fhir",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "fhir",
+          "emit_key": "fhir",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "fix",
+      "label": "FIX",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "fix"
+      ],
+      "corpus_directories": [
+        "fix"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 5,
+      "golden_directories": [
+        "fix"
+      ],
+      "emit_key": "fix",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "fix",
+          "emit_key": "fix",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "flatbuffers",
+      "label": "FlatBuffers",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "flatbuffers"
+      ],
+      "corpus_directories": [
+        "flatbuffers"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "flatbuffers"
+      ],
+      "emit_key": "flatbuffers",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "flatbuffers",
+          "emit_key": "flatbuffers",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "gateway-api",
+      "label": "Gateway API HTTPRoute",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "gateway-api"
+      ],
+      "corpus_directories": [
+        "gateway-api"
+      ],
+      "fixtures": {
+        "valid": 8,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 13
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 6,
+      "golden_directories": [
+        "gateway-api"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "graphql",
+      "label": "GraphQL",
+      "paradigm": "graph",
+      "corpus_formats": [
+        "graphql"
+      ],
+      "corpus_directories": [
+        "graphql"
+      ],
+      "fixtures": {
+        "valid": 18,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 23
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 14,
+      "golden_directories": [
+        "graphql"
+      ],
+      "emit_key": "graphql",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "graphql",
+          "emit_key": "graphql",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "grpc",
+      "label": "gRPC / Protobuf",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "protobuf"
+      ],
+      "corpus_directories": [
+        "protobuf"
+      ],
+      "fixtures": {
+        "valid": 10,
+        "negative": 7,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 17
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 9,
+      "golden_directories": [
+        "protobuf"
+      ],
+      "emit_key": "protobuf",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "protobuf",
+          "emit_key": "protobuf",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "hl7v2",
+      "label": "HL7 v2",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "hl7v2"
+      ],
+      "corpus_directories": [
+        "hl7v2"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "composition",
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "hl7v2"
+      ],
+      "emit_key": "hl7v2",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "hl7v2",
+          "emit_key": "hl7v2",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "http-file",
+      "label": "HTTP Request File",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "http-file"
+      ],
+      "corpus_directories": [
+        "http-file"
+      ],
+      "fixtures": {
+        "valid": 8,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 13
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 6,
+      "golden_directories": [
+        "http-file"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "iso20022",
+      "label": "ISO 20022",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "iso20022"
+      ],
+      "corpus_directories": [
+        "iso20022"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 1,
+        "scale": 0,
+        "total": 12
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "iso20022"
+      ],
+      "emit_key": "iso20022",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "iso20022",
+          "emit_key": "iso20022",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "iso8583",
+      "label": "ISO 8583",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "iso8583"
+      ],
+      "corpus_directories": [
+        "iso8583"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "composition",
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "iso8583"
+      ],
+      "emit_key": "iso8583",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "iso8583",
+          "emit_key": "iso8583",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "json-schema",
+      "label": "JSON Schema",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "json-schema"
+      ],
+      "corpus_directories": [
+        "json-schema"
+      ],
+      "fixtures": {
+        "valid": 12,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 17
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 12,
+      "golden_directories": [
+        "json-schema"
+      ],
+      "emit_key": "json-schema",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "json-schema",
+          "emit_key": "json-schema",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "jtd",
+      "label": "JSON Type Definition",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "jtd"
+      ],
+      "corpus_directories": [
+        "jtd"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "jtd"
+      ],
+      "emit_key": "jtd",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "jtd",
+          "emit_key": "jtd",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "k8s-crd",
+      "label": "Kubernetes CRD",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "k8s-crd"
+      ],
+      "corpus_directories": [
+        "k8s-crd"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "k8s-crd"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "kong",
+      "label": "Kong Declarative Config",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "kong"
+      ],
+      "corpus_directories": [
+        "kong"
+      ],
+      "fixtures": {
+        "valid": 7,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 12
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 6,
+      "golden_directories": [
+        "kong"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "llm-tools",
+      "label": "LLM Tools",
+      "paradigm": "agent",
+      "corpus_formats": [
+        "llm-tools"
+      ],
+      "corpus_directories": [
+        "llm-tools"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "llm-tools"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "mcp",
+      "label": "MCP Server Manifest",
+      "paradigm": "agent",
+      "corpus_formats": [
+        "mcp"
+      ],
+      "corpus_directories": [
+        "mcp"
+      ],
+      "fixtures": {
+        "valid": 7,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 12
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 6,
+      "golden_directories": [
+        "mcp"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "odata",
+      "label": "OData",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "odata"
+      ],
+      "corpus_directories": [
+        "odata"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 1,
+        "scale": 0,
+        "total": 12
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "odata"
+      ],
+      "emit_key": "odata",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "odata",
+          "emit_key": "odata",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "oncrpc",
+      "label": "ONC RPC",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "oncrpc"
+      ],
+      "corpus_directories": [
+        "onc-rpc"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "onc-rpc"
+      ],
+      "emit_key": "oncrpc",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "oncrpc",
+          "emit_key": "oncrpc",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "openapi",
+      "label": "OpenAPI / Swagger",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "openapi",
+        "swagger"
+      ],
+      "corpus_directories": [
+        "openapi",
+        "swagger"
+      ],
+      "fixtures": {
+        "valid": 39,
+        "negative": 6,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 45
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 36,
+      "golden_directories": [
+        "openapi",
+        "swagger"
+      ],
+      "emit_key": "openapi",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "openapi",
+          "emit_key": "openapi",
+          "status": "pass",
+          "has_reason": false
+        },
+        {
+          "source_format": "swagger",
+          "emit_key": "openapi",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "openrpc",
+      "label": "OpenRPC",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "openrpc"
+      ],
+      "corpus_directories": [
+        "openrpc"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "openrpc"
+      ],
+      "emit_key": "openrpc",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "openrpc",
+          "emit_key": "openrpc",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "postman",
+      "label": "Postman",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "postman"
+      ],
+      "corpus_directories": [
+        "postman"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "postman"
+      ],
+      "emit_key": "postman",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "postman",
+          "emit_key": "postman",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "raml",
+      "label": "RAML",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "raml"
+      ],
+      "corpus_directories": [
+        "raml"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "raml"
+      ],
+      "emit_key": "raml",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "raml",
+          "emit_key": "raml",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "smithy",
+      "label": "Smithy",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "smithy"
+      ],
+      "corpus_directories": [
+        "smithy"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "smithy"
+      ],
+      "emit_key": "smithy",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "smithy",
+          "emit_key": "smithy",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "thrift",
+      "label": "Thrift",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "thrift"
+      ],
+      "corpus_directories": [
+        "thrift"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "thrift"
+      ],
+      "emit_key": "thrift",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "thrift",
+          "emit_key": "thrift",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "typespec",
+      "label": "TypeSpec",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "typespec"
+      ],
+      "corpus_directories": [
+        "typespec"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "typespec"
+      ],
+      "emit_key": "typespec",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "typespec",
+          "emit_key": "typespec",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "wadl",
+      "label": "WADL",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "wadl"
+      ],
+      "corpus_directories": [
+        "wadl"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 1,
+        "scale": 0,
+        "total": 12
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "wadl"
+      ],
+      "emit_key": "wadl",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "wadl",
+          "emit_key": "wadl",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "wit",
+      "label": "WIT (WebAssembly)",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "wit"
+      ],
+      "corpus_directories": [
+        "wit"
+      ],
+      "fixtures": {
+        "valid": 8,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 13
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 6,
+      "golden_directories": [
+        "wit"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "wsdl",
+      "label": "WSDL",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "wsdl"
+      ],
+      "corpus_directories": [
+        "wsdl"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 2,
+        "scale": 0,
+        "total": 13
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "wsdl"
+      ],
+      "emit_key": "wsdl",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "wsdl",
+          "emit_key": "wsdl",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "xmlrpc",
+      "label": "XML-RPC",
+      "paradigm": "rpc",
+      "corpus_formats": [
+        "xmlrpc"
+      ],
+      "corpus_directories": [
+        "xml-rpc"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 2,
+        "scale": 0,
+        "total": 13
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "xml-rpc"
+      ],
+      "emit_key": "xmlrpc",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "xmlrpc",
+          "emit_key": "xmlrpc",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "xsd",
+      "label": "XSD",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "xsd"
+      ],
+      "corpus_directories": [
+        "xsd"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 2,
+        "scale": 0,
+        "total": 13
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "xsd"
+      ],
+      "emit_key": "xsd",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "xsd",
+          "emit_key": "xsd",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
+      "format_key": "zosconnect",
+      "label": "z/OS Connect",
+      "paradigm": "rest",
+      "corpus_formats": [
+        "zosconnect"
+      ],
+      "corpus_directories": [
+        "zos-connect"
+      ],
+      "fixtures": {
+        "valid": 6,
+        "negative": 5,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 11
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [
+        "multi-file"
+      ],
+      "goldens": 6,
+      "golden_directories": [
+        "zos-connect"
+      ],
+      "emit_key": "zosconnect",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "zosconnect",
+          "emit_key": "zosconnect",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "derived",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    }
+  ],
+  "excluded_formats": [
+    {
+      "format_key": "sample",
+      "reason": "internal machinery, not a format a user can import"
+    }
+  ],
+  "export_only_destinations": [],
+  "pending_corpus_directories": [
+    "apigee",
+    "arazzo-1.1",
+    "arrow",
+    "avro-idl",
+    "aws-apigateway",
+    "azure-apim",
+    "cddl",
+    "cics-bms",
+    "consul",
+    "cue",
+    "dbt",
+    "dhall",
+    "dicom",
+    "dtd",
+    "edifact",
+    "envoy-xds",
+    "fix-orchestra",
+    "haproxy",
+    "hl7v3",
+    "hoppscotch",
+    "idoc",
+    "ims",
+    "istio",
+    "jsonld",
+    "kafka-connect",
+    "lwm2m",
+    "matter",
+    "nacha",
+    "natural-ddm",
+    "ncpdp",
+    "nginx",
+    "odata-v2",
+    "odcs",
+    "opcua-nodeset",
+    "owl",
+    "pkl",
+    "pli",
+    "postman-v2",
+    "protobuf-editions",
+    "pydantic",
+    "relaxng",
+    "ros2",
+    "schematron",
+    "sepa",
+    "shacl",
+    "soapui",
+    "sparkplug",
+    "sql-ddl",
+    "swagger-1.2",
+    "swift-mt",
+    "thunder-client",
+    "tradacoms",
+    "traefik",
+    "trpc",
+    "tyk",
+    "typescript-types",
+    "vsam-idcams",
+    "wsdl2",
+    "zod"
+  ]
+}

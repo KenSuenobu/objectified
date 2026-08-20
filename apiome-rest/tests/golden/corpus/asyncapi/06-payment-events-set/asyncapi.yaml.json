@@ -1,0 +1,220 @@
+{
+  "adapter": "asyncapi",
+  "canonical": {
+    "channels": [
+      {
+        "address": "payment/authorized",
+        "bindings": {},
+        "description": "A payment was authorized by the processor.",
+        "extras": {},
+        "key": "payment/authorized",
+        "name": "paymentAuthorized",
+        "parameters": [],
+        "protocol": null
+      },
+      {
+        "address": "payment/captured",
+        "bindings": {},
+        "description": "An authorized payment was captured.",
+        "extras": {},
+        "key": "payment/captured",
+        "name": "paymentCaptured",
+        "parameters": [],
+        "protocol": null
+      }
+    ],
+    "description": "Streams payment lifecycle events split across reusable files.",
+    "extras": {},
+    "format": "asyncapi-3",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Payment Events",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "kafka",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Production Kafka cluster.",
+        "extras": {
+          "host": "broker.example.com:9092"
+        },
+        "name": "production",
+        "protocol": "kafka",
+        "url": "broker.example.com:9092",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "default",
+        "name": "default",
+        "operations": [
+          {
+            "channel_ref": "payment/authorized",
+            "deprecated": false,
+            "description": "Handle a newly authorized payment.",
+            "extras": {
+              "action": "receive"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "receivePaymentAuthorized",
+            "kind": "subscribe",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "title": "Payment authorized"
+                },
+                "headers": [],
+                "key": "receivePaymentAuthorized#event.paymentAuthorized",
+                "name": "paymentAuthorized",
+                "payload": null,
+                "payload_schema": {
+                  "description": "Details of an authorized payment.",
+                  "properties": {
+                    "amount": {
+                      "description": "Authorized amount in the payment currency.",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "authorizedAt": {
+                      "description": "When the processor authorized the payment.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "default": "USD",
+                      "description": "ISO 4217 currency code.",
+                      "type": "string"
+                    },
+                    "orderId": {
+                      "description": "Order the payment belongs to.",
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "paymentId": {
+                      "description": "Unique payment identifier.",
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "paymentId",
+                    "orderId",
+                    "amount",
+                    "authorizedAt"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "receivePaymentAuthorized",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": "payment/captured",
+            "deprecated": false,
+            "description": "Handle a captured payment.",
+            "extras": {
+              "action": "receive"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "receivePaymentCaptured",
+            "kind": "subscribe",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "title": "Payment captured"
+                },
+                "headers": [],
+                "key": "receivePaymentCaptured#event.paymentCaptured",
+                "name": "paymentCaptured",
+                "payload": null,
+                "payload_schema": {
+                  "description": "Details of a captured payment.",
+                  "properties": {
+                    "capturedAmount": {
+                      "description": "Amount actually captured.",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "capturedAt": {
+                      "description": "When the capture settled.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "paymentId": {
+                      "description": "The payment that was captured.",
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "paymentId",
+                    "capturedAmount",
+                    "capturedAt"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "receivePaymentCaptured",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Payment Events",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "asyncapi/06-payment-events-set/asyncapi.yaml",
+  "counts": {
+    "channels": 2,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "asyncapi-3"
+  },
+  "fingerprint": "sha256:5146b385c5802b5b19d43e09f0186f179bf19e837a8ff37b4988972c022c132b",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "4e2210fcd6f2f069d92152677c5bae1017d002d804926638183387b545989f90",
+    "score": 96,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

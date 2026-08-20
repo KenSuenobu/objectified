@@ -35,6 +35,7 @@ class OncRpcImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("oncrpc", "sunrpc", "rpcgen", "xdr")
+    file_extensions = (".x",)
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

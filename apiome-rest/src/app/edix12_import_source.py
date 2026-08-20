@@ -43,6 +43,7 @@ class EdiX12ImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("edix12", "x12", "edi")
+    file_extensions = (".edi", ".x12")
     analyzer_key = EDIX12_ANALYZER_KEY
     analyzer_version = EDIX12_ANALYZER_VERSION
 

@@ -22,7 +22,7 @@ import { Spinner } from '@/app/components/ui/Spinner';
 import { cn } from '@lib/utils';
 import type { FileMetadataPreview } from '@/app/utils/openapi-analyzer';
 
-import { IMPORT_FILE_EXTENSIONS, IMPORT_WIZARD_COPY } from './importWizardModel';
+import { describeImportExtensions, IMPORT_FILE_EXTENSIONS, IMPORT_WIZARD_COPY } from './importWizardModel';
 import { SpecMetaTiles } from './SpecMetaTiles';
 
 export interface FileIntakePanelProps {
@@ -42,6 +42,14 @@ export interface FileIntakePanelProps {
   onPick: (file: File) => void;
   /** The *Remove file* link. */
   onRemove: () => void;
+  /**
+   * The picker's `accept` list, derived from the import-source registry (FMT-1.1, #5412).
+   *
+   * Optional so the panel still renders standalone; defaults to the offline fallback list. Pass the
+   * `fileExtensions` the `useImportSources` hook returns so a newly registered adapter's format is
+   * browsable with no change here.
+   */
+  extensions?: ReadonlyArray<string>;
 }
 
 /** `1024`-based size, to one decimal — the unit the mockup's file row shows. */
@@ -70,6 +78,7 @@ export function FileIntakePanel({
   onDrop,
   onPick,
   onRemove,
+  extensions = IMPORT_FILE_EXTENSIONS,
 }: FileIntakePanelProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -83,7 +92,7 @@ export function FileIntakePanel({
         <input
           type="file"
           className="sr-only"
-          accept={IMPORT_FILE_EXTENSIONS.join(',')}
+          accept={extensions.join(',')}
           onChange={(event) => {
             const picked = event.target.files?.[0];
             if (picked) onPick(picked);
@@ -95,7 +104,7 @@ export function FileIntakePanel({
         <span className="text-sm font-semibold text-fg">{IMPORT_WIZARD_COPY.dropTitle}</span>
         <span className="text-xs text-fg-muted">or</span>
         <span className="imp-drop__browse">{IMPORT_WIZARD_COPY.dropBrowse}</span>
-        <span className="text-xs text-fg-muted">{IMPORT_WIZARD_COPY.dropExtensions}</span>
+        <span className="text-xs text-fg-muted">{describeImportExtensions(extensions)}</span>
       </label>
 
       {file ? (

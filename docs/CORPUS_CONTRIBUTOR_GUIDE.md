@@ -31,6 +31,8 @@ that script must always say the same thing.
 | Provenance gate | `scripts/check_corpus_provenance.py` |
 | Python loader | `apiome-rest/tests/corpus_loader.py` (`load_corpus(...)`) |
 | TypeScript loader | `apiome-ui/lib/corpus/corpus.ts` (`loadCorpus(...)`) |
+| Parity gate | `apiome-rest/tests/test_corpus_parity.py` (§8) |
+| Parity coverage report | `apiome-rest/tests/golden/parity/corpus_parity.md` (**generated**) |
 
 Any file named `README.md`, plus `corpus.manifest.json` and `corpus.schema.json`, may exist under
 `apiome-ui/examples/` without being a corpus fixture — including a `README.md` **inside a format
@@ -253,7 +255,12 @@ reconstruct it by hand instead (§4).
    ```
    Review the generated snapshot — it is the canonical model your fixture produces, and reviewing it
    is how a wrong fixture gets caught.
-8. **Run the TypeScript twin** so both loaders agree:
+8. **Regenerate the parity coverage report** — it records per-format fixture counts, so adding a
+   fixture changes it and CI rejects the stale copy (§8):
+   ```bash
+   cd apiome-rest && uv run python scripts/generate_corpus_parity_report.py
+   ```
+9. **Run the TypeScript twin** so both loaders agree:
    ```bash
    cd apiome-ui && yarn test tests/corpus-loader.test.ts
    ```
@@ -292,10 +299,71 @@ A reviewer should be able to tick every box. If any of them cannot be ticked, th
 - [ ] Invalid entries carry a `failure_class` and a registered `expected_error_code`; adversarial
       entries carry a `guard`.
 - [ ] `README.md` was regenerated, and the golden snapshot was reviewed rather than blindly accepted.
+- [ ] The parity coverage report was regenerated, and its fixture-count diff is the one you expected.
 
 ---
 
-## 8. What CI runs
+## 8. The parity gate — definition of done for a new adapter
+
+Fixture coverage used to be a convention: register an adapter, remember to add examples. That held
+at forty adapters and will not hold at eighty. **`apiome-rest/tests/test_corpus_parity.py` now
+enumerates the live import-source and emitter registries and fails when a registered adapter is
+missing any required artifact.** Registering an adapter is what opts a format into the gate — there
+is no list to add yourself to, and no way to ship a format that the corpus does not cover.
+
+An adapter is **done** when all four artifacts exist:
+
+| # | Artifact | Where it lives | How you produce it |
+|---|---|---|---|
+| 1 | **Corpus examples** — at least one `valid` **and** one `negative` entry | `apiome-ui/examples/<format>/` and `<format>/negative/` | §6 above. (The standing floors of §2 — ≥ 6 valid, ≥ 5 negatives across ≥ 5 failure classes — are stricter and still apply.) |
+| 2 | **Golden snapshots** — at least one per corpus directory the adapter owns | `apiome-rest/tests/golden/corpus/<format>/` | `uv run pytest tests/test_corpus_golden.py --update-golden`, then read the snapshots |
+| 3 | **A round-trip matrix row** — plus, when the format also has an emitter, a self round-trip cell that passes or carries a recorded reason | `apiome-rest/tests/golden/roundtrip/matrix.json` | `UPDATE_ROUNDTRIP_MATRIX=1 uv run pytest tests/test_roundtrip_matrix.py`; record any failing cell in `tests/roundtrip_xfails.py` **with a reason** |
+| 4 | **A capability registry entry** | `apiome-rest/src/app/format_capability_registry.py` | Every registered adapter derives one automatically; add a reviewed seed when you can state boundaries nobody could derive |
+
+Note the third row's "**with a reason**". A cell that fails is acceptable and normal — an emitter
+cannot carry every construct. A cell that is *absent*, or present with no reason, is not: that is
+the shape of the `asyncapi` failure this gate exists to prevent, where a format shipped with intake
+examples, no golden corpus, and a round-trip row of thirty-five silently skipped cells.
+
+### If an artifact genuinely cannot exist
+
+Record it, by name and with a reason, in `apiome-rest/tests/corpus_parity_waivers.py`
+(`KNOWN_PARITY_WAIVERS`, keyed by `(adapter_key, requirement)`). The waiver turns the gate red into
+a reasoned xfail — never into silence. Two rules:
+
+- The reason must say **why the artifact cannot exist**, not that it has not been written yet.
+  "No fixtures authored" means the adapter is not finished, and the gate is supposed to say so.
+- Waivers are **strict**. `test_no_parity_waiver_is_obsolete` fails once the artifact does exist, so
+  closing a gap forces the waiver to be deleted rather than leaving a permanently-excused format.
+
+A shipped emitter with no import adapter behind it cannot be covered by the *import* corpus at all;
+that case is recorded separately in `KNOWN_EXPORT_ONLY_DESTINATIONS`, under the same strict rule.
+
+### The coverage report
+
+`apiome-rest/tests/golden/parity/corpus_parity.md` (and its `.json` twin) is the committed coverage
+report: per-format fixture counts by tier, ladder-rung coverage, golden counts, the emitter behind
+each format, and a ✅/⚠️/❌ per required artifact. CI writes it into the job summary and publishes it
+as a downloadable artifact on every run.
+
+It is **drift-checked**, so adding a fixture without regenerating it fails CI:
+
+```bash
+cd apiome-rest && uv run python scripts/generate_corpus_parity_report.py          # regenerate
+cd apiome-rest && uv run python scripts/generate_corpus_parity_report.py --check  # what CI runs
+```
+
+The report is deliberately built from the corpus manifest, the files on disk and the *committed*
+round-trip matrix — never from a live parse or a toolchain probe — so it says the same thing on a
+developer machine that never installed `buf` as it does in CI.
+
+Fixtures may be staged **ahead** of their adapter (`"adapter_key": null`). Those directories are
+listed in the report under "awaiting an adapter" and are not gated; the moment an adapter registers
+under that key, all four requirements apply to it.
+
+---
+
+## 9. What CI runs
 
 | Check | Command | Fails when |
 |---|---|---|
@@ -304,6 +372,8 @@ A reviewer should be able to tick every box. If any of them cannot be ticked, th
 | Manifest contract | `apiome-rest/tests/test_corpus_manifest.py` | completeness, schema validity, adapter-registry drift, ladder floors, tier placement |
 | Provenance rules | `apiome-rest/tests/test_corpus_provenance.py` | the rule engine itself regresses, or the manifest breaks a rule |
 | Tier behavior | `test_corpus_import.py`, `test_corpus_negative.py`, `test_corpus_adversarial.py`, `test_corpus_golden.py` | a fixture does not do what its entry says it does |
+| Corpus parity | `apiome-rest/scripts/generate_corpus_parity_report.py --check --fail-on-gaps` | a registered adapter is missing examples, negatives, goldens, a round-trip row or a capability entry — or the committed coverage report is stale (§8) |
+| Parity gate & engine | `apiome-rest/tests/test_corpus_parity.py` | the same four artifacts, per format, plus waiver hygiene and report drift |
 | TypeScript twin | `apiome-ui/tests/corpus-loader.test.ts` | the two loaders disagree about the contract |
 
 The provenance and README checks also run as their own lightweight workflow

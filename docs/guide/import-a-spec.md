@@ -1,10 +1,93 @@
 # How do I… import a specification?
 
-Importing turns an existing OpenAPI, Swagger 2.0, Arazzo, or JSON Schema document into Apiome
-classes, properties, paths, and operations you can edit. Import is **asynchronous**: you create a
-job, it runs in the background, and you poll it to completion.
+Importing turns an existing API description into something Apiome can search, diff, lint and
+convert. Import is **asynchronous**: you create a job, it runs in the background, and you poll it
+to completion.
 
-Supported inputs: **OpenAPI 3.x**, **Swagger 2.0**, **Arazzo 1.0**, **JSON Schema 2020-12**.
+**Apiome imports 43<!--format-count:importable--> formats**, spanning all
+6<!--format-count:paradigms--> canonical paradigms, and exports 35<!--format-count:exportable-->
+of them again. The full list — with each format's registry key, input kinds, version coverage,
+file extensions and export support — is generated from the running registries at
+[supported-formats.md](supported-formats.md). Do not maintain a copy of it anywhere else.
+
+The same answer is machine-readable at `GET /v1/formats/matrix` and printed by `apiome formats`:
+
+```bash
+apiome formats                              # every format, as a table
+apiome formats --direction import           # only what Apiome can read
+apiome formats --paradigm event --json      # one paradigm, machine-readable
+```
+
+The page above is rendered from that response, so the guide, the API and the CLI cannot disagree.
+
+## Two importers, one registry
+
+Which importer handles a document is decided by the server, from the format it normalizes to:
+
+- **The Projects importer** takes **OpenAPI 3.x** and **Swagger 2.0**. These normalize onto the
+  editable class/property/path model, so an import becomes a **publishable Project** you can
+  version, lint and publish. This is the path the rest of this page describes.
+- **The Catalog importer** takes **everything else** — Protobuf/gRPC, GraphQL, AsyncAPI, Arazzo,
+  JSON Schema, Thrift, Smithy, TypeSpec, WSDL, XSD, OData, EDI X12, HL7 v2, FHIR, COBOL copybooks,
+  FIX, ISO 20022/8583 and the rest. A catalog import keeps the format's **own** structure rather
+  than forcing it into the OpenAPI shape, so what you get back is what you put in. Catalog items
+  are searchable, diffable and convertible; they are not publishable until converted.
+
+Both importers read the same import-source registry, so a format is offered as soon as its adapter
+is registered — the file pickers derive their `accept` lists from it rather than hard-coding one.
+An unrecognized file extension is **not** rejected: the bytes are sent to content detection, and
+the detector's verdict is what you are shown.
+
+> Converting a catalog item into a publishable Project is a separate step — see
+> [convert-to-openapi.md](convert-to-openapi.md) and [export-fidelity.md](export-fidelity.md) for
+> what survives the conversion.
+
+## Formats that need a bundled tool
+
+A few adapters do not parse the document themselves — they shell out to the authoritative parser
+for that format, which the container image bundles. The **Runtime** column of
+[supported-formats.md](supported-formats.md) says which, and a format whose tool is missing is
+reported there (and on the source card) as *Needs toolchain* rather than being offered and then
+failing mid-import.
+
+**AsyncAPI is the exception: it is a hard dependency, not a degradable one.** The AsyncAPI
+adapter runs `@asyncapi/parser` (the JavaScript reference parser) to validate and dereference the
+document, and there is deliberately **no fallback parser** behind it.
+
+### The fallback policy, stated
+
+We considered shipping a minimal pure-Python structural parser for AsyncAPI 2.x/3.x that would
+keep the format `available` with reduced capability, and rejected it. A reduced parse would
+produce a canonical model that *looks* like a successful import while quietly differing from the
+real one — different validation verdicts, unresolved `$ref`s, a different fingerprint, and
+therefore a different diff and lint score for the same document depending on which runtime
+imported it. A format that is honestly unavailable is recoverable; a format that is silently
+half-parsed is not. So:
+
+- **The image ships the parser.** Its exact version is pinned in the REST service's toolchain
+  manifest (`apiome-rest/toolchain/package.json`) and installed during the container build, which
+  smoke-tests it before the image is finished.
+- **Startup verifies it and says so.** The service invokes the parser at boot and logs the
+  version it resolved, so a deployment's logs always name the `@asyncapi/parser` it is running.
+- **A missing parser fails loudly, never silently.** With `APIOME_REQUIRE_TOOLCHAIN=1` — the
+  default in the shipped image and in any production deployment — the service **refuses to
+  start** and names the tool, the formats it gates, and the override to point at a sidecar
+  binary. Set `APIOME_REQUIRE_TOOLCHAIN=0` to accept a deployment without AsyncAPI import: the
+  service then starts, logs the loss as an `ERROR`, and reports the format as unavailable
+  everywhere it is listed. It never comes up quietly missing a format.
+- **The health surface reports it.** `GET /health` carries a `toolchain` block
+  (`status`, `enforced`, `required`, `available`, `missing`). It states availability and nothing
+  more — the endpoint is unauthenticated, so resolved paths and exact parser versions stay
+  behind `GET /v1/ops/toolchain` (platform-admin), which also names which formats each tool
+  gates. The version the runtime resolved is in the startup log either way.
+
+Every other bundled tool (`buf` for Protobuf/gRPC and Connect, the linters, the diff CLIs)
+remains optional: its absence degrades exactly one format to a stated *Needs toolchain*, and the
+service starts normally.
+
+Running the service outside the container? `apiome-rest/scripts/install_dev_toolchain.sh`
+installs the pinned parser (and `buf`) into `apiome-rest/.tools`; `./run.sh` and `yarn dev` call
+it for you.
 
 ---
 
@@ -140,5 +223,9 @@ check is server-side, so a client cannot grant itself one.
 
 ## Related
 
+- [supported-formats.md](supported-formats.md) — every format Apiome imports and exports,
+  generated from the registries (its **Runtime** column is where a missing bundled tool shows up)
+- [catalog-format-details.md](catalog-format-details.md) — what a catalog item records per format
+- [convert-to-openapi.md](convert-to-openapi.md) — promote a catalog item to a publishable Project
 - [edit-classes-and-properties.md](edit-classes-and-properties.md) — refine what you imported
 - [edit-paths.md](edit-paths.md) — refine the imported paths/operations

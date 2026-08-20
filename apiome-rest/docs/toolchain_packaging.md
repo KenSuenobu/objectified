@@ -16,6 +16,12 @@ instead of a crash.
 which tools ship and at what version. The Dockerfile installs exactly these versions via
 build args (`BUF_VERSION`, `TSP_VERSION`, …) — **bump both together**.
 
+One tool is different. `asyncapi-parser` is a **hard dependency** (FMT-1.3, #5414): its exact
+pin lives in the toolchain manifest `apiome-rest/toolchain/package.json`, which the container
+build installs from and CI installs from, and it has no build arg — so no build can quietly
+ship a parser the runtime never verified. See
+[Required tools & the startup self-check](#required-tools--the-startup-self-check) below.
+
 | Key | Tool | Pinned | Runtime | Installed by |
 |-----|------|--------|---------|--------------|
 | `buf` | Protobuf/gRPC build·lint·breaking | `1.50.0` | native | GitHub release binary |
@@ -24,7 +30,7 @@ build args (`BUF_VERSION`, `TSP_VERSION`, …) — **bump both together**.
 | `drafter` | API Blueprint → JSON | `4.0.0` | native | built from source (pinned tag) |
 | `amf` | AML Modeling Framework (RAML/OAS) | `5.7.1` | jvm | MuleSoft Nexus assembly jar + `java -jar` wrapper |
 | `asyncapi` | AsyncAPI validate·convert·diff (`@asyncapi/cli`) | `2.16.0` | node | npm into tools prefix + wrapper |
-| `asyncapi-parser` | AsyncAPI parse·validate·dereference → canonical JSON (`@asyncapi/parser`, MFI-8.1) | `3.6.0` | node | npm into tools prefix + Node wrapper (`toolchain/asyncapi-parse.mjs`) |
+| `asyncapi-parser` **(required)** | AsyncAPI parse·validate·dereference → canonical JSON (`@asyncapi/parser`, MFI-8.1) | `3.6.0` — pinned in `toolchain/package.json` | node | npm from the toolchain manifest + Node wrapper (`toolchain/asyncapi-parse.mjs`) |
 | `asyncapi-diff` | AsyncAPI diff → breaking/non-breaking/unclassified (`@asyncapi/diff`, MFI-8.4) | `0.5.0` | node | npm into tools prefix + Node wrapper (`toolchain/asyncapi-diff.mjs`) |
 | `rover` | Apollo GraphQL schema CLI | `0.27.0` | native | GitHub release tarball |
 | `graphql-inspector-diff` | GraphQL diff → breaking/dangerous/non-breaking (`@graphql-inspector/core`, MFI-10.5) | `6.2.0` | node | npm into tools prefix + Node wrapper (`toolchain/graphql-inspector-diff.mjs`) |
@@ -76,33 +82,104 @@ If the footprint is unacceptable for a deployment, the same `BUNDLED_TOOLS` decl
 unchanged when the tools live in a **sidecar**: point each `APIOME_<TOOL>_BIN` at the
 sidecar mount, or omit a tool entirely and accept its format degrading to "unavailable".
 
+## Required tools & the startup self-check
+
+`REQUIRED_TOOL_KEYS` in `src/app/toolchain_selfcheck.py` names the tools this runtime treats as
+**hard dependencies**. Today that is exactly one:
+
+| Key | Why it cannot be optional |
+|-----|---------------------------|
+| `asyncapi-parser` | The AsyncAPI adapter has no fallback parser — there is no pure-Python AsyncAPI 2.x/3.x parser behind it — and AsyncAPI is a shipped, documented, fixture-covered format. Losing it is losing a product surface. |
+
+At startup `app.main` calls `enforce_toolchain_selfcheck()`, which:
+
+1. resolves every bundled tool and **invokes** each required one, logging the version it
+   reported (`bundled toolchain: asyncapi-parser resolved (asyncapi-parse (apiome)
+   @asyncapi/parser 3.6.0), pinned 3.6.0`);
+2. warns when the reported version disagrees with the pin — the tool still runs, but the image
+   installed something other than what it declares;
+3. **raises** `ToolchainUnavailableError` when a required tool is missing or not invocable and
+   this deployment enforces the toolchain, so the service refuses to start rather than serving
+   with a shipped format silently gone. Without enforcement it logs an `ERROR` naming the lost
+   formats and starts anyway — degraded, never silent.
+
+Enforcement is `APIOME_REQUIRE_TOOLCHAIN` (`settings.enforce_bundled_toolchain`): unset it
+follows `APIOME_ENV`, so a production deployment fails fast and a developer laptop keeps
+working. The shipped image sets it to `1`.
+
+Run the same check by hand — it is what CI uses as an explicit gate:
+
+```bash
+uv run python -m app.toolchain_selfcheck        # exits 1 when a required tool is unusable
+```
+
+The build proves the same thing before the image is finished: the Dockerfile pipes a tiny
+AsyncAPI document through `asyncapi-parser` and fails the build unless it comes back `ok`.
+
+### Keeping the hard pin in sync
+
+`toolchain/package.json` → `BUNDLED_TOOLS` → Dockerfile must agree.
+`tests/test_toolchain_selfcheck.py` asserts all three: the manifest exists, its pins are exact
+(no ranges), each matches the `BundledTool.version`, and the Dockerfile installs from the
+manifest instead of re-pinning the package itself.
+
 ## Optional / lazy — the "format unavailable" path
 
-Tools are optional by construction:
+Every tool *except* the required ones above is optional by construction:
 
 * **Resolution is lazy.** `probe_tool(key)` / `probe_all()` only do a `PATH`/override lookup —
   no subprocess — so an absent tool is reported as `available: false` cheaply.
-* **A missing binary never crashes the service.** At call time the runner raises
+* **A missing optional binary never crashes the service.** At call time the runner raises
   `ToolNotAvailableError`; before calling, an adapter can `probe_tool(...)` and skip straight
-  to a "format unavailable" status.
+  to a "format unavailable" status. (A missing *required* tool is the opposite: the startup
+  self-check refuses to boot — that is the point of the distinction.)
 * **Overrides.** Set `APIOME_<KEY>_BIN` (e.g. `APIOME_BUF_BIN`) to an absolute path
-  to use a custom/sidecar binary instead of the bundled one.
+  to use a custom/sidecar binary instead of the bundled one. This works for required tools too:
+  pointing `APIOME_ASYNCAPI_PARSER_BIN` at a sidecar satisfies the self-check.
 
 ## Operator surface
 
-`GET /v1/ops/toolchain` (platform-admin) returns each tool's pinned version and availability:
+`GET /health` (unauthenticated, the compose healthcheck) carries the compact verdict — enough
+to see a deployment lost a format. Availability only: no resolved paths and no third-party
+versions, because the endpoint is anonymous and rate-limit exempt.
 
 ```jsonc
 {
-  "summary": { "total": 7, "available": 7, "unavailable": 0 },
+  "status": "healthy",
+  "database": "connected",
+  "toolchain": {
+    "status": "ok",            // ok | degraded | failed
+    "enforced": true,
+    "required": 1,
+    "available": 1,
+    "missing": []
+  }
+}
+```
+
+`GET /v1/ops/toolchain` (platform-admin) returns the full picture — each tool's pinned version,
+availability, whether it is required, and which registered formats it gates:
+
+```jsonc
+{
+  "summary": { "total": 15, "available": 15, "unavailable": 0,
+               "required": 1, "required_missing": [],
+               "toolchain_status": "ok", "enforced": true },
   "tools": [
     { "key": "buf", "pinned_version": "1.50.0", "runtime": "native",
       "available": true, "resolved_path": "/opt/apiome-tools/bin/buf",
-      "override_env": "APIOME_BUF_BIN", "detail": "resolved to /opt/apiome-tools/bin/buf" }
+      "override_env": "APIOME_BUF_BIN", "detail": "resolved to /opt/apiome-tools/bin/buf",
+      "required": false, "gated_formats": ["connectrpc", "grpc"] },
+    { "key": "asyncapi-parser", "pinned_version": "3.6.0", "runtime": "node",
+      "available": true, "required": true, "reported_version": "3.6.0",
+      "gated_formats": ["asyncapi"] }
     // …
   ]
 }
 ```
+
+`gated_formats` is read from the live import-source and emitter registries, so a new adapter
+that declares `required_tools` appears here with no edit to the packaging layer.
 
 Add `?verify=true` to additionally invoke each available tool's `--version` probe and confirm
 it actually runs (one subprocess per available tool, so it is slower).
@@ -110,7 +187,8 @@ it actually runs (one subprocess per available tool, so it is slower).
 ## Keeping versions in sync
 
 1. Edit the `version=` field of the relevant `BundledTool` in `toolchain_packaging.py`.
-2. Edit the matching `ARG <TOOL>_VERSION` default in `Dockerfile`.
+2. Edit the matching `ARG <TOOL>_VERSION` default in `Dockerfile` — except for a **required**
+   tool, whose pin lives in `toolchain/package.json` and has no build arg.
 3. Update the table above.
 
 The Python pin is authoritative for what the *runtime reports*; the Dockerfile pin is what is

@@ -36,6 +36,7 @@ from .draft_lock_routes import router as draft_lock_router
 from .export_job_routes import router as export_job_router
 from .export_routes import router as export_router
 from .export_routes import tenant_router as export_tenant_router
+from .format_matrix_routes import router as format_matrix_router
 from .git_import_routes import router as git_import_router
 from .identity_routes import router as identity_router
 from .import_sources_routes import router as import_sources_router
@@ -54,6 +55,7 @@ from .mcp_credential_crypto import validate_credential_encryption_keys
 from .mcp_endpoint_note_routes import router as mcp_endpoint_note_router
 from .mcp_feed_routes import router as mcp_feed_router
 from .mcp_key_routes import router as mcp_key_router
+from .mcp_manifest_routes import router as mcp_manifest_router
 from .mcp_policy_routes import router as mcp_policy_router
 from .mcp_probe_routes import router as mcp_probe_router
 from .mcp_saved_search_routes import router as mcp_saved_search_router
@@ -107,6 +109,7 @@ from .spec_import_routes import router as spec_import_router
 from .style_guide_routes import router as style_guide_router
 from .tenant_repositories_routes import router as tenant_repositories_router
 from .tenants_session_routes import router as tenants_session_router
+from .toolchain_selfcheck import enforce_toolchain_selfcheck
 from .type_namespaces_routes import router as type_namespaces_router
 from .version_change_report_routes import router as version_change_report_router
 from .version_changelog_routes import router as version_changelog_router
@@ -128,7 +131,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.126.0",
+    version="1.134.0",
 )
 
 
@@ -366,6 +369,10 @@ app.include_router(schema_targets_router)
 # payloads the 5.1/5.3 surfaces validate, re-run them per revision, and track regressions.
 app.include_router(schema_suite_router)
 app.include_router(import_sources_router)
+# Format matrix (FMT-1.5, #5416): /v1/formats/matrix — one row per registered format, the single
+# machine-readable answer to "what do you support?". The same payload the generated
+# supported-formats page and `apiome formats` render, so the three cannot disagree.
+app.include_router(format_matrix_router)
 # Multi-format export (MFX-2.5, #3842): tenant-scoped fidelity report surfacing — per-target
 # fidelity badges (/export/{tenant}/targets) and the dry-run preview (/export/{tenant}/preview).
 app.include_router(export_router)
@@ -386,6 +393,9 @@ app.include_router(mock_data_router)
 app.include_router(mcp_endpoints_router)
 # MCP dynamic probes (CLX-3.3, #4857): consent-gated, sandboxed, audited active probing.
 app.include_router(mcp_probe_router)
+# MCP static manifests (FMT-1.7, #5418): catalog a server from a declared descriptor and
+# attribute every surface fact to the manifest, the probe, or both.
+app.include_router(mcp_manifest_router)
 # MCP trust baselines, drift, and shadowing (CLX-3.4, #4858): diff each rediscovery/release against
 # an approved baseline; classify normal/quality/security/coverage-loss deltas; detect shadowed names.
 app.include_router(mcp_trust_baseline_router)
@@ -449,6 +459,13 @@ async def startup_event():
     validate_webhook_signing_key()
     validate_credential_encryption_keys()
     validate_auth_config_encryption_keys()
+
+    # Bundled-toolchain self-check (FMT-1.3, #5414). Resolves and actually invokes every
+    # *required* bundled tool, logging the version it reports — so the boot log always names
+    # the `@asyncapi/parser` this runtime is running. In an enforcing deployment a missing
+    # required tool raises here and startup fails loudly, instead of the service coming up with
+    # a shipped format silently unavailable.
+    await enforce_toolchain_selfcheck(log=_startup_log)
 
     # Log data API routes so we can confirm POST /v1/data/{tenant_slug}/records is registered
     for route in app.routes:

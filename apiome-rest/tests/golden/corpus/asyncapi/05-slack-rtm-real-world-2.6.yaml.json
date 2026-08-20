@@ -1,0 +1,295 @@
+{
+  "adapter": "asyncapi",
+  "canonical": {
+    "channels": [
+      {
+        "address": "/",
+        "bindings": {},
+        "description": null,
+        "extras": {},
+        "key": "/",
+        "name": null,
+        "parameters": [],
+        "protocol": null
+      }
+    ],
+    "description": "Reconstruction of the shape of Slack's RTM WebSocket event stream for the import example corpus.",
+    "extras": {},
+    "format": "asyncapi-2",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Slack Real Time Messaging API",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "wss",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "WebSocket endpoint returned by the rtm.connect bootstrap call.",
+        "extras": {},
+        "name": "production",
+        "protocol": "wss",
+        "url": "wss://wss-primary.slack.com/",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "default",
+        "name": "default",
+        "operations": [
+          {
+            "channel_ref": "/",
+            "deprecated": false,
+            "description": "Events pushed by Slack over the socket.",
+            "extras": {
+              "action": "subscribe"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "receiveEvent",
+            "kind": "subscribe",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Sent once the connection is established.",
+                "extras": {
+                  "title": "Hello"
+                },
+                "headers": [],
+                "key": "receiveEvent#event.hello",
+                "name": "hello",
+                "payload": null,
+                "payload_schema": {
+                  "properties": {
+                    "type": {
+                      "const": "hello",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "title": "Channel message"
+                },
+                "headers": [],
+                "key": "receiveEvent#event.message",
+                "name": "message",
+                "payload": null,
+                "payload_schema": {
+                  "properties": {
+                    "channel": {
+                      "description": "Channel, group or DM identifier.",
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "thread_ts": {
+                      "description": "Present when the message is a threaded reply.",
+                      "type": "string"
+                    },
+                    "ts": {
+                      "description": "Message timestamp used as its unique id.",
+                      "type": "string"
+                    },
+                    "type": {
+                      "const": "message",
+                      "type": "string"
+                    },
+                    "user": {
+                      "description": "Identifier of the authoring user.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "channel",
+                    "user",
+                    "text",
+                    "ts"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "title": "Reaction added"
+                },
+                "headers": [],
+                "key": "receiveEvent#event.reaction_added",
+                "name": "reaction_added",
+                "payload": null,
+                "payload_schema": {
+                  "properties": {
+                    "event_ts": {
+                      "type": "string"
+                    },
+                    "reaction": {
+                      "description": "Emoji short name without colons.",
+                      "type": "string"
+                    },
+                    "type": {
+                      "const": "reaction_added",
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "user",
+                    "reaction"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "receiveEvent",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": "/",
+            "deprecated": false,
+            "description": "Events the client writes to the socket.",
+            "extras": {
+              "action": "publish"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "sendEvent",
+            "kind": "publish",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "title": "Outgoing chat message"
+                },
+                "headers": [],
+                "key": "sendEvent#event.outgoingMessage",
+                "name": "outgoingMessage",
+                "payload": null,
+                "payload_schema": {
+                  "properties": {
+                    "channel": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "description": "Client-chosen id echoed back in the reply.",
+                      "type": "integer"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "const": "message",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "channel",
+                    "text"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": "Keepalive frame; Slack replies with a matching pong.",
+                "extras": {
+                  "title": "Ping"
+                },
+                "headers": [],
+                "key": "sendEvent#event.ping",
+                "name": "ping",
+                "payload": null,
+                "payload_schema": {
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "type": {
+                      "const": "ping",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "sendEvent",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Slack Real Time Messaging API",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "asyncapi/05-slack-rtm-real-world-2.6.yaml",
+  "counts": {
+    "channels": 1,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "asyncapi-2"
+  },
+  "fingerprint": "sha256:ee29d0fa4cb29545aa7ec78ce4eee0a3571cb4e853b24510eb19cbff481d6984",
+  "lint": {
+    "findings": 22,
+    "grade": "F",
+    "report_fingerprint": "3f68e482d044596e26964eb3e76594a835f322881d5c37004ecd0b4da517f756",
+    "score": 50,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 16
+    }
+  },
+  "snapshot_version": 1
+}

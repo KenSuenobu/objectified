@@ -33,6 +33,8 @@ import { jest } from '@jest/globals';
 import {
   IMPORT_JOB_STATES,
   IMPORT_WIZARD_COPY,
+  IMPORT_FILE_EXTENSIONS,
+  describeImportExtensions,
   importJobPresentation,
 } from '@/app/components/ade/import/importWizardModel';
 
@@ -387,7 +389,10 @@ describe('the File intake', () => {
 
   it('lists the extensions it accepts, and accepts exactly those', async () => {
     await openFileIntake();
-    expect(screen.getByText(IMPORT_WIZARD_COPY.dropExtensions)).toBeInTheDocument();
+    // FMT-1.1 (#5412): the hint and `accept` are both derived from the accept list in force. This
+    // fixture's registry entry declares no `file_extensions`, so the offline fallback still applies
+    // — the registry-driven widening is covered in importPickerAcceptFromRegistry.test.tsx.
+    expect(screen.getByText(describeImportExtensions(IMPORT_FILE_EXTENSIONS))).toBeInTheDocument();
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     expect(input.accept).toBe('.yaml,.yml,.json,.zip,.graphql,.gql,.raml,.proto,.avsc,.thrift');
   });
@@ -410,11 +415,20 @@ describe('the File intake', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Analyze →' })).toBeEnabled());
   });
 
-  it('says why an unsupported extension was refused', async () => {
+  it('keeps an unrecognized extension and says so, rather than refusing it', async () => {
+    // FMT-1.1 (#5412): this used to assert "Unsupported file type". Refusing on the filename made
+    // thirty-three registered adapters unreachable, so the extension is now advisory: the file is
+    // selected, a notice explains that no source claims the name, and detection decides.
     await openFileIntake();
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-    fireEvent.change(input, { target: { files: [new File(['x'], 'notes.txt')] } });
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Unsupported file type/);
+    const file = new File(['x'], 'notes.txt');
+    Object.defineProperty(file, 'text', { value: async () => 'x' });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByTestId('import-advisory-notice')).toHaveTextContent(/notes\.txt/);
+    expect(screen.queryByText(/Unsupported file type/)).not.toBeInTheDocument();
+    // The file is selected, so the wizard can proceed to analysis.
+    expect(await screen.findByText('notes.txt')).toBeInTheDocument();
   });
 });
 

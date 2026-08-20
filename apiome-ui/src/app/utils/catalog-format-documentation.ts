@@ -47,6 +47,7 @@ export const CATALOG_FORMAT_DOCUMENTATION_URL: Readonly<Record<string, string>> 
 
   // Agent
   'llm-tools': 'https://platform.openai.com/docs/guides/function-calling',
+  mcp: 'https://modelcontextprotocol.io/specification/2025-06-18/server',
 
   // Data schema
   jsonschema: 'https://json-schema.org/draft/2020-12/json-schema-core',
