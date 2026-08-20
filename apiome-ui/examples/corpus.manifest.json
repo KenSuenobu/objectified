@@ -2538,7 +2538,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the IXH-5.4 example-conformance rule pack (#5116).",
-      "notes": "Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py. The `x-expected-violation` intent marker sits only on the schema: an AsyncAPI 3 `MessageExample` object takes no vendor extensions, so each message example states its intent in its `summary` instead (FMT-1.3, #5414 — caught the first time CI ran with the required parser installed).",
+      "notes": "Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py. The `x-expected-violation` intent marker sits only on the schema: an AsyncAPI 3 `MessageExample` object takes no vendor extensions, so each message example states its intent in its `summary` instead (FMT-1.3, #5414 \u2014 caught the first time CI ran with the required parser installed).",
       "rung": "typical"
     },
     {
@@ -14767,6 +14767,28 @@
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "rung": "typical",
       "notes": "Multi-document YAML stream with two CRDs; imports as one CanonicalApi with two Services. The multi-file ladder rung is waived because CRDs do not resolve cross-file references."
+    },
+    {
+      "path": "k8s-crd/07-status-subresource.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "crd",
+        "status-subresource",
+        "scale-subresource",
+        "printer-columns",
+        "spec-status"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "composition"
     },
     {
       "path": "k8s-crd/negative/01-syntactic-unclosed-mapping.yaml",

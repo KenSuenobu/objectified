@@ -22,13 +22,22 @@ from .canonical_model import (
 from .k8s_crd_parser import K8sCrdDocument, K8sCrdVersion, K8sCustomResourceDefinition
 from .normalizer import Keys, Normalizer, SchemaCoercer, normalize_ordering
 
-__all__ = ["K8sCrdNormalizer", "extract_x_kubernetes_extensions"]
+__all__ = [
+    "K8S_CRD_FORMAT",
+    "K8sCrdNormalizer",
+    "NON_STRUCTURAL_KEYWORDS",
+    "extract_x_kubernetes_extensions",
+]
 
-_FORMAT_KEY = "k8s-crd"
+#: Registry format key shared by the CRD import adapter, normalizer and emitter.
+K8S_CRD_FORMAT = "k8s-crd"
 
-# Keywords Kubernetes structural schemas prune / do not honor structurally.
-# Surfaced via extras so the lint pack and coverage ledger can report them.
-_NON_STRUCTURAL_KEYWORDS = frozenset(
+_FORMAT_KEY = K8S_CRD_FORMAT
+
+#: Keywords Kubernetes structural schemas prune / do not honor structurally.
+#: Surfaced via extras so the lint pack and coverage ledger can report them, and
+#: reused by :mod:`app.k8s_crd_emitter` as the restriction table it enforces.
+NON_STRUCTURAL_KEYWORDS = frozenset(
     {
         "id",
         "$schema",
@@ -119,7 +128,7 @@ def _non_structural_keys(schema: Any) -> List[str]:
     return sorted(
         key
         for key in schema
-        if isinstance(key, str) and key in _NON_STRUCTURAL_KEYWORDS
+        if isinstance(key, str) and key in NON_STRUCTURAL_KEYWORDS
     )
 
 
