@@ -30,6 +30,7 @@
  * `./projectionGraph.ts` / `./capabilityRegistry.ts`.
  */
 
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
 import type { DocumentationEvidence, ProjectionReasonCode } from './capabilityRegistry';
 import { isKnownReasonCode, isSafeDocumentationUrl } from './capabilityRegistry';
 import { stripControlAndBidi } from './projectionGraph';
@@ -75,7 +76,21 @@ export interface ReasonCategoryPresentation {
    * phrased so it can never be confused with the other categories.
    */
   distinction: string;
-  /** Tailwind classes for the category chip. Colour is supplemental to the text label. */
+  /**
+   * The chip's tone from the shared vocabulary. Colour is supplemental to the text label.
+   *
+   * HIVE-8.3 (#5329): a *cause* is an identity, not a severity, so these do not reuse the
+   * ok/warn/danger axis — a "Format limit" is not worse than an "Emitter gap", it is a
+   * different answer to "why". The five hueful non-state tones separate them, and
+   * `not-applicable` takes `outline`, the vocabulary's "set aside" state.
+   */
+  tone: StatusTone;
+  /**
+   * Tailwind classes for the category chip.
+   *
+   * @deprecated Superseded by {@link ReasonCategoryPresentation.tone} in HIVE-8.3 (#5329).
+   * Still read by the catalog conversion surfaces, which their own epic redesigns.
+   */
   badgeClass: string;
 }
 
@@ -84,6 +99,7 @@ const CATEGORY_PRESENTATION: Record<ReasonCategoryKey, ReasonCategoryPresentatio
     key: 'format-limit',
     label: 'Format limit',
     distinction: 'The destination format cannot represent this construct.',
+    tone: 'accent',
     badgeClass: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
   },
   'emitter-gap': {
@@ -91,6 +107,7 @@ const CATEGORY_PRESENTATION: Record<ReasonCategoryKey, ReasonCategoryPresentatio
     label: 'Emitter gap',
     distinction:
       'apiome does not yet emit this construct to this destination — the format itself may support it.',
+    tone: 'violet',
     badgeClass: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
   },
   'source-incomplete': {
@@ -98,24 +115,28 @@ const CATEGORY_PRESENTATION: Record<ReasonCategoryKey, ReasonCategoryPresentatio
     label: 'Source incomplete',
     distinction:
       'The source definition (or what apiome could capture of it) did not include what this export needs.',
+    tone: 'warn',
     badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
   },
   'option-excluded': {
     key: 'option-excluded',
     label: 'Excluded by option',
     distinction: 'An export option excluded this construct — changing the option restores it.',
+    tone: 'honey',
     badgeClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300',
   },
   redacted: {
     key: 'redacted',
     label: 'Redacted',
     distinction: 'This information is withheld by security policy.',
+    tone: 'orange',
     badgeClass: 'bg-slate-200 text-slate-800 dark:bg-slate-700/60 dark:text-slate-200',
   },
   'not-applicable': {
     key: 'not-applicable',
     label: 'Not applicable',
     distinction: 'Nothing in this source applies here — no action is needed.',
+    tone: 'outline',
     badgeClass: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
   },
 };

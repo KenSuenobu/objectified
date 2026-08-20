@@ -32,20 +32,20 @@ export function OriginalSourceOption({ artifact, sourceFormat, className }: Orig
     <div
       data-testid="export-original-source"
       className={cn(
-        'flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30',
+        'xstd-original',
         className,
       )}
     >
       <div className="flex items-start gap-3">
-        <FileDown className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-300" aria-hidden />
+        <FileDown aria-hidden />
         <div>
-          <div className="flex items-center gap-2 text-sm font-medium text-emerald-900 dark:text-emerald-100">
+          <div className="xstd-original__title">
             Original source
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-2xs font-semibold uppercase text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
+            <span className="xstd-rule-chip">
               {sourceFormat}
             </span>
           </div>
-          <p className="mt-0.5 text-xs text-emerald-800 dark:text-emerald-200">
+          <p className="xstd-original__why">
             This item was imported as {sourceFormat}. Download it unchanged — lossless, no
             conversion. (Re-exporting to {sourceFormat} is offered as the original, not a round-trip.)
           </p>

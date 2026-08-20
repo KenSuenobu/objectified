@@ -128,7 +128,7 @@ export function ViewerActionsBar({
           onClick={onDownloadBundle}
         />
       )}
-      <span className="mx-0.5 h-4 w-px bg-gray-200 dark:bg-gray-700" aria-hidden />
+      <span className="xstd-viewer-sep" aria-hidden />
       <ActionButton
         testId={`${testIdPrefix}-wrap`}
         label="Wrap"
@@ -194,15 +194,10 @@ function ActionButton({
       disabled={disabled}
       title={title}
       aria-pressed={pressed}
-      className={cn(
-        'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium shadow-sm transition-colors',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        tone === 'success'
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
-          : pressed
-            ? 'border-indigo-300 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200'
-            : 'border-gray-200 bg-white/95 text-gray-700 hover:bg-gray-50 disabled:hover:bg-white/95 dark:border-gray-600 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-800 dark:disabled:hover:bg-gray-900/95',
-      )}
+      // One shape for all three states: `aria-pressed` and `data-tone` carry the difference,
+      // which is what lets the copied-confirmation and the toggled-on state be the same chip.
+      className="xstd-chip"
+      data-tone={tone === 'success' ? 'ok' : undefined}
     >
       <Icon className="h-3.5 w-3.5" aria-hidden />
       {label}

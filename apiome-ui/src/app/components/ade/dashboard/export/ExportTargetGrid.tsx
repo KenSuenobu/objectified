@@ -8,6 +8,10 @@ import {
   type ExportTargetCard,
 } from './exportTargetCatalog';
 import {
+  groupTargetsByFamily,
+  type ExportTargetFamilyGroup,
+} from '@/app/components/ade/export-studio';
+import {
   bandTone,
   bandLabel,
   cardTitle,
@@ -44,6 +48,17 @@ export interface ExportTargetGridProps {
   order?: ExportTargetOrder;
   /** Switch the ordering; when omitted the order toggle is not rendered. */
   onOrderChange?: (order: ExportTargetOrder) => void;
+  /**
+   * Draw the cards under the four family headings — REST & HTTP, RPC, Events, Data schema &
+   * graph — instead of as one flat grid (HIVE-8.3, #5329).
+   *
+   * Opt-in because the two callers want different things from the same grid: the Export
+   * Studio's Target *step* is a page of its own and can afford the headings that make
+   * thirty-six cards scannable, while the ExportDialog draws the same grid inside a dialog
+   * where four extra headings cost more vertical room than they save. The ordering inside a
+   * family is untouched either way.
+   */
+  groupByFamily?: boolean;
 }
 
 /**
@@ -73,6 +88,7 @@ export function ExportTargetGrid({
   preflight = null,
   order,
   onOrderChange,
+  groupByFamily = false,
 }: ExportTargetGridProps) {
   // Memoized so an omitted `readiness` prop does not hand the ordering a fresh `{}` every render.
   const ranking = useMemo(() => readiness ?? {}, [readiness]);
@@ -81,6 +97,15 @@ export function ExportTargetGrid({
   const ordered = useMemo(
     () => orderTargetCards(cards, ranking, activeOrder),
     [cards, ranking, activeOrder],
+  );
+  // One group per family when asked, otherwise one unnamed group holding every card — so the
+  // card markup below is written once rather than forked between the two layouts.
+  const groups = useMemo<ExportTargetFamilyGroup<ExportTargetCard>[]>(
+    () =>
+      groupByFamily
+        ? groupTargetsByFamily(ordered, (card) => card.entry.descriptor.paradigm)
+        : [{ key: 'all', label: '', items: ordered }],
+    [groupByFamily, ordered],
   );
   const selected = cards.find((card) => card.key === selectedKey) ?? null;
   const fidelity = selected?.entry.fidelity ?? null;
@@ -109,60 +134,79 @@ export function ExportTargetGrid({
         </div>
       )}
 
-      <div
-        role="group"
-        aria-label="Export target formats"
-        className="vdlg-export__grid"
-      >
-        {ordered.map((card) => {
-          const Icon = card.icon;
-          const isSelected = card.key === selectedKey;
-          const target = ranking[card.key];
-          const selectable = isCardSelectable(card, target);
-          return (
-            <button
-              key={card.key}
-              type="button"
-              data-testid={`export-target-${card.key}`}
-              data-band={target?.band}
-              // Selection is a toggle state, not just an indigo fill (MFX-41.5): a screen reader
-              // must be able to tell which target is chosen without seeing the highlight.
-              aria-pressed={isSelected}
-              onClick={() => onSelect(card)}
-              disabled={!selectable}
-              title={cardTitle(card, target)}
-              className="vdlg-export__target"
-              data-selected={isSelected || undefined}
-            >
-              <Badge variant={tierTone(card.entry.fidelity.tier)} className="vdlg-export__target-tier">
-                {tierLabel(card.entry.fidelity.tier)}
-              </Badge>
-              {target && (
-                <Badge
-                  variant={bandTone(target.band)}
-                  data-testid={`export-target-band-${card.key}`}
-                  className="vdlg-export__target-band"
-                >
-                  {bandLabel(target.band)}
-                </Badge>
-              )}
-              <Icon className="vdlg-export__target-icon" aria-hidden />
-              <div className="vdlg-export__target-label">{card.entry.descriptor.label}</div>
-              <div className="vdlg-quiet">
-                {card.entry.descriptor.paradigm}
-                {card.entry.descriptor.multi_file ? ' · multi-file' : ''}
-              </div>
-              {target && (
-                <div
-                  data-testid={`export-target-rationale-${card.key}`}
-                  className="vdlg-quiet"
-                >
-                  {target.rationale}
-                </div>
-              )}
-            </button>
-          );
-        })}
+      <div role="group" aria-label="Export target formats">
+        {groups.map((group) => (
+          <section
+            key={group.key}
+            className="xstd-family"
+            data-family={group.key}
+            aria-label={group.label || undefined}
+          >
+            {group.label && (
+              <h4 className="xstd-family__title">
+                {group.label}
+                <span className="xstd-family__count">{group.items.length}</span>
+              </h4>
+            )}
+            <div className="vdlg-export__grid">
+              {group.items.map((card) => {
+                const Icon = card.icon;
+                const isSelected = card.key === selectedKey;
+                const target = ranking[card.key];
+                const selectable = isCardSelectable(card, target);
+                return (
+                  <button
+                    key={card.key}
+                    type="button"
+                    data-testid={`export-target-${card.key}`}
+                    data-band={target?.band}
+                    // Selection is a toggle state, not just an indigo fill (MFX-41.5): a screen
+                    // reader must be able to tell which target is chosen without seeing the
+                    // highlight.
+                    aria-pressed={isSelected}
+                    onClick={() => onSelect(card)}
+                    disabled={!selectable}
+                    title={cardTitle(card, target)}
+                    className="vdlg-export__target"
+                    data-selected={isSelected || undefined}
+                  >
+                    <Badge
+                      variant={tierTone(card.entry.fidelity.tier)}
+                      className="vdlg-export__target-tier"
+                    >
+                      {tierLabel(card.entry.fidelity.tier)}
+                    </Badge>
+                    {target && (
+                      <Badge
+                        variant={bandTone(target.band)}
+                        data-testid={`export-target-band-${card.key}`}
+                        className="vdlg-export__target-band"
+                      >
+                        {bandLabel(target.band)}
+                      </Badge>
+                    )}
+                    <Icon className="vdlg-export__target-icon" aria-hidden />
+                    <div className="vdlg-export__target-label">
+                      {card.entry.descriptor.label}
+                    </div>
+                    <div className="vdlg-quiet">
+                      {card.entry.descriptor.paradigm}
+                      {card.entry.descriptor.multi_file ? ' · multi-file' : ''}
+                    </div>
+                    {target && (
+                      <div
+                        data-testid={`export-target-rationale-${card.key}`}
+                        className="vdlg-quiet"
+                      >
+                        {target.rationale}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
 
       {showHeadline && selected && fidelity && (

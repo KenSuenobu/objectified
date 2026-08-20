@@ -25,11 +25,12 @@
 
 import { AlertTriangle, Bug, ExternalLink, Loader2, RefreshCcw, Repeat2 } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
-import { kindBadgeClass, kindGlyph, kindLabel } from './exportFidelityPreview';
+import { kindGlyph, kindLabel, kindTone } from './exportFidelityPreview';
 import {
   buildRoundtripIssueReport,
-  changeKindBadgeClass,
+  changeKindTone,
   changeKindLabel,
   diffEntryLabel,
   roundtripStatusPresentation,
@@ -60,7 +61,7 @@ export interface RoundtripComparisonPanelProps {
 /** The panel's heading — one look for every state. */
 function SectionHeading({ targetLabel }: { targetLabel: string }) {
   return (
-    <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+    <h3 className="xstd-caps">
       <Repeat2 className="h-3.5 w-3.5" aria-hidden />
       Round-trip comparison — {targetLabel}
     </h3>
@@ -84,8 +85,8 @@ export function RoundtripComparisonPanel({
     return (
       <section className={cn('space-y-2', className)} data-testid="roundtrip-panel">
         <SectionHeading targetLabel={targetLabel} />
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2.5 dark:border-gray-700">
-          <p className="text-xs text-gray-600 dark:text-gray-300">
+        <div className="xstd-rt__prompt">
+          <p className="xstd-quiet">
             Check the fidelity report against reality: emit this artifact, re-import it, and
             diff the result against the source. Runs one real emit + re-import, only when you
             ask.
@@ -104,10 +105,10 @@ export function RoundtripComparisonPanel({
       <section className={cn('space-y-2', className)} data-testid="roundtrip-panel">
         <SectionHeading targetLabel={targetLabel} />
         <p
-          className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+          className="xstd-loading-row"
           data-testid="roundtrip-running"
         >
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-500" aria-hidden />
+          <Loader2 className="motion-safe:animate-spin" aria-hidden />
           Emitting, re-importing, and comparing against the source…
         </p>
       </section>
@@ -121,7 +122,7 @@ export function RoundtripComparisonPanel({
       <section className={cn('space-y-2', className)} data-testid="roundtrip-panel">
         <SectionHeading targetLabel={targetLabel} />
         <div
-          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+          className="xstd-notice" data-tone="warn"
           data-testid="roundtrip-error"
         >
           <span>
@@ -151,7 +152,7 @@ export function RoundtripComparisonPanel({
         <div className="flex items-center gap-2">
           {fromCache && (
             <span
-              className="rounded-full bg-gray-100 px-2 py-0.5 text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              className="xstd-chip"
               data-testid="roundtrip-from-cache"
             >
               restored from this session
@@ -168,9 +169,11 @@ export function RoundtripComparisonPanel({
       <div
         role="status"
         aria-live="polite"
-        className={cn('rounded-lg border px-3 py-2.5 text-xs', presentation.bannerClass)}
+        className="xstd-notice"
+        data-tone={presentation.tone === 'rose' ? 'danger' : presentation.tone}
         data-testid={`roundtrip-status-${result.status}`}
       >
+        <span className="xstd-notice__grow">
         <p className="font-semibold">
           <span aria-hidden>{presentation.glyph}</span> {presentation.label}
         </p>
@@ -178,40 +181,31 @@ export function RoundtripComparisonPanel({
         <p className="mt-0.5" data-testid="roundtrip-summary">
           {summarizeRoundtrip(result)}
         </p>
+        </span>
       </div>
 
       {/* Expected differences — the fidelity report explains each one. */}
       {result.matched.length > 0 && (
         <div data-testid="roundtrip-explained">
-          <h4 className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <h4 className="xstd-caps">
             Expected differences · explained by the fidelity report ({result.matched.length})
           </h4>
           <ul className="mt-1 space-y-1">
             {result.matched.map((pair, index) => (
               <li
                 key={`${pair.entry.entity}:${pair.entry.key}:${index}`}
-                className="rounded-md border border-gray-200 px-2.5 py-1.5 text-xs dark:border-gray-700"
+                className="xstd-rt__diff"
               >
-                <span
-                  className={cn(
-                    'mr-1.5 rounded-full px-1.5 py-0.5 text-2xs font-medium',
-                    changeKindBadgeClass(pair.entry.change),
-                  )}
-                >
+                <Badge variant={changeKindTone(pair.entry.change)} className="mr-1.5">
                   {changeKindLabel(pair.entry.change)}
-                </span>
-                <span className="font-mono text-2xs text-gray-700 dark:text-gray-200">
+                </Badge>
+                <span className="xstd-mono text-2xs">
                   {diffEntryLabel(pair.entry)}
                 </span>
-                <span className="ml-2 text-gray-500 dark:text-gray-400">
-                  <span
-                    className={cn(
-                      'mr-1 rounded-full px-1.5 py-0.5 text-2xs font-medium',
-                      kindBadgeClass(pair.finding.kind),
-                    )}
-                  >
+                <span className="xstd-note ml-2">
+                  <Badge variant={kindTone(pair.finding.kind)} className="mr-1">
                     {kindGlyph(pair.finding.kind)} {kindLabel(pair.finding.kind)}
-                  </span>
+                  </Badge>
                   {pair.finding.message}
                 </span>
               </li>
@@ -224,7 +218,7 @@ export function RoundtripComparisonPanel({
       {(result.unexplained.length > 0 || result.overclaims.length > 0) && (
         <div data-testid="roundtrip-unexplained">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-2xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
+            <h4 className="xstd-rt__unexplained-title">
               Unexplained differences ({result.unexplained.length + result.overclaims.length})
             </h4>
             {issue && (
@@ -232,7 +226,7 @@ export function RoundtripComparisonPanel({
                 href={issue.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="btn btn--sm"
                 data-testid="roundtrip-report-issue"
               >
                 <Bug className="h-3.5 w-3.5" aria-hidden />
@@ -241,7 +235,7 @@ export function RoundtripComparisonPanel({
               </a>
             )}
           </div>
-          <p className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
+          <p className="xstd-note mt-0.5">
             The fidelity report does not account for these. The report link carries only
             reproduction coordinates
             {issue && issue.redactedOptionKeys.length > 0
@@ -253,17 +247,12 @@ export function RoundtripComparisonPanel({
             {result.unexplained.map((entry, index) => (
               <li
                 key={`${entry.entity}:${entry.key}:${index}`}
-                className="rounded-md border border-red-200 px-2.5 py-1.5 text-xs dark:border-red-900/60"
+                className="xstd-rt__diff" data-unexplained
               >
-                <span
-                  className={cn(
-                    'mr-1.5 rounded-full px-1.5 py-0.5 text-2xs font-medium',
-                    changeKindBadgeClass(entry.change),
-                  )}
-                >
+                <Badge variant={changeKindTone(entry.change)} className="mr-1.5">
                   {changeKindLabel(entry.change)}
-                </span>
-                <span className="font-mono text-2xs text-gray-700 dark:text-gray-200">
+                </Badge>
+                <span className="xstd-mono text-2xs">
                   {diffEntryLabel(entry)}
                 </span>
               </li>
@@ -271,16 +260,16 @@ export function RoundtripComparisonPanel({
             {result.overclaims.map((item, index) => (
               <li
                 key={`overclaim:${item.construct}:${index}`}
-                className="rounded-md border border-red-200 px-2.5 py-1.5 text-xs dark:border-red-900/60"
+                className="xstd-rt__diff" data-unexplained
                 data-testid="roundtrip-overclaim"
               >
-                <span className="mr-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-2xs font-medium text-red-800 dark:bg-red-900/40 dark:text-red-200">
+                <Badge variant="danger" className="mr-1.5">
                   Over-claimed
-                </span>
-                <span className="font-mono text-2xs text-gray-700 dark:text-gray-200">
+                </Badge>
+                <span className="xstd-mono text-2xs">
                   {item.construct}
                 </span>
-                <span className="ml-2 text-gray-500 dark:text-gray-400">
+                <span className="xstd-note ml-2">
                   reported preserved (ok), but it changed or vanished
                 </span>
               </li>
@@ -291,7 +280,7 @@ export function RoundtripComparisonPanel({
 
       {/* Reproduction provenance — the coordinates an issue report (or a matrix cell) shares. */}
       <p
-        className="font-mono text-2xs text-gray-400 dark:text-gray-500"
+        className="xstd-rt__provenance"
         data-testid="roundtrip-provenance"
       >
         source {result.source_fingerprint.slice(0, 12)}

@@ -577,36 +577,21 @@ export interface HeatmapIntensityPresentation {
   label: string;
   /** A repeated block glyph, one per level — the shape channel, readable in greyscale. */
   glyph: string;
-  /** Tailwind classes for the cell — the supplemental colour channel. */
-  cellClass: string;
 }
 
+/*
+ * The colour channel is deliberately absent: HIVE-8.3 (#5329) moved it to
+ * `.xstd-heat__cell[data-heat]` in `globals.css`, so a cell's wash follows the reader's theme
+ * instead of freezing one light palette and one dark one. The two channels that survive here
+ * are the ones that work without colour at all — the word and the glyph run — which is what
+ * DESIGN.md §6 asks of any heat scale.
+ */
 const INTENSITY_PRESENTATION: Record<HeatmapIntensity, HeatmapIntensityPresentation> = {
-  0: {
-    label: 'none',
-    glyph: '·',
-    cellClass: 'bg-gray-50 text-gray-500 dark:bg-gray-900/40 dark:text-gray-400',
-  },
-  1: {
-    label: 'low',
-    glyph: '▪',
-    cellClass: 'bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200',
-  },
-  2: {
-    label: 'moderate',
-    glyph: '▪▪',
-    cellClass: 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100',
-  },
-  3: {
-    label: 'high',
-    glyph: '▪▪▪',
-    cellClass: 'bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-100',
-  },
-  4: {
-    label: 'severe',
-    glyph: '▪▪▪▪',
-    cellClass: 'bg-rose-200 text-rose-950 dark:bg-rose-800/60 dark:text-rose-50',
-  },
+  0: { label: 'none', glyph: '·' },
+  1: { label: 'low', glyph: '▪' },
+  2: { label: 'moderate', glyph: '▪▪' },
+  3: { label: 'high', glyph: '▪▪▪' },
+  4: { label: 'severe', glyph: '▪▪▪▪' },
 };
 
 /** The words/shape/colour presentation for one heat level. */

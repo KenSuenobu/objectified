@@ -382,7 +382,7 @@ export function BundleExplorer({
               entityMarkers.onEditorMount(editorInstance, monaco);
             }}
             height={360}
-            className="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
+            className="xstd-bundle__viewer"
             editorTestId="bundle-file-editor"
             fallbackTestId="bundle-file-content"
             documentLabel={activeFile.path}
@@ -399,7 +399,7 @@ export function BundleExplorer({
   ) : (
     <div
       data-testid="bundle-empty"
-      className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-dashed border-gray-200 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400"
+      className="xstd-bundle__placeholder"
     >
       Select a file from the tree to view it.
     </div>
@@ -411,7 +411,7 @@ export function BundleExplorer({
       <div
         data-testid="bundle-explorer"
         data-multi="false"
-        className={cn('flex min-h-0 flex-col rounded-xl border border-gray-200 p-3 dark:border-gray-700', className)}
+        className={cn('xstd-bundle', className)}
       >
         <BundleHeader fileCount={manifest.files.length} activeFile={activeFile} language={language} />
         <div className="mt-2 flex min-h-0 flex-1 flex-col">{viewer}</div>
@@ -423,7 +423,7 @@ export function BundleExplorer({
     <div
       data-testid="bundle-explorer"
       data-multi="true"
-      className={cn('flex min-h-0 flex-col rounded-xl border border-gray-200 p-3 dark:border-gray-700', className)}
+      className={cn('xstd-bundle', className)}
     >
       <BundleHeader fileCount={manifest.files.length} activeFile={activeFile} language={language} />
       {/* MFX-43.5: say up front that some of this bundle loads on demand — a tree row that opens
@@ -431,7 +431,7 @@ export function BundleExplorer({
       {budgetNotice && (
         <p
           data-testid="bundle-budget-notice"
-          className="mt-1 shrink-0 text-2xs text-gray-500 dark:text-gray-400"
+          className="xstd-note mt-1 shrink-0"
         >
           {budgetNotice}
         </p>
@@ -469,14 +469,14 @@ interface BundleHeaderProps {
 function BundleHeader({ fileCount, activeFile, language }: BundleHeaderProps) {
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-2">
-      <FolderTree className="h-4 w-4 text-indigo-500" aria-hidden />
-      <span className="text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+      <FolderTree aria-hidden />
+      <span className="xstd-tree-card__title">
         Bundle · {fileCount} file{fileCount === 1 ? '' : 's'}
       </span>
       {activeFile && (
         <span
           data-testid="bundle-active-meta"
-          className="ml-auto truncate text-2xs text-gray-400 dark:text-gray-500"
+          className="xstd-tree-card__meta truncate"
         >
           {activeFile.path} · {formatByteSize(activeFile.sizeBytes)}
           {activeFile.mediaType ? ` · ${activeFile.mediaType}` : ''} · {language}

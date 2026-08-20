@@ -204,26 +204,6 @@ export function kindTone(kind: LossinessKind): StatusTone {
 }
 
 /**
- * CSS utility classes for a loss-kind badge.
- *
- * @deprecated Superseded by {@link kindTone} in HIVE-6.3 (#5314), which names a token instead
- * of a palette pair. Still read by `RoundtripComparisonPanel`, which its own epic redesigns.
- */
-export function kindBadgeClass(kind: LossinessKind): string {
-  switch (kind) {
-    case 'drop':
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300';
-    case 'approx':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-    case 'synth':
-      return 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300';
-    case 'ok':
-    default:
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
-  }
-}
-
-/**
  * Order report items for the warning panel: worst-first by kind (drop → approx → synth → ok),
  * then by severity (critical → warn → info), then by construct key for a stable read. The
  * server's canonical order is by construct key; the panel instead leads with what the user
@@ -322,24 +302,6 @@ export function ringGeometry(percent: number, radius: number): RingGeometry {
  */
 export function ringTone(tier: ExportFidelityTier): StatusTone {
   return FIDELITY_BUCKET_TONE[tier] ?? FIDELITY_BUCKET_TONE['types-only'];
-}
-
-/**
- * The ring's stroke class.
- *
- * @deprecated Superseded by {@link ringTone} in HIVE-6.3 (#5314). The ring is drawn from
- * `.vdlg-ring[data-tone]` now, so it follows the theme.
- */
-export function ringStrokeClass(tier: ExportFidelityTier): string {
-  switch (tier) {
-    case 'lossless':
-      return 'stroke-emerald-500 dark:stroke-emerald-400';
-    case 'lossy':
-      return 'stroke-amber-500 dark:stroke-amber-400';
-    case 'types-only':
-    default:
-      return 'stroke-rose-500 dark:stroke-rose-400';
-  }
 }
 
 // ---------------------------------------------------------------------------

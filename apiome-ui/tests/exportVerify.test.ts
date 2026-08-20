@@ -19,7 +19,7 @@ import {
   validatorToolLabel,
   verifyGatePasses,
   verifyVerdictBanner,
-  verifyVerdictBannerClass,
+  verifyVerdictAlertVariant,
   type EmittedArtifactLintReport,
   type EmittedValidationReport,
   type ExportTranscodeGuard,
@@ -232,14 +232,13 @@ describe('verifyVerdictBanner', () => {
     expect(verifyVerdictBanner('invalid').tone).toBe('invalid');
   });
 
-  it('gives a distinct banner class per tone', () => {
-    const classes = new Set([
-      verifyVerdictBannerClass('clean'),
-      verifyVerdictBannerClass('lossy'),
-      verifyVerdictBannerClass('severe'),
-      verifyVerdictBannerClass('invalid'),
-    ]);
-    expect(classes.size).toBe(4);
+  it('routes each verdict to an alert variant, with both stop verdicts on error', () => {
+    expect(verifyVerdictAlertVariant('clean')).toBe('success');
+    expect(verifyVerdictAlertVariant('lossy')).toBe('warning');
+    // HIVE-8.3: `severe` and `invalid` share `error` — the words separate them, not a redder
+    // red. What must stay distinct is the go/no-go, which the three variants carry.
+    expect(verifyVerdictAlertVariant('severe')).toBe('error');
+    expect(verifyVerdictAlertVariant('invalid')).toBe('error');
   });
 });
 

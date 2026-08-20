@@ -33,7 +33,7 @@ export function FindingLocation({ file, path, line, column, rule }: FindingLocat
   if (rule) parts.push(rule);
   if (parts.length === 0) return null;
   return (
-    <div className="mt-1 font-mono text-xs text-gray-500 dark:text-gray-400" data-testid="verify-finding-location">
+    <div className="xstd-finding__location" data-testid="verify-finding-location">
       {parts.join(' · ')}
     </div>
   );

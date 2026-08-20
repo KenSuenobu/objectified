@@ -21,6 +21,7 @@
  * `./exportVerify.ts` and `./exportFidelityPreview.ts`.
  */
 
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
 import type { LossItem } from './exportFidelityPreview';
 import { stripSecretOptions } from './exportStudioUrlState';
 
@@ -109,8 +110,13 @@ export interface RoundtripStatusPresentation {
   sentence: string;
   /** A text glyph reinforcing the verdict (never the only signal). */
   glyph: string;
-  /** Tailwind classes for the verdict banner (colour arrives last, after words + glyph). */
-  bannerClass: string;
+  /**
+   * The verdict banner's tone (colour arrives last, after words + glyph).
+   *
+   * HIVE-8.3 (#5329): a tone name rather than the four Tailwind palette triples this used to
+   * carry, so the banner follows all nine themes through `ui/Alert`.
+   */
+  tone: StatusTone;
 }
 
 /**
@@ -130,16 +136,14 @@ export function roundtripStatusPresentation(
             sentence:
               'The emitted artifact re-imported to an identical canonical model — no differences at all.',
             glyph: '✓',
-            bannerClass:
-              'border-green-300 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950/30 dark:text-green-200',
+            tone: 'ok',
           }
         : {
             label: 'Round trip verified',
             sentence:
               'Every difference between the source and the re-imported artifact is explained by the fidelity report.',
             glyph: '✓',
-            bannerClass:
-              'border-green-300 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950/30 dark:text-green-200',
+            tone: 'ok',
           };
     case 'unsupported':
       return {
@@ -148,8 +152,7 @@ export function roundtripStatusPresentation(
           response.reason ??
           'No import adapter can re-import this format, so the round trip cannot be closed.',
         glyph: '−',
-        bannerClass:
-          'border-gray-300 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300',
+        tone: 'neutral',
       };
     default:
       return {
@@ -157,8 +160,7 @@ export function roundtripStatusPresentation(
         sentence:
           'The round trip found differences the fidelity report does not account for — likely a fidelity bug worth reporting.',
         glyph: '✗',
-        bannerClass:
-          'border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200',
+        tone: 'danger',
       };
   }
 }
@@ -175,15 +177,20 @@ export function changeKindLabel(change: RoundtripChangeKind): string {
   }
 }
 
-/** Badge classes per diff change kind (colour after the label, never instead of it). */
-export function changeKindBadgeClass(change: RoundtripChangeKind): string {
+/**
+ * The tone per diff change kind (colour after the label, never instead of it).
+ *
+ * HIVE-8.3 (#5329) replaced the three Tailwind palette pairs this returned with vocabulary
+ * tones, so a "Removed" here is the same rose as a dropped construct in the manifest tree.
+ */
+export function changeKindTone(change: RoundtripChangeKind): StatusTone {
   switch (change) {
     case 'added':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200';
+      return 'violet';
     case 'removed':
-      return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200';
+      return 'rose';
     default:
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
+      return 'accent';
   }
 }
 

@@ -8,13 +8,11 @@
 import {
   acknowledgementPhraseMatches,
   EXPORT_TYPES_ONLY_ACK_PHRASE,
-  kindBadgeClass,
   kindDescription,
   kindGlyph,
   kindLabel,
   requiresExportAcknowledgement,
   ringGeometry,
-  ringStrokeClass,
   sortReportItemsWorstFirst,
   type LossItem,
 } from '../src/app/components/ade/dashboard/export/exportFidelityPreview';
@@ -25,20 +23,6 @@ describe('kindLabel', () => {
     expect(kindLabel('approx')).toBe('APPROX');
     expect(kindLabel('synth')).toBe('SYNTH');
     expect(kindLabel('ok')).toBe('OK');
-  });
-});
-
-describe('kindBadgeClass', () => {
-  it('matches the count-chip palette: drop red, approx amber, synth violet, ok green', () => {
-    expect(kindBadgeClass('drop')).toContain('rose');
-    expect(kindBadgeClass('approx')).toContain('amber');
-    expect(kindBadgeClass('synth')).toContain('violet');
-    expect(kindBadgeClass('ok')).toContain('emerald');
-  });
-
-  it('styles every kind distinctly', () => {
-    const classes = (['drop', 'approx', 'synth', 'ok'] as const).map(kindBadgeClass);
-    expect(new Set(classes).size).toBe(4);
   });
 });
 
@@ -145,14 +129,6 @@ describe('ringGeometry', () => {
   it('clamps out-of-range percentages to 0–100', () => {
     expect(ringGeometry(-10, RADIUS).dashOffset).toBeCloseTo(CIRCUMFERENCE);
     expect(ringGeometry(150, RADIUS).dashOffset).toBeCloseTo(0);
-  });
-});
-
-describe('ringStrokeClass', () => {
-  it('follows the tier badge palette: lossless green, lossy amber, types-only red', () => {
-    expect(ringStrokeClass('lossless')).toContain('emerald');
-    expect(ringStrokeClass('lossy')).toContain('amber');
-    expect(ringStrokeClass('types-only')).toContain('rose');
   });
 });
 

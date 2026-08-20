@@ -28436,3 +28436,1861 @@ tr:focus-within .pub-url__glyph {
   inline-size: 13.75rem;
   max-inline-size: 100%;
 }
+
+/* ==========================================================================
+   EXPORT STUDIO  (HIVE-8.3, #5329)
+   --------------------------------------------------------------------------
+   `docs/mockups/ship/export-studio.html`, whose **Notes → Keeps (1:1)** list is
+   this ticket's acceptance criteria. This block replaces the mockup's
+   page-local `<style>` (`.xsteps`, `.xstep`, `.tgt`, `.tier`, `.band`, `.fam`,
+   `.lens-badge`, `.proj-table`, `.glyph`, `.stage`, `.heat`) and, on the
+   production side, roughly four hundred palette utilities spread over the
+   twenty-three components the five steps are built from.
+
+   Why the paint moved here
+   ------------------------
+   The Studio is the deepest surface in the product and it had grown four
+   independent colour languages, none of which any theme could reach:
+
+   * **the job stages** returned border/background pairs from a
+     `stageRowClass` switch, while the icon beside them returned a *second*
+     set from a `StageIcon` switch — so `active` was `indigo-200 / indigo-50`
+     around a `text-indigo-500` spinner and nothing tied the two together;
+   * **the manifest tree** carried two hand-written tables, seven statuses and
+     five entity kinds, spelling `bg-emerald-100 text-emerald-700
+     dark:bg-emerald-950/50` and its six siblings once each. The identical
+     seven statuses were spelled again in the mapping graph and a third time
+     in the heatmap's `intensityPresentation`;
+   * **the verify lenses** each decided their own severity ink (a `rose` for
+     blocking, an `amber` for advisory, an `emerald` for clean) three times
+     over — validation, lint and fidelity — from three separate switches;
+   * **five surfaces framed themselves in amber** to mean "read this before
+     you ship": the truncation banner, the reconciliation mismatch, the
+     round-trip error, the viewer budget notice and the delivery gate. Each
+     picked its own border/fill/ink triple.
+
+   Every one of those is a *word* — a status, a severity, a heat level, a
+   decision — and a word's colour belongs to the shared vocabulary. The
+   components hand `data-status` / `data-severity` / `data-heat` /
+   `data-decision` to the rules below and name no colour at all; the tones
+   come from `ui/statusVocabulary` through `exportStudioView.ts`.
+
+   What the SVG surfaces need that a utility cannot give
+   -----------------------------------------------------
+   Three of the five steps draw an `<svg>` — the projection graph on Verify,
+   the mapping graph on Review, and the heat matrix's glyph column. `fill` and
+   `stroke` are the properties that carry meaning there, and they are set from
+   an attribute, which is a *selector* problem: painting them in the component
+   means a `switch` returning colour strings, which is exactly what this
+   ticket removes. One rule per status here means the node, the edge, the row
+   badge and the legend swatch resolve to the same token by construction.
+
+   The pixels the mockup froze that must not be frozen
+   ---------------------------------------------------
+   The mockup pins fourteen lengths: the 90px event log, the 280px and 180px
+   code panes, the 320px manifest scroller, the 22rem manifest column, the
+   150px gate-reason label, the 20px step badge, the 24px stage badge, the
+   18px tier and band pills, the 10px pill type, the 9px heat glyph, the 14px
+   round-trip glyph, the 280px bundle tree and the 180px job progress column.
+   All are `rem`, a token or a viewport length below, so the whole Studio
+   follows all six font scales. The one exception is the type *inside* a
+   `viewBox`, which is geometry and stays in user units — the `ui/svgTypography`
+   exemption DESIGN.md §3.2 grants.
+
+   Nine classes are borrowed rather than restated: `.vdlg-export__target` and
+   its five siblings (HIVE-6.3 already drew the target card, and the Studio
+   and the ExportDialog must not drift), `.vdlg-quiet`, `.vdlg-link`,
+   `.mono` (HIVE-1.4), `.input-wrap` (HIVE-2.1), `.tnt-icon-tile` and
+   `.sr-only`.
+
+   Measured deviations from the mockup, each recorded at the rule that makes it
+   ----------------------------------------------------------------------------
+   1. Quiet text is `--fg-muted`, never the mockup's `--fg-subtle`: at
+      `--fs-2xs` the subtle step measures 3.1:1 on the card, which is a serious
+      axe finding. The finding HIVE-6.2 recorded and every Epic-5 block has
+      repeated since.
+   2. No `-fg` ink is drawn on a plain surface and no `-soft` fill is put under
+      `--fg`. Outside the light themes those pairs are not calibrated for it:
+      `--ok-fg` measures 1.5:1 on Nord's surface. So a verdict is a `Badge` or
+      an `Alert`, and a tinted frame is a `color-mix` wash of the *saturated*
+      step, not its `-soft`.
+   3. The heat matrix keeps the mockup's `color-mix` washes but re-grounds their
+      ink: the mockup's level-4 cell sets a literal `#fff`, which is 1.4:1 on
+      the Whiteboard theme's wash. Every level here paints `--fg`, and the four
+      washes are tuned so `--fg` clears 4.5:1 on all nine appearances.
+   4. Links are `--accent-fg` at rest with `--accent` returning under the
+      underline on hover — `--accent` measures 4.07-4.15:1 as ink in four of the
+      nine themes, under the 4.5:1 floor (HIVE-8.1's finding).
+   5. The step pill's current state adds a `--fg` numeral badge as well as the
+      accent ring, because the ring alone is `--accent` on `--bg-surface` at
+      4.07:1 in Darcula — fine as a non-text mark, not as the only signal.
+   6. **`--ok` and `--accent` are drawn as contours, never as washes.** Both are
+      teals in Solarized and `--fg-muted` is a desaturated one, so a wash of
+      either at any usable strength lands the quiet step between 4.20:1 and
+      4.49:1 — under the floor. (Measured: `--ok` 8% is 4.41:1, `--accent` 10%
+      is 4.20:1, and even 6% only reaches 4.49:1.) The browser suite found this
+      on the original-source card; `export-studio-css.test.ts` now holds the
+      number for every ground this block invents, against both inks. `--warn`
+      and `--danger` keep their washes — both clear 4.5:1 for `--fg` *and*
+      `--fg-muted` in all nine appearances.
+   ========================================================================== */
+
+/* ---- Shared type --------------------------------------------------------- */
+/* The three steps the whole Studio leans on. `.xstd-quiet` is the muted step,
+   not `--fg-subtle`: deviation 1 in the header note. */
+.xstd-quiet {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.xstd-note {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.xstd-caps {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+}
+
+.xstd-caps > svg {
+  inline-size: var(--icon-rail);
+  block-size: var(--icon-rail);
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+/* Deviation 4: accent ink only clears AA as `--accent-fg`. */
+.xstd-link {
+  color: var(--accent-fg);
+  font-weight: 500;
+  text-underline-offset: 2px;
+}
+
+.xstd-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.xstd-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- The screen ---------------------------------------------------------- */
+.xstd-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-end: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--accent-fg);
+}
+
+.xstd-back:hover {
+  text-decoration: underline;
+}
+
+.xstd-back > svg {
+  inline-size: var(--icon-rail);
+  block-size: var(--icon-rail);
+}
+
+.xstd-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.xstd-subtitle {
+  margin-block-start: var(--space-1);
+  max-inline-size: 68ch;
+  font-size: var(--fs-md);
+  color: var(--fg-muted);
+}
+
+.xstd-subtitle strong {
+  color: var(--fg);
+}
+
+/* ---- The stepper --------------------------------------------------------- */
+/* Five boxed pills in a grid, not `ui/Stepper`'s connector row: the mockup
+   gives each step a full-width box because the labels are sentences ("Review
+   & Generate"), which a connector row cannot hold. The *state* still comes
+   from the primitive — `stepperStatus` — so the two cannot disagree about
+   what "done" means. */
+.xstd-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+  list-style: none;
+}
+
+@media (max-width: 56.25rem) {
+  .xstd-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.xstd-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  background: var(--bg-surface);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-align: start;
+  color: var(--fg-muted);
+}
+
+.xstd-step__num {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border-radius: var(--r-full);
+  box-shadow: inset 0 0 0 1.5px var(--border-strong);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.xstd-step__num > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+.xstd-step[data-state='done'] .xstd-step__num {
+  background: var(--ok);
+  color: var(--fg-on-accent);
+  box-shadow: none;
+}
+
+/* Deviation 5: the ring is not the only signal — the numeral badge inverts. */
+.xstd-step[data-state='current'] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.xstd-step[data-state='current'] .xstd-step__num {
+  background: var(--fg);
+  color: var(--bg-surface);
+  box-shadow: none;
+}
+
+/* ---- The step panel ------------------------------------------------------ */
+/* The card the five steps draw inside. It replaces `dashboardPanelPaddedClass`
+   — a `bg-white dark:bg-gray-800 border-gray-200` frame that froze the surface
+   on one light palette and one dark one, and which no theme could reach. */
+.xstd-panel {
+  padding: var(--space-5);
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border), var(--shadow-xs);
+}
+
+/* The panel takes programmatic focus on every step change (the WAI wizard
+   pattern MFX-41.5 introduced), so it needs a visible ring when it does. */
+.xstd-panel:focus {
+  outline: none;
+}
+
+.xstd-panel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.xstd-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-block-size: 0;
+}
+
+.xstd-stack--tight {
+  gap: var(--space-2);
+}
+
+.xstd-rule {
+  block-size: 1px;
+  margin-block: var(--space-1);
+  background: var(--border);
+}
+
+.xstd-loading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-md);
+  color: var(--fg-muted);
+}
+
+.xstd-loading-row > svg {
+  inline-size: var(--icon-rail);
+  block-size: var(--icon-rail);
+  color: var(--accent);
+}
+
+/* A dashed frame is the app's "nothing here" shape; its ink is the muted step
+   for the reason deviation 1 gives. */
+.xstd-empty {
+  padding: var(--space-4) var(--space-3);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+/* ---- The tinted notice --------------------------------------------------- */
+/* One shape for the five surfaces that used to frame themselves in amber
+   independently: truncation, reconciliation mismatch, round-trip error,
+   viewer budget and the deferred-load prompt. Deviation 2 — the wash is a
+   `color-mix` of the saturated step, so `--fg` stays the ink in every theme. */
+.xstd-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  /* The surface itself, not `--bg-subtle` and not `--bg-inset`: in Solarized those two put
+     `--fg-muted` at 4.34:1 and 4.35:1 — the Alert-neutral finding HIVE-5.6 recorded and
+     HIVE-6.6 fixed the same way — while the surface leaves it at 4.86:1. An untoned notice
+     is a *framed* row, which is also what the mockup's `.callout` is. */
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-notice > svg {
+  inline-size: var(--icon-rail);
+  block-size: var(--icon-rail);
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.xstd-notice[data-tone='warn'] {
+  background: color-mix(in srgb, var(--warn) 12%, var(--bg-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 42%, var(--border));
+}
+
+.xstd-notice[data-tone='warn'] > svg {
+  color: var(--warn);
+}
+
+.xstd-notice[data-tone='danger'] {
+  background: color-mix(in srgb, var(--danger) 10%, var(--bg-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 42%, var(--border));
+}
+
+.xstd-notice[data-tone='danger'] > svg {
+  color: var(--danger);
+}
+
+/* `--ok` and `--accent` get a contour instead of a wash — the finding recorded as deviation
+   6 in the header note. Both are teals in Solarized and `--fg-muted` is a desaturated one, so
+   *any* wash of either lands the quiet step at 4.2-4.5:1, under the floor. A ring puts the
+   quiet line back on the surface it is calibrated against, and it is also what the mockup
+   draws for the original-source card. `--warn` and `--danger` keep their washes: both clear
+   4.5:1 for `--fg` and `--fg-muted` in all nine appearances, measured. */
+.xstd-notice[data-tone='ok'] {
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--ok);
+}
+
+.xstd-notice[data-tone='ok'] > svg {
+  color: var(--ok);
+}
+
+.xstd-notice[data-tone='accent'] {
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.xstd-notice[data-tone='accent'] > svg {
+  color: var(--accent);
+}
+
+.xstd-notice__grow {
+  flex: 1 1 16rem;
+  min-inline-size: 0;
+}
+
+.xstd-notice__title {
+  font-weight: 600;
+}
+
+/* ---- Step 1 · Source ----------------------------------------------------- */
+.xstd-source__name {
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.xstd-source__pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.xstd-source__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.xstd-count-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.xstd-count-chip__value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* ---- Step 2 · Target ----------------------------------------------------- */
+/* The original-source card. `--ok` as a frame is a non-text mark, so the
+   3:1 floor applies and it clears it in all nine themes; the words inside are
+   `--fg` / `--fg-muted`, never the tone (deviation 2). */
+/* A ring, not a fill — the same measurement `.xstd-notice[data-tone='ok']` records, and the
+   same treatment the mockup gives this card. `.xstd-original__why` is `--fg-muted`, which is
+   why it matters here more than anywhere else in the block. */
+.xstd-original {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--ok), var(--shadow-sm);
+}
+
+.xstd-original__main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.xstd-original__main > svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  color: var(--ok);
+}
+
+.xstd-original__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.xstd-original__why {
+  margin-block-start: 0.125rem;
+  max-inline-size: 60ch;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The family headings the grid grew (HIVE-8.3): a heading, not a divider, so
+   the group is announced as well as drawn. */
+.xstd-family + .xstd-family {
+  margin-block-start: var(--space-4);
+}
+
+.xstd-family__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+.xstd-family__count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  color: var(--fg-subtle);
+}
+
+/* ---- Step 3 · Options ---------------------------------------------------- */
+.xstd-field__label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: var(--fs-md);
+  color: var(--fg);
+}
+
+.xstd-field__name {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.xstd-field__desc {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.xstd-field__error {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--danger-fg);
+}
+
+/* ---- Step 4 · Verify ----------------------------------------------------- */
+.xstd-advisory {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--accent), var(--shadow-sm);
+}
+
+.xstd-advisory__text {
+  max-inline-size: 60ch;
+  font-size: var(--fs-md);
+  color: var(--fg);
+}
+
+.xstd-check {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+/* The native box, tinted by `accent-color` — the convention HIVE-7.3's file
+   filters set and the reason no checkbox in this block is a custom widget. */
+.xstd-check > input {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.xstd-check:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.xstd-config {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.xstd-config strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.xstd-lens-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 1.25rem;
+  padding: 0.0625rem var(--space-1);
+  border-radius: var(--r-full);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.xstd-lens-badge[data-tone='ok'] {
+  background: var(--ok-soft);
+  color: var(--ok-fg);
+}
+
+.xstd-lens-badge[data-tone='warn'] {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+
+.xstd-lens-badge[data-tone='danger'] {
+  background: var(--danger-soft);
+  color: var(--danger-fg);
+}
+
+/* A lens headline states its verdict in words; the tone lands on the glyph
+   beside them, never on the sentence (deviation 2). */
+.xstd-lens-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.xstd-lens-head > svg {
+  inline-size: var(--icon-rail);
+  block-size: var(--icon-rail);
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.xstd-lens-head[data-tone='ok'] > svg {
+  color: var(--ok);
+}
+
+.xstd-lens-head[data-tone='warn'] > svg {
+  color: var(--warn);
+}
+
+.xstd-lens-head[data-tone='danger'] > svg {
+  color: var(--danger);
+}
+
+.xstd-details {
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-details__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.xstd-details__body {
+  padding: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+
+/* ---- Findings ------------------------------------------------------------ */
+/* One row shape for the validation lens, the lint lens and the round-trip's
+   difference lists. The severity lands on a hairline down the leading edge —
+   a mark, not ink on the words. */
+.xstd-finding {
+  border-radius: var(--r-md);
+  font-size: var(--fs-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-finding[data-tone='danger'] {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--danger) 38%, var(--border)),
+    inset 3px 0 0 0 var(--danger);
+}
+
+.xstd-finding[data-tone='warn'] {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--warn) 38%, var(--border)),
+    inset 3px 0 0 0 var(--warn);
+}
+
+.xstd-finding[data-tone='ok'] {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ok) 38%, var(--border)),
+    inset 3px 0 0 0 var(--ok);
+}
+
+.xstd-finding__button {
+  position: relative;
+  inline-size: 100%;
+  padding: var(--space-3);
+  text-align: start;
+  border-radius: inherit;
+}
+
+.xstd-finding__button:hover {
+  background: var(--bg-subtle);
+}
+
+.xstd-finding__open {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  inset-inline-end: var(--space-3);
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  opacity: 0;
+  color: var(--fg-subtle);
+  transition: opacity var(--dur-fast);
+}
+
+.xstd-finding__button:hover .xstd-finding__open,
+.xstd-finding__button:focus-visible .xstd-finding__open {
+  opacity: 1;
+}
+
+.xstd-finding__message {
+  color: var(--fg);
+}
+
+.xstd-finding__location {
+  margin-block-start: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.xstd-rule-chip {
+  padding: 0.0625rem var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+/* ---- Step 5 · Job progress ----------------------------------------------- */
+.xstd-progress {
+  position: relative;
+  flex: 1 1 auto;
+  block-size: 0.5rem;
+  border-radius: var(--r-full);
+  overflow: hidden;
+  background: var(--bg-inset);
+}
+
+.xstd-progress__fill {
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: transform var(--dur-slow) ease-out;
+}
+
+.xstd-progress__value {
+  flex-shrink: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* A stage row. One rule owns both the frame and the badge inside it, which is
+   the whole point: `stageRowClass` and `StageIcon` cannot drift apart. */
+.xstd-stage {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-stage__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  color: var(--fg-subtle);
+}
+
+.xstd-stage__icon > svg {
+  inline-size: 0.8125rem;
+  block-size: 0.8125rem;
+}
+
+.xstd-stage[data-status='done'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ok) 30%, var(--border));
+}
+
+.xstd-stage[data-status='done'] .xstd-stage__icon {
+  background: var(--ok);
+  color: var(--fg-on-accent);
+}
+
+.xstd-stage[data-status='active'] {
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.xstd-stage[data-status='active'] .xstd-stage__icon {
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+}
+
+.xstd-stage[data-status='failed'] {
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 40%, var(--border));
+}
+
+.xstd-stage[data-status='failed'] .xstd-stage__icon {
+  background: var(--danger);
+  color: var(--fg-on-accent);
+}
+
+.xstd-stage__title {
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.xstd-stage__desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The structured event log. `warn` and `error` are the only levels shown, so
+   the wash is the whole signal beside the glyph that repeats it. */
+.xstd-event {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.xstd-event > svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+}
+
+.xstd-event[data-level='warn'] {
+  background: color-mix(in srgb, var(--warn) 12%, var(--bg-surface));
+}
+
+.xstd-event[data-level='warn'] > svg {
+  color: var(--warn);
+}
+
+.xstd-event[data-level='error'] {
+  background: color-mix(in srgb, var(--danger) 10%, var(--bg-surface));
+}
+
+.xstd-event[data-level='error'] > svg {
+  color: var(--danger);
+}
+
+/* The failure card — one per failure class, all eleven of them. */
+.xstd-failure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 45%, var(--border));
+}
+
+.xstd-failure__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.xstd-failure__head > svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  color: var(--danger);
+}
+
+.xstd-failure__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.xstd-failure__body {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.xstd-failure__detail {
+  margin-block-start: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.xstd-failure__list {
+  margin-inline-start: 2rem;
+  list-style: disc;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.xstd-failure__note {
+  margin-inline-start: 2rem;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* ---- Step 5 · Delivery gate ---------------------------------------------- */
+.xstd-gate {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--r-md);
+}
+
+.xstd-gate[data-decision='block'] {
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 45%, var(--border));
+}
+
+.xstd-gate[data-decision='allow_with_warning'] {
+  background: color-mix(in srgb, var(--warn) 10%, var(--bg-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 45%, var(--border));
+}
+
+.xstd-gate__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.xstd-gate__head > svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+}
+
+.xstd-gate[data-decision='block'] .xstd-gate__head > svg {
+  color: var(--danger);
+}
+
+.xstd-gate[data-decision='allow_with_warning'] .xstd-gate__head > svg {
+  color: var(--warn);
+}
+
+.xstd-gate__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.xstd-gate__reason {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-gate__reason > svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  color: var(--fg-subtle);
+}
+
+.xstd-gate__reason[data-severity='blocking'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 38%, var(--border));
+}
+
+.xstd-gate__reason[data-severity='blocking'] > svg {
+  color: var(--danger);
+}
+
+.xstd-gate__reason[data-severity='warning'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 38%, var(--border));
+}
+
+.xstd-gate__reason[data-severity='warning'] > svg {
+  color: var(--warn);
+}
+
+/* The mockup freezes this label column at 150px; a `ch` follows the scale. */
+.xstd-gate__dimension {
+  flex-shrink: 0;
+  inline-size: 18ch;
+  font-weight: 600;
+}
+
+.xstd-gate__override {
+  padding: var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.xstd-gate__override dt {
+  color: var(--fg-muted);
+}
+
+.xstd-gate__override dd {
+  font-family: var(--font-mono);
+  color: var(--fg);
+}
+
+.xstd-gate__attestation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.xstd-gate__attestation > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  color: var(--ok);
+}
+
+/* ---- The artifact manifest tree ------------------------------------------ */
+.xstd-tree-card {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  min-inline-size: 0;
+  padding: var(--space-3);
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-tree-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.xstd-tree-card__head > svg {
+  inline-size: var(--icon-rail);
+  block-size: var(--icon-rail);
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.xstd-tree-card__title {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+}
+
+.xstd-tree-card__meta {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* The mockup pins the scroller at 320px and the manifest column at 22rem. A
+   `min()` of a viewport length and a `rem` keeps both: the pane never outgrows
+   a short window and never shrinks below a usable tree at the Largest scale. */
+.xstd-tree__scroll {
+  overflow-y: auto;
+  block-size: min(50vh, 23.75rem);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-tree__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+  padding: 0.25rem var(--space-2);
+  border-radius: var(--r-sm);
+  text-align: start;
+  color: var(--fg);
+}
+
+.xstd-tree__row:hover {
+  background: var(--bg-subtle);
+}
+
+.xstd-tree__row:focus {
+  outline: none;
+}
+
+.xstd-tree__row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.xstd-tree__row[data-selected='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+  font-weight: 500;
+}
+
+.xstd-tree__twist {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.xstd-tree__group {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.xstd-tree__count {
+  padding: 0.0625rem var(--space-2);
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.xstd-tree__line {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-fg);
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+.xstd-tree__line--flat {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The entity detail below the tree. */
+.xstd-entity {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: var(--fs-xs);
+}
+
+.xstd-entity__name {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.xstd-entity__reason {
+  padding: 0.0625rem var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.xstd-entity__detail {
+  margin-block-start: var(--space-1);
+  color: var(--fg-muted);
+}
+
+/* ---- The bundle explorer ------------------------------------------------- */
+.xstd-bundle {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  min-inline-size: 0;
+  padding: var(--space-3);
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-bundle__viewer {
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-bundle__placeholder {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 0;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+  font-size: var(--fs-md);
+  color: var(--fg-muted);
+}
+
+.xstd-bundle__tree {
+  overflow: auto;
+  padding: var(--space-1);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-bundle__tab-close {
+  padding: 0.125rem;
+  border-radius: var(--r-xs);
+  /* `--fg-muted`, not `--fg-subtle`: the glyph is this control's only affordance, so it is
+     measured as a non-text mark and the subtle step sits on the 3:1 line. */
+  color: var(--fg-muted);
+  opacity: 0.6;
+}
+
+.xstd-bundle__tab-close:hover {
+  background: var(--bg-inset);
+  color: var(--fg);
+  opacity: 1;
+}
+
+.xstd-file-icon {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.xstd-folder-icon {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.xstd-file-size {
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* ---- The viewer chrome --------------------------------------------------- */
+.xstd-viewer-sep {
+  inline-size: 1px;
+  block-size: 1rem;
+  margin-inline: 0.125rem;
+  background: var(--border);
+}
+
+.xstd-problems {
+  flex-shrink: 0;
+  overflow-y: auto;
+  max-block-size: min(28vh, 12.5rem);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-problems__head {
+  position: sticky;
+  inset-block-start: 0;
+  padding: var(--space-1) var(--space-3);
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-subtle);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+.xstd-problems__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  inline-size: 100%;
+  padding: var(--space-1) var(--space-3);
+  text-align: start;
+  color: var(--fg);
+}
+
+.xstd-problems__row:hover {
+  background: var(--bg-subtle);
+}
+
+.xstd-problems__row[data-selected='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+}
+
+.xstd-problems__icon {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+}
+
+.xstd-problems__icon[data-severity='error'] {
+  color: var(--danger);
+}
+
+.xstd-problems__icon[data-severity='warning'] {
+  color: var(--warn);
+}
+
+.xstd-problems__icon[data-severity='info'] {
+  color: var(--accent);
+}
+
+.xstd-problems__at {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The large-output guards (MFX-43.5). The mockup frames them in amber; the
+   wash keeps `--fg` as the ink for the reason deviation 2 gives. */
+.xstd-guard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-block-size: min(38vh, 15rem);
+  padding: var(--space-6);
+  border: 1px dashed color-mix(in srgb, var(--warn) 45%, var(--border));
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--warn) 8%, var(--bg-surface));
+  text-align: center;
+}
+
+.xstd-guard > svg {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  color: var(--warn);
+}
+
+.xstd-guard__why {
+  max-inline-size: 60ch;
+  font-size: var(--fs-md);
+  color: var(--fg);
+}
+
+.xstd-code-fallback {
+  block-size: 100%;
+  overflow: auto;
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  color: var(--fg);
+}
+
+.xstd-code-empty {
+  display: flex;
+  block-size: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-md);
+  color: var(--fg-muted);
+}
+
+/* ---- The mapping graph --------------------------------------------------- */
+.xstd-map__frame {
+  overflow: auto;
+  max-block-size: min(55vh, 20rem);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-map__lane-label {
+  fill: var(--fg-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.xstd-map__snapshot {
+  padding: 0.0625rem var(--space-2);
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.xstd-map__table {
+  overflow: auto;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-map__table th {
+  border-block-end: 1px solid var(--border);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+.xstd-map__row {
+  border-block-end: 1px solid var(--border);
+  color: var(--fg-muted);
+}
+
+.xstd-map__row[data-selected] {
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+}
+
+.xstd-map__row--aggregate {
+  background: var(--bg-subtle);
+}
+
+.xstd-map__cell {
+  min-inline-size: 0;
+  max-inline-size: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.xstd-map__cell--mono {
+  font-family: var(--font-mono);
+  color: var(--fg);
+}
+
+.xstd-map__none {
+  color: var(--fg-muted);
+}
+
+/* ---- The projection graph SVG -------------------------------------------- */
+/* The nodes and edges of both graphs. `fill`/`stroke` are set from an
+   attribute here rather than a class in the component: the reason the header
+   note gives under "What the SVG surfaces need". */
+.xstd-node {
+  fill: var(--bg-surface);
+  stroke: var(--border-strong);
+}
+
+/* Keyed on the vocabulary tone rather than the raw status, because that is the value every
+   mark already carries (`statusPresentation().tone`) — and because it means the node, the
+   edge, the row badge and the legend swatch of one status cannot resolve differently. */
+.xstd-node[data-tone='ok'],
+.xstd-edge[data-tone='ok'] {
+  stroke: var(--ok);
+}
+
+.xstd-node[data-tone='accent'],
+.xstd-edge[data-tone='accent'] {
+  stroke: var(--accent);
+}
+
+.xstd-node[data-tone='warn'],
+.xstd-edge[data-tone='warn'] {
+  stroke: var(--warn);
+}
+
+.xstd-node[data-tone='violet'],
+.xstd-edge[data-tone='violet'] {
+  stroke: var(--violet);
+}
+
+.xstd-node[data-tone='rose'],
+.xstd-edge[data-tone='rose'] {
+  stroke: var(--rose);
+}
+
+.xstd-node[data-tone='neutral'],
+.xstd-edge[data-tone='neutral'],
+.xstd-node[data-tone='outline'],
+.xstd-edge[data-tone='outline'] {
+  stroke: var(--fg-subtle);
+}
+
+/* Selection out-ranks the status hue: it is the reader's own mark on the drawing. */
+.xstd-node[data-selected='true'],
+.xstd-edge[data-selected='true'] {
+  stroke: var(--accent);
+}
+
+.xstd-node__label {
+  fill: var(--fg);
+  font-weight: 600;
+}
+
+.xstd-node__label--muted {
+  fill: var(--fg-muted);
+}
+
+.xstd-node__meta {
+  fill: var(--fg-muted);
+  font-family: var(--font-mono);
+}
+
+.xstd-edge {
+  stroke: var(--border-strong);
+  fill: none;
+}
+
+.xstd-axis-label {
+  fill: var(--fg-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---- The loss heatmap ---------------------------------------------------- */
+.xstd-heat {
+  overflow-x: auto;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-heat th {
+  border-block-end: 1px solid var(--border);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+.xstd-heat tr {
+  border-block-end: 1px solid var(--border);
+}
+
+.xstd-heat tr:last-child {
+  border-block-end: 0;
+}
+
+.xstd-heat__kind {
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* Deviation 3: the mockup's four washes, re-grounded so `--fg` is the ink in
+   every appearance. The level is also stated in words and in a glyph run
+   beside the count, so colour is never the only channel (DESIGN.md §6). */
+.xstd-heat__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+  inline-size: 100%;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  text-align: start;
+  outline-offset: 2px;
+  color: var(--fg);
+  background: var(--bg-subtle);
+}
+
+.xstd-heat__cell[data-heat='1'] {
+  background: color-mix(in srgb, var(--warn) 14%, var(--bg-surface));
+}
+
+.xstd-heat__cell[data-heat='2'] {
+  background: color-mix(in srgb, var(--warn) 28%, var(--bg-surface));
+}
+
+.xstd-heat__cell[data-heat='3'] {
+  background: color-mix(in srgb, var(--danger) 24%, var(--bg-surface));
+}
+
+.xstd-heat__cell[data-heat='4'] {
+  background: color-mix(in srgb, var(--danger) 40%, var(--bg-surface));
+}
+
+.xstd-heat__cell[aria-pressed='true'] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.xstd-heat__count {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.xstd-heat__glyph {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  line-height: 1;
+}
+
+.xstd-heat__level {
+  font-size: var(--fs-2xs);
+  line-height: 1.2;
+  color: var(--fg-muted);
+}
+
+.xstd-heat__empty {
+  display: block;
+  padding: var(--space-1) var(--space-2);
+  text-align: center;
+  font-size: var(--fs-2xs);
+  color: var(--fg-subtle);
+}
+
+/* The filter chips above the matrix. */
+.xstd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.0625rem var(--space-2);
+  border-radius: var(--r-full);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+.xstd-chip:hover {
+  background: var(--bg-subtle);
+}
+
+.xstd-chip[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  font-weight: 500;
+}
+
+/* The ranked findings below the matrix. */
+.xstd-rank {
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-rank__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}
+
+.xstd-rank__row:first-child {
+  border-block-start: 0;
+}
+
+.xstd-rank__row[data-selected] {
+  background: var(--accent-soft);
+}
+
+.xstd-rank__position {
+  flex-shrink: 0;
+  margin-block-start: 0.125rem;
+  padding: 0.0625rem var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.xstd-rank__construct {
+  max-inline-size: 34ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  text-underline-offset: 2px;
+}
+
+.xstd-rank__construct:hover {
+  text-decoration: underline;
+}
+
+.xstd-weighting {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-weighting__summary {
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--accent-fg);
+  cursor: pointer;
+}
+
+/* ---- The round-trip comparison ------------------------------------------- */
+.xstd-rt__prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-rt__diff {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-rt__diff[data-unexplained] {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--danger) 38%, var(--border)),
+    inset 3px 0 0 0 var(--danger);
+}
+
+/* The mockup pins this glyph column at 14px; a `ch` follows the scale. */
+.xstd-rt__glyph {
+  display: inline-block;
+  inline-size: 2ch;
+  text-align: center;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.xstd-rt__unexplained-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+}
+
+.xstd-rt__provenance {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+}
+
+/* ---- The evidence drawer ------------------------------------------------- */
+.xstd-evidence {
+  margin-block-start: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--accent), var(--shadow-sm);
+}
+
+.xstd-evidence__title {
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.xstd-evidence__close {
+  padding: var(--space-1);
+  border-radius: var(--r-sm);
+  color: var(--fg-muted);
+}
+
+.xstd-evidence__close:hover {
+  background: var(--bg-surface);
+  color: var(--fg);
+}
+
+.xstd-evidence__code {
+  padding: 0.0625rem var(--space-1);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg);
+}
+
+.xstd-evidence__body {
+  margin-block-start: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.xstd-evidence__body strong,
+.xstd-evidence__body dt {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.xstd-evidence__remediation {
+  margin-block-start: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-evidence__action {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--accent-fg);
+}
+
+.xstd-evidence__action:hover {
+  background: var(--accent-soft);
+}

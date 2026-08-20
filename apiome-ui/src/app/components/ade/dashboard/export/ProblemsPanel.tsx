@@ -27,11 +27,11 @@ export interface ProblemsPanelProps {
   className?: string;
 }
 
-/** Per-severity row icon + tint, matching the shared rose/amber palette of the Verify surfaces. */
-const SEVERITY_PRESENTATION: Record<LintSeverity, { icon: LucideIcon; className: string }> = {
-  error: { icon: CircleX, className: 'text-rose-600 dark:text-rose-400' },
-  warning: { icon: AlertTriangle, className: 'text-amber-600 dark:text-amber-400' },
-  info: { icon: Info, className: 'text-sky-600 dark:text-sky-400' },
+/** Per-severity row glyph. The tint is the icon's `data-severity`, painted by HIVE-8.3's block. */
+const SEVERITY_ICON: Record<LintSeverity, LucideIcon> = {
+  error: CircleX,
+  warning: AlertTriangle,
+  info: Info,
 };
 
 /**
@@ -45,12 +45,9 @@ export function ProblemsPanel({ problems, selectedId, onSelect, className }: Pro
   return (
     <div
       data-testid="verify-problems"
-      className={cn(
-        'max-h-40 shrink-0 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700',
-        className,
-      )}
+      className={cn('xstd-problems', className)}
     >
-      <div className="sticky top-0 border-b border-gray-200 bg-gray-50 px-3 py-1.5 text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:bg-gray-800/90 dark:text-gray-400">
+      <div className="xstd-problems__head">
         Problems
         <span className="ml-1.5 tabular-nums" data-testid="verify-problems-count">
           {problems.length}
@@ -58,7 +55,7 @@ export function ProblemsPanel({ problems, selectedId, onSelect, className }: Pro
       </div>
       <ul>
         {problems.map((problem) => {
-          const { icon: Icon, className: tone } = SEVERITY_PRESENTATION[problem.severity];
+          const Icon = SEVERITY_ICON[problem.severity];
           const selected = problem.id === selectedId;
           return (
             <li key={problem.id}>
@@ -68,22 +65,21 @@ export function ProblemsPanel({ problems, selectedId, onSelect, className }: Pro
                 data-selected={selected}
                 onClick={() => onSelect(problem)}
                 title={problem.message}
-                className={cn(
-                  'flex w-full items-start gap-2 px-3 py-1.5 text-left text-xs',
-                  selected
-                    ? 'bg-indigo-50 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100'
-                    : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/60',
-                )}
+                className="xstd-problems__row"
               >
-                <Icon className={cn('mt-0.5 h-3.5 w-3.5 shrink-0', tone)} aria-hidden />
+                <Icon
+                  className="xstd-problems__icon"
+                  data-severity={problem.severity}
+                  aria-hidden
+                />
                 <span className="min-w-0">
-                  <span className="font-mono tabular-nums text-gray-500 dark:text-gray-400">
+                  <span className="xstd-problems__at">
                     {problem.line}
                     {problem.column !== null ? `:${problem.column}` : ''}
                   </span>{' '}
                   <span>{problem.message}</span>
                   {problem.rule && (
-                    <span className="ml-1.5 font-mono text-gray-400 dark:text-gray-500">
+                    <span className="xstd-problems__at ml-1.5">
                       {problem.rule}
                     </span>
                   )}

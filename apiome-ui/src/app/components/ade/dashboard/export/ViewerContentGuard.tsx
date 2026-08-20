@@ -46,18 +46,18 @@ export function DeferredFilePanel({
       data-testid={`${testIdPrefix}-deferred`}
       data-reason={plan.reason ?? 'none'}
       className={cn(
-        'flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-amber-300 bg-amber-50/60 p-6 text-center dark:border-amber-800 dark:bg-amber-950/20',
+        'xstd-guard',
         className,
       )}
     >
-      <FileWarning className="h-6 w-6 text-amber-500" aria-hidden />
-      <p className="max-w-xl text-sm text-amber-900 dark:text-amber-100">{why}</p>
+      <FileWarning aria-hidden />
+      <p className="xstd-guard__why">{why}</p>
       <div className="flex flex-wrap items-center justify-center gap-2">
         <button
           type="button"
           data-testid={`${testIdPrefix}-load`}
           onClick={onLoad}
-          className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2.5 py-1 text-xs font-medium text-amber-900 shadow-sm hover:bg-amber-50 dark:border-amber-700 dark:bg-gray-900 dark:text-amber-100 dark:hover:bg-gray-800"
+          className="btn btn--sm"
         >
           <Eye className="h-3.5 w-3.5" aria-hidden />
           {loadLabel}
@@ -67,7 +67,7 @@ export function DeferredFilePanel({
             type="button"
             data-testid={`${testIdPrefix}-deferred-download`}
             onClick={onDownload}
-            className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+            className="btn btn--sm"
           >
             <Download className="h-3.5 w-3.5" aria-hidden />
             Download the whole file
@@ -75,7 +75,7 @@ export function DeferredFilePanel({
         )}
       </div>
       {plan.headOnly && (
-        <p className="text-2xs text-amber-700 dark:text-amber-300">
+        <p className="xstd-note">
           The viewer will show the beginning of the file only — download it to read all of it.
         </p>
       )}
@@ -110,7 +110,7 @@ export function TruncatedContentNotice({
       data-testid={`${testIdPrefix}-truncated`}
       role="status"
       className={cn(
-        'flex flex-wrap items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100',
+        'xstd-notice',
         className,
       )}
     >
@@ -125,7 +125,7 @@ export function TruncatedContentNotice({
           type="button"
           data-testid={`${testIdPrefix}-truncated-download`}
           onClick={onDownload}
-          className="ml-auto inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-0.5 font-medium text-amber-900 hover:bg-amber-50 dark:border-amber-700 dark:bg-gray-900 dark:text-amber-100 dark:hover:bg-gray-800"
+          className="btn btn--sm ml-auto"
         >
           <Download className="h-3 w-3" aria-hidden />
           Download the whole file

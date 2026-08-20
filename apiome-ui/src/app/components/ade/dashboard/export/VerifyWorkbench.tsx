@@ -13,7 +13,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button } from '../../../ui/Button';
-import { Alert } from '../../../ui/Alert';
+import { Alert, AlertDescription, AlertTitle } from '../../../ui/Alert';
+import { lensBadgeTone } from '@/app/components/ade/export-studio';
 import { TAB_LIST_CLASS, tabTriggerClass } from '../../../ui/tabStyles';
 import { FidelityWarningPanel } from './FidelityWarningPanel';
 import { ValidationResultsLens } from './ValidationResultsLens';
@@ -25,7 +26,7 @@ import {
   isSevereConversion,
   lensBadgeCount,
   verifyVerdictBanner,
-  verifyVerdictBannerClass,
+  verifyVerdictAlertVariant,
   type ExportVerifyResponse,
   type ExportVerifyVerdict,
   type VerifyLensKey,
@@ -236,8 +237,8 @@ export function VerifyWorkbench({
     return (
       <div className="space-y-4" data-testid="verify-workbench">
         {header}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950/40">
-          <p className="max-w-xl text-sm text-indigo-900 dark:text-indigo-100">
+        <div className="xstd-advisory">
+          <p className="xstd-advisory__text">
             Run all three checks — fidelity, validation, and lint — in one pass, before you
             generate anything. Nothing is emitted or stored until you choose to generate.
             {autoVerify
@@ -245,7 +246,7 @@ export function VerifyWorkbench({
               : ''}
           </p>
           <Button data-testid="verify-run" onClick={() => onRun()}>
-            <Sparkles className="h-4 w-4" aria-hidden />
+            <Sparkles aria-hidden />
             Run verification
           </Button>
         </div>
@@ -268,9 +269,9 @@ export function VerifyWorkbench({
               <li
                 key={lens.key}
                 data-testid={`verify-progress-${lens.key}`}
-                className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                className="xstd-loading-row xstd-finding"
               >
-                <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
+                <Loader2 className="motion-safe:animate-spin" aria-hidden />
                 Checking {lens.label.toLowerCase()}…
               </li>
             ))}
@@ -347,7 +348,7 @@ export function VerifyWorkbench({
           aria-labelledby={lensTabId(activeLens)}
           tabIndex={0}
           data-testid={`verify-panel-${activeLens}`}
-          className="pt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="xstd-panel pt-4"
         >
           <LensBody
             lens={activeLens}
@@ -372,15 +373,15 @@ export function VerifyWorkbench({
             key={lens.key}
             data-testid={`verify-accordion-${lens.key}`}
             open={lens.key === activeLens}
-            className="rounded-lg border border-gray-200 dark:border-gray-700"
+            className="xstd-details"
           >
-            <summary className="flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            <summary className="xstd-details__summary">
               <span className="flex items-center gap-2">
                 {lens.label}
                 <LensBadge lens={lens.key} result={result} />
               </span>
             </summary>
-            <div className="border-t border-gray-200 p-3 dark:border-gray-700">
+            <div className="xstd-details__body">
               <LensBody
                 lens={lens.key}
                 result={result}
@@ -434,13 +435,13 @@ function VerifyIntro({
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-        <ShieldCheck className="h-4 w-4 text-indigo-500" aria-hidden />
+      <div className="xstd-caps">
+        <ShieldCheck aria-hidden />
         Verify the {targetLabel} conversion
       </div>
       {onAutoVerifyChange && (
         <label
-          className="flex cursor-pointer items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+          className="xstd-check"
           title="Re-run verification automatically a moment after you change the target or an option."
         >
           <input
@@ -448,7 +449,6 @@ function VerifyIntro({
             data-testid="verify-auto-toggle"
             checked={autoVerify}
             onChange={(event) => onAutoVerifyChange(event.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
           />
           Verify automatically
         </label>
@@ -477,16 +477,15 @@ function VerifyConfigNote({
     <p
       data-testid="verify-config-summary"
       data-cached={fromCache ? 'true' : 'false'}
-      className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400"
+      className="xstd-config"
     >
       <span>
-        This verdict describes{' '}
-        <strong className="font-medium text-gray-900 dark:text-gray-100">{summary}</strong>.
+        This verdict describes <strong>{summary}</strong>.
       </span>
       {fromCache && (
         <span
           data-testid="verify-cached-chip"
-          className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+          className="xstd-chip"
           title="Restored from this session — this configuration was already verified, so nothing was re-run."
         >
           <DatabaseZap className="h-3 w-3" aria-hidden />
@@ -509,31 +508,30 @@ export function VerdictBanner({ verdict }: { verdict: ExportVerifyVerdict }) {
           ? AlertTriangle
           : CheckCircle2;
   return (
-    <div
+    <Alert
       // The go/no-go is the whole point of the step and it appears without the user moving focus,
       // so it announces politely when a run settles (MFX-41.5). Tone is icon + words + palette.
       role="status"
       data-testid="verify-verdict"
       data-verdict={verdict}
-      className={`flex items-start gap-3 rounded-lg border p-4 ${verifyVerdictBannerClass(banner.tone)}`}
+      variant={verifyVerdictAlertVariant(banner.tone)}
+      icon={<Icon aria-hidden />}
     >
-      <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
-      <div className="space-y-1">
-        <div className="text-sm font-semibold">{banner.label}</div>
-        <p className="text-xs opacity-90">{banner.description}</p>
-      </div>
-    </div>
+      <AlertTitle>{banner.label}</AlertTitle>
+      <AlertDescription>{banner.description}</AlertDescription>
+    </Alert>
   );
 }
 
 /** A lens tab/accordion count badge; toned by how much the lens is flagging. */
 function LensBadge({ lens, result }: { lens: VerifyLensKey; result: ExportVerifyResponse | null }) {
   const count = lensBadgeCount(lens, result);
-  const tone = lensBadgeTone(lens, result, count);
+  const tone = lensBadgeTone(count, lensBlocks(lens, result));
   return (
     <span
       data-testid={`verify-badge-${lens}`}
-      className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 text-2xs font-semibold tabular-nums ${tone}`}
+      className="xstd-lens-badge"
+      data-tone={tone}
     >
       <span aria-hidden>{count}</span>
       <span className="sr-only">{lensBadgeLabel(lens, count)}</span>
@@ -541,24 +539,23 @@ function LensBadge({ lens, result }: { lens: VerifyLensKey; result: ExportVerify
   );
 }
 
-/** Badge colour: red when the lens blocks/errors, amber when it warns, neutral/green when clean. */
-function lensBadgeTone(
-  lens: VerifyLensKey,
-  result: ExportVerifyResponse | null,
-  count: number,
-): string {
-  const neutral = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
-  const amber = 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-  const rose = 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300';
-  if (count === 0) return neutral;
-  if (lens === 'validation') return result?.validation.blocks_delivery ? rose : amber;
+/**
+ * Whether a lens's findings *block* delivery, which is the only thing its badge's tone turns on.
+ *
+ * Validation blocks when the emitted artifact failed to re-parse, lint when any finding is an
+ * error, and fidelity when the conversion is severe (types-only or near-empty) — the same
+ * condition its verdict banner reads. Everything else is advisory.
+ *
+ * @param lens Which lens the badge belongs to.
+ * @param result The settled verify response, or null before one exists.
+ * @returns Whether the count should read as blocking rather than advisory.
+ */
+function lensBlocks(lens: VerifyLensKey, result: ExportVerifyResponse | null): boolean {
+  if (lens === 'validation') return Boolean(result?.validation.blocks_delivery);
   if (lens === 'lint') {
-    return (result?.lint?.findings ?? []).some((f) => f.severity === 'error') ? rose : amber;
+    return (result?.lint?.findings ?? []).some((f) => f.severity === 'error');
   }
-  // Fidelity: a severe (types-only / near-empty) reduction reads red like its verdict banner; an
-  // ordinary lossy conversion stays amber.
-  if (result && isSevereConversion(result)) return rose;
-  return amber;
+  return Boolean(result && isSevereConversion(result));
 }
 
 interface LensBodyProps {

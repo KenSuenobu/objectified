@@ -30,10 +30,11 @@
 import { useCallback, useMemo, useState } from 'react';
 import { AlertTriangle, Flame, Loader2 } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
 import { EvidenceDrawer } from './EvidenceDrawer';
 import { useCapabilityReasons } from './useCapabilityReasons';
-import { advisorySeverityPillClass } from '../../../../utils/export-advisory';
+import { advisorySeverityTone } from '../../../../utils/export-advisory';
 import type {
   ExportManifestEntity,
   ExportPreviewManifestPage,
@@ -198,7 +199,7 @@ export function FidelityLossHeatmapPanel({
       <section className={cn('space-y-2', className)} data-testid="fidelity-heatmap">
         <SectionHeading targetLabel={targetLabel} />
         <p
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+          className="xstd-notice" data-tone="warn"
           data-testid="fidelity-heatmap-error"
         >
           <AlertTriangle className="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" aria-hidden />
@@ -215,15 +216,15 @@ export function FidelityLossHeatmapPanel({
         <SectionHeading targetLabel={targetLabel} />
         {loading ? (
           <p
-            className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+            className="xstd-loading-row"
             data-testid="fidelity-heatmap-loading"
           >
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-500" aria-hidden />
+            <Loader2 className="motion-safe:animate-spin" aria-hidden />
             Ranking the fidelity findings…
           </p>
         ) : (
           <p
-            className="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
+            className="xstd-empty"
             data-testid="fidelity-heatmap-empty"
           >
             The manifest carried no canonical entities for this artifact.
@@ -241,7 +242,7 @@ export function FidelityLossHeatmapPanel({
           <span
             data-testid="fidelity-heatmap-snapshot"
             title={`Manifest snapshot ${page.manifest_hash}`}
-            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="xstd-map__snapshot"
           >
             snapshot {page.manifest_hash.slice(0, 12)}
           </span>
@@ -267,7 +268,7 @@ export function FidelityLossHeatmapPanel({
       />
 
       {heatmap.filtered && (
-        <p className="text-2xs text-gray-500 dark:text-gray-400" data-testid="fidelity-heatmap-filtered">
+        <p className="xstd-note" data-testid="fidelity-heatmap-filtered">
           Showing {heatmap.includedCount.toLocaleString()} of{' '}
           {heatmap.totalCount.toLocaleString()} findings — the filter narrows this view only;
           the counts above still cover every entity.
@@ -314,8 +315,8 @@ export function FidelityLossHeatmapPanel({
 /** The section heading, shared by the populated, empty, and error states. */
 function SectionHeading({ targetLabel }: { targetLabel: string }) {
   return (
-    <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-      <Flame className="h-3.5 w-3.5 text-rose-500" aria-hidden />
+    <h4 className="xstd-caps">
+      <Flame aria-hidden />
       What {targetLabel} loses, worst first
     </h4>
   );
@@ -343,7 +344,7 @@ function ReconciliationStrip({
   if (reconciliation.partial) {
     return (
       <div
-        className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-2xs text-gray-600 dark:border-gray-700 dark:text-gray-300"
+        className="xstd-notice"
         data-testid="fidelity-heatmap-partial"
       >
         <span>
@@ -352,8 +353,8 @@ function ReconciliationStrip({
           them all and reconcile against the fidelity report.
         </span>
         {loading ? (
-          <span className="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400">
-            <Loader2 className="h-3 w-3 animate-spin text-indigo-500" aria-hidden />
+          <span className="xstd-quiet inline-flex items-center gap-1">
+            <Loader2 className="h-3 w-3 motion-safe:animate-spin text-accent" aria-hidden />
             Loading…
           </span>
         ) : (
@@ -376,7 +377,7 @@ function ReconciliationStrip({
     return (
       <p
         role="status"
-        className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+        className="xstd-notice" data-tone="warn"
         data-testid="fidelity-heatmap-mismatch"
       >
         <AlertTriangle className="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" aria-hidden />
@@ -391,7 +392,7 @@ function ReconciliationStrip({
 
   return (
     <p
-      className="text-2xs text-gray-500 dark:text-gray-400"
+      className="xstd-note"
       data-testid="fidelity-heatmap-reconciled"
     >
       Reconciles with the fidelity report for this job:{' '}
@@ -421,7 +422,7 @@ function HeatmapControls({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <fieldset className="flex flex-wrap items-center gap-1.5" data-testid="fidelity-heatmap-kind-filter">
         <legend className="sr-only">Filter the ranking by entity kind</legend>
-        <span className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+        <span className="xstd-caps">
           Entity kind
         </span>
         {kinds.map((kind) => {
@@ -433,25 +434,20 @@ function HeatmapControls({
               aria-pressed={active}
               data-testid={`fidelity-heatmap-kind-${kind}`}
               onClick={() => onToggleKind(kind)}
-              className={cn(
-                'rounded-full border px-2 py-0.5 text-2xs font-semibold',
-                active
-                  ? 'border-indigo-500 bg-indigo-100 text-indigo-800 dark:border-indigo-400 dark:bg-indigo-900/50 dark:text-indigo-100'
-                  : 'border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800',
-              )}
+              className="xstd-chip"
             >
               {entityKindPluralLabel(kind)}
             </button>
           );
         })}
         {kindFilter.size === 0 && (
-          <span className="text-2xs text-gray-400 dark:text-gray-500">all kinds</span>
+          <span className="xstd-note">all kinds</span>
         )}
       </fieldset>
 
       <fieldset className="flex flex-wrap items-center gap-1.5" data-testid="fidelity-heatmap-grouping">
         <legend className="sr-only">Group the ranked findings</legend>
-        <span className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+        <span className="xstd-caps">
           Group by
         </span>
         {(
@@ -466,12 +462,7 @@ function HeatmapControls({
             aria-pressed={grouping === option.key}
             data-testid={`fidelity-heatmap-group-${option.key}`}
             onClick={() => onGroupingChange(option.key)}
-            className={cn(
-              'rounded-full border px-2 py-0.5 text-2xs font-semibold',
-              grouping === option.key
-                ? 'border-indigo-500 bg-indigo-100 text-indigo-800 dark:border-indigo-400 dark:bg-indigo-900/50 dark:text-indigo-100'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800',
-            )}
+            className="xstd-chip"
           >
             {option.label}
           </button>
@@ -508,7 +499,7 @@ function HeatmapMatrix({
   if (kinds.length === 0 || classes.length === 0) {
     return (
       <p
-        className="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
+        className="xstd-empty"
         data-testid="fidelity-heatmap-matrix-empty"
       >
         No entities match this filter.
@@ -517,7 +508,7 @@ function HeatmapMatrix({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800">
+    <div className="xstd-heat">
       <table className="w-full text-left text-xs" data-testid="fidelity-heatmap-matrix">
         <caption className="sr-only">
           Fidelity loss for {targetLabel} by entity kind and loss class. Each cell states how
@@ -525,7 +516,7 @@ function HeatmapMatrix({
           weighted score; selecting a cell opens the evidence for its worst finding.
         </caption>
         <thead>
-          <tr className="border-b border-gray-200 text-2xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+          <tr className="text-2xs">
             <th scope="col" className="px-2 py-1.5">
               Entity kind
             </th>
@@ -543,10 +534,10 @@ function HeatmapMatrix({
         </thead>
         <tbody>
           {kinds.map((kind) => (
-            <tr key={kind} className="border-b border-gray-100 last:border-0 dark:border-gray-800">
+            <tr key={kind}>
               <th
                 scope="row"
-                className="whitespace-nowrap px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200"
+                className="xstd-heat__kind px-2 py-1.5"
               >
                 {entityKindPluralLabel(kind)}
               </th>
@@ -563,7 +554,7 @@ function HeatmapMatrix({
                       />
                     ) : (
                       <span
-                        className="block px-1.5 py-1 text-center text-2xs text-gray-300 dark:text-gray-600"
+                        className="xstd-heat__empty"
                         data-testid={`fidelity-heatmap-empty-cell-${heatmapCellKey(kind, lossClass)}`}
                       >
                         <span aria-hidden>—</span>
@@ -580,7 +571,7 @@ function HeatmapMatrix({
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t border-gray-200 text-2xs text-gray-600 dark:border-gray-700 dark:text-gray-300">
+          <tr className="text-2xs">
             <th scope="row" className="px-2 py-1.5 font-semibold uppercase tracking-wide">
               Report totals
               {/* Always every entity, filter or no filter — these are the numbers the
@@ -625,19 +616,15 @@ function HeatmapCellButton({
       aria-label={cellAriaLabel(cell, level)}
       data-testid={`fidelity-heatmap-cell-${cell.key}`}
       data-heat={level}
-      className={cn(
-        'flex w-full flex-col items-start gap-0.5 rounded-md px-2 py-1.5 text-left outline-offset-2',
-        heat.cellClass,
-        scoped && 'ring-2 ring-indigo-500 dark:ring-indigo-400',
-      )}
+      className="xstd-heat__cell"
     >
       <span className="flex items-baseline gap-1.5">
-        <span className="text-sm font-semibold tabular-nums">{cell.count}</span>
-        <span aria-hidden className="font-mono text-2xs leading-none">
+        <span className="xstd-heat__count">{cell.count}</span>
+        <span aria-hidden className="xstd-heat__glyph">
           {heat.glyph}
         </span>
       </span>
-      <span aria-hidden className="text-2xs leading-tight opacity-90">
+      <span aria-hidden className="xstd-heat__level">
         {heat.label} · score {cell.score}
       </span>
     </button>
@@ -692,7 +679,7 @@ function RankedFindings({
   return (
     <div className="space-y-2" data-testid="fidelity-heatmap-ranked">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h5 className="text-2xs font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-200">
+        <h5 className="xstd-caps">
           {scopedCell
             ? `${entityKindPluralLabel(scopedCell.entityKind)} ${lossClassSpec(scopedCell.lossClass).label.toLowerCase()}`
             : 'Every loss, worst first'}
@@ -702,7 +689,7 @@ function RankedFindings({
             type="button"
             onClick={onClearScope}
             data-testid="fidelity-heatmap-clear-scope"
-            className="text-2xs font-medium text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-300"
+            className="xstd-link text-2xs"
           >
             Show every loss
           </button>
@@ -711,7 +698,7 @@ function RankedFindings({
 
       {totalLossy === 0 ? (
         <p
-          className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200"
+          className="xstd-notice" data-tone="ok"
           data-testid="fidelity-heatmap-no-loss"
         >
           Nothing was lost in this selection — every entity here is preserved.
@@ -721,11 +708,11 @@ function RankedFindings({
           {groups.map((group) => (
             <div key={group.key} data-testid={`fidelity-heatmap-group-body-${group.key}`}>
               {group.label && (
-                <div className="mt-1 text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <div className="xstd-caps mt-1">
                   {group.label} ({group.findings.length})
                 </div>
               )}
-              <ol className="mt-1 divide-y divide-gray-100 rounded-lg border border-gray-100 dark:divide-gray-800 dark:border-gray-800">
+              <ol className="xstd-rank mt-1">
                 {group.findings.map((finding) => (
                   <RankedFindingRow
                     key={finding.row.id}
@@ -739,7 +726,7 @@ function RankedFindings({
           ))}
           {findings.length < totalLossy && (
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-2xs text-gray-500 dark:text-gray-400" data-testid="fidelity-heatmap-more-note">
+              <p className="xstd-note" data-testid="fidelity-heatmap-more-note">
                 Showing the {findings.length.toLocaleString()} worst of{' '}
                 {totalLossy.toLocaleString()} losses.
               </p>
@@ -768,46 +755,42 @@ function RankedFindingRow({
   const status = statusPresentation(row.status);
   return (
     <li
-      className={cn('flex items-start gap-2 p-2', selected && 'bg-indigo-50 dark:bg-indigo-950/30')}
+      className="xstd-rank__row"
+      data-selected={selected || undefined}
       data-testid={`fidelity-heatmap-finding-${row.id}`}
     >
       <span
-        className="mt-0.5 shrink-0 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-2xs tabular-nums text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+        className="xstd-rank__position"
         data-testid={`fidelity-heatmap-rank-${row.id}`}
       >
         #{finding.rank}
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-1.5">
-          <span className={cn('rounded px-1.5 py-0.5 text-2xs font-semibold', status.badgeClass)}>
+          <Badge variant={status.tone}>
             <span aria-hidden>{status.symbol} </span>
             {status.label}
-          </span>
+          </Badge>
           {row.severity !== 'info' && (
-            <span
-              className={cn(
-                'rounded-full px-1.5 py-0.5 text-2xs font-semibold uppercase',
-                advisorySeverityPillClass(row.severity),
-              )}
-            >
+            <Badge variant={advisorySeverityTone(row.severity)} className="uppercase">
               {row.severity}
-            </span>
+            </Badge>
           )}
           <button
             type="button"
             onClick={onSelect}
             aria-pressed={selected}
             data-testid={`fidelity-heatmap-select-${row.id}`}
-            className="max-w-72 truncate font-mono text-xs text-gray-800 underline-offset-2 hover:underline dark:text-gray-100"
+            className="xstd-rank__construct"
           >
             {row.construct}
           </button>
-          <span className="text-2xs text-gray-500 dark:text-gray-400">
+          <span className="xstd-note">
             {entityKindLabel(row.entityKind).toLowerCase()} · weight {finding.constructWeight} ·
             score {finding.score}
           </span>
         </span>
-        <span className="mt-0.5 block truncate text-2xs text-gray-600 dark:text-gray-300">
+        <span className="xstd-note mt-0.5 block truncate">
           {row.reason ? <span className="font-mono">{row.reason}</span> : null}
           {row.reason ? ' — ' : ''}
           {row.reasonSummary}
@@ -834,11 +817,11 @@ function WeightingDisclosure() {
   const lines = weightingLines();
   const axes = ['Construct', 'Severity', 'Outcome'];
   return (
-    <details className="rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700" data-testid="fidelity-heatmap-weighting">
-      <summary className="cursor-pointer text-2xs font-medium text-indigo-600 dark:text-indigo-300">
+    <details className="xstd-weighting" data-testid="fidelity-heatmap-weighting">
+      <summary className="xstd-weighting__summary">
         How this ranking works
       </summary>
-      <p className="mt-1.5 text-2xs text-gray-600 dark:text-gray-300">
+      <p className="xstd-note mt-1.5">
         Every finding scores <strong>construct × severity × outcome</strong>. A dropped
         operation therefore outranks a hundred dropped descriptions, and anything preserved
         scores zero. A cell&apos;s heat is the sum of its findings&apos; scores, relative to
@@ -847,7 +830,7 @@ function WeightingDisclosure() {
       <dl className="mt-1.5 grid grid-cols-1 gap-x-4 gap-y-0.5 sm:grid-cols-3">
         {axes.map((axis) => (
           <div key={axis}>
-            <dt className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <dt className="xstd-caps">
               {axis}
             </dt>
             {lines
@@ -855,7 +838,7 @@ function WeightingDisclosure() {
               .map((line) => (
                 <dd
                   key={`${axis}-${line.label}`}
-                  className="text-2xs text-gray-600 dark:text-gray-300"
+                  className="xstd-note"
                   data-testid={`fidelity-heatmap-weight-${weightSlug(line.label)}`}
                 >
                   {line.label} × {line.weight}

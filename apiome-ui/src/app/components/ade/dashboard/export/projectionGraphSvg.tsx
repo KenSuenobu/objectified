@@ -46,7 +46,7 @@ export function ProjectionColumnHeading({ x, label }: { x: number; label: string
       y={10}
       aria-hidden
       fontSize={SVG_TEXT_SIZE.label}
-      className="fill-gray-400 font-semibold uppercase tracking-wide dark:fill-gray-500"
+      className="xstd-axis-label"
     >
       {label}
     </text>
@@ -74,7 +74,7 @@ export function ProjectionEntryConnectors<LaneKey extends string>({
           x2={placed.canonicalBox.x}
           y2={midY}
           strokeWidth={1.5}
-          className="stroke-gray-300 dark:stroke-gray-600"
+          className="xstd-edge"
         />
       )}
       <line
@@ -84,7 +84,8 @@ export function ProjectionEntryConnectors<LaneKey extends string>({
         y2={midY}
         strokeWidth={2}
         strokeDasharray={p.dashArray ?? undefined}
-        className={p.strokeClass}
+        className="xstd-edge"
+        data-tone={p.tone}
       />
     </g>
   );
@@ -116,18 +117,15 @@ export function ProjectionNodeBox({
         height={box.height}
         rx={6}
         strokeWidth={selected ? 2 : 1}
-        className={`${
-          selected
-            ? 'stroke-indigo-500 dark:stroke-indigo-400'
-            : 'stroke-gray-300 dark:stroke-gray-600'
-        } fill-white dark:fill-gray-900 motion-safe:transition-colors`}
+        className="xstd-node motion-safe:transition-colors"
+        data-selected={selected}
       />
       <text
         x={box.x + 8}
         y={box.y + box.height / 2 + 3.5}
         fontSize={SVG_TEXT_SIZE.body}
         className={`${mono ? 'font-mono' : ''} ${
-          muted ? 'fill-gray-500 dark:fill-gray-400' : 'fill-gray-900 dark:fill-gray-100'
+          muted ? 'xstd-node__label--muted' : 'xstd-node__label'
         }`}
       >
         {fitProjectionLabel(label)}
@@ -162,15 +160,15 @@ export function ProjectionOutcomeBox({
         rx={6}
         strokeWidth={selected ? 2.5 : 1.5}
         strokeDasharray={presentation.dashArray ?? undefined}
-        className={`${
-          selected ? 'stroke-indigo-500 dark:stroke-indigo-400' : presentation.strokeClass
-        } fill-white dark:fill-gray-900 motion-safe:transition-colors`}
+        className="xstd-node motion-safe:transition-colors"
+        data-selected={selected}
+        data-tone={presentation.tone}
       />
       <text
         x={box.x + 8}
         y={box.y + (location ? 12.5 : box.height / 2 + 3.5)}
         fontSize={SVG_TEXT_SIZE.label}
-        className="fill-gray-900 font-semibold dark:fill-gray-100"
+        className="xstd-node__label"
       >
         {fitProjectionLabel(`${presentation.symbol} ${presentation.label}`)}
       </text>
@@ -179,7 +177,7 @@ export function ProjectionOutcomeBox({
           x={box.x + 8}
           y={box.y + 24}
           fontSize={SVG_TEXT_SIZE.tick}
-          className="fill-gray-500 font-mono dark:fill-gray-400"
+          className="xstd-node__meta"
         >
           {fitProjectionLabel(location, 32)}
         </text>
@@ -212,7 +210,7 @@ export function ProjectionFocusRing<LaneKey extends string>({
       rx={8}
       fill="none"
       strokeWidth={2}
-      className="stroke-indigo-500 dark:stroke-indigo-400"
+      className="xstd-edge" data-selected="true"
     />
   );
 }

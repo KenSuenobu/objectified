@@ -13,7 +13,7 @@
 
 import {
   buildRoundtripIssueReport,
-  changeKindBadgeClass,
+  changeKindTone,
   changeKindLabel,
   diffEntryLabel,
   ISSUE_BODY_MAX_LENGTH,
@@ -114,11 +114,13 @@ describe('diff entry presentation', () => {
     expect(changeKindLabel('changed')).toBe('Changed');
   });
 
-  it('gives each change kind a distinct badge class', () => {
-    const classes = new Set(
-      (['added', 'removed', 'changed'] as const).map((kind) => changeKindBadgeClass(kind)),
+  it('gives each change kind a distinct vocabulary tone', () => {
+    const tones = new Set(
+      (['added', 'removed', 'changed'] as const).map((kind) => changeKindTone(kind)),
     );
-    expect(classes.size).toBe(3);
+    expect(tones.size).toBe(3);
+    // HIVE-8.3: a tone name, never a palette pair — the whole point of the migration.
+    for (const tone of tones) expect(tone).not.toMatch(/-\d{2,3}\b/);
   });
 
   it('names the artifact root instead of printing an empty key', () => {

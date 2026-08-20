@@ -133,7 +133,7 @@ export function BundleFileTabs({
               role="presentation"
               data-testid={`bundle-tab-close-${path}`}
               onClick={() => onClose(path)}
-              className="cursor-pointer rounded p-0.5 text-gray-400 opacity-60 hover:bg-gray-200 hover:text-gray-700 group-hover:opacity-100 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+              className="xstd-bundle__tab-close cursor-pointer group-hover:opacity-100"
             >
               <X className="h-3 w-3" aria-hidden />
             </span>
