@@ -17,8 +17,13 @@
 /playwright-report/
 /playwright-report-journey/
 /playwright-report-a11y/
+/playwright-report-visual/
 /playwright/.cache/
 /test-results/
+/test-results-visual/
+# HIVE-10.1: the visual-parity harness's published report — screenshots, diffs and verdicts,
+# regenerated on every run and uploaded by CI rather than committed.
+/visual-parity-report/
 /e2e/**/*.png
 !/e2e/**/*.spec.ts-snapshots/*.png
 

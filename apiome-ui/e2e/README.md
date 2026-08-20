@@ -14,6 +14,7 @@ e2e/
 │   └── test-fixtures.ts    # Custom test fixtures and page objects
 ├── login.spec.ts           # Login page tests
 ├── login-a11y.spec.ts      # Login a11y + visual snapshots (OLO-3.5) — axe/keyboard/screenshots
+├── visual/                 # Visual parity against docs/mockups (HIVE-10.1) — see visual/README.md
 ├── navigation.spec.ts      # Navigation and routing tests
 ├── visual-regression.spec.ts # Visual regression tests with screenshots
 ├── accessibility.spec.ts   # Accessibility (a11y) tests
@@ -41,6 +42,25 @@ yarn test:e2e:a11y --update-snapshots
 
 Structural a11y (label association, landmark, announcement roles) is additionally pinned in
 jsdom by `tests/login-a11y.test.tsx`, which runs in the fast `yarn test` (jest) suite.
+
+### Visual-parity harness (HIVE-10.1)
+
+`e2e/visual/` scores every redesigned route against its mockup in `docs/mockups/` and gates at
+95 %. It runs under its own config (`playwright.visual.config.ts`) on its own port, needs no
+session, no REST API and no Postgres, and publishes a report — the mockup, the app, and the two
+blended into a difference image — under `visual-parity-report/<theme>/`.
+
+```bash
+# All eighteen routes, light and dark, plus the self-test and the theme-swap test
+yarn test:e2e:visual
+
+# One route
+yarn test:e2e:visual -g published
+```
+
+`e2e/visual/README.md` explains what is compared and why it is not a pixel diff, and how to
+add a route when a redesign ticket lands. The pure half of the harness — snapping, scoring,
+the route ledger and the report — is pinned in jest by `tests/visual-parity-*.test.ts`.
 
 ## Running Tests
 

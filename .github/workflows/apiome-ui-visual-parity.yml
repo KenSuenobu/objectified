@@ -1,0 +1,98 @@
+name: Apiome UI Visual Parity
+
+# The HIVE-10.1 (#5337) visual-parity gate: every redesigned route in
+# `apiome-ui/e2e/visual/routes.ts` is scored against its mockup in `docs/mockups/`, in light
+# and dark, and must clear 95 %. It also runs the harness's own self-test — a deliberate 20 px
+# padding regression that has to fail — so a green tick here means the gate is both passing
+# and still able to fail.
+#
+# The suite loads only `GET /login` (the route that compiles the real `globals.css`) and
+# mounts the committed fixture dumps into it, so it needs no REST API and no Postgres. The
+# mockups are read over `file://` and never written to.
+#
+# It runs on mockup changes as well as app changes: the mockups are the source of truth, so a
+# redrawn screen moves the target and the harness should say so.
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apiome-ui/**'
+      - 'docs/mockups/**'
+      - 'package.json'
+      - 'yarn.lock'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apiome-ui/**'
+      - 'docs/mockups/**'
+      - 'package.json'
+      - 'yarn.lock'
+  workflow_dispatch:
+
+jobs:
+  visual-parity:
+    name: Visual parity against the mockups
+    runs-on: self-hosted
+
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      BETTER_AUTH_SECRET: hive-visual-parity-ci-secret
+      # Cap heap so a dev-server compile cannot swap-thrash the shared self-hosted runner.
+      NODE_OPTIONS: --max-old-space-size=4096
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Pick a free port for the app under test
+        run: |
+          set -euo pipefail
+          # The runner is shared, so two concurrent runs must not both bind :3300.
+          port="$(python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')"
+          echo "VISUAL_UI_PORT=${port}" >> "$GITHUB_ENV"
+          echo "App under test will listen on ${port}"
+
+      - name: Enable Corepack and set Yarn to 4.12.0
+        run: corepack enable && corepack prepare yarn@4.12.0 --activate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install Apiome UI dependencies
+        run: yarn install
+        working-directory: apiome-ui
+
+      - name: Install Playwright Chromium
+        run: yarn playwright install chromium
+        working-directory: apiome-ui
+
+      - name: Run the visual-parity harness
+        run: yarn test:e2e:visual
+        working-directory: apiome-ui
+        env:
+          CI: "1"
+
+      - name: Upload the parity report and diff images
+        # Always: the report is as useful when the gate fails as when it passes — more so.
+        # The global teardown also appends the per-theme score table to the job summary.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apiome-ui-visual-parity-report
+          path: |
+            apiome-ui/visual-parity-report/
+            apiome-ui/playwright-report-visual/
+          if-no-files-found: warn
+        continue-on-error: true
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apiome-ui-visual-parity-traces
+          path: apiome-ui/test-results-visual/
+          if-no-files-found: ignore
+        continue-on-error: true
