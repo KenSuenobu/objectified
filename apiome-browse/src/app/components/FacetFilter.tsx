@@ -5,15 +5,15 @@ import type {
   BrowseFacetOption,
   BrowseFacetSelection,
 } from '../../../lib/browseFacets';
-import { formatLabel, hasFacetSelection, protocolLabel } from '../../../lib/browseFacets';
+import { formatLabel, hasFacetSelection, paradigmLabel } from '../../../lib/browseFacets';
 
 /**
- * The read-only protocol/format chips for one directory row (MFI-6.1).
+ * The read-only paradigm/format chips for one directory row (MFI-6.1).
  *
  * Purely descriptive — unlike {@link FacetFilter}'s chips these are not clickable; they say what an
  * organization or project is, so a listing stays readable once a facet has narrowed it.
  *
- * @param protocols The row's distinct protocols.
+ * @param protocols The row's distinct paradigms, under the stored column's name.
  * @param formats The row's distinct source formats.
  */
 export function FacetValueChips({
@@ -24,7 +24,7 @@ export function FacetValueChips({
   formats?: string[] | null;
 }) {
   const chips = [
-    ...(protocols ?? []).map(protocolLabel),
+    ...(protocols ?? []).map(paradigmLabel),
     ...(formats ?? []).map(formatLabel),
   ].filter(Boolean);
 
@@ -47,7 +47,7 @@ export function FacetValueChips({
 }
 
 interface FacetGroupProps {
-  /** Group heading ("Protocol" / "Format"). */
+  /** Group heading ("Paradigm" / "Format"). */
   title: string;
   /** The axis this group toggles. */
   axis: BrowseFacetAxis;
@@ -106,8 +106,8 @@ function FacetGroup({ title, axis, options, selected, onToggle }: FacetGroupProp
 }
 
 interface FacetFilterProps {
-  /** Protocol chips, in canonical paradigm order. */
-  protocolOptions: BrowseFacetOption[];
+  /** Paradigm chips, in canonical paradigm order. */
+  paradigmOptions: BrowseFacetOption[];
   /** Format chips, most common first. */
   formatOptions: BrowseFacetOption[];
   /** The current selection. */
@@ -121,31 +121,35 @@ interface FacetFilterProps {
 }
 
 /**
- * The protocol + format facet bar for a browse listing (MFI-6.1).
+ * The paradigm + format facet bar for a browse listing (MFI-6.1; paradigm vocabulary FMT-1.6).
+ *
+ * The paradigm chips are the canonical vocabulary — REST, RPC, event-driven, graph, data schema,
+ * agent — the same values `GET /v1/formats/matrix?paradigm=` and `apiome formats --paradigm` take,
+ * so a visitor narrowing the directory and a partner querying the API mean the same thing.
  *
  * Renders nothing at all when neither axis has a value — a directory of only-OpenAPI specs, or one
- * whose revisions predate the format/protocol columns, should not grow an empty filter bar.
+ * whose revisions predate the format/paradigm columns, should not grow an empty filter bar.
  */
 export function FacetFilter({
-  protocolOptions,
+  paradigmOptions,
   formatOptions,
   selection,
   onToggle,
   onClear,
   entityLabel,
 }: FacetFilterProps) {
-  if (protocolOptions.length === 0 && formatOptions.length === 0) return null;
+  if (paradigmOptions.length === 0 && formatOptions.length === 0) return null;
 
   return (
     <div
-      aria-label={`Filter ${entityLabel} by protocol and format`}
+      aria-label={`Filter ${entityLabel} by paradigm and format`}
       className="flex flex-col gap-2.5 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 dark:border-zinc-800 dark:bg-zinc-900/40"
     >
       <FacetGroup
-        title="Protocol"
-        axis="protocol"
-        options={protocolOptions}
-        selected={selection.protocol}
+        title="Paradigm"
+        axis="paradigm"
+        options={paradigmOptions}
+        selected={selection.paradigm}
         onToggle={onToggle}
       />
       <FacetGroup

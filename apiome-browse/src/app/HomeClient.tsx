@@ -11,6 +11,11 @@ import {
   hasFacetSelection,
   toggleFacet,
 } from '../../lib/browseFacets';
+import {
+  SUPPORTED_FORMATS_DOC_URL,
+  describeFormatSurface,
+  describeParadigms,
+} from '../../lib/formatSurface';
 import { AppShell } from './components/AppShell';
 import { DataTable } from './components/DataTable';
 import { DiscoveryRail } from './components/DiscoveryRail';
@@ -24,7 +29,9 @@ interface Tenant {
   slug: string;
   description?: string;
   created_at?: string;
-  /** Distinct protocols this organization publishes (MFI-6.1). */
+  /**
+   * Distinct paradigms this organization publishes, under the stored column's name (MFI-6.1).
+   */
   protocols?: string[] | null;
   /** Distinct source formats this organization publishes (MFI-6.1). */
   formats?: string[] | null;
@@ -100,7 +107,7 @@ export function HomeClient({
 
   // Counts are over the whole directory and ignore the current selection, so the chip row always
   // shows what else is available to pick (the same contract the /v1/browse API's facets have).
-  const protocolOptions = useMemo(() => computeFacetOptions(tenants, 'protocol'), [tenants]);
+  const paradigmOptions = useMemo(() => computeFacetOptions(tenants, 'paradigm'), [tenants]);
   const formatOptions = useMemo(() => computeFacetOptions(tenants, 'format'), [tenants]);
   const filteredTenants = useMemo(() => filterByFacets(tenants, facets), [tenants, facets]);
   const facetsActive = hasFacetSelection(facets);
@@ -141,8 +148,20 @@ export function HomeClient({
               </span>
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-pretty text-[15px] leading-relaxed text-zinc-600 dark:text-zinc-400">
-              An always-current directory of OpenAPI, Arazzo, and JSON Schema documents published by
-              organizations on Apiome.
+              An always-current directory of API descriptions published by organizations on Apiome —
+              across {describeParadigms()}.
+            </p>
+            <p className="mx-auto mt-2 max-w-xl text-pretty text-[13px] leading-relaxed text-zinc-500 dark:text-zinc-500">
+              Apiome reads and writes {describeFormatSurface()}.{' '}
+              <a
+                href={SUPPORTED_FORMATS_DOC_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-[var(--brand)] transition-colors hover:underline"
+              >
+                See every supported format
+              </a>
+              .
             </p>
 
             <form onSubmit={onSubmit} className="mx-auto mt-7 flex max-w-2xl items-center gap-2">
@@ -281,7 +300,7 @@ export function HomeClient({
             </header>
 
             <FacetFilter
-              protocolOptions={protocolOptions}
+              paradigmOptions={paradigmOptions}
               formatOptions={formatOptions}
               selection={facets}
               onToggle={onToggleFacet}

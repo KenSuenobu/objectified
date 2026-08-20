@@ -2199,7 +2199,7 @@ html[data-kbd-hints="off"] .kbd-group {
    catalog table, the item detail header, the format facet and the
    supported-formats gallery all keep the hue a reader already associates with
    the format, and the pill simply stops changing under them on a dark theme.
-   Re-assigning 45 formats to new hues is a design decision, not this one.
+   Re-assigning every registered format to new hues is a design decision, not this one.
 
    Each pair is a `-100` fill under `-800` ink, which clears WCAG AA for the
    pill's 11 px bold text by a wide margin on every theme, since neither end
