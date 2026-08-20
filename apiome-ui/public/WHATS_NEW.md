@@ -6,7 +6,13 @@ We continue to improve the platform based on your feedback with improvements and
 
 ## Features/Improvements
 
+- Import:
+  - Hardening import functionality
+
 ## Bug Fixes
+
+- Import:
+  - Fixed upload to accept all file format extensions instead of just the 10 it had previously
 
 ---
 
