@@ -8,6 +8,16 @@ to completion.
 version coverage, file extensions and export support — is generated from the running registries at
 [supported-formats.md](supported-formats.md). Do not maintain a copy of it anywhere else.
 
+The same answer is machine-readable at `GET /v1/formats/matrix` and printed by `apiome formats`:
+
+```bash
+apiome formats                              # every format, as a table
+apiome formats --direction import           # only what Apiome can read
+apiome formats --paradigm event --json      # one paradigm, machine-readable
+```
+
+The page above is rendered from that response, so the guide, the API and the CLI cannot disagree.
+
 ## Two importers, one registry
 
 Which importer handles a document is decided by the server, from the format it normalizes to:

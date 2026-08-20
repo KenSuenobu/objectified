@@ -25,6 +25,7 @@ __all__ = [
     "emit_list_table",
     "emit_record_response",
     "emit_record_table",
+    "join_list",
     "emit_type_detail",
     "emit_types_list_response",
     "json_mode_from_context",
@@ -329,6 +330,25 @@ def emit_json_schema_type_import_result(
         summary.add_row("Skipped", str(skipped))
         console = Console()
         console.print(summary, justify="left")
+
+
+def join_list(value: Any) -> str:
+    """Render a list-valued cell as comma-separated text.
+
+    The shared column formatter for the several tables whose cells are lists — input kinds,
+    version coverage, file extensions, format keys. Non-list values pass through as their string
+    form, and ``None`` renders as an empty cell, so a column can be pointed at a field that is
+    sometimes scalar without a second formatter.
+
+    Args:
+        value: The raw cell value.
+
+    Returns:
+        The rendered cell text.
+    """
+    if isinstance(value, list):
+        return ", ".join(str(item) for item in value)
+    return "" if value is None else str(value)
 
 
 def _cell_value(

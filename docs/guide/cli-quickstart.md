@@ -54,11 +54,32 @@ Get an API key from the UI: **Dashboard → API keys** (`/ade/dashboard/api-keys
 ```bash
 apiome doctor                      # connectivity check (no auth)
 apiome health                      # REST health JSON
+apiome formats                     # every supported format, direction and version coverage
 apiome projects list               # needs tenant + API key
 apiome import openapi ./spec.yaml  # import (waits for the job)
 apiome lint --project <p> --version <v> --min-grade B
 apiome spec export --project <p> --version <v> -o spec.json
 ```
+
+## What formats does this deployment support?
+
+`apiome formats` prints the **format matrix** (`GET /v1/formats/matrix`): one row per format this
+deployment reads or writes, with the direction, whether an import becomes a publishable Project or
+a catalog item, the accepted input kinds, the declared version coverage, the file extensions, and
+whether the format's toolchain is actually installed here.
+
+```bash
+apiome formats                          # every format, as a table
+apiome formats --direction import       # only what Apiome can read (round-trips included)
+apiome formats --direction both         # only the formats that round-trip
+apiome formats --paradigm event         # one paradigm: rest, rpc, event, graph, data_schema, agent
+apiome formats --json                   # the endpoint's response, verbatim, for scripting
+```
+
+The `Runtime` column separates two facts a bare "unsupported" would collapse: a format Apiome does
+not support, and a format **this deployment** is missing a binary for. Only the first is about the
+product. [supported-formats.md](supported-formats.md) is rendered from the same response, so the
+docs, the API and this command cannot disagree.
 
 ## Cross-format export & projection evidence
 
@@ -85,6 +106,7 @@ acknowledged snapshot that no longer matches the current preview fails with a
 | Group | What it does |
 |---|---|
 | `doctor`, `health` | Connectivity / health (no auth) |
+| `formats` | The format matrix: what this deployment reads/writes, and at which versions |
 | `auth` | Inspect signed-in identity and accessible tenants |
 | `config` | Show / set / unset saved defaults |
 | `projects`, `properties`, `schemas`, `types` | List & fetch tenant resources |

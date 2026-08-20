@@ -10,6 +10,8 @@ Every format Apiome reads or writes, generated from the running registries — t
 - **35 round-trip** — import *and* export.
 - **4** can introspect a live endpoint rather than reading a file.
 
+The same answer is machine-readable at `GET /v1/formats/matrix` and printed by `apiome formats` (`--json`, `--paradigm`, `--direction`). This page is *rendered from that response*, so the documentation, the API and the CLI cannot disagree: there is one traversal of the registries behind all three.
+
 ## Which importer handles which format
 
 Apiome has two importers, and which one a format uses is decided by the server (`app.import_routing`), not by where you started:

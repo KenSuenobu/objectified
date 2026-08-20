@@ -25,7 +25,7 @@ import typer
 from apiome_cli.client import api_paths
 from apiome_cli.client.http import RestClient
 from apiome_cli.extract.slug import slugify_project_name
-from apiome_cli.output import ListColumn, emit_json, emit_list_table
+from apiome_cli.output import ListColumn, emit_json, emit_list_table, join_list
 
 
 def fetch_import_source_descriptors(client: RestClient) -> list[dict[str, Any]]:
@@ -152,17 +152,10 @@ _SOURCE_LIST_COLUMNS: tuple[ListColumn, ...] = (
     ("Format", "key", None),
     ("Label", "label", None),
     ("Paradigm", "paradigm", None),
-    ("Inputs", "input_kinds", lambda value: _join_list(value)),
+    ("Inputs", "input_kinds", join_list),
     ("Live", "supports_live_discovery", lambda value: "yes" if value else ""),
     ("Description", "description", None),
 )
-
-
-def _join_list(value: Any) -> str:
-    """Render a list field (input kinds / formats) as a comma-separated string."""
-    if isinstance(value, list):
-        return ", ".join(str(item) for item in value)
-    return "" if value is None else str(value)
 
 
 def emit_import_sources(

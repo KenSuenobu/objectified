@@ -16,6 +16,7 @@ from apiome_cli.commands import (
     diff,
     doctor,
     export,
+    formats,
     health,
     lint,
     mcp,
@@ -84,6 +85,7 @@ app.add_typer(mock.app, name="mock")
 app.add_typer(import_commands.app, name="import")
 app.add_typer(export.app, name="export")
 app.command("convert")(convert.convert)
+app.command("formats")(formats.formats)
 
 
 @app.command("help")

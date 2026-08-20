@@ -208,6 +208,31 @@ Override saved defaults for one invocation:
 apiome --base-url http://localhost:8000 --api-key obj_dev_key projects list
 ```
 
+### Format matrix (`apiome formats`)
+
+One authoritative answer to *"what formats does this deployment support, in which directions, at
+which versions?"*. `apiome formats` prints `GET /v1/formats/matrix` — one row per format, with the
+direction, whether an import becomes a publishable Project or a catalog item, the accepted input
+kinds, the declared version coverage, the file extensions, and whether the format's toolchain is
+actually installed here:
+
+```bash
+apiome formats                          # every format, as a table
+apiome formats --direction import       # only what Apiome can read (round-trips included)
+apiome formats --direction export       # only what it can write
+apiome formats --direction both         # only the formats that round-trip
+apiome formats --paradigm event         # rest | rpc | event | graph | data_schema | agent
+apiome formats --json                   # the endpoint's response, verbatim, for scripting
+```
+
+The `Runtime` column keeps two facts apart: a format Apiome does not support, and a format **this
+deployment** is missing a binary for. Only the first is about the product — the second names the
+tool. The generated `docs/guide/supported-formats.md` page is rendered from the same response, so
+the documentation, the API and this command cannot disagree.
+
+`--json` prints the response unchanged, so a script piping it receives exactly what a partner
+calling the endpoint receives.
+
 ### Import sources (registry dispatch)
 
 List every import format the server has registered, then import any of them by

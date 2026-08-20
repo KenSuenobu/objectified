@@ -36,6 +36,7 @@ from .draft_lock_routes import router as draft_lock_router
 from .export_job_routes import router as export_job_router
 from .export_routes import router as export_router
 from .export_routes import tenant_router as export_tenant_router
+from .format_matrix_routes import router as format_matrix_router
 from .git_import_routes import router as git_import_router
 from .identity_routes import router as identity_router
 from .import_sources_routes import router as import_sources_router
@@ -129,7 +130,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.131.0",
+    version="1.132.0",
 )
 
 
@@ -367,6 +368,10 @@ app.include_router(schema_targets_router)
 # payloads the 5.1/5.3 surfaces validate, re-run them per revision, and track regressions.
 app.include_router(schema_suite_router)
 app.include_router(import_sources_router)
+# Format matrix (FMT-1.5, #5416): /v1/formats/matrix — one row per registered format, the single
+# machine-readable answer to "what do you support?". The same payload the generated
+# supported-formats page and `apiome formats` render, so the three cannot disagree.
+app.include_router(format_matrix_router)
 # Multi-format export (MFX-2.5, #3842): tenant-scoped fidelity report surfacing — per-target
 # fidelity badges (/export/{tenant}/targets) and the dry-run preview (/export/{tenant}/preview).
 app.include_router(export_router)
