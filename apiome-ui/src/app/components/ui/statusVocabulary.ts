@@ -300,6 +300,22 @@ export const STATUS_TONE: Readonly<Record<string, StatusTone>> = {
   invited: 'accent',
   expired: 'danger',
 
+  // ---- Sunset timeline (HIVE-8.2, #5328) -----------------------------------
+  // The three statuses `/ade/dashboard/versions/sunset-timeline` files a deprecated revision
+  // into. `imminent` (a sunset within 30 days) is `warn` for the same reason `pending` is: a
+  // deadline that is close but has not passed. `past` is `rose` rather than `danger` because
+  // it records something that *has already happened* — the revision is read-only now, and
+  // nothing is broken — which is the distinction the mockup draws by inking the table's past
+  // badge `--rose` while `sunset` above stays `danger`. `scheduled` is the UI's name for the
+  // server's `announced` (`revision_deprecation.sunset_timeline_fields`): a date is on the
+  // calendar and it is not urgent, which is a fact rather than a step on a health scale, so
+  // it takes `neutral` — and both spellings are listed, so a surface that has not normalised
+  // still gets the same tone.
+  past: 'rose',
+  imminent: 'warn',
+  scheduled: 'neutral',
+  announced: 'neutral',
+
   // ---- Maturity ------------------------------------------------------------
   preview: 'accent',
   beta: 'accent',
