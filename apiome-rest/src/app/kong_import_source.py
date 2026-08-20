@@ -58,6 +58,7 @@ class KongImportSource(ImportSource, register=True):
     )
     supports_live_discovery = False
     formats = ("kong", "kong-declarative")
+    file_extensions = (".yaml", ".yml", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

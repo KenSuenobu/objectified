@@ -41,6 +41,7 @@ class XmlRpcImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("xmlrpc", "xml-rpc")
+    file_extensions = (".xmlrpc", ".xml")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

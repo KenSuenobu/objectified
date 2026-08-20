@@ -13,5 +13,6 @@ export * from './ImportSourceCards';
 export * from './ImportIntakeTabs';
 export * from './SpecMetaTiles';
 export * from './FileIntakePanel';
+export * from './importDetectionAdvisory';
 export * from './McpImportDonePanel';
 export * from './RecentImportJobsDrawer';

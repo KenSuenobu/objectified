@@ -186,6 +186,18 @@ class ImportSourceDescriptor(BaseModel):
         description="Normalizer format keys this adapter can emit "
         "(e.g. ``openapi-3.0``/``openapi-3.1``).",
     )
+    file_extensions: List[str] = Field(
+        default_factory=list,
+        description="Lower-case filename extensions this adapter's documents normally carry, each "
+        "including the leading dot and ordered most-canonical first (e.g. ``['.proto']``). This is "
+        "what a file picker's ``accept`` list is built from (FMT-1.1), so a format is browsable as "
+        "soon as its adapter is registered. Compound extensions are spelled in full "
+        "(``.postman_collection.json``). Adapters that accept a ``fileset`` also carry the archive "
+        "suffixes, because an archive is a legitimate way to hand them their documents. The list is "
+        "an **advisory hint, never an allow-list**: content sniffing (``POST /v1/import/detect``) "
+        "is the authority on what a file is, so an unlisted extension must still be offered to "
+        "detection rather than rejected on its name.",
+    )
     available: bool = Field(
         default=True,
         description="Whether this adapter can actually run in the current runtime — ``False`` when a "
@@ -535,6 +547,15 @@ class ImportSource(ABC):
     supports_live_discovery: ClassVar[bool] = False
     #: Normalizer format keys this adapter can emit.
     formats: ClassVar[Tuple[str, ...]] = ()
+    #: Lower-case filename extensions this format's documents normally carry (FMT-1.1), each with
+    #: its leading dot and ordered most-canonical first. Declaring them here is what puts the format
+    #: in every file picker's ``accept`` list — the UI derives its pickers from the registry rather
+    #: than hand-maintaining a parallel array, so a newly registered adapter is browsable with no UI
+    #: change. Spell compound extensions in full (``.postman_collection.json``) and do **not** list
+    #: archive suffixes: :meth:`descriptor` appends those automatically for any adapter accepting
+    #: :attr:`InputKind.FILESET`. Leave empty only for an adapter that cannot take a file at all
+    #: (:attr:`InputKind.FILE` absent), or one whose files genuinely have no conventional extension.
+    file_extensions: ClassVar[Tuple[str, ...]] = ()
     #: When ``True`` a non-dry-run import through this adapter is **not** persisted — the pipeline
     #: runs parse→normalize→lint and returns a preview summary without writing a catalog item. Set
     #: only for the internal ``sample`` no-op acceptance adapter; every real format adapter persists
@@ -828,12 +849,53 @@ class ImportSource(ABC):
         return normalizer_cls().normalize(native_ast, include_raw=include_raw)
 
     @classmethod
+    def declared_file_extensions(cls) -> Tuple[str, ...]:
+        """Return the effective ``accept`` extensions for this adapter (FMT-1.1).
+
+        The adapter's own :attr:`file_extensions`, normalized (lower-cased, leading dot enforced,
+        duplicates dropped) and — for an adapter that accepts :attr:`InputKind.FILESET` — followed
+        by :data:`app.archive_intake.ARCHIVE_SUFFIXES`, because a ``.zip``/``.tar.gz`` of that
+        format's documents is a legitimate way to hand it an import. Appending the archive suffixes
+        here rather than on each adapter keeps the two lists from drifting: adding an archive
+        container server-side widens every fileset adapter's picker at once.
+
+        Declaration order is preserved (most-canonical extension first) so a picker's hint text
+        reads sensibly; only the archive suffixes are appended, always last.
+
+        Returns:
+            The de-duplicated extension tuple, each entry lower-case and dot-prefixed. Empty for an
+            adapter that declares none and takes no fileset.
+        """
+        # Imported lazily: ``archive_intake`` imports this module, so a top-level import would cycle.
+        from .archive_intake import ARCHIVE_SUFFIXES
+
+        # A one-entry declaration written without its trailing comma — ``(".capnp")`` — is a *str*,
+        # and iterating it would silently yield one bogus extension per character. Treat a bare
+        # string as the single extension it was plainly meant to be rather than shredding it.
+        own = cls.file_extensions
+        declared: List[str] = [own] if isinstance(own, str) else list(own)
+        if InputKind.FILESET in cls.input_kinds:
+            declared.extend(ARCHIVE_SUFFIXES)
+
+        seen: Dict[str, None] = {}
+        for raw in declared:
+            ext = raw.strip().lower()
+            if not ext:
+                continue
+            if not ext.startswith("."):
+                ext = f".{ext}"
+            seen.setdefault(ext, None)
+        return tuple(seen)
+
+    @classmethod
     def descriptor(cls) -> ImportSourceDescriptor:
         """Return this adapter's serializable :class:`ImportSourceDescriptor`.
 
         Computes ``available`` from :attr:`required_tools` (MFI-5.2): an adapter whose parser
         hard-requires a bundled binary that is absent in this runtime reports ``available = False``
         plus an ``unavailable_reason``, so the UI can hide/disable it rather than let an import fail.
+        ``file_extensions`` comes from :meth:`declared_file_extensions`, so the descriptor carries
+        the archive suffixes a fileset adapter implicitly accepts (FMT-1.1).
         """
         from .toolchain_runner import is_tool_available
 
@@ -856,6 +918,7 @@ class ImportSource(ABC):
             input_kinds=list(cls.input_kinds),
             supports_live_discovery=cls.supports_live_discovery,
             formats=list(cls.formats),
+            file_extensions=list(cls.declared_file_extensions()),
             available=available,
             unavailable_reason=unavailable_reason,
             supports_remote_refs=cls.supports_remote_refs,

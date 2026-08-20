@@ -44,6 +44,9 @@ class SampleImportSource(ImportSource, register=True):
     input_kinds = (InputKind.PASTE,)
     supports_live_discovery = False
     formats = (SAMPLE_FORMAT,)
+    # Declares no `file_extensions` (FMT-1.1) and needs no justification entry: `input_kinds` is
+    # paste-only, so this adapter never reaches a file picker and has no filename to accept.
+    file_extensions = ()
     # The sample source is a no-op stub: it exercises the job pipeline without ever writing a
     # catalog item, so submit→poll→terminal can be verified DB-free (real adapters persist).
     preview_only = True

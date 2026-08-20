@@ -72,7 +72,7 @@ from .import_source import (
     InputKind,
     LintReport,
 )
-from .proto_descriptor import CompiledDescriptorSet, ProtoFile
+from .proto_descriptor import DESCRIPTOR_SET_SUFFIXES, CompiledDescriptorSet, ProtoFile
 
 __all__ = ["GrpcImportSource"]
 
@@ -177,6 +177,9 @@ class GrpcImportSource(ImportSource, register=True):
     )
     supports_live_discovery = True
     formats = ("protobuf",)
+    # The binary descriptor-set suffixes come from `proto_descriptor` rather than being
+    # respelled here, so the picker and `is_descriptor_set_filename` cannot drift apart.
+    file_extensions = (".proto", *DESCRIPTOR_SET_SUFFIXES)
     # parse() compiles .proto via `buf build`; with no bundled `buf` there is no fallback, so the
     # source reports itself unavailable (MFI-5.2) rather than failing every import at parse time.
     required_tools = ("buf",)

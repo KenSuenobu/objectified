@@ -83,6 +83,7 @@ class ConnectRpcImportSource(ImportSource, register=True):
     )
     supports_live_discovery = True
     formats = ("connectrpc",)
+    file_extensions = (".proto",)
     required_tools = ("buf",)
 
     def __init__(self) -> None:

@@ -404,6 +404,7 @@ class JtdImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE)
     supports_live_discovery = False
     formats = (JTD_FORMAT, "jsontypedefinition", "rfc8927")
+    file_extensions = (".jtd.json", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         document = payload.document

@@ -48,6 +48,7 @@ class CobolCopybookImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("cobolcopybook", "copybook", "cobol", "cobol-copybook")
+    file_extensions = (".cpy", ".cbl", ".copybook")
     analyzer_key = COBOL_ANALYZER_KEY
     analyzer_version = COBOL_ANALYZER_VERSION
 

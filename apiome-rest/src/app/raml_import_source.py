@@ -38,6 +38,7 @@ class RamlImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("raml",)
+    file_extensions = (".raml",)
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

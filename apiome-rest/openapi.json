@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.126.0",
+    "version": "1.128.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -77286,7 +77286,7 @@
             "type": "string",
             "title": "Operation Uuid",
             "description": "The apiome.path_operation UUID.",
-            "example": "d37557be-0f3b-41ee-b158-49e5f678f7cd"
+            "example": "8e47dbf9-5bf2-4b54-a7ea-51c823c251a5"
           },
           "method": {
             "type": "string",
@@ -79650,7 +79650,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-18T02:25:16Z"
+            "example": "2026-08-20T16:18:59Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -88278,6 +88278,15 @@
             "type": "array",
             "title": "Formats",
             "description": "Normalizer format keys this adapter can emit (e.g. ``openapi-3.0``/``openapi-3.1``).",
+            "maxItems": 1000
+          },
+          "file_extensions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "File Extensions",
+            "description": "Lower-case filename extensions this adapter's documents normally carry, each including the leading dot and ordered most-canonical first (e.g. ``['.proto']``). This is what a file picker's ``accept`` list is built from (FMT-1.1), so a format is browsable as soon as its adapter is registered. Compound extensions are spelled in full (``.postman_collection.json``). Adapters that accept a ``fileset`` also carry the archive suffixes, because an archive is a legitimate way to hand them their documents. The list is an **advisory hint, never an allow-list**: content sniffing (``POST /v1/import/detect``) is the authority on what a file is, so an unlisted extension must still be offered to detection rather than rejected on its name.",
             "maxItems": 1000
           },
           "available": {
@@ -114107,7 +114116,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-18T02:25:16Z"
+            "example": "2026-08-20T16:18:59Z"
           }
         },
         "additionalProperties": false,
@@ -128801,14 +128810,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-18T02:25:16Z"
+            "example": "2026-08-20T16:18:59Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-18T02:25:16Z"
+            "example": "2026-08-20T16:18:59Z"
           },
           "outcome": {
             "anyOf": [

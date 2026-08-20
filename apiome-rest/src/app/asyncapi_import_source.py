@@ -135,6 +135,7 @@ class AsyncApiImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("asyncapi-2", "asyncapi-3")
+    file_extensions = (".asyncapi.yaml", ".asyncapi.yml", ".asyncapi.json", ".yaml", ".yml", ".json")
     # AsyncAPI documents routinely reference a shared message library by URL, and
     # ``@asyncapi/parser`` dereferences in-document ``$ref``\s only — so an import may opt into
     # the MFI-29.4 remote resolver, which inlines those references (SSRF-guarded and budgeted)

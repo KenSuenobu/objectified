@@ -32,6 +32,10 @@ const config: Config = {
     '^@lib/(.*)$': '<rootDir>/lib/$1',
     // CSS modules resolve to an identity-object mock so styled components render in tests.
     '\\.module\\.css$': '<rootDir>/tests/__mocks__/css-module.ts',
+    // Plain stylesheet imports (vendor CSS such as `@xyflow/react/dist/style.css`) are a build-time
+    // side effect with nothing to assert in jsdom. Must stay *after* the `.module.css` rule above:
+    // moduleNameMapper is ordered, and first match wins.
+    '\\.css$': '<rootDir>/tests/__mocks__/css-file.ts',
     '^react-markdown$': '<rootDir>/tests/__mocks__/react-markdown.tsx',
     '^remark-gfm$': '<rootDir>/tests/__mocks__/remark-gfm.ts',
     '^rehype-raw$': '<rootDir>/tests/__mocks__/rehype-raw.ts',

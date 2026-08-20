@@ -62,6 +62,12 @@ export interface ImportSourceDescriptor {
   supports_live_discovery: boolean;
   formats: string[];
   /**
+   * Lower-case, dot-prefixed filename extensions this adapter's documents carry (FMT-1.1), e.g.
+   * `['.proto', '.zip']`. Absent on older REST builds, which is why
+   * {@link FALLBACK_IMPORT_FILE_EXTENSIONS} still exists.
+   */
+  file_extensions?: string[];
+  /**
    * Whether the adapter can actually run in this runtime (MFI-5.2). `false` when a hard-required
    * toolchain is missing (e.g. `buf` for gRPC/Protobuf). Absent (older REST) is treated as `true`.
    */
@@ -185,6 +191,68 @@ export function mergeImportSourceCards(
 /** The built-in cards on their own — the fallback rendered before/without the registry list. */
 export function baseImportSourceCards(): ImportSourceCard[] {
   return BASE_CARDS.map((card) => ({ ...card }));
+}
+
+/* -------------------------------------------------------------------------
+   File-picker accept list (FMT-1.1, #5412)
+   ------------------------------------------------------------------------- */
+
+/**
+ * The accept list to use **only** while the registry is unreachable.
+ *
+ * This is the ten-entry array both pickers used to hard-code. It is deliberately kept as an offline
+ * fallback and nothing more: the engine registers 43 adapters, so treating this list as the truth is
+ * what made thirty-three working formats unbrowsable. Once `GET /api/import/sources` resolves,
+ * {@link mergeImportFileExtensions} replaces it wholesale.
+ */
+export const FALLBACK_IMPORT_FILE_EXTENSIONS: ReadonlyArray<string> = [
+  '.yaml',
+  '.yml',
+  '.json',
+  '.zip',
+  '.graphql',
+  '.gql',
+  '.raml',
+  '.proto',
+  '.avsc',
+  '.thrift',
+];
+
+/**
+ * Derive a file picker's `accept` list from the import-source registry.
+ *
+ * Every registered adapter's declared extensions are unioned — both dialogs offer the full set,
+ * because which adapter will claim a file is decided by content sniffing after it is picked, not by
+ * the picker. Entries are normalized (trimmed, lower-cased, dot-prefixed) and de-duplicated while
+ * preserving first-seen order, so each adapter's canonical extension leads.
+ *
+ * Unavailable adapters (`available: false`, e.g. a missing `buf` toolchain) are **kept**: hiding a
+ * `.proto` from the picker would turn a fixable "this runtime lacks buf" message into a file the
+ * user simply cannot select, which is a worse failure.
+ *
+ * @param descriptors The registry list from `GET /api/import/sources` (may be empty/undefined).
+ * @returns The de-duplicated accept list, or {@link FALLBACK_IMPORT_FILE_EXTENSIONS} when the
+ *   registry contributed nothing usable.
+ */
+export function mergeImportFileExtensions(
+  descriptors: ReadonlyArray<ImportSourceDescriptor> | undefined | null,
+): string[] {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+
+  for (const descriptor of descriptors ?? []) {
+    for (const raw of descriptor?.file_extensions ?? []) {
+      if (typeof raw !== 'string') continue;
+      const trimmed = raw.trim().toLowerCase();
+      if (!trimmed) continue;
+      const ext = trimmed.startsWith('.') ? trimmed : `.${trimmed}`;
+      if (ext.length < 2 || seen.has(ext)) continue;
+      seen.add(ext);
+      merged.push(ext);
+    }
+  }
+
+  return merged.length > 0 ? merged : [...FALLBACK_IMPORT_FILE_EXTENSIONS];
 }
 
 /**

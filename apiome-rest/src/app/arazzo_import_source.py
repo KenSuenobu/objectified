@@ -45,6 +45,7 @@ class ArazzoImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE)
     supports_live_discovery = False
     formats = ("arazzo",)
+    file_extensions = (".arazzo.yaml", ".arazzo.yml", ".arazzo.json", ".yaml", ".yml", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         """Recognize an Arazzo document by its ``arazzo: <version>`` marker."""

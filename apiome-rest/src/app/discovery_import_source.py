@@ -61,6 +61,7 @@ class DiscoveryImportSource(ImportSource, register=True):
     )
     supports_live_discovery = True
     formats = ("discovery",)
+    file_extensions = (".discovery.json", ".discovery", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text
