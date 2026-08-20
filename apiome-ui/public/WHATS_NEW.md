@@ -13,6 +13,7 @@ We continue to improve the platform based on your feedback with improvements and
 
 - Import:
   - Fixed upload to accept all file format extensions instead of just the 10 it had previously
+  - Fixes dependency for AsyncAPI to re-enable import functionality
 
 ---
 

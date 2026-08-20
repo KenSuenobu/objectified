@@ -33,6 +33,8 @@ from app.supported_formats_doc import (
     render_supported_formats_page,
 )
 
+from app.toolchain_selfcheck import missing_required_tools
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PAGE_PATH = REPO_ROOT / SUPPORTED_FORMATS_DOCS_PAGE
 
@@ -59,6 +61,23 @@ def rows() -> List[FormatRow]:
 # ===========================================================================
 
 
+#: The page's **Runtime** column is generated from *this* runtime, and the committed page was
+#: generated from one that has the hard-required bundled toolchain (FMT-1.3, #5414) — as the
+#: container image and CI both do. On a machine that never ran
+#: ``scripts/install_dev_toolchain.sh``, AsyncAPI renders as *Needs toolchain* instead: an
+#: environment difference, not a stale page. Say so and skip, rather than failing with advice
+#: ("regenerate the page") that would commit the developer's own missing toolchain.
+_MISSING_REQUIRED_TOOLS = missing_required_tools()
+_TOOLCHAIN_SKIP_REASON = (
+    "the required bundled toolchain is not installed here ("
+    + ", ".join(_MISSING_REQUIRED_TOOLS)
+    + "); run apiome-rest/scripts/install_dev_toolchain.sh. The committed page describes a "
+    "runtime that has it, so comparing against it here would report an environment difference "
+    "as drift."
+)
+
+
+@pytest.mark.skipif(bool(_MISSING_REQUIRED_TOOLS), reason=_TOOLCHAIN_SKIP_REASON)
 def test_committed_page_matches_a_fresh_generation(page: str) -> None:
     """The acceptance criterion: CI fails when the committed page is stale."""
     assert page == render_supported_formats_page(), (

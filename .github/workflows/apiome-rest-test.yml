@@ -15,12 +15,17 @@ on:
       # The generated supported-formats page (FMT-1.2) is drift-checked by this suite. It is
       # listed here so a hand edit of the page alone still triggers the check that rejects it.
       - 'docs/guide/supported-formats.md'
+      # The import corpus this suite runs (detect/import/golden/round-trip) lives here, so a
+      # fixture or manifest edit alone must trigger it — FMT-1.3 found an `asyncapi` fixture
+      # that had never been validated because the parser was absent.
+      - 'apiome-ui/examples/**'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'apiome-rest/**'
       - '.github/workflows/apiome-rest-test.yml'
       - 'docs/guide/supported-formats.md'
+      - 'apiome-ui/examples/**'
   workflow_dispatch:
 
 jobs:
@@ -54,6 +59,28 @@ jobs:
 
       - name: Install dependencies (incl. dev/test group)
         run: uv sync
+
+      # The AsyncAPI parser is a HARD toolchain dependency (FMT-1.3, #5414): the adapter has no
+      # fallback, so without it every asyncapi corpus/golden/round-trip row silently skips and a
+      # regression in a shipped format never goes red here. Install the exact pin from the
+      # toolchain manifest (the same one the container build uses) into apiome-rest/.tools,
+      # where app.toolchain_runner resolves bundled tools without touching PATH.
+      # npm is what installs the pinned parser; the runtime image uses node for the same wrapper.
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install the required AsyncAPI toolchain
+        run: ./scripts/install_dev_toolchain.sh asyncapi-parser
+
+      # Loud, named gate: prove the required toolchain is actually usable before spending the
+      # suite on it. A failure here says "the parser did not install", not "1,000 asyncapi
+      # tests skipped".
+      - name: Verify the required toolchain self-check passes
+        env:
+          APIOME_REQUIRE_TOOLCHAIN: "1"
+        run: uv run python -m app.toolchain_selfcheck
 
       # An explicit, readable gate for the generated docs (FMT-1.2, #5413). The pytest suite
       # below asserts the same thing, but a dedicated step names the failure and the one-line

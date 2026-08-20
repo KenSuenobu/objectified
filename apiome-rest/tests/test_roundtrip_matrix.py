@@ -67,6 +67,7 @@ from app.roundtrip_matrix import (
     production_emit_targets,
     reconcile,
 )
+from app.toolchain_selfcheck import missing_required_tools
 
 load_builtin_import_sources()
 load_builtin_emitters()
@@ -333,6 +334,23 @@ def test_matrix_cells_are_not_silent_failures(roundtrip_matrix: RoundTripMatrix)
         )
 
 
+#: Both the committed matrix artifact and the golden corpus describe a runtime that has the
+#: hard-required bundled toolchain (FMT-1.3, #5414) — the container image and CI both install it.
+#: On a machine that never ran ``scripts/install_dev_toolchain.sh`` the AsyncAPI rows come back
+#: ``skipped`` instead: an environment difference, not artifact drift. Say so and skip, rather
+#: than failing with advice ("regenerate with UPDATE_ROUNDTRIP_MATRIX=1") that would overwrite
+#: the artifact with the developer's own missing toolchain.
+_MISSING_REQUIRED_TOOLS = missing_required_tools()
+_TOOLCHAIN_SKIP_REASON = (
+    "the required bundled toolchain is not installed here ("
+    + ", ".join(_MISSING_REQUIRED_TOOLS)
+    + "); run apiome-rest/scripts/install_dev_toolchain.sh. The committed artifact describes a "
+    "runtime that has it, so comparing against it here would report an environment difference "
+    "as drift."
+)
+
+
+@pytest.mark.skipif(bool(_MISSING_REQUIRED_TOOLS), reason=_TOOLCHAIN_SKIP_REASON)
 def test_matrix_artifact_complete_and_stable(
     roundtrip_matrix: RoundTripMatrix,
     request: pytest.FixtureRequest,

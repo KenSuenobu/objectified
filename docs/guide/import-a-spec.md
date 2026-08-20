@@ -30,6 +30,53 @@ the detector's verdict is what you are shown.
 > [convert-to-openapi.md](convert-to-openapi.md) and [export-fidelity.md](export-fidelity.md) for
 > what survives the conversion.
 
+## Formats that need a bundled tool
+
+A few adapters do not parse the document themselves — they shell out to the authoritative parser
+for that format, which the container image bundles. The **Runtime** column of
+[supported-formats.md](supported-formats.md) says which, and a format whose tool is missing is
+reported there (and on the source card) as *Needs toolchain* rather than being offered and then
+failing mid-import.
+
+**AsyncAPI is the exception: it is a hard dependency, not a degradable one.** The AsyncAPI
+adapter runs `@asyncapi/parser` (the JavaScript reference parser) to validate and dereference the
+document, and there is deliberately **no fallback parser** behind it.
+
+### The fallback policy, stated
+
+We considered shipping a minimal pure-Python structural parser for AsyncAPI 2.x/3.x that would
+keep the format `available` with reduced capability, and rejected it. A reduced parse would
+produce a canonical model that *looks* like a successful import while quietly differing from the
+real one — different validation verdicts, unresolved `$ref`s, a different fingerprint, and
+therefore a different diff and lint score for the same document depending on which runtime
+imported it. A format that is honestly unavailable is recoverable; a format that is silently
+half-parsed is not. So:
+
+- **The image ships the parser.** Its exact version is pinned in the REST service's toolchain
+  manifest (`apiome-rest/toolchain/package.json`) and installed during the container build, which
+  smoke-tests it before the image is finished.
+- **Startup verifies it and says so.** The service invokes the parser at boot and logs the
+  version it resolved, so a deployment's logs always name the `@asyncapi/parser` it is running.
+- **A missing parser fails loudly, never silently.** With `APIOME_REQUIRE_TOOLCHAIN=1` — the
+  default in the shipped image and in any production deployment — the service **refuses to
+  start** and names the tool, the formats it gates, and the override to point at a sidecar
+  binary. Set `APIOME_REQUIRE_TOOLCHAIN=0` to accept a deployment without AsyncAPI import: the
+  service then starts, logs the loss as an `ERROR`, and reports the format as unavailable
+  everywhere it is listed. It never comes up quietly missing a format.
+- **The health surface reports it.** `GET /health` carries a `toolchain` block
+  (`status`, `enforced`, `required`, `available`, `missing`). It states availability and nothing
+  more — the endpoint is unauthenticated, so resolved paths and exact parser versions stay
+  behind `GET /v1/ops/toolchain` (platform-admin), which also names which formats each tool
+  gates. The version the runtime resolved is in the startup log either way.
+
+Every other bundled tool (`buf` for Protobuf/gRPC and Connect, the linters, the diff CLIs)
+remains optional: its absence degrades exactly one format to a stated *Needs toolchain*, and the
+service starts normally.
+
+Running the service outside the container? `apiome-rest/scripts/install_dev_toolchain.sh`
+installs the pinned parser (and `buf`) into `apiome-rest/.tools`; `./run.sh` and `yarn dev` call
+it for you.
+
 ---
 
 ## In the UI
@@ -165,7 +212,7 @@ check is server-side, so a client cannot grant itself one.
 ## Related
 
 - [supported-formats.md](supported-formats.md) — every format Apiome imports and exports,
-  generated from the registries
+  generated from the registries (its **Runtime** column is where a missing bundled tool shows up)
 - [catalog-format-details.md](catalog-format-details.md) — what a catalog item records per format
 - [convert-to-openapi.md](convert-to-openapi.md) — promote a catalog item to a publishable Project
 - [edit-classes-and-properties.md](edit-classes-and-properties.md) — refine what you imported

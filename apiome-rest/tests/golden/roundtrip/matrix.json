@@ -218,7 +218,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (api-blueprint->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, M (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (api-blueprint->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"http_status\" is not expected to be here (observed: Re-import failed: Property \"http_status\" is not expected to be here)",
       "source_format": "api-blueprint",
       "status": "xfail",
       "unexplained": []
@@ -2049,7 +2049,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (arazzo->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2) (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (arazzo->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"outputs\" is not expected to be here (observed: Re-import failed: Property \"outputs\" is not expected to be here)",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": []
@@ -3583,19 +3583,71 @@
     },
     {
       "corpus_path": "asn1/01-person.asn1",
-      "diff_count": 0,
+      "diff_count": 6,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
       "loss_drop": 13,
       "loss_ok": 5,
       "loss_synth": 0,
-      "matched_count": 0,
-      "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (asn1->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (asn1->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "matched_count": 3,
+      "overclaims": [
+        {
+          "construct": "PersonModule.Address",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PersonModule.Person",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PersonModule.PhoneNumber",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PersonModule.PhoneNumberType",
+          "kind": "ok",
+          "message": "enum type carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PersonModule.Status",
+          "kind": "ok",
+          "message": "enum type carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed type 'PersonModule.PhoneNumberType', removed type 'PersonModule.Status'; overclaim: OK 'PersonModule.Address', OK 'PersonModule.Person', OK 'PersonModule.PhoneNumber', OK 'PersonModule.PhoneNumberType', OK 'PersonModule.Status')",
       "source_format": "asn1",
       "status": "xfail",
-      "unexplained": []
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "PersonModule.PhoneNumberType"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "PersonModule.Status"
+        }
+      ]
     },
     {
       "corpus_path": "asn1/01-person.asn1",
@@ -3768,7 +3820,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.status', added operation '53483be2-9b69-4719-9ba1-aff69a45aaff', changed root '', added service 'com.example.status', removed type 'PersonModule.PhoneNumberType', removed type 'PersonModule.Status'; overclaim: OK 'PersonModule.Address', OK 'PersonModule.Person', OK 'PersonModule.PhoneNumber', OK 'PersonModule.PhoneNumberType', OK 'PersonModule.Status')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.status', added operation 'cefff682-9ee7-4eca-999c-49ba5d56f2b1', changed root '', added service 'com.example.status', removed type 'PersonModule.PhoneNumberType', removed type 'PersonModule.Status'; overclaim: OK 'PersonModule.Address', OK 'PersonModule.Person', OK 'PersonModule.PhoneNumber', OK 'PersonModule.PhoneNumberType', OK 'PersonModule.Status')",
       "source_format": "asn1",
       "status": "xfail",
       "unexplained": [
@@ -3780,7 +3832,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "53483be2-9b69-4719-9ba1-aff69a45aaff"
+          "key": "cefff682-9ee7-4eca-999c-49ba5d56f2b1"
         },
         {
           "change": "changed",
@@ -3831,7 +3883,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-fln68rdd/PersonModule.proto:17:3:field PersonModule.Person.id: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-fckuxrhu/PersonModule.proto:17:3:field PersonModule.Person.id: unknown type .integer)",
       "source_format": "asn1",
       "status": "xfail",
       "unexplained": []
@@ -4699,7 +4751,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-k38sq7ev/PersonModule.proto:16:3:field PersonModule.Person.id: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ff6cxly8/PersonModule.proto:16:3:field PersonModule.Person.id: unknown type .integer)",
       "source_format": "asn1",
       "status": "xfail",
       "unexplained": []
@@ -5266,563 +5318,933 @@
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "apiblueprint",
       "emit_key": "apiblueprint",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: No API Blueprint resources or data structures found (asyncapi->apiblueprint) (observed: Re-import failed: No API Blueprint resources or data structures found (asyncapi->apiblueprint))",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 6,
       "emit_format": "arazzo",
       "emit_key": "arazzo",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', changed service 'default')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "changed",
+          "entity": "service",
+          "key": "default"
+        }
+      ]
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "asn1",
       "emit_key": "asn1",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: ASN.1 module `UserAccountService` defines no types (observed: Re-import failed: ASN.1 module `UserAccountService` defines no types)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 5,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 0,
+      "loss_ok": 4,
       "loss_synth": 0,
       "matched_count": 0,
-      "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "overclaims": [
+        {
+          "construct": "onUserDeleted",
+          "kind": "ok",
+          "message": "operation carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "onUserSignedUp",
+          "kind": "ok",
+          "message": "operation carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "user/deleted",
+          "kind": "ok",
+          "message": "event channel carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "user/signedup",
+          "kind": "ok",
+          "message": "event channel carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed channel 'user/deleted', changed channel 'user/signedup', changed operation 'onUserDeleted', changed operation 'onUserSignedUp', changed root ''; overclaim: OK 'onUserDeleted', OK 'onUserSignedUp', OK 'user/deleted', OK 'user/signedup')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "channel",
+          "key": "user/deleted"
+        },
+        {
+          "change": "changed",
+          "entity": "channel",
+          "key": "user/signedup"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "onUserDeleted"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "onUserSignedUp"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "avro",
       "emit_key": "avro",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: EmitResult has no files (observed: Re-import failed: EmitResult has no files)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "capnproto",
       "emit_key": "capnproto",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: Content does not appear to be a Cap'n Proto .capnp schema (observed: Re-import failed: Content does not appear to be a Cap'n Proto .capnp schema)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "cloudevents",
       "emit_key": "cloudevents",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 0,
+      "loss_ok": 4,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: Source document must be a JSON object / YAML mapping at the top level (asyncapi->cloudevents) (observed: Re-import failed: Source document must be a JSON object / YAML mapping at the top level (asyncapi->cloudevents))",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "cobolcopybook",
       "emit_key": "cobolcopybook",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Emit failed: COBOL copybook export requires `cobolcopybook_tree` extras from import (observed: Emit failed: COBOL copybook export requires `cobolcopybook_tree` extras from import)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 7,
       "emit_format": "connectrpc",
       "emit_key": "connectrpc",
-      "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_approx": 2,
+      "loss_drop": 2,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 2,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'default.onUserDeleted', added operation 'default.onUserSignedUp', removed operation 'onUserDeleted', removed operation 'onUserSignedUp', changed root '')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "default.onUserDeleted"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "default.onUserSignedUp"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "onUserDeleted"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "onUserSignedUp"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 7,
       "emit_format": "corbaidl",
       "emit_key": "corbaidl",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', added service 'Exported.default', removed service 'default')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Exported.default"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "default"
+        }
+      ]
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "edix12",
       "emit_key": "edix12",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Emit failed: EDI X12 export requires `x12_transactions` extras from import (observed: Emit failed: EDI X12 export requires `x12_transactions` extras from import)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 11,
       "emit_format": "fhir",
       "emit_key": "fhir",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /default', added operation 'GET /default/{id}', added operation 'POST /default', changed root '', removed service 'default', added service 'default.default', added type 'default.default')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /default"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /default/{id}"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /default"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "default"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "default.default"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "default.default"
+        }
+      ]
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "fix",
       "emit_key": "fix",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Emit failed: FIX export requires `fix_fields` extras from import (observed: Emit failed: FIX export requires `fix_fields` extras from import)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "flatbuffers",
       "emit_key": "flatbuffers",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: Content does not appear to be a FlatBuffers .fbs schema (observed: Re-import failed: Content does not appear to be a FlatBuffers .fbs schema)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 8,
       "emit_format": "graphql",
       "emit_key": "graphql",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'Query._', changed root '', added service 'Query', removed service 'default')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Query._"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Query"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "default"
+        }
+      ]
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "hl7v2",
       "emit_key": "hl7v2",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Emit failed: HL7 v2 export requires `hl7v2_segments` extras from import (observed: Emit failed: HL7 v2 export requires `hl7v2_segments` extras from import)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "iso20022",
       "emit_key": "iso20022",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Emit failed: ISO 20022 export requires `iso20022_tree` extras from import (observed: Emit failed: ISO 20022 export requires `iso20022_tree` extras from import)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "iso8583",
       "emit_key": "iso8583",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Emit failed: ISO 8583 export requires `iso8583_data_elements` extras from import (observed: Emit failed: ISO 8583 export requires `iso8583_data_elements` extras from import)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 7,
       "emit_format": "json-schema",
       "emit_key": "json-schema",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'default', added type 'User Account Service')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "default"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "User Account Service"
+        }
+      ]
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 7,
       "emit_format": "jtd",
       "emit_key": "jtd",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'default', added type 'User Account Service')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "default"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "User Account Service"
+        }
+      ]
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 10,
       "emit_format": "odata",
       "emit_key": "odata",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /default', added operation 'GET /default({key})', added operation 'POST /default', changed root '', added service 'User Account Service.default', removed service 'default')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /default"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /default({key})"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /default"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "User Account Service.default"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "default"
+        }
+      ]
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 7,
       "emit_format": "oncrpc",
       "emit_key": "oncrpc",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'default', added service 'default.default')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "default"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "default.default"
+        }
+      ]
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 7,
       "emit_format": "openapi-3.1",
       "emit_key": "openapi",
-      "loss_approx": 0,
+      "loss_approx": 4,
       "loss_drop": 0,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed channel 'user/deleted', removed channel 'user/signedup', added operation 'POST /user/deleted/onUserDeleted', added operation 'POST /user/signedup/onUserSignedUp', removed operation 'onUserDeleted', removed operation 'onUserSignedUp', changed root '')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "channel",
+          "key": "user/deleted"
+        },
+        {
+          "change": "removed",
+          "entity": "channel",
+          "key": "user/signedup"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /user/deleted/onUserDeleted"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /user/signedup/onUserSignedUp"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "onUserDeleted"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "onUserSignedUp"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "openrpc",
       "emit_key": "openrpc",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: No OpenRPC methods or component schemas found (asyncapi->openrpc) (observed: Re-import failed: No OpenRPC methods or component schemas found (asyncapi->openrpc))",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "postman",
       "emit_key": "postman",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: No Postman requests found in collection (asyncapi->postman) (observed: Re-import failed: No Postman requests found in collection (asyncapi->postman))",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 7,
       "emit_format": "proto3",
       "emit_key": "protobuf",
-      "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_approx": 2,
+      "loss_drop": 2,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 2,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'default.onUserDeleted', added operation 'default.onUserSignedUp', removed operation 'onUserDeleted', removed operation 'onUserSignedUp', changed root '')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "default.onUserDeleted"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "default.onUserSignedUp"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "onUserDeleted"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "onUserSignedUp"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "raml",
       "emit_key": "raml",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: No RAML types or resources found (asyncapi->raml) (observed: Re-import failed: No RAML types or resources found (asyncapi->raml))",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 6,
       "emit_format": "smithy",
       "emit_key": "smithy",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', changed service 'default')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "changed",
+          "entity": "service",
+          "key": "default"
+        }
+      ]
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 5,
       "emit_format": "thrift",
       "emit_key": "thrift",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 8,
       "emit_format": "typespec",
       "emit_key": "typespec",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /', changed root '', added service 'Exported.default', removed service 'default')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Exported.default"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "default"
+        }
+      ]
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "wadl",
       "emit_key": "wadl",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: Content does not appear to be a WADL document (observed: Re-import failed: Content does not appear to be a WADL document)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
-      "diff_count": 0,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 9,
       "emit_format": "wsdl",
       "emit_key": "wsdl",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 0,
+      "matched_count": 4,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'http://example.com/service.default.onUserDeleted', added operation 'http://example.com/service.default.onUserSignedUp', changed root '', removed service 'default', added service 'http://example.com/service.default')",
       "source_format": "asyncapi",
-      "status": "skipped",
-      "unexplained": []
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.default.onUserDeleted"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.default.onUserSignedUp"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "default"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "http://example.com/service.default"
+        }
+      ]
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "xmlrpc",
       "emit_key": "xmlrpc",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Emit failed: XML-RPC export requires at least one RPC operation (observed: Emit failed: XML-RPC export requires at least one RPC operation)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "xsd",
       "emit_key": "xsd",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Re-import failed: No XSD types or elements found (asyncapi->xsd) (observed: Re-import failed: No XSD types or elements found (asyncapi->xsd))",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": null,
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 0,
       "emit_format": "zosconnect",
       "emit_key": "zosconnect",
       "loss_approx": 0,
-      "loss_drop": 0,
+      "loss_drop": 4,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "No runnable representative corpus entry for this source format (known bugs or missing tools).",
+      "reason": "Emit failed: z/OS Connect export requires `zosconnect_descriptor` extras from import (observed: Emit failed: z/OS Connect export requires `zosconnect_descriptor` extras from import)",
       "source_format": "asyncapi",
-      "status": "skipped",
+      "status": "xfail",
       "unexplained": []
     },
     {
@@ -5952,19 +6374,45 @@
     },
     {
       "corpus_path": "avro/01-user-record.avsc",
-      "diff_count": 0,
+      "diff_count": 3,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
       "loss_drop": 6,
       "loss_ok": 2,
       "loss_synth": 0,
-      "matched_count": 0,
-      "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (avro->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (avro->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "matched_count": 1,
+      "overclaims": [
+        {
+          "construct": "com.example.user.Status",
+          "kind": "ok",
+          "message": "enum type carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "com.example.user.User",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed type 'com.example.user.Status'; overclaim: OK 'com.example.user.Status', OK 'com.example.user.User')",
       "source_format": "avro",
       "status": "xfail",
-      "unexplained": []
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "com.example.user.Status"
+        }
+      ]
     },
     {
       "corpus_path": "avro/01-user-record.avsc",
@@ -6079,7 +6527,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation '1e549e1f-1360-4194-9993-9e1ca0164040', changed root '', added service 'com.example.user', removed type 'com.example.user.Status'; overclaim: OK 'com.example.user.Status', OK 'com.example.user.User')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation '85a5862f-d056-4468-9e93-f4105b4e95ed', changed root '', added service 'com.example.user', removed type 'com.example.user.Status'; overclaim: OK 'com.example.user.Status', OK 'com.example.user.User')",
       "source_format": "avro",
       "status": "xfail",
       "unexplained": [
@@ -6091,7 +6539,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "1e549e1f-1360-4194-9993-9e1ca0164040"
+          "key": "85a5862f-d056-4468-9e93-f4105b4e95ed"
         },
         {
           "change": "changed",
@@ -7370,7 +7818,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (capnproto->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5 (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (capnproto->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"capnp_param_name\" is not expected to be here (observed: Re-import failed: Property \"capnp_param_name\" is not expected to be here)",
       "source_format": "capnproto",
       "status": "xfail",
       "unexplained": []
@@ -7498,7 +7946,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-hldufrq_/api.proto:5:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-hldufrq_/api.proto:11:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-hldufrq_/api.proto:21:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-hldufrq_/api.proto:26:15:tag number 0 must be greater than zero)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-b19j6fl9/api.proto:5:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-b19j6fl9/api.proto:11:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-b19j6fl9/api.proto:21:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-b19j6fl9/api.proto:26:15:tag number 0 must be greater than zero)",
       "source_format": "capnproto",
       "status": "xfail",
       "unexplained": []
@@ -8863,7 +9311,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-7kd56ztx/api.proto:4:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-7kd56ztx/api.proto:10:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-7kd56ztx/api.proto:20:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-7kd56ztx/api.proto:25:15:tag number 0 must be greater than zero)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-np4c02ab/api.proto:4:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-np4c02ab/api.proto:10:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-np4c02ab/api.proto:20:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-np4c02ab/api.proto:25:15:tag number 0 must be greater than zero)",
       "source_format": "capnproto",
       "status": "xfail",
       "unexplained": []
@@ -9852,7 +10300,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (cloudevents->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (cloudevents->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"cloudevents_source\" is not expected to be here (observed: Re-import failed: Property \"cloudevents_source\" is not expected to be here)",
       "source_format": "cloudevents",
       "status": "xfail",
       "unexplained": []
@@ -9975,7 +10423,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-33tuhx6z/api.proto:10:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-33tuhx6z/com/example/order.proto:9:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-80o3lsfc/api.proto:10:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-80o3lsfc/com/example/order.proto:9:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
       "source_format": "cloudevents",
       "status": "xfail",
       "unexplained": []
@@ -10522,7 +10970,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ood13cod/api.proto:9:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-ood13cod/com/example/order.proto:8:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-6vdhgsvk/api.proto:9:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-6vdhgsvk/com/example/order.proto:8:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
       "source_format": "cloudevents",
       "status": "xfail",
       "unexplained": []
@@ -10893,7 +11341,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (cobolcopybook->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, M (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (cobolcopybook->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/double' does not exist (observed: Re-import failed: '#/components/schemas/double' does not exist)",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": []
@@ -10949,7 +11397,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.customer.record', added operation '450144b4-1efb-4c18-975f-1e1bdc492031', changed root '', added service 'com.example.customer.record'; overclaim: OK 'CUSTOMER-RECORD.CUSTOMER-RECORD')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.customer.record', added operation '664a61b1-8680-4741-b381-e56e34a400d9', changed root '', added service 'com.example.customer.record'; overclaim: OK 'CUSTOMER-RECORD.CUSTOMER-RECORD')",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": [
@@ -10961,7 +11409,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "450144b4-1efb-4c18-975f-1e1bdc492031"
+          "key": "664a61b1-8680-4741-b381-e56e34a400d9"
         },
         {
           "change": "changed",
@@ -11002,7 +11450,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-g_awjjxo/CUSTOMER_RECORD.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-g_awjjxo/CUSTOMER_RECORD.proto:4:17:syntax error: unexpected '-'\n/tmp/apiome-proto-g_awjjxo/CUSTOMER_RECORD.proto:13:12:syntax error: unexpected '-'\n/tmp/apiome-proto-g_awjjxo/CUSTOMER_RECORD.proto:13:24:syntax error: unexpected '-'\n/tmp/apiome-proto-g_awjjxo/CUSTOMER_RECORD.proto:16:21:syntax error: unexpected '-'\n/tmp/apiome-proto-g_awjjxo/CUSTOMER_RECORD.proto:16:33:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_i9gx8ir/CUSTOMER_RECORD.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-_i9gx8ir/CUSTOMER_RECORD.proto:4:17:syntax error: unexpected '-'\n/tmp/apiome-proto-_i9gx8ir/CUSTOMER_RECORD.proto:13:12:syntax error: unexpected '-'\n/tmp/apiome-proto-_i9gx8ir/CUSTOMER_RECORD.proto:13:24:syntax error: unexpected '-'\n/tmp/apiome-proto-_i9gx8ir/CUSTOMER_RECORD.proto:16:21:syntax error: unexpected '-'\n/tmp/apiome-proto-_i9gx8ir/CUSTOMER_RECORD.proto:16:33:syntax error: unexpected '-')",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": []
@@ -11433,7 +11881,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-nn8776rw/CUSTOMER_RECORD.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-nn8776rw/CUSTOMER_RECORD.proto:3:17:syntax error: unexpected '-'\n/tmp/apiome-proto-nn8776rw/CUSTOMER_RECORD.proto:12:12:syntax error: unexpected '-'\n/tmp/apiome-proto-nn8776rw/CUSTOMER_RECORD.proto:12:24:syntax error: unexpected '-'\n/tmp/apiome-proto-nn8776rw/CUSTOMER_RECORD.proto:15:21:syntax error: unexpected '-'\n/tmp/apiome-proto-nn8776rw/CUSTOMER_RECORD.proto:15:33:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-csmr8jac/CUSTOMER_RECORD.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-csmr8jac/CUSTOMER_RECORD.proto:3:17:syntax error: unexpected '-'\n/tmp/apiome-proto-csmr8jac/CUSTOMER_RECORD.proto:12:12:syntax error: unexpected '-'\n/tmp/apiome-proto-csmr8jac/CUSTOMER_RECORD.proto:12:24:syntax error: unexpected '-'\n/tmp/apiome-proto-csmr8jac/CUSTOMER_RECORD.proto:15:21:syntax error: unexpected '-'\n/tmp/apiome-proto-csmr8jac/CUSTOMER_RECORD.proto:15:33:syntax error: unexpected '-')",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": []
@@ -12056,7 +12504,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (connectrpc->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI- (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (connectrpc->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/int32' does not exist (observed: Re-import failed: '#/components/schemas/int32' does not exist)",
       "source_format": "connectrpc",
       "status": "xfail",
       "unexplained": []
@@ -15519,7 +15967,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (corbaidl->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5. (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (corbaidl->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"corbaidl_raise_index\" is not expected to be here (observed: Re-import failed: Property \"corbaidl_raise_index\" is not expected to be here)",
       "source_format": "corbaidl",
       "status": "xfail",
       "unexplained": []
@@ -15752,7 +16200,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-dvdkw63j/Banking.proto:31:19:method Banking.Bank.getAccount: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2p4p2mj1/Banking.proto:31:19:method Banking.Bank.getAccount: unknown request type .string)",
       "source_format": "corbaidl",
       "status": "xfail",
       "unexplained": []
@@ -17042,7 +17490,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-dq36zxai/Banking.proto:30:19:method Banking.Bank.getAccount: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-hq0v3o5x/Banking.proto:30:19:method Banking.Bank.getAccount: unknown request type .string)",
       "source_format": "corbaidl",
       "status": "xfail",
       "unexplained": []
@@ -18369,7 +18817,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (discovery->asyncapi); AsyncAPI import is unavailable here (see the bundled toolc... (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (discovery->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"http_status\" is not expected to be here (observed: Re-import failed: Property \"http_status\" is not expected to be here)",
       "source_format": "discovery",
       "status": "xfail",
       "unexplained": []
@@ -18618,7 +19066,7 @@
       "loss_synth": 12,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-98byvquv/api.proto:21:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-d_nvifo4/api.proto:21:3:field BookList.totalItems: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-98byvquv/api.proto:21:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ors_l03x/api.proto:21:3:field BookList.totalItems: unknown type .integer)",
       "source_format": "discovery",
       "status": "xfail",
       "unexplained": []
@@ -19665,7 +20113,7 @@
       "loss_synth": 12,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-c_gd19la/api.proto:20:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-zqf5xija/api.proto:20:3:field BookList.totalItems: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-c_gd19la/api.proto:20:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2ltksts_/api.proto:20:3:field BookList.totalItems: unknown type .integer)",
       "source_format": "discovery",
       "status": "xfail",
       "unexplained": []
@@ -20598,19 +21046,40 @@
     },
     {
       "corpus_path": "edi-x12/01-850-purchase-order.edi",
-      "diff_count": 0,
+      "diff_count": 3,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
       "loss_drop": 23,
       "loss_ok": 2,
       "loss_synth": 0,
-      "matched_count": 0,
-      "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (edix12->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2) (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (edix12->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "matched_count": 2,
+      "overclaims": [
+        {
+          "construct": "X12-850.PO1",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "X12-850.TransactionSet850",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root ''; overclaim: OK 'X12-850.PO1', OK 'X12-850.TransactionSet850')",
       "source_format": "edix12",
       "status": "xfail",
-      "unexplained": []
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
       "corpus_path": "edi-x12/01-850-purchase-order.edi",
@@ -20732,7 +21201,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.x12.850', added operation 'c08279fb-f587-4758-9d8b-d12f5a05c3f1', changed root '', added service 'com.example.x12.850'; overclaim: OK 'X12-850.PO1', OK 'X12-850.TransactionSet850')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.x12.850', added operation '684f57bb-e9b9-4a81-961e-53b839e79811', changed root '', added service 'com.example.x12.850'; overclaim: OK 'X12-850.PO1', OK 'X12-850.TransactionSet850')",
       "source_format": "edix12",
       "status": "xfail",
       "unexplained": [
@@ -20744,7 +21213,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "c08279fb-f587-4758-9d8b-d12f5a05c3f1"
+          "key": "684f57bb-e9b9-4a81-961e-53b839e79811"
         },
         {
           "change": "changed",
@@ -20785,7 +21254,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-erbprbey/X12_850.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-erbprbey/X12_850.proto:4:12:syntax error: unexpected '-'\n/tmp/apiome-proto-erbprbey/X12_850.proto:30:16:syntax error: unexpected '-'\n/tmp/apiome-proto-erbprbey/X12_850.proto:30:17:invalid syntax in float value: 850.PO1)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wr9b0ncr/X12_850.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-wr9b0ncr/X12_850.proto:4:12:syntax error: unexpected '-'\n/tmp/apiome-proto-wr9b0ncr/X12_850.proto:30:16:syntax error: unexpected '-'\n/tmp/apiome-proto-wr9b0ncr/X12_850.proto:30:17:invalid syntax in float value: 850.PO1)",
       "source_format": "edix12",
       "status": "xfail",
       "unexplained": []
@@ -21383,7 +21852,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-9fsidtea/X12_850.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-9fsidtea/X12_850.proto:3:12:syntax error: unexpected '-'\n/tmp/apiome-proto-9fsidtea/X12_850.proto:29:16:syntax error: unexpected '-'\n/tmp/apiome-proto-9fsidtea/X12_850.proto:29:17:invalid syntax in float value: 850.PO1)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-f1hcdk62/X12_850.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-f1hcdk62/X12_850.proto:3:12:syntax error: unexpected '-'\n/tmp/apiome-proto-f1hcdk62/X12_850.proto:29:16:syntax error: unexpected '-'\n/tmp/apiome-proto-f1hcdk62/X12_850.proto:29:17:invalid syntax in float value: 850.PO1)",
       "source_format": "edix12",
       "status": "xfail",
       "unexplained": []
@@ -21976,7 +22445,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (fhir->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (fhir->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/bool' does not exist (observed: Re-import failed: '#/components/schemas/bool' does not exist)",
       "source_format": "fhir",
       "status": "xfail",
       "unexplained": []
@@ -22184,7 +22653,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-7is2mq0p/Patient.proto:23:9:symbol \"Patient.Patient\" already defined at Patient.proto:11:9)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-mbsvssot/Patient.proto:23:9:symbol \"Patient.Patient\" already defined at Patient.proto:11:9)",
       "source_format": "fhir",
       "status": "xfail",
       "unexplained": []
@@ -22963,7 +23432,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-5ne74m_n/Patient.proto:22:9:symbol \"Patient.Patient\" already defined at Patient.proto:10:9)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ib2aafh9/Patient.proto:22:9:symbol \"Patient.Patient\" already defined at Patient.proto:10:9)",
       "source_format": "fhir",
       "status": "xfail",
       "unexplained": []
@@ -23629,19 +24098,33 @@
     },
     {
       "corpus_path": "fix/02-executionreport.fix",
-      "diff_count": 0,
+      "diff_count": 2,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
       "loss_drop": 21,
       "loss_ok": 1,
       "loss_synth": 0,
-      "matched_count": 0,
-      "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (fix->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (fix->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "matched_count": 1,
+      "overclaims": [
+        {
+          "construct": "FIX.4.4.Message8",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root ''; overclaim: OK 'FIX.4.4.Message8')",
       "source_format": "fix",
       "status": "xfail",
-      "unexplained": []
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
       "corpus_path": "fix/02-executionreport.fix",
@@ -23732,7 +24215,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.executionreport.fix.4.4', added operation '3c7c1bdb-f0c1-49ee-9c9f-5999fdf51b06', changed root '', added service 'com.example.executionreport.fix.4.4'; overclaim: OK 'FIX.4.4.Message8')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.executionreport.fix.4.4', added operation 'b46e1604-cf15-4ebc-b553-7a4286f4f314', changed root '', added service 'com.example.executionreport.fix.4.4'; overclaim: OK 'FIX.4.4.Message8')",
       "source_format": "fix",
       "status": "xfail",
       "unexplained": [
@@ -23744,7 +24227,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "3c7c1bdb-f0c1-49ee-9c9f-5999fdf51b06"
+          "key": "b46e1604-cf15-4ebc-b553-7a4286f4f314"
         },
         {
           "change": "changed",
@@ -23785,7 +24268,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-r2nlx8um/FIX/_4/_4.proto:4:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-r2nlx8um/FIX/_4/_4.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-r2nlx8um/FIX/_4/_4.proto:4:12:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-8adtg7_j/FIX/_4/_4.proto:4:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-8adtg7_j/FIX/_4/_4.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-8adtg7_j/FIX/_4/_4.proto:4:12:syntax error: unexpected error)",
       "source_format": "fix",
       "status": "xfail",
       "unexplained": []
@@ -24254,7 +24737,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-p_jbkkhi/FIX/_4/_4.proto:3:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-p_jbkkhi/FIX/_4/_4.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-p_jbkkhi/FIX/_4/_4.proto:3:12:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-u0sonyyw/FIX/_4/_4.proto:3:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-u0sonyyw/FIX/_4/_4.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-u0sonyyw/FIX/_4/_4.proto:3:12:syntax error: unexpected error)",
       "source_format": "fix",
       "status": "xfail",
       "unexplained": []
@@ -24716,7 +25199,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (flatbuffers->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (flatbuffers->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/i16' does not exist (observed: Re-import failed: '#/components/schemas/i16' does not exist)",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": []
@@ -24868,7 +25351,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.example.game', added operation '322327a1-7692-4cfc-88a2-c036fa4bea13', changed root '', added service 'com.example.example.game', removed type 'example.game.Color'; overclaim: OK 'example.game.Color', OK 'example.game.Monster', OK 'example.game.Vec3', OK 'example.game.Weapon')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.example.game', added operation '3d4c7151-db7b-4f5a-9db6-491b595f0216', changed root '', added service 'com.example.example.game', removed type 'example.game.Color'; overclaim: OK 'example.game.Color', OK 'example.game.Monster', OK 'example.game.Vec3', OK 'example.game.Weapon')",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": [
@@ -24880,7 +25363,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "322327a1-7692-4cfc-88a2-c036fa4bea13"
+          "key": "3d4c7151-db7b-4f5a-9db6-491b595f0216"
         },
         {
           "change": "changed",
@@ -24926,7 +25409,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-pj3z69qn/example/game.proto:14:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-pj3z69qn/example/game.proto:15:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-pj3z69qn/example/game.proto:16:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-pj3z69qn/example/game.proto:29:3:field example.game.Weapon.damage: unknown type .i16)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-aweb93g1/example/game.proto:14:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-aweb93g1/example/game.proto:15:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-aweb93g1/example/game.proto:16:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-aweb93g1/example/game.proto:29:3:field example.game.Weapon.damage: unknown type .i16)",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": []
@@ -25658,7 +26141,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-purcic8n/example/game.proto:13:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-purcic8n/example/game.proto:14:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-purcic8n/example/game.proto:15:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-purcic8n/example/game.proto:28:3:field example.game.Weapon.damage: unknown type .i16)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-qkjwxuag/example/game.proto:13:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-qkjwxuag/example/game.proto:14:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-qkjwxuag/example/game.proto:15:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-qkjwxuag/example/game.proto:28:3:field example.game.Weapon.damage: unknown type .i16)",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": []
@@ -26342,7 +26825,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (gateway-api->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5 (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (gateway-api->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"backends\" is not expected to be here (observed: Re-import failed: Property \"backends\" is not expected to be here)",
       "source_format": "gateway-api",
       "status": "xfail",
       "unexplained": []
@@ -27667,7 +28150,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (graphql->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2 (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (graphql->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/Float' does not exist (observed: Re-import failed: '#/components/schemas/Float' does not exist)",
       "source_format": "graphql",
       "status": "xfail",
       "unexplained": []
@@ -27816,7 +28299,7 @@
       "loss_synth": 16,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-yf4aszz1/api.proto:9:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-yf4aszz1/api.proto:11:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-yf4aszz1/api.proto:13:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-yf4aszz1/api.proto:15:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-yf4aszz1/api.proto:21:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-yf4aszz1/api.proto:23:3:field Product.description: unknown type .String\n/tmp/apiome-proto-yf4aszz1/api.proto:25:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-yf4aszz1/api.proto:27:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-yf4aszz1/api.proto:29:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-yf4aszz1/api.proto:31:3:field Product.name: unknown type .String\n/tmp/apiome-proto-yf4aszz1/api.proto:33:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-yf4aszz1/api.proto:35:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-yf4aszz1/api.proto:37:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-yf4aszz1/api.proto:39:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-yf4aszz1/api.proto:41:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-yf4aszz1/api.proto:43:3:field Product.updatedAt: unknown type .DateTime)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4k49qt06/api.proto:9:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-4k49qt06/api.proto:11:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-4k49qt06/api.proto:13:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-4k49qt06/api.proto:15:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-4k49qt06/api.proto:21:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-4k49qt06/api.proto:23:3:field Product.description: unknown type .String\n/tmp/apiome-proto-4k49qt06/api.proto:25:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-4k49qt06/api.proto:27:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-4k49qt06/api.proto:29:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-4k49qt06/api.proto:31:3:field Product.name: unknown type .String\n/tmp/apiome-proto-4k49qt06/api.proto:33:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-4k49qt06/api.proto:35:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-4k49qt06/api.proto:37:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-4k49qt06/api.proto:39:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-4k49qt06/api.proto:41:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-4k49qt06/api.proto:43:3:field Product.updatedAt: unknown type .DateTime)",
       "source_format": "graphql",
       "status": "xfail",
       "unexplained": []
@@ -28876,7 +29359,7 @@
       "loss_synth": 16,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xosuwiqw/api.proto:8:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-xosuwiqw/api.proto:10:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-xosuwiqw/api.proto:12:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-xosuwiqw/api.proto:14:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-xosuwiqw/api.proto:20:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-xosuwiqw/api.proto:22:3:field Product.description: unknown type .String\n/tmp/apiome-proto-xosuwiqw/api.proto:24:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-xosuwiqw/api.proto:26:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-xosuwiqw/api.proto:28:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-xosuwiqw/api.proto:30:3:field Product.name: unknown type .String\n/tmp/apiome-proto-xosuwiqw/api.proto:32:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-xosuwiqw/api.proto:34:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-xosuwiqw/api.proto:36:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-xosuwiqw/api.proto:38:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-xosuwiqw/api.proto:40:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-xosuwiqw/api.proto:42:3:field Product.updatedAt: unknown type .DateTime)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-porh871j/api.proto:8:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-porh871j/api.proto:10:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-porh871j/api.proto:12:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-porh871j/api.proto:14:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-porh871j/api.proto:20:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-porh871j/api.proto:22:3:field Product.description: unknown type .String\n/tmp/apiome-proto-porh871j/api.proto:24:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-porh871j/api.proto:26:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-porh871j/api.proto:28:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-porh871j/api.proto:30:3:field Product.name: unknown type .String\n/tmp/apiome-proto-porh871j/api.proto:32:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-porh871j/api.proto:34:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-porh871j/api.proto:36:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-porh871j/api.proto:38:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-porh871j/api.proto:40:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-porh871j/api.proto:42:3:field Product.updatedAt: unknown type .DateTime)",
       "source_format": "graphql",
       "status": "xfail",
       "unexplained": []
@@ -29746,19 +30229,40 @@
     },
     {
       "corpus_path": "hl7v2/01-adt-a01.hl7",
-      "diff_count": 0,
+      "diff_count": 3,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
       "loss_drop": 49,
       "loss_ok": 2,
       "loss_synth": 0,
-      "matched_count": 0,
-      "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (hl7v2->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (hl7v2->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "matched_count": 2,
+      "overclaims": [
+        {
+          "construct": "ADT-A01.MSH",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "ADT-A01.MessageADTA01",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root ''; overclaim: OK 'ADT-A01.MSH', OK 'ADT-A01.MessageADTA01')",
       "source_format": "hl7v2",
       "status": "xfail",
-      "unexplained": []
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
       "corpus_path": "hl7v2/01-adt-a01.hl7",
@@ -29880,7 +30384,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.adt.a01', added operation '5dc080b4-9ea8-4bb3-9905-3f02873b3588', changed root '', added service 'com.example.adt.a01'; overclaim: OK 'ADT-A01.MSH', OK 'ADT-A01.MessageADTA01')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.adt.a01', added operation '46ad7223-7ee7-4fb2-ad73-1c93bbf3cf4f', changed root '', added service 'com.example.adt.a01'; overclaim: OK 'ADT-A01.MSH', OK 'ADT-A01.MessageADTA01')",
       "source_format": "hl7v2",
       "status": "xfail",
       "unexplained": [
@@ -29892,7 +30396,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "5dc080b4-9ea8-4bb3-9905-3f02873b3588"
+          "key": "46ad7223-7ee7-4fb2-ad73-1c93bbf3cf4f"
         },
         {
           "change": "changed",
@@ -29933,7 +30437,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-03yor85h/ADT_A01.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-03yor85h/ADT_A01.proto:4:12:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wmjz8qlf/ADT_A01.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-wmjz8qlf/ADT_A01.proto:4:12:syntax error: unexpected '-')",
       "source_format": "hl7v2",
       "status": "xfail",
       "unexplained": []
@@ -30523,7 +31027,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-bdwce5yt/ADT_A01.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-bdwce5yt/ADT_A01.proto:3:12:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-9zgfuede/ADT_A01.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-9zgfuede/ADT_A01.proto:3:12:syntax error: unexpected '-')",
       "source_format": "hl7v2",
       "status": "xfail",
       "unexplained": []
@@ -31043,7 +31547,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (http-file->asyncapi); AsyncAPI import is unavailable here (see the bundled toolc... (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (http-file->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"provenance\" is not expected to be here (observed: Re-import failed: Property \"provenance\" is not expected to be here)",
       "source_format": "http-file",
       "status": "xfail",
       "unexplained": []
@@ -31190,7 +31694,7 @@
       "loss_synth": 2,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-mebc7zs1/http_file_02_typical_vars_auth.proto:4:13:syntax error: ex... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-q19nsvki/http_file_02_typical_vars_auth.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-q19nsvki/http_file_02_typical_vars_auth.proto:4:13:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-mebc7zs1/http_file_02_typical_vars_auth.proto:4:13:syntax error: ex... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-0agr0823/http_file_02_typical_vars_auth.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-0agr0823/http_file_02_typical_vars_auth.proto:4:13:syntax error: unexpected '-')",
       "source_format": "http-file",
       "status": "xfail",
       "unexplained": []
@@ -31903,7 +32407,7 @@
       "loss_synth": 2,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-7kj4u8vo/http_file_02_typical_vars_auth.proto:3:13:syntax error: ex... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-1td5x_cc/http_file_02_typical_vars_auth.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-1td5x_cc/http_file_02_typical_vars_auth.proto:3:13:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-7kj4u8vo/http_file_02_typical_vars_auth.proto:3:13:syntax error: ex... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-lpcfq_5i/http_file_02_typical_vars_auth.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-lpcfq_5i/http_file_02_typical_vars_auth.proto:3:13:syntax error: unexpected '-')",
       "source_format": "http-file",
       "status": "xfail",
       "unexplained": []
@@ -32889,19 +33393,152 @@
     },
     {
       "corpus_path": "iso20022/01-pain.001-credit-transfer.xml",
-      "diff_count": 0,
+      "diff_count": 19,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
       "loss_drop": 36,
       "loss_ok": 18,
       "loss_synth": 0,
-      "matched_count": 0,
-      "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (iso20022->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5. (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (iso20022->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "matched_count": 18,
+      "overclaims": [
+        {
+          "construct": "pain.001.001.09.Amt",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.CdtTrfTxInf",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.Cdtr",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.CdtrAcct",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.CdtrAgt",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.CstmrCdtTrfInitn",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.Dbtr",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.DbtrAcct",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.DbtrAgt",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.Document",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.FinInstnId",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.GrpHdr",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.Id",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.InitgPty",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.PmtId",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.PmtInf",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.ReqdExctnDt",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "pain.001.001.09.RmtInf",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root ''; overclaim: OK 'pain.001.001.09.Amt', OK 'pain.001.001.09.CdtTrfTxInf', OK 'pain.001.001.09.Cdtr', OK 'pain.001.001.09.CdtrAcct', OK 'pain.001.001.09.CdtrAgt', OK 'pain.001.001.09.CstmrCdtTrfInitn', OK 'pain.001.001.09.Dbtr', OK 'pain.001.001.09.DbtrAcct', OK 'pain.001.001.09.DbtrAgt', OK 'pain.001.001.09.Document', OK 'pain.001.001.09.FinInstnId', OK 'pain.001.001.09.GrpHdr', OK 'pain.001.001.09.Id', OK 'pain.001.001.09.InitgPty', OK 'pain.001.001.09.PmtId', OK 'pain.001.001.09.PmtInf', OK 'pain.001.001.09.ReqdExctnDt', OK 'pain.001.001.09.RmtInf')",
       "source_format": "iso20022",
       "status": "xfail",
-      "unexplained": []
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
       "corpus_path": "iso20022/01-pain.001-credit-transfer.xml",
@@ -33386,7 +34023,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.cstmrcdttrfinitn.pain.001.001.09', added operation '74b075e6-9e11-4bc8-b9a6-af269b0ccb5b', changed root '', added service 'com.example.cstmrcdttrfinitn.pain.001.001.09'; overclaim: OK 'pain.001.001.09.Amt', OK 'pain.001.001.09.CdtTrfTxInf', OK 'pain.001.001.09.Cdtr', OK 'pain.001.001.09.CdtrAcct', OK 'pain.001.001.09.CdtrAgt', OK 'pain.001.001.09.CstmrCdtTrfInitn', OK 'pain.001.001.09.Dbtr', OK 'pain.001.001.09.DbtrAcct', OK 'pain.001.001.09.DbtrAgt', OK 'pain.001.001.09.Document', OK 'pain.001.001.09.FinInstnId', OK 'pain.001.001.09.GrpHdr', OK 'pain.001.001.09.Id', OK 'pain.001.001.09.InitgPty', OK 'pain.001.001.09.PmtId', OK 'pain.001.001.09.PmtInf', OK 'pain.001.001.09.ReqdExctnDt', OK 'pain.001.001.09.RmtInf')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.cstmrcdttrfinitn.pain.001.001.09', added operation '94f50f86-d6c9-4e6e-ab0e-a023ca216b82', changed root '', added service 'com.example.cstmrcdttrfinitn.pain.001.001.09'; overclaim: OK 'pain.001.001.09.Amt', OK 'pain.001.001.09.CdtTrfTxInf', OK 'pain.001.001.09.Cdtr', OK 'pain.001.001.09.CdtrAcct', OK 'pain.001.001.09.CdtrAgt', OK 'pain.001.001.09.CstmrCdtTrfInitn', OK 'pain.001.001.09.Dbtr', OK 'pain.001.001.09.DbtrAcct', OK 'pain.001.001.09.DbtrAgt', OK 'pain.001.001.09.Document', OK 'pain.001.001.09.FinInstnId', OK 'pain.001.001.09.GrpHdr', OK 'pain.001.001.09.Id', OK 'pain.001.001.09.InitgPty', OK 'pain.001.001.09.PmtId', OK 'pain.001.001.09.PmtInf', OK 'pain.001.001.09.ReqdExctnDt', OK 'pain.001.001.09.RmtInf')",
       "source_format": "iso20022",
       "status": "xfail",
       "unexplained": [
@@ -33398,7 +34035,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "74b075e6-9e11-4bc8-b9a6-af269b0ccb5b"
+          "key": "94f50f86-d6c9-4e6e-ab0e-a023ca216b82"
         },
         {
           "change": "changed",
@@ -33439,7 +34076,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:4:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:4:13:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:11:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:16:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:24:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:24:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:28:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:28:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:32:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:33:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:41:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:41:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:45:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:45:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:49:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:49:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:59:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:59:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:77:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:77:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:79:8:syntax error: unexpected error\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:81:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:85:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-ronsx366/pain/_001/_001/_09.proto:85:8:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:4:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:4:13:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:11:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:16:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:24:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:24:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:28:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:28:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:32:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:33:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:41:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:41:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:45:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:45:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:49:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:49:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:59:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:59:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:77:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:77:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:79:8:syntax error: unexpected error\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:81:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:85:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-9qye1gew/pain/_001/_001/_09.proto:85:8:syntax error: unexpected error)",
       "source_format": "iso20022",
       "status": "xfail",
       "unexplained": []
@@ -35545,7 +36182,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:3:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:3:13:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:10:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:10:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:23:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:23:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:27:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:27:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:31:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:31:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:40:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:40:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:44:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:44:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:48:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:48:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:58:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:58:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:76:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:76:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:78:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:78:8:syntax error: unexpected error\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:84:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-gmpz36o0/pain/_001/_001/_09.proto:84:8:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:3:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:3:13:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:10:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:10:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:23:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:23:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:27:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:27:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:31:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:31:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:40:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:40:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:44:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:44:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:48:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:48:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:58:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:58:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:76:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:76:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:78:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:78:8:syntax error: unexpected error\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:84:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-akjh3fmy/pain/_001/_001/_09.proto:84:8:syntax error: unexpected error)",
       "source_format": "iso20022",
       "status": "xfail",
       "unexplained": []
@@ -37454,19 +38091,110 @@
     },
     {
       "corpus_path": "iso8583/01-authorization-0100.json",
-      "diff_count": 0,
+      "diff_count": 13,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
       "loss_drop": 22,
       "loss_ok": 12,
       "loss_synth": 0,
-      "matched_count": 0,
-      "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (iso8583->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2 (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (iso8583->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "matched_count": 12,
+      "overclaims": [
+        {
+          "construct": "0100.DE11",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE12",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE13",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE18",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE2",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE3",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE32",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE4",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE41",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE49",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.DE7",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "0100.Message0100",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root ''; overclaim: OK '0100.DE11', OK '0100.DE12', OK '0100.DE13', OK '0100.DE18', OK '0100.DE2', OK '0100.DE3', OK '0100.DE32', OK '0100.DE4', OK '0100.DE41', OK '0100.DE49', OK '0100.DE7', OK '0100.Message0100')",
       "source_format": "iso8583",
       "status": "xfail",
-      "unexplained": []
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
       "corpus_path": "iso8583/01-authorization-0100.json",
@@ -37898,7 +38626,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.authorization.request', added operation '96cf28b2-514f-4b4e-b770-430936f80330', changed root '', added service 'com.example.authorization.request'; overclaim: OK '0100.DE11', OK '0100.DE12', OK '0100.DE13', OK '0100.DE18', OK '0100.DE2', OK '0100.DE3', OK '0100.DE32', OK '0100.DE4', OK '0100.DE41', OK '0100.DE49', OK '0100.DE7', OK '0100.Message0100')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.authorization.request', added operation 'bccd07d8-b36d-4161-a65a-ed5f36422758', changed root '', added service 'com.example.authorization.request'; overclaim: OK '0100.DE11', OK '0100.DE12', OK '0100.DE13', OK '0100.DE18', OK '0100.DE2', OK '0100.DE3', OK '0100.DE32', OK '0100.DE4', OK '0100.DE41', OK '0100.DE49', OK '0100.DE7', OK '0100.Message0100')",
       "source_format": "iso8583",
       "status": "xfail",
       "unexplained": [
@@ -37910,7 +38638,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "96cf28b2-514f-4b4e-b770-430936f80330"
+          "key": "bccd07d8-b36d-4161-a65a-ed5f36422758"
         },
         {
           "change": "changed",
@@ -37951,7 +38679,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-g94d6vbd/_0100.proto:4:9:syntax error: unexpected int literal)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-mod3ttf1/_0100.proto:4:9:syntax error: unexpected int literal)",
       "source_format": "iso8583",
       "status": "xfail",
       "unexplained": []
@@ -39481,7 +40209,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-y_cacgy0/_0100.proto:3:9:syntax error: unexpected int literal)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-0hu5pl2f/_0100.proto:3:9:syntax error: unexpected int literal)",
       "source_format": "iso8583",
       "status": "xfail",
       "unexplained": []
@@ -40633,7 +41361,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (json-schema->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (json-schema->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/object' does not exist (observed: Re-import failed: '#/components/schemas/object' does not exist)",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": []
@@ -40703,7 +41431,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.product', added operation '47ae0c37-56a4-4314-8e94-9d1fb196f74b', changed root '', added service 'com.example.product', removed type 'Product'; overclaim: OK 'Product')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.product', added operation '21f404a6-e35a-404f-af1e-00f7314d8c91', changed root '', added service 'com.example.product', removed type 'Product'; overclaim: OK 'Product')",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": [
@@ -40715,7 +41443,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "47ae0c37-56a4-4314-8e94-9d1fb196f74b"
+          "key": "21f404a6-e35a-404f-af1e-00f7314d8c91"
         },
         {
           "change": "changed",
@@ -40761,7 +41489,7 @@
       "loss_synth": 7,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-m61n3wyl/api.proto:7:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-m61n3wyl/api.proto:11:3:field Product.price: unknown type .number\n/tmp/apiome-proto-m61n3wyl/api.proto:13:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-m61n3wyl/api.proto:19:3:field Product.dimensions: unknown type .object)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xz2invvn/api.proto:7:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-xz2invvn/api.proto:11:3:field Product.price: unknown type .number\n/tmp/apiome-proto-xz2invvn/api.proto:13:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-xz2invvn/api.proto:19:3:field Product.dimensions: unknown type .object)",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": []
@@ -41201,7 +41929,7 @@
       "loss_synth": 7,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-jjfi0022/api.proto:6:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-jjfi0022/api.proto:10:3:field Product.price: unknown type .number\n/tmp/apiome-proto-jjfi0022/api.proto:12:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-jjfi0022/api.proto:18:3:field Product.dimensions: unknown type .object)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vz3yw8r9/api.proto:6:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-vz3yw8r9/api.proto:10:3:field Product.price: unknown type .number\n/tmp/apiome-proto-vz3yw8r9/api.proto:12:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-vz3yw8r9/api.proto:18:3:field Product.dimensions: unknown type .object)",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": []
@@ -41594,7 +42322,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (jtd->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (jtd->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/timestamp' does not exist (observed: Re-import failed: '#/components/schemas/timestamp' does not exist)",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": []
@@ -41697,7 +42425,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation 'dea13ca5-8dea-4311-b43d-28657a5228e1', changed root '', added service 'com.example.user', removed type 'User', removed type 'UserAddress', removed type 'UserStatus'; overclaim: OK 'User', OK 'UserAddress', OK 'UserStatus')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation 'ad21bf95-1a84-4916-a311-9280990dcaee', changed root '', added service 'com.example.user', removed type 'User', removed type 'UserAddress', removed type 'UserStatus'; overclaim: OK 'User', OK 'UserAddress', OK 'UserStatus')",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": [
@@ -41709,7 +42437,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "dea13ca5-8dea-4311-b43d-28657a5228e1"
+          "key": "ad21bf95-1a84-4916-a311-9280990dcaee"
         },
         {
           "change": "changed",
@@ -41765,7 +42493,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-x74m7683/api.proto:21:3:field User.createdAt: unknown type .timestamp)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-bezy7gi7/api.proto:21:3:field User.createdAt: unknown type .timestamp)",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": []
@@ -42315,7 +43043,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xjhcnnlx/api.proto:20:3:field User.createdAt: unknown type .timestamp)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-j061r9ih/api.proto:20:3:field User.createdAt: unknown type .timestamp)",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": []
@@ -42854,7 +43582,7 @@
     },
     {
       "corpus_path": "k8s-crd/02-typical-cronwidget.yaml",
-      "diff_count": 0,
+      "diff_count": 3,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
@@ -42862,11 +43590,35 @@
       "loss_ok": 1,
       "loss_synth": 0,
       "matched_count": 0,
-      "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (k8s-crd->asyncapi); AsyncAPI import is unavailable here (see the bundled toolcha... (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (k8s-crd->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "overclaims": [
+        {
+          "construct": "apps.example.io/v1.CronWidget",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'cronwidgets.apps.example.io', removed type 'apps.example.io/v1.CronWidget'; overclaim: OK 'apps.example.io/v1.CronWidget')",
       "source_format": "k8s-crd",
       "status": "xfail",
-      "unexplained": []
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "cronwidgets.apps.example.io"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "apps.example.io/v1.CronWidget"
+        }
+      ]
     },
     {
       "corpus_path": "k8s-crd/02-typical-cronwidget.yaml",
@@ -42982,7 +43734,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "unexplained: added channel 'com.example.cronwidget', added operation '9d2bdd36-7b40-4293-80ee-e5b7902e53dc', changed root '', added service 'com.example.cron... (observed: unexplained: added channel 'com.example.cronwidget', added operation '3931def1-1416-45a0-9f5f-332b37327a09', changed root '', added service 'com.example.cronwidget', removed service 'cronwidgets.apps.example.io', removed type 'apps.example.io/v1.CronWidget'; overclaim: OK 'apps.example.io/v1.CronWidget')",
+      "reason": "unexplained: added channel 'com.example.cronwidget', added operation '9d2bdd36-7b40-4293-80ee-e5b7902e53dc', changed root '', added service 'com.example.cron... (observed: unexplained: added channel 'com.example.cronwidget', added operation '5f395884-2192-4a4e-bf24-cfff5fa6410c', changed root '', added service 'com.example.cronwidget', removed service 'cronwidgets.apps.example.io', removed type 'apps.example.io/v1.CronWidget'; overclaim: OK 'apps.example.io/v1.CronWidget')",
       "source_format": "k8s-crd",
       "status": "xfail",
       "unexplained": [
@@ -42994,7 +43746,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "3931def1-1416-45a0-9f5f-332b37327a09"
+          "key": "5f395884-2192-4a4e-bf24-cfff5fa6410c"
         },
         {
           "change": "changed",
@@ -43045,7 +43797,7 @@
       "loss_synth": 2,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-x_k3k0ae/apps/example/io_v1.proto:4:24:syntax error: expecting ';'\n... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-dhxmf80b/apps/example/io_v1.proto:4:24:syntax error: expecting ';'\n/tmp/apiome-proto-dhxmf80b/apps/example/io_v1.proto:4:24:syntax error: unexpected '/')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-x_k3k0ae/apps/example/io_v1.proto:4:24:syntax error: expecting ';'\n... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-642v9_ju/apps/example/io_v1.proto:4:24:syntax error: expecting ';'\n/tmp/apiome-proto-642v9_ju/apps/example/io_v1.proto:4:24:syntax error: unexpected '/')",
       "source_format": "k8s-crd",
       "status": "xfail",
       "unexplained": []
@@ -43657,7 +44409,7 @@
       "loss_synth": 2,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3eveu44g/apps/example/io_v1.proto:3:24:syntax error: expecting ';'\n... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-1z7zwwml/apps/example/io_v1.proto:3:24:syntax error: expecting ';'\n/tmp/apiome-proto-1z7zwwml/apps/example/io_v1.proto:3:24:syntax error: unexpected '/')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3eveu44g/apps/example/io_v1.proto:3:24:syntax error: expecting ';'\n... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-iik33rjq/apps/example/io_v1.proto:3:24:syntax error: expecting ';'\n/tmp/apiome-proto-iik33rjq/apps/example/io_v1.proto:3:24:syntax error: unexpected '/')",
       "source_format": "k8s-crd",
       "status": "xfail",
       "unexplained": []
@@ -44238,7 +44990,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (kong->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (kong->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"gateway_route\" is not expected to be here (observed: Re-import failed: Property \"gateway_route\" is not expected to be here)",
       "source_format": "kong",
       "status": "xfail",
       "unexplained": []
@@ -45752,7 +46504,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (llm-tools->asyncapi); AsyncAPI import is unavailable here (see the bundled toolc... (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (llm-tools->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"llm_tools_dialect\" is not expected to be here (observed: Re-import failed: Property \"llm_tools_dialect\" is not expected to be here)",
       "source_format": "llm-tools",
       "status": "xfail",
       "unexplained": []
@@ -45908,7 +46660,7 @@
       "loss_synth": 5,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-sud_faed/api.proto:17:3:field search_docsParams.limit: unknown type... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-9j1qrsac/api.proto:17:3:field search_docsParams.limit: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-sud_faed/api.proto:17:3:field search_docsParams.limit: unknown type... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-a7fs1746/api.proto:17:3:field search_docsParams.limit: unknown type .integer)",
       "source_format": "llm-tools",
       "status": "xfail",
       "unexplained": []
@@ -46695,7 +47447,7 @@
       "loss_synth": 5,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-xlqp2ah9/api.proto:16:3:field search_docsParams.limit: unknown type... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-u5u0bu4v/api.proto:16:3:field search_docsParams.limit: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-xlqp2ah9/api.proto:16:3:field search_docsParams.limit: unknown type... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-253_j588/api.proto:16:3:field search_docsParams.limit: unknown type .integer)",
       "source_format": "llm-tools",
       "status": "xfail",
       "unexplained": []
@@ -47512,7 +48264,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (odata->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (odata->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/i32' does not exist (observed: Re-import failed: '#/components/schemas/i32' does not exist)",
       "source_format": "odata",
       "status": "xfail",
       "unexplained": []
@@ -47711,7 +48463,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4u0q805u/Example/Orders.proto:14:3:field Example.Orders.Order.Id: unknown type .i32)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vveqtaxj/Example/Orders.proto:14:3:field Example.Orders.Order.Id: unknown type .i32)",
       "source_format": "odata",
       "status": "xfail",
       "unexplained": []
@@ -48688,7 +49440,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-5eu8e1ne/Example/Orders.proto:13:3:field Example.Orders.Order.Id: unknown type .i32)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-29hwnamh/Example/Orders.proto:13:3:field Example.Orders.Order.Id: unknown type .i32)",
       "source_format": "odata",
       "status": "xfail",
       "unexplained": []
@@ -49605,7 +50357,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (oncrpc->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2) (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (oncrpc->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/bytes' does not exist (observed: Re-import failed: '#/components/schemas/bytes' does not exist)",
       "source_format": "oncrpc",
       "status": "xfail",
       "unexplained": []
@@ -49804,7 +50556,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-s6lls1r7/KV_PROG.proto:14:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-s6lls1r7/KV_PROG.proto:30:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-s6lls1r7/KV_PROG.proto:30:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-s6lls1r7/KV_PROG.proto:31:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-s6lls1r7/KV_PROG.proto:32:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-sgu5_sse/KV_PROG.proto:14:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-sgu5_sse/KV_PROG.proto:30:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-sgu5_sse/KV_PROG.proto:30:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-sgu5_sse/KV_PROG.proto:31:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-sgu5_sse/KV_PROG.proto:32:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
       "source_format": "oncrpc",
       "status": "xfail",
       "unexplained": []
@@ -50800,7 +51552,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2w44gfye/KV_PROG.proto:13:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-2w44gfye/KV_PROG.proto:29:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-2w44gfye/KV_PROG.proto:29:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-2w44gfye/KV_PROG.proto:30:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-2w44gfye/KV_PROG.proto:31:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-krdc89ne/KV_PROG.proto:13:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-krdc89ne/KV_PROG.proto:29:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-krdc89ne/KV_PROG.proto:29:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-krdc89ne/KV_PROG.proto:30:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-krdc89ne/KV_PROG.proto:31:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
       "source_format": "oncrpc",
       "status": "xfail",
       "unexplained": []
@@ -51672,7 +52424,7 @@
     },
     {
       "corpus_path": "openapi/07-nullable-types.yaml",
-      "diff_count": 0,
+      "diff_count": 2,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
       "loss_approx": 0,
@@ -51680,11 +52432,30 @@
       "loss_ok": 1,
       "loss_synth": 0,
       "matched_count": 0,
-      "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (openapi->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2 (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (openapi->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "overclaims": [
+        {
+          "construct": "UserProfile",
+          "kind": "ok",
+          "message": "object carried to AsyncAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed type 'UserProfile'; overclaim: OK 'UserProfile')",
       "source_format": "openapi",
       "status": "xfail",
-      "unexplained": []
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "UserProfile"
+        }
+      ]
     },
     {
       "corpus_path": "openapi/07-nullable-types.yaml",
@@ -51765,7 +52536,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.nullable.types.example', added operation 'afadf9f2-83af-4013-ae1a-7cad68ad4727', changed root '', added service 'com.example.nullable.types.example', removed type 'UserProfile'; overclaim: OK 'UserProfile')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.nullable.types.example', added operation 'b776bc80-493d-46b3-96cb-2bebd8550b8a', changed root '', added service 'com.example.nullable.types.example', removed type 'UserProfile'; overclaim: OK 'UserProfile')",
       "source_format": "openapi",
       "status": "xfail",
       "unexplained": [
@@ -51777,7 +52548,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "afadf9f2-83af-4013-ae1a-7cad68ad4727"
+          "key": "b776bc80-493d-46b3-96cb-2bebd8550b8a"
         },
         {
           "change": "changed",
@@ -51823,7 +52594,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-y60v8u17/api.proto:7:3:field UserProfile.age: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-18syg7oj/api.proto:7:3:field UserProfile.age: unknown type .integer)",
       "source_format": "openapi",
       "status": "xfail",
       "unexplained": []
@@ -52260,7 +53031,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-025v9wdb/api.proto:6:3:field UserProfile.age: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-d5vpdk8h/api.proto:6:3:field UserProfile.age: unknown type .integer)",
       "source_format": "openapi",
       "status": "xfail",
       "unexplained": []
@@ -52743,7 +53514,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (openrpc->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2 (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (openrpc->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"openrpc_params\" is not expected to be here (observed: Re-import failed: Property \"openrpc_params\" is not expected to be here)",
       "source_format": "openrpc",
       "status": "xfail",
       "unexplained": []
@@ -52904,7 +53675,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-zgq_geha/api.proto:11:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-zgq_geha/api.proto:26:19:method Wallet_API.getBalance: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-0hyokxx0/api.proto:11:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-0hyokxx0/api.proto:26:19:method Wallet_API.getBalance: unknown request type .string)",
       "source_format": "openrpc",
       "status": "xfail",
       "unexplained": []
@@ -53633,7 +54404,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vyhijfjg/api.proto:10:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-vyhijfjg/api.proto:25:19:method Wallet_API.getBalance: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-w_8izdpx/api.proto:10:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-w_8izdpx/api.proto:25:19:method Wallet_API.getBalance: unknown request type .string)",
       "source_format": "openrpc",
       "status": "xfail",
       "unexplained": []
@@ -54372,7 +55143,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (postman->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2 (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (postman->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"postman_body_language\" is not expected to be here (observed: Re-import failed: Property \"postman_body_language\" is not expected to be here)",
       "source_format": "postman",
       "status": "xfail",
       "unexplained": []
@@ -54531,7 +55302,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-nq4zozdj/api.proto:7:3:field Task.done: unknown type .boolean)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-k8n_knwm/api.proto:7:3:field Task.done: unknown type .boolean)",
       "source_format": "postman",
       "status": "xfail",
       "unexplained": []
@@ -55209,7 +55980,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-8tys4s_e/api.proto:6:3:field Task.done: unknown type .boolean)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wnya57ci/api.proto:6:3:field Task.done: unknown type .boolean)",
       "source_format": "postman",
       "status": "xfail",
       "unexplained": []
@@ -56028,7 +56799,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (protobuf->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5. (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (protobuf->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/int32' does not exist (observed: Re-import failed: '#/components/schemas/int32' does not exist)",
       "source_format": "protobuf",
       "status": "xfail",
       "unexplained": []
@@ -59239,7 +60010,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (raml->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (raml->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"http_status\" is not expected to be here (observed: Re-import failed: Property \"http_status\" is not expected to be here)",
       "source_format": "raml",
       "status": "xfail",
       "unexplained": []
@@ -61256,7 +62027,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (smithy->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2) (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (smithy->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/float' does not exist (observed: Re-import failed: '#/components/schemas/float' does not exist)",
       "source_format": "smithy",
       "status": "xfail",
       "unexplained": []
@@ -61568,7 +62339,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-lwobhyle/example/weather.proto:28:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-lwobhyle/example/weather.proto:33:3:field example.weather.GetForecastInput.days: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_8xd0r_2/example/weather.proto:28:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-_8xd0r_2/example/weather.proto:33:3:field example.weather.GetForecastInput.days: unknown type .integer)",
       "source_format": "smithy",
       "status": "xfail",
       "unexplained": []
@@ -62925,7 +63696,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-mr885zze/example/weather.proto:27:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-mr885zze/example/weather.proto:32:3:field example.weather.GetForecastInput.days: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-y0jb0x_y/example/weather.proto:27:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-y0jb0x_y/example/weather.proto:32:3:field example.weather.GetForecastInput.days: unknown type .integer)",
       "source_format": "smithy",
       "status": "xfail",
       "unexplained": []
@@ -64204,7 +64975,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (swagger->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2 (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (swagger->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"operationId\" is not expected to be here (observed: Re-import failed: Property \"operationId\" is not expected to be here)",
       "source_format": "swagger",
       "status": "xfail",
       "unexplained": []
@@ -64517,7 +65288,7 @@
       "loss_synth": 36,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2biqopro/api.proto:8:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-2biqopro/api.proto:15:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-2biqopro/api.proto:25:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-2biqopro/api.proto:35:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-2biqopro/api.proto:36:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-2biqopro/api.proto:37:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-2biqopro/api.proto:38:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-2biqopro/api.proto:49:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-2biqopro/api.proto:74:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-2biqopro/api.proto:76:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-2biqopro/api.proto:85:3:field User.id: unknown type .integer\n/tmp/apiome-proto-2biqopro/api.proto:89:3:field User.userStatus: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-o60dz14u/api.proto:8:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-o60dz14u/api.proto:15:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-o60dz14u/api.proto:25:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-o60dz14u/api.proto:35:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-o60dz14u/api.proto:36:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-o60dz14u/api.proto:37:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-o60dz14u/api.proto:38:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-o60dz14u/api.proto:49:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-o60dz14u/api.proto:74:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-o60dz14u/api.proto:76:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-o60dz14u/api.proto:85:3:field User.id: unknown type .integer\n/tmp/apiome-proto-o60dz14u/api.proto:89:3:field User.userStatus: unknown type .integer)",
       "source_format": "swagger",
       "status": "xfail",
       "unexplained": []
@@ -66041,7 +66812,7 @@
       "loss_synth": 36,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ym2l6oa0/api.proto:7:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-ym2l6oa0/api.proto:14:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-ym2l6oa0/api.proto:24:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-ym2l6oa0/api.proto:34:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-ym2l6oa0/api.proto:35:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-ym2l6oa0/api.proto:36:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-ym2l6oa0/api.proto:37:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-ym2l6oa0/api.proto:48:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-ym2l6oa0/api.proto:73:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-ym2l6oa0/api.proto:75:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-ym2l6oa0/api.proto:84:3:field User.id: unknown type .integer\n/tmp/apiome-proto-ym2l6oa0/api.proto:88:3:field User.userStatus: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-nm9lc3hs/api.proto:7:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-nm9lc3hs/api.proto:14:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-nm9lc3hs/api.proto:24:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-nm9lc3hs/api.proto:34:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-nm9lc3hs/api.proto:35:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-nm9lc3hs/api.proto:36:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-nm9lc3hs/api.proto:37:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-nm9lc3hs/api.proto:48:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-nm9lc3hs/api.proto:73:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-nm9lc3hs/api.proto:75:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-nm9lc3hs/api.proto:84:3:field User.id: unknown type .integer\n/tmp/apiome-proto-nm9lc3hs/api.proto:88:3:field User.userStatus: unknown type .integer)",
       "source_format": "swagger",
       "status": "xfail",
       "unexplained": []
@@ -67465,7 +68236,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (thrift->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2) (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (thrift->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"thrift_throw_id\" is not expected to be here (observed: Re-import failed: Property \"thrift_throw_id\" is not expected to be here)",
       "source_format": "thrift",
       "status": "xfail",
       "unexplained": []
@@ -67681,7 +68452,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_v3_bws1/com/example/user.proto:25:3:field com.example.user.User.createdAt: unknown type .i64)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wwrxx_98/com/example/user.proto:25:3:field com.example.user.User.createdAt: unknown type .i64)",
       "source_format": "thrift",
       "status": "xfail",
       "unexplained": []
@@ -69010,7 +69781,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-iu7ya552/com/example/user.proto:24:3:field com.example.user.User.createdAt: unknown type .i64)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-mrw6hii1/com/example/user.proto:24:3:field com.example.user.User.createdAt: unknown type .i64)",
       "source_format": "thrift",
       "status": "xfail",
       "unexplained": []
@@ -70039,7 +70810,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (typespec->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5. (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (typespec->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"typespec_interface\" is not expected to be here (observed: Re-import failed: Property \"typespec_interface\" is not expected to be here)",
       "source_format": "typespec",
       "status": "xfail",
       "unexplained": []
@@ -72383,7 +73154,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (wadl->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (wadl->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"http_status\" is not expected to be here (observed: Re-import failed: Property \"http_status\" is not expected to be here)",
       "source_format": "wadl",
       "status": "xfail",
       "unexplained": []
@@ -72547,7 +73318,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-olzzzt2c/http___example/com_bookstore.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-olzzzt2c/http___example/com_bookstore.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-olzzzt2c/http___example/com_bookstore.proto:16:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-olzzzt2c/http___example/com_bookstore.proto:17:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-olzzzt2c/http___example/com_bookstore.proto:18:24:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4a5mpz04/http___example/com_bookstore.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-4a5mpz04/http___example/com_bookstore.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-4a5mpz04/http___example/com_bookstore.proto:16:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-4a5mpz04/http___example/com_bookstore.proto:17:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-4a5mpz04/http___example/com_bookstore.proto:18:24:syntax error: unexpected ':', expecting ')')",
       "source_format": "wadl",
       "status": "xfail",
       "unexplained": []
@@ -73225,7 +73996,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wu399egt/http___example/com_bookstore.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-wu399egt/http___example/com_bookstore.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-wu399egt/http___example/com_bookstore.proto:15:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-wu399egt/http___example/com_bookstore.proto:16:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-wu399egt/http___example/com_bookstore.proto:17:24:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3fpv6qdd/http___example/com_bookstore.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-3fpv6qdd/http___example/com_bookstore.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-3fpv6qdd/http___example/com_bookstore.proto:15:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-3fpv6qdd/http___example/com_bookstore.proto:16:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-3fpv6qdd/http___example/com_bookstore.proto:17:24:syntax error: unexpected ':', expecting ')')",
       "source_format": "wadl",
       "status": "xfail",
       "unexplained": []
@@ -73900,7 +74671,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (wit->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (wit->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"wit_param_name\" is not expected to be here (observed: Re-import failed: Property \"wit_param_name\" is not expected to be here)",
       "source_format": "wit",
       "status": "xfail",
       "unexplained": []
@@ -74075,7 +74846,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-kletos5f/examples_calculator.proto:4:17:syntax error: expecting ';' /tmp/apiome-proto-klet (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-helcw43d/examples_calculator.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-helcw43d/examples_calculator.proto:4:17:syntax error: unexpected ':'\n/tmp/apiome-proto-helcw43d/examples_calculator.proto:9:26:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-helcw43d/examples_calculator.proto:10:22:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-helcw43d/examples_calculator/calculate.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-helcw43d/examples_calculator/calculate.proto:4:17:syntax error: unexpected ':'\n/tmp/apiome-proto-helcw43d/examples_calculator/calculate.proto:22:12:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-kletos5f/examples_calculator.proto:4:17:syntax error: expecting ';' /tmp/apiome-proto-klet (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-msd8_gjt/examples_calculator.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-msd8_gjt/examples_calculator.proto:4:17:syntax error: unexpected ':'\n/tmp/apiome-proto-msd8_gjt/examples_calculator.proto:9:26:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-msd8_gjt/examples_calculator.proto:10:22:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-msd8_gjt/examples_calculator/calculate.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-msd8_gjt/examples_calculator/calculate.proto:4:17:syntax error: unexpected ':'\n/tmp/apiome-proto-msd8_gjt/examples_calculator/calculate.proto:22:12:syntax error: unexpected ':')",
       "source_format": "wit",
       "status": "xfail",
       "unexplained": []
@@ -75137,7 +75908,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-bejmv9r2/examples_calculator.proto:3:17:syntax error: expecting ';' /tmp/apiome-proto-bejm (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xjvcff8h/examples_calculator.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-xjvcff8h/examples_calculator.proto:3:17:syntax error: unexpected ':'\n/tmp/apiome-proto-xjvcff8h/examples_calculator.proto:8:26:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-xjvcff8h/examples_calculator.proto:9:22:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-xjvcff8h/examples_calculator/calculate.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-xjvcff8h/examples_calculator/calculate.proto:3:17:syntax error: unexpected ':'\n/tmp/apiome-proto-xjvcff8h/examples_calculator/calculate.proto:21:12:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-bejmv9r2/examples_calculator.proto:3:17:syntax error: expecting ';' /tmp/apiome-proto-bejm (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-32aqno96/examples_calculator.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-32aqno96/examples_calculator.proto:3:17:syntax error: unexpected ':'\n/tmp/apiome-proto-32aqno96/examples_calculator.proto:8:26:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-32aqno96/examples_calculator.proto:9:22:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-32aqno96/examples_calculator/calculate.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-32aqno96/examples_calculator/calculate.proto:3:17:syntax error: unexpected ':'\n/tmp/apiome-proto-32aqno96/examples_calculator/calculate.proto:21:12:syntax error: unexpected ':')",
       "source_format": "wit",
       "status": "xfail",
       "unexplained": []
@@ -76307,7 +77078,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (wsdl->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (wsdl->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/http://example.com/orders.CancelOrderRequest' does not exist (observed: Re-import failed: '#/components/schemas/http://example.com/orders.CancelOrderRequest' does not exist)",
       "source_format": "wsdl",
       "status": "xfail",
       "unexplained": []
@@ -76608,7 +77379,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-kim7065j/http___example/com_orders.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-kim7065j/http___example/com_orders.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-kim7065j/http___example/com_orders.proto:17:8:syntax error: unexpected ':'\n/tmp/apiome-proto-kim7065j/http___example/com_orders.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-kim7065j/http___example/com_orders.proto:29:8:syntax error: unexpected ':'\n/tmp/apiome-proto-kim7065j/http___example/com_orders.proto:34:8:syntax error: unexpected ':'\n/tmp/apiome-proto-kim7065j/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-kim7065j/http___example/com_orders.proto:53:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-kim7065j/http___example/com_orders.proto:54:22:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-o09fxscg/http___example/com_orders.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-o09fxscg/http___example/com_orders.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-o09fxscg/http___example/com_orders.proto:17:8:syntax error: unexpected ':'\n/tmp/apiome-proto-o09fxscg/http___example/com_orders.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-o09fxscg/http___example/com_orders.proto:29:8:syntax error: unexpected ':'\n/tmp/apiome-proto-o09fxscg/http___example/com_orders.proto:34:8:syntax error: unexpected ':'\n/tmp/apiome-proto-o09fxscg/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-o09fxscg/http___example/com_orders.proto:53:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-o09fxscg/http___example/com_orders.proto:54:22:syntax error: unexpected ':', expecting ')')",
       "source_format": "wsdl",
       "status": "xfail",
       "unexplained": []
@@ -78481,7 +79252,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vrq95hb4/http___example/com_orders.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-vrq95hb4/http___example/com_orders.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-vrq95hb4/http___example/com_orders.proto:16:8:syntax error: unexpected ':'\n/tmp/apiome-proto-vrq95hb4/http___example/com_orders.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-vrq95hb4/http___example/com_orders.proto:28:8:syntax error: unexpected ':'\n/tmp/apiome-proto-vrq95hb4/http___example/com_orders.proto:33:8:syntax error: unexpected ':'\n/tmp/apiome-proto-vrq95hb4/http___example/com_orders.proto:51:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-vrq95hb4/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-vrq95hb4/http___example/com_orders.proto:53:22:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-a_q4h1nt/http___example/com_orders.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-a_q4h1nt/http___example/com_orders.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-a_q4h1nt/http___example/com_orders.proto:16:8:syntax error: unexpected ':'\n/tmp/apiome-proto-a_q4h1nt/http___example/com_orders.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-a_q4h1nt/http___example/com_orders.proto:28:8:syntax error: unexpected ':'\n/tmp/apiome-proto-a_q4h1nt/http___example/com_orders.proto:33:8:syntax error: unexpected ':'\n/tmp/apiome-proto-a_q4h1nt/http___example/com_orders.proto:51:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-a_q4h1nt/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-a_q4h1nt/http___example/com_orders.proto:53:22:syntax error: unexpected ':', expecting ')')",
       "source_format": "wsdl",
       "status": "xfail",
       "unexplained": []
@@ -79902,7 +80673,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (xmlrpc->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2) (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (xmlrpc->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"xmlrpc_params\" is not expected to be here (observed: Re-import failed: Property \"xmlrpc_params\" is not expected to be here)",
       "source_format": "xmlrpc",
       "status": "xfail",
       "unexplained": []
@@ -81306,7 +82077,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (xsd->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2). (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (xsd->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: '#/components/schemas/i32' does not exist (observed: Re-import failed: '#/components/schemas/i32' does not exist)",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": []
@@ -81458,7 +82229,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.purchaseorder', added operation '19f5a22d-872b-4277-95fb-6fa13491bee6', changed root '', added service 'com.example.purchaseorder', removed type 'http://example.com/po.Status'; overclaim: OK 'http://example.com/po.Address', OK 'http://example.com/po.Item', OK 'http://example.com/po.PurchaseOrder', OK 'http://example.com/po.Status')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.purchaseorder', added operation '95fb66b5-0d81-43c8-b054-c7ae66cde1cb', changed root '', added service 'com.example.purchaseorder', removed type 'http://example.com/po.Status'; overclaim: OK 'http://example.com/po.Address', OK 'http://example.com/po.Item', OK 'http://example.com/po.PurchaseOrder', OK 'http://example.com/po.Status')",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": [
@@ -81470,7 +82241,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "19f5a22d-872b-4277-95fb-6fa13491bee6"
+          "key": "95fb66b5-0d81-43c8-b054-c7ae66cde1cb"
         },
         {
           "change": "changed",
@@ -81516,7 +82287,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-yjbsuv5r/http___example/com_po.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-yjbsuv5r/http___example/com_po.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-yjbsuv5r/http___example/com_po.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-yjbsuv5r/http___example/com_po.proto:22:17:syntax error: unexpected ':'\n/tmp/apiome-proto-yjbsuv5r/http___example/com_po.proto:25:8:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-r0zaeh7m/http___example/com_po.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-r0zaeh7m/http___example/com_po.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-r0zaeh7m/http___example/com_po.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-r0zaeh7m/http___example/com_po.proto:22:17:syntax error: unexpected ':'\n/tmp/apiome-proto-r0zaeh7m/http___example/com_po.proto:25:8:syntax error: unexpected ':')",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": []
@@ -82323,7 +83094,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-946im4ac/http___example/com_po.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-946im4ac/http___example/com_po.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-946im4ac/http___example/com_po.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-946im4ac/http___example/com_po.proto:21:17:syntax error: unexpected ':'\n/tmp/apiome-proto-946im4ac/http___example/com_po.proto:24:8:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-dvp5c9wx/http___example/com_po.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-dvp5c9wx/http___example/com_po.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-dvp5c9wx/http___example/com_po.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-dvp5c9wx/http___example/com_po.proto:21:17:syntax error: unexpected ':'\n/tmp/apiome-proto-dvp5c9wx/http___example/com_po.proto:24:8:syntax error: unexpected ':')",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": []
@@ -83044,7 +83815,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (zosconnect->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI- (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (zosconnect->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "reason": "Re-import failed: Property \"http_status\" is not expected to be here (observed: Re-import failed: Property \"http_status\" is not expected to be here)",
       "source_format": "zosconnect",
       "status": "xfail",
       "unexplained": []
@@ -83278,7 +84049,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-nt58bol4/InventoryRequester.proto:23:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-nt58bol4/InventoryRequester.proto:24:48:syntax error: unexpected '-', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-fhg1zl30/InventoryRequester.proto:23:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-fhg1zl30/InventoryRequester.proto:24:48:syntax error: unexpected '-', expecting ')')",
       "source_format": "zosconnect",
       "status": "xfail",
       "unexplained": []
@@ -84316,7 +85087,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-0y60rrnq/InventoryRequester.proto:22:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-0y60rrnq/InventoryRequester.proto:23:48:syntax error: unexpected '-', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-iaumhbwh/InventoryRequester.proto:22:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-iaumhbwh/InventoryRequester.proto:23:48:syntax error: unexpected '-', expecting ')')",
       "source_format": "zosconnect",
       "status": "xfail",
       "unexplained": []

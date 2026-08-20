@@ -519,6 +519,20 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Bundled toolchain enforcement (FMT-1.3, #5414). The AsyncAPI adapter has no fallback
+    # parser, so a runtime without the bundled `asyncapi-parser` silently loses a shipped
+    # format. When this is on, the startup self-check refuses to boot instead; when off it logs
+    # the degradation loudly and starts anyway. Unset (the default) follows `is_production`, so
+    # a container fails fast while a developer laptop without the Node toolchain keeps working.
+    # See app.toolchain_selfcheck.REQUIRED_TOOL_KEYS for what "required" covers.
+    require_bundled_toolchain: Optional[bool] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "APIOME_REQUIRE_TOOLCHAIN",
+            "require_bundled_toolchain",
+        ),
+    )
+
     # SSRF guard (#3612). When False (default), user-supplied URLs fetched by the
     # import-from-URL and public repository-registration paths are resolved and
     # rejected if they point at non-public addresses (loopback, RFC1918,
@@ -1546,6 +1560,22 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         """True when running in a production-like environment (fail-closed checks on)."""
         return self.app_env.strip().lower() in {"production", "prod"}
+
+    @property
+    def enforce_bundled_toolchain(self) -> bool:
+        """Whether a missing *required* bundled tool must refuse startup (FMT-1.3).
+
+        Explicit configuration wins; otherwise a production-like deployment enforces and a
+        development one does not. The asymmetry is deliberate: an image that shipped without
+        its parser has lost a product surface and should say so at boot, while a laptop that
+        never installed the Node toolchain should still be able to run the rest of the service.
+
+        Returns:
+            ``True`` when the startup self-check raises on a missing required tool.
+        """
+        if self.require_bundled_toolchain is not None:
+            return self.require_bundled_toolchain
+        return self.is_production
 
     @property
     def effective_jwt_secret(self) -> str:

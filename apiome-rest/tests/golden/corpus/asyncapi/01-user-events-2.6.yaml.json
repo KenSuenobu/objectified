@@ -1,0 +1,205 @@
+{
+  "adapter": "asyncapi",
+  "canonical": {
+    "channels": [
+      {
+        "address": "user/deleted",
+        "bindings": {},
+        "description": "A user account was deleted.",
+        "extras": {},
+        "key": "user/deleted",
+        "name": null,
+        "parameters": [],
+        "protocol": null
+      },
+      {
+        "address": "user/signedup",
+        "bindings": {},
+        "description": "A new user completed registration.",
+        "extras": {},
+        "key": "user/signedup",
+        "name": null,
+        "parameters": [],
+        "protocol": null
+      }
+    ],
+    "description": "Publishes account lifecycle events for downstream consumers.",
+    "extras": {},
+    "format": "asyncapi-2",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "User Account Service",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "kafka",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Production Kafka cluster.",
+        "extras": {},
+        "name": "production",
+        "protocol": "kafka",
+        "url": "broker.example.com:9092",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "default",
+        "name": "default",
+        "operations": [
+          {
+            "channel_ref": "user/deleted",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "action": "subscribe"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "onUserDeleted",
+            "kind": "subscribe",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "title": "User deleted"
+                },
+                "headers": [],
+                "key": "onUserDeleted#event.userDeleted",
+                "name": "userDeleted",
+                "payload": null,
+                "payload_schema": {
+                  "description": "Emitted when a user account is removed.",
+                  "properties": {
+                    "deletedAt": {
+                      "description": "When the account was deleted.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "userId": {
+                      "description": "Identifier of the deleted user.",
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "deletedAt"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "onUserDeleted",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": "user/signedup",
+            "deprecated": false,
+            "description": "Receive a notification when a user signs up.",
+            "extras": {
+              "action": "subscribe"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "onUserSignedUp",
+            "kind": "subscribe",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "title": "User signed up"
+                },
+                "headers": [],
+                "key": "onUserSignedUp#event.userSignedUp",
+                "name": "userSignedUp",
+                "payload": null,
+                "payload_schema": {
+                  "description": "Emitted when a user finishes registration.",
+                  "properties": {
+                    "displayName": {
+                      "description": "Optional human-readable name.",
+                      "type": "string"
+                    },
+                    "email": {
+                      "description": "The user's verified email address.",
+                      "format": "email",
+                      "type": "string"
+                    },
+                    "signedUpAt": {
+                      "description": "When registration completed.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "userId": {
+                      "description": "Unique identifier of the new user.",
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "email",
+                    "signedUpAt"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "onUserSignedUp",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "User Account Service",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+  "counts": {
+    "channels": 2,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "asyncapi-2"
+  },
+  "fingerprint": "sha256:c7b823f27dbd1f0dea65221ae73208419a4c71bc912f230eb9500b19c9b881af",
+  "lint": {
+    "findings": 14,
+    "grade": "F",
+    "report_fingerprint": "4780b300385ddc64ba465d19fc8a127274fde86f193e22a0017780daaa9a71ac",
+    "score": 56,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 10
+    }
+  },
+  "snapshot_version": 1
+}

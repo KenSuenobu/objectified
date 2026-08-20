@@ -8,7 +8,9 @@ Two planes of endpoints:
     - ``GET /readyz`` — readiness: dependencies (the database) are reachable. Returns 503 when not,
       so a load balancer / ``depends_on … condition: service_healthy`` holds traffic until ready.
     - ``GET /health`` — retained for backward compatibility (existing compose healthcheck); behaves
-      like readiness.
+      like readiness, and additionally reports the **bundled-toolchain** verdict (FMT-1.3): which
+      hard-required tools resolved and the version each reported, so a deployment that lost a
+      shipped format is visible without an authenticated call.
 
 * **Ops dashboard** (platform-admin only — it exposes operational internals and backup metadata):
     - ``GET /v1/ops/metrics``  — request rate, error rate, latency percentiles, uptime, in-flight.
@@ -16,7 +18,8 @@ Two planes of endpoints:
     - ``GET /v1/ops/status``   — combined metrics + backup status (one call for the dashboard).
     - ``GET /v1/ops/dashboard``— a tiny self-contained HTML view of the above.
     - ``GET /v1/ops/toolchain``— bundled tool packaging/availability (MFI-5.2, #3751) plus the
-      active sandbox posture every tool runs under (MFI-5.3, #3752).
+      active sandbox posture every tool runs under (MFI-5.3, #3752) and, per gated tool, the
+      formats it gates and whether it is a hard dependency (FMT-1.3, #5414).
 """
 
 from __future__ import annotations
@@ -36,6 +39,12 @@ from .observability import metrics
 from .permissions import enforce_platform_admin
 from .toolchain_packaging import probe_all, verify_tool
 from .toolchain_runner import default_runner
+from .toolchain_selfcheck import (
+    REQUIRED_TOOL_KEYS,
+    latest_toolchain_selfcheck,
+    run_toolchain_selfcheck,
+    toolchain_health_detail,
+)
 
 # Liveness/readiness probes live at the root (no /v1 prefix) so orchestration health checks stay
 # stable and unauthenticated.
@@ -69,12 +78,31 @@ async def readiness() -> JSONResponse:
 
 @health_router.get("/health")
 async def health_check() -> JSONResponse:
-    """Backward-compatible health endpoint (compose healthcheck). Equivalent to readiness."""
+    """Backward-compatible health endpoint (compose healthcheck). Equivalent to readiness.
+
+    The ``status``/``database`` keys are unchanged. The response additionally carries a
+    ``toolchain`` block (FMT-1.3) reporting the bundled-toolchain verdict this runtime booted
+    with: ``status`` (``ok`` / ``degraded`` / ``failed``), whether the deployment ``enforced``
+    the toolchain, how many hard-required tools there are, how many resolved, and the keys of
+    any that are ``missing``. Availability only — resolved paths, the optional tools and the
+    exact third-party versions stay on the platform-admin ``GET /v1/ops/toolchain``, because
+    this endpoint is unauthenticated.
+
+    The HTTP status reflects readiness only: an enforcing deployment cannot serve at all with a
+    required tool missing (startup refuses), and a non-enforcing one is degraded deliberately.
+    """
     status_code, payload = _readiness_payload()
     # Preserve the historical key shape while reporting the same readiness signal.
     body = {
         "status": "healthy" if status_code == 200 else "unhealthy",
         "database": payload["database"],
+        # Bundled-toolchain verdict (FMT-1.3): the startup self-check's cached result, or a
+        # resolution-only probe before startup ran one. Counts and missing keys only — no paths
+        # and no third-party versions, which stay on the platform-admin ``/v1/ops/toolchain``.
+        # The HTTP status is deliberately unchanged: an enforcing deployment never reaches here
+        # with a missing tool (startup refuses), and a non-enforcing one is degraded on purpose,
+        # not unready.
+        "toolchain": toolchain_health_detail(),
     }
     if "error" in payload:
         body["error"] = payload["error"]
@@ -169,18 +197,39 @@ async def ops_toolchain(
 
     Reports every declared external tool (buf, tsp, smithy, drafter, amf, asyncapi, rover),
     its pinned version, and whether its binary resolves in this runtime — the "format
-    unavailable" signal a missing tool produces (MFI-5.2). With ``?verify=true`` each
-    *available* tool is additionally invoked with its version probe to confirm it actually
-    runs. The ``sandbox`` block reports the active security/resource posture (MFI-5.3) every
-    tool subprocess runs under (no-network default, rlimit clamps, input/output caps).
+    unavailable" signal a missing tool produces (MFI-5.2). Each tool additionally carries
+    ``required`` (is it a hard dependency of this runtime?) and ``gated_formats`` (which
+    registered import/export formats vanish without it), so the answer to "what did this
+    deployment lose?" is on the same response as "what is missing?" (FMT-1.3). With
+    ``?verify=true`` each *available* tool is additionally invoked with its version probe to
+    confirm it actually runs. The ``sandbox`` block reports the active security/resource posture
+    (MFI-5.3) every tool subprocess runs under (no-network default, rlimit clamps, input/output
+    caps).
     """
     enforce_platform_admin(db, auth_data)
     availability = probe_all()
     tools = [a.model_dump() for a in availability]
+    by_key = {t["key"]: t for t in tools}
+
+    # Per gated tool (FMT-1.3): whether it is a hard dependency of this runtime and which
+    # registered formats disappear without it. The startup self-check already computed both, so
+    # reuse its cached verdict rather than walking the registries again; before startup has run
+    # one (a bare TestClient), fall back to a resolution-only pass so the fields are still there.
+    selfcheck = latest_toolchain_selfcheck()
+    if selfcheck is None:
+        selfcheck = await run_toolchain_selfcheck(verify=False)
+    for status in selfcheck.tools:
+        entry = by_key.get(status.key)
+        if entry is None:
+            continue
+        entry["required"] = status.required
+        entry["gated_formats"] = list(status.gated_formats)
+        if status.reported_version is not None:
+            entry["reported_version"] = status.reported_version
+
     if verify:
         # Only bother spawning version probes for tools that resolve; an unavailable tool is
         # already known to be non-invocable.
-        by_key = {t["key"]: t for t in tools}
         for entry in availability:
             if not entry.available:
                 continue
@@ -191,6 +240,12 @@ async def ops_toolchain(
         "total": len(tools),
         "available": sum(1 for t in tools if t["available"]),
         "unavailable": sum(1 for t in tools if not t["available"]),
+        # The hard-dependency slice: what a missing entry here costs is a shipped format, not a
+        # degraded one, so it is summarized separately from the optional tools.
+        "required": len(REQUIRED_TOOL_KEYS),
+        "required_missing": list(selfcheck.missing_required),
+        "toolchain_status": selfcheck.status,
+        "enforced": selfcheck.enforced,
     }
     # Surface the active sandbox posture (MFI-5.3) every tool subprocess runs under.
     sandbox = default_runner.default_policy.describe()

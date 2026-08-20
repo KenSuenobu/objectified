@@ -1,0 +1,102 @@
+{
+  "adapter": "asyncapi",
+  "canonical": {
+    "channels": [
+      {
+        "address": "heartbeat",
+        "bindings": {},
+        "description": null,
+        "extras": {},
+        "key": "heartbeat",
+        "name": null,
+        "parameters": [],
+        "protocol": null
+      }
+    ],
+    "description": null,
+    "extras": {},
+    "format": "asyncapi-2",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Heartbeat Service",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "default",
+        "name": "default",
+        "operations": [
+          {
+            "channel_ref": "heartbeat",
+            "deprecated": false,
+            "description": "Emit a liveness heartbeat.",
+            "extras": {
+              "action": "publish"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "publishHeartbeat",
+            "kind": "publish",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "publishHeartbeat#event.heartbeat",
+                "name": "heartbeat",
+                "payload": null,
+                "payload_schema": {
+                  "description": "ISO 8601 timestamp of the heartbeat.",
+                  "type": "string"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "publishHeartbeat",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Heartbeat Service",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "asyncapi/03-heartbeat-minimal-2.6.yaml",
+  "counts": {
+    "channels": 1,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "asyncapi-2"
+  },
+  "fingerprint": "sha256:634783d54fdf52bc6c144983fc8a9ff19c8698ed671a910861ce559138ec6081",
+  "lint": {
+    "findings": 12,
+    "grade": "D",
+    "report_fingerprint": "44df2179d07068815c2ca80af2672490c0daf6c3503d006938534338a2e97dc5",
+    "score": 64,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

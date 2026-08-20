@@ -2538,7 +2538,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the IXH-5.4 example-conformance rule pack (#5116).",
-      "notes": "Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py.",
+      "notes": "Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py. The `x-expected-violation` intent marker sits only on the schema: an AsyncAPI 3 `MessageExample` object takes no vendor extensions, so each message example states its intent in its `summary` instead (FMT-1.3, #5414 — caught the first time CI ran with the required parser installed).",
       "rung": "typical"
     },
     {
@@ -2561,7 +2561,7 @@
       "provenance": "AsyncAPI 2.6 document whose `required` flow sequence never closes, breaking the YAML; authored for the negative corpus.",
       "failure_class": "syntactic",
       "expected_error_code": "INPUT_MALFORMED",
-      "notes": "Verified without asyncapi-parser installed (parse raises tool-unavailable), but the flaw is broken YAML, so classification is text-grounded and tool-independent."
+      "notes": "The flaw is broken YAML, so classification is text-grounded and tool-independent. Originally verified without asyncapi-parser installed; re-verified with the required parser present (FMT-1.3, #5414), which now runs in CI."
     },
     {
       "path": "asyncapi/negative/02-semantic-channels-not-a-mapping.yaml",
@@ -2583,7 +2583,7 @@
       "provenance": "Valid YAML with an `asyncapi: 2.6.0` marker whose `channels` value is a plain string instead of a mapping; authored for the negative corpus.",
       "failure_class": "semantic",
       "expected_error_code": "INPUT_MALFORMED",
-      "notes": "Verified without asyncapi-parser installed; the asyncapi sniffer still claims the document (detect_matched true) and the blatantly wrong `channels` type also fails validation when the tool is present."
+      "notes": "The asyncapi sniffer claims the document (detect_matched true) and the blatantly wrong `channels` type also fails parser validation. Originally verified without asyncapi-parser installed; re-verified with the required parser present (FMT-1.3, #5414), which now runs in CI."
     },
     {
       "path": "asyncapi/negative/03-truncated-mid-ref.yaml",

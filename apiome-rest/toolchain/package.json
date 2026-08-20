@@ -1,0 +1,9 @@
+{
+  "name": "apiome-rest-toolchain",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hard Node dependencies of the apiome-rest polyglot toolchain (FMT-1.3, #5414). Every package here is REQUIRED: the runtime image installs it during the container build, the startup self-check invokes it and logs the version it resolves, and a deployment missing one refuses to start rather than silently losing a shipped format. Optional CLIs (@asyncapi/cli, @typespec/compiler, spectral, redocly, ...) stay pinned as Dockerfile build args because their absence only degrades a format to a stated 'unavailable'. Versions are exact and must match BUNDLED_TOOLS in src/app/toolchain_packaging.py and the matching ARG in the Dockerfile — tests/test_toolchain_selfcheck.py enforces all three.",
+  "dependencies": {
+    "@asyncapi/parser": "3.6.0"
+  }
+}

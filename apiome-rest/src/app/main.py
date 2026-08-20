@@ -107,6 +107,7 @@ from .spec_import_routes import router as spec_import_router
 from .style_guide_routes import router as style_guide_router
 from .tenant_repositories_routes import router as tenant_repositories_router
 from .tenants_session_routes import router as tenants_session_router
+from .toolchain_selfcheck import enforce_toolchain_selfcheck
 from .type_namespaces_routes import router as type_namespaces_router
 from .version_change_report_routes import router as version_change_report_router
 from .version_changelog_routes import router as version_changelog_router
@@ -128,7 +129,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.129.0",
+    version="1.130.0",
 )
 
 
@@ -449,6 +450,13 @@ async def startup_event():
     validate_webhook_signing_key()
     validate_credential_encryption_keys()
     validate_auth_config_encryption_keys()
+
+    # Bundled-toolchain self-check (FMT-1.3, #5414). Resolves and actually invokes every
+    # *required* bundled tool, logging the version it reports — so the boot log always names
+    # the `@asyncapi/parser` this runtime is running. In an enforcing deployment a missing
+    # required tool raises here and startup fails loudly, instead of the service coming up with
+    # a shipped format silently unavailable.
+    await enforce_toolchain_selfcheck(log=_startup_log)
 
     # Log data API routes so we can confirm POST /v1/data/{tenant_slug}/records is registered
     for route in app.routes:
