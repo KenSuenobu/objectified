@@ -1,0 +1,37 @@
+# Fileset member: the quality rule pack the contract's steward maintains separately so
+# it can be reviewed on its own cadence. Keyed by the contract id and schema object.
+contractId: 0f6d2f0e-1b2c-4a5e-9f2a-000000000007
+schema: shipment_events
+
+quality:
+  - rule: rowCount
+    mustBeGreaterThan: 0
+    dimension: volume
+    severity: error
+
+  - rule: nullCount
+    property: shipment_id
+    mustBe: 0
+    dimension: completeness
+    severity: error
+
+  - rule: duplicateCount
+    property: event_id
+    mustBe: 0
+    dimension: uniqueness
+    severity: error
+
+  - rule: freshness
+    property: occurred_at
+    mustBeLessThan: 30
+    unit: minute
+    dimension: timeliness
+    businessImpact: operational
+
+  - type: sql
+    description: Every event type must be one the payload schema allows.
+    query: |
+      SELECT COUNT(*) FROM shipment_events
+      WHERE event_type NOT IN
+        ('created','picked','packed','dispatched','delivered','exception')
+    mustBe: 0

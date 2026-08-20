@@ -1,0 +1,11 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "1.0.0",
+  "info": {
+    "title": "Listing with a missing declaration",
+    "description": "The listing names /orders, but no orders declaration accompanies it in the fileset."
+  },
+  "apis": [
+    { "path": "/orders", "description": "Operations about orders" }
+  ]
+}

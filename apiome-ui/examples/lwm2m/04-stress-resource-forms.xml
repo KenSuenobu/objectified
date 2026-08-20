@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Every resource form the LwM2M object model admits: each data type, each operation
+  combination, single and multiple instances, mandatory and optional, ranges and units.
+-->
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://www.openmobilealliance.org/tech/profiles/LWM2M-v1_1.xsd">
+  <Object ObjectType="MODefinition">
+    <Name>Coverage</Name>
+    <Description1>Resource-form coverage object.</Description1>
+    <ObjectID>32701</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:x:32701:1.2</ObjectURN>
+    <LWM2MVersion>1.2</LWM2MVersion>
+    <ObjectVersion>1.2</ObjectVersion>
+    <MultipleInstances>Multiple</MultipleInstances>
+    <Mandatory>Optional</Mandatory>
+    <Resources>
+      <Item ID="0">
+        <Name>String Resource</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration>0..64</RangeEnumeration>
+        <Units/>
+        <Description>Read-write string with a length range.</Description>
+      </Item>
+      <Item ID="1">
+        <Name>Integer Resource</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Integer</Type>
+        <RangeEnumeration>0..65535</RangeEnumeration>
+        <Units>s</Units>
+        <Description>Bounded integer with units.</Description>
+      </Item>
+      <Item ID="2">
+        <Name>Float Resource</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Float</Type>
+        <RangeEnumeration>-40..150</RangeEnumeration>
+        <Units>Cel</Units>
+        <Description>Read-only float with a physical range.</Description>
+      </Item>
+      <Item ID="3">
+        <Name>Boolean Resource</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Boolean</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Read-write boolean.</Description>
+      </Item>
+      <Item ID="4">
+        <Name>Opaque Resource</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Opaque</Type>
+        <RangeEnumeration>0..1024</RangeEnumeration>
+        <Units/>
+        <Description>Binary payload with a byte-length range.</Description>
+      </Item>
+      <Item ID="5">
+        <Name>Time Resource</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Time</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Unix time.</Description>
+      </Item>
+      <Item ID="6">
+        <Name>Objlnk Resource</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Objlnk</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Link to another object instance — the LwM2M reference type.</Description>
+      </Item>
+      <Item ID="7">
+        <Name>Unsigned Integer Resource</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Unsigned Integer</Type>
+        <RangeEnumeration>0..4294967295</RangeEnumeration>
+        <Units/>
+        <Description>Unsigned counter.</Description>
+      </Item>
+      <Item ID="8">
+        <Name>Core Link Resource</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Corelnk</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>CoRE link format value.</Description>
+      </Item>
+      <Item ID="9">
+        <Name>Multiple Instance Resource</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Multiple</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Multi-instance resource: an array in the canonical model.</Description>
+      </Item>
+      <Item ID="10">
+        <Name>Enumerated Resource</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Integer</Type>
+        <RangeEnumeration>0, 1, 2, 3</RangeEnumeration>
+        <Units/>
+        <Description>Enumerated integer: 0=idle, 1=running, 2=faulted, 3=maintenance.</Description>
+      </Item>
+      <Item ID="11">
+        <Name>Execute Resource</Name>
+        <Operations>E</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type/>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Executable resource: an rpc operation, not a property.</Description>
+      </Item>
+      <Item ID="12">
+        <Name>Write-Only Resource</Name>
+        <Operations>W</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Write-only: readable never, writable always.</Description>
+      </Item>
+    </Resources>
+    <Description2>Every combination the object model allows, in one definition.</Description2>
+  </Object>
+</LWM2M>

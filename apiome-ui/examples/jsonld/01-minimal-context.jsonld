@@ -1,0 +1,8 @@
+{
+  "@context": {
+    "@vocab": "https://example.com/ns#",
+    "id": "@id",
+    "type": "@type",
+    "name": "https://schema.org/name"
+  }
+}

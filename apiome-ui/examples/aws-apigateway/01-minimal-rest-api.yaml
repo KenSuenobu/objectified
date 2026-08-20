@@ -1,0 +1,19 @@
+openapi: 3.0.1
+info:
+  title: ping
+  version: "1.0"
+paths:
+  /ping:
+    get:
+      responses:
+        "200":
+          description: 200 response
+      x-amazon-apigateway-integration:
+        type: mock
+        httpMethod: GET
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: when_no_match

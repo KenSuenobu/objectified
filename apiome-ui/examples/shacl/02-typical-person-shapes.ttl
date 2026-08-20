@@ -1,0 +1,73 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ex:   <https://example.com/ns#> .
+
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    rdfs:label "Person shape" ;
+    rdfs:comment "Constraints every person record must satisfy." ;
+
+    sh:property [
+        sh:path ex:givenName ;
+        sh:name "given name" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:minLength 1 ;
+        sh:maxLength 60 ;
+        sh:order 1 ;
+    ] ;
+
+    sh:property [
+        sh:path ex:familyName ;
+        sh:name "family name" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:order 2 ;
+    ] ;
+
+    sh:property [
+        sh:path ex:email ;
+        sh:datatype xsd:string ;
+        sh:pattern "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" ;
+        sh:minCount 1 ;
+        sh:severity sh:Violation ;
+        sh:message "A person must have exactly one well-formed email address." ;
+        sh:maxCount 1 ;
+    ] ;
+
+    sh:property [
+        sh:path ex:birthDate ;
+        sh:datatype xsd:date ;
+        sh:maxCount 1 ;
+    ] ;
+
+    sh:property [
+        sh:path ex:role ;
+        sh:in ( "reader" "writer" "admin" ) ;
+        sh:maxCount 1 ;
+    ] ;
+
+    sh:property [
+        sh:path ex:worksFor ;
+        sh:class ex:Organisation ;
+        sh:nodeKind sh:IRI ;
+        sh:maxCount 1 ;
+    ] .
+
+ex:OrganisationShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Organisation ;
+    sh:property [
+        sh:path ex:legalName ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:employeeCount ;
+        sh:datatype xsd:integer ;
+        sh:minInclusive 0 ;
+    ] .

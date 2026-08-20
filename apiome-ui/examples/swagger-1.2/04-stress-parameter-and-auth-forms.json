@@ -1,0 +1,131 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "0.9.1",
+  "basePath": "https://api.example.com/lab",
+  "resourcePath": "/samples",
+  "produces": ["application/json", "application/xml", "text/csv"],
+  "consumes": ["application/json", "multipart/form-data"],
+  "authorizations": {
+    "oauth2": {
+      "type": "oauth2",
+      "scopes": [
+        { "scope": "samples:read", "description": "Read samples" },
+        { "scope": "samples:write", "description": "Create and update samples" }
+      ],
+      "grantTypes": {
+        "implicit": {
+          "loginEndpoint": { "url": "https://auth.example.com/oauth/authorize" },
+          "tokenName": "access_token"
+        },
+        "authorization_code": {
+          "tokenRequestEndpoint": {
+            "url": "https://auth.example.com/oauth/authorize",
+            "clientIdName": "client_id",
+            "clientSecretName": "client_secret"
+          },
+          "tokenEndpoint": { "url": "https://auth.example.com/oauth/token", "tokenName": "access_token" }
+        }
+      }
+    },
+    "apiKey": {
+      "type": "apiKey",
+      "passAs": "header",
+      "keyname": "X-Api-Key"
+    }
+  },
+  "apis": [
+    {
+      "path": "/samples",
+      "operations": [
+        {
+          "method": "GET",
+          "nickname": "searchSamples",
+          "summary": "Every parameter kind 1.2 admits, in one operation.",
+          "type": "array",
+          "items": { "$ref": "Sample" },
+          "authorizations": { "oauth2": [{ "scope": "samples:read" }] },
+          "parameters": [
+            { "name": "q", "paramType": "query", "required": false, "type": "string" },
+            {
+              "name": "status",
+              "paramType": "query",
+              "required": false,
+              "type": "string",
+              "enum": ["queued", "running", "complete", "failed"],
+              "defaultValue": "complete"
+            },
+            {
+              "name": "tags",
+              "paramType": "query",
+              "required": false,
+              "type": "array",
+              "items": { "type": "string" },
+              "uniqueItems": true,
+              "allowMultiple": true
+            },
+            { "name": "X-Request-Id", "paramType": "header", "required": false, "type": "string" },
+            {
+              "name": "page",
+              "paramType": "query",
+              "required": false,
+              "type": "integer",
+              "format": "int64",
+              "minimum": "0"
+            }
+          ],
+          "produces": ["application/json", "text/csv"],
+          "responseMessages": [
+            { "code": 200, "message": "Matching samples" },
+            { "code": 400, "message": "Bad query", "responseModel": "ErrorModel" },
+            { "code": 429, "message": "Rate limited" }
+          ]
+        },
+        {
+          "method": "POST",
+          "nickname": "uploadSample",
+          "summary": "Form parameters and a file upload.",
+          "type": "Sample",
+          "consumes": ["multipart/form-data"],
+          "authorizations": { "oauth2": [{ "scope": "samples:write" }], "apiKey": [] },
+          "parameters": [
+            { "name": "label", "paramType": "form", "required": true, "type": "string" },
+            { "name": "assay", "paramType": "form", "required": true, "type": "string", "enum": ["elisa", "pcr", "hplc"] },
+            { "name": "replicates", "paramType": "form", "required": false, "type": "integer", "format": "int32", "defaultValue": "3" },
+            { "name": "attachment", "paramType": "form", "required": false, "type": "File" }
+          ],
+          "responseMessages": [
+            { "code": 201, "message": "Sample accepted", "responseModel": "Sample" },
+            { "code": 413, "message": "Attachment too large" }
+          ]
+        }
+      ]
+    }
+  ],
+  "models": {
+    "Sample": {
+      "id": "Sample",
+      "required": ["sampleId", "assay", "status"],
+      "properties": {
+        "sampleId": { "type": "string" },
+        "assay": { "type": "string", "enum": ["elisa", "pcr", "hplc"] },
+        "status": { "type": "string", "enum": ["queued", "running", "complete", "failed"] },
+        "readings": {
+          "type": "array",
+          "items": { "type": "number", "format": "double" },
+          "uniqueItems": false
+        },
+        "collectedAt": { "type": "string", "format": "date-time" },
+        "raw": { "type": "string", "format": "byte" }
+      }
+    },
+    "ErrorModel": {
+      "id": "ErrorModel",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "integer", "format": "int32" },
+        "message": { "type": "string" },
+        "field": { "type": "string" }
+      }
+    }
+  }
+}

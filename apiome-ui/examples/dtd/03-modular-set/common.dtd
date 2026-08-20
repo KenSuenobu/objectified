@@ -1,0 +1,8 @@
+<!-- Common module: shared attribute set and the inline content model. -->
+
+<!ENTITY % commonAtts "id ID #IMPLIED
+                       lang NMTOKEN #IMPLIED">
+
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT para (#PCDATA | emphasis)*>
+<!ELEMENT emphasis (#PCDATA)>

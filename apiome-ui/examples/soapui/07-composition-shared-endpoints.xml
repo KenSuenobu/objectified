@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Within-document composition: two interfaces share one endpoint set through project
+  properties and environments, test cases reference requests defined on the interfaces
+  rather than restating them, and property expansion (${#Project#...}) is how the
+  values flow. Nothing here is complete without the pieces it references.
+-->
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config"
+                    id="7a1c0000-0000-4000-8000-000000000200"
+                    activeEnvironment="Acceptance"
+                    name="Composed project">
+  <con:settings/>
+
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:RestService"
+                 id="7a1c0000-0000-4000-8000-000000000201"
+                 name="Orders"
+                 type="rest"
+                 basePath="/v2">
+    <con:settings/>
+    <con:endpoints>
+      <con:endpoint>${#Project#apiBaseUrl}</con:endpoint>
+    </con:endpoints>
+    <con:resource name="orders" path="/orders" id="7a1c0000-0000-4000-8000-000000000202">
+      <con:settings/>
+      <con:parameters/>
+      <con:method name="listOrders" id="7a1c0000-0000-4000-8000-000000000203" method="GET">
+        <con:settings/>
+        <con:parameters/>
+        <con:request name="Shared request" id="7a1c0000-0000-4000-8000-000000000204"
+                     mediaType="application/json">
+          <con:settings/>
+          <con:endpoint>${#Project#apiBaseUrl}</con:endpoint>
+          <con:request/>
+        </con:request>
+      </con:method>
+    </con:resource>
+  </con:interface>
+
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:RestService"
+                 id="7a1c0000-0000-4000-8000-000000000205"
+                 name="Catalogue"
+                 type="rest"
+                 basePath="/v2">
+    <con:settings/>
+    <con:endpoints>
+      <con:endpoint>${#Project#apiBaseUrl}</con:endpoint>
+    </con:endpoints>
+    <con:resource name="products" path="/products" id="7a1c0000-0000-4000-8000-000000000206">
+      <con:settings/>
+      <con:parameters/>
+      <con:method name="listProducts" id="7a1c0000-0000-4000-8000-000000000207" method="GET">
+        <con:settings/>
+        <con:parameters/>
+        <con:request name="Shared request" id="7a1c0000-0000-4000-8000-000000000208"
+                     mediaType="application/json">
+          <con:settings/>
+          <con:endpoint>${#Project#apiBaseUrl}</con:endpoint>
+          <con:request/>
+        </con:request>
+      </con:method>
+    </con:resource>
+  </con:interface>
+
+  <con:testSuite name="Cross-interface" id="7a1c0000-0000-4000-8000-000000000210">
+    <con:settings/>
+    <con:runType>SEQUENTIAL</con:runType>
+    <con:testCase failOnError="true" name="Order then product"
+                  id="7a1c0000-0000-4000-8000-000000000211">
+      <con:settings/>
+      <con:testStep type="restrequest" name="List orders"
+                    id="7a1c0000-0000-4000-8000-000000000212">
+        <con:settings/>
+        <con:config service="Orders" resourcePath="/orders" methodName="listOrders">
+          <con:restRequest name="List orders" mediaType="application/json">
+            <con:settings/>
+            <con:endpoint>${#Project#apiBaseUrl}</con:endpoint>
+            <con:request/>
+            <con:assertion type="Valid HTTP Status Codes" name="OK">
+              <con:configuration><codes>200</codes></con:configuration>
+            </con:assertion>
+          </con:restRequest>
+        </con:config>
+      </con:testStep>
+      <con:testStep type="transfer" name="Take first sku"
+                    id="7a1c0000-0000-4000-8000-000000000213">
+        <con:settings/>
+        <con:config>
+          <con:transfers setNullOnMissingSource="true">
+            <con:name>sku</con:name>
+            <con:sourceStep>List orders</con:sourceStep>
+            <con:sourceType>Response</con:sourceType>
+            <con:sourcePath>$.items[0].lines[0].sku</con:sourcePath>
+            <con:targetStep>#TestSuite#</con:targetStep>
+            <con:targetType>sku</con:targetType>
+          </con:transfers>
+        </con:config>
+      </con:testStep>
+      <con:testStep type="restrequest" name="List products"
+                    id="7a1c0000-0000-4000-8000-000000000214">
+        <con:settings/>
+        <con:config service="Catalogue" resourcePath="/products" methodName="listProducts">
+          <con:restRequest name="List products" mediaType="application/json">
+            <con:settings/>
+            <con:endpoint>${#Project#apiBaseUrl}</con:endpoint>
+            <con:request/>
+            <con:parameters>
+              <con:entry key="sku" value="${#TestSuite#sku}"/>
+            </con:parameters>
+          </con:restRequest>
+        </con:config>
+      </con:testStep>
+      <con:properties>
+        <con:property><con:name>sku</con:name><con:value/></con:property>
+      </con:properties>
+    </con:testCase>
+    <con:properties>
+      <con:property><con:name>sku</con:name><con:value/></con:property>
+    </con:properties>
+  </con:testSuite>
+
+  <con:properties>
+    <con:property>
+      <con:name>apiBaseUrl</con:name>
+      <con:value>https://acc.example.com</con:value>
+    </con:property>
+  </con:properties>
+
+  <con:environments>
+    <con:environment name="Acceptance" id="7a1c0000-0000-4000-8000-000000000220">
+      <con:services>
+        <con:service name="Orders" type="rest">
+          <con:endpoint>https://acc.example.com</con:endpoint>
+        </con:service>
+        <con:service name="Catalogue" type="rest">
+          <con:endpoint>https://acc.example.com</con:endpoint>
+        </con:service>
+      </con:services>
+    </con:environment>
+    <con:environment name="Production" id="7a1c0000-0000-4000-8000-000000000221">
+      <con:services>
+        <con:service name="Orders" type="rest">
+          <con:endpoint>https://api.example.com</con:endpoint>
+        </con:service>
+        <con:service name="Catalogue" type="rest">
+          <con:endpoint>https://api.example.com</con:endpoint>
+        </con:service>
+      </con:services>
+    </con:environment>
+  </con:environments>
+</con:soapui-project>

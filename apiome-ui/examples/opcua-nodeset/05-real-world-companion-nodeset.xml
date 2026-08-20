@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Companion-specification-shaped nodeset: an equipment information model with
+  identification, state, measurements, alarms and two methods, in the layered style a
+  companion spec publishes. Reconstructed shape; no upstream text copied.
+-->
+<UANodeSet xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd">
+  <NamespaceUris>
+    <Uri>http://example.com/UA/Packaging/</Uri>
+  </NamespaceUris>
+  <Models>
+    <Model ModelUri="http://example.com/UA/Packaging/" Version="2.0.0"
+           PublicationDate="2026-06-01T00:00:00Z">
+      <RequiredModel ModelUri="http://opcfoundation.org/UA/" Version="1.05.03"
+                     PublicationDate="2025-06-01T00:00:00Z"/>
+      <RequiredModel ModelUri="http://opcfoundation.org/UA/DI/" Version="1.04.0"
+                     PublicationDate="2024-11-01T00:00:00Z"/>
+    </Model>
+  </Models>
+  <Aliases>
+    <Alias Alias="Boolean">i=1</Alias>
+    <Alias Alias="UInt32">i=7</Alias>
+    <Alias Alias="UInt64">i=9</Alias>
+    <Alias Alias="Double">i=11</Alias>
+    <Alias Alias="String">i=12</Alias>
+    <Alias Alias="DateTime">i=13</Alias>
+    <Alias Alias="LocalizedText">i=21</Alias>
+    <Alias Alias="HasSubtype">i=45</Alias>
+    <Alias Alias="HasProperty">i=46</Alias>
+    <Alias Alias="HasComponent">i=47</Alias>
+    <Alias Alias="HasTypeDefinition">i=40</Alias>
+    <Alias Alias="HasModellingRule">i=37</Alias>
+    <Alias Alias="Organizes">i=35</Alias>
+  </Aliases>
+
+  <UADataType NodeId="ns=1;i=3100" BrowseName="1:PackMLState">
+    <DisplayName>PackMLState</DisplayName>
+    <Description>Machine state as defined by the packaging state model.</Description>
+    <References>
+      <Reference ReferenceType="HasSubtype" IsForward="false">i=29</Reference>
+    </References>
+    <Definition Name="1:PackMLState">
+      <Field Name="Undefined" Value="0"/>
+      <Field Name="Clearing" Value="1"/>
+      <Field Name="Stopped" Value="2"/>
+      <Field Name="Starting" Value="3"/>
+      <Field Name="Idle" Value="4"/>
+      <Field Name="Suspended" Value="5"/>
+      <Field Name="Execute" Value="6"/>
+      <Field Name="Stopping" Value="7"/>
+      <Field Name="Aborting" Value="8"/>
+      <Field Name="Aborted" Value="9"/>
+      <Field Name="Holding" Value="10"/>
+      <Field Name="Held" Value="11"/>
+    </Definition>
+  </UADataType>
+
+  <UADataType NodeId="ns=1;i=3101" BrowseName="1:ProductionCounters">
+    <DisplayName>ProductionCounters</DisplayName>
+    <References>
+      <Reference ReferenceType="HasSubtype" IsForward="false">i=22</Reference>
+    </References>
+    <Definition Name="1:ProductionCounters">
+      <Field Name="Good" DataType="UInt64"/>
+      <Field Name="Rejected" DataType="UInt64"/>
+      <Field Name="TotalRunTimeSeconds" DataType="UInt64"/>
+      <Field Name="LastResetAt" DataType="DateTime" IsOptional="true"/>
+    </Definition>
+  </UADataType>
+
+  <UAObjectType NodeId="ns=1;i=1100" BrowseName="1:PackagingMachineType">
+    <DisplayName>PackagingMachineType</DisplayName>
+    <Description>A packaging machine exposed to the line control system.</Description>
+    <References>
+      <Reference ReferenceType="HasSubtype" IsForward="false">i=58</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=5100</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=6300</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=6301</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=6302</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=7100</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=7101</Reference>
+    </References>
+  </UAObjectType>
+
+  <UAObject NodeId="ns=1;i=5100" BrowseName="1:Identification" ParentNodeId="ns=1;i=1100">
+    <DisplayName>Identification</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=58</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+      <Reference ReferenceType="HasProperty">ns=1;i=6310</Reference>
+      <Reference ReferenceType="HasProperty">ns=1;i=6311</Reference>
+      <Reference ReferenceType="HasProperty">ns=1;i=6312</Reference>
+    </References>
+  </UAObject>
+
+  <UAVariable NodeId="ns=1;i=6310" BrowseName="1:Manufacturer" DataType="LocalizedText"
+              ParentNodeId="ns=1;i=5100">
+    <DisplayName>Manufacturer</DisplayName>
+    <References>
+      <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAVariable NodeId="ns=1;i=6311" BrowseName="1:Model" DataType="LocalizedText"
+              ParentNodeId="ns=1;i=5100">
+    <DisplayName>Model</DisplayName>
+    <References>
+      <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAVariable NodeId="ns=1;i=6312" BrowseName="1:SerialNumber" DataType="String"
+              ParentNodeId="ns=1;i=5100">
+    <DisplayName>SerialNumber</DisplayName>
+    <References>
+      <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAVariable NodeId="ns=1;i=6300" BrowseName="1:CurrentState" DataType="ns=1;i=3100"
+              ParentNodeId="ns=1;i=1100" AccessLevel="1" MinimumSamplingInterval="100">
+    <DisplayName>CurrentState</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAVariable NodeId="ns=1;i=6301" BrowseName="1:Counters" DataType="ns=1;i=3101"
+              ParentNodeId="ns=1;i=1100" AccessLevel="1">
+    <DisplayName>Counters</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAVariable NodeId="ns=1;i=6302" BrowseName="1:LineSpeed" DataType="Double"
+              ParentNodeId="ns=1;i=1100" AccessLevel="3" Historizing="true"
+              MinimumSamplingInterval="250">
+    <DisplayName>LineSpeed</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=2368</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+      <Reference ReferenceType="HasProperty">ns=1;i=6320</Reference>
+    </References>
+  </UAVariable>
+
+  <UAVariable NodeId="ns=1;i=6320" BrowseName="EngineeringUnits" DataType="i=887"
+              ParentNodeId="ns=1;i=6302">
+    <DisplayName>EngineeringUnits</DisplayName>
+    <References>
+      <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=6302</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAMethod NodeId="ns=1;i=7100" BrowseName="1:ChangeProduct" ParentNodeId="ns=1;i=1100">
+    <DisplayName>ChangeProduct</DisplayName>
+    <Description>Switch the machine to a different product recipe.</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasProperty">ns=1;i=6330</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAMethod>
+
+  <UAVariable NodeId="ns=1;i=6330" BrowseName="InputArguments" DataType="i=296"
+              ParentNodeId="ns=1;i=7100" ValueRank="1" ArrayDimensions="2">
+    <DisplayName>InputArguments</DisplayName>
+    <References>
+      <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=7100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+    </References>
+    <Value>
+      <ListOfExtensionObject xmlns="http://opcfoundation.org/UA/2008/02/Types.xsd">
+        <ExtensionObject>
+          <TypeId><Identifier>i=297</Identifier></TypeId>
+          <Body>
+            <Argument>
+              <Name>ProductCode</Name>
+              <DataType><Identifier>i=12</Identifier></DataType>
+              <ValueRank>-1</ValueRank>
+            </Argument>
+          </Body>
+        </ExtensionObject>
+        <ExtensionObject>
+          <TypeId><Identifier>i=297</Identifier></TypeId>
+          <Body>
+            <Argument>
+              <Name>StartImmediately</Name>
+              <DataType><Identifier>i=1</Identifier></DataType>
+              <ValueRank>-1</ValueRank>
+            </Argument>
+          </Body>
+        </ExtensionObject>
+      </ListOfExtensionObject>
+    </Value>
+  </UAVariable>
+
+  <UAMethod NodeId="ns=1;i=7101" BrowseName="1:ResetCounters" ParentNodeId="ns=1;i=1100">
+    <DisplayName>ResetCounters</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAMethod>
+</UANodeSet>

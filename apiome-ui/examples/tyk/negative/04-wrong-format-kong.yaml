@@ -1,0 +1,13 @@
+_format_version: "3.0"
+services:
+  - name: orders-service
+    url: http://orders.internal.example.com:8080
+    routes:
+      - name: orders
+        paths: ["/v2/orders"]
+        methods: [GET, POST]
+        strip_path: true
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 600

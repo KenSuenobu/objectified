@@ -1,0 +1,67 @@
+edition = "2023";
+
+package example.stress.v1;
+
+// File-level feature set: every knob editions exposes, set away from its default so
+// the resolution order (file -> message -> field) is observable.
+option features.field_presence = IMPLICIT;
+option features.enum_type = CLOSED;
+option features.repeated_field_encoding = EXPANDED;
+option features.utf8_validation = NONE;
+option features.message_encoding = LENGTH_PREFIXED;
+option features.json_format = LEGACY_BEST_EFFORT;
+
+enum ClosedByFile {
+  CLOSED_BY_FILE_A = 1;
+  CLOSED_BY_FILE_B = 2;
+}
+
+enum OpenByOverride {
+  option features.enum_type = OPEN;
+
+  OPEN_BY_OVERRIDE_UNSPECIFIED = 0;
+  OPEN_BY_OVERRIDE_A = 1;
+}
+
+message Overrides {
+  // Message-level override: fields here get EXPLICIT presence unless they say otherwise.
+  option features.field_presence = EXPLICIT;
+  option features.utf8_validation = VERIFY;
+
+  // Inherits EXPLICIT from the message.
+  string explicit_by_message = 1;
+
+  // Back to the file's IMPLICIT for this field only.
+  string implicit_by_field = 2 [features.field_presence = IMPLICIT];
+
+  // LEGACY_REQUIRED is the editions spelling of proto2 `required`.
+  string legacy_required = 3 [features.field_presence = LEGACY_REQUIRED];
+
+  // Field-level encoding override, back to PACKED against the file default.
+  repeated int32 packed_by_field = 4 [features.repeated_field_encoding = PACKED];
+
+  repeated int64 expanded_by_file = 5;
+
+  // Delimited encoding is the editions spelling of a proto2 group.
+  Nested delimited = 6 [features.message_encoding = DELIMITED];
+
+  ClosedByFile closed_enum = 7;
+  OpenByOverride open_enum = 8;
+
+  oneof choice {
+    string text = 9;
+    bytes blob = 10;
+  }
+
+  map<string, Nested> by_name = 11;
+
+  message Nested {
+    string label = 1;
+    bool flag = 2 [features.field_presence = IMPLICIT];
+  }
+}
+
+extend Overrides {
+  // Extensions remain available in editions.
+  string annotation = 1000;
+}

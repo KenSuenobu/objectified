@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurator>
+  <cluster>
+    <name>Broken</name>
+    <code>0xFFF9</code>
+    <define>BROKEN_CLUSTER</define>
+    <attribute side="server" code="0x0000" define="VALUE" type="int8u">Value</attribute>
+</configurator>

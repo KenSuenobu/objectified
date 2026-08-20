@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <realmCode code="GB"/>
+  <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040"/>
+  <templateId root="2.16.840.1.113883.10.20.22.1.1" extension="2015-08-01"/>
+  <templateId root="2.16.840.1.113883.10.20.22.1.8" extension="2015-08-01"/>
+  <id root="2.16.840.1.113883.19.5" extension="DS-2026-004471"/>
+  <code code="18842-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC"
+        displayName="Discharge Summary"/>
+  <title>Discharge Summary — Example General Hospital</title>
+  <effectiveTime value="20260817164500+0100"/>
+  <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25"/>
+  <languageCode code="en-GB"/>
+  <setId root="2.16.840.1.113883.19.5" extension="DS-SET-004471"/>
+  <versionNumber value="1"/>
+
+  <recordTarget>
+    <patientRole>
+      <id root="2.16.840.1.113883.19.5" extension="PAT-0311"/>
+      <addr use="HP">
+        <streetAddressLine>44 Example Terrace</streetAddressLine>
+        <city>Leeds</city>
+        <postalCode>LS9 9ZZ</postalCode>
+        <country>GB</country>
+      </addr>
+      <telecom use="HP" value="tel:+44-20-7946-0999"/>
+      <patient>
+        <name use="L"><given>Chris</given><family>Sample</family></name>
+        <administrativeGenderCode code="M" codeSystem="2.16.840.1.113883.5.1" displayName="Male"/>
+        <birthTime value="19620905"/>
+      </patient>
+      <providerOrganization>
+        <id root="2.16.840.1.113883.19.5" extension="ORG-0100"/>
+        <name>Example General Hospital</name>
+      </providerOrganization>
+    </patientRole>
+  </recordTarget>
+
+  <author>
+    <time value="20260817164500+0100"/>
+    <assignedAuthor>
+      <id root="2.16.840.1.113883.19.5" extension="AUT-0311"/>
+      <code code="207RC0000X" codeSystem="2.16.840.1.113883.6.101" displayName="Cardiology"/>
+      <assignedPerson>
+        <name><prefix>Dr</prefix><given>Ash</given><family>Consultant</family></name>
+      </assignedPerson>
+    </assignedAuthor>
+  </author>
+
+  <custodian>
+    <assignedCustodian>
+      <representedCustodianOrganization>
+        <id root="2.16.840.1.113883.19.5" extension="ORG-0100"/>
+        <name>Example General Hospital</name>
+      </representedCustodianOrganization>
+    </assignedCustodian>
+  </custodian>
+
+  <informationRecipient>
+    <intendedRecipient>
+      <id root="2.16.840.1.113883.19.5" extension="GP-0044"/>
+      <informationRecipient>
+        <name><prefix>Dr</prefix><given>Lee</given><family>Practitioner</family></name>
+      </informationRecipient>
+      <receivedOrganization>
+        <name>Example Community Clinic</name>
+      </receivedOrganization>
+    </intendedRecipient>
+  </informationRecipient>
+
+  <componentOf>
+    <encompassingEncounter>
+      <id root="2.16.840.1.113883.19.5" extension="ENC-2026-88231"/>
+      <code code="IMP" codeSystem="2.16.840.1.113883.5.4" displayName="Inpatient encounter"/>
+      <effectiveTime>
+        <low value="20260812083000+0100"/>
+        <high value="20260817160000+0100"/>
+      </effectiveTime>
+      <dischargeDispositionCode code="01" codeSystem="2.16.840.1.113883.19.9"
+                               displayName="Discharged home"/>
+      <location>
+        <healthCareFacility>
+          <id root="2.16.840.1.113883.19.5" extension="WARD-CCU"/>
+          <location><name>Coronary Care Unit</name></location>
+        </healthCareFacility>
+      </location>
+    </encompassingEncounter>
+  </componentOf>
+
+  <component>
+    <structuredBody>
+      <component>
+        <section>
+          <templateId root="2.16.840.1.113883.10.20.22.2.24" extension="2015-08-01"/>
+          <code code="42346-7" codeSystem="2.16.840.1.113883.6.1"
+                displayName="Medications on admission"/>
+          <title>Medications on Admission</title>
+          <text>Ramipril 5mg daily; Atorvastatin 40mg nightly.</text>
+        </section>
+      </component>
+
+      <component>
+        <section>
+          <templateId root="2.16.840.1.113883.10.20.22.2.5.1" extension="2015-08-01"/>
+          <code code="11535-2" codeSystem="2.16.840.1.113883.6.1" displayName="Hospital discharge diagnosis"/>
+          <title>Discharge Diagnoses</title>
+          <text>
+            <list>
+              <item>NSTEMI, managed medically</item>
+              <item>Hypertension</item>
+            </list>
+          </text>
+          <entry typeCode="DRIV">
+            <act classCode="ACT" moodCode="EVN">
+              <templateId root="2.16.840.1.113883.10.20.22.4.3" extension="2015-08-01"/>
+              <id root="2.16.840.1.113883.19.5" extension="PROB-0001"/>
+              <code code="CONC" codeSystem="2.16.840.1.113883.5.6"/>
+              <statusCode code="completed"/>
+              <effectiveTime><low value="20260812"/></effectiveTime>
+              <entryRelationship typeCode="SUBJ">
+                <observation classCode="OBS" moodCode="EVN">
+                  <id root="2.16.840.1.113883.19.5" extension="PROBOBS-0001"/>
+                  <code code="29308-4" codeSystem="2.16.840.1.113883.6.1" displayName="Diagnosis"/>
+                  <statusCode code="completed"/>
+                  <effectiveTime><low value="20260812"/></effectiveTime>
+                  <value xsi:type="CD" code="401303003" codeSystem="2.16.840.1.113883.6.96"
+                         displayName="Acute non-ST segment elevation myocardial infarction"/>
+                </observation>
+              </entryRelationship>
+            </act>
+          </entry>
+        </section>
+      </component>
+
+      <component>
+        <section>
+          <templateId root="2.16.840.1.113883.10.20.22.2.7.1" extension="2014-06-09"/>
+          <code code="47519-4" codeSystem="2.16.840.1.113883.6.1" displayName="Procedures"/>
+          <title>Procedures</title>
+          <text>Coronary angiography, 13 August 2026.</text>
+          <entry typeCode="DRIV">
+            <procedure classCode="PROC" moodCode="EVN">
+              <templateId root="2.16.840.1.113883.10.20.22.4.14" extension="2014-06-09"/>
+              <id root="2.16.840.1.113883.19.5" extension="PROC-0001"/>
+              <code code="33367005" codeSystem="2.16.840.1.113883.6.96"
+                    displayName="Coronary angiography"/>
+              <statusCode code="completed"/>
+              <effectiveTime value="20260813104500+0100"/>
+            </procedure>
+          </entry>
+        </section>
+      </component>
+
+      <component>
+        <section>
+          <templateId root="2.16.840.1.113883.10.20.22.2.41" extension="2015-08-01"/>
+          <code code="8653-8" codeSystem="2.16.840.1.113883.6.1"
+                displayName="Hospital discharge instructions"/>
+          <title>Discharge Instructions</title>
+          <text>
+            <paragraph>Continue dual antiplatelet therapy for twelve months.</paragraph>
+            <paragraph>Cardiology follow-up in six weeks.</paragraph>
+          </text>
+        </section>
+      </component>
+    </structuredBody>
+  </component>
+</ClinicalDocument>

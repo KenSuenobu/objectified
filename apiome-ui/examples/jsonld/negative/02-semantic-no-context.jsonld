@@ -1,0 +1,7 @@
+{
+  "id": "https://example.com/products/WID-0001",
+  "type": "Product",
+  "sku": "WID-0001",
+  "name": "Stainless widget 40mm",
+  "price": "180.00"
+}

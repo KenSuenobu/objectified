@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/product.json",
+  "type": "object",
+  "properties": {
+    "sku": { "type": "string", "pattern": "^[A-Z]{3}-[0-9]{4}$" },
+    "name": { "type": "string" },
+    "price": { "type": "number", "exclusiveMinimum": 0 }
+  },
+  "required": ["sku", "name", "price"]
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Segment definition export (WE60-style): the field offsets the flat file's SDATA
+  must be cut by. Without this file the flat record's 1000-byte SDATA is opaque.
+-->
+<IDocSegments basicType="ZCUSTMAS01" release="740">
+  <Segment name="Z1CUSTHDR" description="Customer header" minOccurs="1" maxOccurs="1" level="1">
+    <Field name="KUNNR" offset="0" length="10" type="CHAR" description="Customer number"/>
+    <Field name="NAME1" offset="10" length="40" type="CHAR" description="Name"/>
+    <Field name="LAND1" offset="50" length="3" type="CHAR" description="Country key"/>
+    <Field name="WAERS" offset="53" length="5" type="CUKY" description="Currency"/>
+  </Segment>
+
+  <Segment name="Z1CUSTADR" description="Customer address" minOccurs="0" maxOccurs="9999"
+           level="2" parent="Z1CUSTHDR">
+    <Field name="ADRKIND" offset="0" length="6" type="CHAR" description="Address kind"/>
+    <Field name="STRAS" offset="6" length="60" type="CHAR" description="Street"/>
+    <Field name="ORT01" offset="66" length="40" type="CHAR" description="City"/>
+    <Field name="PSTLZ" offset="106" length="10" type="CHAR" description="Postal code"/>
+    <Field name="LAND1" offset="116" length="3" type="CHAR" description="Country key"/>
+  </Segment>
+
+  <Segment name="Z1CUSTBNK" description="Bank details" minOccurs="0" maxOccurs="99"
+           level="2" parent="Z1CUSTHDR">
+    <Field name="IBAN" offset="0" length="34" type="CHAR" description="IBAN"/>
+    <Field name="SWIFT" offset="34" length="11" type="CHAR" description="SWIFT/BIC"/>
+    <Field name="WAERS" offset="45" length="5" type="CUKY" description="Account currency"/>
+  </Segment>
+</IDocSegments>

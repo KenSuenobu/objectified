@@ -1,0 +1,7 @@
+/** A single record, no protocol — the schema-only form of Avro IDL. */
+namespace com.example.ping;
+
+record Beacon {
+  string id;
+  long seenAt;
+}

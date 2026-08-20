@@ -1,0 +1,20 @@
+edition = "2023";
+
+package example.common.v1;
+
+// Deliberately the opposite of the importing file, so a normalizer that leaks the
+// importer's feature set into imported types is caught by the fileset test.
+option features.field_presence = IMPLICIT;
+
+message Address {
+  string line1 = 1;
+  string line2 = 2;
+  string city = 3;
+  string postal_code = 4;
+  string country_code = 5;
+}
+
+message Money {
+  int64 minor_units = 1;
+  string currency_code = 2;
+}

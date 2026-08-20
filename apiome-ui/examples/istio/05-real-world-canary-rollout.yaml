@@ -1,0 +1,119 @@
+# A canary rollout as a platform team ships it: header-pinned canary for internal users,
+# a percentage split for everyone else, subsets and outlier ejection on the destination,
+# and an explicit sticky-session hash so a user does not flip versions mid-session.
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: payments
+  namespace: payments
+  labels:
+    app: payments
+    rollout: canary-2026-08
+spec:
+  hosts:
+    - payments.example.com
+  gateways:
+    - istio-system/public-gateway
+  http:
+    - name: internal-canary
+      match:
+        - uri:
+            prefix: /v3
+          headers:
+            x-employee:
+              exact: "true"
+      route:
+        - destination:
+            host: payments.payments.svc.cluster.local
+            subset: canary
+            port:
+              number: 8443
+      timeout: 20s
+
+    - name: public-split
+      match:
+        - uri:
+            prefix: /v3
+      route:
+        - destination:
+            host: payments.payments.svc.cluster.local
+            subset: stable
+            port:
+              number: 8443
+          weight: 95
+        - destination:
+            host: payments.payments.svc.cluster.local
+            subset: canary
+            port:
+              number: 8443
+          weight: 5
+      retries:
+        attempts: 2
+        perTryTimeout: 5s
+        retryOn: connect-failure,refused-stream,503
+      timeout: 20s
+      headers:
+        response:
+          add:
+            x-payments-variant: split
+
+    - name: webhooks
+      match:
+        - uri:
+            exact: /v3/webhooks
+          method:
+            exact: POST
+      route:
+        - destination:
+            host: payments-webhooks.payments.svc.cluster.local
+            port:
+              number: 8080
+      timeout: 5s
+
+    - name: deprecated-v2
+      match:
+        - uri:
+            prefix: /v2
+      directResponse:
+        status: 410
+        body:
+          string: '{"message":"v2 was withdrawn on 2026-06-30; use /v3"}'
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: payments
+  namespace: payments
+spec:
+  host: payments.payments.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        httpCookie:
+          name: payments-session
+          ttl: 3600s
+    connectionPool:
+      tcp:
+        maxConnections: 200
+        connectTimeout: 2s
+      http:
+        http2MaxRequests: 400
+        maxRequestsPerConnection: 20
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 15s
+      baseEjectionTime: 120s
+      maxEjectionPercent: 30
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: stable
+      labels:
+        version: "3.4.1"
+    - name: canary
+      labels:
+        version: "3.5.0-rc.2"
+      trafficPolicy:
+        outlierDetection:
+          consecutive5xxErrors: 1
+          baseEjectionTime: 300s

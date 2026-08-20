@@ -1,0 +1,18 @@
+# Fileset member: the services the routers target.
+http:
+  services:
+    shipments-service:
+      loadBalancer:
+        servers:
+          - url: http://shipments-1.internal.example.com:8080
+          - url: http://shipments-2.internal.example.com:8080
+        healthCheck:
+          path: /healthz
+          interval: 10s
+          timeout: 3s
+        passHostHeader: true
+
+    parcels-service:
+      loadBalancer:
+        servers:
+          - url: http://parcels.internal.example.com:8080

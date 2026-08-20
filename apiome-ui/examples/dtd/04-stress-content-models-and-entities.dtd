@@ -1,0 +1,67 @@
+<!--
+  Every content-model and entity construct a DTD can express, with a bounded,
+  strictly non-recursive entity chain: three levels, each expanding a fixed
+  number of times. A parser with an expansion budget must handle this without
+  approaching the budget.
+-->
+
+<!-- Parameter entities used as content-model fragments. -->
+<!ENTITY % inlineContent "(#PCDATA | emphasis | code | link)*">
+<!ENTITY % commonAtts    "id ID #IMPLIED
+                          lang NMTOKEN #IMPLIED
+                          class NMTOKENS #IMPLIED">
+<!ENTITY % blockChoice   "(para | list | figure | table)">
+
+<!-- General entities: three bounded levels, no cycles. -->
+<!ENTITY vendor    "Example Corporation">
+<!ENTITY product   "&vendor; Widget">
+<!ENTITY tagline   "&product; — built by &vendor;">
+
+<!-- Unparsed entity plus its notation. -->
+<!NOTATION png SYSTEM "image/png">
+<!ENTITY logo SYSTEM "logo.png" NDATA png>
+
+<!-- ANY and EMPTY content models. -->
+<!ELEMENT document (header, body, appendix*)>
+<!ATTLIST document
+          %commonAtts;
+          version CDATA #FIXED "2.0">
+
+<!ELEMENT header (title, (author | corporateAuthor)+, published?)>
+<!ELEMENT title %inlineContent;>
+<!ELEMENT author (#PCDATA)>
+<!ELEMENT corporateAuthor (#PCDATA)>
+<!ELEMENT published EMPTY>
+<!ATTLIST published
+          date CDATA #REQUIRED>
+
+<!ELEMENT body (%blockChoice;)+>
+<!ELEMENT appendix ANY>
+
+<!ELEMENT para %inlineContent;>
+<!ELEMENT emphasis %inlineContent;>
+<!ELEMENT code (#PCDATA)>
+<!ELEMENT link %inlineContent;>
+<!ATTLIST link
+          href CDATA #REQUIRED
+          rel  (self|next|prev|external) "external">
+
+<!ELEMENT list (item+)>
+<!ATTLIST list
+          ordered (yes|no) "no">
+<!ELEMENT item (%blockChoice; | #PCDATA)*>
+
+<!ELEMENT figure (caption?, image)>
+<!ELEMENT caption %inlineContent;>
+<!ELEMENT image EMPTY>
+<!ATTLIST image
+          src ENTITY #REQUIRED
+          alt CDATA #IMPLIED
+          width NMTOKEN #IMPLIED>
+
+<!ELEMENT table (row+)>
+<!ELEMENT row (cell+)>
+<!ELEMENT cell (%blockChoice; | #PCDATA)*>
+<!ATTLIST cell
+          span NMTOKEN "1"
+          align (left|center|right) "left">

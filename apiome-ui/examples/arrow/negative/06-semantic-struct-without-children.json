@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "customer",
+        "type": { "name": "struct" },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "lines",
+        "type": { "name": "list" },
+        "nullable": false,
+        "children": []
+      }
+    ]
+  }
+}

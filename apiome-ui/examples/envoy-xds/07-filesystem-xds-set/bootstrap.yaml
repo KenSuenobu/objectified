@@ -1,0 +1,41 @@
+# Root of the set: a bootstrap that loads its routes and clusters from sibling files
+# through the filesystem xDS provider. The listener names a route configuration it does
+# not contain — `rds.yaml` supplies it, and `cds.yaml` supplies the clusters those
+# routes target.
+node:
+  id: edge-01
+  cluster: edge
+
+dynamic_resources:
+  cds_config:
+    path_config_source:
+      path: cds.yaml
+    resource_api_version: V3
+  lds_config:
+    path_config_source:
+      path: lds.yaml
+    resource_api_version: V3
+
+static_resources:
+  listeners:
+    - name: ingress_http
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 8080
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                rds:
+                  route_config_name: edge_route
+                  config_source:
+                    path_config_source:
+                      path: rds.yaml
+                    resource_api_version: V3
+                http_filters:
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router

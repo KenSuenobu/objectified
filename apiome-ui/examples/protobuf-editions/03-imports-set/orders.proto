@@ -1,0 +1,20 @@
+edition = "2023";
+
+package example.shipping.v1;
+
+import "common.proto";
+
+// Feature sets do not cross file boundaries: this file's EXPLICIT presence does not
+// apply to the imported common.proto, whose fields keep IMPLICIT presence.
+option features.field_presence = EXPLICIT;
+
+message Shipment {
+  string shipment_id = 1;
+  example.common.v1.Address destination = 2;
+  example.common.v1.Money price = 3;
+  repeated string parcel_ids = 4;
+}
+
+service ShippingService {
+  rpc CreateShipment(Shipment) returns (Shipment);
+}

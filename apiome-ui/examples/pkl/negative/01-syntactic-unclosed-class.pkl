@@ -1,0 +1,5 @@
+module example.broken
+
+class Thing {
+  id: String
+  name: String

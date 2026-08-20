@@ -1,0 +1,50 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix core: <https://example.com/core/shapes#> .
+
+# Fileset member: the shared shapes module the root imports. On its own it targets
+# nothing — it exists to be referenced by sh:node from other shapes graphs.
+
+<https://example.com/core/shapes> a owl:Ontology .
+
+core:AddressShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path core:line1 ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxLength 60 ;
+    ] ;
+    sh:property [
+        sh:path core:city ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path core:postalCode ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path core:countryCode ;
+        sh:datatype xsd:string ;
+        sh:pattern "^[A-Z]{2}$" ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .
+
+core:MoneyShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path core:amount ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0 ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path core:currency ;
+        sh:in ( "EUR" "GBP" "USD" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .

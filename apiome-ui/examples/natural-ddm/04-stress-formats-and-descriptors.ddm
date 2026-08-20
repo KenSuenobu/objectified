@@ -1,0 +1,39 @@
+DDM Name ...... COVERAGE-FILE
+DB ............ 002
+File .......... 099
+Default Sequence AA
+
+* Every field format, occurrence form and descriptor kind the DDM listing
+* can express, including the ones whose storage depends on assumptions the
+* listing does not state.
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA KEY-FIELD                        A    12     U Unique descriptor
+  1 AB ALPHA-FIELD                      A    64     N Alphanumeric
+  1 AC NUMERIC-UNPACKED                 N     7.2   N Zoned decimal
+  1 AD PACKED-FIELD                     P    13.3   N Packed decimal, sign nibble
+  1 AE BINARY-FIELD                     B     4     N Binary, four bytes
+  1 AF FLOATING-FIELD                   F     8     N Floating point
+  1 AG LOGICAL-FIELD                    L     1     N Logical (TRUE/FALSE)
+  1 AH UNICODE-FIELD                    U    40     N Unicode alphanumeric
+  1 AI DATE-FIELD                       D     4     N Natural date
+  1 AJ TIME-FIELD                       T     7     N Natural time
+  1 AK LONG-ALPHA                       A  1024     N Long alphanumeric
+  1 AL LOB-FIELD                        A     0     N Variable length (LOB)
+M 1 AM MULTI-VALUE                      A    20     D Multiple-value, indexed
+M 1 AN MULTI-NUMERIC                    N     5.0   N Multiple-value numeric
+P 1 AO PERIODIC-GROUP                                 Periodic group header
+  2 AP PG-CODE                          A     4     N
+  2 AQ PG-AMOUNT                        P     9.2   N
+  2 AR PG-DATE                          N     8.0   N
+M 2 AS PG-MULTI-NOTE                    A    30     N MU inside a PE group
+P 1 AT SECOND-PERIODIC                                Second periodic group
+  2 AU SP-TYPE                          A     2     N
+  2 AV SP-VALUE                         P     7.2   N
+  1 AW NULL-SUPPRESSED                  A    10     N NU Null suppression
+  1 AX FIXED-STORAGE                    A     8     N FI Fixed storage
+S 1 S1 SUPER-KEY-CODE                   A    16     D AA(1-12),AP(1-4)
+S 1 S2 SUPER-DATE-AMOUNT                A    16     D AR(1-8),AQ(1-8)
+H 1 H1 HYPER-DESCRIPTOR                 A    20     D User-written hyperdescriptor
+Q 1 Q1 SUB-DESCRIPTOR                   A     4     D AB(1-4)

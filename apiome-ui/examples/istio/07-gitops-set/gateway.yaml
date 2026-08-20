@@ -1,0 +1,19 @@
+# Fileset member: the Gateway the VirtualService binds to by `logistics/public-gateway`.
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: public-gateway
+  namespace: logistics
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - api.example.com
+      tls:
+        mode: SIMPLE
+        credentialName: api-example-com-cert

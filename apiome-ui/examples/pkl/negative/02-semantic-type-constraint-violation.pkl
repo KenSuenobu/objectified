@@ -1,0 +1,9 @@
+/// Evaluates to a constraint failure: the default value does not satisfy the type's own
+/// constraint, so `pkl eval` reports an error rather than producing JSON.
+module example.broken
+
+class Port {
+  value: Int(isBetween(1024, 65535)) = 80
+}
+
+port: Port = new {}

@@ -1,0 +1,16 @@
+{
+  "clientName": "Thunder Client",
+  "id": "b1f7c8d0-0000-4000-8000-000000000090",
+  "name": "Payments · sandbox",
+  "default": true,
+  "sortNum": 10000,
+  "created": "2026-08-19T12:00:00.000Z",
+  "modified": "2026-08-19T12:30:00.000Z",
+  "data": [
+    { "name": "baseUrl", "value": "https://sandbox.example.com/v3" },
+    { "name": "merchantId", "value": "MER-000001" },
+    { "name": "clientId", "value": "" },
+    { "name": "clientSecret", "value": "" },
+    { "name": "accessToken", "value": "" }
+  ]
+}

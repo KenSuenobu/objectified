@@ -1,0 +1,13 @@
+# Fileset member: the middlewares the routers reference by name.
+http:
+  middlewares:
+    rate-limit:
+      rateLimit:
+        average: 200
+        burst: 100
+        period: 1m
+
+    strip-v2:
+      stripPrefix:
+        prefixes:
+          - /v2

@@ -1,0 +1,9 @@
+name: local_route
+virtual_hosts:
+  - name: ping
+    domains: ["*"]
+    routes:
+      - match:
+          prefix: /ping
+        route:
+          cluster: ping_service

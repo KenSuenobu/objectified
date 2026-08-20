@@ -1,0 +1,41 @@
+# Root of the set: the GitOps layout every mesh platform uses — one resource per file.
+# This VirtualService binds to a Gateway declared in gateway.yaml and routes to subsets
+# declared in destinationrule.yaml; none of the three is complete alone.
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: shipments
+  namespace: logistics
+spec:
+  hosts:
+    - api.example.com
+  gateways:
+    - logistics/public-gateway
+  http:
+    - name: canary
+      match:
+        - uri:
+            prefix: /v2/shipments
+          headers:
+            x-canary:
+              exact: "true"
+      route:
+        - destination:
+            host: shipments.logistics.svc.cluster.local
+            subset: canary
+            port:
+              number: 8080
+    - name: stable
+      match:
+        - uri:
+            prefix: /v2/shipments
+      route:
+        - destination:
+            host: shipments.logistics.svc.cluster.local
+            subset: stable
+            port:
+              number: 8080
+      retries:
+        attempts: 2
+        perTryTimeout: 4s
+      timeout: 20s

@@ -1,0 +1,19 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "1.0.0",
+  "info": {
+    "title": "Storefront API",
+    "description": "The resource listing: the root a 1.2 import starts from.",
+    "termsOfServiceUrl": "https://example.com/terms",
+    "contact": "api@example.com",
+    "license": "Apache 2.0",
+    "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.html"
+  },
+  "apis": [
+    { "path": "/products", "description": "Operations about products" },
+    { "path": "/carts", "description": "Operations about carts" }
+  ],
+  "authorizations": {
+    "apiKey": { "type": "apiKey", "passAs": "header", "keyname": "X-Api-Key" }
+  }
+}

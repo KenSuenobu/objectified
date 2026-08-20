@@ -1,0 +1,8 @@
+geometry_msgs/PoseStamped pose
+string behavior_tree
+float32 max_speed 0.55
+---
+uint16 NONE=0
+uint16 UNKNOWN=1
+uint16 error_code
+string error_ms

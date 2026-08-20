@@ -1,0 +1,125 @@
+version: 2
+
+sources:
+  - name: raw_commerce
+    description: Landing tables written by the ingestion pipeline.
+    database: raw
+    schema: commerce
+    loader: fivetran
+    loaded_at_field: _loaded_at
+    freshness:
+      warn_after: { count: 6, period: hour }
+      error_after: { count: 24, period: hour }
+    tables:
+      - name: orders_raw
+        identifier: orders
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: payload
+            description: Untyped source payload.
+      - name: customers_raw
+        freshness:
+          warn_after: { count: 12, period: hour }
+        columns:
+          - name: id
+            tests: [not_null]
+
+models:
+  - name: fct_orders
+    description: Contracted order fact table.
+    config:
+      materialized: incremental
+      unique_key: order_id
+      incremental_strategy: merge
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns: [order_id]
+      - type: foreign_key
+        columns: [customer_id]
+        to: ref('dim_customers')
+        to_columns: [customer_id]
+      - type: check
+        expression: total_amount >= 0
+        name: total_amount_non_negative
+    columns:
+      - name: order_id
+        data_type: varchar(20)
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        data_type: varchar(20)
+        constraints:
+          - type: not_null
+      - name: status
+        data_type: varchar(16)
+        tests:
+          - accepted_values:
+              values: [new, paid, shipped, cancelled]
+              config:
+                severity: warn
+      - name: placed_at
+        data_type: timestamp
+      - name: total_amount
+        data_type: numeric(13,2)
+      - name: currency
+        data_type: char(3)
+    tests:
+      - dbt_utils.expression_is_true:
+          expression: "total_amount >= 0"
+
+  - name: dim_customers
+    latest_version: 2
+    config:
+      materialized: table
+    columns:
+      - name: customer_id
+        data_type: varchar(20)
+        tests: [unique, not_null]
+      - name: email
+        data_type: varchar(255)
+      - name: signup_channel
+        data_type: varchar(20)
+    versions:
+      - v: 1
+        columns:
+          - include: all
+            exclude: [signup_channel]
+      - v: 2
+        columns:
+          - include: all
+
+seeds:
+  - name: country_codes
+    description: ISO 3166-1 alpha-2 lookup.
+    columns:
+      - name: code
+        tests: [unique, not_null]
+      - name: label
+
+snapshots:
+  - name: orders_snapshot
+    description: Slowly changing dimension over the raw orders table.
+    columns:
+      - name: order_id
+        tests: [not_null]
+
+exposures:
+  - name: revenue_dashboard
+    type: dashboard
+    maturity: high
+    url: https://bi.example.com/dashboards/revenue
+    description: Executive revenue view.
+    depends_on:
+      - ref('fct_orders')
+      - ref('dim_customers')
+    owner:
+      name: Commerce Analytics
+      email: commerce-analytics@example.com

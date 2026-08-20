@@ -1,0 +1,11 @@
+@namespace("com.example.orders")
+protocol OrderService {
+
+  enum OrderStatus {
+    NEW, PAID, SHIPPED, CANCELLED
+  }
+
+  record Order {
+    string orderId;
+    string customerId;
+    OrderStatus status = "NEW

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fileset member: the shared code-set library. On its own it types nothing; included
+  into a repository it supplies the enumerations every field in that repository names.
+-->
+<fixr:codeSets xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository">
+  <fixr:codeSet name="SideCodeSet" id="54" type="char">
+    <fixr:code name="Buy" id="54001" value="1"/>
+    <fixr:code name="Sell" id="54002" value="2"/>
+    <fixr:code name="SellShort" id="54005" value="5"/>
+  </fixr:codeSet>
+
+  <fixr:codeSet name="OrdTypeCodeSet" id="40" type="char">
+    <fixr:code name="Market" id="40001" value="1"/>
+    <fixr:code name="Limit" id="40002" value="2"/>
+    <fixr:code name="Stop" id="40003" value="3"/>
+    <fixr:code name="StopLimit" id="40004" value="4"/>
+  </fixr:codeSet>
+
+  <fixr:codeSet name="TimeInForceCodeSet" id="59" type="char">
+    <fixr:code name="Day" id="59000" value="0"/>
+    <fixr:code name="GoodTillCancel" id="59001" value="1"/>
+    <fixr:code name="ImmediateOrCancel" id="59003" value="3"/>
+    <fixr:code name="FillOrKill" id="59004" value="4"/>
+  </fixr:codeSet>
+</fixr:codeSets>

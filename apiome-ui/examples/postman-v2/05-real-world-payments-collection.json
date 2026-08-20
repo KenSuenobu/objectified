@@ -1,0 +1,117 @@
+{
+  "info": {
+    "name": "Payments sandbox",
+    "_postman_id": "0f2b6c7a-1111-4a2b-8c3d-000000000005",
+    "description": "The shape a payments vendor ships to integrators: an auth folder, core operations, saved example responses, and environment-driven variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "auth": { "type": "bearer", "bearer": { "token": "{{accessToken}}" } },
+  "variable": [
+    { "id": "baseUrl", "key": "baseUrl", "value": "https://sandbox.example.com/v3" },
+    { "id": "merchantId", "key": "merchantId", "value": "MER-000001" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get access token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials" },
+                { "key": "client_id", "value": "{{clientId}}" },
+                { "key": "client_secret", "value": "{{clientSecret}}" }
+              ]
+            },
+            "url": "https://auth.example.com/oauth/token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.environment.set('accessToken', pm.response.json().access_token);"]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authorizations",
+      "item": [
+        {
+          "name": "Authorize a payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"{{merchantId}}\",\n  \"amount\": { \"value\": 2599, \"currency\": \"EUR\" },\n  \"card\": { \"networkToken\": \"tok_test_4242\", \"expiryMonth\": 12, \"expiryYear\": 2030 },\n  \"captureMode\": \"AUTOMATIC\"\n}"
+            },
+            "url": "{{baseUrl}}/authorizations"
+          },
+          "response": [
+            {
+              "name": "201 Approved",
+              "originalRequest": { "method": "POST", "url": "{{baseUrl}}/authorizations" },
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"authorizationId\":\"AUT-90210\",\"result\":\"APPROVED\",\"authorizedAmount\":{\"value\":2599,\"currency\":\"EUR\"}}"
+            },
+            {
+              "name": "402 Declined",
+              "originalRequest": { "method": "POST", "url": "{{baseUrl}}/authorizations" },
+              "status": "Payment Required",
+              "code": 402,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"result\":\"DECLINED\",\"networkCode\":\"05\"}"
+            }
+          ]
+        },
+        {
+          "name": "Capture an authorization",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"amount\": { \"value\": 2599, \"currency\": \"EUR\" }, \"finalCapture\": true }" },
+            "url": "{{baseUrl}}/authorizations/:authorizationId/captures"
+          },
+          "response": []
+        },
+        {
+          "name": "Void an authorization",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/authorizations/:authorizationId/void"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reporting",
+      "item": [
+        {
+          "name": "Settlement report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "text/csv" }],
+            "url": "{{baseUrl}}/reports/settlement?date=2026-08-01&merchantId={{merchantId}}"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

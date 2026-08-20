@@ -1,0 +1,18 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:   <https://example.com/ns#> .
+
+# sh:node points at ex:MissingShape, which nothing in this graph defines and no owl:imports
+# brings in, so the constraint cannot be evaluated or modelled.
+ex:OrderShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Order ;
+    sh:property [
+        sh:path ex:shipTo ;
+        sh:node ex:MissingShape ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:total ;
+        sh:datatype xsd:decimal ;
+    ] .

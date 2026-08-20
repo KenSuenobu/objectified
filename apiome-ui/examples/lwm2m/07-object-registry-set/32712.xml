@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fileset member: the door lock object the unit links to. -->
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Object ObjectType="MODefinition">
+    <Name>Door Lock</Name>
+    <Description1>Lock state and the command to change it.</Description1>
+    <ObjectID>32712</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:x:32712</ObjectURN>
+    <LWM2MVersion>1.1</LWM2MVersion>
+    <ObjectVersion>1.0</ObjectVersion>
+    <MultipleInstances>Multiple</MultipleInstances>
+    <Mandatory>Optional</Mandatory>
+    <Resources>
+      <Item ID="0">
+        <Name>Locked</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>Boolean</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Current lock state.</Description>
+      </Item>
+      <Item ID="1">
+        <Name>Lock</Name>
+        <Operations>E</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type/>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Engage the lock.</Description>
+      </Item>
+      <Item ID="2">
+        <Name>Unlock</Name>
+        <Operations>E</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type/>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Release the lock.</Description>
+      </Item>
+      <Item ID="3">
+        <Name>Last Change</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Time</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>When the state last changed.</Description>
+      </Item>
+    </Resources>
+    <Description2/>
+  </Object>
+</LWM2M>

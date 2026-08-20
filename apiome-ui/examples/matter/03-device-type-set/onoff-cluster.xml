@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurator>
+  <domain name="General"/>
+  <cluster>
+    <domain>General</domain>
+    <name>On/Off</name>
+    <code>0x0006</code>
+    <define>ON_OFF_CLUSTER</define>
+    <description>Switching between on and off.</description>
+    <attribute side="server" code="0x0000" define="ON_OFF" type="boolean" default="false"
+               writable="false" reportable="true">OnOff</attribute>
+    <command source="client" code="0x00" name="Off" optional="false"/>
+    <command source="client" code="0x01" name="On" optional="false"/>
+    <command source="client" code="0x02" name="Toggle" optional="false"/>
+  </cluster>
+</configurator>

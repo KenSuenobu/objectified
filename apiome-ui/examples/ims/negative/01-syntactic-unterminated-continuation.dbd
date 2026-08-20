@@ -1,0 +1,6 @@
+         DBD   NAME=BROKENDB,ACCESS=(HDAM,OSAM),                       X
+         DATASET DD1=BROKEN,DEVICE=3390
+         SEGM  NAME=BROKEN,BYTES=64,PARENT=0
+         FIELD NAME=(BRKID,SEQ,U),BYTES=8,START=1,TYPE=C
+         DBDGEN
+         END

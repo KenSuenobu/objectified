@@ -1,0 +1,29 @@
+*********************************************************************
+* Root of the set: the physical database description. The PSB in the *
+* same set names segments defined here; neither file is complete on  *
+* its own.                                                           *
+*********************************************************************
+         DBD   NAME=CUSTDB,ACCESS=(HDAM,OSAM),                         X
+               RMNAME=(DFSHDC40,10,500,824)
+         DATASET DD1=CUSTPRIM,DEVICE=3390,SIZE=8192
+*
+         SEGM  NAME=CUSTOMER,BYTES=200,PARENT=0
+         FIELD NAME=(CUSTID,SEQ,U),BYTES=10,START=1,TYPE=C
+         FIELD NAME=CUSTNAME,BYTES=40,START=11,TYPE=C
+         FIELD NAME=CUSTSTAT,BYTES=1,START=51,TYPE=C
+         FIELD NAME=CUSTBAL,BYTES=8,START=52,TYPE=P
+*
+         SEGM  NAME=ADDRESS,BYTES=120,PARENT=CUSTOMER
+         FIELD NAME=(ADDRTYPE,SEQ,U),BYTES=2,START=1,TYPE=C
+         FIELD NAME=ADDRLIN1,BYTES=35,START=3,TYPE=C
+         FIELD NAME=ADDRCITY,BYTES=25,START=38,TYPE=C
+         FIELD NAME=ADDRPOST,BYTES=10,START=63,TYPE=C
+*
+         SEGM  NAME=ORDER,BYTES=160,PARENT=CUSTOMER
+         FIELD NAME=(ORDERID,SEQ,U),BYTES=10,START=1,TYPE=C
+         FIELD NAME=ORDDATE,BYTES=8,START=11,TYPE=C
+         FIELD NAME=ORDTOTAL,BYTES=8,START=19,TYPE=P
+*
+         DBDGEN
+         FINISH
+         END

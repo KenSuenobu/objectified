@@ -1,0 +1,75 @@
+arazzo: 1.1.0
+info:
+  title: Subscription lifecycle
+  version: 1.3.0
+sourceDescriptions:
+  - name: billing
+    url: https://api.example.com/billing/openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: createSubscription
+    summary: Create a subscription, retrying on a rate limit.
+    inputs:
+      $ref: '#/components/inputs/customerRef'
+    steps:
+      - stepId: create
+        operationId: $sourceDescriptions.billing.createSubscription
+        parameters:
+          - $ref: '#/components/parameters/tenantHeader'
+        requestBody:
+          contentType: application/json
+          payload:
+            customerId: $inputs.customerId
+            plan: standard
+        successCriteria:
+          - condition: $statusCode == 201
+        onSuccess:
+          - $ref: '#/components/successActions/finish'
+        onFailure:
+          - $ref: '#/components/failureActions/retryOnRateLimit'
+        outputs:
+          subscriptionId: $response.body#/id
+    outputs:
+      subscriptionId: $steps.create.outputs.subscriptionId
+  - workflowId: cancelSubscription
+    summary: Cancel a subscription created by the workflow above.
+    dependsOn:
+      - createSubscription
+    inputs:
+      $ref: '#/components/inputs/customerRef'
+    steps:
+      - stepId: cancel
+        operationId: $sourceDescriptions.billing.cancelSubscription
+        parameters:
+          - $ref: '#/components/parameters/tenantHeader'
+          - name: subscriptionId
+            in: path
+            value: $workflows.createSubscription.outputs.subscriptionId
+        successCriteria:
+          - condition: $statusCode == 204
+components:
+  inputs:
+    customerRef:
+      type: object
+      properties:
+        customerId:
+          type: string
+          pattern: '^CUS-[0-9]{6}$'
+      required: [customerId]
+  parameters:
+    tenantHeader:
+      name: X-Tenant
+      in: header
+      value: acme
+  successActions:
+    finish:
+      name: finish
+      type: end
+  failureActions:
+    retryOnRateLimit:
+      name: retryOnRateLimit
+      type: retry
+      retryAfter: 2
+      retryLimit: 5
+      criteria:
+        - condition: $statusCode == 429

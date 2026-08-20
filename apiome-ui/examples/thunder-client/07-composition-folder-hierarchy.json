@@ -1,0 +1,106 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "Folder composition",
+  "collectionId": "b1f7c8d0-0000-4000-8000-000000000200",
+  "dateExported": "2026-08-19T15:00:00.000Z",
+  "version": "1.2",
+  "folders": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000201",
+      "name": "Tenant A",
+      "containerId": "",
+      "created": "2026-08-19T14:50:00.000Z",
+      "sortNum": 10000
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000202",
+      "name": "Read",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000201",
+      "created": "2026-08-19T14:51:00.000Z",
+      "sortNum": 10000,
+      "settings": { "headers": [{ "name": "X-Scope", "value": "read" }] }
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000203",
+      "name": "Write",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000201",
+      "created": "2026-08-19T14:52:00.000Z",
+      "sortNum": 20000,
+      "settings": {
+        "headers": [{ "name": "X-Scope", "value": "write" }],
+        "auth": { "type": "basic", "basic": { "username": "{{writeUser}}", "password": "{{writePassword}}" } }
+      }
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000204",
+      "name": "Tenant B",
+      "containerId": "",
+      "created": "2026-08-19T14:53:00.000Z",
+      "sortNum": 20000
+    }
+  ],
+  "settings": {
+    "headers": [{ "name": "X-Collection", "value": "folder-composition" }],
+    "auth": { "type": "bearer", "bearer": "{{accessToken}}" },
+    "options": { "baseUrl": "{{baseUrl}}" }
+  },
+  "requests": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000205",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000200",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000202",
+      "name": "Two levels of folder headers plus collection auth",
+      "url": "{{baseUrl}}/tenant-a/read",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2026-08-19T14:54:00.000Z",
+      "modified": "2026-08-19T14:54:00.000Z",
+      "headers": [],
+      "params": [],
+      "tests": [{ "type": "res-code", "custom": "", "action": "equal", "value": "200" }]
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000206",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000200",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000203",
+      "name": "Folder basic auth wins over collection bearer",
+      "url": "{{baseUrl}}/tenant-a/write",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2026-08-19T14:55:00.000Z",
+      "modified": "2026-08-19T14:55:00.000Z",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "params": [],
+      "body": { "type": "json", "raw": "{ \"value\": 1 }", "form": [] },
+      "tests": []
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000207",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000200",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000204",
+      "name": "Folder with no settings inherits the collection only",
+      "url": "{{baseUrl}}/tenant-b/read",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2026-08-19T14:56:00.000Z",
+      "modified": "2026-08-19T14:56:00.000Z",
+      "headers": [],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000208",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000200",
+      "containerId": "",
+      "name": "Root request: collection settings only",
+      "url": "{{baseUrl}}/root",
+      "method": "GET",
+      "sortNum": 30000,
+      "created": "2026-08-19T14:57:00.000Z",
+      "modified": "2026-08-19T14:57:00.000Z",
+      "headers": [],
+      "params": [],
+      "tests": []
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "service": {
+    "name": "orders",
+    "tags": ["v2", "http"],
+    "meta": { "protocol": "http" }
+  }
+}

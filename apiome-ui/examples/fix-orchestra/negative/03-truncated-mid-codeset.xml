@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 name="ExampleEquities" version="FIX.4.4_EP001">
+  <fixr:codeSets>
+    <fixr:codeSet name="SideCodeSet" id="54" type="char">
+      <fixr:code name="Buy" id="54001" value="1"/>
+      <fixr:code name="Sell" id="54002" val

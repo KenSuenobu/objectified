@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "@vocab": "https://example.com/ns#",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "id": "@id",
+    "type": "@type",
+    "name": "schema:name",
+    "sku": "schema:sku",
+    "price": { "@id": "schema:price", "@type": "xsd:decimal" },
+    "currency": "schema:priceCurrency",
+    "category": { "@id": "schema:category", "@type": "@id" },
+    "tags": { "@id": "schema:keywords", "@container": "@set" },
+    "released": { "@id": "schema:releaseDate", "@type": "xsd:date" }
+  },
+  "@graph": [
+    {
+      "id": "https://example.com/products/WID-0001",
+      "type": "schema:Product",
+      "sku": "WID-0001",
+      "name": "Stainless widget 40mm",
+      "price": "180.00",
+      "currency": "EUR",
+      "category": "https://example.com/categories/hardware",
+      "tags": ["hardware", "stainless"],
+      "released": "2026-03-01"
+    },
+    {
+      "id": "https://example.com/products/GAD-0007",
+      "type": "schema:Product",
+      "sku": "GAD-0007",
+      "name": "Gadget, boxed",
+      "price": "42.00",
+      "currency": "EUR",
+      "category": "https://example.com/categories/hardware",
+      "tags": ["hardware", "boxed"],
+      "released": "2026-05-14"
+    }
+  ]
+}

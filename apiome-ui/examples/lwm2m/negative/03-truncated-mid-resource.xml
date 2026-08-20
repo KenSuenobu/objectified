@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Object ObjectType="MODefinition">
+    <Name>Temperature</Name>
+    <ObjectID>3303</ObjectID>
+    <Resources>
+      <Item ID="5700">
+        <Name>Sensor Value</Name>
+        <Operations>R</Operations>
+        <Type>Flo

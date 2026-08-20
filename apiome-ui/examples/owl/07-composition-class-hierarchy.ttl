@@ -1,0 +1,62 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:   <https://example.com/composition#> .
+
+# Within-document composition: a three-level class hierarchy where each level adds
+# properties and restrictions, plus property specialisation with rdfs:subPropertyOf.
+
+<https://example.com/composition> a owl:Ontology ;
+    owl:versionInfo "1.0.0" .
+
+ex:Party a owl:Class ;
+    rdfs:label "Party" ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty ex:identifier ;
+        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+        owl:onDataRange xsd:string ;
+    ] .
+
+ex:Organisation a owl:Class ;
+    rdfs:subClassOf ex:Party ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty ex:legalName ;
+        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+        owl:onDataRange xsd:string ;
+    ] .
+
+ex:Supplier a owl:Class ;
+    rdfs:subClassOf ex:Organisation ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty ex:suppliesCategory ;
+        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+        owl:onClass ex:Category ;
+    ] .
+
+ex:Customer a owl:Class ;
+    rdfs:subClassOf ex:Organisation .
+
+ex:Supplier owl:disjointWith ex:Customer .
+
+ex:Category a owl:Class .
+
+# Property hierarchy: the specialised properties inherit domain and range.
+ex:identifier a owl:DatatypeProperty ;
+    rdfs:domain ex:Party ;
+    rdfs:range xsd:string .
+
+ex:legalName a owl:DatatypeProperty ;
+    rdfs:subPropertyOf ex:identifier ;
+    rdfs:domain ex:Organisation .
+
+ex:relatedParty a owl:ObjectProperty ;
+    rdfs:domain ex:Party ;
+    rdfs:range ex:Party .
+
+ex:suppliesCategory a owl:ObjectProperty ;
+    rdfs:subPropertyOf ex:relatedParty ;
+    rdfs:domain ex:Supplier ;
+    rdfs:range ex:Category .

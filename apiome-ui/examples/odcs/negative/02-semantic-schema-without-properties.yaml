@@ -1,0 +1,18 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: 0f6d2f0e-1b2c-4a5e-9f2a-0000000000e2
+name: shapeless
+version: 1.0.0
+status: active
+description:
+  purpose: >
+    Valid YAML and a valid ODCS envelope, but the schema object declares no properties,
+    so the contract describes no dataset structure at all.
+schema:
+  - name: shapeless_table
+    logicalType: object
+    physicalType: table
+team:
+  - username: nobody
+    role: Data Product Owner
+    dateIn: 2026-01-01

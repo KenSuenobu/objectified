@@ -1,0 +1,114 @@
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct:   <http://purl.org/dc/terms/> .
+@prefix ex:    <https://example.com/pharmacovigilance#> .
+
+# Domain ontology in the shape a regulated industry publishes: versioned, annotated,
+# with a class hierarchy, typed properties, a SKOS-backed code list and cardinality
+# restrictions. Reconstructed shape; no upstream text copied.
+
+<https://example.com/pharmacovigilance> a owl:Ontology ;
+    dct:title "Pharmacovigilance case ontology"@en ;
+    dct:license <https://www.apache.org/licenses/LICENSE-2.0> ;
+    owl:versionIRI <https://example.com/pharmacovigilance/3.1.0> ;
+    owl:versionInfo "3.1.0" ;
+    rdfs:comment "Adverse event cases, reporters, products and outcomes."@en .
+
+# ---------------------------------------------------------------- class hierarchy
+ex:Party a owl:Class ; rdfs:label "Party"@en .
+
+ex:Reporter a owl:Class ;
+    rdfs:label "Reporter"@en ;
+    rdfs:subClassOf ex:Party ;
+    rdfs:comment "The person or organisation that reported the case."@en .
+
+ex:HealthcareProfessional a owl:Class ;
+    rdfs:label "Healthcare professional"@en ;
+    rdfs:subClassOf ex:Reporter .
+
+ex:Consumer a owl:Class ;
+    rdfs:label "Consumer"@en ;
+    rdfs:subClassOf ex:Reporter .
+
+ex:HealthcareProfessional owl:disjointWith ex:Consumer .
+
+ex:Case a owl:Class ;
+    rdfs:label "Case"@en ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty ex:caseIdentifier ;
+        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+        owl:onDataRange xsd:string ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty ex:hasEvent ;
+        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+        owl:onClass ex:AdverseEvent ;
+    ] .
+
+ex:AdverseEvent a owl:Class ; rdfs:label "Adverse event"@en .
+ex:Product a owl:Class ; rdfs:label "Product"@en .
+ex:Substance a owl:Class ; rdfs:label "Substance"@en .
+
+# ---------------------------------------------------------------- properties
+ex:reportedBy a owl:ObjectProperty ;
+    rdfs:label "reported by"@en ;
+    rdfs:domain ex:Case ;
+    rdfs:range ex:Reporter .
+
+ex:hasEvent a owl:ObjectProperty ;
+    rdfs:domain ex:Case ;
+    rdfs:range ex:AdverseEvent .
+
+ex:suspectProduct a owl:ObjectProperty ;
+    rdfs:domain ex:Case ;
+    rdfs:range ex:Product .
+
+ex:containsSubstance a owl:ObjectProperty ;
+    rdfs:domain ex:Product ;
+    rdfs:range ex:Substance .
+
+ex:caseIdentifier a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:domain ex:Case ;
+    rdfs:range xsd:string .
+
+ex:receivedOn a owl:DatatypeProperty ;
+    rdfs:domain ex:Case ;
+    rdfs:range xsd:date .
+
+ex:seriousness a owl:ObjectProperty ;
+    rdfs:domain ex:AdverseEvent ;
+    rdfs:range ex:SeriousnessCode .
+
+ex:onsetDate a owl:DatatypeProperty ;
+    rdfs:domain ex:AdverseEvent ;
+    rdfs:range xsd:date .
+
+ex:outcome a owl:ObjectProperty ;
+    rdfs:domain ex:AdverseEvent ;
+    rdfs:range ex:OutcomeCode .
+
+# ---------------------------------------------------------------- code lists
+ex:SeriousnessCode a owl:Class , skos:ConceptScheme ;
+    rdfs:label "Seriousness"@en .
+
+ex:Serious a owl:NamedIndividual , ex:SeriousnessCode , skos:Concept ;
+    skos:prefLabel "Serious"@en ;
+    skos:inScheme ex:SeriousnessCode .
+
+ex:NonSerious a owl:NamedIndividual , ex:SeriousnessCode , skos:Concept ;
+    skos:prefLabel "Non-serious"@en ;
+    skos:inScheme ex:SeriousnessCode .
+
+ex:OutcomeCode a owl:Class ;
+    owl:oneOf ( ex:Recovered ex:Recovering ex:NotRecovered ex:Fatal ex:Unknown ) .
+
+ex:Recovered a owl:NamedIndividual , ex:OutcomeCode ; skos:prefLabel "Recovered"@en .
+ex:Recovering a owl:NamedIndividual , ex:OutcomeCode ; skos:prefLabel "Recovering"@en .
+ex:NotRecovered a owl:NamedIndividual , ex:OutcomeCode ; skos:prefLabel "Not recovered"@en .
+ex:Fatal a owl:NamedIndividual , ex:OutcomeCode ; skos:prefLabel "Fatal"@en .
+ex:Unknown a owl:NamedIndividual , ex:OutcomeCode ; skos:prefLabel "Unknown"@en .

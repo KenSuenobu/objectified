@@ -1,0 +1,6 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ex:   <https://example.com/ontology# .
+
+ex:Broken a owl:Class ;
+    rdfs:label "Broken" .

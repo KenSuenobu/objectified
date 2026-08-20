@@ -1,0 +1,30 @@
+ /*********************************************************************/
+ /* Shared storage: one physical record read as three different        */
+ /* layouts depending on the record type in the header. This is the    */
+ /* PL/I equivalent of COBOL REDEFINES, and must present the same way. */
+ /*********************************************************************/
+ DCL 1 TRANSACTION_REC,
+       2 TXN_HEADER,
+         3 TXN_TYPE      CHAR(2),
+         3 TXN_SEQUENCE  FIXED BIN(31),
+         3 TXN_STAMP     FIXED DEC(14,0),
+
+       2 TXN_BODY UNION,
+
+         /* TXN_TYPE = 'DR' */
+         3 DEBIT_VIEW,
+           4 DR_ACCOUNT   CHAR(34),
+           4 DR_AMOUNT    FIXED DEC(15,2),
+           4 DR_CURRENCY  CHAR(3),
+           4 DR_NARRATIVE CHAR(60),
+
+         /* TXN_TYPE = 'CR' */
+         3 CREDIT_VIEW,
+           4 CR_ACCOUNT   CHAR(34),
+           4 CR_AMOUNT    FIXED DEC(15,2),
+           4 CR_CURRENCY  CHAR(3),
+           4 CR_SOURCE    CHAR(20),
+           4 CR_NARRATIVE CHAR(40),
+
+         /* TXN_TYPE = 'AD' — adjustment, read as raw bytes */
+         3 RAW_VIEW       CHAR(114);

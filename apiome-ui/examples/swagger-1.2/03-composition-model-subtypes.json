@@ -1,0 +1,53 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "1.1.0",
+  "basePath": "https://api.example.com/fleet",
+  "resourcePath": "/vehicles",
+  "produces": ["application/json"],
+  "apis": [
+    {
+      "path": "/vehicles/{vin}",
+      "operations": [
+        {
+          "method": "GET",
+          "nickname": "getVehicle",
+          "summary": "Fetch a vehicle; the concrete type is chosen by the discriminator.",
+          "type": "Vehicle",
+          "parameters": [
+            { "name": "vin", "paramType": "path", "required": true, "type": "string" }
+          ]
+        }
+      ]
+    }
+  ],
+  "models": {
+    "Vehicle": {
+      "id": "Vehicle",
+      "description": "Base model; 1.2 expresses inheritance with subTypes + discriminator.",
+      "required": ["vin", "kind"],
+      "discriminator": "kind",
+      "properties": {
+        "vin": { "type": "string" },
+        "kind": { "type": "string" },
+        "registered": { "type": "string", "format": "date" }
+      },
+      "subTypes": ["Truck", "Van"]
+    },
+    "Truck": {
+      "id": "Truck",
+      "required": ["payloadKg"],
+      "properties": {
+        "payloadKg": { "type": "integer", "format": "int32" },
+        "axleCount": { "type": "integer", "format": "int32" }
+      }
+    },
+    "Van": {
+      "id": "Van",
+      "required": ["loadVolumeM3"],
+      "properties": {
+        "loadVolumeM3": { "type": "number", "format": "double" },
+        "refrigerated": { "type": "boolean" }
+      }
+    }
+  }
+}

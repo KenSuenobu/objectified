@@ -1,0 +1,12 @@
+# Routers with no rule select nothing, and services with no servers point nowhere: the
+# document is well-formed YAML and describes no reachable route.
+http:
+  routers:
+    orders:
+      entryPoints:
+        - websecure
+      service: orders-service
+  services:
+    orders-service:
+      loadBalancer:
+        servers: []

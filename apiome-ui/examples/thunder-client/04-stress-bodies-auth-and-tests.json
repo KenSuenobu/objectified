@@ -1,0 +1,177 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "Grammar corners",
+  "collectionId": "b1f7c8d0-0000-4000-8000-000000000030",
+  "dateExported": "2026-08-19T12:00:00.000Z",
+  "version": "1.2",
+  "folders": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000031",
+      "name": "Bodies",
+      "containerId": "",
+      "created": "2026-08-19T11:50:00.000Z",
+      "sortNum": 10000
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000032",
+      "name": "Nested",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000031",
+      "created": "2026-08-19T11:51:00.000Z",
+      "sortNum": 20000
+    }
+  ],
+  "settings": {
+    "headers": [],
+    "auth": { "type": "none" },
+    "options": { "baseUrl": "{{baseUrl}}" }
+  },
+  "requests": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000033",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000030",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000031",
+      "name": "JSON body",
+      "url": "{{baseUrl}}/samples",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2026-08-19T11:52:00.000Z",
+      "modified": "2026-08-19T11:52:00.000Z",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "params": [],
+      "body": { "type": "json", "raw": "{ \"label\": \"sample-a\", \"assay\": \"pcr\" }", "form": [] },
+      "tests": [
+        { "type": "json-query", "custom": "json.status", "action": "equal", "value": "queued" },
+        { "type": "res-body", "custom": "", "action": "contains", "value": "sampleId" }
+      ]
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000034",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000030",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000031",
+      "name": "Form body",
+      "url": "{{baseUrl}}/samples",
+      "method": "POST",
+      "sortNum": 20000,
+      "created": "2026-08-19T11:53:00.000Z",
+      "modified": "2026-08-19T11:53:00.000Z",
+      "headers": [],
+      "params": [],
+      "body": {
+        "type": "formencoded",
+        "raw": "",
+        "form": [
+          { "name": "label", "value": "sample-b" },
+          { "name": "assay", "value": "elisa" },
+          { "name": "replicates", "value": "3", "isDisabled": true }
+        ]
+      },
+      "tests": []
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000035",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000030",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000031",
+      "name": "Multipart with a file",
+      "url": "{{baseUrl}}/samples/upload",
+      "method": "POST",
+      "sortNum": 30000,
+      "created": "2026-08-19T11:54:00.000Z",
+      "modified": "2026-08-19T11:54:00.000Z",
+      "headers": [],
+      "params": [],
+      "body": {
+        "type": "formdata",
+        "raw": "",
+        "form": [{ "name": "label", "value": "sample-c" }],
+        "files": [{ "name": "attachment", "value": "readings.csv" }]
+      },
+      "tests": []
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000036",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000030",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000031",
+      "name": "GraphQL body",
+      "url": "{{baseUrl}}/graphql",
+      "method": "POST",
+      "sortNum": 40000,
+      "created": "2026-08-19T11:55:00.000Z",
+      "modified": "2026-08-19T11:55:00.000Z",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "params": [],
+      "body": {
+        "type": "graphql",
+        "raw": "",
+        "form": [],
+        "graphql": {
+          "query": "query Sample($id: ID!) { sample(id: $id) { id status } }",
+          "variables": "{ \"id\": \"SMP-1\" }"
+        }
+      },
+      "tests": []
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000037",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000030",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000032",
+      "name": "Basic auth in a nested folder",
+      "url": "{{baseUrl}}/legacy",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2026-08-19T11:56:00.000Z",
+      "modified": "2026-08-19T11:56:00.000Z",
+      "headers": [],
+      "params": [],
+      "auth": { "type": "basic", "basic": { "username": "{{labUser}}", "password": "{{labPassword}}" } },
+      "tests": []
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000038",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000030",
+      "containerId": "",
+      "name": "OAuth2 client credentials",
+      "url": "{{baseUrl}}/protected",
+      "method": "GET",
+      "sortNum": 50000,
+      "created": "2026-08-19T11:57:00.000Z",
+      "modified": "2026-08-19T11:57:00.000Z",
+      "headers": [],
+      "params": [],
+      "auth": {
+        "type": "oauth2",
+        "oauth2": {
+          "grantType": "client_credentials",
+          "accessTokenUrl": "https://auth.example.com/oauth/token",
+          "clientId": "{{clientId}}",
+          "clientSecret": "{{clientSecret}}",
+          "scope": "lab.read lab.write"
+        }
+      },
+      "tests": [{ "type": "res-code", "custom": "", "action": "equal", "value": "200" }]
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000039",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000030",
+      "containerId": "",
+      "name": "Path and query params with a pre-request",
+      "url": "{{baseUrl}}/samples/:sampleId/status",
+      "method": "PATCH",
+      "sortNum": 60000,
+      "created": "2026-08-19T11:58:00.000Z",
+      "modified": "2026-08-19T11:58:00.000Z",
+      "headers": [
+        { "name": "X-Request-Id", "value": "{{requestId}}" },
+        { "name": "X-Debug", "value": "1", "isDisabled": true }
+      ],
+      "params": [
+        { "name": "sampleId", "value": "SMP-1", "isPath": true },
+        { "name": "notify", "value": "true", "isPath": false }
+      ],
+      "body": { "type": "json", "raw": "{ \"status\": \"complete\" }", "form": [] },
+      "preReq": {
+        "setvar": [{ "name": "requestId", "action": "setTo", "custom": "{{$guid}}", "type": "set-env-var" }]
+      },
+      "tests": [{ "type": "res-code", "custom": "", "action": "equal", "value": "202" }]
+    }
+  ]
+}

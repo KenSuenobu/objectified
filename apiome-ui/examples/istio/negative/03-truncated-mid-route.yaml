@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: orders
+  namespace: storefront
+spec:
+  hosts:
+    - api.example.com
+  http:
+    - match:
+        - uri:
+            prefix: /v2/orders
+      route:
+        - destination:
+            host: orders.storefront.svc.cluster

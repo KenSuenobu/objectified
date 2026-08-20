@@ -1,0 +1,57 @@
+*********************************************************************
+* Attribute and field-form coverage: every ATTRB combination, both   *
+* picture directions, initial values, occurrences, extended colour   *
+* and highlighting, and a second map in the same mapset.             *
+*********************************************************************
+STRSSET  DFHMSD TYPE=&SYSPARM,MODE=INOUT,LANG=COBOL,STORAGE=AUTO,      X
+               TIOAPFX=YES,CTRL=(FREEKB,FRSET,ALARM),                  X
+               MAPATTS=(COLOR,HILIGHT,PS,VALIDN),                      X
+               DSATTS=(COLOR,HILIGHT,VALIDN),EXTATT=YES
+*
+STRSMAP1 DFHMDI SIZE=(24,80),LINE=1,COLUMN=1,CTRL=(FREEKB,ALARM)
+*
+* Protected, autoskip, bright, dark, normal.
+         DFHMDF POS=(1,1),LENGTH=20,ATTRB=(PROT,BRT),                  X
+               INITIAL='ATTRIBUTE COVERAGE'
+ASKIPFLD DFHMDF POS=(2,1),LENGTH=10,ATTRB=(PROT,ASKIP,NORM)
+DARKFLD  DFHMDF POS=(2,15),LENGTH=10,ATTRB=(PROT,DRK)
+*
+* Unprotected: plain, numeric, with initial cursor, with modified-data-tag.
+UNPFLD   DFHMDF POS=(4,1),LENGTH=20,ATTRB=(UNPROT,NORM),PICIN='X(20)'
+NUMFLD   DFHMDF POS=(5,1),LENGTH=9,ATTRB=(UNPROT,NUM),                 X
+               PICIN='9(7)V99',PICOUT='ZZZ,ZZ9.99'
+CURSFLD  DFHMDF POS=(6,1),LENGTH=8,ATTRB=(UNPROT,NORM,IC),             X
+               INITIAL='________'
+FSETFLD  DFHMDF POS=(7,1),LENGTH=8,ATTRB=(UNPROT,NORM,FSET)
+*
+* Extended attributes: colour, highlighting, validation, symbol set.
+COLRFLD  DFHMDF POS=(9,1),LENGTH=12,ATTRB=(UNPROT,NORM),               X
+               COLOR=YELLOW,HILIGHT=REVERSE
+BLNKFLD  DFHMDF POS=(9,20),LENGTH=12,ATTRB=(PROT,NORM),                X
+               COLOR=TURQUOISE,HILIGHT=BLINK
+UNDRFLD  DFHMDF POS=(9,40),LENGTH=12,ATTRB=(UNPROT,NORM),              X
+               HILIGHT=UNDERLINE,VALIDN=(MUSTENTER,MUSTFILL)
+*
+* Occurrences: a repeating line of fields, and a field group.
+TABLINE  DFHMDF POS=(12,1),LENGTH=12,ATTRB=(PROT,NORM),                X
+               OCCURS=8,INITIAL='            '
+GRPFLDA  DFHMDF POS=(20,1),LENGTH=4,ATTRB=(UNPROT,NORM),               X
+               GRPNAME=DATEGRP
+GRPFLDB  DFHMDF POS=(20,6),LENGTH=2,ATTRB=(UNPROT,NORM),               X
+               GRPNAME=DATEGRP
+GRPFLDC  DFHMDF POS=(20,9),LENGTH=2,ATTRB=(UNPROT,NORM),               X
+               GRPNAME=DATEGRP
+*
+* Output-only message and a field with no name (label only).
+MSGFLD   DFHMDF POS=(22,1),LENGTH=70,ATTRB=(PROT,BRT),COLOR=RED
+         DFHMDF POS=(24,1),LENGTH=30,ATTRB=(PROT,NORM),                X
+               INITIAL='F3=EXIT   F12=CANCEL'
+*
+* A second map in the same mapset, at a different size and origin.
+STRSMAP2 DFHMDI SIZE=(12,40),LINE=6,COLUMN=20,JUSTIFY=(LEFT,FIRST)
+         DFHMDF POS=(1,1),LENGTH=18,ATTRB=(PROT,BRT),                  X
+               INITIAL='CONFIRM (Y/N)'
+CONFIRM  DFHMDF POS=(3,1),LENGTH=1,ATTRB=(UNPROT,NORM,IC),PICIN='X'
+*
+         DFHMSD TYPE=FINAL
+         END

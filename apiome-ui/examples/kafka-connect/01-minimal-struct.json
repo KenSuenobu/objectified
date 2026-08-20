@@ -1,0 +1,9 @@
+{
+  "type": "struct",
+  "name": "com.example.Beacon",
+  "optional": false,
+  "fields": [
+    { "field": "id", "type": "string", "optional": false },
+    { "field": "seen_at", "type": "int64", "optional": false }
+  ]
+}

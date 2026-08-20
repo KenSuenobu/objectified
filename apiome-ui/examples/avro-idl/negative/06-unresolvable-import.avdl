@@ -1,0 +1,17 @@
+/**
+ * The imported file does not exist in the fileset, so `com.example.common.Address`
+ * can never resolve. The import must fail with a named unresolved reference rather
+ * than silently producing a record with a missing field type.
+ */
+@namespace("com.example.shipping")
+protocol ShippingService {
+
+  import idl "does-not-exist.avdl";
+
+  record ShipmentRequest {
+    string shipmentId;
+    com.example.common.Address destination;
+  }
+
+  void ship(ShipmentRequest request) oneway;
+}

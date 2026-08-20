@@ -1,0 +1,134 @@
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcat:  <http://www.w3.org/ns/dcat#> .
+@prefix dct:   <http://purl.org/dc/terms/> .
+@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
+@prefix ex:    <https://example.com/shapes/catalogue#> .
+
+# Publication profile for a data catalogue: the shape a government or publishing
+# programme ships so that submitted metadata can be validated before ingest.
+# Reconstructed shape; no upstream text copied.
+
+ex:CatalogueShape
+    a sh:NodeShape ;
+    sh:targetClass dcat:Catalog ;
+    rdfs:label "Catalogue" ;
+    sh:property [
+        sh:path dct:title ;
+        sh:datatype rdfs:Literal ;
+        sh:minCount 1 ;
+        sh:uniqueLang true ;
+        sh:severity sh:Violation ;
+        sh:message "A catalogue must have at least one title, one per language." ;
+    ] ;
+    sh:property [
+        sh:path dct:publisher ;
+        sh:class foaf:Agent ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dcat:dataset ;
+        sh:node ex:DatasetShape ;
+        sh:minCount 1 ;
+    ] .
+
+ex:DatasetShape
+    a sh:NodeShape ;
+    sh:targetClass dcat:Dataset ;
+    rdfs:label "Dataset" ;
+
+    sh:property [
+        sh:path dct:identifier ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:order 1 ;
+    ] ;
+    sh:property [
+        sh:path dct:title ;
+        sh:minCount 1 ;
+        sh:uniqueLang true ;
+        sh:order 2 ;
+    ] ;
+    sh:property [
+        sh:path dct:description ;
+        sh:minCount 1 ;
+        sh:minLength 20 ;
+        sh:order 3 ;
+    ] ;
+    sh:property [
+        sh:path dct:issued ;
+        sh:datatype xsd:date ;
+        sh:maxCount 1 ;
+        sh:order 4 ;
+    ] ;
+    sh:property [
+        sh:path dct:modified ;
+        sh:datatype xsd:date ;
+        sh:maxCount 1 ;
+        sh:lessThanOrEquals dct:issued ;
+        sh:severity sh:Warning ;
+        sh:message "Modified date should not precede the issued date." ;
+        sh:order 5 ;
+    ] ;
+    sh:property [
+        sh:path dcat:theme ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 1 ;
+        sh:order 6 ;
+    ] ;
+    sh:property [
+        sh:path dct:accrualPeriodicity ;
+        sh:in (
+            <http://publications.example.com/resource/frequency/DAILY>
+            <http://publications.example.com/resource/frequency/WEEKLY>
+            <http://publications.example.com/resource/frequency/MONTHLY>
+            <http://publications.example.com/resource/frequency/ANNUAL>
+        ) ;
+        sh:maxCount 1 ;
+        sh:order 7 ;
+    ] ;
+    sh:property [
+        sh:path dcat:distribution ;
+        sh:node ex:DistributionShape ;
+        sh:minCount 1 ;
+        sh:severity sh:Violation ;
+        sh:message "A published dataset must have at least one distribution." ;
+        sh:order 8 ;
+    ] ;
+    sh:property [
+        sh:path dcat:contactPoint ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:minCount 1 ;
+        sh:order 9 ;
+    ] .
+
+ex:DistributionShape
+    a sh:NodeShape ;
+    sh:targetClass dcat:Distribution ;
+    sh:property [
+        sh:path dcat:accessURL ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dct:format ;
+        sh:in ( "text/csv" "application/json" "application/xml" "application/parquet" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dcat:byteSize ;
+        sh:datatype xsd:nonNegativeInteger ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dct:license ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 1 ;
+        sh:severity sh:Violation ;
+        sh:message "Every distribution must state its licence." ;
+    ] .

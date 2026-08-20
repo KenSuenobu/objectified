@@ -1,0 +1,69 @@
+arazzo: 1.1.0
+info:
+  title: Criteria vocabulary stress
+  description: Every criterion type and reference form Arazzo 1.1 admits, in one document.
+  version: 0.4.0
+sourceDescriptions:
+  - name: catalogue
+    url: ./catalogue.openapi.yaml
+    type: openapi
+  - name: legacy
+    url: https://legacy.example.com/service.wsdl
+    type: openapi
+workflows:
+  - workflowId: probeEverything
+    summary: Exercises simple, regex, jsonpath and xpath criteria.
+    inputs:
+      type: object
+      properties:
+        term:
+          type: string
+      required: [term]
+    steps:
+      - stepId: searchByOperationId
+        operationId: $sourceDescriptions.catalogue.searchProducts
+        parameters:
+          - name: q
+            in: query
+            value: $inputs.term
+          - name: Accept
+            in: header
+            value: application/json
+        successCriteria:
+          - condition: $statusCode == 200
+          - context: $response.header.Content-Type
+            condition: '^application/json'
+            type: regex
+          - context: $response.body
+            condition: $[?count(@.items) > 0]
+            type: jsonpath
+        outputs:
+          firstId: $response.body#/items/0/id
+      - stepId: fetchByOperationPath
+        operationPath: '{$sourceDescriptions.catalogue.url}#/paths/~1products~1{productId}/get'
+        parameters:
+          - name: productId
+            in: path
+            value: $steps.searchByOperationId.outputs.firstId
+        successCriteria:
+          - condition: $statusCode == 200
+          - context: $response.body
+            condition: $.availability != 'discontinued'
+            type:
+              type: jsonpath
+              version: draft-goessner-dispatch-jsonpath-00
+        onFailure:
+          - name: giveUp
+            type: end
+            criteria:
+              - condition: $statusCode == 404
+      - stepId: legacyXmlProbe
+        operationRef: '#/sourceDescriptions/1'
+        successCriteria:
+          - context: $response.body
+            condition: /soap:Envelope/soap:Body/*[local-name()='ProductResponse']
+            type:
+              type: xpath
+              version: xpath-30
+    outputs:
+      firstId: $steps.searchByOperationId.outputs.firstId

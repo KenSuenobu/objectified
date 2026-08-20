@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:inv="http://example.com/billing/types"
+           targetNamespace="http://example.com/billing/types"
+           elementFormDefault="qualified">
+
+  <xs:element name="getInvoice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="invoiceId" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="invoice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="invoiceId" type="xs:string"/>
+        <xs:element name="issuedOn" type="xs:date"/>
+        <xs:element name="currency" type="xs:string"/>
+        <xs:element name="total" type="xs:decimal"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

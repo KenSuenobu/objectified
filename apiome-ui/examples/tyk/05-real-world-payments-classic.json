@@ -1,0 +1,135 @@
+{
+  "api_id": "payments-v3",
+  "name": "Payments v3",
+  "org_id": "000000000000000000000001",
+  "slug": "payments-v3",
+  "use_keyless": false,
+  "use_oauth2": true,
+  "oauth_meta": {
+    "allowed_access_types": ["client_credentials"],
+    "allowed_authorize_types": ["token"],
+    "auth_login_redirect": ""
+  },
+  "auth_configs": {
+    "oauth": { "auth_header_name": "Authorization" }
+  },
+  "notifications": {
+    "shared_secret": "",
+    "oauth_on_keychange_url": ""
+  },
+  "active": true,
+  "proxy": {
+    "listen_path": "/v3/payments/",
+    "target_url": "https://payments-core.internal.example.com:8443/v3",
+    "strip_listen_path": true,
+    "preserve_host_header": false,
+    "enable_load_balancing": true,
+    "target_list": [
+      "https://payments-1.internal.example.com:8443/v3",
+      "https://payments-2.internal.example.com:8443/v3"
+    ],
+    "check_host_against_uptime_tests": true,
+    "transport": {
+      "ssl_insecure_skip_verify": false,
+      "ssl_min_version": 771
+    }
+  },
+  "uptime_tests": {
+    "check_list": [
+      { "url": "https://payments-1.internal.example.com:8443/healthz", "method": "GET" },
+      { "url": "https://payments-2.internal.example.com:8443/healthz", "method": "GET" }
+    ],
+    "config": {
+      "expire_utime_after": 0,
+      "service_discovery": { "use_discovery_service": false },
+      "recheck_wait": 10
+    }
+  },
+  "version_data": {
+    "not_versioned": false,
+    "default_version": "v3",
+    "versions": {
+      "v3": {
+        "name": "v3",
+        "use_extended_paths": true,
+        "extended_paths": {
+          "white_list": [
+            {
+              "path": "/authorizations",
+              "method_actions": { "POST": { "action": "no_action", "code": 201 } }
+            },
+            {
+              "path": "/authorizations/{authorizationId}",
+              "method_actions": { "GET": { "action": "no_action", "code": 200 } }
+            },
+            {
+              "path": "/authorizations/{authorizationId}/captures",
+              "method_actions": { "POST": { "action": "no_action", "code": 201 } }
+            },
+            {
+              "path": "/webhooks",
+              "method_actions": { "POST": { "action": "no_action", "code": 204 } }
+            }
+          ],
+          "validate_json": [
+            {
+              "path": "/authorizations",
+              "method": "POST",
+              "schema": {
+                "type": "object",
+                "required": ["merchantId", "amount", "card"],
+                "properties": {
+                  "merchantId": { "type": "string", "pattern": "^MER-[0-9]{6}$" },
+                  "amount": {
+                    "type": "object",
+                    "required": ["value", "currency"],
+                    "properties": {
+                      "value": { "type": "integer", "minimum": 1 },
+                      "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+                    }
+                  },
+                  "card": { "type": "object" }
+                }
+              },
+              "error_response_code": 422
+            }
+          ],
+          "hard_timeouts": [
+            { "path": "/authorizations", "method": "POST", "timeout": 10 },
+            { "path": "/authorizations/{authorizationId}/captures", "method": "POST", "timeout": 10 }
+          ],
+          "circuit_breakers": [
+            {
+              "path": "/authorizations",
+              "method": "POST",
+              "threshold_percent": 0.4,
+              "samples": 50,
+              "return_to_service_after": 60
+            }
+          ],
+          "ignored": [
+            { "path": "/healthz", "method_actions": { "GET": { "action": "no_action", "code": 200 } } }
+          ]
+        },
+        "global_headers": { "x-gateway": "tyk-edge-eu" }
+      }
+    }
+  },
+  "definition": { "location": "url", "key": "version" },
+  "global_rate_limit": { "rate": 5000, "per": 60 },
+  "enable_detailed_recording": false,
+  "do_not_track": false,
+  "tags": ["edge-eu", "pci"],
+  "enable_context_vars": true,
+  "response_processors": [
+    { "name": "header_injector", "options": { "remove_headers": ["Server", "X-Backend"] } }
+  ],
+  "CORS": {
+    "enable": true,
+    "allowed_origins": ["https://checkout.example.com"],
+    "allowed_methods": ["GET", "POST", "OPTIONS"],
+    "allowed_headers": ["Authorization", "Content-Type", "Idempotency-Key"],
+    "max_age": 600,
+    "allow_credentials": true
+  }
+}

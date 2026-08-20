@@ -1,0 +1,10 @@
+http:
+  routers:
+    ping:
+      rule: Path(`/ping`)
+      service: ping-service
+  services:
+    ping-service:
+      loadBalancer:
+        servers:
+          - url: http://ping.internal.example.com:8080

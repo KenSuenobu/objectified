@@ -1,0 +1,17 @@
+{
+  "type": "struct",
+  "name": "com.example.orders.Order",
+  "version": 3,
+  "doc": "One placed order as it travels through a Connect pipeline.",
+  "optional": false,
+  "fields": [
+    { "field": "order_id", "type": "string", "optional": false, "doc": "Business identifier." },
+    { "field": "customer_id", "type": "string", "optional": false },
+    { "field": "status", "type": "string", "optional": false, "default": "new" },
+    { "field": "placed_at", "type": "int64", "optional": false },
+    { "field": "total_minor_units", "type": "int64", "optional": false },
+    { "field": "currency", "type": "string", "optional": false },
+    { "field": "note", "type": "string", "optional": true },
+    { "field": "cancelled", "type": "boolean", "optional": false, "default": false }
+  ]
+}

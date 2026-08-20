@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Device object in the shape the OMA registry publishes object 3: identification,
+  power sources, error codes, a reboot action and a timezone. Reconstructed shape;
+  no upstream text copied.
+-->
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://www.openmobilealliance.org/tech/profiles/LWM2M-v1_1.xsd">
+  <Object ObjectType="MODefinition">
+    <Name>Device</Name>
+    <Description1>Device identification, power state and management actions.</Description1>
+    <ObjectID>3</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:oma:3:1.2</ObjectURN>
+    <LWM2MVersion>1.2</LWM2MVersion>
+    <ObjectVersion>1.2</ObjectVersion>
+    <MultipleInstances>Single</MultipleInstances>
+    <Mandatory>Mandatory</Mandatory>
+    <Resources>
+      <Item ID="0">
+        <Name>Manufacturer</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Human-readable manufacturer name.</Description>
+      </Item>
+      <Item ID="1">
+        <Name>Model Number</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Model identifier assigned by the manufacturer.</Description>
+      </Item>
+      <Item ID="2">
+        <Name>Serial Number</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Serial number assigned by the manufacturer.</Description>
+      </Item>
+      <Item ID="3">
+        <Name>Firmware Version</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Current firmware version.</Description>
+      </Item>
+      <Item ID="4">
+        <Name>Reboot</Name>
+        <Operations>E</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type/>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Reboot the device to make configuration changes effective.</Description>
+      </Item>
+      <Item ID="5">
+        <Name>Factory Reset</Name>
+        <Operations>E</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type/>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Return the device to its factory configuration.</Description>
+      </Item>
+      <Item ID="6">
+        <Name>Available Power Sources</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Multiple</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Integer</Type>
+        <RangeEnumeration>0..7</RangeEnumeration>
+        <Units/>
+        <Description>0=DC, 1=internal battery, 2=external battery, 4=PoE, 5=USB, 6=AC, 7=solar.</Description>
+      </Item>
+      <Item ID="7">
+        <Name>Power Source Voltage</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Multiple</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Integer</Type>
+        <RangeEnumeration/>
+        <Units>mV</Units>
+        <Description>Voltage of each power source, matched by instance id.</Description>
+      </Item>
+      <Item ID="9">
+        <Name>Battery Level</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Integer</Type>
+        <RangeEnumeration>0..100</RangeEnumeration>
+        <Units>%</Units>
+        <Description>Remaining battery, as a percentage.</Description>
+      </Item>
+      <Item ID="11">
+        <Name>Error Code</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Multiple</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>Integer</Type>
+        <RangeEnumeration>0..8</RangeEnumeration>
+        <Units/>
+        <Description>0=no error, 1=low battery, 2=external supply off, 3=GPS failure, 4=low signal, 5=out of memory, 6=SMS failure, 7=IP connectivity failure, 8=peripheral malfunction.</Description>
+      </Item>
+      <Item ID="12">
+        <Name>Reset Error Code</Name>
+        <Operations>E</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type/>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Clear the error-code resource instances.</Description>
+      </Item>
+      <Item ID="13">
+        <Name>Current Time</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Time</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Current UNIX time of the device.</Description>
+      </Item>
+      <Item ID="14">
+        <Name>UTC Offset</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Offset in ISO 8601 form, e.g. +02:00.</Description>
+      </Item>
+      <Item ID="16">
+        <Name>Supported Binding and Modes</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Transport bindings the device supports, e.g. "UT".</Description>
+      </Item>
+    </Resources>
+    <Description2/>
+  </Object>
+</LWM2M>

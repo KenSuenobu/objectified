@@ -1,0 +1,112 @@
+/// Above the divider: types and constraints a JSON Schema projection can carry.
+/// Below it: Pkl constructs that exceed it, which FMT-8.5 requires declared as limits.
+module example.stress
+
+import "pkl:math"
+
+// ---------------------------------------------------------------- expressible
+
+typealias Percent = Float(isBetween(0.0, 100.0))
+typealias NonEmpty = String(!isEmpty)
+typealias Port = Int(isBetween(1024, 65535))
+typealias Level = "debug" | "info" | "warn" | "error"
+
+class Scalars {
+  text: String
+  bounded: String(length.isBetween(2, 64))
+  pattern: String(matches(Regex("^[a-z0-9-]+$")))
+  count: Int
+  small: Int8
+  big: Int64
+  unsignedish: UInt16
+  ratio: Float
+  precise: Number
+  flag: Boolean
+  duration: Duration
+  size: DataSize
+  nothing: Null
+  anything: Any
+}
+
+class Collections {
+  items: Listing<String>
+  bounded: Listing<Int>(length <= 10)
+  lookup: Mapping<String, Int>
+  pairs: Map<String, Int>
+  plainList: List<String>
+  uniqueSet: Set<String>
+  nested: Listing<Mapping<String, Listing<Int>>>
+}
+
+class Defaults {
+  level: Level = "info"
+  retries: Int(isPositive) = 3
+  label: String = "unnamed"
+  optional: String? = null
+  computedDefault: Int = 2 * 21
+}
+
+open class Base {
+  id: NonEmpty
+  createdAt: String?
+}
+
+class Derived extends Base {
+  extra: Percent
+}
+
+abstract class Shape {
+  kind: String
+}
+
+class Circle extends Shape {
+  kind = "circle"
+  radius: Float(isPositive)
+}
+
+class Square extends Shape {
+  kind = "square"
+  side: Float(isPositive)
+}
+
+class Union {
+  shape: Circle | Square
+  either: String | Int
+}
+
+// ---------------------------------------------------------------- declared limits
+
+/// Amending: a value derived from another by override, resolved only at evaluation.
+amended: Defaults = (new Defaults {}) { level = "warn" }
+
+/// Late binding and self-reference through `this`.
+class SelfReferential {
+  minimum: Int = 1
+  maximum: Int(this > minimum) = 10
+}
+
+/// A generator expression: values computed from other values.
+class Computed {
+  inputs: Listing<String>
+  upper: Listing<String> = new { for (s in inputs) { s.toUpperCase() } }
+  total: Int = inputs.length
+}
+
+/// Conditional members: presence depends on another member's value.
+class Conditional {
+  tier: "free" | "paid"
+  seats: Int = if (tier == "paid") 10 else 1
+}
+
+/// External resource read at evaluation time — the sandbox must refuse it.
+class FromEnvironment {
+  region: String = read("env:AWS_REGION").text
+}
+
+/// Module output rendering: not part of the data shape at all.
+output {
+  renderer = new JsonRenderer {}
+}
+
+/// A method: behaviour, not data.
+function clamp(value: Int, lower: Int, upper: Int): Int = math.min(math.max(value, lower), upper)

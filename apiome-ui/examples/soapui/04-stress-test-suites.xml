@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Test assets are the reason SOAP estates keep these projects: suites, cases, steps,
+  assertions, property transfers, data sources and a groovy step. FMT-10.3 imports them
+  as *declared test intent*, cross-linking the contract-testing roadmap.
+-->
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config"
+                    id="7a1c0000-0000-4000-8000-000000000030"
+                    activeEnvironment="Default"
+                    name="Regression suite">
+  <con:settings/>
+
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:RestService"
+                 id="7a1c0000-0000-4000-8000-000000000031"
+                 name="Orders"
+                 type="rest"
+                 basePath="/v2">
+    <con:settings/>
+    <con:endpoints>
+      <con:endpoint>https://api.example.com</con:endpoint>
+    </con:endpoints>
+    <con:resource name="orders" path="/orders" id="7a1c0000-0000-4000-8000-000000000032">
+      <con:settings/>
+      <con:parameters/>
+      <con:method name="placeOrder" id="7a1c0000-0000-4000-8000-000000000033" method="POST">
+        <con:settings/>
+        <con:parameters/>
+        <con:request name="Request 1" id="7a1c0000-0000-4000-8000-000000000034" mediaType="application/json">
+          <con:settings/>
+          <con:endpoint>https://api.example.com</con:endpoint>
+          <con:request>{ "customerId": "CUS-000123", "lines": [{ "sku": "WID-0001", "quantity": 1 }] }</con:request>
+        </con:request>
+      </con:method>
+    </con:resource>
+  </con:interface>
+
+  <con:testSuite name="Order lifecycle" id="7a1c0000-0000-4000-8000-000000000040">
+    <con:settings/>
+    <con:runType>SEQUENTIAL</con:runType>
+
+    <con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="true"
+                  maxResults="0" name="Place and cancel"
+                  id="7a1c0000-0000-4000-8000-000000000041" searchProperties="true">
+      <con:settings/>
+
+      <con:testStep type="restrequest" name="POST orders" id="7a1c0000-0000-4000-8000-000000000042">
+        <con:settings/>
+        <con:config service="Orders" resourcePath="/orders" methodName="placeOrder">
+          <con:restRequest name="POST orders" mediaType="application/json">
+            <con:settings/>
+            <con:endpoint>${#Project#baseUrl}</con:endpoint>
+            <con:request>{ "customerId": "${#TestCase#customerId}", "lines": [{ "sku": "WID-0001", "quantity": 1 }] }</con:request>
+            <con:assertion type="Valid HTTP Status Codes" name="Created"
+                           id="7a1c0000-0000-4000-8000-000000000043">
+              <con:configuration>
+                <codes>201</codes>
+              </con:configuration>
+            </con:assertion>
+            <con:assertion type="JsonPath Match" name="Status is new"
+                           id="7a1c0000-0000-4000-8000-000000000044">
+              <con:configuration>
+                <path>$.status</path>
+                <content>new</content>
+                <allowWildcards>false</allowWildcards>
+              </con:configuration>
+            </con:assertion>
+            <con:assertion type="Response SLA" name="Under 2s"
+                           id="7a1c0000-0000-4000-8000-000000000045">
+              <con:configuration>
+                <SLA>2000</SLA>
+              </con:configuration>
+            </con:assertion>
+          </con:restRequest>
+        </con:config>
+      </con:testStep>
+
+      <con:testStep type="transfer" name="Capture orderId" id="7a1c0000-0000-4000-8000-000000000046">
+        <con:settings/>
+        <con:config>
+          <con:transfers setNullOnMissingSource="true" transferTextContent="true">
+            <con:name>orderId</con:name>
+            <con:sourceStep>POST orders</con:sourceStep>
+            <con:sourceType>Response</con:sourceType>
+            <con:sourcePath>$.orderId</con:sourcePath>
+            <con:targetStep>#TestCase#</con:targetStep>
+            <con:targetType>orderId</con:targetType>
+          </con:transfers>
+        </con:config>
+      </con:testStep>
+
+      <con:testStep type="delay" name="Settle" id="7a1c0000-0000-4000-8000-000000000047">
+        <con:settings/>
+        <con:config>
+          <delay>500</delay>
+        </con:config>
+      </con:testStep>
+
+      <con:testStep type="groovy" name="Assert identifier shape" id="7a1c0000-0000-4000-8000-000000000048">
+        <con:settings/>
+        <con:config>
+          <script>def id = context.expand('${#TestCase#orderId}')
+assert id ==~ /ORD-[0-9]{8}/</script>
+        </con:config>
+      </con:testStep>
+
+      <con:properties>
+        <con:property>
+          <con:name>customerId</con:name>
+          <con:value>CUS-000123</con:value>
+        </con:property>
+        <con:property>
+          <con:name>orderId</con:name>
+          <con:value/>
+        </con:property>
+      </con:properties>
+    </con:testCase>
+
+    <con:testCase failOnError="true" name="Data-driven search"
+                  id="7a1c0000-0000-4000-8000-000000000050">
+      <con:settings/>
+      <con:testStep type="datasource" name="Statuses" id="7a1c0000-0000-4000-8000-000000000051">
+        <con:settings/>
+        <con:config>
+          <dataSource type="Grid">
+            <property>status</property>
+            <configuration>
+              <rows>
+                <row><value>new</value></row>
+                <row><value>paid</value></row>
+                <row><value>shipped</value></row>
+              </rows>
+            </configuration>
+          </dataSource>
+        </con:config>
+      </con:testStep>
+      <con:testStep type="restrequest" name="GET orders" id="7a1c0000-0000-4000-8000-000000000052">
+        <con:settings/>
+        <con:config service="Orders" resourcePath="/orders" methodName="listOrders">
+          <con:restRequest name="GET orders" mediaType="application/json">
+            <con:settings/>
+            <con:endpoint>${#Project#baseUrl}</con:endpoint>
+            <con:request/>
+            <con:parameters>
+              <con:entry key="status" value="${Statuses#status}"/>
+            </con:parameters>
+            <con:assertion type="Valid HTTP Status Codes" name="OK">
+              <con:configuration>
+                <codes>200</codes>
+              </con:configuration>
+            </con:assertion>
+          </con:restRequest>
+        </con:config>
+      </con:testStep>
+      <con:testStep type="datasourceloop" name="Loop" id="7a1c0000-0000-4000-8000-000000000053">
+        <con:settings/>
+        <con:config>
+          <dataSourceStep>Statuses</dataSourceStep>
+          <targetStep>GET orders</targetStep>
+        </con:config>
+      </con:testStep>
+    </con:testCase>
+  </con:testSuite>
+
+  <con:properties>
+    <con:property>
+      <con:name>baseUrl</con:name>
+      <con:value>https://api.example.com</con:value>
+    </con:property>
+  </con:properties>
+</con:soapui-project>

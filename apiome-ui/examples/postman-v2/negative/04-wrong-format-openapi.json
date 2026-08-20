@@ -1,0 +1,13 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Orders", "version": "2.3.0" },
+  "servers": [{ "url": "https://api.example.com/v2" }],
+  "paths": {
+    "/orders": {
+      "get": {
+        "operationId": "listOrders",
+        "responses": { "200": { "description": "Orders" } }
+      }
+    }
+  }
+}

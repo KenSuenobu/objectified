@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 name="ExampleEquities" version="FIX.4.4_EP001">
+  <fixr:metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>Example equities order flow</dc:title>
+    <dc:creator>Example Trading Ltd</dc:creator>
+    <dc:date>2026-08-19</dc:date>
+  </fixr:metadata>
+
+  <fixr:datatypes>
+    <fixr:datatype name="String" baseType="char"/>
+    <fixr:datatype name="Price" baseType="float"/>
+    <fixr:datatype name="Qty" baseType="float"/>
+    <fixr:datatype name="UTCTimestamp" baseType="String"/>
+    <fixr:datatype name="char"/>
+    <fixr:datatype name="int"/>
+  </fixr:datatypes>
+
+  <fixr:codeSets>
+    <fixr:codeSet name="SideCodeSet" id="54" type="char">
+      <fixr:code name="Buy" id="54001" value="1"/>
+      <fixr:code name="Sell" id="54002" value="2"/>
+      <fixr:code name="SellShort" id="54005" value="5"/>
+    </fixr:codeSet>
+    <fixr:codeSet name="OrdTypeCodeSet" id="40" type="char">
+      <fixr:code name="Market" id="40001" value="1"/>
+      <fixr:code name="Limit" id="40002" value="2"/>
+      <fixr:code name="Stop" id="40003" value="3"/>
+    </fixr:codeSet>
+    <fixr:codeSet name="TimeInForceCodeSet" id="59" type="char">
+      <fixr:code name="Day" id="59000" value="0"/>
+      <fixr:code name="GoodTillCancel" id="59001" value="1"/>
+      <fixr:code name="ImmediateOrCancel" id="59003" value="3"/>
+    </fixr:codeSet>
+  </fixr:codeSets>
+
+  <fixr:fields>
+    <fixr:field id="11" name="ClOrdID" type="String">
+      <fixr:documentation>Unique identifier for the order as assigned by the buy-side.</fixr:documentation>
+    </fixr:field>
+    <fixr:field id="38" name="OrderQty" type="Qty"/>
+    <fixr:field id="40" name="OrdType" type="OrdTypeCodeSet"/>
+    <fixr:field id="44" name="Price" type="Price"/>
+    <fixr:field id="54" name="Side" type="SideCodeSet"/>
+    <fixr:field id="55" name="Symbol" type="String"/>
+    <fixr:field id="59" name="TimeInForce" type="TimeInForceCodeSet"/>
+    <fixr:field id="60" name="TransactTime" type="UTCTimestamp"/>
+    <fixr:field id="48" name="SecurityID" type="String"/>
+    <fixr:field id="22" name="SecurityIDSource" type="String"/>
+  </fixr:fields>
+
+  <fixr:components>
+    <fixr:component name="Instrument" id="1003" category="Common">
+      <fixr:fieldRef id="55" presence="required"/>
+      <fixr:fieldRef id="48" presence="optional"/>
+      <fixr:fieldRef id="22" presence="optional"/>
+    </fixr:component>
+  </fixr:components>
+
+  <fixr:messages>
+    <fixr:message name="NewOrderSingle" id="14" msgType="D" category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:componentRef id="1003" presence="required"/>
+        <fixr:fieldRef id="54" presence="required"/>
+        <fixr:fieldRef id="38" presence="required"/>
+        <fixr:fieldRef id="40" presence="required"/>
+        <fixr:fieldRef id="44" presence="optional"/>
+        <fixr:fieldRef id="59" presence="optional"/>
+        <fixr:fieldRef id="60" presence="required"/>
+      </fixr:structure>
+    </fixr:message>
+
+    <fixr:message name="OrderCancelRequest" id="15" msgType="F" category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:componentRef id="1003" presence="required"/>
+        <fixr:fieldRef id="54" presence="required"/>
+        <fixr:fieldRef id="60" presence="required"/>
+      </fixr:structure>
+    </fixr:message>
+  </fixr:messages>
+</fixr:repository>

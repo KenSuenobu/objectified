@@ -1,0 +1,99 @@
+openapi: 3.0.1
+info:
+  title: subscriptions-http-api
+  description: >
+    An HTTP API export (the v2 flavour): JWT authorizer, payload format 2.0, route-level
+    integrations and $default routing.
+  version: "2026-08-19T13:00:00Z"
+servers:
+  - url: https://p1q2r3s4t5.execute-api.eu-west-1.amazonaws.com/
+    x-amazon-apigateway-endpoint-configuration:
+      disableExecuteApiEndpoint: false
+paths:
+  /subscriptions:
+    get:
+      responses:
+        default:
+          description: Default response
+      security:
+        - jwt-authorizer:
+            - subscriptions:read
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: arn:aws:lambda:eu-west-1:000000000000:function:list-subscriptions
+        payloadFormatVersion: "2.0"
+        connectionType: INTERNET
+        timeoutInMillis: 30000
+    post:
+      responses:
+        default:
+          description: Default response
+      security:
+        - jwt-authorizer:
+            - subscriptions:write
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: arn:aws:lambda:eu-west-1:000000000000:function:create-subscription
+        payloadFormatVersion: "2.0"
+  /subscriptions/{subscriptionId}:
+    delete:
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: Default response
+      security:
+        - jwt-authorizer:
+            - subscriptions:write
+      x-amazon-apigateway-integration:
+        type: http_proxy
+        httpMethod: DELETE
+        uri: http://internal-billing.eu-west-1.elb.amazonaws.com/subscriptions/{subscriptionId}
+        payloadFormatVersion: "1.0"
+        connectionType: VPC_LINK
+        connectionId: vpclink-0abc123
+        requestParameters:
+          overwrite:path: /subscriptions/${request.path.subscriptionId}
+  /$default:
+    x-amazon-apigateway-any-method:
+      responses:
+        default:
+          description: Default response
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: arn:aws:lambda:eu-west-1:000000000000:function:catch-all
+        payloadFormatVersion: "2.0"
+components:
+  securitySchemes:
+    jwt-authorizer:
+      type: oauth2
+      flows: {}
+      x-amazon-apigateway-authorizer:
+        type: jwt
+        jwtConfiguration:
+          issuer: https://auth.example.com/
+          audience:
+            - subscriptions-api
+        identitySource: $request.header.Authorization
+x-amazon-apigateway-cors:
+  allowOrigins:
+    - https://app.example.com
+  allowMethods:
+    - GET
+    - POST
+    - DELETE
+    - OPTIONS
+  allowHeaders:
+    - authorization
+    - content-type
+  exposeHeaders:
+    - x-request-id
+  maxAge: 600
+  allowCredentials: true

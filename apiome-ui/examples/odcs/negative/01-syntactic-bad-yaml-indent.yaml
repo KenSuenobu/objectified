@@ -1,0 +1,12 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: 0f6d2f0e-1b2c-4a5e-9f2a-0000000000e1
+name: broken
+version: 1.0.0
+schema:
+  - name: broken_table
+    logicalType: object
+    properties:
+      - name: id
+       logicalType: string
+        required: true

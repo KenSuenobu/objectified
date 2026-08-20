@@ -1,0 +1,109 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:   <https://example.com/stress#> .
+
+<https://example.com/stress> a owl:Ontology ;
+    owl:versionIRI <https://example.com/stress/2.0.0> ;
+    owl:versionInfo "2.0.0" .
+
+# ---------------------------------------------------------------- expressible
+
+ex:Thing a owl:Class .
+ex:Widget a owl:Class ; rdfs:subClassOf ex:Thing .
+ex:Gadget a owl:Class ; rdfs:subClassOf ex:Thing .
+ex:Widget owl:disjointWith ex:Gadget .
+
+ex:label a owl:DatatypeProperty ;
+    rdfs:domain ex:Thing ;
+    rdfs:range xsd:string .
+
+# Cardinality restrictions map onto minCount/maxCount.
+ex:Assembly a owl:Class ;
+    rdfs:subClassOf ex:Thing ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty ex:hasPart ;
+        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+        owl:onClass ex:Thing ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty ex:serialNumber ;
+        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+        owl:onDataRange xsd:string ;
+    ] .
+
+ex:hasPart a owl:ObjectProperty , owl:TransitiveProperty ;
+    rdfs:domain ex:Thing ;
+    rdfs:range ex:Thing .
+
+ex:serialNumber a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:range xsd:string .
+
+# Enumerated class: a closed set of individuals, which reads as an enum.
+ex:Colour a owl:Class ;
+    owl:oneOf ( ex:Red ex:Green ex:Blue ) .
+
+ex:Red a owl:NamedIndividual , ex:Colour .
+ex:Green a owl:NamedIndividual , ex:Colour .
+ex:Blue a owl:NamedIndividual , ex:Colour .
+
+# Datatype restriction: a constrained literal range.
+ex:Percentage a rdfs:Datatype ;
+    owl:equivalentClass [
+        a rdfs:Datatype ;
+        owl:onDatatype xsd:decimal ;
+        owl:withRestrictions (
+            [ xsd:minInclusive "0.0"^^xsd:decimal ]
+            [ xsd:maxInclusive "100.0"^^xsd:decimal ]
+        ) ;
+    ] .
+
+# ---------------------------------------------------------------- declared limits
+
+# Union and intersection classes: not a closed-world record shape.
+ex:Sellable a owl:Class ;
+    owl:unionOf ( ex:Widget ex:Gadget ) .
+
+ex:PremiumWidget a owl:Class ;
+    owl:intersectionOf (
+        ex:Widget
+        [ a owl:Restriction ; owl:onProperty ex:tier ; owl:hasValue "premium" ]
+    ) .
+
+# Complement: everything that is not a widget.
+ex:NotAWidget a owl:Class ;
+    owl:complementOf ex:Widget .
+
+# someValuesFrom / allValuesFrom: existential and universal quantification.
+ex:Kit a owl:Class ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty ex:hasPart ;
+        owl:someValuesFrom ex:Widget ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty ex:hasPart ;
+        owl:allValuesFrom ex:Thing ;
+    ] .
+
+# Property characteristics that imply inference, not structure.
+ex:adjacentTo a owl:ObjectProperty , owl:SymmetricProperty , owl:IrreflexiveProperty .
+ex:parentOf a owl:ObjectProperty , owl:AsymmetricProperty .
+ex:hasIdentifier a owl:ObjectProperty , owl:InverseFunctionalProperty .
+ex:sameSiteAs a owl:ObjectProperty , owl:ReflexiveProperty .
+
+# Property chain: hasPart o hasPart => hasPart.
+ex:hasPart owl:propertyChainAxiom ( ex:hasPart ex:hasPart ) .
+
+# Individual identity assertions: open-world equality.
+ex:Red owl:sameAs <https://other.example.com/colours#Crimson> .
+ex:Green owl:differentFrom ex:Blue .
+
+# Class equivalence across ontologies.
+ex:Widget owl:equivalentClass <https://other.example.com/parts#Component> .
+
+ex:tier a owl:DatatypeProperty ; rdfs:range xsd:string .

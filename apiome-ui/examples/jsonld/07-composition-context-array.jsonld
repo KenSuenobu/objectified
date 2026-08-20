@@ -1,0 +1,51 @@
+{
+  "@context": [
+    {
+      "@version": 1.1,
+      "xsd": "http://www.w3.org/2001/XMLSchema#",
+      "schema": "https://schema.org/",
+      "id": "@id",
+      "type": "@type"
+    },
+    {
+      "name": "schema:name",
+      "created": { "@id": "schema:dateCreated", "@type": "xsd:dateTime" }
+    },
+    {
+      "@vocab": "https://example.com/orders/ns#",
+      "Order": "https://example.com/orders/ns#Order",
+      "customer": {
+        "@id": "https://example.com/orders/ns#customer",
+        "@type": "@id",
+        "@context": {
+          "billing": {
+            "@id": "https://example.com/orders/ns#billingAddress",
+            "@context": {
+              "street": "schema:streetAddress",
+              "city": "schema:addressLocality"
+            }
+          }
+        }
+      },
+      "lines": {
+        "@id": "https://example.com/orders/ns#line",
+        "@container": "@list",
+        "@context": {
+          "sku": "https://example.com/orders/ns#sku",
+          "quantity": {
+            "@id": "https://example.com/orders/ns#quantity",
+            "@type": "xsd:integer"
+          }
+        }
+      },
+      "status": {
+        "@id": "https://example.com/orders/ns#status",
+        "@type": "@vocab",
+        "@context": {
+          "new": "https://example.com/orders/ns#StatusNew",
+          "paid": "https://example.com/orders/ns#StatusPaid"
+        }
+      }
+    }
+  ]
+}

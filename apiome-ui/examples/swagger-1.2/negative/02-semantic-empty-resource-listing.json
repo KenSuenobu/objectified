@@ -1,0 +1,9 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "1.0.0",
+  "info": {
+    "title": "Empty listing",
+    "description": "Valid JSON and a valid 1.2 marker, but the listing names no resources and no declaration follows, so there is nothing to import."
+  },
+  "apis": []
+}

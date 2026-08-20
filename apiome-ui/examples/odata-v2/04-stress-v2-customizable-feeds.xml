@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx">
+  <edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+                     m:DataServiceVersion="2.0">
+    <Schema Namespace="Feeds" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+
+      <!--
+        Customizable feeds: the v2/v3 construct FMT-3.4 calls out as having no v4 analogue.
+        FC_TargetPath / FC_ContentKind / FC_KeepInContent must survive in extras rather than
+        being discarded.
+      -->
+      <EntityType Name="Article" m:HasStream="true">
+        <Key>
+          <PropertyRef Name="ArticleId"/>
+        </Key>
+        <Property Name="ArticleId" Type="Edm.String" Nullable="false" MaxLength="20"/>
+        <Property Name="Title" Type="Edm.String" MaxLength="200"
+                  m:FC_TargetPath="SyndicationTitle"
+                  m:FC_ContentKind="text"
+                  m:FC_KeepInContent="false"/>
+        <Property Name="Summary" Type="Edm.String" MaxLength="1000"
+                  m:FC_TargetPath="SyndicationSummary"
+                  m:FC_ContentKind="html"
+                  m:FC_KeepInContent="true"/>
+        <Property Name="PublishedOn" Type="Edm.DateTimeOffset"
+                  m:FC_TargetPath="SyndicationUpdated"
+                  m:FC_KeepInContent="false"/>
+        <Property Name="AuthorName" Type="Edm.String" MaxLength="80"
+                  m:FC_TargetPath="SyndicationAuthorName"/>
+        <Property Name="Rating" Type="Edm.Single"/>
+        <Property Name="Draft" Type="Edm.Boolean" m:FC_KeepInContent="true"/>
+        <Property Name="Binary" Type="Edm.Binary" FixedLength="false" MaxLength="Max"/>
+        <Property Name="Ticks" Type="Edm.Int64"/>
+        <Property Name="Duration" Type="Edm.Time"/>
+        <Property Name="Guid" Type="Edm.Guid"/>
+      </EntityType>
+
+      <EntityType Name="Tag">
+        <Key>
+          <PropertyRef Name="Name"/>
+        </Key>
+        <Property Name="Name" Type="Edm.String" Nullable="false" MaxLength="40"/>
+        <NavigationProperty Name="Articles"
+                            Relationship="Feeds.ArticleTags"
+                            FromRole="Tag"
+                            ToRole="Article"/>
+      </EntityType>
+
+      <Association Name="ArticleTags">
+        <End Role="Article" Type="Feeds.Article" Multiplicity="*"/>
+        <End Role="Tag" Type="Feeds.Tag" Multiplicity="*"/>
+      </Association>
+
+      <EntityContainer Name="FeedContainer" m:IsDefaultEntityContainer="true">
+        <EntitySet Name="Articles" EntityType="Feeds.Article"/>
+        <EntitySet Name="Tags" EntityType="Feeds.Tag"/>
+        <AssociationSet Name="ArticleTagsSet" Association="Feeds.ArticleTags">
+          <End Role="Article" EntitySet="Articles"/>
+          <End Role="Tag" EntitySet="Tags"/>
+        </AssociationSet>
+        <FunctionImport Name="MostRead" ReturnType="Collection(Feeds.Article)" EntitySet="Articles" m:HttpMethod="GET">
+          <Parameter Name="Days" Type="Edm.Int32" Mode="In"/>
+        </FunctionImport>
+        <FunctionImport Name="Publish" m:HttpMethod="POST">
+          <Parameter Name="ArticleId" Type="Edm.String" Mode="In" MaxLength="20"/>
+        </FunctionImport>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

@@ -1,0 +1,9 @@
+{
+  "api_id": "broken-api",
+  "name": "Broken API"
+  "org_id": "000000000000000000000001",
+  "proxy": {
+    "listen_path": "/broken/",
+    "target_url": "http://broken.internal.example.com:8080"
+  }
+}

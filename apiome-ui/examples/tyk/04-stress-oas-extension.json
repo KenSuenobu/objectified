@@ -1,0 +1,154 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Lab API",
+    "version": "3.0.0",
+    "description": "Tyk OAS form: a normal OpenAPI document whose gateway behaviour lives under x-tyk-api-gateway."
+  },
+  "servers": [{ "url": "https://gateway.example.com/lab/" }],
+  "paths": {
+    "/assays": {
+      "get": {
+        "operationId": "listAssays",
+        "parameters": [{ "name": "status", "in": "query", "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Assays" } }
+      },
+      "post": {
+        "operationId": "createAssay",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["protocol"],
+                "properties": { "protocol": { "type": "string" }, "replicates": { "type": "integer" } }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/assays/{assayId}": {
+      "get": {
+        "operationId": "getAssay",
+        "parameters": [{ "name": "assayId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "One assay" }, "404": { "description": "Unknown" } }
+      }
+    },
+    "/legacy/{assayId}": {
+      "get": {
+        "operationId": "legacyAssay",
+        "parameters": [{ "name": "assayId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Rewritten to /assays/{assayId}" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "x-tyk-api-gateway": {
+    "info": {
+      "id": "lab-api",
+      "name": "Lab API",
+      "orgId": "000000000000000000000001",
+      "state": { "active": true, "internal": false }
+    },
+    "upstream": {
+      "url": "http://lab.internal.example.com:8080",
+      "rateLimit": { "enabled": true, "rate": 200, "per": "60s" },
+      "loadBalancing": {
+        "enabled": true,
+        "targets": [
+          { "url": "http://lab-1.internal.example.com:8080", "weight": 70 },
+          { "url": "http://lab-2.internal.example.com:8080", "weight": 30 }
+        ]
+      },
+      "uptimeTests": {
+        "enabled": true,
+        "serviceDiscovery": { "enabled": false },
+        "tests": [{ "url": "http://lab.internal.example.com:8080/healthz", "method": "GET" }]
+      },
+      "mutualTLS": { "enabled": false }
+    },
+    "server": {
+      "listenPath": { "value": "/lab/", "strip": true },
+      "authentication": {
+        "enabled": true,
+        "securitySchemes": {
+          "bearerAuth": {
+            "enabled": true,
+            "header": { "enabled": true, "name": "Authorization" },
+            "jwt": {
+              "enabled": true,
+              "signingMethod": "rsa",
+              "source": "https://login.example.com/.well-known/jwks.json",
+              "identityBaseField": "sub",
+              "policyFieldName": "pol"
+            }
+          }
+        }
+      },
+      "clientCertificates": { "enabled": false },
+      "gatewayTags": { "enabled": true, "tags": ["edge-eu"] },
+      "detailedActivityLogs": { "enabled": false }
+    },
+    "middleware": {
+      "global": {
+        "cors": {
+          "enabled": true,
+          "allowedOrigins": ["https://app.example.com"],
+          "allowedMethods": ["GET", "POST", "OPTIONS"],
+          "allowedHeaders": ["Authorization", "Content-Type"],
+          "maxAge": 600,
+          "allowCredentials": true
+        },
+        "cache": { "enabled": true, "timeout": 60, "cacheAllSafeRequests": true },
+        "transformRequestHeaders": {
+          "enabled": true,
+          "add": [{ "name": "X-Gateway", "value": "tyk" }],
+          "remove": ["X-Internal"]
+        }
+      },
+      "operations": {
+        "listAssays": {
+          "cache": { "enabled": true, "timeout": 30 },
+          "rateLimit": { "enabled": true, "rate": 60, "per": "60s" }
+        },
+        "createAssay": {
+          "validateRequest": { "enabled": true, "errorResponseCode": 422 },
+          "transformRequestBody": {
+            "enabled": true,
+            "format": "json",
+            "body": "eyJwcm90b2NvbCI6ICJ7ey5wcm90b2NvbH19In0="
+          }
+        },
+        "legacyAssay": {
+          "urlRewrite": {
+            "enabled": true,
+            "pattern": "/legacy/(.*)",
+            "rewriteTo": "/assays/$1"
+          }
+        },
+        "getAssay": {
+          "mockResponse": {
+            "enabled": false,
+            "code": 200,
+            "body": "{}"
+          },
+          "circuitBreaker": {
+            "enabled": true,
+            "threshold": 0.5,
+            "sampleSize": 100,
+            "coolDownPeriod": 60,
+            "halfOpenStateEnabled": true
+          }
+        }
+      }
+    }
+  }
+}

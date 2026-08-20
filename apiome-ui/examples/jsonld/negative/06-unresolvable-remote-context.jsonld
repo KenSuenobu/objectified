@@ -1,0 +1,10 @@
+{
+  "@context": [
+    "https://contexts.example.com/does-not-exist/v1.jsonld",
+    "./also-missing.jsonld",
+    {
+      "@vocab": "https://example.com/ns#",
+      "localTerm": "https://example.com/ns#localTerm"
+    }
+  ]
+}

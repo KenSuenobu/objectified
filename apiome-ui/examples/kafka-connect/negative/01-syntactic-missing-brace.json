@@ -1,0 +1,8 @@
+{
+  "type": "struct",
+  "name": "com.example.Broken",
+  "optional": false,
+  "fields": [
+    { "field": "id", "type": "string", "optional": false
+  ]
+}

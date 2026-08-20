@@ -1,0 +1,9 @@
+/* INDEXED declares a key-sequenced dataset, but no KEYS parameter says
+   where the key is or how long it is, and RECORDSIZE is absent too: the
+   record layout cannot be described at all. */
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.KEYLESS.KSDS)                  -
+          INDEXED                                     -
+          SHAREOPTIONS(2 3)                           -
+          CYLINDERS(10 2)                             -
+          VOLUMES(VOL001))

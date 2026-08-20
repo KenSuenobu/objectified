@@ -1,0 +1,37 @@
+/**
+ * Composition: named types declared once and referenced from several records,
+ * including a self-referential type and a record reused inside a map and an array.
+ */
+namespace com.example.crm;
+
+enum Channel {
+  EMAIL, SMS, POST, PHONE
+}
+
+record Address {
+  string line1;
+  union { null, string } line2 = null;
+  string city;
+  string postalCode;
+  string countryCode;
+}
+
+record ContactPoint {
+  Channel channel;
+  string value;
+  boolean verified = false;
+}
+
+record Node {
+  string id;
+  array<Node> children = [];
+}
+
+record Party {
+  string partyId;
+  string displayName;
+  Address primaryAddress;
+  array<Address> otherAddresses = [];
+  map<ContactPoint> contactsByLabel;
+  Node orgTree;
+}

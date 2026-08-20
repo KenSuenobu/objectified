@@ -1,0 +1,24 @@
+{
+  "v": 6,
+  "id": "clx00000000000000000000f1",
+  "name": "Orders API",
+  "folders": [],
+  "requests": [
+    {
+      "v": "11",
+      "id": "clx00000000000000000000f2",
+      "name": "List orders",
+      "method": "GET",
+      "endpoint": "<<baseUrl>>/v2/orders",
+      "params": [],
+      "headers": [],
+      "auth": { "authType": "none", "authActive": false },
+      "body": { "contentType": null, "body": null },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": []
+    }
+  ],
+  "auth": { "authType": "none", "authActive": false },
+  "headers": []
+}

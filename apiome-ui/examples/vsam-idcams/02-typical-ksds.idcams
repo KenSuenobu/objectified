@@ -1,0 +1,24 @@
+//DEFCUST  JOB (ACCT),'DEFINE CUSTOMER KSDS',CLASS=A,MSGCLASS=X
+//STEP010  EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.CUSTOMER.KSDS)                 -
+          INDEXED                                     -
+          KEYS(10 0)                                  -
+          RECORDSIZE(200 200)                         -
+          FREESPACE(10 20)                            -
+          SHAREOPTIONS(2 3)                           -
+          SPEED                                       -
+          CYLINDERS(50 10)                            -
+          VOLUMES(VOL001 VOL002))                     -
+         DATA                                         -
+         (NAME(EXAMPLE.CUSTOMER.KSDS.DATA)            -
+          CONTROLINTERVALSIZE(4096))                  -
+         INDEX                                        -
+         (NAME(EXAMPLE.CUSTOMER.KSDS.INDEX)           -
+          CONTROLINTERVALSIZE(2048))
+
+  IF LASTCC = 0 THEN                                  -
+    LISTCAT ENTRIES(EXAMPLE.CUSTOMER.KSDS) ALL
+/*

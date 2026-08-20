@@ -1,0 +1,23 @@
+{
+  "mcpVersion": "2025-06-18",
+  "server": {
+    "name": "echo",
+    "version": "1.0.0"
+  },
+  "capabilities": {
+    "tools": {}
+  },
+  "tools": [
+    {
+      "name": "echo",
+      "description": "Return the supplied message unchanged.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" }
+        },
+        "required": ["message"]
+      }
+    }
+  ]
+}

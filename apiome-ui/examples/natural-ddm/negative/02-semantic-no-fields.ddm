@@ -1,0 +1,10 @@
+DDM Name ...... EMPTY-FILE
+DB ............ 001
+File .......... 091
+Default Sequence
+
+* A DDM header with a column banner and no field lines: the file is
+* declared but describes no record, so there is nothing to model.
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------

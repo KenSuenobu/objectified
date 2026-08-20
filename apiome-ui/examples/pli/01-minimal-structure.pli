@@ -1,0 +1,4 @@
+ /* The smallest PL/I record declaration. */
+ DCL 1 BEACON_REC,
+       2 BEACON_ID   CHAR(16),
+       2 SEEN_AT     FIXED BIN(63);

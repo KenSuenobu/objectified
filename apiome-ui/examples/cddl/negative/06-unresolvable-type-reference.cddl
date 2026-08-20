@@ -1,0 +1,7 @@
+; `money` is referenced but never defined and no companion file is supplied, so the
+; grammar cannot be resolved. The import must name the missing rule rather than
+; silently treating it as `any`.
+order = {
+  order-id: tstr,
+  total: money,
+}

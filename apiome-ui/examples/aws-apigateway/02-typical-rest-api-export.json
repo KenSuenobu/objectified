@@ -1,0 +1,157 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "orders-api",
+    "description": "Exported REST API definition (extensions included).",
+    "version": "2026-08-19T10:30:00Z"
+  },
+  "servers": [
+    {
+      "url": "https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/{basePath}",
+      "variables": { "basePath": { "default": "prod" } }
+    }
+  ],
+  "paths": {
+    "/orders": {
+      "get": {
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/OrderList" } }
+            }
+          }
+        },
+        "security": [{ "orders-authorizer": [] }],
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:list-orders/invocations",
+          "payloadFormatVersion": "1.0",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000,
+          "connectionType": "INTERNET"
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/NewOrder" } }
+          }
+        },
+        "responses": { "201": { "description": "201 response" } },
+        "x-amazon-apigateway-request-validator": "body-and-params",
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:create-order/invocations",
+          "passthroughBehavior": "when_no_match"
+        }
+      },
+      "options": {
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": { "schema": { "type": "string" } },
+              "Access-Control-Allow-Methods": { "schema": { "type": "string" } },
+              "Access-Control-Allow-Headers": { "schema": { "type": "string" } }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "mock",
+          "requestTemplates": { "application/json": "{\"statusCode\": 200}" },
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'https://app.example.com'",
+                "method.response.header.Access-Control-Allow-Methods": "'GET,POST,OPTIONS'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "200 response" }, "404": { "description": "404 response" } },
+        "security": [{ "orders-authorizer": [] }],
+        "x-amazon-apigateway-integration": {
+          "type": "http_proxy",
+          "httpMethod": "GET",
+          "uri": "http://internal-orders.eu-west-1.elb.amazonaws.com/orders/{orderId}",
+          "requestParameters": {
+            "integration.request.path.orderId": "method.request.path.orderId"
+          },
+          "connectionType": "VPC_LINK",
+          "connectionId": "abc123",
+          "passthroughBehavior": "when_no_match"
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "OrderList": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } },
+          "nextCursor": { "type": "string" }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "orderId": { "type": "string" },
+          "status": { "type": "string" },
+          "total": { "type": "number" }
+        }
+      },
+      "NewOrder": {
+        "type": "object",
+        "required": ["lines"],
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sku": { "type": "string" },
+                "quantity": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "orders-authorizer": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "x-amazon-apigateway-authtype": "custom",
+        "x-amazon-apigateway-authorizer": {
+          "type": "request",
+          "identitySource": "method.request.header.Authorization",
+          "authorizerUri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:authorizer/invocations",
+          "authorizerResultTtlInSeconds": 300
+        }
+      }
+    }
+  },
+  "x-amazon-apigateway-request-validators": {
+    "body-and-params": { "validateRequestBody": true, "validateRequestParameters": true },
+    "params-only": { "validateRequestBody": false, "validateRequestParameters": true }
+  }
+}

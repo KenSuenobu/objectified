@@ -1,0 +1,4 @@
+version: 2
+
+# A properties file with a version marker and no models, sources, seeds, snapshots or
+# exposures: nothing here describes any data.

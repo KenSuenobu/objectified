@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+  <!-- include pulls the address module in and overrides one of its definitions. -->
+  <include href="address.rng">
+    <define name="postalCode">
+      <data type="string">
+        <param name="pattern">[0-9]{4} [A-Z]{2}</param>
+      </data>
+    </define>
+  </include>
+
+  <start>
+    <element name="shipment">
+      <attribute name="id">
+        <data type="string"/>
+      </attribute>
+      <element name="destination">
+        <ref name="address"/>
+      </element>
+      <!-- externalRef reaches a second module without merging its grammar. -->
+      <element name="parcel">
+        <externalRef href="parcel.rng"/>
+      </element>
+    </element>
+  </start>
+</grammar>

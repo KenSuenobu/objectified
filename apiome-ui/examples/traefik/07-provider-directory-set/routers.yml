@@ -1,0 +1,22 @@
+# Root of the set: Traefik's file provider can watch a *directory*, merging every file
+# into one dynamic configuration. This file declares the routers; the services and
+# middlewares they name are in the sibling files.
+http:
+  routers:
+    shipments:
+      rule: Host(`api.example.com`) && PathPrefix(`/v2/shipments`)
+      entryPoints: [websecure]
+      service: shipments-service
+      middlewares:
+        - rate-limit
+        - strip-v2
+      tls:
+        certResolver: letsencrypt
+
+    parcels:
+      rule: Host(`api.example.com`) && PathPrefix(`/v2/parcels`)
+      entryPoints: [websecure]
+      service: parcels-service
+      middlewares:
+        - rate-limit
+      tls: {}

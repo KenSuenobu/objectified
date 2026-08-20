@@ -1,0 +1,12 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "order_id",
+        "type": { "name": "utf8" },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "placed_at",
+        "type": { "name": "timestamp", "unit": "MICROS

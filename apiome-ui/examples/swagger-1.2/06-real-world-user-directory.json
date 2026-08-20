@@ -1,0 +1,131 @@
+{
+  "swaggerVersion": "1.2",
+  "apiVersion": "3.4.2",
+  "basePath": "https://directory.example.com/api",
+  "resourcePath": "/users",
+  "produces": ["application/json"],
+  "consumes": ["application/json"],
+  "authorizations": {
+    "apiKey": { "type": "apiKey", "passAs": "header", "keyname": "Authorization" }
+  },
+  "apis": [
+    {
+      "path": "/users",
+      "description": "Operations on the user collection",
+      "operations": [
+        {
+          "method": "GET",
+          "nickname": "listUsers",
+          "summary": "List users in the directory",
+          "type": "array",
+          "items": { "$ref": "User" },
+          "parameters": [
+            { "name": "department", "paramType": "query", "required": false, "type": "string" },
+            { "name": "includeDisabled", "paramType": "query", "required": false, "type": "boolean", "defaultValue": "false" },
+            { "name": "cursor", "paramType": "query", "required": false, "type": "string" }
+          ],
+          "responseMessages": [
+            { "code": 200, "message": "A page of users" },
+            { "code": 403, "message": "Caller may not list users", "responseModel": "ApiError" }
+          ]
+        },
+        {
+          "method": "POST",
+          "nickname": "createUser",
+          "summary": "Create a user",
+          "type": "User",
+          "parameters": [{ "name": "body", "paramType": "body", "required": true, "type": "NewUser" }],
+          "responseMessages": [
+            { "code": 201, "message": "Created", "responseModel": "User" },
+            { "code": 409, "message": "Login already taken", "responseModel": "ApiError" }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/users/{login}",
+      "operations": [
+        {
+          "method": "GET",
+          "nickname": "getUser",
+          "summary": "Fetch one user by login",
+          "type": "User",
+          "parameters": [{ "name": "login", "paramType": "path", "required": true, "type": "string" }],
+          "responseMessages": [{ "code": 404, "message": "No such user", "responseModel": "ApiError" }]
+        },
+        {
+          "method": "PUT",
+          "nickname": "replaceUser",
+          "summary": "Replace a user record",
+          "type": "User",
+          "parameters": [
+            { "name": "login", "paramType": "path", "required": true, "type": "string" },
+            { "name": "body", "paramType": "body", "required": true, "type": "NewUser" }
+          ]
+        },
+        {
+          "method": "DELETE",
+          "nickname": "disableUser",
+          "summary": "Disable a user",
+          "type": "void",
+          "parameters": [{ "name": "login", "paramType": "path", "required": true, "type": "string" }],
+          "responseMessages": [{ "code": 204, "message": "Disabled" }]
+        }
+      ]
+    },
+    {
+      "path": "/users/{login}/groups",
+      "operations": [
+        {
+          "method": "GET",
+          "nickname": "listUserGroups",
+          "summary": "Groups the user belongs to",
+          "type": "array",
+          "items": { "$ref": "Group" },
+          "parameters": [{ "name": "login", "paramType": "path", "required": true, "type": "string" }]
+        }
+      ]
+    }
+  ],
+  "models": {
+    "User": {
+      "id": "User",
+      "required": ["login", "displayName", "enabled"],
+      "properties": {
+        "login": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "department": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "groups": { "type": "array", "items": { "$ref": "Group" } }
+      }
+    },
+    "NewUser": {
+      "id": "NewUser",
+      "required": ["login", "displayName"],
+      "properties": {
+        "login": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "department": { "type": "string" }
+      }
+    },
+    "Group": {
+      "id": "Group",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "ApiError": {
+      "id": "ApiError",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "integer", "format": "int32" },
+        "message": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config"
+                    id="7a1c0000-0000-4000-8000-0000000000e6"
+                    name="Missing WSDL">
+  <!--
+    The interface's definition points at a file that is not in the fileset and a
+    definitionCache that is empty, so the operations have no schema behind them: the
+    FMT-10.3 acceptance case for a project with a missing WSDL.
+  -->
+  <con:settings/>
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:WsdlInterface"
+                 id="7a1c0000-0000-4000-8000-0000000000e7"
+                 name="OrphanServiceSoapBinding"
+                 type="wsdl"
+                 bindingName="{http://example.com/orphan}OrphanServiceSoapBinding"
+                 soapVersion="1_1"
+                 definition="does-not-exist.wsdl">
+    <con:settings/>
+    <con:definitionCache type="TEXT" rootPart=""/>
+    <con:endpoints>
+      <con:endpoint>https://api.example.com/orphan</con:endpoint>
+    </con:endpoints>
+    <con:operation id="7a1c0000-0000-4000-8000-0000000000e8"
+                   name="DoThing"
+                   bindingOperationName="DoThing"
+                   type="Request-Response"
+                   inputName="DoThingRequest"
+                   outputName="DoThingResponse">
+      <con:settings/>
+    </con:operation>
+  </con:interface>
+  <con:properties/>
+</con:soapui-project>

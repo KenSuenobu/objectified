@@ -1,0 +1,19 @@
+/// Root of the set: amends the shared module's classes.
+module example.shipping
+
+import "shared.pkl"
+
+class Shipment {
+  shipmentId: String(matches(Regex("^SHP-[0-9]{6}$")))
+  destination: shared.Address
+  price: shared.Money
+  weightKg: Float(isPositive)
+  parcels: Listing<Parcel>(!isEmpty)
+}
+
+class Parcel {
+  parcelId: String
+  fragile: Boolean = false
+}
+
+shipment: Shipment

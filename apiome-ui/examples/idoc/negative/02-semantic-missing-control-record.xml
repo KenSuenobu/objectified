@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ORDERS05>
+  <IDOC BEGIN="1">
+    <!--
+      No EDI_DC40 control record: without it there is no message type, no basic type
+      and no partner, so nothing identifies what this document is.
+    -->
+    <E1EDK01 SEGMENT="1">
+      <CURCY>EUR</CURCY>
+      <BELNR>4500098299</BELNR>
+    </E1EDK01>
+    <E1EDP01 SEGMENT="1">
+      <POSEX>000010</POSEX>
+      <MENGE>10</MENGE>
+      <MENEE>PCE</MENEE>
+    </E1EDP01>
+  </IDOC>
+</ORDERS05>

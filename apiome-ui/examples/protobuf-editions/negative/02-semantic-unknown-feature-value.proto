@@ -1,0 +1,11 @@
+edition = "2023";
+
+package example.broken.v1;
+
+// SOMETIMES is not a member of the field_presence enum; the file parses as protobuf
+// grammar but resolves to no valid feature set.
+option features.field_presence = SOMETIMES;
+
+message Thing {
+  string id = 1;
+}

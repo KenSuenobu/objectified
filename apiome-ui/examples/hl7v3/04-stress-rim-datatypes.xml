@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:sdtc="urn:hl7-org:sdtc">
+  <!--
+    RIM data-type coverage: II, CD/CE with translation, IVL_TS, AD, PN, TEL, PQ, IVL_PQ,
+    RTO_PQ_PQ, ST, ED with reference, BL, INT, nullFlavor on several levels.
+  -->
+  <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040"/>
+  <id root="2.16.840.1.113883.19.5" extension="DT-000001"/>
+  <code code="34133-9" codeSystem="2.16.840.1.113883.6.1" displayName="Summarization of Episode Note">
+    <translation code="SUMM" codeSystem="2.16.840.1.113883.19.9" displayName="Episode summary"/>
+  </code>
+  <title>RIM data-type stress document</title>
+  <effectiveTime value="20260819130000+0200"/>
+  <confidentialityCode code="R" codeSystem="2.16.840.1.113883.5.25" displayName="Restricted"/>
+  <languageCode code="en-GB"/>
+
+  <recordTarget>
+    <patientRole>
+      <id root="2.16.840.1.113883.19.5" extension="PAT-0099"/>
+      <id nullFlavor="NI"/>
+      <addr use="HP">
+        <streetAddressLine>1 Example Way</streetAddressLine>
+        <streetAddressLine>Flat 4</streetAddressLine>
+        <city>Leeds</city>
+        <state nullFlavor="NA"/>
+        <postalCode>LS2 2BB</postalCode>
+        <country>GB</country>
+        <useablePeriod xsi:type="IVL_TS">
+          <low value="20200101"/>
+          <high nullFlavor="UNK"/>
+        </useablePeriod>
+      </addr>
+      <telecom use="MC" value="tel:+44-7700-900000"/>
+      <telecom use="WP" value="mailto:patient@example.com"/>
+      <telecom nullFlavor="UNK"/>
+      <patient>
+        <name use="L">
+          <prefix>Ms</prefix>
+          <given>Sam</given>
+          <given qualifier="IN">J</given>
+          <family qualifier="BR">Sample</family>
+          <suffix qualifier="AC">MSc</suffix>
+        </name>
+        <name use="P">
+          <given>Sammy</given>
+          <family>Sample</family>
+        </name>
+        <administrativeGenderCode nullFlavor="UNK"/>
+        <birthTime value="19770630"/>
+        <sdtc:deceasedInd value="false"/>
+        <maritalStatusCode code="M" codeSystem="2.16.840.1.113883.5.2" displayName="Married"/>
+        <raceCode nullFlavor="ASKU"/>
+      </patient>
+    </patientRole>
+  </recordTarget>
+
+  <author>
+    <time value="20260819130000+0200"/>
+    <assignedAuthor>
+      <id root="2.16.840.1.113883.19.5" extension="AUT-0099"/>
+      <code code="207Q00000X" codeSystem="2.16.840.1.113883.6.101"
+            displayName="Family Medicine"/>
+      <assignedAuthoringDevice>
+        <manufacturerModelName>Example EHR 12.4</manufacturerModelName>
+        <softwareName>example-ehr</softwareName>
+      </assignedAuthoringDevice>
+    </assignedAuthor>
+  </author>
+
+  <custodian>
+    <assignedCustodian>
+      <representedCustodianOrganization>
+        <id root="2.16.840.1.113883.19.5" extension="ORG-0001"/>
+        <name>Example Community Clinic</name>
+      </representedCustodianOrganization>
+    </assignedCustodian>
+  </custodian>
+
+  <relatedDocument typeCode="RPLC">
+    <parentDocument>
+      <id root="2.16.840.1.113883.19.5" extension="DT-000000"/>
+      <setId root="2.16.840.1.113883.19.5" extension="DT-SET-0001"/>
+      <versionNumber value="1"/>
+    </parentDocument>
+  </relatedDocument>
+
+  <component>
+    <structuredBody>
+      <component>
+        <section>
+          <code code="8716-3" codeSystem="2.16.840.1.113883.6.1" displayName="Vital signs"/>
+          <title>Vital signs</title>
+          <text>
+            <content ID="vs-1">Blood pressure 128/78 mmHg</content>
+          </text>
+          <entry>
+            <observation classCode="OBS" moodCode="EVN">
+              <id root="2.16.840.1.113883.19.5" extension="OBS-1001"/>
+              <code code="85354-9" codeSystem="2.16.840.1.113883.6.1"
+                    displayName="Blood pressure panel"/>
+              <text><reference value="#vs-1"/></text>
+              <statusCode code="completed"/>
+              <effectiveTime xsi:type="IVL_TS">
+                <low value="202608190900+0200"/>
+                <high value="202608190905+0200"/>
+              </effectiveTime>
+              <value xsi:type="RTO_PQ_PQ">
+                <numerator xsi:type="PQ" value="128" unit="mm[Hg]"/>
+                <denominator xsi:type="PQ" value="78" unit="mm[Hg]"/>
+              </value>
+              <methodCode code="AUTO" codeSystem="2.16.840.1.113883.19.9"/>
+              <targetSiteCode code="368209003" codeSystem="2.16.840.1.113883.6.96"
+                              displayName="Right arm"/>
+            </observation>
+          </entry>
+          <entry>
+            <observation classCode="OBS" moodCode="EVN">
+              <id root="2.16.840.1.113883.19.5" extension="OBS-1002"/>
+              <code code="8302-2" codeSystem="2.16.840.1.113883.6.1" displayName="Body height"/>
+              <statusCode code="completed"/>
+              <value xsi:type="PQ" value="1.72" unit="m"/>
+            </observation>
+          </entry>
+          <entry>
+            <observation classCode="OBS" moodCode="EVN">
+              <id root="2.16.840.1.113883.19.5" extension="OBS-1003"/>
+              <code code="72166-2" codeSystem="2.16.840.1.113883.6.1" displayName="Smoking status"/>
+              <statusCode code="completed"/>
+              <value xsi:type="CD" code="266919005" codeSystem="2.16.840.1.113883.6.96"
+                     displayName="Never smoked"/>
+            </observation>
+          </entry>
+          <entry>
+            <observation classCode="OBS" moodCode="EVN">
+              <id root="2.16.840.1.113883.19.5" extension="OBS-1004"/>
+              <code code="LOCAL-NOTE" codeSystem="2.16.840.1.113883.19.9"/>
+              <statusCode code="completed"/>
+              <value xsi:type="ST">Free-text observation value.</value>
+            </observation>
+          </entry>
+          <entry>
+            <observationMedia classCode="OBS" moodCode="EVN" ID="img-1">
+              <id root="2.16.840.1.113883.19.5" extension="IMG-0001"/>
+              <value xsi:type="ED" mediaType="image/png">
+                <reference value="chart.png"/>
+              </value>
+            </observationMedia>
+          </entry>
+        </section>
+      </component>
+    </structuredBody>
+  </component>
+</ClinicalDocument>

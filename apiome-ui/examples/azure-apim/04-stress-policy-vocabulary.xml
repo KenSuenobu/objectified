@@ -1,0 +1,118 @@
+<!--
+  Every policy element that carries semantics Apiome can normalize, plus several that it
+  cannot. FMT-7.2 requires the unmapped ones preserved verbatim in extras and visible in
+  the detail view — the `<example-unknown-policy>` element at the end is the deliberate
+  test of that rule.
+-->
+<policies>
+  <inbound>
+    <base />
+
+    <!-- Security -->
+    <validate-jwt header-name="Authorization" require-scheme="Bearer"
+                  require-expiration-time="true" require-signed-tokens="true"
+                  clock-skew="30" output-token-variable-name="jwt">
+      <openid-config url="https://login.example.com/.well-known/openid-configuration" />
+      <audiences>
+        <audience>lab-api</audience>
+      </audiences>
+      <issuers>
+        <issuer>https://login.example.com/</issuer>
+      </issuers>
+      <required-claims>
+        <claim name="roles" match="all">
+          <value>lab.operator</value>
+        </claim>
+      </required-claims>
+    </validate-jwt>
+    <check-header name="X-Api-Version" failed-check-httpcode="400"
+                  failed-check-error-message="Missing version" ignore-case="true">
+      <value>2026-08-01</value>
+    </check-header>
+    <ip-filter action="allow">
+      <address-range from="203.0.113.0" to="203.0.113.255" />
+      <address>198.51.100.14</address>
+    </ip-filter>
+    <validate-content unspecified-content-type-action="prevent"
+                      max-size="102400" size-exceeded-action="prevent"
+                      errors-variable-name="validationErrors">
+      <content type="application/json" validate-as="json" action="prevent" />
+    </validate-content>
+
+    <!-- Throttling -->
+    <rate-limit calls="120" renewal-period="60" />
+    <rate-limit-by-key calls="20" renewal-period="1" counter-key="@(context.Request.IpAddress)"
+                       increment-condition="@(context.Response.StatusCode != 429)" />
+    <quota calls="1000000" bandwidth="10240" renewal-period="2592000" />
+
+    <!-- Routing and transformation -->
+    <set-backend-service backend-id="lab-backend" />
+    <rewrite-uri template="/internal/v3{path}" />
+    <set-method>POST</set-method>
+    <set-header name="X-Correlation-Id" exists-action="skip">
+      <value>@(context.RequestId.ToString())</value>
+    </set-header>
+    <set-query-parameter name="api-version" exists-action="override">
+      <value>2026-08-01</value>
+    </set-query-parameter>
+    <set-variable name="tenant" value="@(context.Subscription?.Name ?? &quot;anonymous&quot;)" />
+
+    <!-- Control flow -->
+    <choose>
+      <when condition="@(context.Request.Headers.GetValueOrDefault(&quot;X-Debug&quot;,&quot;&quot;) == &quot;1&quot;)">
+        <trace source="lab-api" severity="verbose">
+          <message>@("Debug request from " + context.Request.IpAddress)</message>
+        </trace>
+      </when>
+      <when condition="@(context.Variables.GetValueOrDefault&lt;string&gt;(&quot;tenant&quot;) == &quot;blocked&quot;)">
+        <return-response>
+          <set-status code="403" reason="Forbidden" />
+          <set-body>{"message":"Tenant is blocked"}</set-body>
+        </return-response>
+      </when>
+      <otherwise>
+        <set-header name="X-Tenant" exists-action="override">
+          <value>@((string)context.Variables["tenant"])</value>
+        </set-header>
+      </otherwise>
+    </choose>
+
+    <!-- Caching and side calls -->
+    <cache-lookup vary-by-developer="false" vary-by-developer-groups="false"
+                  downstream-caching-type="private" must-revalidate="true">
+      <vary-by-header>Accept</vary-by-header>
+      <vary-by-query-parameter>assay</vary-by-query-parameter>
+    </cache-lookup>
+    <send-request mode="new" response-variable-name="entitlement" timeout="5" ignore-error="true">
+      <set-url>https://entitlements.internal.example.com/check</set-url>
+      <set-method>POST</set-method>
+      <set-body>@{ return "{\"sub\":\"" + context.Request.Headers.GetValueOrDefault("X-Sub","") + "\"}"; }</set-body>
+    </send-request>
+
+    <!-- Not a real APIM policy: must be preserved verbatim in extras, not dropped. -->
+    <example-unknown-policy mode="observe" owner="platform-team">
+      <note>Vendor-specific policy injected by an internal deployment pipeline.</note>
+    </example-unknown-policy>
+  </inbound>
+
+  <backend>
+    <retry condition="@(context.Response.StatusCode == 503)" count="3" interval="2"
+           max-interval="10" delta="1" first-fast-retry="true">
+      <forward-request timeout="20" />
+    </retry>
+  </backend>
+
+  <outbound>
+    <base />
+    <cache-store duration="120" />
+    <set-header name="X-Backend" exists-action="delete" />
+    <json-to-xml apply="content-type-json" consider-accept-header="true" />
+  </outbound>
+
+  <on-error>
+    <base />
+    <set-header name="X-Error-Source" exists-action="override">
+      <value>@(context.LastError.Source)</value>
+    </set-header>
+  </on-error>
+</policies>

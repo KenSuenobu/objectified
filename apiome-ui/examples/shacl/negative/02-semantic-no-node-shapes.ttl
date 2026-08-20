@@ -1,0 +1,11 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix ex:   <https://example.com/ns#> .
+
+# Valid Turtle in the right neighbourhood, but not a shapes graph: no sh:NodeShape and
+# no sh:PropertyShape anywhere, so there are no constraints to import.
+ex:Person a owl:Class ;
+    rdfs:label "Person" .
+
+ex:name a owl:DatatypeProperty ;
+    rdfs:domain ex:Person .

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UANodeSet xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd">
+  <!--
+    Namespace and aliases but no nodes at all: nothing here declares a type, a variable
+    or a method, so there is no information model to import.
+  -->
+  <NamespaceUris>
+    <Uri>http://example.com/UA/Empty/</Uri>
+  </NamespaceUris>
+  <Aliases>
+    <Alias Alias="Boolean">i=1</Alias>
+    <Alias Alias="String">i=12</Alias>
+  </Aliases>
+</UANodeSet>

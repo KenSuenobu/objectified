@@ -1,0 +1,9 @@
+ /* Parses as declarations, but the level numbers do not describe a tree:
+    a level 4 follows a level 2 with no level 3 between them, and a level 2
+    appears before any level 1. The structure cannot be built.            */
+ DCL 2 ORPHAN_FIELD CHAR(10);
+
+ DCL 1 BAD_REC,
+       2 GROUP_A,
+         4 DEEP_FIELD CHAR(8),
+       2 GROUP_B CHAR(4);

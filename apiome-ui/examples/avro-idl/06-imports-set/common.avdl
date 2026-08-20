@@ -1,0 +1,20 @@
+/** Imported IDL: shared value types. */
+namespace com.example.common;
+
+record Address {
+  string line1;
+  union { null, string } line2 = null;
+  string city;
+  string postalCode;
+  string countryCode;
+}
+
+record Weight {
+  double value;
+  string unit;
+}
+
+record Money {
+  decimal(12, 2) amount;
+  string currency;
+}

@@ -1,0 +1,13 @@
+{
+  "mcpVersion": "2025-06-18",
+  "server": { "name": "acme-tickets", "version": "1.4.0" },
+  "capabilities": { "tools": {} },
+  "tools": [
+    {
+      "name": "search_tickets",
+      "description": "Full-text search across open support tickets.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "status": { "type": "string", "enum": ["open", "pend

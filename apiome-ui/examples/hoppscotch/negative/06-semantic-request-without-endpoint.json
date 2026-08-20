@@ -1,0 +1,38 @@
+{
+  "v": 6,
+  "id": "clx00000000000000000000e6",
+  "name": "Endpointless",
+  "folders": [],
+  "requests": [
+    {
+      "v": "11",
+      "id": "clx00000000000000000000e7",
+      "name": "No endpoint",
+      "method": "GET",
+      "endpoint": "",
+      "params": [],
+      "headers": [],
+      "auth": { "authType": "none", "authActive": false },
+      "body": { "contentType": null, "body": null },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": []
+    },
+    {
+      "v": "11",
+      "id": "clx00000000000000000000e8",
+      "name": "Unresolvable variable only",
+      "method": "POST",
+      "endpoint": "<<undefinedBaseUrl>>",
+      "params": [],
+      "headers": [],
+      "auth": { "authType": "none", "authActive": false },
+      "body": { "contentType": null, "body": null },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": []
+    }
+  ],
+  "auth": { "authType": "none", "authActive": false },
+  "headers": []
+}

@@ -1,0 +1,5 @@
+# Fileset member: the Host allowlist. A one-column map is used as a set: presence of the
+# key is the whole answer.
+api.example.com
+api-eu.example.com
+api-us.example.com

@@ -1,0 +1,41 @@
+*********************************************************************
+* Customer enquiry screen: a title, labelled input fields, an output *
+* area and a message line — the shape of a 3270 transaction's API.   *
+*********************************************************************
+CUSTSET  DFHMSD TYPE=&SYSPARM,MODE=INOUT,LANG=COBOL,STORAGE=AUTO,      X
+               TIOAPFX=YES,CTRL=(FREEKB,FRSET),                        X
+               MAPATTS=(COLOR,HILIGHT),DSATTS=(COLOR,HILIGHT)
+*
+CUSTMAP  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1,JUSTIFY=LEFT
+*
+         DFHMDF POS=(1,26),LENGTH=27,ATTRB=(PROT,BRT),                 X
+               COLOR=BLUE,INITIAL='CUSTOMER ENQUIRY  (CUST01)'
+         DFHMDF POS=(3,1),LENGTH=14,ATTRB=(PROT,NORM),                 X
+               INITIAL='CUSTOMER ID  :'
+CUSTID   DFHMDF POS=(3,17),LENGTH=10,ATTRB=(UNPROT,NORM,IC),           X
+               PICIN='X(10)',PICOUT='X(10)',COLOR=GREEN
+         DFHMDF POS=(3,28),LENGTH=1,ATTRB=(PROT,ASKIP)
+*
+         DFHMDF POS=(5,1),LENGTH=14,ATTRB=(PROT,NORM),                 X
+               INITIAL='NAME         :'
+CUSTNAME DFHMDF POS=(5,17),LENGTH=40,ATTRB=(PROT,NORM),PICOUT='X(40)'
+*
+         DFHMDF POS=(6,1),LENGTH=14,ATTRB=(PROT,NORM),                 X
+               INITIAL='STATUS       :'
+CUSTSTAT DFHMDF POS=(6,17),LENGTH=1,ATTRB=(PROT,NORM),PICOUT='X'
+*
+         DFHMDF POS=(7,1),LENGTH=14,ATTRB=(PROT,NORM),                 X
+               INITIAL='BALANCE      :'
+CUSTBAL  DFHMDF POS=(7,17),LENGTH=15,ATTRB=(PROT,NORM),                X
+               PICOUT='ZZZ,ZZZ,ZZ9.99-'
+CUSTCCY  DFHMDF POS=(7,33),LENGTH=3,ATTRB=(PROT,NORM),PICOUT='XXX'
+*
+         DFHMDF POS=(22,1),LENGTH=8,ATTRB=(PROT,NORM),                 X
+               INITIAL='MESSAGE:'
+MSGLINE  DFHMDF POS=(22,10),LENGTH=60,ATTRB=(PROT,BRT),COLOR=RED
+*
+         DFHMDF POS=(24,1),LENGTH=40,ATTRB=(PROT,NORM),                X
+               INITIAL='F3=EXIT  F5=REFRESH  ENTER=ENQUIRE'
+*
+         DFHMSD TYPE=FINAL
+         END

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Root of the set: the payment initiation. The bank's response arrives as a separate
+  pain.002 document that references this message's MsgId and each transaction's
+  EndToEndId — neither file tells the whole story of what happened.
+-->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSG-20260824-0007</MsgId>
+      <CreDtTm>2026-08-24T09:00:00</CreDtTm>
+      <NbOfTxs>2</NbOfTxs>
+      <CtrlSum>8600.00</CtrlSum>
+      <InitgPty><Nm>Example Company BV</Nm></InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>BATCH-0007</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <NbOfTxs>2</NbOfTxs>
+      <CtrlSum>8600.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl><Cd>SEPA</Cd></SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt><Dt>2026-08-26</Dt></ReqdExctnDt>
+      <Dbtr><Nm>Example Company BV</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>NL91ABNA0417164300</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId></DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>SUP-0007-A</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">5100.00</InstdAmt></Amt>
+        <Cdtr><Nm>Northern Supplies Ltd</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>INV-77140</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>SUP-0007-B</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">3500.00</InstdAmt></Amt>
+        <Cdtr><Nm>Rapid Logistics NV</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>BE71096123456769</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>INV-77141</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

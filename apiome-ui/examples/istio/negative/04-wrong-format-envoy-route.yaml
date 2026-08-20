@@ -1,0 +1,11 @@
+name: local_route
+virtual_hosts:
+  - name: storefront
+    domains:
+      - api.example.com
+    routes:
+      - match:
+          prefix: /v2/orders
+        route:
+          cluster: orders_service
+          timeout: 15s

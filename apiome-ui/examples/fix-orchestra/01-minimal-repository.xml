@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 name="ExampleMinimal" version="FIX.4.4">
+  <fixr:codeSets>
+    <fixr:codeSet name="SideCodeSet" id="54" type="char">
+      <fixr:code name="Buy" id="54001" value="1"/>
+      <fixr:code name="Sell" id="54002" value="2"/>
+    </fixr:codeSet>
+  </fixr:codeSets>
+
+  <fixr:fields>
+    <fixr:field id="11" name="ClOrdID" type="String"/>
+    <fixr:field id="54" name="Side" type="SideCodeSet"/>
+  </fixr:fields>
+
+  <fixr:messages>
+    <fixr:message name="NewOrderSingle" id="14" msgType="D" category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:fieldRef id="54" presence="required"/>
+      </fixr:structure>
+    </fixr:message>
+  </fixr:messages>
+</fixr:repository>

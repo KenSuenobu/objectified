@@ -1,0 +1,42 @@
+{
+  "schema": {
+    "fields": [
+      { "name": "vendor_id", "type": { "name": "utf8" }, "nullable": true, "children": [], "dictionary": { "id": 0, "indexType": { "name": "int", "bitWidth": 8, "isSigned": true }, "isOrdered": false } },
+      { "name": "pickup_datetime", "type": { "name": "timestamp", "unit": "MICROSECOND", "timezone": "America/New_York" }, "nullable": false, "children": [] },
+      { "name": "dropoff_datetime", "type": { "name": "timestamp", "unit": "MICROSECOND", "timezone": "America/New_York" }, "nullable": false, "children": [] },
+      { "name": "passenger_count", "type": { "name": "int", "bitWidth": 8, "isSigned": false }, "nullable": true, "children": [] },
+      { "name": "trip_distance_miles", "type": { "name": "floatingpoint", "precision": "DOUBLE" }, "nullable": true, "children": [] },
+      { "name": "rate_code", "type": { "name": "utf8" }, "nullable": true, "children": [], "dictionary": { "id": 1, "indexType": { "name": "int", "bitWidth": 8, "isSigned": true }, "isOrdered": false } },
+      { "name": "store_and_fwd_flag", "type": { "name": "bool" }, "nullable": true, "children": [] },
+      { "name": "pickup_location_id", "type": { "name": "int", "bitWidth": 16, "isSigned": true }, "nullable": true, "children": [] },
+      { "name": "dropoff_location_id", "type": { "name": "int", "bitWidth": 16, "isSigned": true }, "nullable": true, "children": [] },
+      { "name": "payment_type", "type": { "name": "utf8" }, "nullable": true, "children": [], "dictionary": { "id": 2, "indexType": { "name": "int", "bitWidth": 8, "isSigned": true }, "isOrdered": false } },
+      { "name": "fare_amount", "type": { "name": "decimal", "precision": 12, "scale": 2, "bitWidth": 128 }, "nullable": true, "children": [] },
+      { "name": "extra", "type": { "name": "decimal", "precision": 12, "scale": 2, "bitWidth": 128 }, "nullable": true, "children": [] },
+      { "name": "tip_amount", "type": { "name": "decimal", "precision": 12, "scale": 2, "bitWidth": 128 }, "nullable": true, "children": [] },
+      { "name": "tolls_amount", "type": { "name": "decimal", "precision": 12, "scale": 2, "bitWidth": 128 }, "nullable": true, "children": [] },
+      { "name": "total_amount", "type": { "name": "decimal", "precision": 12, "scale": 2, "bitWidth": 128 }, "nullable": true, "children": [] },
+      {
+        "name": "surcharges",
+        "type": { "name": "map", "keysSorted": false },
+        "nullable": true,
+        "children": [
+          {
+            "name": "entries",
+            "type": { "name": "struct" },
+            "nullable": false,
+            "children": [
+              { "name": "key", "type": { "name": "utf8" }, "nullable": false, "children": [] },
+              { "name": "value", "type": { "name": "decimal", "precision": 12, "scale": 2, "bitWidth": 128 }, "nullable": true, "children": [] }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": [
+      { "key": "dataset", "value": "trip_records" },
+      { "key": "partitioning", "value": "year/month" },
+      { "key": "row_group_size", "value": "1048576" }
+    ]
+  }
+}

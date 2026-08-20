@@ -1,0 +1,36 @@
+{
+  "apiVersion": "v3.1.0",
+  "kind": "DataContract",
+  "id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000006",
+  "name": "inventory_snapshots",
+  "version": "1.0.1",
+  "status": "active",
+  "domain": "supply-chain",
+  "description": {
+    "purpose": "Daily inventory position by SKU and warehouse.",
+    "usage": "Feeds replenishment planning."
+  },
+  "schema": [
+    {
+      "name": "inventory_snapshots",
+      "logicalType": "object",
+      "physicalType": "table",
+      "properties": [
+        { "name": "snapshot_date", "logicalType": "date", "physicalType": "date", "required": true, "partitioned": true },
+        { "name": "sku", "logicalType": "string", "physicalType": "varchar(18)", "required": true, "primaryKey": true, "primaryKeyPosition": 1 },
+        { "name": "warehouse", "logicalType": "string", "physicalType": "char(3)", "required": true, "primaryKey": true, "primaryKeyPosition": 2 },
+        { "name": "on_hand", "logicalType": "integer", "physicalType": "integer", "required": true },
+        { "name": "reserved", "logicalType": "integer", "physicalType": "integer", "required": true }
+      ],
+      "quality": [
+        { "rule": "nullCount", "property": "on_hand", "mustBe": 0, "dimension": "completeness" }
+      ]
+    }
+  ],
+  "servers": [
+    { "server": "warehouse", "type": "bigquery", "project": "example-supply", "dataset": "inventory" }
+  ],
+  "team": [{ "username": "s.owner", "role": "Data Product Owner", "dateIn": "2026-04-01" }],
+  "slaProperties": [{ "property": "latency", "value": 12, "unit": "h", "element": "inventory_snapshots.snapshot_date" }],
+  "tags": ["supply-chain"]
+}

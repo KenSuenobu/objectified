@@ -16,6 +16,9 @@ const eslintConfig = defineConfig([
     // Generated and one-off scripts
     "coverage/**",
     "convert-mui-to-radix.js",
+    // Import corpus fixtures: deliberately malformed by design, and never app code.
+    // Also excluded from tsconfig.json, so `next build` does not type-check them.
+    "examples/**",
   ]),
   {
     /*

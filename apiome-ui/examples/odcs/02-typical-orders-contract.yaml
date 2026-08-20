@@ -1,0 +1,107 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: 0f6d2f0e-1b2c-4a5e-9f2a-000000000002
+name: orders
+version: 2.3.0
+status: active
+domain: commerce
+dataProduct: order_analytics
+tenant: ExampleCorp
+
+description:
+  purpose: Serve settled order facts to finance and merchandising.
+  usage: Read-only analytical access; not a source of truth for fulfilment.
+  limitations: Cancelled orders are retained for 90 days and then removed.
+
+schema:
+  - name: orders
+    physicalName: orders_v2
+    logicalType: object
+    physicalType: table
+    description: One row per placed order.
+    dataGranularityDescription: One row per order_id.
+    properties:
+      - name: order_id
+        logicalType: string
+        physicalType: varchar(20)
+        required: true
+        unique: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: Business identifier of the order.
+        examples:
+          - ORD-00010042
+      - name: customer_id
+        logicalType: string
+        physicalType: varchar(20)
+        required: true
+        classification: confidential
+        criticalDataElement: true
+      - name: placed_at
+        logicalType: date
+        physicalType: timestamp
+        required: true
+        partitioned: true
+        partitionKeyPosition: 1
+      - name: status
+        logicalType: string
+        physicalType: varchar(16)
+        required: true
+        examples:
+          - new
+          - paid
+          - shipped
+          - cancelled
+      - name: total_amount
+        logicalType: number
+        physicalType: numeric(13,2)
+        required: true
+      - name: currency
+        logicalType: string
+        physicalType: char(3)
+        required: true
+
+    quality:
+      - rule: rowCount
+        mustBeGreaterThan: 0
+        dimension: completeness
+      - rule: duplicateCount
+        property: order_id
+        mustBe: 0
+        dimension: uniqueness
+
+servers:
+  - server: analytics-warehouse
+    type: postgres
+    host: warehouse.example.com
+    port: 5432
+    database: analytics
+    schema: commerce
+
+team:
+  - username: dana.owner
+    role: Data Product Owner
+    dateIn: 2026-01-15
+  - username: sam.steward
+    role: Data Steward
+    dateIn: 2026-02-01
+
+support:
+  - channel: '#data-commerce'
+    tool: slack
+    url: https://example.slack.com/archives/C0000COMMERCE
+    scope: interactive
+
+slaDefaultElement: orders.placed_at
+slaProperties:
+  - property: latency
+    value: 4
+    unit: h
+    element: orders.placed_at
+  - property: retention
+    value: 3
+    unit: y
+
+tags:
+  - commerce
+  - finance-approved

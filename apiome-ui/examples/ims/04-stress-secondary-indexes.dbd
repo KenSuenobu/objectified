@@ -1,0 +1,48 @@
+*********************************************************************
+* HIDAM database with secondary indexing, logical children and      *
+* every FIELD/LCHILD/XDFLD form the macro language admits.          *
+*********************************************************************
+         DBD   NAME=ORDERDB,ACCESS=(HIDAM,VSAM)
+         DATASET DD1=ORDERPRI,DEVICE=3390,SIZE=8192
+*
+* Root segment, indexed by ORDERID through the primary index DBD.
+         SEGM  NAME=ORDER,BYTES=(240,80),PARENT=0,POINTER=(TWINBWD,LTWIN)
+         LCHILD NAME=(ORDERIDX,ORDIXDB),POINTER=INDX
+         FIELD NAME=(ORDERID,SEQ,U),BYTES=10,START=1,TYPE=C
+         FIELD NAME=ORDCUST,BYTES=10,START=11,TYPE=C
+         FIELD NAME=ORDDATE,BYTES=8,START=21,TYPE=C
+         FIELD NAME=ORDSTAT,BYTES=1,START=29,TYPE=C
+         FIELD NAME=ORDCHAN,BYTES=4,START=30,TYPE=C
+         FIELD NAME=ORDTOTAL,BYTES=8,START=34,TYPE=P
+         FIELD NAME=ORDFLAGS,BYTES=2,START=42,TYPE=X
+* Secondary index on customer plus date: the search field is built from
+* two source fields, which is what XDFLD/SUBSEQ express.
+         LCHILD NAME=(CUSTDATE,ORDXDB2),POINTER=INDX
+         XDFLD NAME=XCUSTDT,SEGMENT=ORDER,                              X
+               SRCH=(ORDCUST,ORDDATE),                                  X
+               SUBSEQ=(ORDERID),                                        X
+               DDATA=(ORDSTAT),                                         X
+               NULLVAL=BLANK
+*
+* Dependent segment with a non-unique sequence field.
+         SEGM  NAME=ORDLINE,BYTES=96,PARENT=ORDER,POINTER=(TWIN)
+         FIELD NAME=(LINENO,SEQ,M),BYTES=4,START=1,TYPE=C
+         FIELD NAME=LINESKU,BYTES=18,START=5,TYPE=C
+         FIELD NAME=LINEQTY,BYTES=6,START=23,TYPE=P
+         FIELD NAME=LINEPRIC,BYTES=8,START=29,TYPE=P
+         FIELD NAME=LINECCY,BYTES=3,START=37,TYPE=C
+*
+* Variable-length segment: BYTES=(max,min).
+         SEGM  NAME=ORDNOTE,BYTES=(500,20),PARENT=ORDER
+         FIELD NAME=(NOTESEQ,SEQ,U),BYTES=4,START=1,TYPE=C
+         FIELD NAME=NOTETEXT,BYTES=480,START=5,TYPE=C
+*
+* Logical child: pairs this database with the customer database.
+         SEGM  NAME=CUSTLINK,BYTES=20,PARENT=((ORDER,SNGL),             X
+               (CUSTOMER,PHYSICAL,CUSTDB))
+         FIELD NAME=(LNKCUST,SEQ,U),BYTES=10,START=1,TYPE=C
+         FIELD NAME=LNKROLE,BYTES=2,START=11,TYPE=C
+*
+         DBDGEN
+         FINISH
+         END

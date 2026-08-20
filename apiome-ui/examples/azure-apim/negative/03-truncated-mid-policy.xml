@@ -1,0 +1,5 @@
+<policies>
+  <inbound>
+    <base />
+    <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+      <openid-config url="https://login.example.com/.well-known/openid-config

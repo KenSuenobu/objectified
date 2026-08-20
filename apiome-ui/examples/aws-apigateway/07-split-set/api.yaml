@@ -1,0 +1,75 @@
+openapi: 3.0.1
+info:
+  title: shipments-api
+  description: >
+    Root of the set: the API definition. Its schemas live in components.yaml, which the
+    team maintains separately and merges at deploy time — so neither file describes the
+    API on its own.
+  version: "2026-08-19T15:00:00Z"
+servers:
+  - url: https://api.example.com/{basePath}
+    variables:
+      basePath:
+        default: shipments
+paths:
+  /shipments:
+    get:
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 200 response
+          content:
+            application/json:
+              schema:
+                $ref: './components.yaml#/components/schemas/ShipmentPage'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:list-shipments/invocations
+        passthroughBehavior: when_no_match
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components.yaml#/components/schemas/NewShipment'
+      responses:
+        "201":
+          description: 201 response
+      x-amazon-apigateway-request-validator: body-only
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:create-shipment/invocations
+        passthroughBehavior: when_no_match
+  /shipments/{shipmentId}:
+    get:
+      parameters:
+        - $ref: './components.yaml#/components/parameters/ShipmentId'
+      responses:
+        "200":
+          description: 200 response
+          content:
+            application/json:
+              schema:
+                $ref: './components.yaml#/components/schemas/Shipment'
+        "404":
+          description: 404 response
+      x-amazon-apigateway-integration:
+        type: http_proxy
+        httpMethod: GET
+        uri: http://internal-shipments.eu-west-1.elb.amazonaws.com/shipments/{shipmentId}
+        requestParameters:
+          integration.request.path.shipmentId: method.request.path.shipmentId
+        connectionType: VPC_LINK
+        connectionId: vpclink-0abc123
+        passthroughBehavior: when_no_match
+x-amazon-apigateway-request-validators:
+  body-only:
+    validateRequestBody: true
+    validateRequestParameters: false

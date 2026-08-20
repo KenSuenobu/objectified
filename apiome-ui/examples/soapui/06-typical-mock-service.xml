@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config"
+                    id="7a1c0000-0000-4000-8000-000000000090"
+                    name="Orders mock">
+  <con:settings/>
+
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:RestService"
+                 id="7a1c0000-0000-4000-8000-000000000091"
+                 name="Orders"
+                 type="rest"
+                 basePath="/v2">
+    <con:settings/>
+    <con:endpoints>
+      <con:endpoint>https://api.example.com</con:endpoint>
+    </con:endpoints>
+    <con:resource name="orders" path="/orders" id="7a1c0000-0000-4000-8000-000000000092">
+      <con:settings/>
+      <con:parameters/>
+      <con:method name="listOrders" id="7a1c0000-0000-4000-8000-000000000093" method="GET">
+        <con:settings/>
+        <con:parameters/>
+        <con:request name="Request 1" id="7a1c0000-0000-4000-8000-000000000094" mediaType="application/json">
+          <con:settings/>
+          <con:endpoint>https://api.example.com</con:endpoint>
+          <con:request/>
+        </con:request>
+      </con:method>
+    </con:resource>
+  </con:interface>
+
+  <con:restMockService id="7a1c0000-0000-4000-8000-000000000095" port="8088"
+                       path="/mock/orders" host="localhost" name="Orders REST MockService">
+    <con:settings/>
+    <con:properties/>
+    <con:restMockAction id="7a1c0000-0000-4000-8000-000000000096" name="GET /v2/orders"
+                        method="GET" resourcePath="/v2/orders">
+      <con:settings/>
+      <con:response name="200 OK" id="7a1c0000-0000-4000-8000-000000000097"
+                    httpResponseStatus="200" mediaType="application/json">
+        <con:settings/>
+        <con:responseContent>{ "items": [{ "orderId": "ORD-00010042", "status": "new", "total": 42.5 }], "nextCursor": null }</con:responseContent>
+      </con:response>
+      <con:response name="401 Unauthorized" id="7a1c0000-0000-4000-8000-000000000098"
+                    httpResponseStatus="401" mediaType="application/json">
+        <con:settings/>
+        <con:responseContent>{ "message": "Unauthorized" }</con:responseContent>
+      </con:response>
+      <con:dispatchStyle>SEQUENCE</con:dispatchStyle>
+    </con:restMockAction>
+  </con:restMockService>
+
+  <con:properties/>
+</con:soapui-project>

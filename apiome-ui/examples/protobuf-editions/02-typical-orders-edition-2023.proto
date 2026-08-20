@@ -1,0 +1,42 @@
+edition = "2023";
+
+package example.orders.v1;
+
+// Editions default to EXPLICIT field presence, so every singular field below has
+// presence — the opposite of proto3's implicit default. Normalizing this file as
+// proto3 would model each of these as non-nullable.
+option features.field_presence = EXPLICIT;
+
+enum OrderStatus {
+  // Editions default enums to OPEN; a closed enum must declare it.
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_NEW = 1;
+  ORDER_STATUS_PAID = 2;
+  ORDER_STATUS_SHIPPED = 3;
+  ORDER_STATUS_CANCELLED = 4;
+}
+
+message OrderLine {
+  string sku = 1;
+  int32 quantity = 2;
+  double unit_price = 3;
+}
+
+message Order {
+  string order_id = 1;
+  string customer_id = 2;
+  OrderStatus status = 3;
+  repeated OrderLine lines = 4;
+  // Implicit presence for this field only: no presence tracking, default is absent.
+  int64 placed_at = 5 [features.field_presence = IMPLICIT];
+  string note = 6;
+}
+
+message GetOrderRequest {
+  string order_id = 1;
+}
+
+service OrderService {
+  rpc GetOrder(GetOrderRequest) returns (Order);
+  rpc PlaceOrder(Order) returns (Order);
+}

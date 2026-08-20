@@ -1,0 +1,126 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "Payments sandbox",
+  "collectionId": "b1f7c8d0-0000-4000-8000-000000000060",
+  "dateExported": "2026-08-19T13:00:00.000Z",
+  "version": "1.2",
+  "folders": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000061",
+      "name": "Authentication",
+      "containerId": "",
+      "created": "2026-08-19T12:50:00.000Z",
+      "sortNum": 10000
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000062",
+      "name": "Authorizations",
+      "containerId": "",
+      "created": "2026-08-19T12:51:00.000Z",
+      "sortNum": 20000
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000063",
+      "name": "Reporting",
+      "containerId": "",
+      "created": "2026-08-19T12:52:00.000Z",
+      "sortNum": 30000
+    }
+  ],
+  "settings": {
+    "headers": [],
+    "auth": { "type": "bearer", "bearer": "{{accessToken}}" },
+    "options": { "baseUrl": "{{baseUrl}}" }
+  },
+  "requests": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000064",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000060",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000061",
+      "name": "Get access token",
+      "url": "https://auth.example.com/oauth/token",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2026-08-19T12:53:00.000Z",
+      "modified": "2026-08-19T12:53:00.000Z",
+      "headers": [{ "name": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+      "params": [],
+      "auth": { "type": "none" },
+      "body": {
+        "type": "formencoded",
+        "raw": "",
+        "form": [
+          { "name": "grant_type", "value": "client_credentials" },
+          { "name": "client_id", "value": "{{clientId}}" },
+          { "name": "client_secret", "value": "{{clientSecret}}" }
+        ]
+      },
+      "tests": [
+        { "type": "res-code", "custom": "", "action": "equal", "value": "200" },
+        { "type": "set-env-var", "custom": "json.access_token", "action": "setto", "value": "accessToken" }
+      ]
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000065",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000060",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000062",
+      "name": "Authorize a payment",
+      "url": "{{baseUrl}}/authorizations",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2026-08-19T12:54:00.000Z",
+      "modified": "2026-08-19T12:54:00.000Z",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Idempotency-Key", "value": "{{$guid}}" }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"merchantId\": \"{{merchantId}}\",\n  \"amount\": { \"value\": 2599, \"currency\": \"EUR\" },\n  \"card\": { \"networkToken\": \"tok_test_4242\", \"expiryMonth\": 12, \"expiryYear\": 2030 },\n  \"captureMode\": \"AUTOMATIC\"\n}",
+        "form": []
+      },
+      "tests": [
+        { "type": "res-code", "custom": "", "action": "equal", "value": "201" },
+        { "type": "json-query", "custom": "json.result", "action": "equal", "value": "APPROVED" },
+        { "type": "set-env-var", "custom": "json.authorizationId", "action": "setto", "value": "authorizationId" }
+      ]
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000066",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000060",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000062",
+      "name": "Capture an authorization",
+      "url": "{{baseUrl}}/authorizations/:authorizationId/captures",
+      "method": "POST",
+      "sortNum": 20000,
+      "created": "2026-08-19T12:55:00.000Z",
+      "modified": "2026-08-19T12:55:00.000Z",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "params": [{ "name": "authorizationId", "value": "{{authorizationId}}", "isPath": true }],
+      "body": {
+        "type": "json",
+        "raw": "{ \"amount\": { \"value\": 2599, \"currency\": \"EUR\" }, \"finalCapture\": true }",
+        "form": []
+      },
+      "tests": [{ "type": "res-code", "custom": "", "action": "equal", "value": "201" }]
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000067",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000060",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000063",
+      "name": "Settlement report",
+      "url": "{{baseUrl}}/reports/settlement",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2026-08-19T12:56:00.000Z",
+      "modified": "2026-08-19T12:56:00.000Z",
+      "headers": [{ "name": "Accept", "value": "text/csv" }],
+      "params": [
+        { "name": "date", "value": "2026-08-01", "isPath": false },
+        { "name": "merchantId", "value": "{{merchantId}}", "isPath": false }
+      ],
+      "tests": [{ "type": "res-code", "custom": "", "action": "equal", "value": "200" }]
+    }
+  ]
+}

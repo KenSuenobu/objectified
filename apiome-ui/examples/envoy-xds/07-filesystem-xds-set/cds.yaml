@@ -1,0 +1,43 @@
+# Fileset member: the clusters the routes target. A route naming a cluster that is not
+# here is the unresolvable-reference case; here they all resolve.
+resources:
+  - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+    name: shipments_service
+    type: STRICT_DNS
+    connect_timeout: 5s
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: shipments_service
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: shipments.internal.example.com
+                    port_value: 8080
+  - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+    name: parcels_service
+    type: STRICT_DNS
+    connect_timeout: 5s
+    load_assignment:
+      cluster_name: parcels_service
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: parcels.internal.example.com
+                    port_value: 8080
+  - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+    name: legacy_service
+    type: STATIC
+    connect_timeout: 10s
+    load_assignment:
+      cluster_name: legacy_service
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 10.20.30.40
+                    port_value: 80

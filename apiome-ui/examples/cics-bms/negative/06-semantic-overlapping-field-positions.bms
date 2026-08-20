@@ -1,0 +1,14 @@
+*********************************************************************
+* Two fields claim overlapping screen positions, and a third starts  *
+* past the declared map width. The screen cannot be laid out, so the *
+* record positions derived from it would be wrong.                   *
+*********************************************************************
+OVLPSET  DFHMSD TYPE=&SYSPARM,MODE=INOUT,LANG=COBOL,STORAGE=AUTO,      X
+               TIOAPFX=YES
+OVLPMAP  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1
+FLDA     DFHMDF POS=(5,10),LENGTH=20,ATTRB=(UNPROT,NORM)
+FLDB     DFHMDF POS=(5,20),LENGTH=20,ATTRB=(UNPROT,NORM)
+FLDC     DFHMDF POS=(5,75),LENGTH=20,ATTRB=(UNPROT,NORM)
+FLDD     DFHMDF POS=(30,1),LENGTH=10,ATTRB=(PROT,NORM)
+         DFHMSD TYPE=FINAL
+         END

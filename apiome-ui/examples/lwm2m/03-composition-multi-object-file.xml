@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Several object definitions in one file, with cross-object links: the composition case.
+  The Actuation object's Objlnk resource points at an instance of the Temperature object,
+  so the two definitions only make sense together.
+-->
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://www.openmobilealliance.org/tech/profiles/LWM2M-v1_1.xsd">
+  <Object ObjectType="MODefinition">
+    <Name>Temperature</Name>
+    <Description1>Temperature sensor, referenced by the actuation object below.</Description1>
+    <ObjectID>3303</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:ext:3303</ObjectURN>
+    <LWM2MVersion>1.1</LWM2MVersion>
+    <ObjectVersion>1.1</ObjectVersion>
+    <MultipleInstances>Multiple</MultipleInstances>
+    <Mandatory>Optional</Mandatory>
+    <Resources>
+      <Item ID="5700">
+        <Name>Sensor Value</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>Float</Type>
+        <RangeEnumeration/>
+        <Units>Cel</Units>
+        <Description>Current temperature.</Description>
+      </Item>
+    </Resources>
+    <Description2/>
+  </Object>
+
+  <Object ObjectType="MODefinition">
+    <Name>Actuation</Name>
+    <Description1>Controls an output, optionally driven by a linked sensor.</Description1>
+    <ObjectID>3306</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:ext:3306</ObjectURN>
+    <LWM2MVersion>1.1</LWM2MVersion>
+    <ObjectVersion>1.1</ObjectVersion>
+    <MultipleInstances>Multiple</MultipleInstances>
+    <Mandatory>Optional</Mandatory>
+    <Resources>
+      <Item ID="5850">
+        <Name>On/Off</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>Boolean</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Actuator state.</Description>
+      </Item>
+      <Item ID="5851">
+        <Name>Dimmer</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Integer</Type>
+        <RangeEnumeration>0..100</RangeEnumeration>
+        <Units>%</Units>
+        <Description>Proportional output level.</Description>
+      </Item>
+      <Item ID="5750">
+        <Name>Application Type</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Free-text role of this actuator.</Description>
+      </Item>
+      <Item ID="32700">
+        <Name>Driven By</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Objlnk</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Link to a Temperature object instance (3303:n) that drives this output.</Description>
+      </Item>
+    </Resources>
+    <Description2/>
+  </Object>
+</LWM2M>

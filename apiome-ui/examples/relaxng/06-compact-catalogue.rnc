@@ -1,0 +1,26 @@
+# Compact syntax of 02-typical-catalogue.rng: the same grammar, so both files must
+# import to the same canonical model.
+
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+start = catalogue
+
+catalogue =
+  element catalogue {
+    attribute version { xsd:string },
+    product*
+  }
+
+product =
+  element product {
+    attribute sku { xsd:string { pattern = "[A-Z]{3}-[0-9]{4}" } },
+    attribute discontinued { xsd:boolean }?,
+    element name { text },
+    element description { text }?,
+    element price { money },
+    element tag { text }*
+  }
+
+money =
+  attribute currency { "EUR" | "GBP" | "USD" },
+  xsd:decimal

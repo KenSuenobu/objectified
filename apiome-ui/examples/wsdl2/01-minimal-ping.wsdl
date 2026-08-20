@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://www.w3.org/ns/wsdl"
+             xmlns:tns="http://example.com/ping"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:wsoap="http://www.w3.org/ns/wsdl/soap"
+             targetNamespace="http://example.com/ping">
+
+  <types>
+    <xs:schema targetNamespace="http://example.com/ping"
+               elementFormDefault="qualified">
+      <xs:element name="ping" type="xs:string"/>
+      <xs:element name="pong" type="xs:string"/>
+    </xs:schema>
+  </types>
+
+  <interface name="PingInterface">
+    <operation name="ping"
+               pattern="http://www.w3.org/ns/wsdl/in-out">
+      <input messageLabel="In" element="tns:ping"/>
+      <output messageLabel="Out" element="tns:pong"/>
+    </operation>
+  </interface>
+
+  <binding name="PingSoapBinding"
+           interface="tns:PingInterface"
+           type="http://www.w3.org/ns/wsdl/soap"
+           wsoap:protocol="http://www.w3.org/2003/05/soap/bindings/HTTP/">
+    <operation ref="tns:ping" wsoap:mep="http://www.w3.org/2003/05/soap/mep/request-response"/>
+  </binding>
+
+  <service name="PingService" interface="tns:PingInterface">
+    <endpoint name="PingEndpoint"
+              binding="tns:PingSoapBinding"
+              address="https://api.example.com/ping"/>
+  </service>
+</description>

@@ -1,0 +1,7 @@
+<!--
+  Every declaration is syntactically fine, but `price` appears in a content model and
+  is never declared, so the grammar describes elements it cannot validate.
+-->
+<!ELEMENT catalogue (product+)>
+<!ELEMENT product (name, price)>
+<!ELEMENT name (#PCDATA)>

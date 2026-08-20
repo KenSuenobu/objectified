@@ -1,0 +1,31 @@
+{
+  "flight_descriptor": {
+    "type": "PATH",
+    "path": ["warehouse", "public", "shipments"]
+  },
+  "schema": {
+    "fields": [
+      { "name": "shipment_id", "type": { "name": "utf8" }, "nullable": false, "children": [] },
+      { "name": "carrier", "type": { "name": "utf8" }, "nullable": true, "children": [], "dictionary": { "id": 0, "indexType": { "name": "int", "bitWidth": 8, "isSigned": true }, "isOrdered": false } },
+      { "name": "shipped_at", "type": { "name": "timestamp", "unit": "MILLISECOND", "timezone": "UTC" }, "nullable": true, "children": [] },
+      { "name": "weight_kg", "type": { "name": "floatingpoint", "precision": "DOUBLE" }, "nullable": true, "children": [] },
+      {
+        "name": "parcels",
+        "type": { "name": "list" },
+        "nullable": true,
+        "children": [
+          {
+            "name": "item",
+            "type": { "name": "struct" },
+            "nullable": false,
+            "children": [
+              { "name": "parcel_id", "type": { "name": "utf8" }, "nullable": false, "children": [] },
+              { "name": "fragile", "type": { "name": "bool" }, "nullable": true, "children": [] }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": [{ "key": "flight.endpoint", "value": "grpc+tls://flight.example.com:443" }]
+  }
+}

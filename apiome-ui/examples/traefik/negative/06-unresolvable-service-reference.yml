@@ -1,0 +1,15 @@
+# The router names `missing-service`, and no service by that name is declared here or in
+# any provider file supplied alongside it; the middleware reference is dangling too.
+http:
+  routers:
+    orders:
+      rule: Host(`api.example.com`) && PathPrefix(`/v2/orders`)
+      entryPoints: [websecure]
+      service: missing-service
+      middlewares:
+        - missing-middleware
+  services:
+    catalogue-service:
+      loadBalancer:
+        servers:
+          - url: http://catalogue.internal.example.com:8080

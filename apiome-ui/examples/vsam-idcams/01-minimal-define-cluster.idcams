@@ -1,0 +1,6 @@
+ DEFINE CLUSTER (NAME(EXAMPLE.BEACON.KSDS) -
+                 INDEXED -
+                 KEYS(16 0) -
+                 RECORDSIZE(32 32) -
+                 CYLINDERS(1 1) -
+                 VOLUMES(VOL001))

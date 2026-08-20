@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <!--
+    `money` is referenced but never defined, and no include brings it in, so the
+    grammar cannot be resolved.
+  -->
+  <start>
+    <element name="invoice">
+      <element name="total">
+        <ref name="money"/>
+      </element>
+    </element>
+  </start>
+</grammar>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ORDERS05>
+  <IDOC BEGIN="1">
+    <EDI_DC40 SEGMENT="1">
+      <TABNAM>EDI_DC40</TABNAM>
+      <MANDT>100</MANDT>
+      <DOCNUM>0000000000123460</DOCNUM>
+      <DIRECT>2</DIRECT>
+      <IDOCTYP>ORDERS05</IDOCTYP>
+      <CIMTYP>ZORDERS05_EXT</CIMTYP>
+      <MESTYP>ORDERS</MESTYP>
+      <SNDPOR>SAPPRD</SNDPOR>
+      <SNDPRT>LS</SNDPRT>
+      <SNDPRN>PRDCLNT100</SNDPRN>
+      <RCVPRT>KU</RCVPRT>
+      <RCVPRN>0000098765</RCVPRN>
+      <CREDAT>20260819</CREDAT>
+      <CRETIM>114500</CRETIM>
+    </EDI_DC40>
+    <E1EDK01 SEGMENT="1">
+      <CURCY>EUR</CURCY>
+      <BELNR>4500098260</BELNR>
+      <E1EDK14 SEGMENT="1">
+        <QUALF>006</QUALF>
+        <ORGID>1000</ORGID>
+      </E1EDK14>
+      <E1EDKA1 SEGMENT="1">
+        <PARVW>AG</PARVW>
+        <PARTN>0000098765</PARTN>
+        <E1EDKA3 SEGMENT="1">
+          <PARTNER_Q>001</PARTNER_Q>
+          <PARTNER_ID>CONTACT-4711</PARTNER_ID>
+        </E1EDKA3>
+      </E1EDKA1>
+      <E1EDKT1 SEGMENT="1">
+        <TDID>Z001</TDID>
+        <E1EDKT2 SEGMENT="1">
+          <TDLINE>Deliver between 06:00 and 10:00 only.</TDLINE>
+        </E1EDKT2>
+        <E1EDKT2 SEGMENT="1">
+          <TDLINE>Gate pass required for every driver.</TDLINE>
+        </E1EDKT2>
+      </E1EDKT1>
+    </E1EDK01>
+    <E1EDP01 SEGMENT="1">
+      <POSEX>000010</POSEX>
+      <MENGE>480</MENGE>
+      <MENEE>PCE</MENEE>
+      <E1EDP19 SEGMENT="1">
+        <QUALF>001</QUALF>
+        <IDTNR>WIDGET-001</IDTNR>
+      </E1EDP19>
+      <E1EDP19 SEGMENT="1">
+        <QUALF>002</QUALF>
+        <IDTNR>8712345001234</IDTNR>
+      </E1EDP19>
+      <E1EDPT1 SEGMENT="1">
+        <TDID>Z002</TDID>
+        <E1EDPT2 SEGMENT="1">
+          <TDLINE>Substitute item not permitted.</TDLINE>
+        </E1EDPT2>
+      </E1EDPT1>
+      <E1EDP05 SEGMENT="1">
+        <ALCKZ>+</ALCKZ>
+        <KSCHL>ZDIS</KSCHL>
+        <BETRG>250.00</BETRG>
+      </E1EDP05>
+    </E1EDP01>
+    <E1EDS01 SEGMENT="1">
+      <SUMID>002</SUMID>
+      <SUMME>1</SUMME>
+    </E1EDS01>
+  </IDOC>
+</ORDERS05>

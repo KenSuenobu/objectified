@@ -1,0 +1,21 @@
+ /*********************************************************************/
+ /* Root of the set: the record's shared blocks arrive by %INCLUDE.    */
+ /* Nothing here declares ADDRESS_BLOCK or MONEY_BLOCK — without the   */
+ /* included members the layout is incomplete, and the importer must   */
+ /* say so rather than emitting a short record.                        */
+ /*********************************************************************/
+ %INCLUDE ADDRBLK;
+ %INCLUDE MONYBLK;
+
+ DCL 1 ORDER_REC,
+       2 ORDER_ID       CHAR(10),
+       2 ORDER_DATE     FIXED DEC(8,0),
+       2 ORDER_CUSTOMER CHAR(10),
+       2 SHIP_TO        LIKE ADDRESS_BLOCK,
+       2 BILL_TO        LIKE ADDRESS_BLOCK,
+       2 ORDER_TOTAL    LIKE MONEY_BLOCK,
+       2 LINE_COUNT     FIXED BIN(15),
+       2 ORDER_LINES(20),
+         3 LINE_SKU     CHAR(18),
+         3 LINE_QTY     FIXED DEC(9,3),
+         3 LINE_PRICE   LIKE MONEY_BLOCK;

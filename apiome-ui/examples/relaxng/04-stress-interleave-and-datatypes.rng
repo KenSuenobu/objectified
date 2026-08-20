@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+  <a:documentation>
+    Every pattern combinator RELAX NG has, including the two JSON Schema cannot express:
+    interleave (unordered content) and the list/except datatype constructs.
+  </a:documentation>
+
+  <start>
+    <choice>
+      <ref name="record"/>
+      <ref name="envelope"/>
+    </choice>
+  </start>
+
+  <define name="record">
+    <element name="record">
+      <!-- interleave: children may appear in any order, each exactly once. -->
+      <interleave>
+        <element name="identity">
+          <ref name="identityContent"/>
+        </element>
+        <element name="audit">
+          <ref name="auditContent"/>
+        </element>
+        <optional>
+          <element name="notes">
+            <ref name="mixedProse"/>
+          </element>
+        </optional>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="identityContent">
+    <group>
+      <attribute name="id">
+        <data type="token">
+          <param name="minLength">4</param>
+          <param name="maxLength">32</param>
+        </data>
+      </attribute>
+      <oneOrMore>
+        <element name="alias">
+          <text/>
+        </element>
+      </oneOrMore>
+    </group>
+  </define>
+
+  <define name="auditContent">
+    <group>
+      <element name="createdAt">
+        <data type="dateTime"/>
+      </element>
+      <optional>
+        <element name="createdBy">
+          <data type="NCName"/>
+        </element>
+      </optional>
+      <element name="revisions">
+        <list>
+          <oneOrMore>
+            <data type="positiveInteger"/>
+          </oneOrMore>
+        </list>
+      </element>
+    </group>
+  </define>
+
+  <define name="mixedProse">
+    <mixed>
+      <zeroOrMore>
+        <choice>
+          <element name="emphasis"><text/></element>
+          <element name="link">
+            <attribute name="href">
+              <data type="anyURI"/>
+            </attribute>
+            <text/>
+          </element>
+        </choice>
+      </zeroOrMore>
+    </mixed>
+  </define>
+
+  <define name="envelope">
+    <element name="envelope">
+      <attribute name="kind">
+        <choice>
+          <value>request</value>
+          <value>response</value>
+        </choice>
+      </attribute>
+      <!-- data with an except clause: any token that is not "reserved". -->
+      <element name="channel">
+        <data type="token">
+          <except>
+            <value>reserved</value>
+          </except>
+        </data>
+      </element>
+      <element name="payload">
+        <choice>
+          <ref name="record"/>
+          <empty/>
+        </choice>
+      </element>
+      <zeroOrMore>
+        <element name="header">
+          <attribute name="name"><text/></attribute>
+          <attribute name="value"><text/></attribute>
+          <empty/>
+        </element>
+      </zeroOrMore>
+      <optional>
+        <element name="anything">
+          <ref name="anyElement"/>
+        </element>
+      </optional>
+    </element>
+  </define>
+
+  <define name="anyElement">
+    <element>
+      <anyName>
+        <except>
+          <nsName ns="http://example.com/reserved"/>
+        </except>
+      </anyName>
+      <zeroOrMore>
+        <choice>
+          <attribute>
+            <anyName/>
+          </attribute>
+          <text/>
+          <ref name="anyElement"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+</grammar>

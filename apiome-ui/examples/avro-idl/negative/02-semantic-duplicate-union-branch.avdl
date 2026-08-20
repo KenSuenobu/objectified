@@ -1,0 +1,10 @@
+/**
+ * Parses as IDL, but the union declares `string` twice. Avro forbids two branches of
+ * the same unnamed type in one union, so this is a semantically invalid schema.
+ */
+namespace com.example.broken;
+
+record Thing {
+  string id;
+  union { null, string, string } label = null;
+}

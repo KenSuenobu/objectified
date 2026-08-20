@@ -1,0 +1,13 @@
+{
+  "v": 6,
+  "id": "clx00000000000000000000e1",
+  "name": "Broken",
+  "folders": [],
+  "requests": [
+    {
+      "v": "11",
+      "name": "Ping",
+      "method": "GET",
+      "endpoint": "https://api.example.com/ping"
+  ]
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurator>
+  <domain name="General"/>
+  <cluster>
+    <domain>General</domain>
+    <name>Identify</name>
+    <code>0x0003</code>
+    <define>IDENTIFY_CLUSTER</define>
+    <description>Puts the device into an identifying state.</description>
+    <attribute side="server" code="0x0000" define="IDENTIFY_TIME" type="int16u"
+               default="0x0000" writable="true">IdentifyTime</attribute>
+    <command source="client" code="0x00" name="Identify" optional="false">
+      <arg name="IdentifyTime" type="int16u"/>
+    </command>
+  </cluster>
+</configurator>

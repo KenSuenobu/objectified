@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Message xmlns="http://www.ncpdp.org/schema/SCRIPT" version="010" release="006"
+         DatatypesVersion="20170715" TransportVersion="20170715" ECLVersion="20170715">
+  <Header>
+    <To Qualifier="P">1234567</To>
+    <From Qualifier="D">1234567893</From>
+    <MessageID>MSG-20260819-0002</MessageID>
+    <RelatesToMessageID>MSG-20260819-0000</RelatesToMessageID>
+    <SentTime>2026-08-19T11:05:00Z</SentTime>
+    <SenderSoftware>
+      <SenderSoftwareDeveloper>Example EHR</SenderSoftwareDeveloper>
+      <SenderSoftwareProduct>Prescribe</SenderSoftwareProduct>
+      <SenderSoftwareVersionRelease>12.4</SenderSoftwareVersionRelease>
+    </SenderSoftware>
+    <PrescriberOrderNumber>RX-2026-004471</PrescriberOrderNumber>
+  </Header>
+  <Body>
+    <NewRx>
+      <Patient>
+        <HumanPatient>
+          <Identification>
+            <MedicalRecordIdentificationNumberEHR>PAT-0042</MedicalRecordIdentificationNumberEHR>
+          </Identification>
+          <Name><LastName>Sample</LastName><FirstName>Jordan</FirstName><MiddleName>T</MiddleName></Name>
+          <Gender>F</Gender>
+          <DateOfBirth><Date>1985-02-14</Date></DateOfBirth>
+          <Address>
+            <AddressLine1>12 Example Street</AddressLine1>
+            <City>Springfield</City>
+            <StateProvince>IL</StateProvince>
+            <PostalCode>627010000</PostalCode>
+            <CountryCode>US</CountryCode>
+          </Address>
+          <CommunicationNumbers>
+            <PrimaryTelephone><Number>5555550100</Number></PrimaryTelephone>
+          </CommunicationNumbers>
+        </HumanPatient>
+      </Patient>
+      <Pharmacy>
+        <Identification>
+          <NCPDPID>1234567</NCPDPID>
+          <NPI>1234567890</NPI>
+        </Identification>
+        <BusinessName>Example Community Pharmacy</BusinessName>
+        <Address>
+          <AddressLine1>440 Main Street</AddressLine1>
+          <City>Springfield</City>
+          <StateProvince>IL</StateProvince>
+          <PostalCode>627010000</PostalCode>
+        </Address>
+        <CommunicationNumbers>
+          <PrimaryTelephone><Number>5555550111</Number></PrimaryTelephone>
+        </CommunicationNumbers>
+      </Pharmacy>
+      <Prescriber>
+        <NonVeterinarian>
+          <Identification>
+            <NPI>1234567893</NPI>
+            <DEANumber>AC1234563</DEANumber>
+            <StateLicenseNumber>IL-000112</StateLicenseNumber>
+          </Identification>
+          <Name><LastName>Clinician</LastName><FirstName>Robin</FirstName><Suffix>MD</Suffix></Name>
+          <Address>
+            <AddressLine1>1 Clinic Way</AddressLine1>
+            <City>Springfield</City>
+            <StateProvince>IL</StateProvince>
+            <PostalCode>627010000</PostalCode>
+          </Address>
+          <CommunicationNumbers>
+            <PrimaryTelephone><Number>5555550122</Number></PrimaryTelephone>
+          </CommunicationNumbers>
+          <PracticeLocation><BusinessName>Example Family Practice</BusinessName></PracticeLocation>
+        </NonVeterinarian>
+      </Prescriber>
+      <MedicationPrescribed>
+        <DrugDescription>Amoxicillin 500 MG oral capsule</DrugDescription>
+        <DrugCoded>
+          <ProductCode>00093310501</ProductCode>
+          <ProductCodeQualifier>ND</ProductCodeQualifier>
+          <Strength>
+            <StrengthValue>500</StrengthValue>
+            <StrengthForm><Code>C48480</Code></StrengthForm>
+            <StrengthUnitOfMeasure><Code>C28253</Code></StrengthUnitOfMeasure>
+          </Strength>
+          <DrugDBCode>
+            <Code>1234567</Code>
+            <Qualifier>SBD</Qualifier>
+          </DrugDBCode>
+        </DrugCoded>
+        <Quantity>
+          <Value>21</Value>
+          <CodeListQualifier>38</CodeListQualifier>
+          <QuantityUnitOfMeasure><Code>C48480</Code></QuantityUnitOfMeasure>
+        </Quantity>
+        <DaysSupply>7</DaysSupply>
+        <Substitutions>0</Substitutions>
+        <WrittenDate><Date>2026-08-19</Date></WrittenDate>
+        <NumberOfRefills>0</NumberOfRefills>
+        <Diagnosis>
+          <ClinicalInformationQualifier>1</ClinicalInformationQualifier>
+          <Primary><Code>J01.90</Code><Qualifier>ABF</Qualifier></Primary>
+        </Diagnosis>
+        <Sig>
+          <SigText>Take one capsule by mouth three times daily for seven days.</SigText>
+        </Sig>
+        <Note>Patient reports no penicillin allergy.</Note>
+      </MedicationPrescribed>
+    </NewRx>
+  </Body>
+</Message>

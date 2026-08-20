@@ -1,0 +1,84 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:   <https://example.com/commerce#> .
+
+<https://example.com/commerce> a owl:Ontology ;
+    rdfs:label "Commerce ontology" ;
+    owl:versionInfo "2.3.0" ;
+    rdfs:comment "Customers, orders and the products they contain." .
+
+# ---------------------------------------------------------------- classes
+ex:Agent a owl:Class ;
+    rdfs:label "Agent" .
+
+ex:Customer a owl:Class ;
+    rdfs:label "Customer" ;
+    rdfs:subClassOf ex:Agent ;
+    rdfs:comment "A party that places orders." .
+
+ex:Organisation a owl:Class ;
+    rdfs:label "Organisation" ;
+    rdfs:subClassOf ex:Agent .
+
+ex:Order a owl:Class ;
+    rdfs:label "Order" .
+
+ex:OrderLine a owl:Class ;
+    rdfs:label "Order line" .
+
+ex:Product a owl:Class ;
+    rdfs:label "Product" .
+
+ex:Customer owl:disjointWith ex:Order .
+
+# ---------------------------------------------------------------- object properties
+ex:placedBy a owl:ObjectProperty ;
+    rdfs:label "placed by" ;
+    rdfs:domain ex:Order ;
+    rdfs:range ex:Customer .
+
+ex:placed a owl:ObjectProperty ;
+    rdfs:label "placed" ;
+    owl:inverseOf ex:placedBy ;
+    rdfs:domain ex:Customer ;
+    rdfs:range ex:Order .
+
+ex:hasLine a owl:ObjectProperty ;
+    rdfs:domain ex:Order ;
+    rdfs:range ex:OrderLine .
+
+ex:refersTo a owl:ObjectProperty ;
+    rdfs:domain ex:OrderLine ;
+    rdfs:range ex:Product ;
+    a owl:FunctionalProperty .
+
+# ---------------------------------------------------------------- datatype properties
+ex:orderId a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:label "order identifier" ;
+    rdfs:domain ex:Order ;
+    rdfs:range xsd:string .
+
+ex:placedAt a owl:DatatypeProperty ;
+    rdfs:domain ex:Order ;
+    rdfs:range xsd:dateTime .
+
+ex:quantity a owl:DatatypeProperty ;
+    rdfs:domain ex:OrderLine ;
+    rdfs:range xsd:positiveInteger .
+
+ex:sku a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:domain ex:Product ;
+    rdfs:range xsd:string .
+
+ex:price a owl:DatatypeProperty ;
+    rdfs:domain ex:Product ;
+    rdfs:range xsd:decimal .
+
+# ---------------------------------------------------------------- individuals
+ex:OrderStatus a owl:Class .
+ex:New a owl:NamedIndividual , ex:OrderStatus .
+ex:Paid a owl:NamedIndividual , ex:OrderStatus .
+ex:Shipped a owl:NamedIndividual , ex:OrderStatus .
+ex:Cancelled a owl:NamedIndividual , ex:OrderStatus .

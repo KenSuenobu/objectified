@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.001.08">
+  <CstmrDrctDbtInitn>
+    <GrpHdr>
+      <MsgId>DD-20260819-0001</MsgId>
+      <CreDtTm>2026-08-19T09:00:00</CreDtTm>
+      <NbOfTxs>4</NbOfTxs>
+      <CtrlSum>487.45</CtrlSum>
+      <InitgPty>
+        <Nm>Example Utilities NV</Nm>
+        <Id><OrgId><Othr><Id>NL98ZZZ123456780000</Id></Othr></OrgId></Id>
+      </InitgPty>
+    </GrpHdr>
+
+    <PmtInf>
+      <PmtInfId>DD-FRST-2026-08</PmtInfId>
+      <PmtMtd>DD</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>2</NbOfTxs>
+      <CtrlSum>235.20</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl><Cd>SEPA</Cd></SvcLvl>
+        <LclInstrm><Cd>CORE</Cd></LclInstrm>
+        <SeqTp>FRST</SeqTp>
+      </PmtTpInf>
+      <ReqdColltnDt>2026-08-26</ReqdColltnDt>
+      <Cdtr><Nm>Example Utilities NV</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>NL91ABNA0417164300</IBAN></Id></CdtrAcct>
+      <CdtrAgt><FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId></CdtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtrSchmeId>
+        <Id>
+          <PrvtId>
+            <Othr>
+              <Id>NL98ZZZ123456780000</Id>
+              <SchmeNm><Prtry>SEPA</Prtry></SchmeNm>
+            </Othr>
+          </PrvtId>
+        </Id>
+      </CdtrSchmeId>
+
+      <DrctDbtTxInf>
+        <PmtId><EndToEndId>DD-0001</EndToEndId></PmtId>
+        <InstdAmt Ccy="EUR">120.45</InstdAmt>
+        <DrctDbtTx>
+          <MndtRltdInf>
+            <MndtId>MND-0000114</MndtId>
+            <DtOfSgntr>2026-07-01</DtOfSgntr>
+            <AmdmntInd>false</AmdmntInd>
+          </MndtRltdInf>
+        </DrctDbtTx>
+        <DbtrAgt><FinInstnId><BICFI>INGBNL2A</BICFI></FinInstnId></DbtrAgt>
+        <Dbtr><Nm>Sample Pat</Nm></Dbtr>
+        <DbtrAcct><Id><IBAN>NL69INGB0123456789</IBAN></Id></DbtrAcct>
+        <RmtInf><Ustrd>Electricity August 2026</Ustrd></RmtInf>
+      </DrctDbtTxInf>
+
+      <DrctDbtTxInf>
+        <PmtId><EndToEndId>DD-0002</EndToEndId></PmtId>
+        <InstdAmt Ccy="EUR">114.75</InstdAmt>
+        <DrctDbtTx>
+          <MndtRltdInf>
+            <MndtId>MND-0000115</MndtId>
+            <DtOfSgntr>2026-07-02</DtOfSgntr>
+            <AmdmntInd>true</AmdmntInd>
+            <AmdmntInfDtls>
+              <OrgnlMndtId>MND-0000099</OrgnlMndtId>
+              <OrgnlDbtrAcct><Id><IBAN>NL69INGB0999999999</IBAN></Id></OrgnlDbtrAcct>
+            </AmdmntInfDtls>
+          </MndtRltdInf>
+        </DrctDbtTx>
+        <DbtrAgt><FinInstnId><BICFI>INGBNL2A</BICFI></FinInstnId></DbtrAgt>
+        <Dbtr><Nm>Sample Sam</Nm></Dbtr>
+        <DbtrAcct><Id><IBAN>NL69INGB0123456790</IBAN></Id></DbtrAcct>
+        <RmtInf><Ustrd>Electricity August 2026</Ustrd></RmtInf>
+      </DrctDbtTxInf>
+    </PmtInf>
+
+    <PmtInf>
+      <PmtInfId>DD-RCUR-2026-08</PmtInfId>
+      <PmtMtd>DD</PmtMtd>
+      <NbOfTxs>2</NbOfTxs>
+      <CtrlSum>252.25</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl><Cd>SEPA</Cd></SvcLvl>
+        <LclInstrm><Cd>B2B</Cd></LclInstrm>
+        <SeqTp>RCUR</SeqTp>
+        <CtgyPurp><Cd>SUPP</Cd></CtgyPurp>
+      </PmtTpInf>
+      <ReqdColltnDt>2026-08-26</ReqdColltnDt>
+      <Cdtr><Nm>Example Utilities NV</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>NL91ABNA0417164300</IBAN></Id></CdtrAcct>
+      <CdtrAgt><FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId></CdtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtrSchmeId>
+        <Id><PrvtId><Othr><Id>NL98ZZZ123456780000</Id>
+          <SchmeNm><Prtry>SEPA</Prtry></SchmeNm></Othr></PrvtId></Id>
+      </CdtrSchmeId>
+
+      <DrctDbtTxInf>
+        <PmtId><InstrId>I-0003</InstrId><EndToEndId>DD-0003</EndToEndId></PmtId>
+        <InstdAmt Ccy="EUR">190.00</InstdAmt>
+        <ChrgBr>SLEV</ChrgBr>
+        <DrctDbtTx>
+          <MndtRltdInf>
+            <MndtId>MND-B2B-0007</MndtId>
+            <DtOfSgntr>2025-01-15</DtOfSgntr>
+            <AmdmntInd>false</AmdmntInd>
+          </MndtRltdInf>
+        </DrctDbtTx>
+        <DbtrAgt><FinInstnId><BICFI>RABONL2U</BICFI></FinInstnId></DbtrAgt>
+        <Dbtr>
+          <Nm>Acme Retail BV</Nm>
+          <PstlAdr><TwnNm>Rotterdam</TwnNm><Ctry>NL</Ctry></PstlAdr>
+        </Dbtr>
+        <DbtrAcct><Id><IBAN>NL44RABO0123456789</IBAN></Id></DbtrAcct>
+        <RmtInf>
+          <Strd>
+            <RfrdDocInf>
+              <Tp><CdOrPrtry><Cd>CINV</Cd></CdOrPrtry></Tp>
+              <Nb>INV-2026-4411</Nb>
+            </RfrdDocInf>
+          </Strd>
+        </RmtInf>
+      </DrctDbtTxInf>
+
+      <DrctDbtTxInf>
+        <PmtId><EndToEndId>DD-0004</EndToEndId></PmtId>
+        <InstdAmt Ccy="EUR">62.25</InstdAmt>
+        <DrctDbtTx>
+          <MndtRltdInf>
+            <MndtId>MND-B2B-0008</MndtId>
+            <DtOfSgntr>2025-03-02</DtOfSgntr>
+          </MndtRltdInf>
+        </DrctDbtTx>
+        <DbtrAgt><FinInstnId><Othr><Id>NOTPROVIDED</Id></Othr></FinInstnId></DbtrAgt>
+        <Dbtr><Nm>Small Trader VOF</Nm></Dbtr>
+        <DbtrAcct><Id><IBAN>NL18RABO0123459876</IBAN></Id></DbtrAcct>
+        <RmtInf><Ustrd>Monthly service fee</Ustrd></RmtInf>
+      </DrctDbtTxInf>
+    </PmtInf>
+  </CstmrDrctDbtInitn>
+</Document>

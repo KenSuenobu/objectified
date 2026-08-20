@@ -1,0 +1,14 @@
+*********************************************************************
+* The program view of CUSTDB: read-only on the customer and address  *
+* segments, insert allowed on orders. PROCOPT is the access profile  *
+* FMT-11.2 carries in extras.                                        *
+*********************************************************************
+         PCB   TYPE=DB,DBDNAME=CUSTDB,PROCOPT=G,KEYLEN=20
+         SENSEG NAME=CUSTOMER,PARENT=0,PROCOPT=G
+         SENFLD NAME=CUSTID,START=1
+         SENFLD NAME=CUSTNAME,START=11
+         SENSEG NAME=ADDRESS,PARENT=CUSTOMER,PROCOPT=G
+         SENSEG NAME=ORDER,PARENT=CUSTOMER,PROCOPT=I
+*
+         PSBGEN LANG=COBOL,PSBNAME=CUSTINQ,CMPAT=YES
+         END

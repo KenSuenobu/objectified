@@ -1,0 +1,82 @@
+/* Every VSAM organisation and the parameter forms that describe them. */
+
+  /* Key-sequenced: keys, free space, reuse, extended addressability. */
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.ORDER.KSDS)                    -
+          INDEXED                                     -
+          KEYS(20 0)                                  -
+          RECORDSIZE(240 500)                         -
+          FREESPACE(20 20)                            -
+          SHAREOPTIONS(3 3)                           -
+          REUSE                                       -
+          SPANNED                                     -
+          ERASE                                       -
+          BUFFERSPACE(37888)                          -
+          DATACLASS(EXTENDED)                         -
+          MANAGEMENTCLASS(MCSTD)                      -
+          STORAGECLASS(SCFAST)                        -
+          RECOVERY                                    -
+          CYLINDERS(200 50))
+
+  /* Entry-sequenced: no keys, records addressed by RBA. */
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.AUDIT.ESDS)                    -
+          NONINDEXED                                  -
+          RECORDSIZE(512 4096)                        -
+          SPANNED                                     -
+          SHAREOPTIONS(2 3)                           -
+          NOREUSE                                     -
+          MEGABYTES(500 100)                          -
+          VOLUMES(VOL010))
+
+  /* Relative-record: fixed-length slots addressed by number. */
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.SLOT.RRDS)                     -
+          NUMBERED                                    -
+          RECORDSIZE(128 128)                         -
+          SHAREOPTIONS(1 3)                           -
+          TRACKS(300 60)                              -
+          VOLUMES(VOL011))
+
+  /* Variable relative-record. */
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.SLOTV.VRRDS)                   -
+          NUMBERED                                    -
+          RECORDSIZE(80 400)                          -
+          RECORDS(100000 20000)                       -
+          VOLUMES(VOL012))
+
+  /* Linear: no record structure at all — a declared limit for a schema
+     importer, since the layout is entirely in the application. */
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.LINEAR.LDS)                    -
+          LINEAR                                      -
+          SHAREOPTIONS(3 3)                           -
+          CYLINDERS(100 20)                           -
+          VOLUMES(VOL013))
+
+  /* Alternate index over the KSDS, plus the path that joins them. */
+  DEFINE AIX                                          -
+         (NAME(EXAMPLE.ORDER.AIX.CUST)                -
+          RELATE(EXAMPLE.ORDER.KSDS)                  -
+          KEYS(10 20)                                 -
+          RECORDSIZE(60 4086)                         -
+          NONUNIQUEKEY                                -
+          UPGRADE                                     -
+          CYLINDERS(20 5)                             -
+          VOLUMES(VOL001))
+
+  DEFINE PATH                                         -
+         (NAME(EXAMPLE.ORDER.PATH.CUST)               -
+          PATHENTRY(EXAMPLE.ORDER.AIX.CUST)           -
+          UPDATE)
+
+  /* Generation data group: a schema-free container of like-typed files. */
+  DEFINE GDG                                          -
+         (NAME(EXAMPLE.DAILY.EXTRACT)                 -
+          LIMIT(30)                                   -
+          SCRATCH                                     -
+          NOEMPTY)
+
+  BLDINDEX INDATASET(EXAMPLE.ORDER.KSDS)              -
+           OUTDATASET(EXAMPLE.ORDER.AIX.CUST)

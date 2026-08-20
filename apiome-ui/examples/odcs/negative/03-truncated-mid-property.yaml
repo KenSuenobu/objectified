@@ -1,0 +1,18 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: 0f6d2f0e-1b2c-4a5e-9f2a-0000000000e3
+name: orders
+version: 2.3.0
+status: active
+schema:
+  - name: orders
+    logicalType: object
+    physicalType: table
+    properties:
+      - name: order_id
+        logicalType: string
+        physicalType: varchar(20)
+        required: true
+      - name: placed_at
+        logicalType: date
+        physicalType: "timestam

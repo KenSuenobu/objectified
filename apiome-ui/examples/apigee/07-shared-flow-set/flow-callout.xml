@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fileset member: the FlowCallout policy that binds the proxy step to the shared flow
+  bundle by name. It is the reference edge between the two files above.
+-->
+<FlowCallout name="Call-Security-SharedFlow">
+    <DisplayName>Call Security SharedFlow</DisplayName>
+    <SharedFlowBundle>security-v1</SharedFlowBundle>
+    <Parameters>
+        <Parameter name="requiredScope">shipments.read</Parameter>
+        <Parameter name="quotaIdentifier">developer.app.name</Parameter>
+    </Parameters>
+</FlowCallout>

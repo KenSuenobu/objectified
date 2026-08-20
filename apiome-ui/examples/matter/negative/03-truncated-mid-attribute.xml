@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurator>
+  <domain name="HVAC"/>
+  <cluster>
+    <domain>HVAC</domain>
+    <name>Thermostat</name>
+    <code>0x0201</code>
+    <define>THERMOSTAT_CLUSTER</define>
+    <attribute side="server" code="0x0000" define="LOCAL_TEMPERATURE" type="temper

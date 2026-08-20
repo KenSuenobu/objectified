@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0"
+         ns="http://example.com/publishing/article"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+  <a:documentation>
+    Publishing article grammar in the shape DocBook- and TEI-derived house schemas take:
+    a metadata header, recursive sections, mixed-content prose, and a figure model.
+  </a:documentation>
+
+  <start>
+    <ref name="article"/>
+  </start>
+
+  <define name="article">
+    <element name="article">
+      <attribute name="lang">
+        <data type="language"/>
+      </attribute>
+      <optional>
+        <attribute name="status">
+          <choice>
+            <value>draft</value>
+            <value>review</value>
+            <value>published</value>
+          </choice>
+        </attribute>
+      </optional>
+      <ref name="info"/>
+      <oneOrMore>
+        <ref name="section"/>
+      </oneOrMore>
+      <optional>
+        <ref name="bibliography"/>
+      </optional>
+    </element>
+  </define>
+
+  <define name="info">
+    <element name="info">
+      <interleave>
+        <element name="title"><ref name="inline"/></element>
+        <optional>
+          <element name="subtitle"><ref name="inline"/></element>
+        </optional>
+        <oneOrMore>
+          <element name="author">
+            <attribute name="orcid">
+              <optional>
+                <data type="string">
+                  <param name="pattern">[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]</param>
+                </data>
+              </optional>
+            </attribute>
+            <element name="name"><text/></element>
+            <optional>
+              <element name="affiliation"><text/></element>
+            </optional>
+          </element>
+        </oneOrMore>
+        <element name="published">
+          <data type="date"/>
+        </element>
+        <zeroOrMore>
+          <element name="keyword"><text/></element>
+        </zeroOrMore>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="section">
+    <element name="section">
+      <optional>
+        <attribute name="id">
+          <data type="ID"/>
+        </attribute>
+      </optional>
+      <element name="title"><ref name="inline"/></element>
+      <zeroOrMore>
+        <choice>
+          <ref name="para"/>
+          <ref name="figure"/>
+          <ref name="section"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="para">
+    <element name="para">
+      <ref name="inline"/>
+    </element>
+  </define>
+
+  <define name="figure">
+    <element name="figure">
+      <attribute name="id">
+        <data type="ID"/>
+      </attribute>
+      <element name="caption"><ref name="inline"/></element>
+      <element name="image">
+        <attribute name="src"><data type="anyURI"/></attribute>
+        <optional>
+          <attribute name="width"><data type="positiveInteger"/></attribute>
+        </optional>
+        <empty/>
+      </element>
+    </element>
+  </define>
+
+  <define name="inline">
+    <mixed>
+      <zeroOrMore>
+        <choice>
+          <element name="emphasis"><ref name="inline"/></element>
+          <element name="code"><text/></element>
+          <element name="citation">
+            <attribute name="ref"><data type="IDREF"/></attribute>
+            <empty/>
+          </element>
+          <element name="link">
+            <attribute name="href"><data type="anyURI"/></attribute>
+            <ref name="inline"/>
+          </element>
+        </choice>
+      </zeroOrMore>
+    </mixed>
+  </define>
+
+  <define name="bibliography">
+    <element name="bibliography">
+      <oneOrMore>
+        <element name="entry">
+          <attribute name="id"><data type="ID"/></attribute>
+          <element name="citationTitle"><text/></element>
+          <element name="year"><data type="gYear"/></element>
+          <optional>
+            <element name="doi"><text/></element>
+          </optional>
+        </element>
+      </oneOrMore>
+    </element>
+  </define>
+</grammar>

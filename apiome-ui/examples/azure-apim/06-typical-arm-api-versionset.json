@@ -1,0 +1,84 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "ApimServiceName": { "type": "string", "defaultValue": "example-apim" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ApiManagement/service/apiVersionSets",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/catalogue-version-set')]",
+      "properties": {
+        "displayName": "Catalogue",
+        "versioningScheme": "Segment",
+        "description": "Versioned by URL segment: /catalogue/v1, /catalogue/v2."
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/catalogue-v1')]",
+      "properties": {
+        "displayName": "Catalogue API",
+        "path": "catalogue",
+        "protocols": ["https"],
+        "apiVersion": "v1",
+        "apiVersionSetId": "catalogue-version-set",
+        "serviceUrl": "https://catalogue.internal.example.com/v1",
+        "isCurrent": false,
+        "subscriptionRequired": true
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/catalogue-v2')]",
+      "properties": {
+        "displayName": "Catalogue API",
+        "path": "catalogue",
+        "protocols": ["https"],
+        "apiVersion": "v2",
+        "apiVersionSetId": "catalogue-version-set",
+        "serviceUrl": "https://catalogue.internal.example.com/v2",
+        "isCurrent": true,
+        "subscriptionRequired": true
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/catalogue-v2/list-products')]",
+      "properties": {
+        "displayName": "List products",
+        "method": "GET",
+        "urlTemplate": "/products",
+        "request": {
+          "queryParameters": [{ "name": "category", "type": "string", "required": false }]
+        },
+        "responses": [{ "statusCode": 200 }]
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/catalogue-v2/get-product')]",
+      "properties": {
+        "displayName": "Get product",
+        "method": "GET",
+        "urlTemplate": "/products/{sku}",
+        "templateParameters": [{ "name": "sku", "type": "string", "required": true }],
+        "responses": [{ "statusCode": 200 }, { "statusCode": 404 }]
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/catalogue-v2/list-products/policy')]",
+      "properties": {
+        "format": "xml",
+        "value": "<policies><inbound><base /><rate-limit-by-key calls=\"300\" renewal-period=\"60\" counter-key=\"@(context.Subscription.Id)\" /><cache-lookup vary-by-developer=\"false\" vary-by-developer-groups=\"false\"><vary-by-query-parameter>category</vary-by-query-parameter></cache-lookup></inbound><backend><base /></backend><outbound><base /><cache-store duration=\"300\" /></outbound><on-error><base /></on-error></policies>"
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UANodeSet xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd">
+  <NamespaceUris>
+    <Uri>http://example.com/UA/Machine/</Uri>
+  </NamespaceUris>
+  <UADataType NodeId="ns=1;i=3001" BrowseName="1:MachineState">
+    <DisplayName>MachineState</DisplayName>
+    <Definition Name="1:MachineState">
+      <Field Name="Idle" Value="0"/>
+      <Field Name="Running" Val

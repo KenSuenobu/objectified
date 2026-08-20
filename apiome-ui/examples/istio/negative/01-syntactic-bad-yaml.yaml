@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: broken
+  namespace: storefront
+spec:
+  hosts:
+    - broken.example.com
+  http:
+    - match:
+        - uri:
+           prefix: /broken
+      route:
+        - destination:
+            host: broken.storefront.svc.cluster.local

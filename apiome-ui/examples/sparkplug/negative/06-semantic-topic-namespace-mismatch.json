@@ -1,0 +1,10 @@
+{
+  "namespace": "spBv1.0",
+  "groupId": "PlantAmsterdam",
+  "edgeNodeId": "Line1",
+  "topics": [
+    { "messageType": "DBIRTH", "topic": "spAv1.0/PlantAmsterdam/DBIRTH/Line1/Filler01" },
+    { "messageType": "DDATA", "topic": "spBv1.0/OtherPlant/DDATA/Line9" },
+    { "messageType": "NDATA", "topic": "spBv1.0/PlantAmsterdam/NDATA" }
+  ]
+}

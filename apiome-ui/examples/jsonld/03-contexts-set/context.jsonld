@@ -1,0 +1,14 @@
+{
+  "@context": [
+    "shared-context.jsonld",
+    {
+      "@version": 1.1,
+      "@vocab": "https://example.com/orders/ns#",
+      "Order": "https://example.com/orders/ns#Order",
+      "orderId": "https://example.com/orders/ns#orderId",
+      "placedAt": { "@id": "https://example.com/orders/ns#placedAt", "@type": "xsd:dateTime" },
+      "lines": { "@id": "https://example.com/orders/ns#line", "@container": "@list" },
+      "shipTo": { "@id": "https://example.com/orders/ns#shipTo", "@type": "@id" }
+    }
+  ]
+}

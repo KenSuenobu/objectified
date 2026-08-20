@@ -1,0 +1,8 @@
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.CUSTOMER.KSDS)                 -
+          INDEXED                                     -
+          KEYS(10 0)                                  -
+          RECORDSIZE(200 200)                         -
+          FREESPACE(10 20)                            -
+          CYLINDERS(50 10)                            -
+          VOLUMES(VOL001))

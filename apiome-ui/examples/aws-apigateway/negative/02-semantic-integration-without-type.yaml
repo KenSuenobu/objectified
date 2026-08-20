@@ -1,0 +1,16 @@
+openapi: 3.0.1
+info:
+  title: typeless-integration
+  version: "1.0"
+paths:
+  /orders:
+    get:
+      responses:
+        "200":
+          description: 200 response
+      # The extension is present but declares no `type`, so nothing says whether this is a
+      # Lambda proxy, an HTTP proxy, an AWS service integration or a mock: the backend
+      # cannot be resolved.
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        passthroughBehavior: when_no_match

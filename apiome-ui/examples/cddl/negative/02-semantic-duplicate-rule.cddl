@@ -1,0 +1,11 @@
+; `person` is defined twice with `=`, which CDDL forbids: a rule name may be assigned
+; once, and extended only through /= or //=.
+person = {
+  name: tstr,
+  age: uint,
+}
+
+person = {
+  full-name: tstr,
+  years: uint,
+}

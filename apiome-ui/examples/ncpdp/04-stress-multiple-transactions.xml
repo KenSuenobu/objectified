@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  One transport document carrying several SCRIPT transaction types in sequence, the way a
+  batch exchange presents them. Each Message element is a transaction in its own right:
+  the transaction type is what detection must record, and it is the Body's first child.
+-->
+<Messages xmlns="http://www.ncpdp.org/schema/SCRIPT">
+  <Message version="010" release="006">
+    <Header>
+      <To Qualifier="D">1234567893</To>
+      <From Qualifier="P">1234567</From>
+      <MessageID>MSG-20260819-0010</MessageID>
+      <SentTime>2026-08-19T13:00:00Z</SentTime>
+      <PrescriberOrderNumber>RX-2026-004471</PrescriberOrderNumber>
+    </Header>
+    <Body>
+      <RxFill>
+        <FillStatus><Dispensed/></FillStatus>
+        <Patient>
+          <HumanPatient>
+            <Name><LastName>Sample</LastName><FirstName>Jordan</FirstName></Name>
+            <DateOfBirth><Date>1985-02-14</Date></DateOfBirth>
+          </HumanPatient>
+        </Patient>
+        <Pharmacy><Identification><NCPDPID>1234567</NCPDPID></Identification></Pharmacy>
+        <MedicationDispensed>
+          <DrugDescription>Amoxicillin 500 MG oral capsule</DrugDescription>
+          <Quantity><Value>21</Value><CodeListQualifier>38</CodeListQualifier></Quantity>
+          <DaysSupply>7</DaysSupply>
+          <LastFillDate><Date>2026-08-19</Date></LastFillDate>
+        </MedicationDispensed>
+      </RxFill>
+    </Body>
+  </Message>
+
+  <Message version="010" release="006">
+    <Header>
+      <To Qualifier="D">1234567893</To>
+      <From Qualifier="P">1234567</From>
+      <MessageID>MSG-20260819-0011</MessageID>
+      <SentTime>2026-08-19T13:05:00Z</SentTime>
+    </Header>
+    <Body>
+      <RxRenewalRequest>
+        <Patient>
+          <HumanPatient>
+            <Name><LastName>Sample</LastName><FirstName>Chris</FirstName></Name>
+            <DateOfBirth><Date>1962-09-05</Date></DateOfBirth>
+          </HumanPatient>
+        </Patient>
+        <Pharmacy><Identification><NCPDPID>1234567</NCPDPID></Identification></Pharmacy>
+        <Prescriber>
+          <NonVeterinarian>
+            <Identification><NPI>1234567893</NPI></Identification>
+          </NonVeterinarian>
+        </Prescriber>
+        <MedicationDispensed>
+          <DrugDescription>Ramipril 5 MG oral capsule</DrugDescription>
+          <Quantity><Value>90</Value><CodeListQualifier>38</CodeListQualifier></Quantity>
+          <DaysSupply>90</DaysSupply>
+          <NumberOfRefills>0</NumberOfRefills>
+        </MedicationDispensed>
+      </RxRenewalRequest>
+    </Body>
+  </Message>
+
+  <Message version="010" release="006">
+    <Header>
+      <To Qualifier="P">1234567</To>
+      <From Qualifier="D">1234567893</From>
+      <MessageID>MSG-20260819-0012</MessageID>
+      <RelatesToMessageID>MSG-20260819-0002</RelatesToMessageID>
+      <SentTime>2026-08-19T13:10:00Z</SentTime>
+    </Header>
+    <Body>
+      <CancelRx>
+        <Patient>
+          <HumanPatient>
+            <Name><LastName>Sample</LastName><FirstName>Jordan</FirstName></Name>
+            <DateOfBirth><Date>1985-02-14</Date></DateOfBirth>
+          </HumanPatient>
+        </Patient>
+        <Pharmacy><Identification><NCPDPID>1234567</NCPDPID></Identification></Pharmacy>
+        <Prescriber>
+          <NonVeterinarian><Identification><NPI>1234567893</NPI></Identification></NonVeterinarian>
+        </Prescriber>
+        <MedicationPrescribed>
+          <DrugDescription>Amoxicillin 500 MG oral capsule</DrugDescription>
+          <Quantity><Value>21</Value><CodeListQualifier>38</CodeListQualifier></Quantity>
+        </MedicationPrescribed>
+      </CancelRx>
+    </Body>
+  </Message>
+
+  <Message version="010" release="006">
+    <Header>
+      <To Qualifier="D">1234567893</To>
+      <From Qualifier="P">1234567</From>
+      <MessageID>MSG-20260819-0013</MessageID>
+      <RelatesToMessageID>MSG-20260819-0012</RelatesToMessageID>
+      <SentTime>2026-08-19T13:11:00Z</SentTime>
+    </Header>
+    <Body>
+      <Status>
+        <Code>010</Code>
+        <Description>Transaction accepted.</Description>
+      </Status>
+    </Body>
+  </Message>
+
+  <Message version="010" release="006">
+    <Header>
+      <To Qualifier="D">1234567893</To>
+      <From Qualifier="P">1234567</From>
+      <MessageID>MSG-20260819-0014</MessageID>
+      <RelatesToMessageID>MSG-20260819-0011</RelatesToMessageID>
+      <SentTime>2026-08-19T13:12:00Z</SentTime>
+    </Header>
+    <Body>
+      <Error>
+        <Code>900</Code>
+        <DescriptionCode>Prescriber not found for the supplied NPI.</DescriptionCode>
+      </Error>
+    </Body>
+  </Message>
+</Messages>

@@ -1,0 +1,27 @@
+<!--
+  Product catalogue: sequences, choices, occurrence indicators and the full ATTLIST
+  default vocabulary.
+-->
+
+<!ELEMENT catalogue (product+)>
+<!ATTLIST catalogue
+          version CDATA #REQUIRED
+          generator CDATA #IMPLIED>
+
+<!ELEMENT product (name, description?, price, tag*)>
+<!ATTLIST product
+          sku ID #REQUIRED
+          discontinued (yes|no) "no"
+          kind (physical|digital|service) #REQUIRED>
+
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT description (#PCDATA)>
+
+<!ELEMENT price (#PCDATA)>
+<!ATTLIST price
+          currency (EUR|GBP|USD) #REQUIRED
+          scheme CDATA #FIXED "iso-4217">
+
+<!ELEMENT tag (#PCDATA)>
+<!ATTLIST tag
+          lang NMTOKEN #IMPLIED>

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package com.example.orders;
+
+message Order {
+  string order_id = 1;
+  string customer_id = 2;
+  double total = 3;
+}
+
+service OrderService {
+  rpc GetOrder(Order) returns (Order);
+}

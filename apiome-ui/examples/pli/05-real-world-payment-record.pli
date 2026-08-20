@@ -1,0 +1,64 @@
+ /*********************************************************************/
+ /* Payment instruction record in the shape a bank's PL/I applications */
+ /* pass between modules: header, party blocks, amount blocks, a       */
+ /* repeating charges table and a trailer.                             */
+ /* Reconstructed shape; no upstream text copied.                      */
+ /*********************************************************************/
+ DCL 1 PAYMENT_REC,
+
+       2 PAY_HEADER,
+         3 PAY_RECORD_TYPE   CHAR(3),          /* 'PAY'                */
+         3 PAY_VERSION       CHAR(2),          /* '03'                 */
+         3 PAY_REFERENCE     CHAR(16),
+         3 PAY_CREATED_DATE  FIXED DEC(8,0),   /* YYYYMMDD             */
+         3 PAY_CREATED_TIME  FIXED DEC(6,0),   /* HHMMSS               */
+         3 PAY_CHANNEL       CHAR(4),
+         3 PAY_PRIORITY      CHAR(1),
+
+       2 PAY_ORDERING_PARTY,
+         3 ORD_ACCOUNT       CHAR(34),
+         3 ORD_BIC           CHAR(11),
+         3 ORD_NAME          CHAR(70),
+         3 ORD_ADDRESS(3)    CHAR(70),
+         3 ORD_COUNTRY       CHAR(2),
+
+       2 PAY_BENEFICIARY,
+         3 BEN_ACCOUNT       CHAR(34),
+         3 BEN_BIC           CHAR(11),
+         3 BEN_NAME          CHAR(70),
+         3 BEN_ADDRESS(3)    CHAR(70),
+         3 BEN_COUNTRY       CHAR(2),
+
+       2 PAY_AMOUNTS,
+         3 SETTLE_AMOUNT     FIXED DEC(17,3),
+         3 SETTLE_CURRENCY   CHAR(3),
+         3 INSTRUCTED_AMOUNT FIXED DEC(17,3),
+         3 INSTRUCTED_CCY    CHAR(3),
+         3 EXCHANGE_RATE     FIXED DEC(11,6),
+         3 VALUE_DATE        FIXED DEC(8,0),
+
+       2 PAY_CHARGES,
+         3 CHARGE_BEARER     CHAR(3),          /* OUR / SHA / BEN      */
+         3 CHARGE_COUNT      FIXED BIN(15),
+         3 CHARGE_ENTRY(6),
+           4 CHARGE_TYPE     CHAR(4),
+           4 CHARGE_AMOUNT   FIXED DEC(15,3),
+           4 CHARGE_CCY      CHAR(3),
+
+       2 PAY_REMITTANCE,
+         3 REMIT_STRUCTURED  BIT(1) ALIGNED,
+         3 REMIT_LINES(4)    CHAR(35),
+
+       2 PAY_REGULATORY,
+         3 REG_CODE          CHAR(8),
+         3 REG_TEXT          CHAR(105),
+
+       2 PAY_STATUS_BLOCK,
+         3 STATUS_CODE       CHAR(4),
+         3 STATUS_FLAGS      BIT(16) ALIGNED,
+         3 STATUS_UPDATED    FIXED DEC(14,0),  /* YYYYMMDDHHMMSS       */
+         3 STATUS_REASON     CHAR(35),
+
+       2 PAY_TRAILER,
+         3 TRAILER_MARK      CHAR(3),          /* 'END'                */
+         3 RECORD_LENGTH     FIXED BIN(31);

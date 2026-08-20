@@ -1,0 +1,7 @@
+{
+  "type": "struct",
+  "name": "com.example.Shapeless",
+  "version": 1,
+  "optional": false,
+  "doc": "A struct schema with no fields describes no record, so there is nothing to model."
+}

@@ -1,0 +1,35 @@
+{
+  "mcpVersion": "2025-06-18",
+  "server": {
+    "name": "acme-billing",
+    "title": "Acme Billing",
+    "version": "3.0.1"
+  },
+  "transport": {
+    "type": "streamable-http",
+    "url": "https://mcp.example.com/billing"
+  },
+  "capabilities": { "tools": {}, "resources": {} },
+  "tools": [
+    {
+      "name": "get_invoice",
+      "description": "Fetch one invoice by id.",
+      "inputSchema": { "$ref": "./schemas.json#/GetInvoiceInput" },
+      "outputSchema": { "$ref": "./schemas.json#/Invoice" },
+      "annotations": { "readOnlyHint": true }
+    },
+    {
+      "name": "issue_credit_note",
+      "description": "Issue a credit note against an invoice.",
+      "inputSchema": { "$ref": "./schemas.json#/CreditNoteInput" },
+      "annotations": { "destructiveHint": false }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "billing://invoices/recent",
+      "name": "recent-invoices",
+      "mimeType": "application/json"
+    }
+  ]
+}

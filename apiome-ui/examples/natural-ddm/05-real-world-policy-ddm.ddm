@@ -1,0 +1,43 @@
+DDM Name ...... POLICY-FILE
+DB ............ 003
+File .......... 120
+Default Sequence AA
+
+* Insurance policy file as a Natural/ADABAS estate defines one: a keyed
+* policy record with periodic groups for coverages and claims, packed
+* monetary fields and two superdescriptors for common access paths.
+* Reconstructed shape; no upstream text copied.
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA POLICY-NUMBER                    A    12     U Unique descriptor
+  1 AB PRODUCT-CODE                     A     6     D
+  1 AC POLICY-STATUS                    A     1     D I=issued L=lapsed C=cancelled
+  1 AD EFFECTIVE-DATE                   N     8.0   D YYYYMMDD
+  1 AE EXPIRY-DATE                      N     8.0   N YYYYMMDD
+  1 AF PREMIUM-AMOUNT                   P    11.2   N
+  1 AG PREMIUM-CURRENCY                 A     3     N
+  1 AH BROKER-CODE                      A     8     D
+  1 AI PAYMENT-FREQUENCY                A     1     N M=monthly Q=quarterly A=annual
+M 1 AJ INSURED-NAME                     A    60     D Multiple-value: joint policies
+  1 AK ADDRESS-LINE-1                   A    35     N
+  1 AL ADDRESS-CITY                     A    25     D
+  1 AM ADDRESS-POSTCODE                 A    10     D
+  1 AN ADDRESS-COUNTRY                  A     3     N
+P 1 AO COVERAGE                                       Periodic group: one per cover
+  2 AP COVERAGE-CODE                    A     6     D
+  2 AQ COVERAGE-LIMIT                   P    13.2   N
+  2 AR COVERAGE-DEDUCTIBLE              P    11.2   N
+  2 AS COVERAGE-PREMIUM                 P    11.2   N
+  2 AT COVERAGE-STATUS                  A     1     N
+P 1 AU CLAIM                                          Periodic group: one per claim
+  2 AV CLAIM-NUMBER                     A    12     D
+  2 AW CLAIM-DATE                       N     8.0   N
+  2 AX CLAIM-STATUS                     A     1     N
+  2 AY CLAIM-RESERVE                    P    13.2   N
+  2 AZ CLAIM-PAID                       P    13.2   N
+M 2 A1 CLAIM-NOTE                       A    70     N Multiple-value inside the group
+  1 A2 LAST-UPDATED                     N    14.0   N YYYYMMDDHHMMSS
+  1 A3 UPDATED-BY                       A     8     N
+S 1 S1 SUPER-BROKER-STATUS              A     9     D AH(1-8),AC(1-1)
+S 1 S2 SUPER-PRODUCT-EFFDATE            A    14     D AB(1-6),AD(1-8)

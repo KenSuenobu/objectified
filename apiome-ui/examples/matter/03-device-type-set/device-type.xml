@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Root of the set: a device type is a *composition* of clusters. On its own it names
+  cluster codes; the cluster definitions that give those codes meaning live in the
+  sibling files.
+-->
+<configurator>
+  <domain name="CHIP"/>
+  <deviceType>
+    <name>MA-dimmablelight</name>
+    <domain>CHIP</domain>
+    <typeName>Matter Dimmable Light</typeName>
+    <profileId editable="false">0x0103</profileId>
+    <deviceId editable="false">0x0101</deviceId>
+    <class>Simple</class>
+    <scope>Endpoint</scope>
+
+    <clusters lockOthers="true">
+      <include cluster="Identify" client="false" server="true" clientLocked="true"
+               serverLocked="false">
+        <requireAttribute>IDENTIFY_TIME</requireAttribute>
+        <requireCommand>Identify</requireCommand>
+      </include>
+      <include cluster="On/Off" client="false" server="true" clientLocked="true"
+               serverLocked="false">
+        <requireAttribute>ON_OFF</requireAttribute>
+        <requireCommand>Off</requireCommand>
+        <requireCommand>On</requireCommand>
+        <requireCommand>Toggle</requireCommand>
+      </include>
+      <include cluster="Level Control" client="false" server="true" clientLocked="true"
+               serverLocked="false">
+        <requireAttribute>CURRENT_LEVEL</requireAttribute>
+        <requireCommand>MoveToLevel</requireCommand>
+      </include>
+    </clusters>
+  </deviceType>
+</configurator>

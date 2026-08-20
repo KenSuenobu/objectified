@@ -1,0 +1,48 @@
+{
+  "type": "struct",
+  "name": "logistics.shipments.Value",
+  "version": 4,
+  "optional": true,
+  "doc": "Fileset member: the value schema the pipeline carries. The connector's transforms reshape the envelope, but the field types below are what lands in the sink.",
+  "fields": [
+    { "field": "shipment_id", "type": "string", "optional": false },
+    { "field": "carrier", "type": "string", "optional": true },
+    {
+      "field": "shipped_at",
+      "type": "int64",
+      "name": "org.apache.kafka.connect.data.Timestamp",
+      "version": 1,
+      "optional": true
+    },
+    {
+      "field": "price",
+      "type": "bytes",
+      "name": "org.apache.kafka.connect.data.Decimal",
+      "version": 1,
+      "optional": true,
+      "parameters": { "scale": "2", "connect.decimal.precision": "12" }
+    },
+    {
+      "field": "parcels",
+      "type": "array",
+      "optional": true,
+      "items": {
+        "type": "struct",
+        "name": "logistics.shipments.Parcel",
+        "optional": false,
+        "fields": [
+          { "field": "parcel_id", "type": "string", "optional": false },
+          { "field": "weight_kg", "type": "float64", "optional": true },
+          { "field": "fragile", "type": "boolean", "optional": true, "default": false }
+        ]
+      }
+    },
+    {
+      "field": "attributes",
+      "type": "map",
+      "optional": true,
+      "keys": { "type": "string", "optional": false },
+      "values": { "type": "string", "optional": true }
+    }
+  ]
+}

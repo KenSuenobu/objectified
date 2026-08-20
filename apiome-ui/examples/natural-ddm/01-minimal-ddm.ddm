@@ -1,0 +1,9 @@
+DDM Name ...... BEACON-FILE
+DB ............ 001
+File .......... 050
+Default Sequence
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA BEACON-ID                        A    16     D Beacon identifier
+  1 AB SEEN-AT                          N    14.0   N Timestamp YYYYMMDDHHMMSS

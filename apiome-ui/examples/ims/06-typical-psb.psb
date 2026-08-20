@@ -1,0 +1,22 @@
+*********************************************************************
+* Program specification block: what one application program may see  *
+* and what it may do with it. PROCOPT is the access contract.        *
+*********************************************************************
+         PCB   TYPE=DB,DBDNAME=CUSTDB,PROCOPT=G,KEYLEN=20,             X
+               PROCSEQ=CUSTIDX
+         SENSEG NAME=CUSTOMER,PARENT=0,PROCOPT=G
+         SENFLD NAME=CUSTID,START=1
+         SENFLD NAME=CUSTNAME,START=11
+         SENFLD NAME=CUSTSTAT,START=51
+         SENSEG NAME=ADDRESS,PARENT=CUSTOMER,PROCOPT=G
+         SENSEG NAME=ORDER,PARENT=CUSTOMER,PROCOPT=A
+*
+         PCB   TYPE=DB,DBDNAME=ORDERDB,PROCOPT=AP,KEYLEN=24
+         SENSEG NAME=ORDER,PARENT=0,PROCOPT=AP
+         SENSEG NAME=ORDLINE,PARENT=ORDER,PROCOPT=AP
+         SENSEG NAME=ORDNOTE,PARENT=ORDER,PROCOPT=GI
+*
+         PCB   TYPE=TP,MODIFY=YES
+*
+         PSBGEN LANG=COBOL,PSBNAME=CUSTINQ,CMPAT=YES,IOASIZE=4096
+         END

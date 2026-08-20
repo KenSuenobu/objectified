@@ -1,0 +1,68 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ex:   <https://example.com/ns#> .
+
+# Reusable node shape referenced from several property shapes by sh:node.
+ex:AddressShape
+    a sh:NodeShape ;
+    sh:property [ sh:path ex:line1 ; sh:datatype xsd:string ; sh:minCount 1 ] ;
+    sh:property [ sh:path ex:city ; sh:datatype xsd:string ; sh:minCount 1 ] ;
+    sh:property [ sh:path ex:postalCode ; sh:datatype xsd:string ; sh:minCount 1 ] ;
+    sh:property [ sh:path ex:countryCode ; sh:datatype xsd:string ; sh:pattern "^[A-Z]{2}$" ] .
+
+# Shape reuse by inheritance: every OrderShape target must also satisfy IdentifiedShape.
+ex:IdentifiedShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path ex:identifier ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .
+
+ex:OrderShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Order ;
+    rdfs:subClassOf ex:IdentifiedShape ;
+    sh:node ex:IdentifiedShape ;
+
+    sh:property [
+        sh:path ex:shipTo ;
+        sh:node ex:AddressShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    sh:property [
+        sh:path ex:billTo ;
+        sh:node ex:AddressShape ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # Logical composition: exactly one of the two payment forms.
+    sh:xone (
+        [ sh:property [ sh:path ex:cardToken ; sh:minCount 1 ] ]
+        [ sh:property [ sh:path ex:bankTransferIban ; sh:minCount 1 ] ]
+    ) ;
+
+    # Conjunction and disjunction over shapes.
+    sh:and (
+        [ sh:property [ sh:path ex:placedAt ; sh:datatype xsd:dateTime ; sh:minCount 1 ] ]
+    ) ;
+    sh:or (
+        [ sh:property [ sh:path ex:total ; sh:datatype xsd:decimal ] ]
+        [ sh:property [ sh:path ex:total ; sh:datatype xsd:integer ] ]
+    ) ;
+
+    # Property path composition: a sequence path and an inverse path.
+    sh:property [
+        sh:path ( ex:shipTo ex:countryCode ) ;
+        sh:in ( "NL" "BE" "DE" "FR" "GB" ) ;
+        sh:message "Orders may only ship to supported countries." ;
+    ] ;
+    sh:property [
+        sh:path [ sh:inversePath ex:orderedBy ] ;
+        sh:class ex:Customer ;
+        sh:maxCount 1 ;
+    ] .

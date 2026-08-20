@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Within-document composition: a struct built from two other structs, a cluster that
+  reuses those types across attributes, commands and events, and a derived cluster that
+  extends a base cluster's id space — the two Matter composition mechanisms.
+-->
+<configurator>
+  <domain name="Measurement &amp; Sensing"/>
+
+  <enum name="UnitEnum" type="enum8">
+    <cluster code="0xFFF3"/>
+    <cluster code="0xFFF4"/>
+    <item name="Celsius" value="0x00"/>
+    <item name="Fahrenheit" value="0x01"/>
+    <item name="Kelvin" value="0x02"/>
+  </enum>
+
+  <struct name="RangeStruct">
+    <cluster code="0xFFF3"/>
+    <cluster code="0xFFF4"/>
+    <item fieldId="0" name="Min" type="int32s"/>
+    <item fieldId="1" name="Max" type="int32s"/>
+  </struct>
+
+  <struct name="ReadingStruct">
+    <cluster code="0xFFF3"/>
+    <cluster code="0xFFF4"/>
+    <item fieldId="0" name="Value" type="int32s" isNullable="true"/>
+    <item fieldId="1" name="Unit" type="UnitEnum"/>
+    <item fieldId="2" name="Timestamp" type="epoch_s"/>
+  </struct>
+
+  <!-- A struct composed of the two structs above. -->
+  <struct name="CalibratedReadingStruct">
+    <cluster code="0xFFF3"/>
+    <cluster code="0xFFF4"/>
+    <item fieldId="0" name="Reading" type="ReadingStruct"/>
+    <item fieldId="1" name="ValidRange" type="RangeStruct"/>
+    <item fieldId="2" name="CalibrationOffset" type="int16s" optional="true"/>
+  </struct>
+
+  <!-- Base cluster: the shared behaviour. -->
+  <cluster>
+    <domain>Measurement &amp; Sensing</domain>
+    <name>Generic Measurement</name>
+    <code>0xFFF3</code>
+    <define>GENERIC_MEASUREMENT_CLUSTER</define>
+    <description>Base measurement behaviour, reused by derived clusters.</description>
+
+    <attribute side="server" code="0x0000" define="CURRENT_READING"
+               type="ReadingStruct" writable="false" reportable="true">CurrentReading</attribute>
+    <attribute side="server" code="0x0001" define="VALID_RANGE"
+               type="RangeStruct" writable="false">ValidRange</attribute>
+    <attribute side="server" code="0x0002" define="HISTORY" type="array"
+               entryType="CalibratedReadingStruct" writable="false"
+               optional="true" length="24">History</attribute>
+
+    <command source="client" code="0x00" name="ReadNow" optional="true"
+             response="ReadNowResponse">
+      <access op="invoke" privilege="operate"/>
+    </command>
+    <command source="server" code="0x01" name="ReadNowResponse" optional="true">
+      <arg name="Reading" type="CalibratedReadingStruct"/>
+    </command>
+
+    <event source="server" code="0x00" name="ReadingOutOfRange" priority="info" optional="true">
+      <field id="0" name="Reading" type="ReadingStruct"/>
+      <field id="1" name="ExpectedRange" type="RangeStruct"/>
+    </event>
+  </cluster>
+
+  <!-- Derived cluster: same types, additional attribute, its own id. -->
+  <cluster>
+    <domain>Measurement &amp; Sensing</domain>
+    <name>Soil Temperature Measurement</name>
+    <code>0xFFF4</code>
+    <define>SOIL_TEMPERATURE_MEASUREMENT_CLUSTER</define>
+    <description>Derived from Generic Measurement; adds a probe depth.</description>
+
+    <attribute side="server" code="0x0000" define="CURRENT_READING"
+               type="ReadingStruct" writable="false" reportable="true">CurrentReading</attribute>
+    <attribute side="server" code="0x0001" define="VALID_RANGE"
+               type="RangeStruct" writable="false">ValidRange</attribute>
+    <attribute side="server" code="0x0010" define="PROBE_DEPTH_CM" type="int16u"
+               writable="true" min="0" max="500">ProbeDepthCm
+      <access op="read" privilege="view"/>
+      <access op="write" privilege="manage"/>
+    </attribute>
+
+    <event source="server" code="0x00" name="ReadingOutOfRange" priority="info" optional="true">
+      <field id="0" name="Reading" type="ReadingStruct"/>
+      <field id="1" name="ExpectedRange" type="RangeStruct"/>
+      <field id="2" name="ProbeDepthCm" type="int16u"/>
+    </event>
+  </cluster>
+</configurator>

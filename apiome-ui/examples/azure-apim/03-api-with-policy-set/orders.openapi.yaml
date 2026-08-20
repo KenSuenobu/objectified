@@ -1,0 +1,91 @@
+openapi: 3.0.1
+info:
+  title: Orders API
+  description: The definition half of an APIM export; the policy half is policy.xml.
+  version: v2
+servers:
+  - url: https://example-apim.azure-api.net/orders
+paths:
+  /orders:
+    get:
+      operationId: list-orders
+      summary: List orders
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+      responses:
+        "200":
+          description: Matching orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        "401":
+          description: Unauthorized
+    post:
+      operationId: create-order
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewOrder'
+      responses:
+        "201":
+          description: Created
+  /orders/{orderId}:
+    get:
+      operationId: get-order
+      summary: Get order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: One order
+        "404":
+          description: Unknown order
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        orderId:
+          type: string
+        status:
+          type: string
+        total:
+          type: number
+    NewOrder:
+      type: object
+      required: [lines]
+      properties:
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              sku:
+                type: string
+              quantity:
+                type: integer
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+security:
+  - apiKeyHeader: []

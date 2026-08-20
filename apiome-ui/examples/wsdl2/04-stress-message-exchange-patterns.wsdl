@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://www.w3.org/ns/wsdl"
+             xmlns:tns="http://example.com/meps"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:whttp="http://www.w3.org/ns/wsdl/http"
+             xmlns:wsoap="http://www.w3.org/ns/wsdl/soap"
+             xmlns:wsdlx="http://www.w3.org/ns/wsdl-extensions"
+             targetNamespace="http://example.com/meps">
+
+  <documentation>
+    One operation per WSDL 2.0 message exchange pattern, plus an HTTP binding with
+    method and location templates alongside the SOAP binding.
+  </documentation>
+
+  <types>
+    <xs:schema targetNamespace="http://example.com/meps" elementFormDefault="qualified">
+      <xs:element name="request" type="xs:string"/>
+      <xs:element name="response" type="xs:string"/>
+      <xs:element name="notification" type="xs:string"/>
+      <xs:element name="fault" type="xs:string"/>
+    </xs:schema>
+  </types>
+
+  <interface name="MepInterface">
+    <fault name="GeneralFault" element="tns:fault"/>
+
+    <operation name="inOut" pattern="http://www.w3.org/ns/wsdl/in-out" wsdlx:safe="true">
+      <input messageLabel="In" element="tns:request"/>
+      <output messageLabel="Out" element="tns:response"/>
+      <outfault ref="tns:GeneralFault" messageLabel="Out"/>
+    </operation>
+
+    <operation name="inOnly" pattern="http://www.w3.org/ns/wsdl/in-only">
+      <input messageLabel="In" element="tns:request"/>
+    </operation>
+
+    <operation name="robustInOnly" pattern="http://www.w3.org/ns/wsdl/robust-in-only">
+      <input messageLabel="In" element="tns:request"/>
+      <outfault ref="tns:GeneralFault" messageLabel="In"/>
+    </operation>
+
+    <operation name="inOptionalOut" pattern="http://www.w3.org/ns/wsdl/in-opt-out">
+      <input messageLabel="In" element="tns:request"/>
+      <output messageLabel="Out" element="tns:response"/>
+      <outfault ref="tns:GeneralFault" messageLabel="Out"/>
+    </operation>
+
+    <operation name="outOnly" pattern="http://www.w3.org/ns/wsdl/out-only">
+      <output messageLabel="Out" element="tns:notification"/>
+    </operation>
+  </interface>
+
+  <binding name="MepHttpBinding"
+           interface="tns:MepInterface"
+           type="http://www.w3.org/ns/wsdl/http">
+    <operation ref="tns:inOut"
+               whttp:method="GET"
+               whttp:location="things/{request}"/>
+    <operation ref="tns:inOnly"
+               whttp:method="POST"
+               whttp:inputSerialization="application/json"/>
+    <operation ref="tns:robustInOnly" whttp:method="DELETE"/>
+    <operation ref="tns:inOptionalOut" whttp:method="PATCH"/>
+  </binding>
+
+  <binding name="MepSoapBinding"
+           interface="tns:MepInterface"
+           type="http://www.w3.org/ns/wsdl/soap"
+           wsoap:protocol="http://www.w3.org/2003/05/soap/bindings/HTTP/"
+           wsoap:mepDefault="http://www.w3.org/2003/05/soap/mep/request-response">
+    <fault ref="tns:GeneralFault" wsoap:code="soap:Receiver"/>
+    <operation ref="tns:inOut"/>
+    <operation ref="tns:inOnly" wsoap:mep="http://www.w3.org/2003/05/soap/mep/soap-response"/>
+  </binding>
+
+  <service name="MepService" interface="tns:MepInterface">
+    <endpoint name="HttpEndpoint" binding="tns:MepHttpBinding" address="https://api.example.com/meps/"/>
+    <endpoint name="SoapEndpoint" binding="tns:MepSoapBinding" address="https://api.example.com/meps/soap"/>
+  </service>
+</description>

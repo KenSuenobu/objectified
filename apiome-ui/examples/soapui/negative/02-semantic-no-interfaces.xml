@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config"
+                    id="7a1c0000-0000-4000-8000-0000000000e2"
+                    name="Properties only">
+  <!--
+    A project with settings and properties and no interfaces, test suites or mock
+    services: nothing here describes an API.
+  -->
+  <con:settings/>
+  <con:properties>
+    <con:property>
+      <con:name>baseUrl</con:name>
+      <con:value>https://api.example.com</con:value>
+    </con:property>
+  </con:properties>
+</con:soapui-project>

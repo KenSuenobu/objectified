@@ -1,0 +1,87 @@
+version: 2
+
+semantic_models:
+  - name: orders
+    description: Semantic model over the order fact table.
+    model: ref('fct_orders')
+    defaults:
+      agg_time_dimension: placed_at
+    entities:
+      - name: order
+        type: primary
+        expr: order_id
+      - name: customer
+        type: foreign
+        expr: customer_id
+    dimensions:
+      - name: placed_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: status
+        type: categorical
+      - name: channel
+        type: categorical
+        expr: order_channel
+    measures:
+      - name: order_count
+        agg: count
+        expr: order_id
+        agg_time_dimension: placed_at
+      - name: order_total
+        agg: sum
+        expr: total_amount
+        agg_time_dimension: placed_at
+      - name: average_order_value
+        agg: average
+        expr: total_amount
+
+  - name: customers
+    model: ref('dim_customers')
+    entities:
+      - name: customer
+        type: primary
+        expr: customer_id
+    dimensions:
+      - name: country_code
+        type: categorical
+      - name: signup_channel
+        type: categorical
+    measures:
+      - name: customer_count
+        agg: count_distinct
+        expr: customer_id
+
+metrics:
+  - name: revenue
+    label: Revenue
+    description: Sum of order totals.
+    type: simple
+    type_params:
+      measure: order_total
+
+  - name: paid_revenue
+    label: Paid revenue
+    type: simple
+    type_params:
+      measure: order_total
+    filter: |
+      {{ Dimension('order__status') }} = 'paid'
+
+  - name: revenue_per_customer
+    label: Revenue per customer
+    type: ratio
+    type_params:
+      numerator: revenue
+      denominator: customer_count
+
+  - name: revenue_mom_growth
+    label: Revenue month-over-month growth
+    type: derived
+    type_params:
+      expr: (revenue - revenue_prior_month) * 100 / revenue_prior_month
+      metrics:
+        - name: revenue
+        - name: revenue
+          offset_window: 1 month
+          alias: revenue_prior_month

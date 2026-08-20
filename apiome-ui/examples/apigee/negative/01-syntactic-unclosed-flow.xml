@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProxyEndpoint name="default">
+    <Flows>
+        <Flow name="Broken">
+            <Condition>(proxy.pathsuffix MatchesPath "/broken")</Condition>
+            <Request/>
+    </Flows>
+    <HTTPProxyConnection>
+        <BasePath>/v1/broken</BasePath>
+    </HTTPProxyConnection>
+</ProxyEndpoint>

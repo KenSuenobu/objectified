@@ -1,0 +1,15 @@
+{
+  "api_id": "orders-api",
+  "name": "Orders API",
+  "org_id": "000000000000000000000001",
+  "proxy": {
+    "listen_path": "/v2/orders/",
+    "target_url": "http://orders.internal.example.com:8080"
+  },
+  "version_data": {
+    "not_versioned": false,
+    "default_version": "v2",
+    "versions": {
+      "v2": {
+        "name": "v2",
+        "use_extended_paths": tr

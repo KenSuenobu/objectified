@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurator>
+  <domain name="General"/>
+  <!--
+    A cluster with a name, a code and a description, and no attributes, commands or
+    events: nothing is exposed, so there is no surface to model.
+  -->
+  <cluster>
+    <domain>General</domain>
+    <name>Hollow</name>
+    <code>0xFFF8</code>
+    <define>HOLLOW_CLUSTER</define>
+    <description>Declared but exposing nothing.</description>
+  </cluster>
+</configurator>

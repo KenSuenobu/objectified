@@ -1,0 +1,10 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dct:  <http://purl.org/dc/terms/> .
+
+# An ontology header and nothing else: no classes, no properties, no individuals, so
+# there is no vocabulary to import.
+<https://example.com/empty> a owl:Ontology ;
+    dct:title "Empty ontology" ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Declared but never populated." .

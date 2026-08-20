@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": { "name": "int", "bitWidth": 64, "isSigned": true },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "mystery",
+        "type": { "name": "quaternion", "bitWidth": 256 },
+        "nullable": true,
+        "children": []
+      }
+    ]
+  }
+}

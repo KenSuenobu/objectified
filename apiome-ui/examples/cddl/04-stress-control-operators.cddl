@@ -1,0 +1,78 @@
+; Every control operator, tag form and range construct RFC 8610 (plus RFC 9165)
+; defines, in one grammar.
+
+start = corners
+
+corners = {
+  ; .size on strings and integers
+  short-text: tstr .size (1..40),
+  fixed-bytes: bstr .size 32,
+  small-int: uint .size 2,
+
+  ; .regexp
+  sku: tstr .regexp "[A-Z]{3}-[0-9]{4}",
+
+  ; .cbor / .cborseq — embedded encodings
+  embedded: bstr .cbor inner,
+  sequence: bstr .cborseq inner,
+
+  ; .within / .and — refinement and intersection
+  narrowed: refined .within broad,
+  intersected: uint .and (1..100),
+
+  ; .default on an optional member
+  ? retries: uint .default 3,
+
+  ; .bits — a bit set over a named group
+  flags: uint .bits flag-bits,
+
+  ; .ne / .lt / .le / .gt / .ge (RFC 9165)
+  not-zero: int .ne 0,
+  positive: int .gt 0,
+  capped: int .le 1000,
+
+  ; ranges, inclusive and exclusive
+  percent: 0..100,
+  exclusive: 0...100,
+
+  ; tagged values
+  when: #6.1(number),
+  uri: #6.32(tstr),
+  bignum: #6.2(bstr),
+
+  ; unwrapping another rule
+  unwrapped: ~wrapper,
+
+  ; any, nil and the major-type shorthands
+  anything: any,
+  nothing: nil,
+  raw-major-two: #2,
+
+  ; nested arrays with occurrence bounds
+  matrix: [3*3 [3*3 number]],
+  at-least-one: [+ tstr],
+  at-most-five: [0*5 uint],
+
+  ; a table (map with a non-literal key)
+  index: { * tstr => uint },
+
+  ; group choice inside an array
+  either: [ (a: uint, b: uint) // (c: tstr) ],
+}
+
+broad = uint
+refined = 1..10
+
+wrapper = [wrapped-a: tstr, wrapped-b: uint]
+
+inner = {
+  id: tstr,
+  value: number,
+}
+
+flag-bits = &(
+  read: 0,
+  write: 1,
+  execute: 2,
+  admin: 7,
+)

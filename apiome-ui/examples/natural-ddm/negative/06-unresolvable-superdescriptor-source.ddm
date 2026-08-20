@@ -1,0 +1,15 @@
+DDM Name ...... DANGLING-FILE
+DB ............ 001
+File .......... 092
+Default Sequence AA
+
+* The superdescriptor S1 is built from AB and ZZ. AB exists; ZZ is not
+* defined anywhere in this DDM, so the descriptor's source fields cannot be
+* resolved and its length cannot be verified.
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA KEY-FIELD                        A    10     U
+  1 AB NAME-FIELD                       A    40     D
+S 1 S1 SUPER-NAME-MISSING                A    50     D AB(1-40),ZZ(1-10)
+Q 1 Q1 SUB-MISSING                       A     4     D YY(1-4)

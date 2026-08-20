@@ -1,0 +1,18 @@
+<!--
+  Root of the set: an external subset assembled from two modules through parameter
+  entities, which is how large DTDs (DocBook, JATS, TEI) are actually organized.
+-->
+
+<!ENTITY % commonModule SYSTEM "common.dtd">
+%commonModule;
+
+<!ENTITY % tableModule SYSTEM "table.dtd">
+%tableModule;
+
+<!ELEMENT report (title, section+)>
+<!ATTLIST report
+          %commonAtts;>
+
+<!ELEMENT section (title, (para | table)+)>
+<!ATTLIST section
+          %commonAtts;>

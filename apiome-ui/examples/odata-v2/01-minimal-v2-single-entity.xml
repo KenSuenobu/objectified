@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx">
+  <edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+                     m:DataServiceVersion="2.0">
+    <Schema Namespace="Ping" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+      <EntityType Name="Beacon">
+        <Key>
+          <PropertyRef Name="Id"/>
+        </Key>
+        <Property Name="Id" Type="Edm.String" Nullable="false" MaxLength="16"/>
+        <Property Name="SeenAt" Type="Edm.DateTime"/>
+      </EntityType>
+      <EntityContainer Name="PingContainer" m:IsDefaultEntityContainer="true">
+        <EntitySet Name="Beacons" EntityType="Ping.Beacon"/>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

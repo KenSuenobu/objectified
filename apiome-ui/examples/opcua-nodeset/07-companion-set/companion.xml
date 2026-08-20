@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Fileset member: the companion specification the vendor model requires. It supplies the
+  base object type and the enumerated data type the root's nodes reference by ns=2 ids.
+-->
+<UANodeSet xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd">
+  <NamespaceUris>
+    <Uri>http://example.com/UA/Companion/</Uri>
+  </NamespaceUris>
+  <Models>
+    <Model ModelUri="http://example.com/UA/Companion/" Version="2.0.0"
+           PublicationDate="2026-06-01T00:00:00Z">
+      <RequiredModel ModelUri="http://opcfoundation.org/UA/" Version="1.05.03"/>
+    </Model>
+  </Models>
+  <Aliases>
+    <Alias Alias="String">i=12</Alias>
+    <Alias Alias="HasSubtype">i=45</Alias>
+    <Alias Alias="HasComponent">i=47</Alias>
+    <Alias Alias="HasTypeDefinition">i=40</Alias>
+    <Alias Alias="HasModellingRule">i=37</Alias>
+  </Aliases>
+
+  <UADataType NodeId="ns=1;i=3100" BrowseName="1:RecipeState">
+    <DisplayName>RecipeState</DisplayName>
+    <References>
+      <Reference ReferenceType="HasSubtype" IsForward="false">i=29</Reference>
+    </References>
+    <Definition Name="1:RecipeState">
+      <Field Name="Idle" Value="0"/>
+      <Field Name="Loading" Value="1"/>
+      <Field Name="Running" Value="2"/>
+      <Field Name="Complete" Value="3"/>
+    </Definition>
+  </UADataType>
+
+  <UAObjectType NodeId="ns=1;i=1100" BrowseName="1:MachineBaseType" IsAbstract="true">
+    <DisplayName>MachineBaseType</DisplayName>
+    <References>
+      <Reference ReferenceType="HasSubtype" IsForward="false">i=58</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=6100</Reference>
+    </References>
+  </UAObjectType>
+
+  <UAVariable NodeId="ns=1;i=6100" BrowseName="1:SerialNumber" DataType="String"
+              ParentNodeId="ns=1;i=1100">
+    <DisplayName>SerialNumber</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+</UANodeSet>

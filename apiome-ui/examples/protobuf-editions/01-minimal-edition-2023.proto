@@ -1,0 +1,8 @@
+edition = "2023";
+
+package example.ping.v1;
+
+message Beacon {
+  string id = 1;
+  int64 seen_at = 2;
+}

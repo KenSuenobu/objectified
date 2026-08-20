@@ -1,0 +1,18 @@
+*********************************************************************
+* ORDLINE names PARENT=ORDER, and no SEGM defines ORDER; the PSB-side *
+* PROCSEQ names an index DBD that is not in the fileset either. The   *
+* hierarchy cannot be reconstructed.                                  *
+*********************************************************************
+         DBD   NAME=DANGLEDB,ACCESS=(HIDAM,VSAM),PROCSEQ=MISSINGX
+         DATASET DD1=DANGLE,DEVICE=3390,SIZE=8192
+*
+         SEGM  NAME=CUSTOMER,BYTES=200,PARENT=0
+         FIELD NAME=(CUSTID,SEQ,U),BYTES=10,START=1,TYPE=C
+*
+         SEGM  NAME=ORDLINE,BYTES=96,PARENT=ORDER
+         FIELD NAME=(LINENO,SEQ,U),BYTES=4,START=1,TYPE=C
+         FIELD NAME=LINESKU,BYTES=18,START=5,TYPE=C
+*
+         DBDGEN
+         FINISH
+         END

@@ -1,0 +1,101 @@
+{
+  "schema": {
+    "fields": [
+      { "name": "f_null", "type": { "name": "null" }, "nullable": true, "children": [] },
+      { "name": "f_bool", "type": { "name": "bool" }, "nullable": true, "children": [] },
+      { "name": "f_int8", "type": { "name": "int", "bitWidth": 8, "isSigned": true }, "nullable": true, "children": [] },
+      { "name": "f_uint16", "type": { "name": "int", "bitWidth": 16, "isSigned": false }, "nullable": true, "children": [] },
+      { "name": "f_int64", "type": { "name": "int", "bitWidth": 64, "isSigned": true }, "nullable": false, "children": [] },
+      { "name": "f_float", "type": { "name": "floatingpoint", "precision": "SINGLE" }, "nullable": true, "children": [] },
+      { "name": "f_double", "type": { "name": "floatingpoint", "precision": "DOUBLE" }, "nullable": true, "children": [] },
+      { "name": "f_half", "type": { "name": "floatingpoint", "precision": "HALF" }, "nullable": true, "children": [] },
+      { "name": "f_utf8", "type": { "name": "utf8" }, "nullable": true, "children": [] },
+      { "name": "f_large_utf8", "type": { "name": "largeutf8" }, "nullable": true, "children": [] },
+      { "name": "f_binary", "type": { "name": "binary" }, "nullable": true, "children": [] },
+      { "name": "f_fixed_binary", "type": { "name": "fixedsizebinary", "byteWidth": 16 }, "nullable": true, "children": [] },
+      { "name": "f_decimal128", "type": { "name": "decimal", "precision": 38, "scale": 9, "bitWidth": 128 }, "nullable": true, "children": [] },
+      { "name": "f_decimal256", "type": { "name": "decimal", "precision": 60, "scale": 12, "bitWidth": 256 }, "nullable": true, "children": [] },
+      { "name": "f_date_day", "type": { "name": "date", "unit": "DAY" }, "nullable": true, "children": [] },
+      { "name": "f_date_ms", "type": { "name": "date", "unit": "MILLISECOND" }, "nullable": true, "children": [] },
+      { "name": "f_time_s", "type": { "name": "time", "unit": "SECOND", "bitWidth": 32 }, "nullable": true, "children": [] },
+      { "name": "f_time_ns", "type": { "name": "time", "unit": "NANOSECOND", "bitWidth": 64 }, "nullable": true, "children": [] },
+      { "name": "f_timestamp_tz", "type": { "name": "timestamp", "unit": "NANOSECOND", "timezone": "Europe/Amsterdam" }, "nullable": true, "children": [] },
+      { "name": "f_timestamp_naive", "type": { "name": "timestamp", "unit": "MILLISECOND" }, "nullable": true, "children": [] },
+      { "name": "f_interval_ym", "type": { "name": "interval", "unit": "YEAR_MONTH" }, "nullable": true, "children": [] },
+      { "name": "f_interval_mdn", "type": { "name": "interval", "unit": "MONTH_DAY_NANO" }, "nullable": true, "children": [] },
+      { "name": "f_duration", "type": { "name": "duration", "unit": "MICROSECOND" }, "nullable": true, "children": [] },
+      {
+        "name": "f_fixed_size_list",
+        "type": { "name": "fixedsizelist", "listSize": 3 },
+        "nullable": true,
+        "children": [
+          { "name": "item", "type": { "name": "floatingpoint", "precision": "DOUBLE" }, "nullable": false, "children": [] }
+        ]
+      },
+      {
+        "name": "f_large_list",
+        "type": { "name": "largelist" },
+        "nullable": true,
+        "children": [
+          { "name": "item", "type": { "name": "int", "bitWidth": 32, "isSigned": true }, "nullable": true, "children": [] }
+        ]
+      },
+      {
+        "name": "f_dense_union",
+        "type": { "name": "union", "mode": "DENSE", "typeIds": [0, 1, 2] },
+        "nullable": true,
+        "children": [
+          { "name": "as_int", "type": { "name": "int", "bitWidth": 32, "isSigned": true }, "nullable": true, "children": [] },
+          { "name": "as_text", "type": { "name": "utf8" }, "nullable": true, "children": [] },
+          { "name": "as_bytes", "type": { "name": "binary" }, "nullable": true, "children": [] }
+        ]
+      },
+      {
+        "name": "f_sparse_union",
+        "type": { "name": "union", "mode": "SPARSE", "typeIds": [0, 1] },
+        "nullable": true,
+        "children": [
+          { "name": "left", "type": { "name": "bool" }, "nullable": true, "children": [] },
+          { "name": "right", "type": { "name": "floatingpoint", "precision": "DOUBLE" }, "nullable": true, "children": [] }
+        ]
+      },
+      {
+        "name": "f_dictionary",
+        "type": { "name": "utf8" },
+        "nullable": true,
+        "children": [],
+        "dictionary": {
+          "id": 0,
+          "indexType": { "name": "int", "bitWidth": 32, "isSigned": true },
+          "isOrdered": false
+        },
+        "metadata": [{ "key": "cardinality_hint", "value": "48" }]
+      },
+      {
+        "name": "f_ordered_dictionary",
+        "type": { "name": "utf8" },
+        "nullable": true,
+        "children": [],
+        "dictionary": {
+          "id": 1,
+          "indexType": { "name": "int", "bitWidth": 8, "isSigned": false },
+          "isOrdered": true
+        }
+      },
+      {
+        "name": "f_extension",
+        "type": { "name": "fixedsizebinary", "byteWidth": 16 },
+        "nullable": true,
+        "children": [],
+        "metadata": [
+          { "key": "ARROW:extension:name", "value": "arrow.uuid" },
+          { "key": "ARROW:extension:metadata", "value": "" }
+        ]
+      }
+    ],
+    "metadata": [
+      { "key": "purpose", "value": "type coverage" },
+      { "key": "arrow_format_version", "value": "1.4" }
+    ]
+  }
+}

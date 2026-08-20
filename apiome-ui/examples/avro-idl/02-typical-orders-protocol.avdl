@@ -1,0 +1,37 @@
+/** Order service: the protocol form, whose messages become RPC operations. */
+@namespace("com.example.orders")
+protocol OrderService {
+
+  enum OrderStatus {
+    NEW, PAID, SHIPPED, CANCELLED
+  }
+
+  record OrderLine {
+    string sku;
+    int quantity;
+    double unitPrice;
+  }
+
+  record Order {
+    string orderId;
+    string customerId;
+    OrderStatus status = "NEW";
+    array<OrderLine> lines;
+    union { null, string } note = null;
+    long placedAt;
+  }
+
+  error OrderNotFound {
+    string orderId;
+    string message;
+  }
+
+  /** Fetch one order. */
+  Order getOrder(string orderId) throws OrderNotFound;
+
+  /** Create an order and return the stored form. */
+  Order placeOrder(Order order);
+
+  /** Fire-and-forget cancellation. */
+  void cancelOrder(string orderId, union { null, string } reason = null) oneway;
+}

@@ -1,0 +1,7 @@
+{
+  "service": {
+    "name": "ping",
+    "port": 8080,
+    "address": "10.20.30.40"
+  }
+}

@@ -1,0 +1,147 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: matcher-coverage
+  namespace: lab
+  annotations:
+    example.com/owner: platform-team
+spec:
+  hosts:
+    - lab.example.com
+    - lab.lab.svc.cluster.local
+  gateways:
+    - lab/public-gateway
+    - mesh
+  http:
+    - name: exact-and-headers
+      match:
+        - uri:
+            exact: /exact
+          headers:
+            x-tenant:
+              prefix: acme-
+            x-debug:
+              regex: "^(1|true)$"
+          withoutHeaders:
+            x-blocked:
+              exact: "true"
+          queryParams:
+            q:
+              regex: ".+"
+          method:
+            regex: "GET|HEAD"
+          scheme:
+            exact: https
+          authority:
+            prefix: lab.
+          port: 443
+          sourceLabels:
+            app: front-door
+          gateways:
+            - lab/public-gateway
+      route:
+        - destination:
+            host: exact.lab.svc.cluster.local
+            subset: stable
+      headers:
+        request:
+          set:
+            x-forwarded-tenant: acme
+          remove:
+            - x-internal
+        response:
+          add:
+            x-served-by: lab
+      corsPolicy:
+        allowOrigins:
+          - exact: https://app.example.com
+          - regex: "https://.*\\.example\\.com"
+        allowMethods: [GET, POST, OPTIONS]
+        allowHeaders: [content-type, authorization]
+        exposeHeaders: [x-request-id]
+        maxAge: 10m
+        allowCredentials: true
+
+    - name: regex-and-fault
+      match:
+        - uri:
+            regex: "^/assays/[a-f0-9]{8}/results$"
+      route:
+        - destination:
+            host: assays.lab.svc.cluster.local
+      fault:
+        delay:
+          percentage:
+            value: 0.5
+          fixedDelay: 3s
+        abort:
+          percentage:
+            value: 0.1
+          httpStatus: 503
+      timeout: 30s
+
+    - name: mirror-and-retry
+      match:
+        - uri:
+            prefix: /ingest
+      route:
+        - destination:
+            host: ingest.lab.svc.cluster.local
+            subset: v2
+      mirror:
+        host: ingest-shadow.lab.svc.cluster.local
+      mirrorPercentage:
+        value: 25
+      retries:
+        attempts: 5
+        perTryTimeout: 2s
+        retryOn: gateway-error,reset,connect-failure
+        retryRemoteLocalities: true
+
+    - name: rewrite-authority
+      match:
+        - uri:
+            prefix: /partner
+      rewrite:
+        uri: /
+        authority: partner-backend.lab.svc.cluster.local
+      route:
+        - destination:
+            host: partner-backend.lab.svc.cluster.local
+
+    - name: redirect
+      match:
+        - uri:
+            prefix: /old
+      redirect:
+        uri: /new
+        authority: lab.example.com
+        redirectCode: 308
+
+    - name: delegated
+      match:
+        - uri:
+            prefix: /delegated
+      delegate:
+        name: delegated-routes
+        namespace: lab
+
+  tls:
+    - match:
+        - port: 8443
+          sniHosts:
+            - secure.lab.example.com
+      route:
+        - destination:
+            host: secure.lab.svc.cluster.local
+            port:
+              number: 8443
+
+  tcp:
+    - match:
+        - port: 5432
+      route:
+        - destination:
+            host: postgres.lab.svc.cluster.local
+            port:
+              number: 5432

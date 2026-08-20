@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 name="ExampleRules" version="FIX.4.4_EP003">
+  <fixr:codeSets>
+    <fixr:codeSet name="OrdTypeCodeSet" id="40" type="char">
+      <fixr:code name="Market" id="40001" value="1"/>
+      <fixr:code name="Limit" id="40002" value="2"/>
+      <fixr:code name="Stop" id="40003" value="3"/>
+      <fixr:code name="StopLimit" id="40004" value="4"/>
+    </fixr:codeSet>
+    <fixr:codeSet name="ExecTypeCodeSet" id="150" type="char">
+      <fixr:code name="New" id="150000" value="0"/>
+      <fixr:code name="Trade" id="150F" value="F"/>
+      <fixr:code name="Canceled" id="150004" value="4"/>
+      <fixr:code name="Rejected" id="150008" value="8"/>
+    </fixr:codeSet>
+  </fixr:codeSets>
+
+  <fixr:fields>
+    <fixr:field id="11" name="ClOrdID" type="String"/>
+    <fixr:field id="38" name="OrderQty" type="Qty"/>
+    <fixr:field id="40" name="OrdType" type="OrdTypeCodeSet"/>
+    <fixr:field id="44" name="Price" type="Price"/>
+    <fixr:field id="99" name="StopPx" type="Price"/>
+    <fixr:field id="150" name="ExecType" type="ExecTypeCodeSet"/>
+    <fixr:field id="18" name="ExecInst" type="MultipleCharValue"/>
+    <fixr:field id="21" name="HandlInst" type="char"/>
+    <fixr:field id="110" name="MinQty" type="Qty"/>
+    <fixr:field id="126" name="ExpireTime" type="UTCTimestamp"/>
+    <fixr:field id="1" name="Account" type="String"/>
+  </fixr:fields>
+
+  <fixr:messages>
+    <fixr:message name="NewOrderSingle" id="14" msgType="D"
+                  category="SingleGeneralOrderHandling" scenario="base">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:fieldRef id="40" presence="required"/>
+        <fixr:fieldRef id="38" presence="required">
+          <fixr:rule name="PositiveQuantity">
+            <fixr:assign>OrderQty &gt; 0</fixr:assign>
+          </fixr:rule>
+        </fixr:fieldRef>
+
+        <!-- Conditionally required: a limit order must carry a price. -->
+        <fixr:fieldRef id="44" presence="conditional">
+          <fixr:rule name="RequiredForLimit" presence="required">
+            <fixr:when>OrdType in {"^Limit", "^StopLimit"}</fixr:when>
+          </fixr:rule>
+        </fixr:fieldRef>
+
+        <!-- Conditionally required: a stop order must carry a stop price. -->
+        <fixr:fieldRef id="99" presence="conditional">
+          <fixr:rule name="RequiredForStop" presence="required">
+            <fixr:when>OrdType in {"^Stop", "^StopLimit"}</fixr:when>
+          </fixr:rule>
+        </fixr:fieldRef>
+
+        <!-- Forbidden: this venue rejects the field outright. It must be modelled as a
+             declared constraint, never dropped. -->
+        <fixr:fieldRef id="110" presence="forbidden"/>
+
+        <!-- Ignored: accepted on the wire, never acted on. -->
+        <fixr:fieldRef id="18" presence="ignored"/>
+
+        <!-- Constant: the venue fixes the value. -->
+        <fixr:fieldRef id="21" presence="constant" value="1"/>
+
+        <fixr:fieldRef id="126" presence="optional"/>
+        <fixr:fieldRef id="1" presence="optional"/>
+      </fixr:structure>
+      <fixr:responses>
+        <fixr:response name="accept">
+          <fixr:messageRef name="ExecutionReport" msgType="8" id="9"/>
+        </fixr:response>
+      </fixr:responses>
+    </fixr:message>
+
+    <fixr:message name="NewOrderSingle" id="14" msgType="D"
+                  category="SingleGeneralOrderHandling" scenario="dark">
+      <fixr:documentation>
+        A second scenario of the same message: on the dark venue MinQty is required and
+        Price is forbidden.
+      </fixr:documentation>
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:fieldRef id="40" presence="constant" value="1"/>
+        <fixr:fieldRef id="38" presence="required"/>
+        <fixr:fieldRef id="110" presence="required"/>
+        <fixr:fieldRef id="44" presence="forbidden"/>
+      </fixr:structure>
+    </fixr:message>
+
+    <fixr:message name="ExecutionReport" id="9" msgType="8" category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:fieldRef id="150" presence="required"/>
+        <fixr:fieldRef id="38" presence="required"/>
+        <fixr:fieldRef id="44" presence="optional"/>
+      </fixr:structure>
+    </fixr:message>
+  </fixr:messages>
+</fixr:repository>

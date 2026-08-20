@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+                     m:DataServiceVersion="3.0"
+                     m:MaxDataServiceVersion="3.0">
+    <Schema Namespace="Catalog" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+
+      <EntityType Name="Product">
+        <Key>
+          <PropertyRef Name="Sku"/>
+        </Key>
+        <Property Name="Sku" Type="Edm.String" Nullable="false" MaxLength="18"/>
+        <Property Name="Name" Type="Edm.String" MaxLength="120"/>
+        <Property Name="Price" Type="Edm.Decimal" Precision="9" Scale="2"/>
+        <Property Name="Discontinued" Type="Edm.Boolean"/>
+        <NavigationProperty Name="Category"
+                            Relationship="Catalog.ProductCategory"
+                            FromRole="Product"
+                            ToRole="Category"/>
+      </EntityType>
+
+      <EntityType Name="Category">
+        <Key>
+          <PropertyRef Name="Code"/>
+        </Key>
+        <Property Name="Code" Type="Edm.String" Nullable="false" MaxLength="8"/>
+        <Property Name="Label" Type="Edm.String" MaxLength="60"/>
+        <NavigationProperty Name="Products"
+                            Relationship="Catalog.ProductCategory"
+                            FromRole="Category"
+                            ToRole="Product"/>
+      </EntityType>
+
+      <Association Name="ProductCategory">
+        <End Role="Product" Type="Catalog.Product" Multiplicity="*"/>
+        <End Role="Category" Type="Catalog.Category" Multiplicity="0..1"/>
+      </Association>
+
+      <EntityContainer Name="CatalogContainer" m:IsDefaultEntityContainer="true">
+        <EntitySet Name="Products" EntityType="Catalog.Product"/>
+        <EntitySet Name="Categories" EntityType="Catalog.Category"/>
+        <AssociationSet Name="ProductCategorySet" Association="Catalog.ProductCategory">
+          <End Role="Product" EntitySet="Products"/>
+          <End Role="Category" EntitySet="Categories"/>
+        </AssociationSet>
+        <FunctionImport Name="Discount" IsSideEffecting="true" m:HttpMethod="POST">
+          <Parameter Name="Sku" Type="Edm.String" Mode="In" MaxLength="18"/>
+          <Parameter Name="Percent" Type="Edm.Int16" Mode="In"/>
+        </FunctionImport>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

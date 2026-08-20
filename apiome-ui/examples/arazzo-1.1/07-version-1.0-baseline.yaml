@@ -1,0 +1,41 @@
+arazzo: 1.0.1
+info:
+  title: Login and read profile
+  version: 1.0.0
+sourceDescriptions:
+  - name: identity
+    url: https://api.example.com/identity/openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: loginAndReadProfile
+    summary: A plain 1.0 document — the emitter must not silently upgrade it to 1.1.
+    inputs:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+    steps:
+      - stepId: login
+        operationId: $sourceDescriptions.identity.login
+        requestBody:
+          contentType: application/json
+          payload:
+            username: $inputs.username
+            password: $inputs.password
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          token: $response.body#/accessToken
+      - stepId: profile
+        operationId: $sourceDescriptions.identity.getProfile
+        parameters:
+          - name: Authorization
+            in: header
+            value: Bearer $steps.login.outputs.token
+        successCriteria:
+          - condition: $statusCode == 200
+    outputs:
+      token: $steps.login.outputs.token

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ORDERS05>
+  <IDOC BEGIN="1">
+    <EDI_DC40 SEGMENT="1">
+      <TABNAM>EDI_DC40</TABNAM>
+      <MANDT>100</MANDT>
+      <DOCNUM>0000000000123456</DOCNUM>
+      <DOCREL>740</DOCREL>
+      <STATUS>30</STATUS>
+      <DIRECT>1</DIRECT>
+      <OUTMOD>2</OUTMOD>
+      <IDOCTYP>ORDERS05</IDOCTYP>
+      <MESTYP>ORDERS</MESTYP>
+      <SNDPOR>SAPPRD</SNDPOR>
+      <SNDPRT>LS</SNDPRT>
+      <SNDPRN>PRDCLNT100</SNDPRN>
+      <RCVPOR>A000000012</RCVPOR>
+      <RCVPRT>LI</RCVPRT>
+      <RCVPRN>0000012345</RCVPRN>
+      <CREDAT>20260819</CREDAT>
+      <CRETIM>103000</CRETIM>
+      <REFMES>4500098231</REFMES>
+    </EDI_DC40>
+    <E1EDK01 SEGMENT="1">
+      <CURCY>EUR</CURCY>
+      <WKURS>1.00000</WKURS>
+      <BELNR>4500098231</BELNR>
+      <NTGEW>412.500</NTGEW>
+      <GEWEI>KGM</GEWEI>
+    </E1EDK01>
+    <E1EDK14 SEGMENT="1">
+      <QUALF>006</QUALF>
+      <ORGID>1000</ORGID>
+    </E1EDK14>
+    <E1EDK03 SEGMENT="1">
+      <IDDAT>002</IDDAT>
+      <DATUM>20260819</DATUM>
+    </E1EDK03>
+    <E1EDK03 SEGMENT="1">
+      <IDDAT>002</IDDAT>
+      <DATUM>20260826</DATUM>
+    </E1EDK03>
+    <E1EDKA1 SEGMENT="1">
+      <PARVW>AG</PARVW>
+      <PARTN>0000012345</PARTN>
+      <NAME1>Acme Retail BV</NAME1>
+      <STRAS>Coolsingel 40</STRAS>
+      <ORT01>Rotterdam</ORT01>
+      <PSTLZ>3011 AD</PSTLZ>
+      <LAND1>NL</LAND1>
+    </E1EDKA1>
+    <E1EDKA1 SEGMENT="1">
+      <PARVW>WE</PARVW>
+      <PARTN>0000012399</PARTN>
+      <NAME1>Acme Retail Warehouse 1</NAME1>
+      <STRAS>Havenweg 12</STRAS>
+      <ORT01>Rotterdam</ORT01>
+      <PSTLZ>3011 XX</PSTLZ>
+      <LAND1>NL</LAND1>
+    </E1EDKA1>
+    <E1EDP01 SEGMENT="1">
+      <POSEX>000010</POSEX>
+      <MENGE>480</MENGE>
+      <MENEE>PCE</MENEE>
+      <E1EDP19 SEGMENT="1">
+        <QUALF>001</QUALF>
+        <IDTNR>WIDGET-001</IDTNR>
+        <KTEXT>Stainless widget 40mm</KTEXT>
+      </E1EDP19>
+      <E1EDP26 SEGMENT="1">
+        <QUALF>003</QUALF>
+        <BETRG>86400.00</BETRG>
+      </E1EDP26>
+    </E1EDP01>
+    <E1EDP01 SEGMENT="1">
+      <POSEX>000020</POSEX>
+      <MENGE>120</MENGE>
+      <MENEE>PCE</MENEE>
+      <E1EDP19 SEGMENT="1">
+        <QUALF>001</QUALF>
+        <IDTNR>GADGET-007</IDTNR>
+        <KTEXT>Gadget boxed</KTEXT>
+      </E1EDP19>
+      <E1EDP26 SEGMENT="1">
+        <QUALF>003</QUALF>
+        <BETRG>5040.00</BETRG>
+      </E1EDP26>
+    </E1EDP01>
+    <E1EDS01 SEGMENT="1">
+      <SUMID>002</SUMID>
+      <SUMME>2</SUMME>
+    </E1EDS01>
+  </IDOC>
+</ORDERS05>

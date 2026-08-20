@@ -1,0 +1,12 @@
+{
+  "schema": {
+    "fields": [
+      { "name": "sku", "type": { "name": "utf8" }, "nullable": false, "children": [] },
+      { "name": "warehouse", "type": { "name": "fixedsizebinary", "byteWidth": 3 }, "nullable": false, "children": [] },
+      { "name": "on_hand", "type": { "name": "int", "bitWidth": 32, "isSigned": true }, "nullable": false, "children": [] },
+      { "name": "reserved", "type": { "name": "int", "bitWidth": 32, "isSigned": true }, "nullable": false, "children": [] },
+      { "name": "counted_at", "type": { "name": "timestamp", "unit": "SECOND", "timezone": "UTC" }, "nullable": true, "children": [] }
+    ],
+    "metadata": [{ "key": "source", "value": "warehouse.public.inventory" }]
+  }
+}

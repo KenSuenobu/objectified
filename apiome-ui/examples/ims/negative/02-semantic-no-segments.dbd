@@ -1,0 +1,9 @@
+*********************************************************************
+* A DBD with a dataset and no SEGM statements: the database is       *
+* declared but describes no records, so there is nothing to model.   *
+*********************************************************************
+         DBD   NAME=HOLLOWDB,ACCESS=(HDAM,OSAM)
+         DATASET DD1=HOLLOW,DEVICE=3390,SIZE=4096
+         DBDGEN
+         FINISH
+         END

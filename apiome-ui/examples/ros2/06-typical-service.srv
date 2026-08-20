@@ -1,0 +1,16 @@
+# Request and response separated by the --- delimiter.
+
+# ---------------------------------------------------------------- request
+string map_name
+bool overwrite_existing false
+geometry_msgs/Pose initial_pose
+---
+# ---------------------------------------------------------------- response
+uint8 RESULT_OK=0
+uint8 RESULT_NAME_TAKEN=1
+uint8 RESULT_INVALID_POSE=2
+uint8 RESULT_STORAGE_FULL=3
+
+uint8 result
+string message
+string map_uri

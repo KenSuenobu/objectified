@@ -1,0 +1,9 @@
+<policies>
+  <!--
+    Well-formed XML with a policies root, but none of the four required sections
+    (inbound, backend, outbound, on-error) is present, so no pipeline stage is defined
+    and no policy semantics can be read.
+  -->
+  <set-backend-service base-url="https://orders.internal.example.com" />
+  <rate-limit calls="100" renewal-period="60" />
+</policies>

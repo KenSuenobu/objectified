@@ -1,0 +1,76 @@
+/// Platform configuration template as a team ships one: an open base class every service
+/// amends, constrained members with defaults, and two concrete services.
+/// Reconstructed shape; no upstream text copied.
+module example.platform
+
+typealias Environment = "dev" | "staging" | "production"
+
+typealias CpuQuantity = String(matches(Regex("^[0-9]+m$")))
+
+typealias MemoryQuantity = String(matches(Regex("^[0-9]+(Mi|Gi)$")))
+
+class Resources {
+  cpu: CpuQuantity = "250m"
+  memory: MemoryQuantity = "512Mi"
+}
+
+class Probe {
+  path: String(startsWith("/")) = "/healthz"
+  initialDelaySeconds: Int(isBetween(0, 300)) = 10
+  periodSeconds: Int(isPositive) = 10
+  failureThreshold: Int(isPositive) = 3
+}
+
+class Ingress {
+  enabled: Boolean = false
+  host: String?(matches(Regex("^[a-z0-9.-]+$")))
+  paths: Listing<String(startsWith("/"))> = new { "/" }
+  tls: Boolean = true
+}
+
+open class Service {
+  name: String(matches(Regex("^[a-z][a-z0-9-]*$")), length.isBetween(3, 40))
+  env: Environment
+  image: String(matches(Regex("^[a-z0-9./-]+:[a-zA-Z0-9._-]+$")))
+  replicas: Int(isBetween(1, 50)) = 2
+  port: Int(isBetween(1024, 65535)) = 8080
+
+  resources: Resources = new {}
+  liveness: Probe = new {}
+  readiness: Probe = new { path = "/readyz" }
+  ingress: Ingress = new {}
+
+  envVars: Mapping<String, String> = new {}
+  secrets: Listing<String> = new {}
+}
+
+class ProductionService extends Service {
+  env = "production"
+  replicas: Int(isBetween(2, 50)) = 4
+}
+
+services: Mapping<String, Service> = new {
+  ["orders"] = new ProductionService {
+    name = "orders"
+    image = "registry.example.com/orders:2.3.0"
+    resources = new { cpu = "1000m"; memory = "2Gi" }
+    ingress = new {
+      enabled = true
+      host = "api.example.com"
+      paths = new { "/v2/orders" }
+    }
+    envVars = new { ["LOG_LEVEL"] = "info"; ["REGION"] = "eu-west-1" }
+    secrets = new { "orders-db"; "orders-signing-key" }
+  }
+  ["catalogue"] = new ProductionService {
+    name = "catalogue"
+    image = "registry.example.com/catalogue:1.9.4"
+    replicas = 2
+    ingress = new {
+      enabled = true
+      host = "api.example.com"
+      paths = new { "/v2/products" }
+    }
+    envVars = new { ["LOG_LEVEL"] = "warn" }
+  }
+}

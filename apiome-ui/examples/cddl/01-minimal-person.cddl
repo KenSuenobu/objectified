@@ -1,0 +1,6 @@
+; The canonical CDDL hello-world: one map rule with three members.
+person = {
+  name: tstr,
+  age: uint,
+  ? email: tstr,
+}

@@ -1,0 +1,6 @@
+ DCL 1 BROKEN_REC,
+       2 FIELD_A CHAR(10),
+       2 FIELD_B FIXED BIN(31)
+
+ DCL 1 OTHER_REC,
+       2 FIELD_C CHAR(4);

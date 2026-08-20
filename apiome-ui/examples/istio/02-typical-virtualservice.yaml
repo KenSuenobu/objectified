@@ -1,0 +1,61 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: orders
+  namespace: storefront
+  labels:
+    app: orders
+spec:
+  hosts:
+    - api.example.com
+  gateways:
+    - storefront/public-gateway
+  http:
+    - name: health
+      match:
+        - uri:
+            exact: /healthz
+      directResponse:
+        status: 200
+        body:
+          string: '{"status":"ok"}'
+
+    - name: orders-v2
+      match:
+        - uri:
+            prefix: /v2/orders
+          method:
+            exact: GET
+        - uri:
+            prefix: /v2/orders
+          method:
+            exact: POST
+      route:
+        - destination:
+            host: orders.storefront.svc.cluster.local
+            port:
+              number: 8080
+      timeout: 15s
+      retries:
+        attempts: 3
+        perTryTimeout: 4s
+        retryOn: 5xx,connect-failure,refused-stream
+
+    - name: catalogue
+      match:
+        - uri:
+            prefix: /v2/products
+      rewrite:
+        uri: /products
+      route:
+        - destination:
+            host: catalogue.storefront.svc.cluster.local
+            port:
+              number: 8080
+
+    - name: default
+      route:
+        - destination:
+            host: legacy.storefront.svc.cluster.local
+            port:
+              number: 80

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UANodeSet xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <NamespaceUris>
+    <Uri>http://example.com/UA/Machine/</Uri>
+  </NamespaceUris>
+  <Models>
+    <Model ModelUri="http://example.com/UA/Machine/" Version="1.2.0"
+           PublicationDate="2026-08-19T00:00:00Z">
+      <RequiredModel ModelUri="http://opcfoundation.org/UA/" Version="1.05.03"
+                     PublicationDate="2025-06-01T00:00:00Z"/>
+    </Model>
+  </Models>
+  <Aliases>
+    <Alias Alias="Boolean">i=1</Alias>
+    <Alias Alias="Int32">i=6</Alias>
+    <Alias Alias="Double">i=11</Alias>
+    <Alias Alias="String">i=12</Alias>
+    <Alias Alias="DateTime">i=13</Alias>
+    <Alias Alias="HasSubtype">i=45</Alias>
+    <Alias Alias="HasProperty">i=46</Alias>
+    <Alias Alias="HasComponent">i=47</Alias>
+    <Alias Alias="HasTypeDefinition">i=40</Alias>
+    <Alias Alias="HasModellingRule">i=37</Alias>
+  </Aliases>
+
+  <UADataType NodeId="ns=1;i=3001" BrowseName="1:MachineState">
+    <DisplayName>MachineState</DisplayName>
+    <References>
+      <Reference ReferenceType="HasSubtype" IsForward="false">i=29</Reference>
+    </References>
+    <Definition Name="1:MachineState">
+      <Field Name="Idle" Value="0"/>
+      <Field Name="Running" Value="1"/>
+      <Field Name="Faulted" Value="2"/>
+      <Field Name="Maintenance" Value="3"/>
+    </Definition>
+  </UADataType>
+
+  <UAObjectType NodeId="ns=1;i=1002" BrowseName="1:MachineType">
+    <DisplayName>MachineType</DisplayName>
+    <Description>A production machine with identification and live measurements.</Description>
+    <References>
+      <Reference ReferenceType="HasSubtype" IsForward="false">i=58</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=6010</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=6011</Reference>
+      <Reference ReferenceType="HasProperty">ns=1;i=6012</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=7001</Reference>
+    </References>
+  </UAObjectType>
+
+  <UAVariable NodeId="ns=1;i=6010" BrowseName="1:State" DataType="ns=1;i=3001"
+              ParentNodeId="ns=1;i=1002" AccessLevel="1">
+    <DisplayName>State</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1002</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAVariable NodeId="ns=1;i=6011" BrowseName="1:Temperature" DataType="Double"
+              ParentNodeId="ns=1;i=1002" AccessLevel="1" MinimumSamplingInterval="500">
+    <DisplayName>Temperature</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1002</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAVariable NodeId="ns=1;i=6012" BrowseName="1:SerialNumber" DataType="String"
+              ParentNodeId="ns=1;i=1002" AccessLevel="1">
+    <DisplayName>SerialNumber</DisplayName>
+    <References>
+      <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=1002</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAMethod NodeId="ns=1;i=7001" BrowseName="1:Start" ParentNodeId="ns=1;i=1002">
+    <DisplayName>Start</DisplayName>
+    <Description>Start the machine with a named programme.</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1002</Reference>
+      <Reference ReferenceType="HasProperty">ns=1;i=6013</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAMethod>
+
+  <UAVariable NodeId="ns=1;i=6013" BrowseName="InputArguments" DataType="i=296"
+              ParentNodeId="ns=1;i=7001" ValueRank="1" ArrayDimensions="1">
+    <DisplayName>InputArguments</DisplayName>
+    <References>
+      <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=7001</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+    <Value>
+      <ListOfExtensionObject xmlns="http://opcfoundation.org/UA/2008/02/Types.xsd">
+        <ExtensionObject>
+          <TypeId><Identifier>i=297</Identifier></TypeId>
+          <Body>
+            <Argument>
+              <Name>ProgrammeName</Name>
+              <DataType><Identifier>i=12</Identifier></DataType>
+              <ValueRank>-1</ValueRank>
+              <ArrayDimensions/>
+              <Description><Locale/><Text>Programme to run.</Text></Description>
+            </Argument>
+          </Body>
+        </ExtensionObject>
+      </ListOfExtensionObject>
+    </Value>
+  </UAVariable>
+</UANodeSet>

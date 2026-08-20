@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSG-20260819-0002</MsgId>
+      <CreDtTm>2026-08-19T10:45:00</CreDtTm>
+      <NbOfTxs>3</NbOfTxs>
+      <CtrlSum>13350.00</CtrlSum>
+      <InitgPty>
+        <Nm>Example Company BV</Nm>
+        <Id>
+          <OrgId>
+            <Othr>
+              <Id>NL123456789B01</Id>
+              <SchmeNm><Cd>TXID</Cd></SchmeNm>
+            </Othr>
+          </OrgId>
+        </Id>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>SALARY-2026-08</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>true</BtchBookg>
+      <NbOfTxs>3</NbOfTxs>
+      <CtrlSum>13350.00</CtrlSum>
+      <PmtTpInf>
+        <InstrPrty>NORM</InstrPrty>
+        <SvcLvl><Cd>SEPA</Cd></SvcLvl>
+        <CtgyPurp><Cd>SALA</Cd></CtgyPurp>
+      </PmtTpInf>
+      <ReqdExctnDt><Dt>2026-08-25</Dt></ReqdExctnDt>
+      <Dbtr>
+        <Nm>Example Company BV</Nm>
+        <PstlAdr>
+          <StrtNm>Keizersgracht</StrtNm>
+          <BldgNb>1</BldgNb>
+          <PstCd>1015 CJ</PstCd>
+          <TwnNm>Amsterdam</TwnNm>
+          <Ctry>NL</Ctry>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id><IBAN>NL91ABNA0417164300</IBAN></Id>
+        <Ccy>EUR</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+
+      <CdtTrfTxInf>
+        <PmtId>
+          <InstrId>INSTR-0001</InstrId>
+          <EndToEndId>SAL-0001</EndToEndId>
+        </PmtId>
+        <Amt><InstdAmt Ccy="EUR">4500.00</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>INGBNL2A</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Sample Alex</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>NL69INGB0123456789</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>Salary August 2026</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+
+      <CdtTrfTxInf>
+        <PmtId>
+          <InstrId>INSTR-0002</InstrId>
+          <EndToEndId>SAL-0002</EndToEndId>
+        </PmtId>
+        <Amt><InstdAmt Ccy="EUR">5100.00</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>RABONL2U</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Sample Jordan</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>NL44RABO0123456789</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>Salary August 2026</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+
+      <CdtTrfTxInf>
+        <PmtId>
+          <InstrId>INSTR-0003</InstrId>
+          <EndToEndId>SAL-0003</EndToEndId>
+        </PmtId>
+        <Amt><InstdAmt Ccy="EUR">3750.00</InstdAmt></Amt>
+        <Cdtr><Nm>Sample Chris</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>BE68539007547034</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>Salary August 2026</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

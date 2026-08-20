@@ -1,0 +1,16 @@
+{
+  "api_id": "versionless-api",
+  "name": "Versionless API",
+  "org_id": "000000000000000000000001",
+  "active": true,
+  "proxy": {
+    "listen_path": "/versionless/",
+    "target_url": "http://versionless.internal.example.com:8080",
+    "strip_listen_path": true
+  },
+  "version_data": {
+    "not_versioned": false,
+    "default_version": "v1",
+    "versions": {}
+  }
+}

@@ -1,0 +1,22 @@
+DDM Name ...... CUSTOMER-FILE
+DB ............ 001
+File .......... 010
+Default Sequence AA
+
+* Root of the set: the data definition module. The Natural source in the
+* sibling file defines a VIEW over a subset of these fields, which is what
+* the program actually sees.
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA CUSTOMER-NUMBER                  A    10     U
+  1 AB CUSTOMER-NAME                    A    40     D
+  1 AC CUSTOMER-STATUS                  A     1     D
+  1 AD DATE-OPENED                      N     8.0   N
+  1 AE BALANCE                          P    11.2   N
+  1 AF CURRENCY                         A     3     N
+M 1 AG PHONE-NUMBER                     A    20     N
+P 1 AH CONTACT                                        Periodic group
+  2 AI CONTACT-TYPE                     A     2     N
+  2 AJ CONTACT-VALUE                    A    60     N
+S 1 S1 SUPER-NAME-STATUS                A    41     D AB(1-40),AC(1-1)

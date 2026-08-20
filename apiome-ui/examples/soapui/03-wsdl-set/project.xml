@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Root of the set: the interface points at a local WSDL rather than a URL, so the schema
+  fidelity FMT-10.3 promises only exists once both files are present. WSDL-backed
+  interfaces must delegate to the shipped WSDL adapter and match its goldens.
+-->
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config"
+                    id="7a1c0000-0000-4000-8000-000000000100"
+                    name="Catalogue SOAP">
+  <con:settings/>
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:WsdlInterface"
+                 id="7a1c0000-0000-4000-8000-000000000101"
+                 name="CatalogueServiceSoapBinding"
+                 type="wsdl"
+                 bindingName="{http://example.com/catalogue}CatalogueServiceSoapBinding"
+                 soapVersion="1_1"
+                 definition="catalogue.wsdl">
+    <con:settings/>
+    <con:definitionCache type="TEXT" rootPart="catalogue.wsdl"/>
+    <con:endpoints>
+      <con:endpoint>https://api.example.com/catalogue</con:endpoint>
+    </con:endpoints>
+    <con:operation id="7a1c0000-0000-4000-8000-000000000102"
+                   action="http://example.com/catalogue/GetProduct"
+                   name="GetProduct"
+                   bindingOperationName="GetProduct"
+                   type="Request-Response"
+                   inputName="GetProductRequest"
+                   outputName="GetProductResponse">
+      <con:settings/>
+      <con:call id="7a1c0000-0000-4000-8000-000000000103" name="Request 1">
+        <con:settings/>
+        <con:endpoint>https://api.example.com/catalogue</con:endpoint>
+        <con:request>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cat="http://example.com/catalogue"&gt;&lt;soapenv:Body&gt;&lt;cat:GetProductRequest&gt;&lt;cat:sku&gt;WID-0001&lt;/cat:sku&gt;&lt;/cat:GetProductRequest&gt;&lt;/soapenv:Body&gt;&lt;/soapenv:Envelope&gt;</con:request>
+      </con:call>
+    </con:operation>
+  </con:interface>
+  <con:properties/>
+</con:soapui-project>

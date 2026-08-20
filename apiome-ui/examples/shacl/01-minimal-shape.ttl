@@ -1,0 +1,13 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:   <https://example.com/ns#> .
+
+ex:BeaconShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Beacon ;
+    sh:property [
+        sh:path ex:identifier ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .

@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: orders
+    description: Order facts, one row per order.
+    meta:
+      owner: commerce-analytics
+      maturity: production
+    tags: [commerce, nightly]
+    columns:
+      - name: order_id
+        description: Business identifier of the order.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key into customers.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: status
+        description: Order lifecycle status.
+        tests:
+          - accepted_values:
+              values: [new, paid, shipped, cancelled]
+      - name: placed_at
+        description: When the order was placed, UTC.
+        tests:
+          - not_null
+      - name: total_amount
+        description: Order total in the order currency.
+
+  - name: customers
+    description: One row per customer.
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: email
+        description: Contact address; hashed downstream.
+      - name: country_code
+        tests:
+          - accepted_values:
+              values: [NL, BE, DE, FR, GB, US]
+              quote: true

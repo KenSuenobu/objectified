@@ -1,0 +1,46 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:   <https://example.com/ns#> .
+
+# A deliberately cyclic shape graph: PersonShape requires KnowsShape, which requires
+# PersonShape again. SHACL leaves recursion undefined, so a reader must terminate and
+# say so rather than looping — this is the FMT-9.4 cyclic case.
+
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:knows ;
+        sh:node ex:KnowsShape ;
+    ] .
+
+ex:KnowsShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path ex:person ;
+        sh:node ex:PersonShape ;
+        sh:minCount 1 ;
+    ] .
+
+# A second cycle, through sh:or.
+ex:AShape
+    a sh:NodeShape ;
+    sh:or ( ex:BShape [ sh:datatype xsd:string ] ) .
+
+ex:BShape
+    a sh:NodeShape ;
+    sh:or ( ex:AShape [ sh:datatype xsd:integer ] ) .
+
+# Self-referential shape.
+ex:TreeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:TreeNode ;
+    sh:property [
+        sh:path ex:child ;
+        sh:node ex:TreeShape ;
+    ] .

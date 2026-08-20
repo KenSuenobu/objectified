@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config" name="Broken">
+  <con:settings/>
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:RestService" name="Broken" type="rest">
+    <con:endpoints>
+      <con:endpoint>https://api.example.com</con:endpoint>
+    </con:endpoints>
+</con:soapui-project>

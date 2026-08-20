@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://www.w3.org/ns/wsdl"
+             xmlns:tns="http://example.com/billing"
+             xmlns:inv="http://example.com/billing/types"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:wsoap="http://www.w3.org/ns/wsdl/soap"
+             targetNamespace="http://example.com/billing">
+
+  <documentation>Root of the set: the types live in the imported invoice.xsd.</documentation>
+
+  <types>
+    <xs:schema>
+      <xs:import namespace="http://example.com/billing/types" schemaLocation="invoice.xsd"/>
+    </xs:schema>
+  </types>
+
+  <interface name="BillingInterface">
+    <operation name="getInvoice" pattern="http://www.w3.org/ns/wsdl/in-out">
+      <input messageLabel="In" element="inv:getInvoice"/>
+      <output messageLabel="Out" element="inv:invoice"/>
+    </operation>
+  </interface>
+
+  <binding name="BillingBinding"
+           interface="tns:BillingInterface"
+           type="http://www.w3.org/ns/wsdl/soap"
+           wsoap:protocol="http://www.w3.org/2003/05/soap/bindings/HTTP/">
+    <operation ref="tns:getInvoice"/>
+  </binding>
+
+  <service name="BillingService" interface="tns:BillingInterface">
+    <endpoint name="Main" binding="tns:BillingBinding" address="https://api.example.com/billing"/>
+  </service>
+</description>

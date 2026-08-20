@@ -1,0 +1,67 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: 0f6d2f0e-1b2c-4a5e-9f2a-000000000007
+name: shipment_events
+version: 1.0.0
+status: active
+domain: logistics
+
+description:
+  purpose: >
+    Root of the set. The schema's structural detail is delegated to a sibling JSON Schema
+    through authoritativeDefinitions, and the quality rule pack lives in a second file —
+    so this contract is only complete alongside them.
+
+schema:
+  - name: shipment_events
+    logicalType: object
+    physicalType: table
+    description: One row per shipment lifecycle event.
+    authoritativeDefinitions:
+      - url: ./shipment-event.schema.json
+        type: schemaDefinition
+    properties:
+      - name: event_id
+        logicalType: string
+        physicalType: uuid
+        required: true
+        primaryKey: true
+      - name: shipment_id
+        logicalType: string
+        physicalType: varchar(12)
+        required: true
+      - name: event_type
+        logicalType: string
+        physicalType: varchar(24)
+        required: true
+      - name: occurred_at
+        logicalType: date
+        physicalType: timestamp
+        required: true
+        partitioned: true
+      - name: payload
+        logicalType: object
+        physicalType: jsonb
+        description: Event body; its shape is defined by the referenced JSON Schema.
+
+servers:
+  - server: warehouse
+    type: postgres
+    host: warehouse.example.com
+    port: 5432
+    database: analytics
+    schema: logistics
+
+team:
+  - username: l.owner
+    role: Data Product Owner
+    dateIn: 2026-05-01
+
+slaProperties:
+  - property: latency
+    value: 15
+    unit: m
+    element: shipment_events.occurred_at
+
+tags:
+  - logistics

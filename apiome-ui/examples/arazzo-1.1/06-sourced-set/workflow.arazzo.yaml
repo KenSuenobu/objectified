@@ -1,0 +1,31 @@
+arazzo: 1.1.0
+info:
+  title: Locally sourced workflow
+  version: 1.0.0
+sourceDescriptions:
+  - name: inventory
+    url: ./inventory.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: reserveStock
+    summary: Reserve stock through the API described by the sibling file.
+    inputs:
+      type: object
+      properties:
+        sku:
+          type: string
+      required: [sku]
+    steps:
+      - stepId: reserve
+        operationId: $sourceDescriptions.inventory.reserveStock
+        requestBody:
+          contentType: application/json
+          payload:
+            sku: $inputs.sku
+            quantity: 1
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          reservationId: $response.body#/reservationId
+    outputs:
+      reservationId: $steps.reserve.outputs.reservationId

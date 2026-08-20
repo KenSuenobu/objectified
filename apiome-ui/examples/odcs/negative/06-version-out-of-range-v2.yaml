@@ -1,0 +1,18 @@
+apiVersion: v2.2.2
+kind: DataContract
+uuid: 0f6d2f0e-1b2c-4a5e-9f2a-0000000000e6
+quantumName: legacy_orders
+version: 1.0.0
+status: current
+datasetDomain: commerce
+dataset:
+  - table: orders
+    physicalName: orders_v1
+    columns:
+      - column: order_id
+        logicalType: string
+        physicalType: varchar(20)
+        isPrimary: true
+      - column: placed_at
+        logicalType: date
+        physicalType: timestamp

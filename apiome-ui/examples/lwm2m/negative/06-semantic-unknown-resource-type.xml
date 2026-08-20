@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!--
+    `Decimal128` and `Quaternion` are not LwM2M resource types, and the Operations value
+    `RX` is not a valid combination, so neither resource can be typed or mapped to an
+    access mode.
+  -->
+  <Object ObjectType="MODefinition">
+    <Name>Untyped</Name>
+    <ObjectID>32797</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:x:32797</ObjectURN>
+    <LWM2MVersion>1.1</LWM2MVersion>
+    <ObjectVersion>1.0</ObjectVersion>
+    <MultipleInstances>Single</MultipleInstances>
+    <Mandatory>Optional</Mandatory>
+    <Resources>
+      <Item ID="0">
+        <Name>Odd Value</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>Decimal128</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Not an LwM2M type.</Description>
+      </Item>
+      <Item ID="1">
+        <Name>Odder Value</Name>
+        <Operations>RX</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Quaternion</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Neither the type nor the operation set is valid.</Description>
+      </Item>
+    </Resources>
+    <Description2/>
+  </Object>
+</LWM2M>

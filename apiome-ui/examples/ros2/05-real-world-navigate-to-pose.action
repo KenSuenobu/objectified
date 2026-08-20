@@ -1,0 +1,28 @@
+# Navigation goal as a robotics stack ships it: goal, result and feedback separated by
+# the --- delimiters. Reconstructed shape; no upstream text copied.
+
+# ---------------------------------------------------------------- goal
+geometry_msgs/PoseStamped pose
+string behavior_tree
+float32 max_speed 0.55
+bool allow_reversing false
+---
+# ---------------------------------------------------------------- result
+uint16 NONE=0
+uint16 UNKNOWN=1
+uint16 FAILED_TO_MAKE_PROGRESS=2
+uint16 NO_VALID_CONTROL=3
+uint16 TIMEOUT=4
+uint16 CANCELLED=5
+
+uint16 error_code
+string error_msg
+builtin_interfaces/Duration total_time
+float32 distance_travelled
+---
+# ---------------------------------------------------------------- feedback
+geometry_msgs/PoseStamped current_pose
+builtin_interfaces/Duration navigation_time
+builtin_interfaces/Duration estimated_time_remaining
+int16 number_of_recoveries
+float32 distance_remaining

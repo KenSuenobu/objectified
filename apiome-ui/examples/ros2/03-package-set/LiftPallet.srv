@@ -1,0 +1,8 @@
+# Service in the same package; its request references the sibling message by bare name.
+string pallet_id
+float32 target_height_m
+LoadCell[] expected_cells
+---
+bool accepted
+string message
+PalletStatus status

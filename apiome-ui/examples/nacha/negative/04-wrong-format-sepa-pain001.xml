@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>SEPA-20260819-0001</MsgId>
+      <CreDtTm>2026-08-19T10:30:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>150.00</CtrlSum>
+      <InitgPty><Nm>EXAMPLE COMPANY</Nm></InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>BATCH-0001</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <ReqdExctnDt><Dt>2026-08-20</Dt></ReqdExctnDt>
+      <Dbtr><Nm>EXAMPLE COMPANY</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>NL91ABNA0417164300</IBAN></Id></DbtrAcct>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>SALARY-0001</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">150.00</InstdAmt></Amt>
+        <Cdtr><Nm>SAMPLE ALEX</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>NL02ABNA0123456789</IBAN></Id></CdtrAcct>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

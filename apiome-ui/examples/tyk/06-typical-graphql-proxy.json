@@ -1,0 +1,31 @@
+{
+  "api_id": "graph-api",
+  "name": "Graph API",
+  "org_id": "000000000000000000000001",
+  "active": true,
+  "use_keyless": false,
+  "auth_configs": { "authToken": { "auth_header_name": "Authorization" } },
+  "proxy": {
+    "listen_path": "/graph/",
+    "target_url": "http://graph.internal.example.com:4000/graphql",
+    "strip_listen_path": true
+  },
+  "graphql": {
+    "enabled": true,
+    "execution_mode": "proxyOnly",
+    "version": "2",
+    "schema": "type Query { product(sku: ID!): Product orders(status: OrderStatus): [Order!]! }\ntype Mutation { placeOrder(input: NewOrder!): Order! }\ntype Product { sku: ID! name: String! price: Float! }\ntype Order { id: ID! status: OrderStatus! total: Float! }\nenum OrderStatus { NEW PAID SHIPPED CANCELLED }\ninput NewOrder { sku: ID! quantity: Int! }",
+    "playground": { "enabled": false, "path": "/playground" },
+    "engine": {
+      "field_configs": [
+        { "type_name": "Query", "field_name": "orders", "disable_default_mapping": false }
+      ]
+    }
+  },
+  "version_data": {
+    "not_versioned": true,
+    "default_version": "Default",
+    "versions": { "Default": { "name": "Default", "use_extended_paths": true } }
+  },
+  "global_rate_limit": { "rate": 120, "per": 60 }
+}

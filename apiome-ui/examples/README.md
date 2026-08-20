@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **544 files** across **43 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **1410 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -21,19 +21,37 @@ The corpus holds **544 files** across **43 format directories**. Every file has 
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
 | `api-blueprint/` | API Blueprint | rest | `FORMAT: 1A` metadata line | 11 |
+| `apigee/` | Apigee proxy bundle (pending #5457) | rest | zip with `apiproxy/` members and an `APIProxy` manifest, or a `ProxyEndpoint`/`TargetEndpoint` root | 15 |
 | `arazzo/` | Arazzo workflows | rest | top-level `arazzo:` version | 11 |
+| `arazzo-1.1/` | Arazzo 1.1 workflows (pending #5426) | rest | top-level `arazzo: 1.1.x` | 14 |
+| `aws-apigateway/` | AWS API Gateway (pending #5455) | rest | OpenAPI document carrying `x-amazon-apigateway-*` extensions | 13 |
+| `azure-apim/` | Azure API Management (pending #5456) | rest | `<policies>` sections, or `Microsoft.ApiManagement/service/apis` ARM resources | 14 |
+| `consul/` | Consul service definitions (pending #5459) | rest | `service`/`services` definitions, or `Kind: service-router`/`ingress-gateway` | 15 |
 | `discovery/` | Google API Discovery | rest | `kind: discovery#restDescription` / `discoveryVersion` | 11 |
+| `envoy-xds/` | Envoy xDS routes (pending #5458) | rest | `static_resources` + `HttpConnectionManager`, or `virtual_hosts[]` route config | 15 |
 | `gateway-api/` | Gateway API HTTPRoute | rest | `apiVersion: gateway.networking.k8s.io/*` + `kind: HTTPRoute` | 13 |
+| `haproxy/` | HAProxy configuration (pending #5459) | rest | `frontend`/`backend`/`listen` sections with `bind`, `acl`, `use_backend` | 16 |
+| `hoppscotch/` | Hoppscotch collections (pending #5473) | rest | top-level `v` + `folders[]`/`requests[]` with `endpoint` and `auth.authType` | 14 |
 | `http-file/` | HTTP Request File | rest | HTTP request line / `###` separators / `curl` / `.http` `.rest` | 13 |
+| `istio/` | Istio traffic resources (pending #5458) | rest | `apiVersion: networking.istio.io/*` + `kind: VirtualService` | 15 |
 | `kong/` | Kong Declarative Config | rest | `_format_version` + `services:`/`routes:` declarative sections | 12 |
+| `nginx/` | nginx configuration (pending #5459) | rest | `server { listen … location … }` / `upstream … { server … }` blocks | 15 |
 | `odata/` | OData v4 (EDMX) | rest | `<edmx:Edmx>` root | 12 |
+| `odata-v2/` | OData v2 / v3 (CSDL) (pending #5429) | rest | `<edmx:Edmx>` with the 2007/06 or 2009/11 EDM namespaces | 14 |
 | `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 44 |
 | `postman/` | Postman v2.1 | rest | collection `info.schema` URL | 11 |
+| `postman-v2/` | Postman Collection v2.0 (pending #5431) | rest | `info.schema` ending `/collection/v2.0.0/collection.json` | 13 |
 | `raml/` | RAML 1.0 | rest | `#%RAML 1.0` header | 11 |
+| `soapui/` | SoapUI / ReadyAPI projects (pending #5477) | rest | `<con:soapui-project>` root in the eviware config namespace | 14 |
 | `swagger/` | Swagger 2.0 | rest | `swagger: "2.0"` | 1 |
+| `swagger-1.2/` | Swagger 1.2 (pending #5431) | rest | `"swaggerVersion": "1.2"` | 14 |
+| `thunder-client/` | Thunder Client collections (pending #5475) | rest | `"clientName": "Thunder Client"` + `requests[]` or environment `data[]` | 14 |
+| `traefik/` | Traefik dynamic config (pending #5459) | rest | `http.routers` + `http.services` (YAML/TOML), or `kind: IngressRoute` | 15 |
+| `tyk/` | Tyk API definition (pending #5459) | rest | `api_id` + `proxy.listen_path`, or an OpenAPI document with `x-tyk-api-gateway` | 14 |
 | `typespec/` | TypeSpec | rest | `import "@typespec/..."` | 11 |
 | `wadl/` | WADL | rest | `<application>` root (WADL namespace) | 12 |
 | `wsdl/` | WSDL 1.1 (SOAP) | soap | `<wsdl:definitions>` root | 13 |
+| `wsdl2/` | WSDL 2.0 (pending #5428) | soap | `<description>` root in the `http://www.w3.org/ns/wsdl` namespace | 13 |
 | `zos-connect/` | z/OS Connect | rest | `apiRequester` / `apiProvider` descriptor | 11 |
 
 ### RPC
@@ -45,8 +63,11 @@ The corpus holds **544 files** across **43 format directories**. Every file has 
 | `onc-rpc/` | ONC RPC / XDR | rpc | `program {} = N` + XDR types | 11 |
 | `openrpc/` | OpenRPC (JSON-RPC) | rpc | top-level `openrpc:` version | 11 |
 | `protobuf/` | Protobuf / gRPC | rpc | `syntax = "proto3"` | 17 |
+| `protobuf-editions/` | Protobuf editions (pending #5432) | rpc | `edition = "2023"` / `"2024"` in place of `syntax` | 14 |
+| `ros2/` | ROS 2 interfaces (pending #5470) | rpc | `.msg`/`.srv`/`.action` field lines with ROS primitive types and `---` separators | 16 |
 | `smithy/` | Smithy 2.0 | rpc | `$version` + Smithy shapes | 11 |
 | `thrift/` | Apache Thrift | rpc | `service` / `struct` shapes | 11 |
+| `trpc/` | tRPC routers (pending #5464) | rpc | `initTRPC` + exported `t.router({...})` with `.query`/`.mutation` procedures | 16 |
 | `wit/` | WIT (WebAssembly Component Model) | rpc | `package ns:name` + `interface`/`world` blocks | 13 |
 | `xml-rpc/` | XML-RPC | rpc | `<methodCall>` / `<methodResponse>` root | 13 |
 
@@ -56,6 +77,7 @@ The corpus holds **544 files** across **43 format directories**. Every file has 
 | --- | --- | --- | --- | --- |
 | `asyncapi/` | AsyncAPI 2.x/3.0 | event | top-level `asyncapi:` version | 14 |
 | `cloudevents/` | CloudEvents 1.0 | event | `specversion` + `type` + `source` envelope | 11 |
+| `sparkplug/` | MQTT Sparkplug B (pending #5469) | event | `spBv1.0/...` topic namespace, or a Sparkplug protobuf `Payload` on the binary intake path | 15 |
 
 ### Graph
 
@@ -67,32 +89,70 @@ The corpus holds **544 files** across **43 format directories**. Every file has 
 
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
+| `arrow/` | Apache Arrow / Flight schema (pending #5438) | data_schema | `schema.fields[].type.name` in the Arrow JSON integration form | 14 |
 | `asn1/` | ASN.1 | data_schema | `DEFINITIONS ::= BEGIN … END` | 12 |
 | `avro/` | Avro schema | data_schema | `type: record` + `fields` | 11 |
+| `avro-idl/` | Avro IDL (pending #5430) | data_schema | `protocol … {` or `namespace …;` + `record` declarations in `.avdl` | 14 |
 | `capnproto/` | Cap'n Proto | data_schema | `@0x…` file id + `struct` | 11 |
+| `cddl/` | CDDL (RFC 8610) (pending #5437) | data_schema | `name = { … }` rules with `tstr`/`bstr`/`uint` prelude types | 14 |
+| `cics-bms/` | CICS BMS maps (pending #5484) | data_schema | `DFHMSD`/`DFHMDI`/`DFHMDF` macro source with column-72 continuations | 14 |
 | `cobol-copybook/` | COBOL copybook | data_schema | level numbers + `PIC` clauses | 13 |
+| `cue/` | CUE (pending #5466) | data_schema | `package …` + `#Definition: {…}` with `&`/`\|`/`=~` constraints | 15 |
+| `dbt/` | dbt models and manifests (pending #5442) | data_schema | `version: 2` + `models:`/`sources:`, or `metadata.dbt_schema_version` in a manifest | 16 |
+| `dhall/` | Dhall (pending #5466) | data_schema | `let … in …` with type annotations, union types and `::` completion | 14 |
+| `dtd/` | DTD (pending #5435) | data_schema | `<!ELEMENT>`/`<!ATTLIST>` declarations, or a `<!DOCTYPE …[…]>` internal subset | 15 |
 | `flatbuffers/` | FlatBuffers | data_schema | `table`/`struct` + `root_type` | 11 |
+| `ims/` | IMS DBD and PSB (pending #5482) | data_schema | `DBD NAME=…,ACCESS=(…)` with `SEGM`/`FIELD`, or `PCB TYPE=DB` with `SENSEG` | 14 |
 | `json-schema/` | JSON Schema | data_schema | `$schema` / `type` + `properties` | 17 |
+| `jsonld/` | JSON-LD contexts (pending #5471) | data_schema | top-level `@context` with term definitions (`@id`/`@type`/`@container`) | 14 |
 | `jtd/` | JSON Type Definition | data_schema | `properties`/`optionalProperties` | 11 |
 | `k8s-crd/` | Kubernetes CRD | data_schema | `apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition` | 11 |
+| `kafka-connect/` | Kafka Connect schema (pending #5441) | data_schema | `"type": "struct"` + `fields[].field` | 15 |
+| `lwm2m/` | LwM2M / IPSO objects (pending #5472) | data_schema | `<LWM2M>` root with `<Object ObjectType="MODefinition">` and `Resources/Item` | 15 |
+| `matter/` | Matter clusters and device types (pending #5472) | rpc | `<configurator>` root with `<cluster>` (name/code/define) or `<deviceType>` | 15 |
+| `natural-ddm/` | Natural / ADABAS DDM (pending #5486) | data_schema | `DDM Name ......` header + the `T L DB Name … F Leng S D Remark` banner | 14 |
+| `odcs/` | Open Data Contract Standard v3.1 (pending #5439) | data_schema | `apiVersion: v3.x` + `kind: DataContract` + `schema:` | 15 |
+| `opcua-nodeset/` | OPC UA NodeSet2 (pending #5468) | rpc | `<UANodeSet>` root in the OPC Foundation NodeSet2 namespace | 14 |
+| `owl/` | OWL / RDFS ontologies (pending #5471) | data_schema | `owl:Ontology`/`owl:Class`/`owl:*Property` in the OWL namespace (Turtle or RDF/XML) | 14 |
+| `pkl/` | Pkl (pending #5466) | data_schema | `module …` + `class`/`typealias` with member constraints and `Listing<…>` types | 14 |
+| `pli/` | PL/I structures (pending #5480) | data_schema | `DCL`/`DECLARE` level-numbered structures with PL/I attributes and `%INCLUDE` | 15 |
+| `pydantic/` | Pydantic models (pending #5465) | data_schema | `from pydantic import BaseModel` + `class X(BaseModel):` definitions | 15 |
+| `relaxng/` | RELAX NG (pending #5434) | data_schema | `grammar`/`element` root in the RELAX NG namespace, or a `.rnc` compact grammar | 15 |
+| `schematron/` | Schematron rules (pending #5436) | data_schema | `schema`/`pattern` root in `http://purl.oclc.org/dsdl/schematron` | 13 |
+| `shacl/` | SHACL shapes (pending #5471) | data_schema | `sh:NodeShape`/`sh:property` in the SHACL namespace (Turtle or JSON-LD) | 15 |
+| `sql-ddl/` | SQL DDL (pending #5444) | data_schema | `CREATE TABLE`/`CREATE VIEW`/`ALTER TABLE … ADD CONSTRAINT` | 15 |
+| `typescript-types/` | TypeScript type declarations (pending #5462) | data_schema | `export interface`/`export type`/`export enum` declarations in `.ts`/`.d.ts` | 15 |
+| `vsam-idcams/` | VSAM cluster definitions (pending #5484) | data_schema | `DEFINE CLUSTER`/`AIX`/`PATH` with parenthesised parameters, or `LISTCAT` output | 14 |
 | `xsd/` | XML Schema (XSD) | data_schema | `xs:schema` root element | 13 |
+| `zod/` | Zod schemas (pending #5463) | data_schema | `import { z } from 'zod'` + exported `z.object(...)` values | 15 |
 
 ### Industry / domain messaging
 
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
+| `dicom/` | DICOM (pending #5451) | data_schema | `DICM` magic at offset 128, or 8-hex-digit keys with `vr`/`Value` (DICOM JSON) | 15 |
 | `edi-x12/` | EDI ASC X12 | message | `ISA`/`GS`/`ST` envelopes | 12 |
+| `edifact/` | UN/EDIFACT (pending #5445) | message | `UNB`/`UNH` envelopes, optional `UNA` service string advice | 16 |
 | `fhir/` | FHIR R4 | data_schema | `resourceType` (+ StructureDefinition) | 11 |
 | `fix/` | FIX / FIX Orchestra | message | `8=FIX.` tags / `<fixr:repository>` | 11 |
+| `fix-orchestra/` | FIX Orchestra (pending #5453) | message | `<fixr:repository>` root in the Orchestra namespace | 14 |
 | `hl7v2/` | HL7 v2.x | message | `MSH\|^~\&\|` message header | 11 |
+| `hl7v3/` | HL7 v3 / CDA (pending #5448) | message | `<ClinicalDocument>` root in the `urn:hl7-org:v3` namespace | 14 |
+| `idoc/` | SAP IDoc (pending #5446) | message | `EDI_DC40` control record (flat) or `<IDOC>` + `<EDI_DC40>` (XML) | 14 |
 | `iso20022/` | ISO 20022 | message | `urn:iso:std:iso:20022` XML namespace | 12 |
 | `iso8583/` | ISO 8583 | message | `mti` + numbered `dataElements` | 11 |
+| `nacha/` | NACHA ACH (pending #5450) | message | 94-character records: `1` file header, `5`/`6`/`7`/`8`/`9` types | 14 |
+| `ncpdp/` | NCPDP SCRIPT / Telecom (pending #5452) | message | `Message` root in the NCPDP SCRIPT namespace, or a `D0` Telecom transaction header | 14 |
+| `sepa/` | SEPA payment files (pending #5450) | message | `urn:iso:std:iso:20022:tech:xsd:pain.*`/`pacs.*`/`camt.*` namespace | 14 |
+| `swift-mt/` | SWIFT MT (pending #5447) | message | `{1:` basic header + `{4:` text block terminated by `-}` | 14 |
+| `tradacoms/` | TRADACOMS (pending #5449) | message | `STX=` transmission header + `END=` trailer | 15 |
 
 ### Agent / LLM tools
 
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
 | `llm-tools/` | LLM Tools | agent | OpenAI / Anthropic / bare tool-array shape | 11 |
+| `mcp/` | MCP server manifest (pending #5418) | agent | `mcpVersion` + `tools[].inputSchema` | 12 |
 
 ## File index
 
@@ -118,6 +178,34 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-protobuf.proto` | — | `api-blueprint` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf` |
 | `negative/05-encoding-utf16.apib` | — | `api-blueprint` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
 
+### `apigee/` — Apigee proxy bundle (pending #5457)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-proxy-endpoint.xml` | minimal | `apigee` ≥ 0.9 | valid | `proxy-endpoint`, `base-path`, `route-rule`, `flow-condition`, `pending-adapter` |
+| `02-typical-proxy-bundle.zip` | typical | `apigee` ≥ 0.9 | valid | `bundle`, `archive-intake`, `flows`, `VerifyAPIKey`, `SpikeArrest`, `Quota`, `cors`, `pending-adapter` |
+| `03-composition-multi-target-bundle.zip` | composition | `apigee` ≥ 0.9 | valid | `bundle`, `archive-intake`, `multi-target`, `ordered-route-rules`, `conditioned-route`, `no-route-rule`, `pending-adapter` |
+| `04-stress-policy-coverage-bundle.zip` | stress | `apigee` ≥ 0.9 | valid | `bundle`, `archive-intake`, `OAuthV2`, `JSONThreatProtection`, `ServiceCallout`, `Javascript`, `ResponseCache`, `FaultRules`, `load-balancer`, `unconditional-flow`, `script-resource`, `pending-adapter` |
+| `05-real-world-payments-bundle.zip` | real-world | `apigee` ≥ 0.9 | valid | `bundle`, `archive-intake`, `oauth-scopes`, `quota`, `hmac`, `idempotency`, `environment-routing`, `mtls`, `pending-adapter` |
+| `06-typical-target-endpoint.xml` | typical | `apigee` ≥ 0.9 | valid | `target-endpoint`, `load-balancer`, `ssl-info`, `timeouts`, `success-codes`, `pending-adapter` |
+| `07-shared-flow-set/flow-callout.xml` ⚠ | multi-file (member) | `apigee` (no guarantee) | valid | `flow-callout-policy`, `shared-flow-bundle`, `parameters`, `pending-adapter` |
+| `07-shared-flow-set/proxy-endpoint.xml` | multi-file (root) | `apigee` ≥ 0.9 | valid | `flow-callout`, `delegated-security`, `pending-adapter` |
+| `07-shared-flow-set/shared-flow.xml` ⚠ | multi-file (member) | `apigee` (no guarantee) | valid | `shared-flow`, `oauth`, `quota`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-flow.xml` | — | `apigee` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-no-proxy-endpoint.zip` | — | `apigee` (no guarantee) | invalid | `negative`, `semantic`, `no-proxy-endpoint`, `bundle`, `pending-adapter` |
+| `negative/03-truncated-bundle.zip` ⚠ | — | `apigee` (no guarantee) | invalid | `negative`, `truncated`, `truncated-archive`, `pending-adapter` |
+| `negative/04-wrong-format-gateway-api.yaml` | — | `apigee` (no guarantee) | invalid | `negative`, `wrong-format`, `gateway-api`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `apigee` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-target-endpoint.zip` ⚠ | — | `apigee` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-target-endpoint`, `bundle`, `pending-adapter` |
+
+> ⚠ **`07-shared-flow-set/flow-callout.xml`** — Fileset member: the FlowCallout policy that binds the proxy step to the shared flow bundle.
+
+> ⚠ **`07-shared-flow-set/shared-flow.xml`** — Fileset member: the shared flow where the proxy's security and quota steps actually live.
+
+> ⚠ **`negative/03-truncated-bundle.zip`** — The zip's central directory is cut off, so the archive cannot be opened at all — the failure surfaces as an archive error rather than an XML parse error.
+
+> ⚠ **`negative/06-unresolvable-target-endpoint.zip`** — The FMT-7.3 acceptance case: a bundle with a missing target endpoint.
+
 ### `arazzo/` — Arazzo workflows
 
 | File | Rung | Expected detection | Class | Features |
@@ -139,6 +227,52 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`negative/04-wrong-format-openapi.yaml`** — The YAML parses cleanly, so the failure surfaces at normalize (`no arazzo version marker`) as INPUT_SEMANTIC_INVALID rather than FORMAT_MISMATCH; the arazzo sniffer correctly reports no match (detect_matched false).
 
 > ⚠ **`negative/property-conflicts.yaml`** — The line-scrambled YAML fails to parse, so the arazzo sniffer cannot claim it; the greedy graphql sniffer claims the text at 0.9 confidence, so the pipeline classifies FORMAT_MISMATCH instead of INPUT_MALFORMED.
+
+### `arazzo-1.1/` — Arazzo 1.1 workflows (pending #5426)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-single-step.yaml` | minimal | `arazzo-1.1` ≥ 0.95 | valid | `workflows`, `steps`, `successCriteria`, `sourceDescriptions`, `pending-adapter` |
+| `02-typical-checkout-flow.yaml` | typical | `arazzo-1.1` ≥ 0.95 | valid | `workflows`, `inputs`, `outputs`, `requestBody`, `step-outputs`, `pending-adapter` |
+| `03-composition-reusable-components.yaml` | composition | `arazzo-1.1` ≥ 0.95 | valid | `components`, `ref-reuse`, `dependsOn`, `failureActions`, `successActions`, `pending-adapter` |
+| `04-stress-criteria-vocabulary.yaml` | stress | `arazzo-1.1` ≥ 0.95 | valid | `successCriteria`, `regex`, `jsonpath`, `xpath`, `operationPath`, `operationRef`, `pending-adapter` |
+| `05-real-world-order-to-cash.yaml` | real-world | `arazzo-1.1` ≥ 0.95 | valid | `asyncapi-source`, `mixed-sync-async`, `message-payload-criteria`, `retry`, `pending-adapter` |
+| `06-sourced-set/inventory.openapi.yaml` ⚠ | multi-file (member) | `openapi-3.1` (no guarantee) | valid | `multi-file`, `openapi-source`, `pending-adapter` |
+| `06-sourced-set/workflow.arazzo.yaml` | multi-file (root) | `arazzo-1.1` ≥ 0.95 | valid | `multi-file`, `relative-source-url`, `workflows`, `pending-adapter` |
+| `07-version-1.0-baseline.yaml` ⚠ | typical | `arazzo` ≥ 0.95 | valid | `version-1.0`, `no-upgrade`, `workflows`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-flow-sequence.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-flow-sequence`, `pending-adapter` |
+| `negative/02-semantic-step-without-operation.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `semantic`, `step-without-operation`, `pending-adapter` |
+| `negative/03-truncated-mid-workflow.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `truncated`, `mid-quoted-scalar`, `pending-adapter` |
+| `negative/04-wrong-format-asyncapi.yaml` ⚠ | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `wrong-format`, `asyncapi`, `pending-adapter` |
+| `negative/05-encoding-utf16.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-version-out-of-range-2.0.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `version-out-of-range`, `arazzo-2.0`, `pending-adapter` |
+
+> ⚠ **`06-sourced-set/inventory.openapi.yaml`** — Fileset member: the OpenAPI document the workflow's sourceDescriptions resolve to; detected as OpenAPI on its own.
+
+> ⚠ **`07-version-1.0-baseline.yaml`** — A 1.0.1 document kept beside the 1.1 ladder so FMT-3.1 can assert that a 1.0 source still emits as 1.0.
+
+> ⚠ **`negative/04-wrong-format-asyncapi.yaml`** — An AsyncAPI 3 document — plausible neighbour now that 1.1 reads AsyncAPI sources, and exactly the confusion detection must not make.
+
+### `arrow/` — Apache Arrow / Flight schema (pending #5438)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-schema.json` | minimal | `arrow` ≥ 0.85 | valid | `json-form`, `flat-fields`, `pending-adapter` |
+| `02-typical-orders-schema.json` | typical | `arrow` ≥ 0.85 | valid | `json-form`, `timestamp-timezone`, `fixedsizebinary`, `schema-metadata`, `pending-adapter` |
+| `03-composition-nested-types.json` | composition | `arrow` ≥ 0.85 | valid | `struct`, `list`, `map`, `nested`, `pending-adapter` |
+| `04-stress-type-coverage.json` | stress | `arrow` ≥ 0.85 | valid | `decimal`, `union`, `dictionary`, `interval`, `duration`, `largeutf8`, `fixedsizelist`, `extension-type`, `all-int-widths`, `pending-adapter` |
+| `05-real-world-trip-records-schema.json` | real-world | `arrow` ≥ 0.85 | valid | `dictionary`, `decimal`, `map`, `partition-metadata`, `pending-adapter` |
+| `06-typical-flight-getschema-response.json` | typical | `arrow` ≥ 0.85 | valid | `flight`, `GetSchema`, `flight-descriptor`, `dictionary`, `pending-adapter` |
+| `07-flight-set/flight-info.json` | multi-file (root) | `arrow` ≥ 0.85 | valid | `multi-file`, `flight`, `GetFlightInfo`, `endpoints`, `pending-adapter` |
+| `07-flight-set/inventory-schema.json` | multi-file (member) | `arrow` (no guarantee) | valid | `multi-file`, `flight`, `json-form`, `pending-adapter` |
+| `negative/01-syntactic-trailing-comma.json` | — | `arrow` (no guarantee) | invalid | `negative`, `syntactic`, `trailing-comma`, `pending-adapter` |
+| `negative/02-semantic-unknown-type-name.json` | — | `arrow` (no guarantee) | invalid | `negative`, `semantic`, `unknown-type-name`, `pending-adapter` |
+| `negative/03-truncated-mid-field.json` | — | `arrow` (no guarantee) | invalid | `negative`, `truncated`, `mid-type`, `pending-adapter` |
+| `negative/04-wrong-format-avro.avsc` | — | `arrow` (no guarantee) | invalid | `negative`, `wrong-format`, `avro`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `arrow` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-struct-without-children.json` ⚠ | — | `arrow` (no guarantee) | invalid | `negative`, `semantic`, `nested-without-children`, `pending-adapter` |
+
+> ⚠ **`negative/06-semantic-struct-without-children.json`** — Second semantic case: struct and list fields are meaningless with an empty children array, so the schema cannot describe a record batch.
 
 ### `asn1/` — ASN.1
 
@@ -206,6 +340,78 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-json-schema.json` | — | `avro` (no guarantee) | invalid | `negative`, `wrong-format`, `json-schema` |
 | `negative/05-encoding-utf16.avsc` | — | `avro` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
 
+### `avro-idl/` — Avro IDL (pending #5430)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-record.avdl` | minimal | `avro-idl` ≥ 0.9 | valid | `schema-only`, `record`, `pending-adapter` |
+| `02-typical-orders-protocol.avdl` ⚠ | typical | `avro-idl` ≥ 0.9 | valid | `protocol`, `messages`, `oneway`, `throws`, `enum`, `union`, `pending-adapter` |
+| `03-composition-named-type-reuse.avdl` | composition | `avro-idl` ≥ 0.9 | valid | `named-type-reuse`, `self-reference`, `map`, `array`, `schema-only`, `pending-adapter` |
+| `04-stress-grammar-corners.avdl` | stress | `avro-idl` ≥ 0.9 | valid | `fixed`, `decimal`, `logicalType`, `order`, `aliases`, `escaped-name`, `nested-union`, `pending-adapter` |
+| `05-real-world-payments-protocol.avdl` | real-world | `avro-idl` ≥ 0.9 | valid | `protocol`, `messages`, `decimal`, `errors`, `oneway`, `pending-adapter` |
+| `06-imports-set/common.avdl` | multi-file (member) | `avro-idl` (no guarantee) | valid | `multi-file`, `import-idl`, `schema-only`, `pending-adapter` |
+| `06-imports-set/main.avdl` | multi-file (root) | `avro-idl` ≥ 0.9 | valid | `multi-file`, `import-idl`, `import-schema`, `protocol`, `pending-adapter` |
+| `06-imports-set/parcel.avsc` ⚠ | multi-file (member) | `avro` (no guarantee) | valid | `multi-file`, `import-schema`, `record`, `pending-adapter` |
+| `negative/01-syntactic-missing-semicolon.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `syntactic`, `missing-semicolon`, `pending-adapter` |
+| `negative/02-semantic-duplicate-union-branch.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `semantic`, `duplicate-union-branch`, `pending-adapter` |
+| `negative/03-truncated-mid-record.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `truncated`, `mid-record`, `pending-adapter` |
+| `negative/04-wrong-format-protobuf.proto` | — | `avro-idl` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf`, `pending-adapter` |
+| `negative/05-encoding-utf16.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-import.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-import`, `pending-adapter` |
+
+> ⚠ **`02-typical-orders-protocol.avdl`** — Protocol form: messages must normalize to rpc-paradigm operations, unlike the schema-only files.
+
+> ⚠ **`06-imports-set/parcel.avsc`** — Fileset member reached by `import schema`; on its own it is a plain .avsc the shipped avro adapter already claims.
+
+### `aws-apigateway/` — AWS API Gateway (pending #5455)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-rest-api.yaml` | minimal | `aws-apigateway` ≥ 0.9 | valid | `rest-api`, `mock-integration`, `pending-adapter` |
+| `02-typical-rest-api-export.json` | typical | `aws-apigateway` ≥ 0.9 | valid | `rest-api`, `aws-proxy`, `http-proxy`, `vpc-link`, `custom-authorizer`, `request-validator`, `cors-mock`, `pending-adapter` |
+| `03-composition-stage-variables-and-refs.yaml` | composition | `aws-apigateway` ≥ 0.9 | valid | `stage-variables`, `shared-parameters`, `server-variables`, `binary-media-types`, `pending-adapter` |
+| `04-stress-extension-coverage.yaml` ⚠ | stress | `aws-apigateway` ≥ 0.9 | valid | `any-method`, `greedy-proxy`, `aws-service-integration`, `gateway-responses`, `resource-policy`, `cognito-authorizer`, `token-authorizer`, `unknown-extension`, `pending-adapter` |
+| `05-real-world-payments-rest-api.json` | real-world | `aws-apigateway` ≥ 0.9 | valid | `lambda-authorizer`, `idempotency-header`, `sqs-integration`, `cors`, `regional-endpoint`, `request-validator`, `pending-adapter` |
+| `06-typical-http-api-export.yaml` | typical | `aws-apigateway` ≥ 0.9 | valid | `http-api`, `jwt-authorizer`, `payload-format-2.0`, `default-route`, `cors-extension`, `vpc-link`, `pending-adapter` |
+| `07-split-set/api.yaml` | multi-file (root) | `aws-apigateway` ≥ 0.9 | valid | `relative-ref`, `split-definition`, `aws-proxy`, `vpc-link`, `pending-adapter` |
+| `07-split-set/components.yaml` ⚠ | multi-file (member) | `aws-apigateway` (no guarantee) | valid | `schema-half`, `shared-parameters`, `pending-adapter` |
+| `negative/01-syntactic-bad-yaml.yaml` | — | `aws-apigateway` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation`, `pending-adapter` |
+| `negative/02-semantic-integration-without-type.yaml` | — | `aws-apigateway` (no guarantee) | invalid | `negative`, `semantic`, `integration-without-type`, `pending-adapter` |
+| `negative/03-truncated-mid-integration.json` | — | `aws-apigateway` (no guarantee) | invalid | `negative`, `truncated`, `mid-uri`, `pending-adapter` |
+| `negative/04-wrong-format-plain-openapi.yaml` ⚠ | — | `aws-apigateway` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi`, `greedy-detection`, `pending-adapter` |
+| `negative/05-encoding-utf16.yaml` | — | `aws-apigateway` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+
+> ⚠ **`04-stress-extension-coverage.yaml`** — Carries x-example-unknown-extension: FMT-7.1 requires unknown extensions preserved in extras and reported, never dropped.
+
+> ⚠ **`07-split-set/components.yaml`** — Fileset member: schemas and parameters reached by relative $ref; declares no paths and no AWS extensions of its own.
+
+> ⚠ **`negative/04-wrong-format-plain-openapi.yaml`** — The FMT-7.1 acceptance case: a plain OpenAPI document with no AWS extensions must route to the openapi adapter, so this adapter's detect() must not claim it.
+
+### `azure-apim/` — Azure API Management (pending #5456)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-policy.xml` | minimal | `azure-apim` ≥ 0.85 | valid | `policy`, `pipeline-sections`, `set-backend-service`, `pending-adapter` |
+| `02-typical-arm-api.json` | typical | `azure-apim` ≥ 0.85 | valid | `arm-template`, `api-resource`, `operations`, `operation-policy`, `rate-limit-by-key`, `subscription-keys`, `pending-adapter` |
+| `03-api-with-policy-set/orders.openapi.yaml` | multi-file (root) | `azure-apim` ≥ 0.85 | valid | `multi-file`, `definition-half`, `openapi`, `subscription-key`, `pending-adapter` |
+| `03-api-with-policy-set/policy.xml` ⚠ | multi-file (member) | `azure-apim` (no guarantee) | valid | `multi-file`, `policy-half`, `validate-jwt`, `cors`, `quota-by-key`, `rewrite-uri`, `pending-adapter` |
+| `04-stress-policy-vocabulary.xml` ⚠ | stress | `azure-apim` ≥ 0.85 | valid | `validate-jwt`, `ip-filter`, `rate-limit`, `quota`, `choose`, `retry`, `cache-lookup`, `send-request`, `set-variable`, `unknown-policy`, `pending-adapter` |
+| `05-real-world-soap-passthrough-arm.json` | real-world | `azure-apim` ≥ 0.85 | valid | `soap-passthrough`, `wsdl-derived`, `backends-resource`, `product`, `xml-to-json`, `authentication-certificate`, `pending-adapter` |
+| `06-typical-arm-api-versionset.json` | typical | `azure-apim` ≥ 0.85 | valid | `apiVersionSets`, `segment-versioning`, `two-versions`, `operation-policy`, `pending-adapter` |
+| `07-composition-policy-inheritance.xml` ⚠ | composition | `azure-apim` ≥ 0.85 | valid | `base-element`, `scope-inheritance`, `global-scope`, `product-scope`, `api-scope`, `operation-scope`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-policy.xml` | — | `azure-apim` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-policy-without-sections.xml` | — | `azure-apim` (no guarantee) | invalid | `negative`, `semantic`, `no-pipeline-sections`, `pending-adapter` |
+| `negative/03-truncated-mid-policy.xml` | — | `azure-apim` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-kong.yaml` | — | `azure-apim` (no guarantee) | invalid | `negative`, `wrong-format`, `kong`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `azure-apim` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-backend-reference.xml` | — | `azure-apim` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-backend-id`, `missing-named-value`, `pending-adapter` |
+
+> ⚠ **`03-api-with-policy-set/policy.xml`** — Fileset member: the policy document. Facts here are policy-derived provenance, distinct from the definition-derived facts in the root.
+
+> ⚠ **`04-stress-policy-vocabulary.xml`** — Carries <example-unknown-policy>: FMT-7.2 requires unmapped policy elements preserved verbatim in extras and visible in the detail view.
+
+> ⚠ **`07-composition-policy-inheritance.xml`** — Carries all four policy scopes in evaluation order; <base /> is the composition operator, and its position decides whether the inherited fragment runs before or after the local one.
+
 ### `capnproto/` — Cap'n Proto
 
 | File | Rung | Expected detection | Class | Features |
@@ -223,6 +429,50 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/05-encoding-utf16.capnp` | — | `capnproto` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
 
 > ⚠ **`04-event-stress.capnp`** — Import fidelity gap: the `drain` method's `List(Event)` result contains parentheses, which the interface-method regex cannot span, so that method is silently dropped from the imported Collector interface.
+
+### `cddl/` — CDDL (RFC 8610) (pending #5437)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-person.cddl` | minimal | `cddl` ≥ 0.85 | valid | `map`, `optional-member`, `pending-adapter` |
+| `02-typical-order.cddl` | typical | `cddl` ≥ 0.85 | valid | `map`, `array`, `occurrence`, `type-choice`, `rule-reference`, `pending-adapter` |
+| `03-composition-sockets-and-generics.cddl` ⚠ | composition | `cddl` ≥ 0.85 | valid | `socket`, `plug`, `group-socket`, `generics`, `type-extension`, `pending-adapter` |
+| `04-stress-control-operators.cddl` | stress | `cddl` ≥ 0.85 | valid | `size`, `regexp`, `cbor`, `within`, `and`, `default`, `bits`, `ranges`, `tags`, `unwrap`, `table`, `group-choice`, `pending-adapter` |
+| `05-real-world-cose-shaped.cddl` | real-world | `cddl` ≥ 0.85 | valid | `tags`, `header-map`, `negative-labels`, `cbor`, `cose`, `pending-adapter` |
+| `06-real-world-webauthn-shaped.cddl` | real-world | `cddl` ≥ 0.85 | valid | `attestation`, `bits`, `cbor`, `webauthn`, `type-choice`, `pending-adapter` |
+| `07-modules-set/api.cddl` | multi-file (root) | `cddl` ≥ 0.85 | valid | `multi-file`, `cross-file-reference`, `pending-adapter` |
+| `07-modules-set/common.cddl` ⚠ | multi-file (member) | `cddl` (no guarantee) | valid | `multi-file`, `shared-types`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-map.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-map`, `pending-adapter` |
+| `negative/02-semantic-duplicate-rule.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `semantic`, `duplicate-rule`, `pending-adapter` |
+| `negative/03-truncated-mid-rule.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `truncated`, `mid-rule`, `pending-adapter` |
+| `negative/04-wrong-format-json-schema.json` | — | `cddl` (no guarantee) | invalid | `negative`, `wrong-format`, `json-schema`, `pending-adapter` |
+| `negative/05-encoding-utf16.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-type-reference.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `undefined-rule`, `pending-adapter` |
+
+> ⚠ **`03-composition-sockets-and-generics.cddl`** — Sockets/plugs and generics are the constructs FMT-4.4 expects to model or declare as parsing limits; a clean import here should carry declared-limit warnings, not silence.
+
+> ⚠ **`07-modules-set/common.cddl`** — Fileset member: shared value types with no entry point of their own — CDDL has no include, so the set is the unit of import.
+
+### `cics-bms/` — CICS BMS maps (pending #5484)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-mapset.bms` | minimal | `cics-bms` ≥ 0.9 | valid | `dfhmsd`, `dfhmdi`, `dfhmdf`, `literal-field`, `pending-adapter` |
+| `02-typical-enquiry-map.bms` | typical | `cics-bms` ≥ 0.9 | valid | `picin`, `picout`, `edited-picture`, `message-line`, `color`, `initial-cursor`, `pending-adapter` |
+| `03-mapset-and-copybook-set/ORDRMAP.cpy` ⚠ | multi-file (member) | `cics-bms` (no guarantee) | valid | `multi-file`, `symbolic-map`, `length-attribute-data-triple`, `input-output-redefine`, `pending-adapter` |
+| `03-mapset-and-copybook-set/ORDRSET.bms` | multi-file (root) | `cics-bms` ≥ 0.9 | valid | `multi-file`, `mapset`, `screen-positions`, `pending-adapter` |
+| `04-stress-field-attributes.bms` | stress | `cics-bms` ≥ 0.9 | valid | `attrb-combinations`, `askip`, `dark`, `numeric`, `fset`, `extended-attributes`, `validn`, `occurs`, `grpname`, `second-map`, `pending-adapter` |
+| `05-real-world-order-entry-mapset.bms` | real-world | `cics-bms` ≥ 0.9 | valid | `three-maps`, `repeating-table`, `occurs`, `edited-pictures`, `confirmation-map`, `pending-adapter` |
+| `06-typical-dsect-copybook.cpy` | typical | `cics-bms` ≥ 0.9 | valid | `symbolic-map`, `length-attribute-data-triple`, `input-output-redefine`, `comp-length`, `pending-adapter` |
+| `07-composition-map-inheritance.bms` | composition | `cics-bms` ≥ 0.9 | valid | `shared-chrome`, `mapset-defaults`, `field-group`, `repeating-table`, `multiple-maps`, `pending-adapter` |
+| `negative/01-syntactic-missing-continuation.bms` | — | `cics-bms` (no guarantee) | invalid | `negative`, `syntactic`, `missing-continuation-mark`, `pending-adapter` |
+| `negative/02-semantic-map-without-fields.bms` | — | `cics-bms` (no guarantee) | invalid | `negative`, `semantic`, `no-fields`, `pending-adapter` |
+| `negative/03-truncated-mid-field.bms` | — | `cics-bms` (no guarantee) | invalid | `negative`, `truncated`, `mid-initial-value`, `pending-adapter` |
+| `negative/04-wrong-format-idcams.idcams` | — | `cics-bms` (no guarantee) | invalid | `negative`, `wrong-format`, `vsam-idcams`, `pending-adapter` |
+| `negative/05-encoding-utf16.bms` | — | `cics-bms` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-overlapping-field-positions.bms` | — | `cics-bms` (no guarantee) | invalid | `negative`, `semantic`, `overlapping-fields`, `off-screen-position`, `pending-adapter` |
+
+> ⚠ **`03-mapset-and-copybook-set/ORDRMAP.cpy`** — Fileset member: the generated symbolic map. It carries the record layout; the .bms carries the geometry.
 
 ### `cloudevents/` — CloudEvents 1.0
 
@@ -287,6 +537,28 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/04-wrong-format-user-directory.thrift`** — The connectrpc _CONNECT_MARKER_RE claims any proto-looking text whose comments mention 'Connect-RPC' at 0.98, so the fixture's comment deliberately avoids the phrase to keep detect_matched false.
 
+### `consul/` — Consul service definitions (pending #5459)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-service.json` | minimal | `consul` ≥ 0.8 | valid | `service-definition`, `port`, `pending-adapter` |
+| `02-typical-service-with-checks.json` | typical | `consul` ≥ 0.8 | valid | `tags`, `urlprefix-tag`, `meta`, `health-checks`, `weights`, `pending-adapter` |
+| `03-service-set/catalogue.json` | multi-file (member) | `consul` (no guarantee) | valid | `multi-file`, `service-definition`, `pending-adapter` |
+| `03-service-set/orders.json` | multi-file (root) | `consul` ≥ 0.8 | valid | `multi-file`, `service-definition`, `connect-sidecar`, `pending-adapter` |
+| `03-service-set/service-router.json` ⚠ | multi-file (member) | `consul` (no guarantee) | valid | `multi-file`, `service-router`, `path-prefix`, `prefix-rewrite`, `pending-adapter` |
+| `04-stress-connect-and-resolvers.hcl` | stress | `consul` ≥ 0.8 | valid | `hcl`, `connect`, `sidecar-upstreams`, `grpc-check`, `alias-check`, `service-router`, `path-exact`, `path-regex`, `header-match`, `query-match`, `subset`, `retries`, `pending-adapter` |
+| `05-real-world-catalog-export.json` | real-world | `consul` ≥ 0.8 | valid | `catalog-export`, `nodes`, `check-status`, `service-meta`, `datacenter`, `pending-adapter` |
+| `06-typical-ingress-gateway.json` | typical | `consul` ≥ 0.8 | valid | `ingress-gateway`, `listeners`, `http`, `grpc`, `tcp`, `pending-adapter` |
+| `07-composition-resolver-and-splitter.hcl` | composition | `consul` ≥ 0.8 | valid | `service-defaults`, `service-resolver`, `service-splitter`, `service-router`, `subsets`, `failover`, `hcl`, `pending-adapter` |
+| `negative/01-syntactic-trailing-comma.json` | — | `consul` (no guarantee) | invalid | `negative`, `syntactic`, `trailing-comma`, `pending-adapter` |
+| `negative/02-semantic-service-without-port.json` | — | `consul` (no guarantee) | invalid | `negative`, `semantic`, `no-port`, `pending-adapter` |
+| `negative/03-truncated-mid-check.json` | — | `consul` (no guarantee) | invalid | `negative`, `truncated`, `mid-check`, `pending-adapter` |
+| `negative/04-wrong-format-tyk.json` | — | `consul` (no guarantee) | invalid | `negative`, `wrong-format`, `tyk`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `consul` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-service-reference.json` | — | `consul` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-service`, `missing-subset`, `pending-adapter` |
+
+> ⚠ **`03-service-set/service-router.json`** — Fileset member: the only file in the set that carries paths — the service definitions alone describe no routes.
+
 ### `corba-idl/` — CORBA / OMG IDL
 
 | File | Rung | Expected detection | Class | Features |
@@ -305,6 +577,106 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/02-unresolvable-ref-missing-include.idl`** — is_corbaidl hard-rejects any text containing `include "` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 — the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code.
 
+### `cue/` — CUE (pending #5466)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-schema.cue` | minimal | `cue` ≥ 0.85 | valid | `definition`, `scalars`, `pending-adapter` |
+| `02-typical-order-schema.cue` | typical | `cue` ≥ 0.85 | valid | `disjunction`, `regex-constraint`, `range-constraint`, `list-type`, `optional-field`, `default-branch`, `pending-adapter` |
+| `03-imports-set/cue.mod` ⚠ | multi-file (member) | `cue` (no guarantee) | valid | `multi-file`, `module-file`, `pending-adapter` |
+| `03-imports-set/schema.cue` | multi-file (root) | `cue` ≥ 0.85 | valid | `multi-file`, `import`, `package`, `pending-adapter` |
+| `03-imports-set/shared.cue` | multi-file (member) | `cue` (no guarantee) | valid | `multi-file`, `package`, `definitions`, `pending-adapter` |
+| `04-stress-lattice.cue` ⚠ | stress | `cue` ≥ 0.85 | valid | `open-struct`, `closed-struct`, `embedding`, `unification`, `comprehension`, `conditional-field`, `hidden-field`, `let-binding`, `recursion`, `interpolation`, `pattern-constraint`, `pending-adapter` |
+| `05-real-world-service-config.cue` | real-world | `cue` ≥ 0.85 | valid | `defaults`, `cross-field-constraint`, `pattern-keyed-map`, `schema-plus-instance`, `pending-adapter` |
+| `06-typical-schema-and-data.cue` | typical | `cue` ≥ 0.85 | valid | `schema-plus-data`, `unification`, `defaults`, `pending-adapter` |
+| `07-composition-embedding.cue` | composition | `cue` ≥ 0.85 | valid | `embedding`, `unification`, `disjunction`, `pattern-constraint`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-struct.cue` | — | `cue` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-struct`, `pending-adapter` |
+| `negative/02-semantic-conflicting-unification.cue` | — | `cue` (no guarantee) | invalid | `negative`, `semantic`, `bottom-value`, `conflicting-constraints`, `pending-adapter` |
+| `negative/03-truncated-mid-constraint.cue` | — | `cue` (no guarantee) | invalid | `negative`, `truncated`, `mid-constraint`, `pending-adapter` |
+| `negative/04-wrong-format-hcl.hcl` | — | `cue` (no guarantee) | invalid | `negative`, `wrong-format`, `hcl`, `pending-adapter` |
+| `negative/05-encoding-utf16.cue` | — | `cue` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-incomplete-value.cue` ⚠ | — | `cue` (no guarantee) | invalid | `negative`, `semantic`, `incomplete-value`, `pending-adapter` |
+
+> ⚠ **`03-imports-set/cue.mod`** — Fileset member: the module descriptor that makes the import path resolvable.
+
+> ⚠ **`04-stress-lattice.cue`** — Second half is deliberately outside JSON Schema's reach; FMT-8.5 requires those declared rather than approximated.
+
+> ⚠ **`negative/06-semantic-incomplete-value.cue`** — Valid CUE that `cue export` refuses: the sandboxed evaluation produces no JSON, so the import must fail with that reason rather than an empty model.
+
+### `dbt/` — dbt models and manifests (pending #5442)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-schema.yml` | minimal | `dbt` ≥ 0.85 | valid | `models`, `columns`, `pending-adapter` |
+| `02-typical-schema.yml` | typical | `dbt` ≥ 0.85 | valid | `not-null`, `unique`, `accepted-values`, `relationships`, `meta`, `tags`, `pending-adapter` |
+| `03-project-set/dbt_project.yml` | multi-file (root) | `dbt` ≥ 0.85 | valid | `multi-file`, `dbt-project`, `materialization-config`, `pending-adapter` |
+| `03-project-set/fct_orders.sql` ⚠ | multi-file (member) | `dbt` (no guarantee) | valid | `multi-file`, `ref`, `lineage`, `pending-adapter` |
+| `03-project-set/schema.yml` | multi-file (member) | `dbt` (no guarantee) | valid | `multi-file`, `models`, `relationships`, `pending-adapter` |
+| `03-project-set/stg_orders.sql` | multi-file (member) | `dbt` (no guarantee) | valid | `multi-file`, `source`, `lineage`, `pending-adapter` |
+| `04-stress-contracts-sources-and-exposures.yml` | stress | `dbt` ≥ 0.85 | valid | `contract`, `constraints`, `sources`, `freshness`, `versions`, `seeds`, `snapshots`, `exposures`, `package-test`, `severity`, `pending-adapter` |
+| `05-real-world-manifest.json` | real-world | `dbt` ≥ 0.85 | valid | `manifest`, `nodes`, `test-metadata`, `parent-map`, `child-map`, `exposures`, `pending-adapter` |
+| `06-semantic-manifest.yml` | typical | `dbt` ≥ 0.85 | valid | `semantic-models`, `entities`, `dimensions`, `measures`, `metrics`, `derived-metric`, `pending-adapter` |
+| `07-composition-model-inheritance.yml` | composition | `dbt` ≥ 0.85 | valid | `yaml-anchors`, `shared-column-groups`, `shared-tests`, `versions`, `pending-adapter` |
+| `negative/01-syntactic-bad-indentation.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation`, `pending-adapter` |
+| `negative/02-semantic-no-models.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `semantic`, `no-resources`, `pending-adapter` |
+| `negative/03-truncated-mid-test.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `truncated`, `mid-flow-sequence`, `pending-adapter` |
+| `negative/04-wrong-format-odcs.yaml` | — | `dbt` (no guarantee) | invalid | `negative`, `wrong-format`, `odcs`, `pending-adapter` |
+| `negative/05-encoding-utf16.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-ref.yml` ⚠ | — | `dbt` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `broken-ref`, `pending-adapter` |
+
+> ⚠ **`03-project-set/fct_orders.sql`** — Fileset member: the model SQL whose ref() calls are the lineage edges; not independently detectable as dbt.
+
+> ⚠ **`negative/06-unresolvable-ref.yml`** — The FMT-5.4 acceptance case: a project with a broken ref().
+
+### `dhall/` — Dhall (pending #5466)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-schema.dhall` | minimal | `dhall` ≥ 0.85 | valid | `schema-record`, `default`, `pending-adapter` |
+| `02-typical-order-schema.dhall` | typical | `dhall` ≥ 0.85 | valid | `record-type`, `union-type`, `Optional`, `List`, `typed-default`, `pending-adapter` |
+| `03-imports-set/package.dhall` | multi-file (root) | `dhall` ≥ 0.85 | valid | `multi-file`, `package-file`, `import`, `pending-adapter` |
+| `03-imports-set/shared.dhall` | multi-file (member) | `dhall` (no guarantee) | valid | `multi-file`, `shared-types`, `pending-adapter` |
+| `04-stress-type-system.dhall` ⚠ | stress | `dhall` ≥ 0.85 | valid | `union-with-payload`, `map-list`, `record-type-merge`, `record-prefer`, `type-function`, `generic-record`, `fold`, `hash-pinned-import`, `pending-adapter` |
+| `05-real-world-service-config.dhall` | real-world | `dhall` ≥ 0.85 | valid | `nested-schema-records`, `completion-operator`, `defaults`, `enumerated-environment`, `pending-adapter` |
+| `06-typical-union-and-defaults.dhall` | typical | `dhall` ≥ 0.85 | valid | `union-constructors`, `completion-operator`, `defaults`, `pending-adapter` |
+| `07-composition-record-merge.dhall` | composition | `dhall` ≥ 0.85 | valid | `record-type-merge`, `record-prefer`, `schema-record-reuse`, `union-of-composed`, `pending-adapter` |
+| `negative/01-syntactic-missing-in.dhall` | — | `dhall` (no guarantee) | invalid | `negative`, `syntactic`, `missing-in`, `pending-adapter` |
+| `negative/02-semantic-type-mismatch.dhall` | — | `dhall` (no guarantee) | invalid | `negative`, `semantic`, `type-mismatch`, `pending-adapter` |
+| `negative/03-truncated-mid-record.dhall` | — | `dhall` (no guarantee) | invalid | `negative`, `truncated`, `mid-union`, `pending-adapter` |
+| `negative/04-wrong-format-nickel.ncl` | — | `dhall` (no guarantee) | invalid | `negative`, `wrong-format`, `nickel`, `pending-adapter` |
+| `negative/05-encoding-utf16.dhall` | — | `dhall` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-import.dhall` | — | `dhall` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-import`, `pending-adapter` |
+
+> ⚠ **`04-stress-type-system.dhall`** — Type-level functions and the hash-pinned import are the declared limits; the sandbox must also refuse remote imports outright.
+
+### `dicom/` — DICOM (pending #5451)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-json.json` | minimal | `dicom` ≥ 0.9 | valid | `dicom-json`, `sop-class`, `patient-module`, `pending-adapter` |
+| `02-typical-ct-instance-json.json` | typical | `dicom` ≥ 0.9 | valid | `dicom-json`, `ct`, `image-plane`, `image-pixel-descriptors`, `rescale`, `pending-adapter` |
+| `03-composition-structured-report-json.json` | composition | `dicom` ≥ 0.9 | valid | `structured-report`, `ContentSequence`, `nested-sequences`, `coded-concepts`, `measured-value`, `pending-adapter` |
+| `04-stress-part10-sequences-and-pixeldata.dcm` ⚠ | stress | `dicom` ≥ 0.9 | valid | `part10`, `binary-intake`, `explicit-vr`, `nested-sequences`, `private-block`, `pixel-data-skipped`, `multi-valued`, `pending-adapter` |
+| `05-real-world-mr-series-json.json` | real-world | `dicom` ≥ 0.9 | valid | `dicom-json`, `mr`, `acquisition-parameters`, `frame-of-reference`, `referenced-pps`, `pending-adapter` |
+| `06-typical-part10-minimal.dcm` | typical | `dicom` ≥ 0.9 | valid | `part10`, `binary-intake`, `file-meta-group`, `explicit-vr`, `pending-adapter` |
+| `07-study-set/series-1-instance.json` ⚠ | multi-file (member) | `dicom` (no guarantee) | valid | `instance`, `series-1`, `pending-adapter` |
+| `07-study-set/series-2-instance.json` ⚠ | multi-file (member) | `dicom` (no guarantee) | valid | `instance`, `series-2`, `image-plane`, `pending-adapter` |
+| `07-study-set/study-index.json` | multi-file (root) | `dicom` ≥ 0.9 | valid | `study-level-query`, `series-counts`, `dicomweb-url`, `pending-adapter` |
+| `negative/01-syntactic-broken-json.json` | — | `dicom` (no guarantee) | invalid | `negative`, `syntactic`, `missing-comma`, `pending-adapter` |
+| `negative/02-semantic-no-sop-class.json` | — | `dicom` (no guarantee) | invalid | `negative`, `semantic`, `missing-sop-class`, `pending-adapter` |
+| `negative/03-truncated-mid-element.dcm` | — | `dicom` (no guarantee) | invalid | `negative`, `truncated`, `part10`, `mid-element`, `pending-adapter` |
+| `negative/04-wrong-format-fhir-imagingstudy.json` | — | `dicom` (no guarantee) | invalid | `negative`, `wrong-format`, `fhir`, `ImagingStudy`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `dicom` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-missing-dicm-preamble.dcm` ⚠ | — | `dicom` (no guarantee) | invalid | `negative`, `semantic`, `missing-magic`, `pending-adapter` |
+
+> ⚠ **`04-stress-part10-sequences-and-pixeldata.dcm`** — Contains a (7FE0,0010) PixelData element of eight zero bytes so the skip can be asserted; the private (0009,10xx) block with VR UN is a declared parsing limit.
+
+> ⚠ **`07-study-set/series-1-instance.json`** — Fileset member: an instance of the first series, keyed by the same StudyInstanceUID.
+
+> ⚠ **`07-study-set/series-2-instance.json`** — Fileset member: an instance of the second series.
+
+> ⚠ **`negative/06-semantic-missing-dicm-preamble.dcm`** — 128-byte preamble present but the magic is not DICM, so the file cannot be claimed as Part 10.
+
 ### `discovery/` — Google API Discovery
 
 | File | Rung | Expected detection | Class | Features |
@@ -320,6 +692,28 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/03-truncated-mid-token.json` | — | `discovery` (no guarantee) | invalid | `negative`, `truncated`, `mid-token-cut` |
 | `negative/04-wrong-format-protobuf.proto` | — | `discovery` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf-idl` |
 | `negative/05-encoding-utf16.json` | — | `discovery` (no guarantee) | invalid | `negative`, `encoding`, `utf16` |
+
+### `dtd/` — DTD (pending #5435)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-note.dtd` | minimal | `dtd` ≥ 0.85 | valid | `ELEMENT`, `ATTLIST`, `PCDATA`, `pending-adapter` |
+| `02-typical-catalogue.dtd` | typical | `dtd` ≥ 0.85 | valid | `sequence`, `occurrence-indicators`, `enumerated-attribute`, `REQUIRED`, `IMPLIED`, `FIXED`, `default-value`, `pending-adapter` |
+| `03-modular-set/common.dtd` | multi-file (member) | `dtd` (no guarantee) | valid | `multi-file`, `parameter-entity`, `shared-attributes`, `pending-adapter` |
+| `03-modular-set/document.dtd` | multi-file (root) | `dtd` ≥ 0.85 | valid | `multi-file`, `parameter-entity`, `external-subset`, `pending-adapter` |
+| `03-modular-set/table.dtd` | multi-file (member) | `dtd` (no guarantee) | valid | `multi-file`, `parameter-entity`, `pending-adapter` |
+| `04-stress-content-models-and-entities.dtd` ⚠ | stress | `dtd` ≥ 0.85 | valid | `ANY`, `EMPTY`, `mixed-content`, `choice`, `parameter-entity`, `general-entity`, `NOTATION`, `unparsed-entity`, `NMTOKENS`, `pending-adapter` |
+| `05-real-world-rss-2.0-subset.dtd` | real-world | `dtd` ≥ 0.85 | valid | `optional-heavy`, `repeated-elements`, `FIXED`, `pending-adapter` |
+| `06-internal-subset-invoice.xml` | typical | `dtd` ≥ 0.85 | valid | `internal-subset`, `DOCTYPE`, `general-entity`, `instance-document`, `pending-adapter` |
+| `07-composition-parameter-entities.dtd` | composition | `dtd` ≥ 0.85 | valid | `parameter-entity`, `attribute-set`, `content-model-fragment`, `nested-fragments`, `pending-adapter` |
+| `negative/01-syntactic-unterminated-declaration.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `syntactic`, `unterminated-declaration`, `pending-adapter` |
+| `negative/02-semantic-undeclared-element-in-model.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `semantic`, `undeclared-element`, `pending-adapter` |
+| `negative/03-truncated-mid-attlist.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `truncated`, `mid-attlist`, `pending-adapter` |
+| `negative/04-wrong-format-relaxng.rng` | — | `dtd` (no guarantee) | invalid | `negative`, `wrong-format`, `relaxng`, `pending-adapter` |
+| `negative/05-encoding-utf16.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-parameter-entity.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-parameter-entity`, `pending-adapter` |
+
+> ⚠ **`04-stress-content-models-and-entities.dtd`** — Bounded, non-recursive three-level entity chain — exercises expansion accounting without being an expansion bomb; mixed content is a declared limit.
 
 ### `edi-x12/` — EDI ASC X12
 
@@ -343,6 +737,63 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`negative/01-syntactic-missing-se.edi`** — ISA-level syntactic faults were avoided on purpose: pyx12 raises X12Error/IndexError out of X12Reader iteration for a short or reordered ISA envelope and the exception escapes parse_edix12 unwrapped (UNHANDLED in the pipeline); the missing-SE variant fails cleanly via the adapter's own EdiX12ParseError.
 
 > ⚠ **`negative/02-semantic-nested-gs.edi`** — The canonical semantic negative (SE segment-count mismatch, e.g. SE*9 over 6 segments) does NOT fail here: pyx12 treats the count mismatch as non-fatal and the import completes all the way to persist, so the nested-GS contradiction is used instead.
+
+### `edifact/` — UN/EDIFACT (pending #5445)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-orders-d96a.edi` | minimal | `edifact` ≥ 0.9 | valid | `ORDERS`, `D96A`, `default-delimiters`, `pending-adapter` |
+| `02-typical-invoic-d96a.edi` | typical | `edifact` ≥ 0.9 | valid | `INVOIC`, `D96A`, `UNA`, `NAD`, `TAX`, `MOA`, `CUX`, `pending-adapter` |
+| `03-typical-desadv-d01b.edi` | typical | `edifact` ≥ 0.9 | valid | `DESADV`, `D01B`, `PAC`, `MEA`, `GIN`, `TDT`, `CPS`, `pending-adapter` |
+| `04-stress-multi-message-group.edi` ⚠ | stress | `edifact` ≥ 0.9 | valid | `UNG`, `UNE`, `multi-message`, `comma-decimal`, `release-character`, `empty-elements`, `pending-adapter` |
+| `05-real-world-eancom-orders.edi` | real-world | `edifact` ≥ 0.9 | valid | `EANCOM`, `ORDERS`, `GLN`, `PIA`, `IMD`, `LOC`, `association-code`, `pending-adapter` |
+| `06-typical-odette-delfor.edi` ⚠ | typical | `edifact` ≥ 0.9 | valid | `ODETTE`, `DELFOR`, `SCC`, `schedule-lines`, `UNOA`, `pending-adapter` |
+| `07-stress-control-count-mismatch.edi` ⚠ | stress | `edifact` ≥ 0.9 | valid | `control-counts`, `declared-vs-observed`, `self-inconsistent`, `pending-adapter` |
+| `08-composition-nested-segment-groups.edi` | composition | `edifact` ≥ 0.9 | valid | `nested-segment-groups`, `contact-group`, `allowance-charge`, `tax-group`, `INVOIC`, `pending-adapter` |
+| `09-interchange-set/contrl.edi` ⚠ | multi-file (member) | `edifact` (no guarantee) | valid | `CONTRL`, `functional-acknowledgment`, `UCI`, `UCM`, `pending-adapter` |
+| `09-interchange-set/orders.edi` | multi-file (root) | `edifact` ≥ 0.9 | valid | `ORDERS`, `interchange`, `pending-adapter` |
+| `negative/01-syntactic-missing-segment-terminator.edi` | — | `edifact` (no guarantee) | invalid | `negative`, `syntactic`, `missing-terminator`, `pending-adapter` |
+| `negative/02-semantic-no-message-in-interchange.edi` | — | `edifact` (no guarantee) | invalid | `negative`, `semantic`, `no-message`, `pending-adapter` |
+| `negative/03-truncated-mid-segment.edi` | — | `edifact` (no guarantee) | invalid | `negative`, `truncated`, `mid-segment`, `pending-adapter` |
+| `negative/04-wrong-format-x12.edi` ⚠ | — | `edifact` (no guarantee) | invalid | `negative`, `wrong-format`, `x12`, `pending-adapter` |
+| `negative/05-encoding-utf16.edi` | — | `edifact` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-unh-without-unt.edi` | — | `edifact` (no guarantee) | invalid | `negative`, `semantic`, `unterminated-message`, `pending-adapter` |
+
+> ⚠ **`04-stress-multi-message-group.edi`** — Two functional groups and three messages: the canonical model is derived from the first group's first message and the extras must be reported, exactly as the X12 analyzer does.
+
+> ⚠ **`06-typical-odette-delfor.edi`** — The ODETTE/VDA dialect sample FMT-6.5 needs; detection must record the profile rather than treating it as plain EDIFACT.
+
+> ⚠ **`07-stress-control-count-mismatch.edi`** — UNT declares 99 segments and UNZ declares 7 interchanges; both disagree with what is present. The acceptance criterion is that both numbers are shown, not that the interchange is rejected.
+
+> ⚠ **`09-interchange-set/contrl.edi`** — Fileset member: the CONTRL acknowledgment referring to the ORDERS interchange by its control reference.
+
+> ⚠ **`negative/04-wrong-format-x12.edi`** — An ISA/GS/ST interchange: the same file extension, the same industry, a different syntax — the misroute the EDIFACT sniffer must not make.
+
+### `envoy-xds/` — Envoy xDS routes (pending #5458)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-route-config.yaml` | minimal | `envoy-xds` ≥ 0.85 | valid | `route-config`, `virtual-host`, `prefix-match`, `pending-adapter` |
+| `02-typical-bootstrap.yaml` | typical | `envoy-xds` ≥ 0.85 | valid | `bootstrap`, `listener`, `http-connection-manager`, `clusters`, `direct-response`, `prefix-rewrite`, `pending-adapter` |
+| `03-composition-multi-virtualhost.yaml` | composition | `envoy-xds` ≥ 0.85 | valid | `multi-virtual-host`, `wildcard-domain`, `require-tls`, `header-match`, `redirect`, `response-headers`, `pending-adapter` |
+| `04-stress-matchers.yaml` | stress | `envoy-xds` ≥ 0.85 | valid | `path-match`, `prefix-match`, `path-separated-prefix`, `safe-regex`, `header-match`, `query-parameter-match`, `runtime-fraction`, `grpc-match`, `connect-matcher`, `weighted-clusters`, `retry-policy`, `regex-rewrite`, `typed-per-filter-config`, `cors`, `rate-limits`, `pending-adapter` |
+| `05-real-world-mesh-bootstrap.yaml` | real-world | `envoy-xds` ≥ 0.85 | valid | `sidecar-bootstrap`, `node-metadata`, `ads`, `jwt-authn`, `inbound-listener`, `pending-adapter` |
+| `06-typical-discovery-response.json` | typical | `envoy-xds` ≥ 0.85 | valid | `discovery-response`, `type-url`, `route-config`, `retry-policy`, `pending-adapter` |
+| `07-filesystem-xds-set/bootstrap.yaml` | multi-file (root) | `envoy-xds` ≥ 0.85 | valid | `filesystem-xds`, `rds`, `path-config-source`, `pending-adapter` |
+| `07-filesystem-xds-set/cds.yaml` ⚠ | multi-file (member) | `envoy-xds` (no guarantee) | valid | `clusters`, `discovery-resources`, `pending-adapter` |
+| `07-filesystem-xds-set/rds.yaml` ⚠ | multi-file (member) | `envoy-xds` (no guarantee) | valid | `route-configuration`, `discovery-resources`, `pending-adapter` |
+| `negative/01-syntactic-bad-yaml.yaml` | — | `envoy-xds` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation`, `pending-adapter` |
+| `negative/02-semantic-no-virtual-hosts.yaml` | — | `envoy-xds` (no guarantee) | invalid | `negative`, `semantic`, `no-virtual-hosts`, `pending-adapter` |
+| `negative/03-truncated-mid-route.yaml` | — | `envoy-xds` (no guarantee) | invalid | `negative`, `truncated`, `mid-value`, `pending-adapter` |
+| `negative/04-wrong-format-istio-virtualservice.yaml` ⚠ | — | `envoy-xds` (no guarantee) | invalid | `negative`, `wrong-format`, `istio`, `pending-adapter` |
+| `negative/05-encoding-utf16.yaml` | — | `envoy-xds` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-cluster-reference.yaml` | — | `envoy-xds` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-cluster`, `pending-adapter` |
+
+> ⚠ **`07-filesystem-xds-set/cds.yaml`** — Fileset member: the clusters the routes target.
+
+> ⚠ **`07-filesystem-xds-set/rds.yaml`** — Fileset member: the route configuration the bootstrap's rds block names.
+
+> ⚠ **`negative/04-wrong-format-istio-virtualservice.yaml`** — The sibling sub-format from the same ticket: it must route to the istio front end, not be parsed as an Envoy route config.
 
 ### `fhir/` — FHIR R4
 
@@ -383,6 +834,29 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`negative/03-truncated-mid-tag.fix`** — The fix sniffer is_fix() raises FixParseError on the trailing bare tag instead of returning False; the pipeline grounds the failure to INPUT_MALFORMED, but a direct adapter.detect() probe raises FixParseError.
 
 > ⚠ **`negative/05-encoding-utf16-order.fix`** — A direct adapter.detect() probe on the replacement-character text raises FixParseError (known is_fix sniffer bug); the pipeline classifies the file as INPUT_ENCODING_INVALID before that matters.
+
+### `fix-orchestra/` — FIX Orchestra (pending #5453)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-repository.xml` | minimal | `fix-orchestra` ≥ 0.9 | valid | `codeSet`, `fields`, `message`, `structure`, `pending-adapter` |
+| `02-typical-order-repository.xml` | typical | `fix-orchestra` ≥ 0.9 | valid | `datatypes`, `codeSets`, `component`, `componentRef`, `documentation`, `metadata`, `pending-adapter` |
+| `03-composition-components-and-groups.xml` | composition | `fix-orchestra` ≥ 0.9 | valid | `group`, `nested-group`, `numInGroup`, `groupRef`, `componentRef`, `pending-adapter` |
+| `04-stress-presence-and-rules.xml` | stress | `fix-orchestra` ≥ 0.9 | valid | `presence-required`, `presence-optional`, `presence-conditional`, `presence-forbidden`, `presence-ignored`, `presence-constant`, `rule`, `when`, `scenario`, `responses`, `pending-adapter` |
+| `05-real-world-execution-flow.xml` | real-world | `fix-orchestra` ≥ 0.9 | valid | `actors`, `flow`, `responses`, `conditional-rules`, `execution-report`, `cancel-reject`, `pending-adapter` |
+| `06-typical-actors-and-state-machine.xml` | typical | `fix-orchestra` ≥ 0.9 | valid | `actors`, `flow-reliability`, `states`, `transition`, `state-machine`, `pending-adapter` |
+| `07-modular-set/codesets.xml` ⚠ | multi-file (member) | `fix-orchestra` (no guarantee) | valid | `shared-code-sets`, `xinclude-target`, `pending-adapter` |
+| `07-modular-set/repository.xml` | multi-file (root) | `fix-orchestra` ≥ 0.9 | valid | `xinclude`, `modular-repository`, `conditional-rule`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-message.xml` | — | `fix-orchestra` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-no-messages.xml` | — | `fix-orchestra` (no guarantee) | invalid | `negative`, `semantic`, `no-messages`, `pending-adapter` |
+| `negative/03-truncated-mid-codeset.xml` | — | `fix-orchestra` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-fix-tagvalue.fix` ⚠ | — | `fix-orchestra` (no guarantee) | invalid | `negative`, `wrong-format`, `fix-tagvalue`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `fix-orchestra` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-field-ref.xml` | — | `fix-orchestra` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-field`, `missing-component`, `pending-adapter` |
+
+> ⚠ **`07-modular-set/codesets.xml`** — Fileset member: the shared code-set library; on its own it types nothing.
+
+> ⚠ **`negative/04-wrong-format-fix-tagvalue.fix`** — A tag=value message log: the shipped fix adapter's input, and the thing Orchestra is the specification *for*. Detection must not confuse the two.
 
 ### `flatbuffers/` — FlatBuffers
 
@@ -470,6 +944,33 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`14-federation-supergraph.graphql`** — expected_detection records intent: the greedy flatbuffers sniffer (is_flatbuffers matches the join__Graph enum block) claims this file at 0.96, with smithy/thrift at 0.95, outranking graphql's 0.9 — the same sniffer-ranking bug family recorded for graphql/03-04/07-08 (IXH-1.2).
 
+### `haproxy/` — HAProxy configuration (pending #5459)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal.cfg` | minimal | `haproxy` ≥ 0.8 | valid | `frontend`, `backend`, `default-backend`, `pending-adapter` |
+| `02-typical-path-acls.cfg` | typical | `haproxy` ≥ 0.8 | valid | `path-acl`, `use-backend`, `http-request-return`, `httpchk`, `replace-path`, `tls-bind`, `pending-adapter` |
+| `03-composition-multi-frontend.cfg` | composition | `haproxy` ≥ 0.8 | valid | `multi-frontend`, `listen-section`, `shared-backends`, `map-file-backend`, `mtls-bind`, `cookie-affinity`, `pending-adapter` |
+| `04-stress-acl-vocabulary.cfg` ⚠ | stress | `haproxy` ≥ 0.8 | valid | `path`, `path-beg`, `path-end`, `path-sub`, `path-dir`, `path-reg`, `method-acl`, `header-acl`, `urlp`, `src-acl`, `ssl-acl`, `stick-table`, `lua-acl`, `capture`, `pending-adapter` |
+| `05-real-world-edge.cfg` | real-world | `haproxy` ≥ 0.8 | valid | `rate-limiting`, `maintenance-switch`, `websocket-tunnel`, `mtls-backend`, `hsts`, `error-files`, `pending-adapter` |
+| `06-typical-tcp-mode.cfg` | typical | `haproxy` ≥ 0.8 | valid | `tcp-mode`, `sni-routing`, `pgsql-check`, `listen-section`, `pending-adapter` |
+| `07-composition-defaults-inheritance.cfg` | composition | `haproxy` ≥ 0.8 | valid | `defaults-inheritance`, `named-defaults`, `shared-backend`, `mode-switch`, `pending-adapter` |
+| `08-map-file-set/haproxy.cfg` | multi-file (root) | `haproxy` ≥ 0.8 | valid | `map-file-backend`, `host-allowlist`, `runtime-backend-selection`, `pending-adapter` |
+| `08-map-file-set/hosts.map` ⚠ | multi-file (member) | `haproxy` (no guarantee) | valid | `map-file`, `allowlist`, `pending-adapter` |
+| `08-map-file-set/tenants.map` ⚠ | multi-file (member) | `haproxy` (no guarantee) | valid | `map-file`, `key-to-backend`, `pending-adapter` |
+| `negative/01-syntactic-unknown-section.cfg` | — | `haproxy` (no guarantee) | invalid | `negative`, `syntactic`, `unknown-section-keyword`, `pending-adapter` |
+| `negative/02-semantic-no-frontend.cfg` | — | `haproxy` (no guarantee) | invalid | `negative`, `semantic`, `no-frontend`, `pending-adapter` |
+| `negative/03-truncated-mid-backend.cfg` | — | `haproxy` (no guarantee) | invalid | `negative`, `truncated`, `mid-directive`, `pending-adapter` |
+| `negative/04-wrong-format-traefik.yml` | — | `haproxy` (no guarantee) | invalid | `negative`, `wrong-format`, `traefik`, `pending-adapter` |
+| `negative/05-encoding-utf16.cfg` | — | `haproxy` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-backend-reference.cfg` | — | `haproxy` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-backend`, `pending-adapter` |
+
+> ⚠ **`04-stress-acl-vocabulary.cfg`** — Includes a Lua-backed ACL and stick-table rate conditions: FMT-7.5 requires each declared as outside the documented subset rather than guessed at.
+
+> ⚠ **`08-map-file-set/hosts.map`** — Fileset member: a one-column map used as a Host allowlist.
+
+> ⚠ **`08-map-file-set/tenants.map`** — Fileset member: tenant header value to backend name, read by map_str at request time.
+
 ### `hl7v2/` — HL7 v2.x
 
 | File | Rung | Expected detection | Class | Features |
@@ -485,6 +986,50 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/03-truncated-mid-msh.hl7` | — | `hl7v2` (no guarantee) | invalid | `negative`, `truncated`, `mid-msh` |
 | `negative/04-wrong-format-fix-order.fix` | — | `hl7v2` (no guarantee) | invalid | `negative`, `wrong-format`, `fix-message` |
 | `negative/05-encoding-utf16-ack.hl7` | — | `hl7v2` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
+
+### `hl7v3/` — HL7 v3 / CDA (pending #5448)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-clinical-document.xml` | minimal | `hl7v3` ≥ 0.9 | valid | `header`, `recordTarget`, `structuredBody`, `narrative-section`, `pending-adapter` |
+| `02-typical-ccd.xml` | typical | `hl7v3` ≥ 0.9 | valid | `CCD`, `templateId`, `sections`, `entries`, `substanceAdministration`, `narrative-table`, `pending-adapter` |
+| `03-composition-nested-entries.xml` | composition | `hl7v3` ≥ 0.9 | valid | `organizer`, `entryRelationship`, `nested-observations`, `translation`, `referenceRange`, `pending-adapter` |
+| `04-stress-rim-datatypes.xml` | stress | `hl7v3` ≥ 0.9 | valid | `II`, `CD`, `IVL-TS`, `AD`, `PN`, `TEL`, `PQ`, `RTO-PQ-PQ`, `ED`, `nullFlavor`, `sdtc-extension`, `relatedDocument`, `pending-adapter` |
+| `05-real-world-discharge-summary.xml` | real-world | `hl7v3` ≥ 0.9 | valid | `discharge-summary`, `encompassingEncounter`, `informationRecipient`, `coded-diagnosis`, `procedure`, `pending-adapter` |
+| `06-typical-unknown-template.xml` ⚠ | typical | `hl7v3` ≥ 0.9 | valid | `unknown-templateId`, `asserted-conformance`, `local-section`, `pending-adapter` |
+| `07-transmission-set/discharge-summary.xml` ⚠ | multi-file (member) | `hl7v3` (no guarantee) | valid | `cda`, `payload`, `sections`, `pending-adapter` |
+| `07-transmission-set/transmission-wrapper.xml` | multi-file (root) | `hl7v3` ≥ 0.9 | valid | `transmission-wrapper`, `MCCI`, `sender-receiver`, `payload-reference`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-section.xml` | — | `hl7v3` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-no-record-target.xml` | — | `hl7v3` (no guarantee) | invalid | `negative`, `semantic`, `missing-participations`, `pending-adapter` |
+| `negative/03-truncated-mid-entry.xml` | — | `hl7v3` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-fhir.json` ⚠ | — | `hl7v3` (no guarantee) | invalid | `negative`, `wrong-format`, `fhir`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `hl7v3` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-narrative-reference.xml` | — | `hl7v3` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `dangling-narrative-anchor`, `pending-adapter` |
+
+> ⚠ **`06-typical-unknown-template.xml`** — The FMT-6.4 acceptance case: template ids are asserted claims, so an unrecognised OID must import with a 'not validated' statement rather than failing.
+
+> ⚠ **`07-transmission-set/discharge-summary.xml`** — Fileset member: the CDA payload the wrapper carries; the document id is the edge between the two files.
+
+> ⚠ **`negative/04-wrong-format-fhir.json`** — A FHIR Composition describing the same discharge summary — the neighbour the shipped fhir adapter owns.
+
+### `hoppscotch/` — Hoppscotch collections (pending #5473)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-collection.json` | minimal | `hoppscotch` ≥ 0.85 | valid | `single-request`, `no-auth`, `pending-adapter` |
+| `02-typical-orders-collection.json` | typical | `hoppscotch` ≥ 0.85 | valid | `inherited-auth`, `inactive-params`, `request-variables`, `test-script`, `collection-headers`, `pending-adapter` |
+| `03-environment-set/collection.json` | multi-file (root) | `hoppscotch` ≥ 0.85 | valid | `multi-file`, `environment-variables`, `pending-adapter` |
+| `03-environment-set/environment.json` | multi-file (member) | `hoppscotch` (no guarantee) | valid | `multi-file`, `environment-file`, `secret-flag`, `pending-adapter` |
+| `04-stress-auth-and-bodies.json` | stress | `hoppscotch` ≥ 0.85 | valid | `raw-body`, `urlencoded-body`, `multipart-body`, `graphql-body`, `basic-auth`, `api-key-auth`, `oauth2-auth`, `nested-folders`, `disabled-headers`, `scripts`, `pending-adapter` |
+| `05-real-world-payments-collection.json` | real-world | `hoppscotch` ≥ 0.85 | valid | `token-capture`, `idempotency-key`, `feature-folders`, `inherited-auth`, `pending-adapter` |
+| `06-typical-nested-folders.json` | typical | `hoppscotch` ≥ 0.85 | valid | `nested-folders`, `operation-groups`, `request-variables`, `pending-adapter` |
+| `07-composition-inherited-auth.json` | composition | `hoppscotch` ≥ 0.85 | valid | `auth-inheritance`, `nested-folders`, `folder-headers`, `request-override`, `pending-adapter` |
+| `negative/01-syntactic-missing-brace.json` | — | `hoppscotch` (no guarantee) | invalid | `negative`, `syntactic`, `missing-brace`, `pending-adapter` |
+| `negative/02-semantic-no-requests.json` | — | `hoppscotch` (no guarantee) | invalid | `negative`, `semantic`, `no-requests`, `pending-adapter` |
+| `negative/03-truncated-mid-request.json` | — | `hoppscotch` (no guarantee) | invalid | `negative`, `truncated`, `mid-endpoint`, `pending-adapter` |
+| `negative/04-wrong-format-postman.json` | — | `hoppscotch` (no guarantee) | invalid | `negative`, `wrong-format`, `postman`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `hoppscotch` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-request-without-endpoint.json` | — | `hoppscotch` (no guarantee) | invalid | `negative`, `semantic`, `empty-endpoint`, `unresolvable-variable`, `pending-adapter` |
 
 ### `http-file/` — HTTP Request File
 
@@ -507,6 +1052,54 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`06-users-set/admin.http`** — Fileset member imported through the set root api.http together with http-client.env.json.
 
 > ⚠ **`06-users-set/http-client.env.json`** — JetBrains-style environment file; not independently importable as requests.
+
+### `idoc/` — SAP IDoc (pending #5446)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-xml-orders05.xml` | minimal | `idoc` ≥ 0.9 | valid | `xml-form`, `control-record`, `ORDERS05`, `pending-adapter` |
+| `02-typical-xml-orders05.xml` | typical | `idoc` ≥ 0.9 | valid | `xml-form`, `ORDERS05`, `partners`, `items`, `summary`, `pending-adapter` |
+| `03-composition-xml-nested-segments.xml` | composition | `idoc` ≥ 0.9 | valid | `xml-form`, `nested-segments`, `extension-type`, `repeated-qualifiers`, `text-segments`, `pending-adapter` |
+| `04-stress-flat-multi-idoc.txt` | stress | `idoc` ≥ 0.9 | valid | `flat-form`, `multi-idoc`, `PSGNUM`, `HLEVEL`, `test-flag`, `edi-standard-fields`, `empty-fields`, `pending-adapter` |
+| `05-real-world-xml-invoic02.xml` | real-world | `idoc` ≥ 0.9 | valid | `xml-form`, `INVOIC02`, `vat-per-line`, `payment-terms`, `incoterms`, `summary-rows`, `pending-adapter` |
+| `06-typical-flat-orders05.txt` ⚠ | typical | `idoc` ≥ 0.9 | valid | `flat-form`, `ORDERS05`, `fixed-width`, `same-document-as-02`, `pending-adapter` |
+| `07-with-definition-set/custmas01.txt` | multi-file (root) | `idoc` ≥ 0.9 | valid | `multi-file`, `flat-form`, `custom-basic-type`, `segment-definition`, `pending-adapter` |
+| `07-with-definition-set/segments.xml` ⚠ | multi-file (member) | `idoc` (no guarantee) | valid | `multi-file`, `segment-definition`, `field-offsets`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-segment.xml` | — | `idoc` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-missing-control-record.xml` | — | `idoc` (no guarantee) | invalid | `negative`, `semantic`, `no-control-record`, `pending-adapter` |
+| `negative/03-truncated-mid-segment.xml` | — | `idoc` (no guarantee) | invalid | `negative`, `truncated`, `mid-element`, `pending-adapter` |
+| `negative/04-wrong-format-edifact.edi` | — | `idoc` (no guarantee) | invalid | `negative`, `wrong-format`, `edifact`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `idoc` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-short-control-record.txt` ⚠ | — | `idoc` (no guarantee) | invalid | `negative`, `semantic`, `malformed-control-record`, `short-record`, `pending-adapter` |
+
+> ⚠ **`06-typical-flat-orders05.txt`** — Byte-exact flat twin of 02-typical-xml-orders05.xml: both forms must produce the same canonical model.
+
+> ⚠ **`07-with-definition-set/segments.xml`** — Fileset member: the WE60-style segment definition that supplies the SDATA field offsets; without it the flat record's payload is opaque.
+
+> ⚠ **`negative/06-semantic-short-control-record.txt`** — The FMT-6.2 acceptance case: a flat control record shorter than 524 bytes, so the fixed-width cut cannot find IDOCTYP/MESTYP at their declared offsets.
+
+### `ims/` — IMS DBD and PSB (pending #5482)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-dbd.dbd` | minimal | `ims` ≥ 0.85 | valid | `dbd`, `segm`, `field`, `sequence-field`, `pending-adapter` |
+| `02-typical-hdam-dbd.dbd` | typical | `ims` ≥ 0.85 | valid | `hdam`, `parent-hierarchy`, `packed-field`, `randomizer`, `continuation`, `pending-adapter` |
+| `03-dbd-psb-set/CUSTDB.dbd` | multi-file (root) | `ims` ≥ 0.85 | valid | `multi-file`, `dbd`, `hierarchy`, `pending-adapter` |
+| `03-dbd-psb-set/CUSTINQ.psb` ⚠ | multi-file (member) | `ims` (no guarantee) | valid | `multi-file`, `psb`, `senseg`, `senfld`, `procopt`, `pending-adapter` |
+| `04-stress-secondary-indexes.dbd` | stress | `ims` ≥ 0.85 | valid | `hidam`, `lchild`, `xdfld`, `subseq`, `ddata`, `nullval`, `non-unique-key`, `variable-length-segment`, `logical-child`, `pointer-options`, `pending-adapter` |
+| `05-real-world-policy-dbd.dbd` | real-world | `ims` ≥ 0.85 | valid | `four-level-hierarchy`, `packed-money`, `secondary-index`, `variable-length-segment`, `free-space`, `pending-adapter` |
+| `06-typical-psb.psb` | typical | `ims` ≥ 0.85 | valid | `psb`, `multiple-pcbs`, `procopt`, `senfld`, `tp-pcb`, `procseq`, `pending-adapter` |
+| `07-composition-logical-database.dbd` | composition | `ims` ≥ 0.85 | valid | `logical-database`, `source-operand`, `concatenated-segment`, `cross-database-hierarchy`, `pending-adapter` |
+| `negative/01-syntactic-unterminated-continuation.dbd` | — | `ims` (no guarantee) | invalid | `negative`, `syntactic`, `dangling-continuation`, `pending-adapter` |
+| `negative/02-semantic-no-segments.dbd` | — | `ims` (no guarantee) | invalid | `negative`, `semantic`, `no-segments`, `pending-adapter` |
+| `negative/03-truncated-mid-field.dbd` | — | `ims` (no guarantee) | invalid | `negative`, `truncated`, `mid-operand`, `pending-adapter` |
+| `negative/04-wrong-format-cobol-copybook.cpy` | — | `ims` (no guarantee) | invalid | `negative`, `wrong-format`, `cobol-copybook`, `pending-adapter` |
+| `negative/05-encoding-utf16.dbd` | — | `ims` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-parent-reference.dbd` ⚠ | — | `ims` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `dangling-parent`, `missing-index-dbd`, `pending-adapter` |
+
+> ⚠ **`03-dbd-psb-set/CUSTINQ.psb`** — Fileset member: the program view. PROCOPT is the access contract FMT-11.2 carries in extras, and it only makes sense against the DBD in the same set.
+
+> ⚠ **`negative/06-unresolvable-parent-reference.dbd`** — The FMT-11.2 acceptance case: a DBD with a dangling PARENT.
 
 ### `iso20022/` — ISO 20022
 
@@ -545,6 +1138,30 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/03-truncated-mid-element.json`** — Grounded FORMAT_MISMATCH rather than INPUT_MALFORMED: the greedy graphql sniffer claims the truncated JSON at 0.9 (`type` keyword match) and grpc claims it at 0.7, while iso8583's own detect cannot claim broken JSON.
 
+### `istio/` — Istio traffic resources (pending #5458)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-virtualservice.yaml` | minimal | `istio` ≥ 0.9 | valid | `VirtualService`, `single-route`, `pending-adapter` |
+| `02-typical-virtualservice.yaml` | typical | `istio` ≥ 0.9 | valid | `VirtualService`, `uri-exact`, `uri-prefix`, `method-match`, `directResponse`, `rewrite`, `retries`, `timeout`, `pending-adapter` |
+| `03-composition-multidoc.yaml` | composition | `istio` ≥ 0.9 | valid | `multi-document`, `Gateway`, `DestinationRule`, `subsets`, `weighted-routes`, `header-match`, `pending-adapter` |
+| `04-stress-match-and-traffic-policy.yaml` | stress | `istio` ≥ 0.9 | valid | `withoutHeaders`, `queryParams`, `scheme`, `authority`, `sourceLabels`, `corsPolicy`, `fault-injection`, `mirror`, `delegate`, `header-mutation`, `tls-routes`, `tcp-routes`, `pending-adapter` |
+| `05-real-world-canary-rollout.yaml` | real-world | `istio` ≥ 0.9 | valid | `canary`, `weighted-routes`, `consistentHash`, `outlierDetection`, `gone-response`, `multi-document`, `pending-adapter` |
+| `06-typical-serviceentry-and-sidecar.yaml` | typical | `istio` ≥ 0.9 | valid | `ServiceEntry`, `Sidecar`, `egress`, `REGISTRY-ONLY`, `multi-document`, `pending-adapter` |
+| `07-gitops-set/destinationrule.yaml` ⚠ | multi-file (member) | `istio` (no guarantee) | valid | `destinationrule`, `subsets`, `outlierDetection`, `pending-adapter` |
+| `07-gitops-set/gateway.yaml` ⚠ | multi-file (member) | `istio` (no guarantee) | valid | `gateway`, `tls-credential`, `pending-adapter` |
+| `07-gitops-set/virtualservice.yaml` | multi-file (root) | `istio` ≥ 0.9 | valid | `gitops-layout`, `canary`, `subset-reference`, `pending-adapter` |
+| `negative/01-syntactic-bad-yaml.yaml` | — | `istio` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation`, `pending-adapter` |
+| `negative/02-semantic-no-routes.yaml` | — | `istio` (no guarantee) | invalid | `negative`, `semantic`, `no-route-blocks`, `pending-adapter` |
+| `negative/03-truncated-mid-route.yaml` | — | `istio` (no guarantee) | invalid | `negative`, `truncated`, `mid-value`, `pending-adapter` |
+| `negative/04-wrong-format-envoy-route.yaml` | — | `istio` (no guarantee) | invalid | `negative`, `wrong-format`, `envoy-xds`, `pending-adapter` |
+| `negative/05-encoding-utf16.yaml` | — | `istio` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-subset-reference.yaml` | — | `istio` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-subset`, `pending-adapter` |
+
+> ⚠ **`07-gitops-set/destinationrule.yaml`** — Fileset member: defines the subsets the routes name.
+
+> ⚠ **`07-gitops-set/gateway.yaml`** — Fileset member: the Gateway the VirtualService binds to.
+
 ### `json-schema/` — JSON Schema
 
 | File | Rung | Expected detection | Class | Features |
@@ -570,6 +1187,27 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`12-nonconforming-examples.json`** — Every `examples` entry deliberately violates the subschema it sits in (root required, minimum, minLength, enum, maxItems, and a $defs pattern); the document is a valid JSON Schema and must import cleanly. Drives tests/test_example_conformance_corpus.py.
 
 > ⚠ **`negative/03-truncated-mid-token.json`** — Grounded FORMAT_MISMATCH rather than INPUT_MALFORMED: the greedy graphql sniffer claims the truncated JSON at 0.9 (`type` keyword match), while json-schema's own detect cannot claim broken JSON.
+
+### `jsonld/` — JSON-LD contexts (pending #5471)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-context.jsonld` | minimal | `jsonld` ≥ 0.85 | valid | `context`, `vocab`, `keyword-alias`, `pending-adapter` |
+| `02-typical-context.jsonld` | typical | `jsonld` ≥ 0.85 | valid | `typed-term`, `set-container`, `list-container`, `language-container`, `scoped-context`, `pending-adapter` |
+| `03-contexts-set/context.jsonld` | multi-file (root) | `jsonld` ≥ 0.85 | valid | `multi-file`, `context-array`, `relative-context`, `pending-adapter` |
+| `03-contexts-set/shared-context.jsonld` | multi-file (member) | `jsonld` (no guarantee) | valid | `multi-file`, `shared-terms`, `scoped-context`, `pending-adapter` |
+| `04-stress-keyword-coverage.jsonld` | stress | `jsonld` ≥ 0.85 | valid | `index-container`, `id-container`, `type-container`, `graph-container`, `compound-container`, `reverse`, `protected`, `prefix`, `nest`, `direction`, `base`, `json-type`, `pending-adapter` |
+| `05-real-world-catalog-context.jsonld` | real-world | `jsonld` ≥ 0.85 | valid | `dcat`, `dublin-core`, `skos`, `vcard`, `language-map`, `typed-dates`, `scoped-context`, `pending-adapter` |
+| `06-typical-document-with-context.jsonld` | typical | `jsonld` ≥ 0.85 | valid | `context-plus-graph`, `instance-data`, `typed-values`, `pending-adapter` |
+| `07-composition-context-array.jsonld` | composition | `jsonld` ≥ 0.85 | valid | `context-array`, `scoped-context`, `nested-scoped-context`, `type-scoped-values`, `pending-adapter` |
+| `negative/01-syntactic-trailing-comma.jsonld` | — | `jsonld` (no guarantee) | invalid | `negative`, `syntactic`, `trailing-comma`, `pending-adapter` |
+| `negative/02-semantic-no-context.jsonld` | — | `jsonld` (no guarantee) | invalid | `negative`, `semantic`, `no-context`, `pending-adapter` |
+| `negative/03-truncated-mid-term.jsonld` | — | `jsonld` (no guarantee) | invalid | `negative`, `truncated`, `mid-term-definition`, `pending-adapter` |
+| `negative/04-wrong-format-json-schema.json` | — | `jsonld` (no guarantee) | invalid | `negative`, `wrong-format`, `json-schema`, `pending-adapter` |
+| `negative/05-encoding-utf16.jsonld` | — | `jsonld` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-remote-context.jsonld` ⚠ | — | `jsonld` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `remote-context`, `missing-relative-context`, `pending-adapter` |
+
+> ⚠ **`negative/06-unresolvable-remote-context.jsonld`** — Remote contexts must resolve under the SSRF guard; an unreachable one is a named unresolved reference, not an empty term map.
 
 ### `jtd/` — JSON Type Definition
 
@@ -606,6 +1244,32 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/05-encoding-utf16.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
 
 > ⚠ **`06-multi-crd-stream.yaml`** — Multi-document YAML stream with two CRDs; imports as one CanonicalApi with two Services. The multi-file ladder rung is waived because CRDs do not resolve cross-file references.
+
+### `kafka-connect/` — Kafka Connect schema (pending #5441)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-struct.json` | minimal | `kafka-connect` ≥ 0.85 | valid | `struct`, `primitives`, `pending-adapter` |
+| `02-typical-order-schema.json` | typical | `kafka-connect` ≥ 0.85 | valid | `struct`, `version`, `doc`, `optional`, `defaults`, `pending-adapter` |
+| `03-composition-nested-and-map.json` | composition | `kafka-connect` ≥ 0.85 | valid | `nested-struct`, `array`, `map`, `Decimal`, `pending-adapter` |
+| `04-stress-logical-types-and-parameters.json` | stress | `kafka-connect` ≥ 0.85 | valid | `Decimal`, `Date`, `Time`, `Timestamp`, `connector-logical-types`, `parameters`, `array-of-array`, `map-of-struct`, `null-default`, `pending-adapter` |
+| `05-real-world-change-event-schema.json` | real-world | `kafka-connect` ≥ 0.85 | valid | `cdc-envelope`, `before-after`, `source-block`, `Decimal`, `enum-parameters`, `pending-adapter` |
+| `06-typical-schema-payload-envelope.json` | typical | `kafka-connect` ≥ 0.85 | valid | `schema-payload-envelope`, `array`, `Timestamp`, `pending-adapter` |
+| `07-pipeline-set/connector.json` | multi-file (root) | `kafka-connect` ≥ 0.85 | valid | `connector-config`, `converters`, `transforms`, `pending-adapter` |
+| `07-pipeline-set/key-schema.json` ⚠ | multi-file (member) | `kafka-connect` (no guarantee) | valid | `key-schema`, `struct`, `pending-adapter` |
+| `07-pipeline-set/value-schema.json` ⚠ | multi-file (member) | `kafka-connect` (no guarantee) | valid | `value-schema`, `Decimal`, `Timestamp`, `array-of-struct`, `map`, `pending-adapter` |
+| `negative/01-syntactic-missing-brace.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `syntactic`, `missing-brace`, `pending-adapter` |
+| `negative/02-semantic-struct-without-fields.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `semantic`, `no-fields`, `pending-adapter` |
+| `negative/03-truncated-mid-field.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `truncated`, `mid-type`, `pending-adapter` |
+| `negative/04-wrong-format-avro.avsc` ⚠ | — | `kafka-connect` (no guarantee) | invalid | `negative`, `wrong-format`, `avro`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-field-without-type.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `semantic`, `missing-type`, `unknown-type`, `pending-adapter` |
+
+> ⚠ **`07-pipeline-set/key-schema.json`** — Fileset member: the key schema the pipeline carries.
+
+> ⚠ **`07-pipeline-set/value-schema.json`** — Fileset member: the value schema that lands in the sink.
+
+> ⚠ **`negative/04-wrong-format-avro.avsc`** — Avro uses `name`/`fields[].name`; Connect uses `field`. The two are the pair most easily confused, and the transcode FMT-5.3 promises depends on telling them apart.
 
 ### `kong/` — Kong Declarative Config
 
@@ -650,6 +1314,168 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`06-tools-wrapper-object.json`** — Object wrapper with a tools array; multi-file ladder rung is waived because tool bundles do not resolve cross-file references.
 
+### `lwm2m/` — LwM2M / IPSO objects (pending #5472)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-object.xml` | minimal | `lwm2m` ≥ 0.9 | valid | `object-definition`, `resource`, `read-only`, `pending-adapter` |
+| `02-typical-ipso-temperature.xml` | typical | `lwm2m` ≥ 0.9 | valid | `ipso`, `units`, `executable-resource`, `optional-resources`, `multiple-instances`, `pending-adapter` |
+| `03-composition-multi-object-file.xml` | composition | `lwm2m` ≥ 0.9 | valid | `multi-object`, `objlnk`, `cross-object-reference`, `pending-adapter` |
+| `04-stress-resource-forms.xml` | stress | `lwm2m` ≥ 0.9 | valid | `all-resource-types`, `write-only`, `executable-resource`, `multiple-instances`, `range`, `enumeration`, `objlnk`, `corelnk`, `units`, `pending-adapter` |
+| `05-real-world-device-object.xml` | real-world | `lwm2m` ≥ 0.9 | valid | `device-object`, `multi-instance-resources`, `error-codes`, `reboot`, `factory-reset`, `timezone`, `pending-adapter` |
+| `06-typical-firmware-update-object.xml` | typical | `lwm2m` ≥ 0.9 | valid | `firmware-update`, `write-only`, `executable-resource`, `state-enum`, `result-enum`, `pending-adapter` |
+| `07-object-registry-set/32710.xml` | multi-file (root) | `lwm2m` ≥ 0.9 | valid | `objlnk-composition`, `registry-convention`, `pending-adapter` |
+| `07-object-registry-set/32711.xml` ⚠ | multi-file (member) | `lwm2m` (no guarantee) | valid | `temperature-object`, `executable-resource`, `pending-adapter` |
+| `07-object-registry-set/32712.xml` ⚠ | multi-file (member) | `lwm2m` (no guarantee) | valid | `actuator-object`, `executable-resource`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-item.xml` | — | `lwm2m` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-no-resources.xml` | — | `lwm2m` (no guarantee) | invalid | `negative`, `semantic`, `empty-resources`, `pending-adapter` |
+| `negative/03-truncated-mid-resource.xml` | — | `lwm2m` (no guarantee) | invalid | `negative`, `truncated`, `mid-element`, `pending-adapter` |
+| `negative/04-wrong-format-matter-cluster.xml` | — | `lwm2m` (no guarantee) | invalid | `negative`, `wrong-format`, `matter`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `lwm2m` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-unknown-resource-type.xml` | — | `lwm2m` (no guarantee) | invalid | `negative`, `semantic`, `unknown-type`, `invalid-operations`, `pending-adapter` |
+
+> ⚠ **`07-object-registry-set/32711.xml`** — Fileset member: the sensor object the unit links to.
+
+> ⚠ **`07-object-registry-set/32712.xml`** — Fileset member: the actuator object the unit links to.
+
+### `matter/` — Matter clusters and device types (pending #5472)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-cluster.xml` | minimal | `matter` ≥ 0.9 | valid | `cluster`, `attribute`, `command`, `pending-adapter` |
+| `02-typical-onoff-cluster.xml` | typical | `matter` ≥ 0.9 | valid | `enum`, `bitmap`, `optional-attribute`, `nullable-attribute`, `defaults`, `commands`, `pending-adapter` |
+| `03-device-type-set/device-type.xml` | multi-file (root) | `matter` ≥ 0.9 | valid | `multi-file`, `deviceType`, `cluster-include`, `required-members`, `pending-adapter` |
+| `03-device-type-set/levelcontrol-cluster.xml` | multi-file (member) | `matter` (no guarantee) | valid | `multi-file`, `cluster`, `bitmap`, `access`, `pending-adapter` |
+| `03-device-type-set/onoff-cluster.xml` | multi-file (member) | `matter` (no guarantee) | valid | `multi-file`, `cluster`, `pending-adapter` |
+| `04-stress-structs-enums-bitmaps.xml` | stress | `matter` ≥ 0.9 | valid | `struct`, `nested-struct-array`, `features`, `conformance`, `list-attribute`, `access-privilege`, `command-response`, `events`, `event-priority`, `nullable`, `pending-adapter` |
+| `05-real-world-thermostat-cluster.xml` | real-world | `matter` ≥ 0.9 | valid | `thermostat`, `setpoint-limits`, `mode-enum`, `running-state-bitmap`, `schedule-commands`, `command-response`, `pending-adapter` |
+| `06-typical-events-and-access.xml` | typical | `matter` ≥ 0.9 | valid | `basic-information`, `struct-attribute`, `write-privilege`, `lifecycle-events`, `pending-adapter` |
+| `07-composition-derived-cluster.xml` | composition | `matter` ≥ 0.9 | valid | `struct-of-structs`, `shared-types`, `derived-cluster`, `command-response`, `events`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-cluster.xml` | — | `matter` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-cluster-without-members.xml` | — | `matter` (no guarantee) | invalid | `negative`, `semantic`, `no-members`, `pending-adapter` |
+| `negative/03-truncated-mid-attribute.xml` | — | `matter` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-lwm2m.xml` | — | `matter` (no guarantee) | invalid | `negative`, `wrong-format`, `lwm2m`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `matter` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-type-reference.xml` | — | `matter` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-enum`, `missing-struct`, `pending-adapter` |
+
+### `mcp/` — MCP server manifest (pending #5418)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-echo-tool.json` | minimal | `mcp` ≥ 0.9 | valid | `tools`, `single-tool`, `inputSchema`, `pending-adapter` |
+| `02-typical-tickets-server.json` | typical | `mcp` ≥ 0.9 | valid | `tools`, `resources`, `resourceTemplates`, `prompts`, `annotations`, `streamable-http`, `pending-adapter` |
+| `03-composition-shared-schemas.json` | composition | `mcp` ≥ 0.9 | valid | `defs`, `ref-reuse`, `outputSchema`, `tools`, `pending-adapter` |
+| `04-stress-grammar-corners.json` | stress | `mcp` ≥ 0.9 | valid | `oneOf`, `anyOf`, `outputSchema`, `meta`, `experimental-capabilities`, `uri-template`, `stdio`, `pending-adapter` |
+| `05-real-world-filesystem-server.json` | real-world | `mcp` ≥ 0.9 | valid | `tools`, `annotations`, `resources`, `stdio`, `pending-adapter` |
+| `06-split-set/manifest.json` | multi-file (root) | `mcp` ≥ 0.9 | valid | `multi-file`, `cross-file-ref`, `tools`, `pending-adapter` |
+| `06-split-set/schemas.json` ⚠ | multi-file (member) | `mcp` (no guarantee) | valid | `multi-file`, `cross-file-ref`, `schemas`, `pending-adapter` |
+| `negative/01-syntactic-trailing-comma.json` | — | `mcp` (no guarantee) | invalid | `negative`, `syntactic`, `trailing-comma`, `pending-adapter` |
+| `negative/02-semantic-tool-without-input-schema.json` ⚠ | — | `mcp` (no guarantee) | invalid | `negative`, `semantic`, `missing-inputSchema`, `pending-adapter` |
+| `negative/03-truncated-mid-tool.json` | — | `mcp` (no guarantee) | invalid | `negative`, `truncated`, `mid-tool`, `pending-adapter` |
+| `negative/04-wrong-format-openapi.yaml` | — | `mcp` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` ⚠ | — | `mcp` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+
+> ⚠ **`06-split-set/schemas.json`** — Fileset member with no mcpVersion marker — not independently detectable; imported only through 06-split-set/manifest.json.
+
+> ⚠ **`negative/02-semantic-tool-without-input-schema.json`** — Well-formed JSON whose tools declare no inputSchema, so the manifest describes no callable surface.
+
+> ⚠ **`negative/05-encoding-utf16.json`** — 01-minimal-echo-tool.json re-encoded as UTF-16 (BOM + NUL bytes).
+
+### `nacha/` — NACHA ACH (pending #5450)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-ppd-credit.ach` | minimal | `nacha` ≥ 0.9 | valid | `PPD`, `single-entry`, `fixed-width`, `block-padding`, `pending-adapter` |
+| `02-typical-ppd-batch.ach` | typical | `nacha` ≥ 0.9 | valid | `PPD`, `multiple-entries`, `transaction-codes`, `entry-hash`, `pending-adapter` |
+| `03-composition-ccd-with-addenda.ach` | composition | `nacha` ≥ 0.9 | valid | `CCD`, `addenda`, `RMR`, `addenda-indicator`, `pending-adapter` |
+| `04-stress-multi-batch-sec-codes.ach` | stress | `nacha` ≥ 0.9 | valid | `PPD`, `CCD`, `WEB`, `TEL`, `multi-batch`, `service-class`, `savings-transaction-codes`, `file-id-modifier`, `pending-adapter` |
+| `05-real-world-payroll-and-tax.ach` | real-world | `nacha` ≥ 0.9 | valid | `payroll`, `TXP`, `two-batches`, `credit-and-debit`, `pending-adapter` |
+| `06-stress-control-total-mismatch.ach` ⚠ | stress | `nacha` ≥ 0.9 | valid | `control-totals`, `declared-vs-observed`, `entry-hash-mismatch`, `pending-adapter` |
+| `07-return-set/forward-file.ach` | multi-file (root) | `nacha` ≥ 0.9 | valid | `PPD`, `forward-file`, `pending-adapter` |
+| `07-return-set/return-file.ach` ⚠ | multi-file (member) | `nacha` (no guarantee) | valid | `return-entry`, `R03`, `addenda-99`, `pending-adapter` |
+| `negative/01-syntactic-short-record.ach` ⚠ | — | `nacha` (no guarantee) | invalid | `negative`, `syntactic`, `record-length`, `pending-adapter` |
+| `negative/02-semantic-batch-without-entries.ach` | — | `nacha` (no guarantee) | invalid | `negative`, `semantic`, `empty-batch`, `pending-adapter` |
+| `negative/03-truncated-mid-entry.ach` | — | `nacha` (no guarantee) | invalid | `negative`, `truncated`, `mid-record`, `pending-adapter` |
+| `negative/04-wrong-format-sepa-pain001.xml` ⚠ | — | `nacha` (no guarantee) | invalid | `negative`, `wrong-format`, `sepa`, `pain.001`, `pending-adapter` |
+| `negative/05-encoding-utf16.ach` | — | `nacha` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-orphan-addenda.ach` ⚠ | — | `nacha` (no guarantee) | invalid | `negative`, `semantic`, `orphan-addenda`, `pending-adapter` |
+
+> ⚠ **`06-stress-control-total-mismatch.ach`** — Batch and file control records declare five entries, a zero hash and a 999999 credit total; none of it matches the two entries present. The acceptance criterion is that both numbers are shown.
+
+> ⚠ **`07-return-set/return-file.ach`** — Fileset member: the return file. Transaction code 26 plus a 99 addenda carry the return reason, and the trace number is the edge back to the original entry.
+
+> ⚠ **`negative/01-syntactic-short-record.ach`** — A 32-character batch header: in a fixed-width format a short record is a grammar error, not a semantic one.
+
+> ⚠ **`negative/04-wrong-format-sepa-pain001.xml`** — The European half of FMT-6.6: it must route to the shipped iso20022 adapter with its message identifier recorded, never to the ACH parser.
+
+> ⚠ **`negative/06-semantic-orphan-addenda.ach`** — A `7` addenda record before any `6` entry detail: the addenda has no entry to attach to.
+
+### `natural-ddm/` — Natural / ADABAS DDM (pending #5486)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-ddm.ddm` | minimal | `natural-ddm` ≥ 0.9 | valid | `ddm-header`, `fields`, `descriptor`, `pending-adapter` |
+| `02-typical-customer-ddm.ddm` | typical | `natural-ddm` ≥ 0.9 | valid | `alpha`, `numeric`, `packed`, `unique-descriptor`, `multiple-value`, `superdescriptor`, `pending-adapter` |
+| `03-view-set/CUSTINQ.nsp` ⚠ | multi-file (member) | `natural-ddm` (no guarantee) | valid | `multi-file`, `define-data-view`, `occurrence-bounds`, `field-subset`, `pending-adapter` |
+| `03-view-set/CUSTOMER.ddm` | multi-file (root) | `natural-ddm` ≥ 0.9 | valid | `multi-file`, `ddm`, `periodic-group`, `superdescriptor`, `pending-adapter` |
+| `04-stress-formats-and-descriptors.ddm` | stress | `natural-ddm` ≥ 0.9 | valid | `all-formats`, `binary`, `float`, `logical`, `unicode`, `date`, `time`, `lob`, `mu-in-pe`, `two-periodic-groups`, `null-suppression`, `fixed-storage`, `hyperdescriptor`, `subdescriptor`, `pending-adapter` |
+| `05-real-world-policy-ddm.ddm` | real-world | `natural-ddm` ≥ 0.9 | valid | `periodic-groups`, `packed-money`, `multiple-value`, `superdescriptors`, `status-codes`, `pending-adapter` |
+| `06-typical-periodic-groups.ddm` | typical | `natural-ddm` ≥ 0.9 | valid | `periodic-group`, `mu-in-pe`, `superdescriptor`, `packed`, `pending-adapter` |
+| `07-composition-redefines-and-groups.ddm` | composition | `natural-ddm` ≥ 0.9 | valid | `redefinition`, `group-field`, `group-in-periodic-group`, `superdescriptor-across-levels`, `pending-adapter` |
+| `negative/01-syntactic-malformed-column-layout.ddm` | — | `natural-ddm` (no guarantee) | invalid | `negative`, `syntactic`, `malformed-columns`, `pending-adapter` |
+| `negative/02-semantic-no-fields.ddm` | — | `natural-ddm` (no guarantee) | invalid | `negative`, `semantic`, `no-field-lines`, `pending-adapter` |
+| `negative/03-truncated-mid-field-list.ddm` | — | `natural-ddm` (no guarantee) | invalid | `negative`, `truncated`, `mid-field-line`, `pending-adapter` |
+| `negative/04-wrong-format-cobol-copybook.cpy` | — | `natural-ddm` (no guarantee) | invalid | `negative`, `wrong-format`, `cobol-copybook`, `pending-adapter` |
+| `negative/05-encoding-utf16.ddm` | — | `natural-ddm` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-superdescriptor-source.ddm` | — | `natural-ddm` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-source-field`, `pending-adapter` |
+
+> ⚠ **`03-view-set/CUSTINQ.nsp`** — Fileset member: the program's VIEW over the DDM, carrying occurrence bounds the DDM itself does not state.
+
+### `ncpdp/` — NCPDP SCRIPT / Telecom (pending #5452)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-newrx.xml` | minimal | `ncpdp` ≥ 0.85 | valid | `script`, `NewRx`, `participants`, `pending-adapter` |
+| `02-typical-newrx.xml` | typical | `ncpdp` ≥ 0.85 | valid | `script`, `NewRx`, `coded-drug`, `diagnosis`, `sig`, `sender-software`, `pending-adapter` |
+| `03-composition-rxchangerequest.xml` | composition | `ncpdp` ≥ 0.85 | valid | `script`, `RxChangeRequest`, `prescribed-and-requested`, `prior-authorization`, `benefits-coordination`, `pending-adapter` |
+| `04-stress-multiple-transactions.xml` | stress | `ncpdp` ≥ 0.85 | valid | `script`, `RxFill`, `RxRenewalRequest`, `CancelRx`, `Status`, `Error`, `multi-transaction`, `pending-adapter` |
+| `05-real-world-telecom-b1-claim.dat` | real-world | `ncpdp` ≥ 0.85 | valid | `telecom`, `D0`, `B1`, `insurance-segment`, `claim-segment`, `pricing-segment`, `control-characters`, `pending-adapter` |
+| `06-typical-telecom-b2-reversal.dat` | typical | `ncpdp` ≥ 0.85 | valid | `telecom`, `D0`, `B2`, `reversal`, `control-characters`, `pending-adapter` |
+| `07-transaction-set/newrx.xml` | multi-file (root) | `ncpdp` ≥ 0.85 | valid | `NewRx`, `script`, `pending-adapter` |
+| `07-transaction-set/status.xml` ⚠ | multi-file (member) | `ncpdp` (no guarantee) | valid | `Status`, `RelatesToMessageID`, `script`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-body.xml` | — | `ncpdp` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-empty-body.xml` | — | `ncpdp` (no guarantee) | invalid | `negative`, `semantic`, `no-transaction`, `pending-adapter` |
+| `negative/03-truncated-mid-medication.xml` | — | `ncpdp` (no guarantee) | invalid | `negative`, `truncated`, `mid-element`, `pending-adapter` |
+| `negative/04-wrong-format-hl7v2.hl7` ⚠ | — | `ncpdp` (no guarantee) | invalid | `negative`, `wrong-format`, `hl7v2`, `RDE`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `ncpdp` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-unknown-telecom-version.dat` | — | `ncpdp` (no guarantee) | invalid | `negative`, `semantic`, `unknown-version`, `telecom`, `pending-adapter` |
+
+> ⚠ **`07-transaction-set/status.xml`** — Fileset member: the pharmacy's response, tied to the NewRx by RelatesToMessageID.
+
+> ⚠ **`negative/04-wrong-format-hl7v2.hl7`** — An HL7 v2 pharmacy order for the same prescription — the neighbour the shipped hl7v2 adapter owns.
+
+### `nginx/` — nginx configuration (pending #5459)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-server.conf` | minimal | `nginx` ≥ 0.8 | valid | `server-block`, `location`, `proxy-pass`, `pending-adapter` |
+| `02-typical-reverse-proxy.conf` | typical | `nginx` ≥ 0.8 | valid | `upstream`, `exact-location`, `prefix-location`, `alias`, `redirect-server`, `tls`, `proxy-headers`, `pending-adapter` |
+| `03-includes-set/api.example.com.conf` | multi-file (member) | `nginx` (no guarantee) | valid | `multi-file`, `server-block`, `location`, `pending-adapter` |
+| `03-includes-set/nginx.conf` | multi-file (root) | `nginx` ≥ 0.8 | valid | `multi-file`, `include`, `http-block`, `pending-adapter` |
+| `03-includes-set/upstreams.conf` | multi-file (member) | `nginx` (no guarantee) | valid | `multi-file`, `upstream`, `pending-adapter` |
+| `04-stress-location-modifiers.conf` ⚠ | stress | `nginx` ≥ 0.8 | valid | `exact-modifier`, `preferential-prefix`, `regex-location`, `case-insensitive-regex`, `named-location`, `map`, `geo`, `limit-req`, `if-in-location`, `internal`, `try-files`, `nested-location`, `websocket`, `pending-adapter` |
+| `05-real-world-edge.conf` | real-world | `nginx` ≥ 0.8 | valid | `canonical-redirect`, `proxy-cache`, `gzip`, `security-headers`, `allow-deny`, `gone-response`, `least-conn`, `pending-adapter` |
+| `06-typical-grpc-and-stream.conf` | typical | `nginx` ≥ 0.8 | valid | `grpc-pass`, `stream-block`, `error-page`, `http2`, `pending-adapter` |
+| `07-composition-shared-snippets.conf` | composition | `nginx` ≥ 0.8 | valid | `directive-inheritance`, `map`, `shared-upstreams`, `server-override`, `location-override`, `pending-adapter` |
+| `negative/01-syntactic-missing-brace.conf` | — | `nginx` (no guarantee) | invalid | `negative`, `syntactic`, `missing-brace`, `pending-adapter` |
+| `negative/02-semantic-no-server-block.conf` | — | `nginx` (no guarantee) | invalid | `negative`, `semantic`, `no-server-block`, `pending-adapter` |
+| `negative/03-truncated-mid-location.conf` | — | `nginx` (no guarantee) | invalid | `negative`, `truncated`, `mid-directive`, `pending-adapter` |
+| `negative/04-wrong-format-haproxy.cfg` | — | `nginx` (no guarantee) | invalid | `negative`, `wrong-format`, `haproxy`, `pending-adapter` |
+| `negative/05-encoding-utf16.conf` | — | `nginx` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-upstream-reference.conf` | — | `nginx` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-upstream`, `pending-adapter` |
+
+> ⚠ **`04-stress-location-modifiers.conf`** — Deliberately reaches past the documented subset (if, map, geo, nested locations): FMT-7.5 requires each of those declared as a parsing limit rather than guessed at.
+
 ### `odata/` — OData v4 (EDMX)
 
 | File | Rung | Expected detection | Class | Features |
@@ -666,6 +1492,53 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/03-truncated-mid-tag.edmx` | — | `odata` (no guarantee) | invalid | `negative`, `truncated`, `cut-mid-token` |
 | `negative/04-wrong-format-wsdl.wsdl` | — | `odata` (no guarantee) | invalid | `negative`, `wrong-format`, `wsdl-definitions` |
 | `negative/05-encoding-utf16.edmx` | — | `odata` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
+
+### `odata-v2/` — OData v2 / v3 (CSDL) (pending #5429)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-v2-single-entity.xml` | minimal | `odata-v2` ≥ 0.9 | valid | `EntityType`, `EntitySet`, `v2`, `pending-adapter` |
+| `02-typical-v2-orders.xml` | typical | `odata-v2` ≥ 0.9 | valid | `Association`, `AssociationSet`, `ReferentialConstraint`, `compound-key`, `FunctionImport`, `v2`, `pending-adapter` |
+| `03-composition-v3-inheritance.xml` | composition | `odata-v3` ≥ 0.9 | valid | `BaseType`, `abstract-entity`, `ComplexType`, `EnumType`, `v3`, `pending-adapter` |
+| `04-stress-v2-customizable-feeds.xml` | stress | `odata-v2` ≥ 0.9 | valid | `FC-TargetPath`, `customizable-feeds`, `HasStream`, `Edm.Time`, `many-to-many`, `v2`, `pending-adapter` |
+| `05-real-world-sap-gateway-service.xml` | real-world | `odata-v2` ≥ 0.9 | valid | `sap-annotations`, `sap-semantics`, `ReferentialConstraint`, `FunctionImport`, `v2`, `pending-adapter` |
+| `06-typical-v3-catalog.xml` | typical | `odata-v3` ≥ 0.9 | valid | `v3`, `IsSideEffecting`, `Association`, `pending-adapter` |
+| `07-referenced-set/service.xml` | multi-file (root) | `odata-v3` ≥ 0.9 | valid | `multi-file`, `edmx-Reference`, `v3`, `pending-adapter` |
+| `07-referenced-set/shared-types.xml` ⚠ | multi-file (member) | `odata-v3` (no guarantee) | valid | `multi-file`, `ComplexType`, `v3`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-entitytype.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-no-entity-container.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `semantic`, `no-entity-container`, `pending-adapter` |
+| `negative/03-truncated-mid-property.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-wsdl.wsdl` | — | `odata-v2` (no guarantee) | invalid | `negative`, `wrong-format`, `wsdl`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-association-ref.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-association`, `pending-adapter` |
+
+> ⚠ **`07-referenced-set/shared-types.xml`** — Fileset member: the shared ComplexType namespace the root includes by edmx:Reference.
+
+### `odcs/` — Open Data Contract Standard v3.1 (pending #5439)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-contract.yaml` | minimal | `odcs` ≥ 0.9 | valid | `schema`, `properties`, `primaryKey`, `pending-adapter` |
+| `02-typical-orders-contract.yaml` | typical | `odcs` ≥ 0.9 | valid | `quality`, `servers`, `team`, `support`, `slaProperties`, `partitioned`, `classification`, `tags`, `pending-adapter` |
+| `03-composition-nested-schema.yaml` | composition | `odcs` ≥ 0.9 | valid | `nested-object`, `array-of-objects`, `authoritativeDefinitions`, `multiple-schema-objects`, `pending-adapter` |
+| `04-stress-quality-sla-and-custom.yaml` | stress | `odcs` ≥ 0.9 | valid | `quality-sql`, `quality-text`, `quality-custom`, `logicalTypeOptions`, `transformLogic`, `encryptedName`, `roles`, `price`, `customProperties`, `slaProperties`, `pending-adapter` |
+| `05-real-world-transactions-contract.yaml` | real-world | `odcs` ≥ 0.9 | valid | `compound-key`, `partitioned`, `pii`, `roles`, `retention`, `quality-sql`, `pending-adapter` |
+| `06-typical-contract.json` | typical | `odcs` ≥ 0.9 | valid | `json-serialization`, `quality`, `servers`, `slaProperties`, `pending-adapter` |
+| `07-contract-set/contract.yaml` | multi-file (root) | `odcs` ≥ 0.9 | valid | `authoritativeDefinitions`, `delegated-schema`, `slaProperties`, `pending-adapter` |
+| `07-contract-set/quality.yaml` ⚠ | multi-file (member) | `odcs` (no guarantee) | valid | `quality-pack`, `sql-rule`, `freshness`, `pending-adapter` |
+| `07-contract-set/shipment-event.schema.json` ⚠ | multi-file (member) | `odcs` (no guarantee) | valid | `json-schema`, `payload-definition`, `pending-adapter` |
+| `negative/01-syntactic-bad-yaml-indent.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation`, `pending-adapter` |
+| `negative/02-semantic-schema-without-properties.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `semantic`, `no-properties`, `pending-adapter` |
+| `negative/03-truncated-mid-property.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `truncated`, `mid-quoted-scalar`, `pending-adapter` |
+| `negative/04-wrong-format-dbt-schema.yml` | — | `odcs` (no guarantee) | invalid | `negative`, `wrong-format`, `dbt`, `pending-adapter` |
+| `negative/05-encoding-utf16.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-version-out-of-range-v2.yaml` ⚠ | — | `odcs` (no guarantee) | invalid | `negative`, `version-out-of-range`, `odcs-v2.2`, `pending-adapter` |
+
+> ⚠ **`07-contract-set/quality.yaml`** — Fileset member: the quality rule pack, maintained separately and keyed by contract id.
+
+> ⚠ **`07-contract-set/shipment-event.schema.json`** — Fileset member: the structural definition the contract delegates to via authoritativeDefinitions.
+
+> ⚠ **`negative/06-version-out-of-range-v2.yaml`** — The FMT-5.1 acceptance case: a v2.2.x contract (quantumName/dataset/columns) must be rejected with a version-out-of-range taxonomy code and remediation text, not a parse error.
 
 ### `onc-rpc/` — ONC RPC / XDR
 
@@ -694,6 +1567,29 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`05-portmapper-style.x`** — Currently outranked: detection ranks `flatbuffers` (0.96) above `oncrpc` (0.95); expected_detection records the intended winner for the detection-hardening work.
 
 > ⚠ **`06-metrics-collector.x`** — Currently outranked: detection ranks `flatbuffers` (0.96) above `oncrpc` (0.95); expected_detection records the intended winner for the detection-hardening work.
+
+### `opcua-nodeset/` — OPC UA NodeSet2 (pending #5468)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-nodeset.xml` | minimal | `opcua-nodeset` ≥ 0.9 | valid | `UAObjectType`, `UAVariable`, `aliases`, `references`, `pending-adapter` |
+| `02-typical-machine-type.xml` | typical | `opcua-nodeset` ≥ 0.9 | valid | `UADataType`, `enum-definition`, `UAMethod`, `InputArguments`, `Models`, `RequiredModel`, `modelling-rule`, `pending-adapter` |
+| `03-composition-subtypes.xml` | composition | `opcua-nodeset` ≥ 0.9 | valid | `abstract-type`, `subtypes`, `UAReferenceType`, `inverse-name`, `UAVariableType`, `optional-modelling-rule`, `pending-adapter` |
+| `04-stress-datatypes-and-methods.xml` | stress | `opcua-nodeset` ≥ 0.9 | valid | `option-set`, `structured-datatype`, `optional-fields`, `union-datatype`, `array-dimensions`, `AccessLevel`, `Historizing`, `output-arguments`, `encoding-object`, `multi-namespace`, `pending-adapter` |
+| `05-real-world-companion-nodeset.xml` | real-world | `opcua-nodeset` ≥ 0.9 | valid | `companion-spec`, `state-enum`, `counters-structure`, `identification`, `analog-item`, `engineering-units`, `methods`, `pending-adapter` |
+| `06-typical-instance-address-space.xml` ⚠ | typical | `opcua-nodeset` ≥ 0.9 | valid | `instances`, `address-space`, `hierarchy`, `live-value`, `pending-adapter` |
+| `07-companion-set/companion.xml` ⚠ | multi-file (member) | `opcua-nodeset` (no guarantee) | valid | `companion-model`, `base-type`, `enum-datatype`, `pending-adapter` |
+| `07-companion-set/model.xml` | multi-file (root) | `opcua-nodeset` ≥ 0.9 | valid | `RequiredModel`, `cross-namespace-subtype`, `cross-namespace-datatype`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-node.xml` | — | `opcua-nodeset` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-no-nodes.xml` | — | `opcua-nodeset` (no guarantee) | invalid | `negative`, `semantic`, `no-nodes`, `pending-adapter` |
+| `negative/03-truncated-mid-definition.xml` | — | `opcua-nodeset` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-xsd.xsd` | — | `opcua-nodeset` (no guarantee) | invalid | `negative`, `wrong-format`, `xsd`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `opcua-nodeset` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-node-reference.xml` | — | `opcua-nodeset` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-node-id`, `missing-datatype`, `pending-adapter` |
+
+> ⚠ **`06-typical-instance-address-space.xml`** — Instances are described in the payload analysis but must not be promoted to canonical types — the FMT-9.1 boundary rule.
+
+> ⚠ **`07-companion-set/companion.xml`** — Fileset member: the companion specification supplying the base type and data type the root references by ns=2 ids.
 
 ### `openapi/` — OpenAPI 3.x
 
@@ -794,6 +1690,74 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-protobuf.proto` | — | `openrpc` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf-idl` |
 | `negative/05-encoding-utf16.json` | — | `openrpc` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
 
+### `owl/` — OWL / RDFS ontologies (pending #5471)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-ontology.ttl` | minimal | `owl` ≥ 0.85 | valid | `ontology-header`, `class`, `datatype-property`, `pending-adapter` |
+| `02-typical-classes-and-properties.ttl` | typical | `owl` ≥ 0.85 | valid | `subClassOf`, `object-property`, `domain-range`, `inverseOf`, `FunctionalProperty`, `disjointWith`, `named-individuals`, `pending-adapter` |
+| `03-imports-set/core.ttl` | multi-file (member) | `owl` (no guarantee) | valid | `multi-file`, `shared-classes`, `pending-adapter` |
+| `03-imports-set/domain.ttl` | multi-file (root) | `owl` ≥ 0.85 | valid | `multi-file`, `owl-imports`, `cross-ontology-subclass`, `pending-adapter` |
+| `04-stress-owl-constructs.ttl` ⚠ | stress | `owl` ≥ 0.85 | valid | `qualified-cardinality`, `oneOf`, `datatype-restriction`, `unionOf`, `intersectionOf`, `complementOf`, `someValuesFrom`, `allValuesFrom`, `TransitiveProperty`, `SymmetricProperty`, `propertyChainAxiom`, `sameAs`, `equivalentClass`, `pending-adapter` |
+| `05-real-world-domain-ontology.ttl` | real-world | `owl` ≥ 0.85 | valid | `versionIRI`, `disjoint-subclasses`, `cardinality-restriction`, `skos-code-list`, `language-tagged-labels`, `licence`, `pending-adapter` |
+| `06-typical-rdfxml.owl` | typical | `owl` ≥ 0.85 | valid | `rdf-xml`, `restriction`, `inverseOf`, `disjointWith`, `pending-adapter` |
+| `07-composition-class-hierarchy.ttl` | composition | `owl` ≥ 0.85 | valid | `subClassOf`, `subPropertyOf`, `restriction-inheritance`, `disjointWith`, `pending-adapter` |
+| `negative/01-syntactic-unterminated-iri.ttl` | — | `owl` (no guarantee) | invalid | `negative`, `syntactic`, `unterminated-iri`, `pending-adapter` |
+| `negative/02-semantic-no-classes.ttl` | — | `owl` (no guarantee) | invalid | `negative`, `semantic`, `header-only`, `pending-adapter` |
+| `negative/03-truncated-mid-restriction.ttl` | — | `owl` (no guarantee) | invalid | `negative`, `truncated`, `mid-typed-literal`, `pending-adapter` |
+| `negative/04-wrong-format-shacl.ttl` | — | `owl` (no guarantee) | invalid | `negative`, `wrong-format`, `shacl`, `pending-adapter` |
+| `negative/05-encoding-utf16.ttl` | — | `owl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-import.ttl` | — | `owl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-owl-imports`, `pending-adapter` |
+
+> ⚠ **`04-stress-owl-constructs.ttl`** — The second half is open-world reasoning, not record structure; FMT-9.4 requires it declared rather than approximated.
+
+### `pkl/` — Pkl (pending #5466)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-schema.pkl` | minimal | `pkl` ≥ 0.85 | valid | `module-properties`, `scalars`, `pending-adapter` |
+| `02-typical-order-schema.pkl` | typical | `pkl` ≥ 0.85 | valid | `typealias`, `union-type`, `regex-constraint`, `range-constraint`, `listing`, `nullable`, `default`, `pending-adapter` |
+| `03-modules-set/shared.pkl` | multi-file (member) | `pkl` (no guarantee) | valid | `multi-file`, `classes`, `pending-adapter` |
+| `03-modules-set/shipping.pkl` | multi-file (root) | `pkl` ≥ 0.85 | valid | `multi-file`, `import`, `cross-module-class`, `pending-adapter` |
+| `04-stress-type-system.pkl` ⚠ | stress | `pkl` ≥ 0.85 | valid | `Duration`, `DataSize`, `Mapping`, `Listing`, `open-class`, `abstract-class`, `inheritance`, `union`, `amending`, `late-binding`, `generator`, `conditional`, `read-env`, `output-renderer`, `function`, `pending-adapter` |
+| `05-real-world-service-config.pkl` | real-world | `pkl` ≥ 0.85 | valid | `open-class-template`, `amending`, `subclass-tightening`, `defaults`, `mapping-of-services`, `pending-adapter` |
+| `06-typical-template-and-instance.pkl` | typical | `pkl` ≥ 0.85 | valid | `template-plus-instance`, `listing-of-objects`, `defaults`, `pending-adapter` |
+| `07-composition-mixins.pkl` | composition | `pkl` ≥ 0.85 | valid | `open-class`, `inheritance-chain`, `amending`, `listing-of-classes`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-class.pkl` | — | `pkl` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-class`, `pending-adapter` |
+| `negative/02-semantic-type-constraint-violation.pkl` | — | `pkl` (no guarantee) | invalid | `negative`, `semantic`, `constraint-violation`, `pending-adapter` |
+| `negative/03-truncated-mid-property.pkl` | — | `pkl` (no guarantee) | invalid | `negative`, `truncated`, `mid-constraint`, `pending-adapter` |
+| `negative/04-wrong-format-cue.cue` | — | `pkl` (no guarantee) | invalid | `negative`, `wrong-format`, `cue`, `pending-adapter` |
+| `negative/05-encoding-utf16.pkl` | — | `pkl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-import.pkl` | — | `pkl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-module`, `pending-adapter` |
+
+> ⚠ **`04-stress-type-system.pkl`** — Second half exceeds JSON Schema and the sandbox: `read("env:…")` must be refused by the evaluation sandbox, and amending/late binding declared as limits.
+
+### `pli/` — PL/I structures (pending #5480)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-structure.pli` | minimal | `pli` ≥ 0.85 | valid | `declare`, `char`, `fixed-bin`, `pending-adapter` |
+| `02-typical-customer-record.pli` | typical | `pli` ≥ 0.85 | valid | `nested-group`, `fixed-dec`, `bit-flags`, `array-of-structures`, `filler`, `pending-adapter` |
+| `03-includes-set/ADDRBLK.inc` | multi-file (member) | `pli` (no guarantee) | valid | `multi-file`, `include-member`, `pending-adapter` |
+| `03-includes-set/MONYBLK.inc` | multi-file (member) | `pli` (no guarantee) | valid | `multi-file`, `include-member`, `pending-adapter` |
+| `03-includes-set/main.pli` | multi-file (root) | `pli` ≥ 0.85 | valid | `multi-file`, `include`, `like-clone`, `occurs-table`, `pending-adapter` |
+| `04-stress-attribute-coverage.pli` ⚠ | stress | `pli` ≥ 0.85 | valid | `char-varying`, `graphic`, `picture`, `fixed-bin-widths`, `float`, `bit`, `pointer`, `area`, `arrays`, `two-dimensional`, `union`, `like`, `based`, `aligned`, `unaligned`, `refer`, `pending-adapter` |
+| `05-real-world-payment-record.pli` | real-world | `pli` ≥ 0.85 | valid | `header-trailer`, `party-blocks`, `address-arrays`, `charges-table`, `status-flags`, `packed-decimal`, `pending-adapter` |
+| `06-typical-union-record.pli` | typical | `pli` ≥ 0.85 | valid | `union`, `shared-storage`, `record-type-discriminator`, `pending-adapter` |
+| `07-composition-like-and-nesting.pli` | composition | `pli` ≥ 0.85 | valid | `like-clone`, `shared-blocks`, `record-of-records`, `array-of-structures`, `pending-adapter` |
+| `negative/01-syntactic-missing-semicolon.pli` | — | `pli` (no guarantee) | invalid | `negative`, `syntactic`, `missing-semicolon`, `pending-adapter` |
+| `negative/02-semantic-level-number-gap.pli` | — | `pli` (no guarantee) | invalid | `negative`, `semantic`, `level-number-gap`, `orphan-level`, `pending-adapter` |
+| `negative/03-truncated-mid-declare.pli` | — | `pli` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-cobol-copybook.cpy` ⚠ | — | `pli` (no guarantee) | invalid | `negative`, `wrong-format`, `cobol-copybook`, `pending-adapter` |
+| `negative/05-encoding-utf16.pli` | — | `pli` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-include.pli` ⚠ | — | `pli` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-include`, `pending-adapter` |
+
+> ⚠ **`04-stress-attribute-coverage.pli`** — REFER extents are runtime values: FMT-11.1 must declare that limit rather than guessing a length.
+
+> ⚠ **`negative/04-wrong-format-cobol-copybook.cpy`** — The sibling format in the same estates, already shipped as cobolcopybook: level numbers plus PIC clauses rather than DCL plus attributes.
+
+> ⚠ **`negative/06-unresolvable-include.pli`** — The FMT-11.1 acceptance case: an unresolved %INCLUDE makes the record partial with a named reason, never a silently short layout.
+
 ### `postman/` — Postman v2.1
 
 | File | Rung | Expected detection | Class | Features |
@@ -809,6 +1773,28 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/03-truncated-mid-token.postman_collection.json` | — | `postman` (no guarantee) | invalid | `negative`, `truncated`, `mid-token-cut` |
 | `negative/04-wrong-format-openrpc.json` | — | `postman` (no guarantee) | invalid | `negative`, `wrong-format`, `openrpc-document` |
 | `negative/05-encoding-utf16.postman_collection.json` | — | `postman` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
+
+### `postman-v2/` — Postman Collection v2.0 (pending #5431)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-single-request.json` | minimal | `postman-2.0` ≥ 0.95 | valid | `string-url`, `single-request`, `pending-adapter` |
+| `02-typical-crud-collection.json` | typical | `postman-2.0` ≥ 0.95 | valid | `string-url`, `collection-variables`, `path-variables`, `saved-response`, `pending-adapter` |
+| `03-composition-nested-folders.json` | composition | `postman-2.0` ≥ 0.95 | valid | `nested-folders`, `operation-groups`, `pending-adapter` |
+| `04-stress-auth-bodies-and-scripts.json` | stress | `postman-2.0` ≥ 0.95 | valid | `raw-body`, `urlencoded-body`, `formdata-body`, `graphql-body`, `v2.0-auth-shape`, `scripts`, `disabled-entries`, `pending-adapter` |
+| `05-real-world-payments-collection.json` | real-world | `postman-2.0` ≥ 0.95 | valid | `oauth-token-capture`, `idempotency-key`, `saved-response`, `nested-folders`, `pending-adapter` |
+| `06-environment-set/collection.json` | multi-file (root) | `postman-2.0` ≥ 0.95 | valid | `multi-file`, `environment-variables`, `pending-adapter` |
+| `06-environment-set/environment.json` ⚠ | multi-file (member) | `postman-2.0` (no guarantee) | valid | `multi-file`, `environment-file`, `pending-adapter` |
+| `negative/01-syntactic-unterminated-string.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `syntactic`, `unterminated-string`, `pending-adapter` |
+| `negative/02-semantic-no-items.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `semantic`, `no-items`, `pending-adapter` |
+| `negative/03-truncated-mid-item.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `truncated`, `mid-url`, `pending-adapter` |
+| `negative/04-wrong-format-openapi.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-version-out-of-range-v1.json` ⚠ | — | `postman-2.0` (no guarantee) | invalid | `negative`, `version-out-of-range`, `collection-v1`, `pending-adapter` |
+
+> ⚠ **`06-environment-set/environment.json`** — Fileset member: a Postman environment export (_postman_variable_scope), not a collection — not independently detectable as one.
+
+> ⚠ **`negative/06-version-out-of-range-v1.json`** — Postman Collection v1: no info.schema at all. FMT-3.6 extends intake to v2.0, not to v1, so this must reject with a version message rather than a parse error.
 
 ### `protobuf/` — Protobuf / gRPC
 
@@ -838,6 +1824,53 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`09-inventory-buf-image.binpb`** — Paired fixture (IXH-7.5): must import to the same canonical model as protobuf/07-inventory-source.proto.
 
+### `protobuf-editions/` — Protobuf editions (pending #5432)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-edition-2023.proto` | minimal | `protobuf-editions` ≥ 0.9 | valid | `edition-2023`, `defaults-only`, `pending-adapter` |
+| `02-typical-orders-edition-2023.proto` | typical | `protobuf-editions` ≥ 0.9 | valid | `edition-2023`, `field-presence`, `EXPLICIT`, `IMPLICIT`, `service`, `pending-adapter` |
+| `03-imports-set/common.proto` ⚠ | multi-file (member) | `protobuf-editions` (no guarantee) | valid | `multi-file`, `edition-2023`, `IMPLICIT`, `pending-adapter` |
+| `03-imports-set/orders.proto` | multi-file (root) | `protobuf-editions` ≥ 0.9 | valid | `multi-file`, `import`, `edition-2023`, `feature-scope`, `pending-adapter` |
+| `04-stress-feature-overrides.proto` | stress | `protobuf-editions` ≥ 0.9 | valid | `field-presence`, `enum-type`, `repeated-field-encoding`, `utf8-validation`, `message-encoding`, `json-format`, `LEGACY-REQUIRED`, `DELIMITED`, `oneof`, `map`, `extension`, `pending-adapter` |
+| `05-real-world-telemetry-edition-2023.proto` | real-world | `protobuf-editions` ≥ 0.9 | valid | `edition-2023`, `LEGACY-REQUIRED`, `utf8-validation`, `streaming`, `well-known-types`, `pending-adapter` |
+| `06-typical-edition-2024.proto` | typical | `protobuf-editions` ≥ 0.9 | valid | `edition-2024`, `enum-type`, `IMPLICIT`, `pending-adapter` |
+| `07-composition-nested-and-extended.proto` | composition | `protobuf-editions` ≥ 0.9 | valid | `nested-message`, `nested-enum`, `message-reuse`, `extensions`, `feature-scope`, `pending-adapter` |
+| `negative/01-syntactic-missing-semicolon.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `syntactic`, `missing-semicolon`, `pending-adapter` |
+| `negative/02-semantic-unknown-feature-value.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `semantic`, `unknown-feature-value`, `pending-adapter` |
+| `negative/03-truncated-mid-message.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `truncated`, `mid-field-option`, `pending-adapter` |
+| `negative/04-wrong-format-flatbuffers.fbs` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `wrong-format`, `flatbuffers`, `pending-adapter` |
+| `negative/05-encoding-utf16.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-version-out-of-range-edition-2099.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `version-out-of-range`, `edition-2099`, `pending-adapter` |
+
+> ⚠ **`03-imports-set/common.proto`** — Fileset member with the opposite file-level presence default from its importer — the leak test.
+
+### `pydantic/` — Pydantic models (pending #5465)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-model.py` | minimal | `pydantic` ≥ 0.85 | valid | `BaseModel`, `annotations`, `pending-adapter` |
+| `02-typical-order-models.py` | typical | `pydantic` ≥ 0.85 | valid | `Field-constraints`, `str-enum`, `optional`, `list-cardinality`, `EmailStr`, `pattern`, `pending-adapter` |
+| `03-models-set/customer.py` | multi-file (member) | `pydantic` (no guarantee) | valid | `multi-file`, `BaseModel`, `pending-adapter` |
+| `03-models-set/models.py` ⚠ | multi-file (root) | `pydantic` ≥ 0.85 | valid | `multi-file`, `cross-module-import`, `aggregate-model`, `pending-adapter` |
+| `03-models-set/order.py` | multi-file (member) | `pydantic` (no guarantee) | valid | `multi-file`, `cross-module-type`, `enum`, `pending-adapter` |
+| `04-stress-annotation-coverage.py` ⚠ | stress | `pydantic` ≥ 0.85 | valid | `Annotated`, `StringConstraints`, `Decimal`, `Literal`, `discriminator`, `generic-model`, `self-reference`, `ConfigDict`, `alias`, `default-factory`, `field-validator`, `computed-field`, `create-model-constants`, `pending-adapter` |
+| `05-real-world-api-models.py` | real-world | `pydantic` ≥ 0.85 | valid | `camelCase-alias`, `Decimal`, `discriminated-union`, `pagination`, `populate-by-name`, `extra-forbid`, `pending-adapter` |
+| `06-typical-dynamic-models.py` ⚠ | typical | `pydantic` ≥ 0.85 | valid | `create-model`, `dynamic-construction`, `declared-limit`, `pending-adapter` |
+| `07-composition-inheritance.py` | composition | `pydantic` ≥ 0.85 | valid | `mixin`, `multiple-inheritance`, `generic-subclass`, `model-of-models`, `discriminated-union`, `pending-adapter` |
+| `negative/01-syntactic-bad-indentation.py` | — | `pydantic` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation`, `pending-adapter` |
+| `negative/02-semantic-no-basemodel-subclasses.py` | — | `pydantic` (no guarantee) | invalid | `negative`, `semantic`, `no-models`, `pending-adapter` |
+| `negative/03-truncated-mid-class.py` | — | `pydantic` (no guarantee) | invalid | `negative`, `truncated`, `mid-field`, `pending-adapter` |
+| `negative/04-wrong-format-dataclasses.py` | — | `pydantic` (no guarantee) | invalid | `negative`, `wrong-format`, `dataclasses`, `pending-adapter` |
+| `negative/05-encoding-utf16.py` | — | `pydantic` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-import.py` | — | `pydantic` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-module`, `pending-adapter` |
+
+> ⚠ **`03-models-set/models.py`** — Set root: named models.py rather than __init__.py because the corpus path contract forbids a leading underscore; it plays the package-root role.
+
+> ⚠ **`04-stress-annotation-coverage.py`** — Organised as statically-resolvable / declared-limits halves: validators and computed fields cannot be read without executing the module, which FMT-8.4 forbids.
+
+> ⚠ **`06-typical-dynamic-models.py`** — The FMT-8.4 acceptance case: dynamic model construction must be declared a parsing limit, with the statically visible base still modelled.
+
 ### `raml/` — RAML 1.0
 
 | File | Rung | Expected detection | Class | Features |
@@ -853,6 +1886,128 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/03-truncated-mid-token.raml` | — | `raml` (no guarantee) | invalid | `negative`, `truncated`, `mid-token-cut` |
 | `negative/04-wrong-format-openapi.yaml` | — | `raml` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi-document` |
 | `negative/05-encoding-utf16.raml` | — | `raml` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
+
+### `relaxng/` — RELAX NG (pending #5434)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-note.rng` | minimal | `relaxng` ≥ 0.9 | valid | `element-pattern`, `attribute`, `text`, `pending-adapter` |
+| `02-typical-catalogue.rng` | typical | `relaxng` ≥ 0.9 | valid | `grammar`, `define`, `ref`, `optional`, `zeroOrMore`, `choice`, `data-param`, `pending-adapter` |
+| `03-modular-set/address.rng` | multi-file (member) | `relaxng` (no guarantee) | valid | `multi-file`, `include`, `define`, `pending-adapter` |
+| `03-modular-set/main.rng` | multi-file (root) | `relaxng` ≥ 0.9 | valid | `multi-file`, `include`, `define-override`, `externalRef`, `pending-adapter` |
+| `03-modular-set/parcel.rng` | multi-file (member) | `relaxng` (no guarantee) | valid | `multi-file`, `externalRef`, `element-pattern`, `pending-adapter` |
+| `04-stress-interleave-and-datatypes.rng` ⚠ | stress | `relaxng` ≥ 0.9 | valid | `interleave`, `mixed`, `list`, `except`, `anyName`, `nsName`, `empty`, `recursion`, `pending-adapter` |
+| `05-real-world-article-grammar.rng` | real-world | `relaxng` ≥ 0.9 | valid | `interleave`, `recursion`, `mixed`, `ID`, `IDREF`, `ns`, `pending-adapter` |
+| `06-compact-catalogue.rnc` ⚠ | typical | `relaxng` ≥ 0.9 | valid | `compact-syntax`, `datatypes`, `same-grammar-as-02`, `pending-adapter` |
+| `07-composition-named-pattern-reuse.rng` | composition | `relaxng` ≥ 0.9 | valid | `define`, `ref`, `combine-choice`, `shared-attributes`, `recursion`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-define.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-grammar-without-start.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `semantic`, `no-start`, `pending-adapter` |
+| `negative/03-truncated-mid-pattern.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-xsd.xsd` | — | `relaxng` (no guarantee) | invalid | `negative`, `wrong-format`, `xsd`, `pending-adapter` |
+| `negative/05-encoding-utf16.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-ref.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `undefined-pattern`, `pending-adapter` |
+
+> ⚠ **`04-stress-interleave-and-datatypes.rng`** — interleave and the wildcard/except constructs have no canonical analogue; FMT-4.1 requires them declared as parsing limits, so a clean import here is expected to carry declared-loss warnings.
+
+> ⚠ **`06-compact-catalogue.rnc`** — The compact form of 02-typical-catalogue.rng; the acceptance criterion is that both produce the same canonical model.
+
+### `ros2/` — ROS 2 interfaces (pending #5470)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-message.msg` | minimal | `ros2` ≥ 0.85 | valid | `msg`, `primitives`, `pending-adapter` |
+| `02-typical-sensor-message.msg` | typical | `ros2` ≥ 0.85 | valid | `msg`, `constants`, `header`, `unbounded-array`, `comments`, `pending-adapter` |
+| `03-package-set/LiftPallet.srv` | multi-file (member) | `ros2` (no guarantee) | valid | `multi-file`, `srv`, `bare-name-reference`, `pending-adapter` |
+| `03-package-set/LoadCell.msg` | multi-file (member) | `ros2` (no guarantee) | valid | `multi-file`, `msg`, `pending-adapter` |
+| `03-package-set/PalletStatus.msg` | multi-file (member) | `ros2` (no guarantee) | valid | `multi-file`, `bare-name-reference`, `cross-package-reference`, `constants`, `pending-adapter` |
+| `03-package-set/package.xml` | multi-file (root) | `ros2` ≥ 0.85 | valid | `multi-file`, `package-manifest`, `dependencies`, `pending-adapter` |
+| `04-stress-idl-grammar.msg` | stress | `ros2` ≥ 0.85 | valid | `all-primitives`, `constants`, `wstring`, `bounded-string`, `fixed-array`, `bounded-array`, `array-default`, `cross-package-reference`, `pending-adapter` |
+| `05-real-world-navigate-to-pose.action` | real-world | `ros2` ≥ 0.85 | valid | `action`, `goal-result-feedback`, `error-constants`, `duration`, `defaults`, `pending-adapter` |
+| `06-typical-service.srv` | typical | `ros2` ≥ 0.85 | valid | `srv`, `request-response`, `result-constants`, `defaults`, `pending-adapter` |
+| `07-composition-nested-messages.msg` | composition | `ros2` ≥ 0.85 | valid | `same-package-reference`, `cross-package-reference`, `bounded-array-of-composed`, `constants`, `pending-adapter` |
+| `negative/01-syntactic-bad-field-line.msg` | — | `ros2` (no guarantee) | invalid | `negative`, `syntactic`, `malformed-field-line`, `pending-adapter` |
+| `negative/02-semantic-empty-message.msg` | — | `ros2` (no guarantee) | invalid | `negative`, `semantic`, `no-fields`, `pending-adapter` |
+| `negative/03-truncated-mid-action.action` | — | `ros2` (no guarantee) | invalid | `negative`, `truncated`, `mid-field`, `missing-feedback-section`, `pending-adapter` |
+| `negative/04-wrong-format-protobuf.proto` | — | `ros2` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf`, `pending-adapter` |
+| `negative/05-encoding-utf16.msg` | — | `ros2` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-type-reference.msg` ⚠ | — | `ros2` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-package`, `missing-local-type`, `pending-adapter` |
+
+> ⚠ **`negative/06-unresolvable-type-reference.msg`** — The FMT-9.3 acceptance case: cross-package references resolve within a fileset and are declared unresolved otherwise.
+
+### `schematron/` — Schematron rules (pending #5436)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-single-assert.sch` | minimal | `schematron` ≥ 0.9 | valid | `pattern`, `rule`, `assert`, `pending-adapter` |
+| `02-typical-invoice-rules.sch` | typical | `schematron` ≥ 0.9 | valid | `pattern`, `rule`, `assert`, `report`, `let`, `ns`, `role`, `rule-ids`, `pending-adapter` |
+| `03-composition-abstract-patterns.sch` | composition | `schematron` ≥ 0.9 | valid | `abstract-pattern`, `is-a`, `param`, `abstract-rule`, `extends`, `pending-adapter` |
+| `04-stress-phases-and-diagnostics.sch` ⚠ | stress | `schematron` ≥ 0.9 | valid | `phase`, `active`, `defaultPhase`, `diagnostics`, `flag`, `unevaluable-xpath`, `pending-adapter` |
+| `05-real-world-billing-bis-rules.sch` | real-world | `schematron` ≥ 0.9 | valid | `business-rules`, `calculation-rules`, `vat-rules`, `role`, `rule-ids`, `pending-adapter` |
+| `06-include-set/main.sch` | multi-file (root) | `schematron` ≥ 0.9 | valid | `multi-file`, `include`, `pattern`, `pending-adapter` |
+| `06-include-set/structure-rules.sch` ⚠ | multi-file (member) | `schematron` (no guarantee) | valid | `multi-file`, `include`, `pattern-module`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-rule.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-pattern-without-rules.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `semantic`, `no-assertions`, `pending-adapter` |
+| `negative/03-truncated-mid-assert.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-xslt.xsl` ⚠ | — | `schematron` (no guarantee) | invalid | `negative`, `wrong-format`, `xslt`, `pending-adapter` |
+| `negative/05-encoding-utf16.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-is-a-reference.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-abstract-pattern`, `pending-adapter` |
+
+> ⚠ **`04-stress-phases-and-diagnostics.sch`** — Carries one deliberately unevaluable XPath (doc:resolve-external) so the declared-but-unevaluable path is exercised; import succeeds with that rule flagged.
+
+> ⚠ **`06-include-set/structure-rules.sch`** — Fileset member: a bare pattern module with no schema root — only meaningful once included.
+
+> ⚠ **`negative/04-wrong-format-xslt.xsl`** — Schematron is usually compiled to XSLT, so a stylesheet is the neighbour most likely to be mistaken for one.
+
+### `sepa/` — SEPA payment files (pending #5450)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-pain001.xml` | minimal | `iso20022` ≥ 0.9 | valid | `pain.001`, `single-transaction`, `iban`, `pending-adapter` |
+| `02-typical-pain001-batch.xml` | typical | `iso20022` ≥ 0.9 | valid | `pain.001`, `batch-booking`, `PmtTpInf`, `category-purpose`, `postal-address`, `pending-adapter` |
+| `03-composition-pain001-multi-pmtinf.xml` | composition | `iso20022` ≥ 0.9 | valid | `pain.001`, `multiple-PmtInf`, `structured-remittance`, `instant-payment`, `purpose-code`, `pending-adapter` |
+| `04-stress-pain008-direct-debit.xml` | stress | `iso20022` ≥ 0.9 | valid | `pain.008`, `CORE`, `B2B`, `FRST`, `RCUR`, `mandate`, `mandate-amendment`, `creditor-scheme-id`, `pending-adapter` |
+| `05-real-world-pacs008-interbank.xml` | real-world | `iso20022` ≥ 0.9 | valid | `pacs.008`, `clearing-system`, `UETR`, `intermediary-agent`, `regulatory-reporting`, `pending-adapter` |
+| `06-typical-camt053-statement.xml` | typical | `iso20022` ≥ 0.9 | valid | `camt.053`, `balances`, `bank-transaction-code`, `entry-details`, `pending-adapter` |
+| `07-status-set/pain001.xml` | multi-file (root) | `iso20022` ≥ 0.9 | valid | `pain.001`, `two-transactions`, `pending-adapter` |
+| `07-status-set/pain002.xml` ⚠ | multi-file (member) | `iso20022` (no guarantee) | valid | `pain.002`, `status-report`, `reject-reason`, `partial-acceptance`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-element.xml` | — | `iso20022` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-no-transactions.xml` | — | `iso20022` (no guarantee) | invalid | `negative`, `semantic`, `no-transactions`, `pending-adapter` |
+| `negative/03-truncated-mid-transaction.xml` | — | `iso20022` (no guarantee) | invalid | `negative`, `truncated`, `mid-amount`, `pending-adapter` |
+| `negative/04-wrong-format-nacha.ach` ⚠ | — | `iso20022` (no guarantee) | invalid | `negative`, `wrong-format`, `nacha`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `iso20022` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-version-out-of-range-pain001-099.xml` | — | `iso20022` (no guarantee) | invalid | `negative`, `version-out-of-range`, `unpublished-message-version`, `pending-adapter` |
+
+> ⚠ **`07-status-set/pain002.xml`** — Fileset member: the status report. It references the initiation by OrgnlMsgId and each transaction by OrgnlEndToEndId.
+
+> ⚠ **`negative/04-wrong-format-nacha.ach`** — The US twin from the same ticket: fixed-width ACH must route to the NACHA parser, not to the ISO 20022 adapter.
+
+### `shacl/` — SHACL shapes (pending #5471)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-shape.ttl` | minimal | `shacl` ≥ 0.85 | valid | `NodeShape`, `property-shape`, `datatype`, `cardinality`, `pending-adapter` |
+| `02-typical-person-shapes.ttl` | typical | `shacl` ≥ 0.85 | valid | `targetClass`, `pattern`, `in`, `severity`, `message`, `class-reference`, `order`, `pending-adapter` |
+| `03-composition-node-shapes.ttl` | composition | `shacl` ≥ 0.85 | valid | `sh-node`, `and`, `or`, `xone`, `sequence-path`, `inverse-path`, `pending-adapter` |
+| `04-stress-constraint-components.ttl` ⚠ | stress | `shacl` ≥ 0.85 | valid | `all-core-components`, `closed`, `ignoredProperties`, `qualifiedValueShape`, `property-pair`, `languageIn`, `uniqueLang`, `property-group`, `sparql-constraint`, `zeroOrMorePath`, `alternativePath`, `pending-adapter` |
+| `05-real-world-dataset-shapes.ttl` | real-world | `shacl` ≥ 0.85 | valid | `dcat`, `publication-profile`, `ordered-properties`, `severity`, `lessThanOrEquals`, `pending-adapter` |
+| `06-typical-shapes.jsonld` | typical | `shacl` ≥ 0.85 | valid | `json-ld-serialization`, `NodeShape`, `pattern`, `in`, `pending-adapter` |
+| `07-stress-cyclic-shape-graph.ttl` ⚠ | stress | `shacl` ≥ 0.85 | valid | `cyclic-shapes`, `mutual-reference`, `self-reference`, `recursion`, `pending-adapter` |
+| `08-imported-shapes-set/core-shapes.ttl` ⚠ | multi-file (member) | `shacl` (no guarantee) | valid | `shared-shapes`, `reusable-node-shapes`, `pending-adapter` |
+| `08-imported-shapes-set/shapes.ttl` | multi-file (root) | `shacl` ≥ 0.85 | valid | `owl-imports`, `sh-node-across-files`, `pending-adapter` |
+| `negative/01-syntactic-missing-dot.ttl` | — | `shacl` (no guarantee) | invalid | `negative`, `syntactic`, `missing-statement-terminator`, `pending-adapter` |
+| `negative/02-semantic-no-node-shapes.ttl` | — | `shacl` (no guarantee) | invalid | `negative`, `semantic`, `no-shapes`, `pending-adapter` |
+| `negative/03-truncated-mid-property.ttl` | — | `shacl` (no guarantee) | invalid | `negative`, `truncated`, `mid-literal`, `pending-adapter` |
+| `negative/04-wrong-format-owl.ttl` ⚠ | — | `shacl` (no guarantee) | invalid | `negative`, `wrong-format`, `owl`, `pending-adapter` |
+| `negative/05-encoding-utf16.ttl` | — | `shacl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-shape-reference.ttl` | — | `shacl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-shape`, `pending-adapter` |
+
+> ⚠ **`04-stress-constraint-components.ttl`** — SPARQL constraints and unbounded property paths have no canonical analogue; FMT-9.4 requires them declared, not approximated.
+
+> ⚠ **`07-stress-cyclic-shape-graph.ttl`** — The FMT-9.4 cyclic case: SHACL leaves recursion undefined, so the reader must terminate within budget and declare the cycle.
+
+> ⚠ **`08-imported-shapes-set/core-shapes.ttl`** — Fileset member: the shared shapes module the root imports; it targets nothing on its own.
+
+> ⚠ **`negative/04-wrong-format-owl.ttl`** — Same syntax (Turtle), different vocabulary: the split between shapes and ontologies is the namespace, not the file type.
 
 ### `smithy/` — Smithy 2.0
 
@@ -874,6 +2029,81 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`05-dynamodb-style.smithy`** — Currently outranked: detection ranks `flatbuffers` (0.96, `union` definition) above `smithy` (0.95); expected_detection records the intended winner for the detection-hardening work.
 
+### `soapui/` — SoapUI / ReadyAPI projects (pending #5477)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-project.xml` | minimal | `soapui` ≥ 0.9 | valid | `rest-interface`, `resource`, `method`, `pending-adapter` |
+| `02-typical-rest-project.xml` | typical | `soapui` ≥ 0.9 | valid | `rest-interface`, `query-parameter`, `template-parameter`, `representations`, `multiple-endpoints`, `project-properties`, `pending-adapter` |
+| `03-wsdl-set/catalogue.wsdl` ⚠ | multi-file (member) | `wsdl` (no guarantee) | valid | `multi-file`, `wsdl`, `pending-adapter` |
+| `03-wsdl-set/project.xml` | multi-file (root) | `soapui` ≥ 0.9 | valid | `multi-file`, `wsdl-interface`, `local-definition`, `pending-adapter` |
+| `04-stress-test-suites.xml` | stress | `soapui` ≥ 0.9 | valid | `test-suite`, `test-case`, `restrequest-step`, `transfer-step`, `groovy-step`, `datasource-step`, `assertions`, `test-properties`, `pending-adapter` |
+| `05-real-world-soap-project.xml` | real-world | `soapui` ≥ 0.9 | valid | `wsdl-interface`, `one-way-operation`, `saved-envelopes`, `ws-security`, `environments`, `smoke-suite`, `pending-adapter` |
+| `06-typical-mock-service.xml` | typical | `soapui` ≥ 0.9 | valid | `mock-service`, `canned-responses`, `dispatch-style`, `pending-adapter` |
+| `07-composition-shared-endpoints.xml` | composition | `soapui` ≥ 0.9 | valid | `shared-endpoints`, `project-properties`, `property-expansion`, `cross-interface-testcase`, `environments`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-interface.xml` | — | `soapui` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-no-interfaces.xml` | — | `soapui` (no guarantee) | invalid | `negative`, `semantic`, `no-interfaces`, `pending-adapter` |
+| `negative/03-truncated-mid-operation.xml` | — | `soapui` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-wsdl.wsdl` | — | `soapui` (no guarantee) | invalid | `negative`, `wrong-format`, `wsdl`, `pending-adapter` |
+| `negative/05-encoding-utf16.xml` | — | `soapui` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-wsdl-definition.xml` ⚠ | — | `soapui` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-wsdl`, `pending-adapter` |
+
+> ⚠ **`03-wsdl-set/catalogue.wsdl`** — Fileset member: the WSDL the interface delegates to; on its own the shipped wsdl adapter claims it.
+
+> ⚠ **`negative/06-unresolvable-wsdl-definition.xml`** — The FMT-10.3 acceptance case: a project with a missing WSDL.
+
+### `sparkplug/` — MQTT Sparkplug B (pending #5469)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-topic-namespace.json` | minimal | `sparkplug` ≥ 0.8 | valid | `topic-namespace`, `node-topics`, `pending-adapter` |
+| `02-typical-nbirth.bin` | typical | `sparkplug` ≥ 0.8 | valid | `binary-intake`, `NBIRTH`, `bdSeq`, `node-control`, `properties`, `pending-adapter` |
+| `03-composition-dbirth.bin` | composition | `sparkplug` ≥ 0.8 | valid | `binary-intake`, `DBIRTH`, `aliases`, `property-set`, `metadata`, `engineering-units`, `pending-adapter` |
+| `04-stress-ddata-all-datatypes.bin` | stress | `sparkplug` ≥ 0.8 | valid | `binary-intake`, `all-datatypes`, `is-null`, `is-historical`, `is-transient`, `payload-uuid`, `alias-only-metric`, `pending-adapter` |
+| `05-real-world-namespace-description.json` | real-world | `sparkplug` ≥ 0.8 | valid | `topic-namespace`, `devices`, `metric-catalogue`, `NCMD`, `DCMD`, `STATE`, `broker`, `pending-adapter` |
+| `06-typical-ddata.bin` ⚠ | typical | `sparkplug` ≥ 0.8 | valid | `binary-intake`, `DDATA`, `alias-only-metric`, `pending-adapter` |
+| `07-session-set/dbirth.bin` | multi-file (root) | `sparkplug` ≥ 0.8 | valid | `DBIRTH`, `aliases`, `property-set`, `binary-intake`, `pending-adapter` |
+| `07-session-set/ddata.bin` ⚠ | multi-file (member) | `sparkplug` (no guarantee) | valid | `DDATA`, `alias-only-metric`, `binary-intake`, `pending-adapter` |
+| `07-session-set/ddeath.bin` ⚠ | multi-file (member) | `sparkplug` (no guarantee) | valid | `DDEATH`, `bdSeq`, `binary-intake`, `pending-adapter` |
+| `negative/01-syntactic-malformed-wire-format.bin` | — | `sparkplug` (no guarantee) | invalid | `negative`, `syntactic`, `malformed-varint-length`, `pending-adapter` |
+| `negative/02-semantic-no-metrics.bin` | — | `sparkplug` (no guarantee) | invalid | `negative`, `semantic`, `no-metrics`, `pending-adapter` |
+| `negative/03-truncated-mid-metric.bin` | — | `sparkplug` (no guarantee) | invalid | `negative`, `truncated`, `mid-metric`, `pending-adapter` |
+| `negative/04-wrong-format-protobuf-schema.proto` ⚠ | — | `sparkplug` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf-schema`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `sparkplug` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-topic-namespace-mismatch.json` | — | `sparkplug` (no guarantee) | invalid | `negative`, `semantic`, `namespace-mismatch`, `group-mismatch`, `missing-edge-node`, `pending-adapter` |
+
+> ⚠ **`06-typical-ddata.bin`** — Alias-only metrics: without the matching DBIRTH the names cannot be resolved, so the import must report inferred, unnamed metrics rather than inventing names.
+
+> ⚠ **`07-session-set/ddata.bin`** — Fileset member: alias-only metrics that are only nameable through the DBIRTH in the same set.
+
+> ⚠ **`07-session-set/ddeath.bin`** — Fileset member: the death certificate closing the session opened by the DBIRTH.
+
+> ⚠ **`negative/04-wrong-format-protobuf-schema.proto`** — The Sparkplug payload *schema* rather than a payload: the shipped grpc adapter's input, not this one's.
+
+### `sql-ddl/` — SQL DDL (pending #5444)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-ansi.sql` | minimal | `sql-ddl` ≥ 0.85 | valid | `ansi`, `create-table`, `primary-key`, `pending-adapter` |
+| `02-typical-postgres.sql` | typical | `sql-ddl` ≥ 0.85 | valid | `postgres`, `enum-type`, `foreign-key`, `check-constraint`, `expression-index`, `comment-on`, `view`, `pending-adapter` |
+| `03-migrations-set/V1__create_core.sql` ⚠ | multi-file (root) | `sql-ddl` ≥ 0.85 | valid | `multi-file`, `migrations`, `postgres`, `final-state`, `pending-adapter` |
+| `03-migrations-set/V2__widen_and_rename.sql` | multi-file (member) | `sql-ddl` (no guarantee) | valid | `multi-file`, `migrations`, `rename-column`, `alter-type`, `pending-adapter` |
+| `03-migrations-set/V3__constraints_and_indexes.sql` | multi-file (member) | `sql-ddl` (no guarantee) | valid | `multi-file`, `migrations`, `constraints`, `index`, `pending-adapter` |
+| `04-stress-mysql.sql` ⚠ | stress | `sql-ddl` ≥ 0.85 | valid | `mysql`, `auto-increment`, `enum`, `set`, `json`, `generated-column`, `fulltext`, `partitions`, `alter-table`, `pending-adapter` |
+| `05-real-world-sqlserver.sql` | real-world | `sql-ddl` ≥ 0.85 | valid | `sqlserver`, `identity`, `computed-column`, `filtered-index`, `rowversion`, `go-batches`, `view`, `pending-adapter` |
+| `06-typical-oracle.sql` | typical | `sql-ddl` ≥ 0.85 | valid | `oracle`, `varchar2`, `number`, `clob`, `sequence`, `partitions`, `comment-on`, `pending-adapter` |
+| `07-composition-inheritance-and-views.sql` | composition | `sql-ddl` ≥ 0.85 | valid | `domain`, `composite-type`, `table-inheritance`, `partitioning`, `view`, `materialized-view`, `postgres`, `pending-adapter` |
+| `negative/01-syntactic-missing-paren.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `syntactic`, `missing-paren`, `pending-adapter` |
+| `negative/02-semantic-table-without-columns.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `semantic`, `no-columns`, `pending-adapter` |
+| `negative/03-truncated-mid-statement.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `truncated`, `mid-column`, `pending-adapter` |
+| `negative/04-wrong-format-dbml.dbml` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `wrong-format`, `dbml`, `pending-adapter` |
+| `negative/05-encoding-utf16.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-foreign-key.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-referenced-table`, `pending-adapter` |
+
+> ⚠ **`03-migrations-set/V1__create_core.sql`** — Set root: the migration series imports as its final state, so V1's shape is deliberately not what the canonical model should contain.
+
+> ⚠ **`04-stress-mysql.sql`** — Storage clauses, partitions and FULLTEXT indexes have no canonical analogue; FMT-5.6 requires them declared as parsing limits rather than dropped.
+
 ### `swagger/` — Swagger 2.0
 
 | File | Rung | Expected detection | Class | Features |
@@ -881,6 +2111,52 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `01-swagger-2-petstore.yaml` ⚠ | real-world | `swagger-2.0` ≥ 0.9 | valid | `nullable`, `enum`, `additionalProperties`, `defs`, `x-extensions` |
 
 > ⚠ **`01-swagger-2-petstore.yaml`** — Currently outranked: detection ranks `api-blueprint` (0.98) above `swagger-2.0` (0.95); expected_detection records the intended winner for the detection-hardening work.
+
+### `swagger-1.2/` — Swagger 1.2 (pending #5431)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-declaration.json` | minimal | `swagger-1.2` ≥ 0.95 | valid | `api-declaration`, `operations`, `pending-adapter` |
+| `02-typical-orders-declaration.json` | typical | `swagger-1.2` ≥ 0.95 | valid | `api-declaration`, `models`, `responseMessages`, `body-parameter`, `enum`, `pending-adapter` |
+| `03-composition-model-subtypes.json` | composition | `swagger-1.2` ≥ 0.95 | valid | `subTypes`, `discriminator`, `inheritance`, `pending-adapter` |
+| `04-stress-parameter-and-auth-forms.json` | stress | `swagger-1.2` ≥ 0.95 | valid | `form-parameter`, `header-parameter`, `allowMultiple`, `File`, `oauth2`, `apiKey`, `grantTypes`, `pending-adapter` |
+| `05-petstore-set/api-docs.json` | multi-file (root) | `swagger-1.2` ≥ 0.95 | valid | `multi-file`, `resource-listing`, `authorizations`, `pending-adapter` |
+| `05-petstore-set/carts.json` | multi-file (member) | `swagger-1.2` (no guarantee) | valid | `multi-file`, `api-declaration`, `pending-adapter` |
+| `05-petstore-set/products.json` | multi-file (member) | `swagger-1.2` (no guarantee) | valid | `multi-file`, `api-declaration`, `pending-adapter` |
+| `06-real-world-user-directory.json` | real-world | `swagger-1.2` ≥ 0.95 | valid | `api-declaration`, `models`, `apiKey`, `cursor-paging`, `pending-adapter` |
+| `negative/01-syntactic-unquoted-key.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `syntactic`, `unquoted-key`, `pending-adapter` |
+| `negative/02-semantic-empty-resource-listing.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `semantic`, `empty-listing`, `pending-adapter` |
+| `negative/03-truncated-mid-model.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `truncated`, `mid-model`, `pending-adapter` |
+| `negative/04-wrong-format-swagger-2.0.json` ⚠ | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `wrong-format`, `swagger-2.0`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-declaration-ref.json` ⚠ | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-declaration`, `pending-adapter` |
+
+> ⚠ **`negative/04-wrong-format-swagger-2.0.json`** — The neighbouring version the shipped adapter already claims; a 1.2 reader must not take it, and detection must route it to the Swagger 2.0 path.
+
+> ⚠ **`negative/06-unresolvable-declaration-ref.json`** — The FMT-3.6 acceptance case: a 1.2 listing whose declaration is missing from the fileset.
+
+### `swift-mt/` — SWIFT MT (pending #5447)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-mt103.txt` | minimal | `swift-mt` ≥ 0.9 | valid | `MT103`, `block-structure`, `tag-fields`, `pending-adapter` |
+| `02-typical-mt103.txt` | typical | `swift-mt` ≥ 0.9 | valid | `MT103`, `user-header`, `UETR`, `remittance-codes`, `sender-to-receiver`, `pending-adapter` |
+| `03-composition-mt202cov.txt` | composition | `swift-mt` ≥ 0.9 | valid | `MT202COV`, `two-sequences`, `option-letters`, `50F`, `59F`, `validation-flag`, `pending-adapter` |
+| `04-stress-mt940-statement.txt` | stress | `swift-mt` ≥ 0.9 | valid | `MT940`, `statement-lines`, `transaction-type-codes`, `reversal`, `supplementary-details`, `balances`, `pending-adapter` |
+| `05-real-world-mt103-charges-chain.txt` | real-world | `swift-mt` ≥ 0.9 | valid | `MT103`, `cross-currency`, `exchange-rate`, `correspondent-chain`, `charges`, `regulatory-reporting`, `pending-adapter` |
+| `06-typical-mt942-interim.txt` | typical | `swift-mt` ≥ 0.9 | valid | `MT942`, `floor-limit`, `summary-counts`, `statement-lines`, `pending-adapter` |
+| `07-cover-set/mt103.txt` | multi-file (root) | `swift-mt` ≥ 0.9 | valid | `MT103`, `customer-transfer`, `pending-adapter` |
+| `07-cover-set/mt202cov.txt` ⚠ | multi-file (member) | `swift-mt` (no guarantee) | valid | `MT202COV`, `cover-payment`, `field-21-reference`, `pending-adapter` |
+| `negative/01-syntactic-unterminated-block4.txt` | — | `swift-mt` (no guarantee) | invalid | `negative`, `syntactic`, `unterminated-block`, `pending-adapter` |
+| `negative/02-semantic-no-transaction-reference.txt` | — | `swift-mt` (no guarantee) | invalid | `negative`, `semantic`, `missing-field-20`, `pending-adapter` |
+| `negative/03-truncated-mid-field.txt` | — | `swift-mt` (no guarantee) | invalid | `negative`, `truncated`, `mid-field`, `pending-adapter` |
+| `negative/04-wrong-format-iso20022.xml` ⚠ | — | `swift-mt` (no guarantee) | invalid | `negative`, `wrong-format`, `iso20022`, `pacs.008`, `pending-adapter` |
+| `negative/05-encoding-utf16.txt` | — | `swift-mt` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-unknown-message-type.txt` | — | `swift-mt` (no guarantee) | invalid | `negative`, `semantic`, `unsupported-mt-type`, `free-format`, `pending-adapter` |
+
+> ⚠ **`07-cover-set/mt202cov.txt`** — Fileset member: the cover payment. Field 21 carries the MT103's field 20, which is the only link between the two messages.
+
+> ⚠ **`negative/04-wrong-format-iso20022.xml`** — The MX twin of an MT103. Routing this to the shipped iso20022 adapter rather than claiming it is the whole point of the MT/MX split.
 
 ### `thrift/` — Apache Thrift
 
@@ -908,6 +2184,149 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`06-payment-service.thrift`** — Currently outranked: detection ranks `oncrpc` (0.95) and `smithy` (0.95) above `thrift` (0.95); expected_detection records the intended winner for the detection-hardening work.
 
+### `thunder-client/` — Thunder Client collections (pending #5475)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-collection.json` | minimal | `thunder-client` ≥ 0.9 | valid | `collection`, `single-request`, `pending-adapter` |
+| `02-typical-orders-collection.json` | typical | `thunder-client` ≥ 0.9 | valid | `folders`, `containerId`, `collection-auth`, `path-params`, `declarative-tests`, `pending-adapter` |
+| `03-environment-set/thunder-collection_inventory.json` | multi-file (root) | `thunder-client` ≥ 0.9 | valid | `multi-file`, `collection`, `environment-variables`, `pending-adapter` |
+| `03-environment-set/thunder-environment_staging.json` | multi-file (member) | `thunder-client` (no guarantee) | valid | `multi-file`, `environment-file`, `pending-adapter` |
+| `04-stress-bodies-auth-and-tests.json` | stress | `thunder-client` ≥ 0.9 | valid | `json-body`, `formencoded-body`, `formdata-body`, `graphql-body`, `basic-auth`, `oauth2-auth`, `nested-folder`, `disabled-entries`, `preReq`, `test-kinds`, `pending-adapter` |
+| `05-real-world-payments-collection.json` | real-world | `thunder-client` ≥ 0.9 | valid | `token-capture`, `idempotency-key`, `auth-override`, `folders`, `json-query-test`, `pending-adapter` |
+| `06-typical-environment.json` | typical | `thunder-client` ≥ 0.9 | valid | `environment`, `empty-credentials`, `default-flag`, `pending-adapter` |
+| `07-composition-folder-hierarchy.json` | composition | `thunder-client` ≥ 0.9 | valid | `folder-hierarchy`, `containerId-chain`, `settings-inheritance`, `auth-override`, `pending-adapter` |
+| `negative/01-syntactic-missing-comma.json` | — | `thunder-client` (no guarantee) | invalid | `negative`, `syntactic`, `missing-comma`, `pending-adapter` |
+| `negative/02-semantic-no-requests.json` | — | `thunder-client` (no guarantee) | invalid | `negative`, `semantic`, `no-requests`, `pending-adapter` |
+| `negative/03-truncated-mid-request.json` | — | `thunder-client` (no guarantee) | invalid | `negative`, `truncated`, `mid-url`, `pending-adapter` |
+| `negative/04-wrong-format-hoppscotch.json` | — | `thunder-client` (no guarantee) | invalid | `negative`, `wrong-format`, `hoppscotch`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `thunder-client` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-orphan-container-id.json` ⚠ | — | `thunder-client` (no guarantee) | invalid | `negative`, `semantic`, `orphan-containerId`, `pending-adapter` |
+
+> ⚠ **`negative/06-semantic-orphan-container-id.json`** — Folders and requests reference container ids that no folder declares, so the hierarchy cannot be reconstructed.
+
+### `tradacoms/` — TRADACOMS (pending #5449)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-order-file.edi` | minimal | `tradacoms` ≥ 0.9 | valid | `ORDHDR`, `ORDERS`, `ORDTLR`, `STX-envelope`, `pending-adapter` |
+| `02-typical-order-file.edi` | typical | `tradacoms` ≥ 0.9 | valid | `ORDERS`, `OLD`, `DIN`, `delivery-window`, `trading-party-codes`, `pending-adapter` |
+| `03-typical-invoice-file.edi` | typical | `tradacoms` ≥ 0.9 | valid | `INVFIL`, `INVOIC`, `VATTLR`, `INVTLR`, `vat-rate-lines`, `settlement-totals`, `pending-adapter` |
+| `04-stress-multi-message-file.edi` | stress | `tradacoms` ≥ 0.9 | valid | `multi-message`, `uncoded-line`, `stx-password`, `application-reference`, `pending-adapter` |
+| `05-real-world-grocery-order-file.edi` | real-world | `tradacoms` ≥ 0.9 | valid | `ORDERS`, `gtin`, `case-quantities`, `multi-depot`, `delivery-window`, `pending-adapter` |
+| `06-typical-delivery-file.edi` | typical | `tradacoms` ≥ 0.9 | valid | `DELHDR`, `DELIVR`, `DELTLR`, `ordered-vs-delivered`, `pending-adapter` |
+| `07-composition-nested-files.edi` | composition | `tradacoms` ≥ 0.9 | valid | `multiple-files-one-transmission`, `ORDERS`, `DELIVR`, `nested-message-structure`, `pending-adapter` |
+| `08-transmission-set/ack-file.edi` ⚠ | multi-file (member) | `tradacoms` (no guarantee) | valid | `ACKHDR`, `ACKMNT`, `acknowledgment`, `pending-adapter` |
+| `08-transmission-set/order-file.edi` | multi-file (root) | `tradacoms` ≥ 0.9 | valid | `ORDERS`, `transmission`, `pending-adapter` |
+| `negative/01-syntactic-missing-equals.edi` | — | `tradacoms` (no guarantee) | invalid | `negative`, `syntactic`, `missing-equals`, `pending-adapter` |
+| `negative/02-semantic-no-end-segment.edi` | — | `tradacoms` (no guarantee) | invalid | `negative`, `semantic`, `no-end-segment`, `pending-adapter` |
+| `negative/03-truncated-mid-segment.edi` | — | `tradacoms` (no guarantee) | invalid | `negative`, `truncated`, `mid-segment`, `pending-adapter` |
+| `negative/04-wrong-format-edifact.edi` ⚠ | — | `tradacoms` (no guarantee) | invalid | `negative`, `wrong-format`, `edifact`, `pending-adapter` |
+| `negative/05-encoding-utf16.edi` | — | `tradacoms` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-message-count-mismatch.edi` | — | `tradacoms` (no guarantee) | invalid | `negative`, `semantic`, `sequence-mismatch`, `pending-adapter` |
+
+> ⚠ **`08-transmission-set/ack-file.edi`** — Fileset member: the acknowledgment transmission referring to the order file by its file generation number.
+
+> ⚠ **`negative/04-wrong-format-edifact.edi`** — TRADACOMS must parse as its own structure, not as an EDIFACT interchange — the misroute FMT-6.5 names explicitly.
+
+### `traefik/` — Traefik dynamic config (pending #5459)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-router.yml` | minimal | `traefik` ≥ 0.85 | valid | `router`, `service`, `path-rule`, `pending-adapter` |
+| `02-typical-dynamic.yml` | typical | `traefik` ≥ 0.85 | valid | `routers`, `services`, `middlewares`, `entrypoints`, `tls`, `health-check`, `sticky-cookie`, `rate-limit`, `pending-adapter` |
+| `03-composition-middleware-chains.yml` | composition | `traefik` ≥ 0.85 | valid | `chain-middleware`, `weighted-service`, `mirroring-service`, `serversTransports`, `tls-options`, `basic-auth`, `pending-adapter` |
+| `04-stress-rule-grammar.yml` | stress | `traefik` ≥ 0.85 | valid | `Path`, `PathPrefix`, `PathRegexp`, `Host`, `HostRegexp`, `Header`, `Query`, `ClientIP`, `negation`, `grouping`, `tcp-router`, `udp-router`, `forwardAuth`, `buffering`, `errors`, `pending-adapter` |
+| `05-real-world-dynamic.toml` | real-world | `traefik` ≥ 0.85 | valid | `toml`, `redirect-regex`, `cert-domains`, `ip-allowlist`, `priority`, `compress`, `pending-adapter` |
+| `06-typical-ingressroute-crd.yaml` | typical | `traefik` ≥ 0.85 | valid | `IngressRoute`, `crd`, `Middleware`, `multi-document`, `pending-adapter` |
+| `07-provider-directory-set/middlewares.yml` ⚠ | multi-file (member) | `traefik` (no guarantee) | valid | `middlewares`, `rate-limit`, `stripPrefix`, `pending-adapter` |
+| `07-provider-directory-set/routers.yml` | multi-file (root) | `traefik` ≥ 0.85 | valid | `file-provider-directory`, `routers`, `tls`, `pending-adapter` |
+| `07-provider-directory-set/services.yml` ⚠ | multi-file (member) | `traefik` (no guarantee) | valid | `services`, `health-check`, `pending-adapter` |
+| `negative/01-syntactic-bad-yaml.yml` | — | `traefik` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation`, `pending-adapter` |
+| `negative/02-semantic-routers-without-rules.yml` | — | `traefik` (no guarantee) | invalid | `negative`, `semantic`, `no-rule`, `no-servers`, `pending-adapter` |
+| `negative/03-truncated-mid-service.yml` | — | `traefik` (no guarantee) | invalid | `negative`, `truncated`, `mid-url`, `pending-adapter` |
+| `negative/04-wrong-format-nginx.conf` | — | `traefik` (no guarantee) | invalid | `negative`, `wrong-format`, `nginx`, `pending-adapter` |
+| `negative/05-encoding-utf16.yml` | — | `traefik` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-service-reference.yml` | — | `traefik` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-service`, `missing-middleware`, `pending-adapter` |
+
+> ⚠ **`07-provider-directory-set/middlewares.yml`** — Fileset member: the middlewares the routers reference by name.
+
+> ⚠ **`07-provider-directory-set/services.yml`** — Fileset member: the services the routers target.
+
+### `trpc/` — tRPC routers (pending #5464)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-router.ts` | minimal | `trpc` ≥ 0.85 | valid | `router`, `query`, `zod-input`, `pending-adapter` |
+| `02-typical-order-router.ts` | typical | `trpc` ≥ 0.85 | valid | `query`, `mutation`, `input`, `output`, `typed-context`, `TRPCError`, `pending-adapter` |
+| `03-routers-set/customer-router.ts` | multi-file (member) | `trpc` (no guarantee) | valid | `multi-file`, `query`, `pending-adapter` |
+| `03-routers-set/order-router.ts` | multi-file (member) | `trpc` (no guarantee) | valid | `multi-file`, `query`, `mutation`, `pending-adapter` |
+| `03-routers-set/root.ts` | multi-file (root) | `trpc` ≥ 0.85 | valid | `multi-file`, `router-merge`, `pending-adapter` |
+| `03-routers-set/schemas.ts` | multi-file (member) | `trpc` (no guarantee) | valid | `multi-file`, `shared-schemas`, `pending-adapter` |
+| `04-stress-procedure-forms.ts` ⚠ | stress | `trpc` ≥ 0.85 | valid | `no-input-query`, `meta`, `middleware`, `chained-input`, `subscription`, `non-zod-validator`, `inline-nested-router`, `pending-adapter` |
+| `05-real-world-app-router.ts` | real-world | `trpc` ≥ 0.85 | valid | `session-middleware`, `shared-pagination`, `feature-routers`, `output-schemas`, `error-codes`, `pending-adapter` |
+| `06-typical-nested-routers.ts` | typical | `trpc` ≥ 0.85 | valid | `nested-routers`, `operation-groups`, `top-level-procedure`, `pending-adapter` |
+| `07-composition-shared-builders.ts` | composition | `trpc` ≥ 0.85 | valid | `shared-schemas`, `middleware-builders`, `router-merge`, `schema-factory`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-router.ts` | — | `trpc` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-call`, `pending-adapter` |
+| `negative/02-semantic-no-procedures.ts` | — | `trpc` (no guarantee) | invalid | `negative`, `semantic`, `empty-router`, `pending-adapter` |
+| `negative/03-truncated-mid-procedure.ts` | — | `trpc` (no guarantee) | invalid | `negative`, `truncated`, `mid-chain`, `pending-adapter` |
+| `negative/04-wrong-format-zod.ts` ⚠ | — | `trpc` (no guarantee) | invalid | `negative`, `wrong-format`, `zod`, `pending-adapter` |
+| `negative/05-encoding-utf16.ts` | — | `trpc` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-non-zod-input-only.ts` ⚠ | — | `trpc` (no guarantee) | invalid | `negative`, `semantic`, `non-zod-validators`, `pending-adapter` |
+
+> ⚠ **`04-stress-procedure-forms.ts`** — The non-Zod validator and the subscription are the two constructs FMT-8.3 must declare rather than invent a schema for.
+
+> ⚠ **`negative/04-wrong-format-zod.ts`** — Zod schemas with no router: the zod adapter's input, not this one's.
+
+> ⚠ **`negative/06-semantic-non-zod-input-only.ts`** — The FMT-8.3 acceptance case: a router with a non-Zod input must be reported, not turned into an operation with an empty request body.
+
+### `tyk/` — Tyk API definition (pending #5459)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-classic.json` | minimal | `tyk` ≥ 0.85 | valid | `classic`, `listen-path`, `keyless`, `pending-adapter` |
+| `02-typical-classic-with-paths.json` | typical | `tyk` ≥ 0.85 | valid | `classic`, `white-list`, `method-actions`, `cache`, `hard-timeouts`, `global-rate-limit`, `pending-adapter` |
+| `03-composition-versions-and-middleware.json` | composition | `tyk` ≥ 0.85 | valid | `classic`, `two-versions`, `header-versioning`, `black-list`, `ignored`, `validate-json`, `url-rewrites`, `custom-middleware`, `pending-adapter` |
+| `04-stress-oas-extension.json` ⚠ | stress | `tyk` ≥ 0.85 | valid | `tyk-oas`, `x-tyk-api-gateway`, `load-balancing`, `uptime-tests`, `jwt`, `cors`, `per-operation-middleware`, `circuit-breaker`, `mock-response`, `pending-adapter` |
+| `05-real-world-payments-classic.json` | real-world | `tyk` ≥ 0.85 | valid | `classic`, `oauth2`, `target-list`, `uptime-tests`, `validate-json`, `circuit-breakers`, `cors`, `response-processors`, `pending-adapter` |
+| `06-typical-graphql-proxy.json` | typical | `tyk` ≥ 0.85 | valid | `graphql`, `proxyOnly`, `inline-sdl`, `paradigm-switch`, `pending-adapter` |
+| `07-policies-set/api-definition.json` | multi-file (root) | `tyk` ≥ 0.85 | valid | `classic`, `white-list`, `versioned`, `pending-adapter` |
+| `07-policies-set/policies.json` ⚠ | multi-file (member) | `tyk` (no guarantee) | valid | `policies`, `quotas`, `access-rights`, `allowed-urls`, `pending-adapter` |
+| `negative/01-syntactic-missing-comma.json` | — | `tyk` (no guarantee) | invalid | `negative`, `syntactic`, `missing-comma`, `pending-adapter` |
+| `negative/02-semantic-no-listen-path.json` | — | `tyk` (no guarantee) | invalid | `negative`, `semantic`, `no-listen-path`, `pending-adapter` |
+| `negative/03-truncated-mid-version.json` | — | `tyk` (no guarantee) | invalid | `negative`, `truncated`, `mid-value`, `pending-adapter` |
+| `negative/04-wrong-format-kong.yaml` | — | `tyk` (no guarantee) | invalid | `negative`, `wrong-format`, `kong`, `pending-adapter` |
+| `negative/05-encoding-utf16.json` | — | `tyk` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-empty-versions.json` | — | `tyk` (no guarantee) | invalid | `negative`, `semantic`, `empty-versions`, `pending-adapter` |
+
+> ⚠ **`04-stress-oas-extension.json`** — The non-greedy detection case in the positive direction: a real OpenAPI document that this adapter may claim only because of the x-tyk-api-gateway extension.
+
+> ⚠ **`07-policies-set/policies.json`** — Fileset member: quotas, rate limits and per-URL access rights keyed by the api_id in the root.
+
+### `typescript-types/` — TypeScript type declarations (pending #5462)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-model.d.ts` | minimal | `typescript-types` ≥ 0.8 | valid | `interface`, `primitives`, `pending-adapter` |
+| `02-typical-order-model.ts` | typical | `typescript-types` ≥ 0.8 | valid | `literal-union`, `optional`, `nullable`, `array`, `readonly`, `Pick`, `Omit`, `pending-adapter` |
+| `03-modules-set/customer.d.ts` | multi-file (member) | `typescript-types` (no guarantee) | valid | `multi-file`, `interface`, `pending-adapter` |
+| `03-modules-set/index.d.ts` | multi-file (root) | `typescript-types` ≥ 0.8 | valid | `multi-file`, `re-export`, `import-type`, `pending-adapter` |
+| `03-modules-set/order.d.ts` | multi-file (member) | `typescript-types` (no guarantee) | valid | `multi-file`, `cross-module-type`, `pending-adapter` |
+| `04-stress-type-system.ts` ⚠ | stress | `typescript-types` ≥ 0.8 | valid | `tuple`, `index-signature`, `intersection`, `enum`, `const-enum`, `generic-instantiation`, `conditional-type`, `mapped-type`, `template-literal-type`, `declaration-merging`, `unique-symbol`, `function-type`, `pending-adapter` |
+| `05-real-world-api-client-types.d.ts` | real-world | `typescript-types` ≥ 0.8 | valid | `client-package`, `generic-instantiation`, `discriminated-union`, `money`, `pagination`, `pending-adapter` |
+| `06-typical-discriminated-unions.ts` | typical | `typescript-types` ≥ 0.8 | valid | `discriminated-union`, `extends`, `indexed-access`, `nested-object`, `pending-adapter` |
+| `07-composition-inheritance.ts` | composition | `typescript-types` ≥ 0.8 | valid | `multiple-extends`, `intersection`, `generic-instantiation`, `index-signature`, `pending-adapter` |
+| `negative/01-syntactic-missing-brace.ts` | — | `typescript-types` (no guarantee) | invalid | `negative`, `syntactic`, `missing-brace`, `pending-adapter` |
+| `negative/02-semantic-no-exported-types.ts` | — | `typescript-types` (no guarantee) | invalid | `negative`, `semantic`, `no-exported-types`, `pending-adapter` |
+| `negative/03-truncated-mid-interface.ts` | — | `typescript-types` (no guarantee) | invalid | `negative`, `truncated`, `mid-type-reference`, `pending-adapter` |
+| `negative/04-wrong-format-zod.ts` ⚠ | — | `typescript-types` (no guarantee) | invalid | `negative`, `wrong-format`, `zod`, `pending-adapter` |
+| `negative/05-encoding-utf16.ts` | — | `typescript-types` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-import.ts` | — | `typescript-types` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-module`, `pending-adapter` |
+
+> ⚠ **`04-stress-type-system.ts`** — Organised as modellable-subset / declared-limits halves; the second half must produce named parsing limits, never `any`.
+
+> ⚠ **`negative/04-wrong-format-zod.ts`** — A Zod module is TypeScript too: the split between this adapter and the zod adapter is the `zod` import plus runtime schema values, not the file extension.
+
 ### `typespec/` — TypeSpec
 
 | File | Rung | Expected detection | Class | Features |
@@ -923,6 +2342,29 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/03-truncated-mid-token.tsp` | — | `typespec` (no guarantee) | invalid | `negative`, `truncated`, `mid-token-cut` |
 | `negative/04-wrong-format-raml.raml` | — | `typespec` (no guarantee) | invalid | `negative`, `wrong-format`, `raml-document` |
 | `negative/05-encoding-utf16.tsp` | — | `typespec` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
+
+### `vsam-idcams/` — VSAM cluster definitions (pending #5484)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-define-cluster.idcams` | minimal | `vsam-idcams` ≥ 0.85 | valid | `define-cluster`, `indexed`, `keys`, `recordsize`, `pending-adapter` |
+| `02-typical-ksds.idcams` | typical | `vsam-idcams` ≥ 0.85 | valid | `jcl-wrapper`, `data-index-subdefinitions`, `freespace`, `shareoptions`, `listcat`, `pending-adapter` |
+| `03-cluster-and-index-set/alternate-index.idcams` ⚠ | multi-file (member) | `vsam-idcams` (no guarantee) | valid | `multi-file`, `alternate-index`, `path`, `bldindex`, `pending-adapter` |
+| `03-cluster-and-index-set/cluster.idcams` | multi-file (root) | `vsam-idcams` ≥ 0.85 | valid | `multi-file`, `base-cluster`, `keys`, `pending-adapter` |
+| `04-stress-cluster-forms.idcams` ⚠ | stress | `vsam-idcams` ≥ 0.85 | valid | `ksds`, `esds`, `rrds`, `vrrds`, `lds`, `space-forms`, `sms-classes`, `alternate-index`, `path`, `gdg`, `spanned`, `reuse`, `pending-adapter` |
+| `05-real-world-account-cluster.idcams` | real-world | `vsam-idcams` ≥ 0.85 | valid | `delete-define`, `two-alternate-indexes`, `unique-and-nonunique`, `paths`, `bldindex`, `sms-classes`, `pending-adapter` |
+| `06-typical-listcat-output.idcams` | typical | `vsam-idcams` ≥ 0.85 | valid | `listcat`, `attributes`, `associations`, `statistics`, `pending-adapter` |
+| `07-composition-alternate-index-family.idcams` | composition | `vsam-idcams` ≥ 0.85 | valid | `base-cluster`, `alternate-index-family`, `paths`, `repro`, `bldindex`, `pending-adapter` |
+| `negative/01-syntactic-unbalanced-parens.idcams` | — | `vsam-idcams` (no guarantee) | invalid | `negative`, `syntactic`, `unbalanced-parentheses`, `pending-adapter` |
+| `negative/02-semantic-indexed-without-keys.idcams` | — | `vsam-idcams` (no guarantee) | invalid | `negative`, `semantic`, `indexed-without-keys`, `no-recordsize`, `pending-adapter` |
+| `negative/03-truncated-mid-parameter.idcams` | — | `vsam-idcams` (no guarantee) | invalid | `negative`, `truncated`, `mid-parameter`, `pending-adapter` |
+| `negative/04-wrong-format-bms.bms` | — | `vsam-idcams` (no guarantee) | invalid | `negative`, `wrong-format`, `cics-bms`, `pending-adapter` |
+| `negative/05-encoding-utf16.idcams` | — | `vsam-idcams` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-relate-target.idcams` | — | `vsam-idcams` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-base-cluster`, `pending-adapter` |
+
+> ⚠ **`03-cluster-and-index-set/alternate-index.idcams`** — Fileset member: KEYS(8 40) describes an offset into the *base* cluster's record, so the two files must be read together.
+
+> ⚠ **`04-stress-cluster-forms.idcams`** — LINEAR datasets have no record structure at all: FMT-11.3 must declare that limit rather than inventing one.
 
 ### `wadl/` — WADL
 
@@ -989,6 +2431,28 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-wadl-application.wadl` | — | `wsdl` (no guarantee) | invalid | `negative`, `wrong-format`, `wadl-application` |
 | `negative/05-encoding-utf16-bom.wsdl` | — | `wsdl` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bom` |
 
+### `wsdl2/` — WSDL 2.0 (pending #5428)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-ping.wsdl` | minimal | `wsdl-2.0` ≥ 0.95 | valid | `interface`, `in-out`, `soap-binding`, `endpoint`, `pending-adapter` |
+| `02-typical-orders.wsdl` | typical | `wsdl-2.0` ≥ 0.95 | valid | `interface`, `faults`, `in-only`, `safe`, `inline-schema`, `pending-adapter` |
+| `03-composition-interface-extension.wsdl` | composition | `wsdl-2.0` ≥ 0.95 | valid | `interface-extends`, `inherited-operations`, `inherited-faults`, `pending-adapter` |
+| `04-stress-message-exchange-patterns.wsdl` | stress | `wsdl-2.0` ≥ 0.95 | valid | `in-out`, `in-only`, `robust-in-only`, `in-opt-out`, `out-only`, `http-binding`, `wsoap-mep`, `pending-adapter` |
+| `05-real-world-shipment-tracking.wsdl` | real-world | `wsdl-2.0` ≥ 0.95 | valid | `restricted-types`, `enumeration`, `repeated-elements`, `multiple-endpoints`, `pending-adapter` |
+| `06-imported-set/invoice.xsd` ⚠ | multi-file (member) | `xsd` (no guarantee) | valid | `multi-file`, `xs-import`, `types`, `pending-adapter` |
+| `06-imported-set/service.wsdl` | multi-file (root) | `wsdl-2.0` ≥ 0.95 | valid | `multi-file`, `xs-import`, `interface`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-element.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
+| `negative/02-semantic-no-interface.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `semantic`, `no-interface`, `pending-adapter` |
+| `negative/03-truncated-mid-binding.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
+| `negative/04-wrong-format-xsd.xsd` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `wrong-format`, `xsd`, `pending-adapter` |
+| `negative/05-encoding-utf16.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-unresolvable-interface-ref.wsdl` ⚠ | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-interface`, `pending-adapter` |
+
+> ⚠ **`06-imported-set/invoice.xsd`** — Fileset member: the imported schema; on its own it is an XSD, not a WSDL 2.0 description.
+
+> ⚠ **`negative/06-unresolvable-interface-ref.wsdl`** — The 2.0 unresolvable-interface case FMT-3.3's acceptance criteria call for: binding and service both reference tns:MissingInterface.
+
 ### `xml-rpc/` — XML-RPC
 
 | File | Rung | Expected detection | Class | Features |
@@ -1026,6 +2490,30 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/03-truncated-mid-element.xsd` | — | `xsd` (no guarantee) | invalid | `negative`, `truncated`, `mid-element` |
 | `negative/04-wrong-format-openapi-document.json` | — | `xsd` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi-document` |
 | `negative/05-encoding-utf16-bom.xsd` | — | `xsd` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bom` |
+
+### `zod/` — Zod schemas (pending #5463)
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-schema.ts` | minimal | `zod` ≥ 0.85 | valid | `object`, `primitives`, `pending-adapter` |
+| `02-typical-order-schemas.ts` | typical | `zod` ≥ 0.85 | valid | `regex`, `bounds`, `enum`, `default`, `array-cardinality`, `pick`, `infer`, `pending-adapter` |
+| `03-modules-set/index.ts` | multi-file (root) | `zod` ≥ 0.85 | valid | `multi-file`, `cross-module-schema`, `pending-adapter` |
+| `03-modules-set/order-line.ts` | multi-file (member) | `zod` (no guarantee) | valid | `multi-file`, `cross-module-schema`, `pending-adapter` |
+| `03-modules-set/shared.ts` | multi-file (member) | `zod` (no guarantee) | valid | `multi-file`, `shared-schemas`, `pending-adapter` |
+| `04-stress-constraint-coverage.ts` ⚠ | stress | `zod` ≥ 0.85 | valid | `string-constraints`, `number-constraints`, `tuple`, `record`, `set`, `map`, `strict`, `passthrough`, `catchall`, `discriminatedUnion`, `nativeEnum`, `refine`, `superRefine`, `transform`, `preprocess`, `brand`, `pipe`, `custom`, `function-schema`, `pending-adapter` |
+| `05-real-world-api-validation.ts` | real-world | `zod` ≥ 0.85 | valid | `request-validation`, `response-validation`, `coerce`, `discriminatedUnion`, `shared-value-schemas`, `pending-adapter` |
+| `06-typical-recursive-and-lazy.ts` | typical | `zod` ≥ 0.85 | valid | `lazy`, `recursion`, `json-value-union`, `self-reference`, `pending-adapter` |
+| `07-composition-schema-reuse.ts` | composition | `zod` ≥ 0.85 | valid | `merge`, `extend`, `pick`, `omit`, `partial`, `discriminatedUnion`, `schema-factory`, `pending-adapter` |
+| `negative/01-syntactic-unclosed-call.ts` | — | `zod` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-call`, `pending-adapter` |
+| `negative/02-semantic-no-exported-schemas.ts` | — | `zod` (no guarantee) | invalid | `negative`, `semantic`, `private-schemas`, `pending-adapter` |
+| `negative/03-truncated-mid-schema.ts` | — | `zod` (no guarantee) | invalid | `negative`, `truncated`, `mid-chain`, `pending-adapter` |
+| `negative/04-wrong-format-typescript-types.ts` | — | `zod` (no guarantee) | invalid | `negative`, `wrong-format`, `typescript-types`, `pending-adapter` |
+| `negative/05-encoding-utf16.ts` | — | `zod` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
+| `negative/06-semantic-throws-on-import.ts` ⚠ | — | `zod` (no guarantee) | invalid | `negative`, `semantic`, `throws-on-import`, `sandbox`, `pending-adapter` |
+
+> ⚠ **`04-stress-constraint-coverage.ts`** — Split into a modellable half and a declared-limits half; refine/transform/brand/custom must surface as named limits.
+
+> ⚠ **`negative/06-semantic-throws-on-import.ts`** — The FMT-8.2 acceptance case for sandboxed evaluation: a module that throws must fail the job cleanly inside the time budget.
 
 ### `zos-connect/` — z/OS Connect
 
@@ -1091,7 +2579,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 544 | `Apache-2.0` |
+| `hand-authored` | 1410 | `Apache-2.0` |
 
 ## Trying an import
 

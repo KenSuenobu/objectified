@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UANodeSet xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd">
+  <!--
+    The object type declares components ns=1;i=6999 and ns=1;i=7999, and its data type
+    reference points at ns=1;i=3999. None of those nodes exists here, and no required
+    model supplies them, so the type cannot be assembled.
+  -->
+  <NamespaceUris>
+    <Uri>http://example.com/UA/Dangling/</Uri>
+  </NamespaceUris>
+  <Aliases>
+    <Alias Alias="HasSubtype">i=45</Alias>
+    <Alias Alias="HasComponent">i=47</Alias>
+  </Aliases>
+
+  <UAObjectType NodeId="ns=1;i=1001" BrowseName="1:DanglingType">
+    <DisplayName>DanglingType</DisplayName>
+    <References>
+      <Reference ReferenceType="HasSubtype" IsForward="false">i=58</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=6999</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=7999</Reference>
+    </References>
+  </UAObjectType>
+
+  <UAVariable NodeId="ns=1;i=6001" BrowseName="1:Reading" DataType="ns=1;i=3999"
+              ParentNodeId="ns=1;i=1001">
+    <DisplayName>Reading</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1001</Reference>
+    </References>
+  </UAVariable>
+</UANodeSet>

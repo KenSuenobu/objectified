@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Message xmlns="http://www.ncpdp.org/schema/SCRIPT" version="010" release="006">
+  <Header>
+    <To Qualifier="D">1234567893</To>
+    <From Qualifier="P">1234567</From>
+    <MessageID>MSG-20260819-0003</MessageID>
+    <RelatesToMessageID>MSG-20260819-0002</RelatesToMessageID>
+    <SentTime>2026-08-19T12:15:00Z</SentTime>
+    <PrescriberOrderNumber>RX-2026-004471</PrescriberOrderNumber>
+  </Header>
+  <Body>
+    <RxChangeRequest>
+      <MessageRequestCode>T</MessageRequestCode>
+      <Patient>
+        <HumanPatient>
+          <Name><LastName>Sample</LastName><FirstName>Jordan</FirstName></Name>
+          <Gender>F</Gender>
+          <DateOfBirth><Date>1985-02-14</Date></DateOfBirth>
+        </HumanPatient>
+      </Patient>
+      <Pharmacy>
+        <Identification><NCPDPID>1234567</NCPDPID></Identification>
+        <BusinessName>Example Community Pharmacy</BusinessName>
+      </Pharmacy>
+      <Prescriber>
+        <NonVeterinarian>
+          <Identification><NPI>1234567893</NPI></Identification>
+          <Name><LastName>Clinician</LastName><FirstName>Robin</FirstName></Name>
+        </NonVeterinarian>
+      </Prescriber>
+      <MedicationPrescribed>
+        <DrugDescription>Amoxicillin 500 MG oral capsule</DrugDescription>
+        <DrugCoded>
+          <ProductCode>00093310501</ProductCode>
+          <ProductCodeQualifier>ND</ProductCodeQualifier>
+        </DrugCoded>
+        <Quantity>
+          <Value>21</Value>
+          <CodeListQualifier>38</CodeListQualifier>
+        </Quantity>
+        <DaysSupply>7</DaysSupply>
+      </MedicationPrescribed>
+      <MedicationRequested>
+        <DrugDescription>Amoxicillin 875 MG oral tablet</DrugDescription>
+        <DrugCoded>
+          <ProductCode>00093226201</ProductCode>
+          <ProductCodeQualifier>ND</ProductCodeQualifier>
+        </DrugCoded>
+        <Quantity>
+          <Value>14</Value>
+          <CodeListQualifier>38</CodeListQualifier>
+        </Quantity>
+        <DaysSupply>7</DaysSupply>
+        <Sig><SigText>Take one tablet by mouth twice daily for seven days.</SigText></Sig>
+        <PriorAuthorization>
+          <PriorAuthorizationStatus>R</PriorAuthorizationStatus>
+          <PriorAuthorizationNumber>PA-2026-0091</PriorAuthorizationNumber>
+        </PriorAuthorization>
+      </MedicationRequested>
+      <BenefitsCoordination>
+        <PayerIdentification><PayerID>EXPAY01</PayerID></PayerIdentification>
+        <PayerName>Example Health Plan</PayerName>
+        <CardholderID>MEM-000112233</CardholderID>
+        <GroupID>GRP-4711</GroupID>
+      </BenefitsCoordination>
+    </RxChangeRequest>
+  </Body>
+</Message>

@@ -1,0 +1,19 @@
+{
+  "api_id": "ping-api",
+  "name": "Ping API",
+  "org_id": "000000000000000000000001",
+  "use_keyless": true,
+  "active": true,
+  "proxy": {
+    "listen_path": "/ping/",
+    "target_url": "http://ping.internal.example.com:8080",
+    "strip_listen_path": true
+  },
+  "version_data": {
+    "not_versioned": true,
+    "default_version": "Default",
+    "versions": {
+      "Default": { "name": "Default", "use_extended_paths": true }
+    }
+  }
+}

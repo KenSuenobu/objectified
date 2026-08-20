@@ -1,0 +1,39 @@
+; Order document: maps, arrays, occurrence indicators and type choices.
+
+order = {
+  order-id: tstr,
+  customer: customer,
+  lines: [+ line],
+  ? note: tstr,
+  status: status,
+  placed-at: epoch-time,
+}
+
+customer = {
+  customer-id: tstr,
+  name: tstr,
+  ? address: address,
+}
+
+address = {
+  line1: tstr,
+  ? line2: tstr,
+  city: tstr,
+  postal-code: tstr,
+  country: tstr,
+}
+
+line = {
+  sku: tstr,
+  quantity: uint,
+  unit-price: money,
+}
+
+money = {
+  minor-units: int,
+  currency: tstr,
+}
+
+status = "new" / "paid" / "shipped" / "cancelled"
+
+epoch-time = uint

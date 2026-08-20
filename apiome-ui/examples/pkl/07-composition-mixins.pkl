@@ -1,0 +1,51 @@
+/// Within-document composition: an open base class amended by two subclasses, a class
+/// used as a member type, and a module-level value that amends the whole tree.
+module example.composition
+
+open class Timestamps {
+  createdAt: String
+  updatedAt: String?
+}
+
+open class Identified extends Timestamps {
+  id: String(matches(Regex("^[A-Z]{3}-[0-9]{6}$")))
+}
+
+open class Record extends Identified {
+  label: String(!isEmpty)
+}
+
+class ActiveRecord extends Record {
+  status: "active" = "active"
+  updatedAt: String
+}
+
+class ArchivedRecord extends Record {
+  status: "archived" = "archived"
+  archivedAt: String
+}
+
+class RecordSet {
+  active: Listing<ActiveRecord> = new {}
+  archived: Listing<ArchivedRecord> = new {}
+  byId: Mapping<String, Record> = new {}
+}
+
+records: RecordSet = new {
+  active = new {
+    new ActiveRecord {
+      id = "ABC-000001"
+      label = "first"
+      createdAt = "2026-08-01T00:00:00Z"
+      updatedAt = "2026-08-19T00:00:00Z"
+    }
+  }
+  archived = new {
+    new ArchivedRecord {
+      id = "ABC-000002"
+      label = "second"
+      createdAt = "2026-07-01T00:00:00Z"
+      archivedAt = "2026-08-10T00:00:00Z"
+    }
+  }
+}

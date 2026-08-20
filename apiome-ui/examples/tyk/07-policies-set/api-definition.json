@@ -1,0 +1,57 @@
+{
+  "api_id": "shipments-api",
+  "name": "Shipments API",
+  "org_id": "000000000000000000000001",
+  "active": true,
+  "use_keyless": false,
+  "auth_configs": {
+    "authToken": {
+      "auth_header_name": "Authorization"
+    }
+  },
+  "proxy": {
+    "listen_path": "/v2/shipments/",
+    "target_url": "http://shipments.internal.example.com:8080",
+    "strip_listen_path": true
+  },
+  "version_data": {
+    "not_versioned": false,
+    "default_version": "v2",
+    "versions": {
+      "v2": {
+        "name": "v2",
+        "use_extended_paths": true,
+        "extended_paths": {
+          "white_list": [
+            {
+              "path": "/shipments",
+              "method_actions": {
+                "GET": {
+                  "action": "no_action",
+                  "code": 200
+                },
+                "POST": {
+                  "action": "no_action",
+                  "code": 201
+                }
+              }
+            },
+            {
+              "path": "/shipments/{shipmentId}",
+              "method_actions": {
+                "GET": {
+                  "action": "no_action",
+                  "code": 200
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "definition": {
+    "location": "url",
+    "key": "version"
+  }
+}

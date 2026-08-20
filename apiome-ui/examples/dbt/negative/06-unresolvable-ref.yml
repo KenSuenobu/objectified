@@ -1,0 +1,16 @@
+version: 2
+
+# fct_orders tests a relationship to ref('dim_customers'), and dim_customers is not
+# declared here or anywhere else in the project. Lineage cannot be resolved, which
+# FMT-5.4 requires to surface as a named unresolved reference.
+models:
+  - name: fct_orders
+    description: Order facts with a lineage edge that goes nowhere.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_id

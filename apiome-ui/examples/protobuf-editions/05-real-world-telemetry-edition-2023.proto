@@ -1,0 +1,65 @@
+edition = "2023";
+
+package example.telemetry.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+// A telemetry ingest service migrated from proto2: LEGACY_REQUIRED preserves the
+// proto2 `required` fields the wire format still carries, while new fields use the
+// editions default of EXPLICIT presence.
+option features.field_presence = EXPLICIT;
+option features.utf8_validation = VERIFY;
+
+enum Severity {
+  option features.enum_type = CLOSED;
+
+  SEVERITY_DEBUG = 1;
+  SEVERITY_INFO = 2;
+  SEVERITY_WARN = 3;
+  SEVERITY_ERROR = 4;
+  SEVERITY_FATAL = 5;
+}
+
+message Resource {
+  string service_name = 1 [features.field_presence = LEGACY_REQUIRED];
+  string service_version = 2;
+  string host = 3;
+  map<string, string> attributes = 4;
+}
+
+message Metric {
+  string name = 1 [features.field_presence = LEGACY_REQUIRED];
+  string unit = 2;
+  repeated double values = 3 [features.repeated_field_encoding = PACKED];
+  google.protobuf.Timestamp observed_at = 4;
+  map<string, string> labels = 5;
+}
+
+message LogRecord {
+  Severity severity = 1;
+  string body = 2;
+  google.protobuf.Timestamp observed_at = 3;
+  // Trace ids are raw bytes and must not be UTF-8 validated.
+  bytes trace_id = 4 [features.utf8_validation = NONE];
+  bytes span_id = 5 [features.utf8_validation = NONE];
+  map<string, string> attributes = 6;
+}
+
+message ExportRequest {
+  Resource resource = 1 [features.field_presence = LEGACY_REQUIRED];
+  repeated Metric metrics = 2;
+  repeated LogRecord logs = 3;
+  google.protobuf.Duration collection_window = 4;
+}
+
+message ExportResponse {
+  int64 accepted = 1 [features.field_presence = IMPLICIT];
+  int64 rejected = 2 [features.field_presence = IMPLICIT];
+  repeated string rejection_reasons = 3;
+}
+
+service TelemetryService {
+  rpc Export(ExportRequest) returns (ExportResponse);
+  rpc ExportStream(stream ExportRequest) returns (ExportResponse);
+}

@@ -1,0 +1,16 @@
+name: example_commerce
+version: 1.3.0
+config-version: 2
+
+profile: example_commerce
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+
+models:
+  example_commerce:
+    +materialized: view
+    marts:
+      +materialized: table
+      +schema: analytics

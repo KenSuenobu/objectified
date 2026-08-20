@@ -1,0 +1,21 @@
+{
+  "resourceType": "Composition",
+  "id": "discharge-summary-4471",
+  "status": "final",
+  "type": {
+    "coding": [
+      { "system": "http://loinc.org", "code": "18842-5", "display": "Discharge Summary" }
+    ]
+  },
+  "subject": { "reference": "Patient/PAT-0311" },
+  "date": "2026-08-17T16:45:00+01:00",
+  "author": [{ "reference": "Practitioner/AUT-0311" }],
+  "title": "Discharge Summary",
+  "section": [
+    {
+      "title": "Discharge Diagnoses",
+      "code": { "coding": [{ "system": "http://loinc.org", "code": "11535-2" }] },
+      "text": { "status": "generated", "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">NSTEMI</div>" }
+    }
+  ]
+}

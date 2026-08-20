@@ -1,0 +1,48 @@
+{
+  "shipments-reader": {
+    "_id": "shipments-reader",
+    "name": "Shipments reader",
+    "org_id": "000000000000000000000001",
+    "active": true,
+    "state": "active",
+    "rate": 300,
+    "per": 60,
+    "quota_max": 100000,
+    "quota_renewal_rate": 86400,
+    "access_rights": {
+      "shipments-api": {
+        "api_name": "Shipments API",
+        "api_id": "shipments-api",
+        "versions": ["v2"],
+        "allowed_urls": [
+          { "url": "/shipments", "methods": ["GET"] },
+          { "url": "/shipments/{shipmentId}", "methods": ["GET"] }
+        ]
+      }
+    },
+    "tags": ["read-only"]
+  },
+  "shipments-writer": {
+    "_id": "shipments-writer",
+    "name": "Shipments writer",
+    "org_id": "000000000000000000000001",
+    "active": true,
+    "state": "active",
+    "rate": 1000,
+    "per": 60,
+    "quota_max": 1000000,
+    "quota_renewal_rate": 86400,
+    "access_rights": {
+      "shipments-api": {
+        "api_name": "Shipments API",
+        "api_id": "shipments-api",
+        "versions": ["v2"],
+        "allowed_urls": [
+          { "url": "/shipments", "methods": ["GET", "POST"] },
+          { "url": "/shipments/{shipmentId}", "methods": ["GET"] }
+        ]
+      }
+    },
+    "tags": ["read-write"]
+  }
+}

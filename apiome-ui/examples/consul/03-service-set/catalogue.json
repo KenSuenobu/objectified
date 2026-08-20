@@ -1,0 +1,13 @@
+{
+  "service": {
+    "id": "catalogue-1",
+    "name": "catalogue",
+    "tags": ["v1", "http", "urlprefix-/v2/products"],
+    "port": 8081,
+    "meta": { "protocol": "http", "version": "1.9.4" },
+    "check": {
+      "http": "http://localhost:8081/healthz",
+      "interval": "10s"
+    }
+  }
+}

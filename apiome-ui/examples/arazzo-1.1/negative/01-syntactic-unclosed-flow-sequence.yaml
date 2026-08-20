@@ -1,0 +1,11 @@
+arazzo: 1.1.0
+info:
+  title: Broken flow sequence
+  version: 1.0.0
+sourceDescriptions:
+  - name: api
+    url: https://api.example.com/openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: broken
+    steps: [ { stepId: one, operationId: $sourceDescriptions.api.getThing }

@@ -1,0 +1,35 @@
+# The route sends traffic to subset `v3`, and the DestinationRule in the same stream
+# declares only v1 and v2, so the destination cannot be resolved.
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: checkout
+  namespace: storefront
+spec:
+  hosts:
+    - api.example.com
+  http:
+    - match:
+        - uri:
+            prefix: /v2/checkout
+      route:
+        - destination:
+            host: checkout.storefront.svc.cluster.local
+            subset: v3
+            port:
+              number: 8080
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: checkout
+  namespace: storefront
+spec:
+  host: checkout.storefront.svc.cluster.local
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2

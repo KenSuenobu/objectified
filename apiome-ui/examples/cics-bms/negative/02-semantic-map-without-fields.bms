@@ -1,0 +1,9 @@
+*********************************************************************
+* A mapset whose map declares a size and no DFHMDF fields: there is  *
+* a screen but no record layout, so nothing can be modelled.         *
+*********************************************************************
+HOLWSET  DFHMSD TYPE=&SYSPARM,MODE=INOUT,LANG=COBOL,STORAGE=AUTO,      X
+               TIOAPFX=YES
+HOLWMAP  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1
+         DFHMSD TYPE=FINAL
+         END

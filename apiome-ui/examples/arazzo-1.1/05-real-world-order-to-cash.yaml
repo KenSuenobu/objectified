@@ -1,0 +1,85 @@
+arazzo: 1.1.0
+info:
+  title: Order to cash
+  summary: Place an order over REST, then wait for the async settlement event.
+  description: >
+    The pairing Arazzo 1.1 exists for: a workflow whose steps span an OpenAPI-described
+    synchronous API and an AsyncAPI-described event stream.
+  version: 4.0.0
+sourceDescriptions:
+  - name: orders
+    url: https://api.example.com/orders/openapi.yaml
+    type: openapi
+  - name: orderEvents
+    url: https://events.example.com/orders/asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: orderToCash
+    summary: Place an order and observe its settlement.
+    inputs:
+      type: object
+      properties:
+        customerId:
+          type: string
+        sku:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+      required: [customerId, sku, quantity]
+    steps:
+      - stepId: placeOrder
+        description: Synchronous REST call that creates the order.
+        operationId: $sourceDescriptions.orders.createOrder
+        requestBody:
+          contentType: application/json
+          payload:
+            customerId: $inputs.customerId
+            lines:
+              - sku: $inputs.sku
+                quantity: $inputs.quantity
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          orderId: $response.body#/id
+      - stepId: awaitOrderAccepted
+        description: Asynchronous step — the order-accepted event on the events broker.
+        operationId: $sourceDescriptions.orderEvents.receiveOrderAccepted
+        successCriteria:
+          - context: $message.payload
+            condition: $.orderId == $steps.placeOrder.outputs.orderId
+            type: jsonpath
+        outputs:
+          acceptedAt: $message.payload#/acceptedAt
+      - stepId: awaitSettlement
+        description: Asynchronous step — settlement completes on a different channel.
+        operationId: $sourceDescriptions.orderEvents.receivePaymentSettled
+        successCriteria:
+          - context: $message.payload
+            condition: $.orderId == $steps.placeOrder.outputs.orderId
+            type: jsonpath
+          - context: $message.payload
+            condition: $.status == 'settled'
+            type: jsonpath
+        onFailure:
+          - name: retrySettlement
+            type: retry
+            retryAfter: 30
+            retryLimit: 10
+        outputs:
+          settledAmount: $message.payload#/amount
+      - stepId: fetchInvoice
+        description: Back to REST once the event has been seen.
+        operationId: $sourceDescriptions.orders.getInvoice
+        parameters:
+          - name: orderId
+            in: path
+            value: $steps.placeOrder.outputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          invoiceUrl: $response.body#/invoiceUrl
+    outputs:
+      orderId: $steps.placeOrder.outputs.orderId
+      invoiceUrl: $steps.fetchInvoice.outputs.invoiceUrl
+      settledAmount: $steps.awaitSettlement.outputs.settledAmount

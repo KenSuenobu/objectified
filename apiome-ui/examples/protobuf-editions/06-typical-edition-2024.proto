@@ -1,0 +1,30 @@
+edition = "2024";
+
+package example.catalogue.v2;
+
+// Edition 2024 keeps the 2023 feature vocabulary and changes defaults; the adapter
+// must resolve defaults per edition rather than assuming the 2023 table.
+option features.enum_type = OPEN;
+
+message Product {
+  string sku = 1;
+  string name = 2;
+  double price = 3;
+  bool discontinued = 4 [features.field_presence = IMPLICIT];
+  repeated string tags = 5;
+}
+
+message ListProductsRequest {
+  string category = 1;
+  int32 page_size = 2 [features.field_presence = IMPLICIT];
+  string page_token = 3;
+}
+
+message ListProductsResponse {
+  repeated Product products = 1;
+  string next_page_token = 2;
+}
+
+service CatalogueService {
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+}

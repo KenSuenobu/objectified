@@ -1,0 +1,194 @@
+{
+  "v": 6,
+  "id": "clx0000000000000000000200",
+  "name": "Auth inheritance",
+  "folders": [
+    {
+      "v": 6,
+      "id": "clx0000000000000000000201",
+      "name": "Tenant A",
+      "folders": [
+        {
+          "v": 6,
+          "id": "clx0000000000000000000202",
+          "name": "Read",
+          "folders": [],
+          "requests": [
+            {
+              "v": "11",
+              "id": "clx0000000000000000000203",
+              "name": "Inherits folder bearer, adds folder header",
+              "method": "GET",
+              "endpoint": "<<baseUrl>>/tenant-a/read",
+              "params": [],
+              "headers": [],
+              "auth": {
+                "authType": "inherit",
+                "authActive": true
+              },
+              "body": {
+                "contentType": null,
+                "body": null
+              },
+              "preRequestScript": "",
+              "testScript": "",
+              "requestVariables": []
+            }
+          ],
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "headers": [
+            {
+              "key": "X-Scope",
+              "value": "read",
+              "active": true,
+              "description": ""
+            }
+          ]
+        },
+        {
+          "v": 6,
+          "id": "clx0000000000000000000204",
+          "name": "Write",
+          "folders": [],
+          "requests": [
+            {
+              "v": "11",
+              "id": "clx0000000000000000000205",
+              "name": "Overrides with its own basic auth",
+              "method": "POST",
+              "endpoint": "<<baseUrl>>/tenant-a/write",
+              "params": [],
+              "headers": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "active": true,
+                  "description": ""
+                }
+              ],
+              "auth": {
+                "authType": "basic",
+                "authActive": true,
+                "username": "<<writeUser>>",
+                "password": "<<writePassword>>"
+              },
+              "body": {
+                "contentType": "application/json",
+                "body": "{ \"value\": 1 }"
+              },
+              "preRequestScript": "",
+              "testScript": "",
+              "requestVariables": []
+            }
+          ],
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "headers": [
+            {
+              "key": "X-Scope",
+              "value": "write",
+              "active": true,
+              "description": ""
+            }
+          ]
+        }
+      ],
+      "requests": [],
+      "auth": {
+        "authType": "bearer",
+        "authActive": true,
+        "token": "<<tenantAToken>>"
+      },
+      "headers": [
+        {
+          "key": "X-Tenant",
+          "value": "acme",
+          "active": true,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "v": 6,
+      "id": "clx0000000000000000000206",
+      "name": "Tenant B",
+      "folders": [],
+      "requests": [
+        {
+          "v": "11",
+          "id": "clx0000000000000000000207",
+          "name": "Inherits the collection api-key, not the folder bearer",
+          "method": "GET",
+          "endpoint": "<<baseUrl>>/tenant-b/read",
+          "params": [],
+          "headers": [],
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [
+        {
+          "key": "X-Tenant",
+          "value": "globex",
+          "active": true,
+          "description": ""
+        }
+      ]
+    }
+  ],
+  "requests": [
+    {
+      "v": "11",
+      "id": "clx0000000000000000000208",
+      "name": "Root request: collection auth only",
+      "method": "GET",
+      "endpoint": "<<baseUrl>>/root",
+      "params": [],
+      "headers": [],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "body": {
+        "contentType": null,
+        "body": null
+      },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": []
+    }
+  ],
+  "auth": {
+    "authType": "api-key",
+    "authActive": true,
+    "addTo": "HEADERS",
+    "key": "X-Api-Key",
+    "value": "<<apiKey>>"
+  },
+  "headers": [
+    {
+      "key": "X-Collection",
+      "value": "auth-inheritance",
+      "active": true,
+      "description": ""
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+_format_version: "3.0"
+services:
+  - name: orders-service
+    url: https://orders.internal.example.com/v2
+    routes:
+      - name: orders
+        paths: ["/orders"]
+        methods: [GET, POST]
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 600
+          policy: local
+      - name: jwt

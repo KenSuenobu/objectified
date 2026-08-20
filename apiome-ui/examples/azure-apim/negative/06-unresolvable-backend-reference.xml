@@ -1,0 +1,23 @@
+<!--
+  set-backend-service names backend-id="missing-backend", and no Microsoft.ApiManagement/
+  service/backends resource in the fileset declares it. The backend cannot be resolved, so
+  the API's server is unknown; the same applies to the {{missing-named-value}} token.
+-->
+<policies>
+  <inbound>
+    <base />
+    <set-backend-service backend-id="missing-backend" />
+    <set-header name="X-Shared-Secret" exists-action="override">
+      <value>{{missing-named-value}}</value>
+    </set-header>
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

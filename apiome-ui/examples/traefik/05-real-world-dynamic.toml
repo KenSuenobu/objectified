@@ -1,0 +1,86 @@
+# Production edge configuration in the TOML form Traefik still accepts: three public
+# hosts, a maintenance switch, and a metrics endpoint restricted by source range.
+
+[http.routers]
+
+  [http.routers.storefront]
+    rule = "Host(`www.example.com`) || Host(`example.com`)"
+    entryPoints = ["websecure"]
+    service = "storefront"
+    middlewares = ["canonical-host", "compress", "security-headers"]
+    priority = 10
+    [http.routers.storefront.tls]
+      certResolver = "letsencrypt"
+      [[http.routers.storefront.tls.domains]]
+        main = "example.com"
+        sans = ["www.example.com"]
+
+  [http.routers.api]
+    rule = "Host(`api.example.com`) && PathPrefix(`/v3`)"
+    entryPoints = ["websecure"]
+    service = "api"
+    middlewares = ["api-rate-limit", "strip-v3"]
+    [http.routers.api.tls]
+      certResolver = "letsencrypt"
+
+  [http.routers.metrics]
+    rule = "Host(`api.example.com`) && Path(`/metrics`)"
+    entryPoints = ["websecure"]
+    service = "prometheus"
+    middlewares = ["internal-only"]
+    priority = 100
+    [http.routers.metrics.tls]
+
+[http.services]
+
+  [http.services.storefront.loadBalancer]
+    passHostHeader = true
+    [[http.services.storefront.loadBalancer.servers]]
+      url = "http://storefront-1.internal.example.com:3000"
+    [[http.services.storefront.loadBalancer.servers]]
+      url = "http://storefront-2.internal.example.com:3000"
+    [http.services.storefront.loadBalancer.healthCheck]
+      path = "/healthz"
+      interval = "10s"
+      timeout = "3s"
+
+  [http.services.api.loadBalancer]
+    [[http.services.api.loadBalancer.servers]]
+      url = "http://api.internal.example.com:8080"
+
+  [http.services.prometheus.loadBalancer]
+    [[http.services.prometheus.loadBalancer.servers]]
+      url = "http://prometheus.internal.example.com:9090"
+
+[http.middlewares]
+
+  [http.middlewares.canonical-host.redirectRegex]
+    regex = "^https://example\\.com/(.*)"
+    replacement = "https://www.example.com/${1}"
+    permanent = true
+
+  [http.middlewares.compress.compress]
+    minResponseBodyBytes = 1024
+
+  [http.middlewares.security-headers.headers]
+    frameDeny = true
+    contentTypeNosniff = true
+    stsSeconds = 31536000
+    stsIncludeSubdomains = true
+
+  [http.middlewares.api-rate-limit.rateLimit]
+    average = 200
+    burst = 100
+    period = "1m"
+    [http.middlewares.api-rate-limit.rateLimit.sourceCriterion.ipStrategy]
+      depth = 2
+
+  [http.middlewares.strip-v3.stripPrefix]
+    prefixes = ["/v3"]
+
+  [http.middlewares.internal-only.ipAllowList]
+    sourceRange = ["10.0.0.0/8", "203.0.113.0/24"]
+
+[tls.options.default]
+  minVersion = "VersionTLS12"
+  sniStrict = true

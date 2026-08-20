@@ -1,0 +1,79 @@
+*********************************************************************
+* Order entry mapset as a CICS estate ships one: a header map for    *
+* customer selection, a detail map with a repeating line table, and  *
+* a confirmation map — three screens of one transaction.             *
+* Reconstructed shape; no upstream text copied.                      *
+*********************************************************************
+ORDRSET  DFHMSD TYPE=&SYSPARM,MODE=INOUT,LANG=COBOL,STORAGE=AUTO,      X
+               TIOAPFX=YES,CTRL=(FREEKB,FRSET),                        X
+               MAPATTS=(COLOR,HILIGHT),DSATTS=(COLOR,HILIGHT),         X
+               EXTATT=YES
+*
+*---------------------------------------------------------------- header
+ORDRHDR  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1
+         DFHMDF POS=(1,25),LENGTH=30,ATTRB=(PROT,BRT),COLOR=BLUE,      X
+               INITIAL='ORDER ENTRY - CUSTOMER  (ORD1)'
+         DFHMDF POS=(4,5),LENGTH=16,ATTRB=(PROT,NORM),                 X
+               INITIAL='CUSTOMER ID   :'
+HCUSTID  DFHMDF POS=(4,22),LENGTH=10,ATTRB=(UNPROT,NORM,IC),           X
+               PICIN='X(10)',PICOUT='X(10)',COLOR=GREEN
+         DFHMDF POS=(6,5),LENGTH=16,ATTRB=(PROT,NORM),                 X
+               INITIAL='NAME          :'
+HCUSTNM  DFHMDF POS=(6,22),LENGTH=40,ATTRB=(PROT,NORM),PICOUT='X(40)'
+         DFHMDF POS=(8,5),LENGTH=16,ATTRB=(PROT,NORM),                 X
+               INITIAL='CREDIT LIMIT  :'
+HLIMIT   DFHMDF POS=(8,22),LENGTH=15,ATTRB=(PROT,NORM),                X
+               PICOUT='ZZZ,ZZZ,ZZ9.99'
+         DFHMDF POS=(10,5),LENGTH=16,ATTRB=(PROT,NORM),                X
+               INITIAL='DELIVERY DATE :'
+HDELDT   DFHMDF POS=(10,22),LENGTH=8,ATTRB=(UNPROT,NUM),               X
+               PICIN='9(8)',PICOUT='9(8)'
+HMSG     DFHMDF POS=(22,1),LENGTH=70,ATTRB=(PROT,BRT),COLOR=RED
+         DFHMDF POS=(24,1),LENGTH=45,ATTRB=(PROT,NORM),                X
+               INITIAL='ENTER=CONTINUE  F3=EXIT  F5=CUSTOMER LOOKUP'
+*
+*---------------------------------------------------------------- detail
+ORDRDTL  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1
+         DFHMDF POS=(1,25),LENGTH=30,ATTRB=(PROT,BRT),COLOR=BLUE,      X
+               INITIAL='ORDER ENTRY - LINES     (ORD2)'
+         DFHMDF POS=(3,2),LENGTH=4,ATTRB=(PROT,NORM),INITIAL='LINE'
+         DFHMDF POS=(3,8),LENGTH=18,ATTRB=(PROT,NORM),INITIAL='ITEM'
+         DFHMDF POS=(3,30),LENGTH=8,ATTRB=(PROT,NORM),INITIAL='QUANTITY'
+         DFHMDF POS=(3,42),LENGTH=10,ATTRB=(PROT,NORM),INITIAL='UNIT PRICE'
+         DFHMDF POS=(3,56),LENGTH=12,ATTRB=(PROT,NORM),INITIAL='LINE TOTAL'
+*
+* The repeating detail table: eight lines, each four fields.
+DLINENO  DFHMDF POS=(5,2),LENGTH=3,ATTRB=(PROT,NORM),OCCURS=8,         X
+               PICOUT='ZZ9'
+DITEM    DFHMDF POS=(5,8),LENGTH=18,ATTRB=(UNPROT,NORM),OCCURS=8,      X
+               PICIN='X(18)',PICOUT='X(18)'
+DQTY     DFHMDF POS=(5,30),LENGTH=8,ATTRB=(UNPROT,NUM),OCCURS=8,       X
+               PICIN='9(5)V99',PICOUT='ZZ,ZZ9.99'
+DPRICE   DFHMDF POS=(5,42),LENGTH=11,ATTRB=(PROT,NORM),OCCURS=8,       X
+               PICOUT='ZZZ,ZZ9.99'
+DTOTAL   DFHMDF POS=(5,56),LENGTH=13,ATTRB=(PROT,NORM),OCCURS=8,       X
+               PICOUT='Z,ZZZ,ZZ9.99'
+*
+         DFHMDF POS=(20,42),LENGTH=12,ATTRB=(PROT,BRT),                X
+               INITIAL='ORDER TOTAL:'
+DORDTOT  DFHMDF POS=(20,56),LENGTH=13,ATTRB=(PROT,BRT),                X
+               PICOUT='Z,ZZZ,ZZ9.99',COLOR=YELLOW
+DMSG     DFHMDF POS=(22,1),LENGTH=70,ATTRB=(PROT,BRT),COLOR=RED
+         DFHMDF POS=(24,1),LENGTH=50,ATTRB=(PROT,NORM),                X
+               INITIAL='ENTER=RECALC  F4=CONFIRM  F3=BACK  F12=CANCEL'
+*
+*---------------------------------------------------------------- confirm
+ORDRCFM  DFHMDI SIZE=(10,60),LINE=8,COLUMN=11,CTRL=(FREEKB,ALARM)
+         DFHMDF POS=(1,10),LENGTH=24,ATTRB=(PROT,BRT),                 X
+               INITIAL='CONFIRM ORDER SUBMISSION'
+         DFHMDF POS=(3,2),LENGTH=18,ATTRB=(PROT,NORM),                 X
+               INITIAL='ORDER TOTAL     :'
+CORDTOT  DFHMDF POS=(3,22),LENGTH=13,ATTRB=(PROT,NORM),                X
+               PICOUT='Z,ZZZ,ZZ9.99'
+         DFHMDF POS=(5,2),LENGTH=18,ATTRB=(PROT,NORM),                 X
+               INITIAL='CONFIRM (Y/N)   :'
+CCONFIRM DFHMDF POS=(5,22),LENGTH=1,ATTRB=(UNPROT,NORM,IC),PICIN='X'
+CMSG     DFHMDF POS=(8,2),LENGTH=50,ATTRB=(PROT,BRT),COLOR=RED
+*
+         DFHMSD TYPE=FINAL
+         END

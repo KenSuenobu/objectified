@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+  <start>
+    <ref name="catalogue"/>
+  </start>
+
+  <define name="catalogue">
+    <element name="catalogue">
+      <attribute name="version">
+        <data type="string"/>
+      </attribute>
+      <zeroOrMore>
+        <ref name="product"/>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="product">
+    <element name="product">
+      <attribute name="sku">
+        <data type="string">
+          <param name="pattern">[A-Z]{3}-[0-9]{4}</param>
+        </data>
+      </attribute>
+      <optional>
+        <attribute name="discontinued">
+          <data type="boolean"/>
+        </attribute>
+      </optional>
+      <element name="name">
+        <text/>
+      </element>
+      <optional>
+        <element name="description">
+          <text/>
+        </element>
+      </optional>
+      <element name="price">
+        <ref name="money"/>
+      </element>
+      <zeroOrMore>
+        <element name="tag">
+          <text/>
+        </element>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="money">
+    <group>
+      <attribute name="currency">
+        <choice>
+          <value>EUR</value>
+          <value>GBP</value>
+          <value>USD</value>
+        </choice>
+      </attribute>
+      <data type="decimal"/>
+    </group>
+  </define>
+</grammar>

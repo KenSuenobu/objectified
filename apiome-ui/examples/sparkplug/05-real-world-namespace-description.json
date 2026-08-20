@@ -1,0 +1,60 @@
+{
+  "namespace": "spBv1.0",
+  "description": "Topic namespace and metric catalogue for a packaging line, as an edge-of-network node advertises it.",
+  "groupId": "PlantAmsterdam",
+  "edgeNodeId": "Line1",
+  "hostApplicationId": "SCADA-Primary",
+  "broker": {
+    "url": "ssl://mqtt.internal.example.com:8883",
+    "keepAliveSeconds": 30,
+    "cleanSession": true,
+    "qos": 0
+  },
+  "topics": [
+    { "messageType": "NBIRTH", "topic": "spBv1.0/PlantAmsterdam/NBIRTH/Line1", "retained": false },
+    { "messageType": "NDEATH", "topic": "spBv1.0/PlantAmsterdam/NDEATH/Line1", "retained": false },
+    { "messageType": "NDATA", "topic": "spBv1.0/PlantAmsterdam/NDATA/Line1" },
+    { "messageType": "NCMD", "topic": "spBv1.0/PlantAmsterdam/NCMD/Line1", "direction": "inbound" },
+    { "messageType": "DBIRTH", "topic": "spBv1.0/PlantAmsterdam/DBIRTH/Line1/Filler01" },
+    { "messageType": "DDEATH", "topic": "spBv1.0/PlantAmsterdam/DDEATH/Line1/Filler01" },
+    { "messageType": "DDATA", "topic": "spBv1.0/PlantAmsterdam/DDATA/Line1/Filler01" },
+    { "messageType": "DCMD", "topic": "spBv1.0/PlantAmsterdam/DCMD/Line1/Filler01", "direction": "inbound" },
+    { "messageType": "DBIRTH", "topic": "spBv1.0/PlantAmsterdam/DBIRTH/Line1/Capper01" },
+    { "messageType": "DDATA", "topic": "spBv1.0/PlantAmsterdam/DDATA/Line1/Capper01" },
+    { "messageType": "STATE", "topic": "spBv1.0/STATE/SCADA-Primary", "retained": true }
+  ],
+  "devices": [
+    {
+      "deviceId": "Filler01",
+      "description": "Rotary filler",
+      "metrics": [
+        { "name": "Inputs/Temperature", "alias": 1, "datatype": "Double", "engUnit": "degC", "engLow": -40, "engHigh": 150 },
+        { "name": "Inputs/Pressure", "alias": 2, "datatype": "Float", "engUnit": "bar" },
+        { "name": "Inputs/Running", "alias": 3, "datatype": "Boolean" },
+        { "name": "Outputs/Setpoint", "alias": 4, "datatype": "Double", "engUnit": "degC", "writable": true },
+        { "name": "Device Control/Rebirth", "alias": 5, "datatype": "Boolean", "writable": true },
+        { "name": "Properties/Serial", "alias": 6, "datatype": "String" },
+        { "name": "Counters/Good", "alias": 7, "datatype": "UInt64" },
+        { "name": "Counters/Rejected", "alias": 8, "datatype": "UInt64" }
+      ]
+    },
+    {
+      "deviceId": "Capper01",
+      "description": "Capping head",
+      "metrics": [
+        { "name": "Inputs/Torque", "alias": 20, "datatype": "Double", "engUnit": "Nm" },
+        { "name": "Inputs/Running", "alias": 21, "datatype": "Boolean" },
+        { "name": "Counters/Good", "alias": 22, "datatype": "UInt64" }
+      ]
+    }
+  ],
+  "nodeMetrics": [
+    { "name": "bdSeq", "alias": 0, "datatype": "UInt64" },
+    { "name": "Node Control/Rebirth", "datatype": "Boolean", "writable": true },
+    { "name": "Node Control/Next Server", "datatype": "Boolean", "writable": true },
+    { "name": "Properties/Hardware Make", "datatype": "String" },
+    { "name": "Properties/Hardware Model", "datatype": "String" },
+    { "name": "Properties/FW", "datatype": "String" },
+    { "name": "Properties/OS", "datatype": "String" }
+  ]
+}

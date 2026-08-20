@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Message xmlns="http://www.ncpdp.org/schema/SCRIPT" version="010" release="006">
+  <Header>
+    <To Qualifier="P">1234567</To>
+    <From Qualifier="D">1234567893</From>
+    <MessageID>MSG-BAD-0003</MessageID>
+    <SentTime>2026-08-19T10:30:00Z</SentTime>
+  </Header>
+  <Body>
+    <NewRx>
+      <MedicationPrescribed>
+        <DrugDescription>Amoxicillin 500 MG oral cap

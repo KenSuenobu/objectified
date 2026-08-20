@@ -1,0 +1,58 @@
+{
+  "type": "struct",
+  "name": "com.example.orders.OrderDetail",
+  "version": 1,
+  "optional": false,
+  "fields": [
+    { "field": "order_id", "type": "string", "optional": false },
+    {
+      "field": "customer",
+      "type": "struct",
+      "name": "com.example.orders.Customer",
+      "optional": false,
+      "fields": [
+        { "field": "customer_id", "type": "string", "optional": false },
+        {
+          "field": "address",
+          "type": "struct",
+          "name": "com.example.orders.Address",
+          "optional": true,
+          "fields": [
+            { "field": "line1", "type": "string", "optional": false },
+            { "field": "city", "type": "string", "optional": false },
+            { "field": "country_code", "type": "string", "optional": false }
+          ]
+        }
+      ]
+    },
+    {
+      "field": "lines",
+      "type": "array",
+      "optional": false,
+      "items": {
+        "type": "struct",
+        "name": "com.example.orders.OrderLine",
+        "optional": false,
+        "fields": [
+          { "field": "sku", "type": "string", "optional": false },
+          { "field": "quantity", "type": "int32", "optional": false },
+          {
+            "field": "unit_price",
+            "type": "bytes",
+            "name": "org.apache.kafka.connect.data.Decimal",
+            "version": 1,
+            "optional": false,
+            "parameters": { "scale": "4", "connect.decimal.precision": "18" }
+          }
+        ]
+      }
+    },
+    {
+      "field": "attributes",
+      "type": "map",
+      "optional": true,
+      "keys": { "type": "string", "optional": false },
+      "values": { "type": "string", "optional": true }
+    }
+  ]
+}

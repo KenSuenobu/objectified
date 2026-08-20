@@ -1,0 +1,10 @@
+DDM Name ...... BROKEN-FILE
+DB ............ 001
+File .......... 090
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA GOOD-FIELD                       A    10     N
+1 AB
+  1 AC ANOTHER A 20 N
+  Q ZZ ???                              ? ????   ? ?

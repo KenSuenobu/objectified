@@ -1,0 +1,8 @@
+{
+  "type": "struct",
+  "name": "com.example.orders.Order",
+  "version": 3,
+  "optional": false,
+  "fields": [
+    { "field": "order_id", "type": "string", "optional": false },
+    { "field": "placed_at", "type": "int

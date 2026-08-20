@@ -1,0 +1,24 @@
+{
+  "v": 6,
+  "id": "clx0000000000000000000001",
+  "name": "Ping",
+  "folders": [],
+  "requests": [
+    {
+      "v": "11",
+      "id": "clx0000000000000000000002",
+      "name": "Ping",
+      "method": "GET",
+      "endpoint": "https://api.example.com/ping",
+      "params": [],
+      "headers": [],
+      "auth": { "authType": "none", "authActive": false },
+      "body": { "contentType": null, "body": null },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": []
+    }
+  ],
+  "auth": { "authType": "inherit", "authActive": true },
+  "headers": []
+}

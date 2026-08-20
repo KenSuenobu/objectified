@@ -1,0 +1,119 @@
+{
+  "info": {
+    "name": "Grammar corners",
+    "_postman_id": "0f2b6c7a-1111-4a2b-8c3d-000000000004",
+    "description": "Every v2.0 body mode and the v2.0 auth shape, which differs from v2.1's array form.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": { "token": "{{accessToken}}" }
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": ["pm.environment.set('requestId', pm.variables.replaceIn('{{$guid}}'));"]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": ["pm.test('status is 2xx', function () { pm.response.to.be.success; });"]
+      }
+    }
+  ],
+  "variable": [
+    { "id": "baseUrl", "key": "baseUrl", "value": "https://api.example.com/lab" },
+    { "id": "accessToken", "key": "accessToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Raw JSON body",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ \"label\": \"sample-a\", \"assay\": \"pcr\" }" },
+        "url": "{{baseUrl}}/samples"
+      },
+      "response": []
+    },
+    {
+      "name": "URL-encoded body",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "label", "value": "sample-b" },
+            { "key": "assay", "value": "elisa" },
+            { "key": "replicates", "value": "3", "disabled": true }
+          ]
+        },
+        "url": "{{baseUrl}}/samples"
+      },
+      "response": []
+    },
+    {
+      "name": "Form-data with a file",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "label", "value": "sample-c", "type": "text" },
+            { "key": "attachment", "type": "file", "src": "readings.csv" }
+          ]
+        },
+        "url": "{{baseUrl}}/samples/upload"
+      },
+      "response": []
+    },
+    {
+      "name": "Basic auth override",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": { "username": "{{labUser}}", "password": "{{labPassword}}" }
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/samples/legacy"
+      },
+      "response": []
+    },
+    {
+      "name": "GraphQL body",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "graphql",
+          "graphql": {
+            "query": "query Sample($id: ID!) { sample(id: $id) { id status } }",
+            "variables": "{ \"id\": \"SMP-1\" }"
+          }
+        },
+        "url": "{{baseUrl}}/graphql"
+      },
+      "response": []
+    },
+    {
+      "name": "Disabled request header and path variables",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "X-Request-Id", "value": "{{requestId}}" },
+          { "key": "X-Debug", "value": "1", "disabled": true }
+        ],
+        "body": { "mode": "raw", "raw": "{ \"status\": \"complete\" }" },
+        "url": "{{baseUrl}}/samples/:sampleId/status"
+      },
+      "response": []
+    }
+  ]
+}

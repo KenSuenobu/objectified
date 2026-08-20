@@ -1,0 +1,7 @@
+@namespace("com.example.broken")
+protocol Broken {
+  record Thing {
+    string id
+    long seenAt;
+  }
+}

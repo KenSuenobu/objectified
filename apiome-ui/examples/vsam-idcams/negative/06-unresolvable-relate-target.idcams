@@ -1,0 +1,14 @@
+/* The alternate index RELATEs to a cluster that no DEFINE in this file or
+   the fileset creates, and BLDINDEX names the same missing dataset, so the
+   alternate key's position cannot be resolved against any record layout. */
+  DEFINE AIX                                          -
+         (NAME(EXAMPLE.ORPHAN.AIX.CUST)               -
+          RELATE(EXAMPLE.MISSING.KSDS)                -
+          KEYS(10 20)                                 -
+          RECORDSIZE(60 2048)                         -
+          NONUNIQUEKEY                                -
+          UPGRADE                                     -
+          CYLINDERS(20 5))
+
+  BLDINDEX INDATASET(EXAMPLE.MISSING.KSDS)            -
+           OUTDATASET(EXAMPLE.ORPHAN.AIX.CUST)

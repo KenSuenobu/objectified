@@ -1,0 +1,98 @@
+{
+  "mcpVersion": "2025-06-18",
+  "server": {
+    "name": "acme-tickets",
+    "title": "Acme Support Tickets",
+    "version": "1.4.0",
+    "websiteUrl": "https://example.com/mcp/tickets"
+  },
+  "transport": {
+    "type": "streamable-http",
+    "url": "https://mcp.example.com/tickets"
+  },
+  "capabilities": {
+    "tools": { "listChanged": true },
+    "resources": { "subscribe": true, "listChanged": true },
+    "prompts": {},
+    "logging": {}
+  },
+  "tools": [
+    {
+      "name": "search_tickets",
+      "title": "Search tickets",
+      "description": "Full-text search across open support tickets.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Free-text query." },
+          "status": { "type": "string", "enum": ["open", "pending", "closed"] },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true, "idempotentHint": true }
+    },
+    {
+      "name": "create_ticket",
+      "title": "Create ticket",
+      "description": "Open a new support ticket for a customer.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "subject": { "type": "string", "maxLength": 200 },
+          "body": { "type": "string" },
+          "priority": { "type": "string", "enum": ["low", "normal", "high", "urgent"], "default": "normal" },
+          "customerEmail": { "type": "string", "format": "email" }
+        },
+        "required": ["subject", "body", "customerEmail"],
+        "additionalProperties": false
+      },
+      "annotations": { "destructiveHint": false, "openWorldHint": true }
+    },
+    {
+      "name": "close_ticket",
+      "title": "Close ticket",
+      "description": "Close a ticket with a resolution note.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "string", "pattern": "^TCK-[0-9]{6}$" },
+          "resolution": { "type": "string" }
+        },
+        "required": ["ticketId", "resolution"],
+        "additionalProperties": false
+      },
+      "annotations": { "destructiveHint": true, "idempotentHint": true }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "tickets://queues/frontline",
+      "name": "frontline-queue",
+      "title": "Frontline queue",
+      "description": "Snapshot of the frontline ticket queue.",
+      "mimeType": "application/json"
+    }
+  ],
+  "resourceTemplates": [
+    {
+      "uriTemplate": "tickets://ticket/{ticketId}",
+      "name": "ticket",
+      "title": "Single ticket",
+      "description": "One ticket rendered as JSON.",
+      "mimeType": "application/json"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "summarize_ticket",
+      "title": "Summarize a ticket",
+      "description": "Summarize a ticket thread for a handover note.",
+      "arguments": [
+        { "name": "ticketId", "description": "Ticket to summarize.", "required": true },
+        { "name": "audience", "description": "Who the summary is for.", "required": false }
+      ]
+    }
+  ]
+}

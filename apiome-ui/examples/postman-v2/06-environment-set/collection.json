@@ -1,0 +1,29 @@
+{
+  "info": {
+    "name": "Inventory (set root)",
+    "_postman_id": "0f2b6c7a-1111-4a2b-8c3d-000000000006",
+    "description": "Root of the set: every URL resolves through the sibling environment file.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Check stock",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "X-Api-Key", "value": "{{apiKey}}" }],
+        "url": "{{baseUrl}}/stock/:sku?warehouse={{warehouse}}"
+      },
+      "response": []
+    },
+    {
+      "name": "Reserve stock",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ \"sku\": \"WID-0001\", \"quantity\": 1 }" },
+        "url": "{{baseUrl}}/reservations"
+      },
+      "response": []
+    }
+  ]
+}

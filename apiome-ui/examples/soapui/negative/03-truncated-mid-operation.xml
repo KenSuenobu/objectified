@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config" name="Legacy Billing">
+  <con:settings/>
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:WsdlInterface"
+                 name="BillingServiceSoapBinding"
+                 type="wsdl"
+                 definition="https://billing.internal.example.com/BillingService?wsdl">
+    <con:operation name="GetInvoice" bindingOperationName="GetIn

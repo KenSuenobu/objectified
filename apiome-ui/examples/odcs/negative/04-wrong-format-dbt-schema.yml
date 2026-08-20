@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: orders
+    description: Order facts.
+    columns:
+      - name: order_id
+        description: Business identifier.
+        tests:
+          - unique
+          - not_null
+      - name: status
+        tests:
+          - accepted_values:
+              values: [new, paid, shipped, cancelled]

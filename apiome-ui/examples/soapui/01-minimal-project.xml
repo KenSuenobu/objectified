@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config"
+                    id="7a1c0000-0000-4000-8000-000000000001"
+                    activeEnvironment="Default"
+                    name="Ping"
+                    resourceRoot="">
+  <con:settings/>
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:RestService"
+                 id="7a1c0000-0000-4000-8000-000000000002"
+                 wadlVersion="http://wadl.dev.java.net/2009/02"
+                 name="Ping"
+                 type="rest"
+                 basePath="">
+    <con:settings/>
+    <con:definitionCache type="TEXT" rootPart=""/>
+    <con:endpoints>
+      <con:endpoint>https://api.example.com</con:endpoint>
+    </con:endpoints>
+    <con:resource name="ping" path="/ping" id="7a1c0000-0000-4000-8000-000000000003">
+      <con:settings/>
+      <con:parameters/>
+      <con:method name="ping" id="7a1c0000-0000-4000-8000-000000000004" method="GET">
+        <con:settings/>
+        <con:parameters/>
+        <con:request name="Request 1" id="7a1c0000-0000-4000-8000-000000000005">
+          <con:settings/>
+          <con:endpoint>https://api.example.com</con:endpoint>
+          <con:request/>
+        </con:request>
+      </con:method>
+    </con:resource>
+  </con:interface>
+  <con:properties/>
+</con:soapui-project>

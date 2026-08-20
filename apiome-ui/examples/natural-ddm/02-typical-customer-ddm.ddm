@@ -1,0 +1,20 @@
+DDM Name ...... CUSTOMER-FILE
+DB ............ 001
+File .......... 010
+Default Sequence AA
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA CUSTOMER-NUMBER                  A    10     U Unique descriptor, primary key
+  1 AB CUSTOMER-NAME                    A    40     D Name, indexed
+  1 AC CUSTOMER-STATUS                  A     1     D A=active C=closed S=suspended
+  1 AD DATE-OPENED                      N     8.0   N YYYYMMDD
+  1 AE BALANCE                          P    11.2   N Packed, two decimals
+  1 AF CURRENCY                         A     3     N ISO 4217
+  1 AG CREDIT-LIMIT                     P    11.2   N
+M 1 AH PHONE-NUMBER                     A    20     N Multiple-value field
+  1 AI ADDRESS-LINE-1                   A    35     N
+  1 AJ ADDRESS-CITY                     A    25     D
+  1 AK ADDRESS-POSTCODE                 A    10     D
+  1 AL ADDRESS-COUNTRY                  A     3     N
+S 1 S1 SUPER-CITY-NAME                  A    65     D AJ(1-25),AB(1-40)

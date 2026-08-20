@@ -1,0 +1,188 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: 53581432-6c55-4ba2-a65f-000000000005
+name: retail_transactions
+version: 1.1.0
+status: active
+domain: seller
+dataProduct: transactions
+tenant: ExampleRetail
+
+description:
+  purpose: >
+    Provide point-of-sale and online transaction facts for revenue reporting,
+    fraud analytics and inventory reconciliation.
+  usage: >
+    Query through the analytics warehouse. Do not join to raw payment-network
+    records; use the settlement contract for that.
+  limitations: >
+    Refunds appear as negative rows on the original transaction date, not on the
+    refund date. Card details are tokenized upstream and are not available here.
+
+schema:
+  - name: transactions
+    physicalName: tbl_transactions_v1
+    logicalType: object
+    physicalType: table
+    description: One row per completed transaction line.
+    dataGranularityDescription: Aggregation on transaction_id and line_number.
+    properties:
+      - name: transaction_id
+        logicalType: string
+        physicalType: varchar(24)
+        required: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: Identifier assigned by the till or the storefront.
+        examples:
+          - TXN-2026-08-0000041233
+
+      - name: line_number
+        logicalType: integer
+        physicalType: smallint
+        required: true
+        primaryKey: true
+        primaryKeyPosition: 2
+
+      - name: txn_ref_dt
+        logicalType: date
+        physicalType: date
+        required: true
+        partitioned: true
+        partitionKeyPosition: 1
+        description: Business date of the transaction, store local time.
+
+      - name: store_code
+        logicalType: string
+        physicalType: char(5)
+        required: true
+        description: Five-character store identifier; ONLINE for storefront sales.
+
+      - name: sku
+        logicalType: string
+        physicalType: varchar(18)
+        required: true
+
+      - name: quantity
+        logicalType: number
+        physicalType: numeric(9,3)
+        required: true
+
+      - name: net_amount
+        logicalType: number
+        physicalType: numeric(13,2)
+        required: true
+        description: Line amount excluding tax, in the transaction currency.
+
+      - name: tax_amount
+        logicalType: number
+        physicalType: numeric(13,2)
+        required: true
+
+      - name: currency
+        logicalType: string
+        physicalType: char(3)
+        required: true
+
+      - name: loyalty_member_id
+        logicalType: string
+        physicalType: varchar(24)
+        classification: confidential
+        criticalDataElement: true
+        description: Present only when the customer identified themselves.
+
+      - name: channel
+        logicalType: string
+        physicalType: varchar(12)
+        required: true
+        logicalTypeOptions:
+          enum: [in-store, online, click-collect, telephone]
+
+    quality:
+      - rule: rowCount
+        mustBeGreaterThan: 0
+        dimension: volume
+      - rule: freshness
+        property: txn_ref_dt
+        mustBeLessThan: 1
+        unit: day
+        dimension: timeliness
+        businessImpact: operational
+      - type: sql
+        description: Tax must never exceed the net amount on a line.
+        query: SELECT COUNT(*) FROM tbl_transactions_v1 WHERE tax_amount > net_amount
+        mustBe: 0
+
+servers:
+  - server: warehouse
+    type: snowflake
+    account: exampleretail
+    database: RETAIL
+    schema: SALES
+    warehouse: REPORTING_WH
+  - server: lake
+    type: s3
+    location: s3://exampleretail-lake/transactions/
+    format: parquet
+
+team:
+  - username: r.owner
+    role: Data Product Owner
+    dateIn: 2025-06-01
+  - username: k.steward
+    role: Data Steward
+    dateIn: 2025-06-01
+  - username: p.privacy
+    role: Privacy Officer
+    dateIn: 2025-09-15
+
+roles:
+  - role: retail_reader
+    access: read
+    firstLevelApprovers: Retail Analytics Lead
+  - role: retail_pii_reader
+    access: read
+    firstLevelApprovers: Retail Analytics Lead
+    secondLevelApprovers: Privacy Officer
+
+support:
+  - channel: '#retail-data'
+    tool: slack
+    url: https://example.slack.com/archives/C0000RETAIL
+    scope: interactive
+  - channel: retail-data-issues
+    tool: ticket
+    url: https://tickets.example.com/projects/RETAILDATA
+    scope: issues
+
+price:
+  priceAmount: 0
+  priceCurrency: EUR
+  priceUnit: megabyte
+
+slaDefaultElement: transactions.txn_ref_dt
+slaProperties:
+  - property: latency
+    value: 6
+    unit: h
+    element: transactions.txn_ref_dt
+  - property: retention
+    value: 7
+    unit: y
+    element: transactions.txn_ref_dt
+  - property: frequency
+    value: 1
+    unit: h
+  - property: generalAvailability
+    value: 2025-07-01T00:00:00Z
+
+tags:
+  - retail
+  - revenue
+  - pii-present
+
+customProperties:
+  - property: dataGovernanceTier
+    value: gold
+  - property: sourceSystem
+    value: pos-central

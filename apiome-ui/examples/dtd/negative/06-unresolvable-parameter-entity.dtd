@@ -1,0 +1,13 @@
+<!--
+  %missingModule; is declared SYSTEM against a file that is not in the fileset, so the
+  content models below can never be completed. The import must fail with a named
+  unresolved reference, not silently drop the attributes.
+-->
+<!ENTITY % missingModule SYSTEM "does-not-exist.dtd">
+%missingModule;
+
+<!ELEMENT report (title, section+)>
+<!ATTLIST report
+          %commonAtts;>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT section (title)>

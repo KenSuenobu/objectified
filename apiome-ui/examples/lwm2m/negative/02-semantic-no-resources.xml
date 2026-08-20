@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!--
+    A complete object header with an empty Resources element: the object declares an id
+    and a URN but exposes nothing, so there are no properties or operations to import.
+  -->
+  <Object ObjectType="MODefinition">
+    <Name>Hollow</Name>
+    <Description1>Declared but exposing nothing.</Description1>
+    <ObjectID>32798</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:x:32798</ObjectURN>
+    <LWM2MVersion>1.1</LWM2MVersion>
+    <ObjectVersion>1.0</ObjectVersion>
+    <MultipleInstances>Single</MultipleInstances>
+    <Mandatory>Optional</Mandatory>
+    <Resources/>
+    <Description2/>
+  </Object>
+</LWM2M>

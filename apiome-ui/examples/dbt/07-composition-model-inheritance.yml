@@ -1,0 +1,82 @@
+version: 2
+
+# Within-document composition: reusable anchors for shared column definitions and
+# tests, a model whose columns come from two anchor groups, and versioned models that
+# differ only by the columns they include.
+
+x-shared-columns:
+  audit: &audit_columns
+    - name: created_at
+      description: Row creation timestamp, UTC.
+      tests: [not_null]
+    - name: created_by
+      description: Pipeline that wrote the row.
+    - name: updated_at
+      description: Last modification timestamp, UTC.
+
+  identity: &identity_columns
+    - name: id
+      description: Surrogate key.
+      tests: [unique, not_null]
+    - name: natural_key
+      description: Business key from the source system.
+      tests: [not_null]
+
+x-shared-tests:
+  freshness: &freshness_test
+    dbt_utils.recency:
+      datepart: day
+      field: updated_at
+      interval: 2
+
+models:
+  - name: dim_customer
+    description: Customer dimension, built from the shared column groups.
+    columns:
+      - *identity_columns
+      - *audit_columns
+      - name: display_name
+        tests: [not_null]
+      - name: country_code
+        tests:
+          - accepted_values:
+              values: [NL, BE, DE, FR, GB, US]
+    tests:
+      - *freshness_test
+
+  - name: dim_product
+    description: Product dimension, composed the same way.
+    columns:
+      - *identity_columns
+      - *audit_columns
+      - name: sku
+        tests: [unique, not_null]
+      - name: category
+    tests:
+      - *freshness_test
+
+  - name: fct_order_line
+    description: Fact table that references both dimensions.
+    columns:
+      - *identity_columns
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('dim_customer')
+              field: id
+      - name: product_id
+        tests:
+          - relationships:
+              to: ref('dim_product')
+              field: id
+      - name: quantity
+      - name: line_amount
+    latest_version: 2
+    versions:
+      - v: 1
+        columns:
+          - include: all
+            exclude: [line_amount]
+      - v: 2
+        columns:
+          - include: all

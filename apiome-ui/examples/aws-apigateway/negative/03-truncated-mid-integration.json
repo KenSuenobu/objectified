@@ -1,0 +1,11 @@
+{
+  "openapi": "3.0.1",
+  "info": { "title": "orders-api", "version": "2026-08-19T10:30:00Z" },
+  "paths": {
+    "/orders": {
+      "get": {
+        "responses": { "200": { "description": "200 response" } },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/func

@@ -1,0 +1,53 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:   <https://example.com/logistics/shapes#> .
+@prefix core: <https://example.com/core/shapes#> .
+
+# Root of the set: a shapes graph that pulls in a shared module with owl:imports — the
+# mechanism SHACL uses for composition across files. ex:ShipmentShape constrains a
+# property with core:AddressShape, which is only defined in the imported file.
+
+<https://example.com/logistics/shapes>
+    a owl:Ontology ;
+    owl:imports <https://example.com/core/shapes> .
+
+ex:ShipmentShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Shipment ;
+    sh:property [
+        sh:path ex:shipmentId ;
+        sh:datatype xsd:string ;
+        sh:pattern "^SHP-[0-9]{6}$" ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:destination ;
+        sh:node core:AddressShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:price ;
+        sh:node core:MoneyShape ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:parcel ;
+        sh:node ex:ParcelShape ;
+        sh:minCount 1 ;
+    ] .
+
+ex:ParcelShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path ex:parcelId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:weightKg ;
+        sh:datatype xsd:decimal ;
+        sh:minExclusive 0 ;
+    ] .

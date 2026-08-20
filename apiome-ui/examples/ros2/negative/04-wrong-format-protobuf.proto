@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package example.robot.v1;
+
+message PoseStamped {
+  Header header = 1;
+  Pose pose = 2;
+}
+
+message Header {
+  string frame_id = 1;
+  int64 stamp_nanos = 2;
+}
+
+message Pose {
+  double x = 1;
+  double y = 2;
+  double theta = 3;
+}

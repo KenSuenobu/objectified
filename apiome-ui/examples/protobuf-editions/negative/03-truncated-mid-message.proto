@@ -1,0 +1,11 @@
+edition = "2023";
+
+package example.orders.v1;
+
+option features.field_presence = EXPLICIT;
+
+message Order {
+  string order_id = 1;
+  string customer_id = 2;
+  repeated OrderLine lines = 3;
+  int64 placed_at = 4 [features.field_pres

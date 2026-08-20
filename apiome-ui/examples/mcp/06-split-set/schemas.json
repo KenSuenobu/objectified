@@ -1,0 +1,42 @@
+{
+  "GetInvoiceInput": {
+    "type": "object",
+    "properties": {
+      "invoiceId": { "type": "string", "pattern": "^INV-[0-9]{8}$" }
+    },
+    "required": ["invoiceId"],
+    "additionalProperties": false
+  },
+  "Invoice": {
+    "type": "object",
+    "properties": {
+      "invoiceId": { "type": "string", "pattern": "^INV-[0-9]{8}$" },
+      "issuedOn": { "type": "string", "format": "date" },
+      "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+      "total": { "type": "number", "minimum": 0 },
+      "lines": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "description": { "type": "string" },
+            "quantity": { "type": "integer", "minimum": 1 },
+            "unitPrice": { "type": "number", "minimum": 0 }
+          },
+          "required": ["description", "quantity", "unitPrice"]
+        }
+      }
+    },
+    "required": ["invoiceId", "issuedOn", "currency", "total"]
+  },
+  "CreditNoteInput": {
+    "type": "object",
+    "properties": {
+      "invoiceId": { "type": "string", "pattern": "^INV-[0-9]{8}$" },
+      "amount": { "type": "number", "exclusiveMinimum": 0 },
+      "reason": { "type": "string", "enum": ["goodwill", "billing-error", "return"] }
+    },
+    "required": ["invoiceId", "amount", "reason"],
+    "additionalProperties": false
+  }
+}

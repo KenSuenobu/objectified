@@ -1,0 +1,230 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "payments-public-api",
+    "description": "Exported production REST API: eight operations, a Lambda authorizer, request validation, CORS, usage-plan API keys and a WAF-fronted regional endpoint.",
+    "version": "2026-08-15T08:12:04Z"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/{basePath}",
+      "variables": { "basePath": { "default": "v3" } }
+    }
+  ],
+  "paths": {
+    "/authorizations": {
+      "post": {
+        "summary": "Authorize a payment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AuthorizationRequest" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Approved or declined",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AuthorizationResponse" } }
+            }
+          },
+          "400": { "description": "Invalid request" },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Rate limited" }
+        },
+        "security": [{ "lambda-authorizer": [] }],
+        "x-amazon-apigateway-request-validator": "full",
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:payments-authorize:live/invocations",
+          "timeoutInMillis": 10000,
+          "passthroughBehavior": "never",
+          "contentHandling": "CONVERT_TO_TEXT"
+        }
+      },
+      "options": { "$ref": "#/components/pathItems/cors" }
+    },
+    "/authorizations/{authorizationId}": {
+      "get": {
+        "parameters": [
+          { "name": "authorizationId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Found" }, "404": { "description": "Unknown" } },
+        "security": [{ "lambda-authorizer": [] }],
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:payments-read:live/invocations",
+          "passthroughBehavior": "never"
+        }
+      }
+    },
+    "/authorizations/{authorizationId}/captures": {
+      "post": {
+        "parameters": [
+          { "name": "authorizationId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CaptureRequest" } }
+          }
+        },
+        "responses": { "201": { "description": "Captured" }, "409": { "description": "Already captured" } },
+        "security": [{ "lambda-authorizer": [] }],
+        "x-amazon-apigateway-request-validator": "full",
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:payments-capture:live/invocations",
+          "passthroughBehavior": "never"
+        }
+      }
+    },
+    "/webhooks": {
+      "post": {
+        "summary": "Receive a network webhook",
+        "responses": { "204": { "description": "Accepted" } },
+        "x-amazon-apigateway-integration": {
+          "type": "aws",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:sqs:path/000000000000/payment-webhooks",
+          "credentials": "arn:aws:iam::000000000000:role/apigw-webhooks",
+          "requestParameters": {
+            "integration.request.header.Content-Type": "'application/x-www-form-urlencoded'"
+          },
+          "requestTemplates": {
+            "application/json": "Action=SendMessage&MessageBody=$util.urlEncode($input.body)"
+          },
+          "responses": { "default": { "statusCode": "204" } },
+          "passthroughBehavior": "never"
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "responses": { "200": { "description": "OK" } },
+        "x-amazon-apigateway-integration": {
+          "type": "mock",
+          "requestTemplates": { "application/json": "{\"statusCode\": 200}" },
+          "responses": { "default": { "statusCode": "200", "responseTemplates": { "application/json": "{\"status\":\"ok\"}" } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "pathItems": {
+      "cors": {
+        "responses": {
+          "200": {
+            "description": "CORS preflight",
+            "headers": {
+              "Access-Control-Allow-Origin": { "schema": { "type": "string" } },
+              "Access-Control-Allow-Methods": { "schema": { "type": "string" } },
+              "Access-Control-Allow-Headers": { "schema": { "type": "string" } },
+              "Access-Control-Max-Age": { "schema": { "type": "integer" } }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "mock",
+          "requestTemplates": { "application/json": "{\"statusCode\": 200}" },
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'https://checkout.example.com'",
+                "method.response.header.Access-Control-Allow-Methods": "'POST,GET,OPTIONS'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,Idempotency-Key'",
+                "method.response.header.Access-Control-Max-Age": "'600'"
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "AuthorizationRequest": {
+        "type": "object",
+        "required": ["merchantId", "amount", "card"],
+        "properties": {
+          "merchantId": { "type": "string", "pattern": "^MER-[0-9]{6}$" },
+          "amount": {
+            "type": "object",
+            "required": ["value", "currency"],
+            "properties": {
+              "value": { "type": "integer", "minimum": 1 },
+              "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+            }
+          },
+          "card": {
+            "type": "object",
+            "required": ["networkToken", "expiryMonth", "expiryYear"],
+            "properties": {
+              "networkToken": { "type": "string" },
+              "expiryMonth": { "type": "integer", "minimum": 1, "maximum": 12 },
+              "expiryYear": { "type": "integer", "minimum": 2026 }
+            }
+          },
+          "captureMode": { "type": "string", "enum": ["AUTOMATIC", "MANUAL"] }
+        }
+      },
+      "AuthorizationResponse": {
+        "type": "object",
+        "properties": {
+          "authorizationId": { "type": "string" },
+          "result": { "type": "string", "enum": ["APPROVED", "DECLINED", "REFERRAL"] },
+          "networkCode": { "type": "string" }
+        }
+      },
+      "CaptureRequest": {
+        "type": "object",
+        "required": ["amount"],
+        "properties": {
+          "amount": {
+            "type": "object",
+            "properties": {
+              "value": { "type": "integer" },
+              "currency": { "type": "string" }
+            }
+          },
+          "finalCapture": { "type": "boolean" }
+        }
+      }
+    },
+    "securitySchemes": {
+      "lambda-authorizer": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "x-amazon-apigateway-authtype": "custom",
+        "x-amazon-apigateway-authorizer": {
+          "type": "request",
+          "identitySource": "method.request.header.Authorization, context.identity.sourceIp",
+          "authorizerUri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:payments-authorizer:live/invocations",
+          "authorizerResultTtlInSeconds": 60,
+          "enableSimpleResponses": false
+        }
+      }
+    }
+  },
+  "x-amazon-apigateway-api-key-source": "HEADER",
+  "x-amazon-apigateway-minimum-compression-size": 4096,
+  "x-amazon-apigateway-request-validators": {
+    "full": { "validateRequestBody": true, "validateRequestParameters": true }
+  },
+  "x-amazon-apigateway-gateway-responses": {
+    "DEFAULT_4XX": {
+      "responseParameters": {
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'https://checkout.example.com'"
+      }
+    },
+    "ACCESS_DENIED": {
+      "statusCode": 403,
+      "responseTemplates": { "application/json": "{\"message\":\"Forbidden\"}" }
+    }
+  },
+  "x-amazon-apigateway-endpoint-configuration": { "types": ["REGIONAL"] }
+}

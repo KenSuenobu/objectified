@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Within-document composition: named patterns combined by reference, a pattern extended
+  with combine="choice", and an attribute set reused by three elements.
+-->
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+  <start>
+    <ref name="document"/>
+  </start>
+
+  <define name="commonAttributes">
+    <attribute name="id">
+      <data type="ID"/>
+    </attribute>
+    <optional>
+      <attribute name="lang">
+        <data type="language"/>
+      </attribute>
+    </optional>
+  </define>
+
+  <define name="inline">
+    <mixed>
+      <zeroOrMore>
+        <ref name="inlineElement"/>
+      </zeroOrMore>
+    </mixed>
+  </define>
+
+  <!-- combine="choice": the pattern is assembled from three separate declarations. -->
+  <define name="inlineElement" combine="choice">
+    <element name="emphasis">
+      <ref name="inline"/>
+    </element>
+  </define>
+
+  <define name="inlineElement" combine="choice">
+    <element name="code">
+      <text/>
+    </element>
+  </define>
+
+  <define name="inlineElement" combine="choice">
+    <element name="link">
+      <ref name="commonAttributes"/>
+      <attribute name="href">
+        <data type="anyURI"/>
+      </attribute>
+      <ref name="inline"/>
+    </element>
+  </define>
+
+  <define name="block">
+    <choice>
+      <element name="para">
+        <ref name="commonAttributes"/>
+        <ref name="inline"/>
+      </element>
+      <element name="quote">
+        <ref name="commonAttributes"/>
+        <oneOrMore>
+          <ref name="block"/>
+        </oneOrMore>
+      </element>
+    </choice>
+  </define>
+
+  <define name="document">
+    <element name="document">
+      <ref name="commonAttributes"/>
+      <element name="title">
+        <ref name="inline"/>
+      </element>
+      <oneOrMore>
+        <ref name="block"/>
+      </oneOrMore>
+    </element>
+  </define>
+</grammar>

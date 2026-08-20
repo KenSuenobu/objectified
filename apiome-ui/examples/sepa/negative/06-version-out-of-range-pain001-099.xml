@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.99">
+  <!--
+    A namespace whose message-version segment (.99) is not a published ISO 20022 variant.
+    The adapter must reject with a version message naming the variants it reads, not fall
+    back to a best-effort parse of an unknown schema.
+  -->
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSG-FUTURE-0001</MsgId>
+      <CreDtTm>2026-08-19T10:30:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <InitgPty><Nm>Example Company BV</Nm></InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>FUTURE-BATCH</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <ReqdExctnDt><Dt>2026-08-20</Dt></ReqdExctnDt>
+      <Dbtr><Nm>Example Company BV</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>NL91ABNA0417164300</IBAN></Id></DbtrAcct>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>E2E-FUTURE</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">10.00</InstdAmt></Amt>
+        <Cdtr><Nm>Sample Alex</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>NL02ABNA0123456789</IBAN></Id></CdtrAcct>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

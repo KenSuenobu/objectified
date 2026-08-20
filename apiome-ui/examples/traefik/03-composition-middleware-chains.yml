@@ -1,0 +1,121 @@
+http:
+  routers:
+    admin:
+      rule: Host(`admin.example.com`) && PathPrefix(`/`)
+      entryPoints: [websecure]
+      service: admin-service
+      middlewares:
+        - secure-chain
+      tls:
+        options: modern
+
+    partner:
+      rule: Host(`partner.example.com`) && PathPrefix(`/api`) && Header(`X-Partner-Id`, `.+`)
+      entryPoints: [websecure]
+      service: partner-service
+      middlewares:
+        - partner-chain
+
+  services:
+    admin-service:
+      loadBalancer:
+        servers:
+          - url: http://admin.internal.example.com:8080
+
+    partner-service:
+      weighted:
+        services:
+          - name: partner-v1
+            weight: 80
+          - name: partner-v2
+            weight: 20
+        sticky:
+          cookie:
+            name: partner-version
+
+    partner-v1:
+      loadBalancer:
+        servers:
+          - url: http://partner-v1.internal.example.com:8080
+
+    partner-v2:
+      loadBalancer:
+        servers:
+          - url: http://partner-v2.internal.example.com:8080
+
+    mirror-target:
+      mirroring:
+        service: partner-v1
+        mirrors:
+          - name: partner-v2
+            percent: 10
+
+  middlewares:
+    # A chain composed of other middlewares — the composition case.
+    secure-chain:
+      chain:
+        middlewares:
+          - ip-allowlist
+          - basic-auth
+          - security-headers
+          - in-flight
+
+    partner-chain:
+      chain:
+        middlewares:
+          - ip-allowlist
+          - strip-api-prefix
+          - circuit-breaker
+
+    ip-allowlist:
+      ipAllowList:
+        sourceRange:
+          - 203.0.113.0/24
+          - 198.51.100.14/32
+
+    basic-auth:
+      basicAuth:
+        usersFile: /run/secrets/admin-users
+        realm: Administration
+        removeHeader: true
+
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+        customResponseHeaders:
+          Server: ""
+
+    in-flight:
+      inFlightReq:
+        amount: 25
+        sourceCriterion:
+          ipStrategy:
+            depth: 1
+
+    strip-api-prefix:
+      stripPrefix:
+        prefixes: ["/api"]
+
+    circuit-breaker:
+      circuitBreaker:
+        expression: NetworkErrorRatio() > 0.30 || ResponseCodeRatio(500, 600, 0, 600) > 0.25
+        checkPeriod: 10s
+        fallbackDuration: 30s
+        recoveryDuration: 60s
+
+  serversTransports:
+    insecure-backend:
+      insecureSkipVerify: true
+      maxIdleConnsPerHost: 20
+
+tls:
+  options:
+    modern:
+      minVersion: VersionTLS13
+      sniStrict: true

@@ -1,0 +1,10 @@
+{
+  "id": "1a2b3c4d-0000-4000-8000-000000000006",
+  "name": "Inventory · staging",
+  "values": [
+    { "key": "baseUrl", "value": "https://staging.example.com/inventory", "enabled": true },
+    { "key": "warehouse", "value": "AMS", "enabled": true },
+    { "key": "apiKey", "value": "", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment"
+}

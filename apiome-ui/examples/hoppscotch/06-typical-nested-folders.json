@@ -1,0 +1,120 @@
+{
+  "v": 6,
+  "id": "clx0000000000000000000090",
+  "name": "Storefront",
+  "folders": [
+    {
+      "v": 6,
+      "id": "clx0000000000000000000091",
+      "name": "Catalogue",
+      "folders": [
+        {
+          "v": 6,
+          "id": "clx0000000000000000000092",
+          "name": "Products",
+          "folders": [],
+          "requests": [
+            {
+              "v": "11",
+              "id": "clx0000000000000000000093",
+              "name": "List products",
+              "method": "GET",
+              "endpoint": "<<baseUrl>>/products",
+              "params": [{ "key": "category", "value": "tools", "active": true, "description": "" }],
+              "headers": [],
+              "auth": { "authType": "inherit", "authActive": true },
+              "body": { "contentType": null, "body": null },
+              "preRequestScript": "",
+              "testScript": "",
+              "requestVariables": []
+            },
+            {
+              "v": "11",
+              "id": "clx0000000000000000000094",
+              "name": "Get product",
+              "method": "GET",
+              "endpoint": "<<baseUrl>>/products/<<sku>>",
+              "params": [],
+              "headers": [],
+              "auth": { "authType": "inherit", "authActive": true },
+              "body": { "contentType": null, "body": null },
+              "preRequestScript": "",
+              "testScript": "",
+              "requestVariables": [{ "key": "sku", "value": "WID-0001", "active": true }]
+            }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "headers": []
+        },
+        {
+          "v": 6,
+          "id": "clx0000000000000000000095",
+          "name": "Categories",
+          "folders": [],
+          "requests": [
+            {
+              "v": "11",
+              "id": "clx0000000000000000000096",
+              "name": "List categories",
+              "method": "GET",
+              "endpoint": "<<baseUrl>>/categories",
+              "params": [],
+              "headers": [],
+              "auth": { "authType": "inherit", "authActive": true },
+              "body": { "contentType": null, "body": null },
+              "preRequestScript": "",
+              "testScript": "",
+              "requestVariables": []
+            }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "headers": []
+        }
+      ],
+      "requests": [],
+      "auth": { "authType": "inherit", "authActive": true },
+      "headers": []
+    },
+    {
+      "v": 6,
+      "id": "clx0000000000000000000097",
+      "name": "Cart",
+      "folders": [],
+      "requests": [
+        {
+          "v": "11",
+          "id": "clx0000000000000000000098",
+          "name": "Create cart",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/carts",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": { "contentType": null, "body": null },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        },
+        {
+          "v": "11",
+          "id": "clx0000000000000000000099",
+          "name": "Add item",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/carts/<<cartId>>/items",
+          "params": [],
+          "headers": [{ "key": "Content-Type", "value": "application/json", "active": true, "description": "" }],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": { "contentType": "application/json", "body": "{ \"sku\": \"WID-0001\", \"quantity\": 1 }" },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        }
+      ],
+      "auth": { "authType": "inherit", "authActive": true },
+      "headers": []
+    }
+  ],
+  "requests": [],
+  "auth": { "authType": "none", "authActive": false },
+  "headers": []
+}

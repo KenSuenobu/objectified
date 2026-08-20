@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 name="FieldsOnly" version="FIX.4.4">
+  <!--
+    A repository with fields and code sets but no messages: nothing describes an
+    interface, so there is no surface to import.
+  -->
+  <fixr:codeSets>
+    <fixr:codeSet name="SideCodeSet" id="54" type="char">
+      <fixr:code name="Buy" id="54001" value="1"/>
+    </fixr:codeSet>
+  </fixr:codeSets>
+  <fixr:fields>
+    <fixr:field id="54" name="Side" type="SideCodeSet"/>
+    <fixr:field id="11" name="ClOrdID" type="String"/>
+  </fixr:fields>
+</fixr:repository>

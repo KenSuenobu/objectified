@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+  <FIToFICstmrCdtTrf>
+    <GrpHdr>
+      <MsgId>PACS008-20260819-000411</MsgId>
+      <CreDtTm>2026-08-19T10:31:12</CreDtTm>
+      <NbOfTxs>2</NbOfTxs>
+      <TtlIntrBkSttlmAmt Ccy="EUR">111250.00</TtlIntrBkSttlmAmt>
+      <IntrBkSttlmDt>2026-08-19</IntrBkSttlmDt>
+      <SttlmInf>
+        <SttlmMtd>CLRG</SttlmMtd>
+        <ClrSys><Cd>TGT</Cd></ClrSys>
+      </SttlmInf>
+      <InstgAgt><FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId></InstgAgt>
+      <InstdAgt><FinInstnId><BICFI>DEUTDEFF</BICFI></FinInstnId></InstdAgt>
+    </GrpHdr>
+
+    <CdtTrfTxInf>
+      <PmtId>
+        <InstrId>INSTR-000411-1</InstrId>
+        <EndToEndId>INV-10042</EndToEndId>
+        <TxId>TX-000411-1</TxId>
+        <UETR>6b2c1a7e-0f4d-4a2b-9c31-000000000411</UETR>
+      </PmtId>
+      <PmtTpInf>
+        <SvcLvl><Cd>SEPA</Cd></SvcLvl>
+        <LclInstrm><Cd>INST</Cd></LclInstrm>
+      </PmtTpInf>
+      <IntrBkSttlmAmt Ccy="EUR">12500.00</IntrBkSttlmAmt>
+      <IntrBkSttlmDt>2026-08-19</IntrBkSttlmDt>
+      <ChrgBr>SLEV</ChrgBr>
+      <Dbtr>
+        <Nm>Acme Retail BV</Nm>
+        <PstlAdr><TwnNm>Rotterdam</TwnNm><Ctry>NL</Ctry></PstlAdr>
+      </Dbtr>
+      <DbtrAcct><Id><IBAN>NL91ABNA0417164300</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId></DbtrAgt>
+      <CdtrAgt><FinInstnId><BICFI>DEUTDEFF</BICFI></FinInstnId></CdtrAgt>
+      <Cdtr>
+        <Nm>Northern Supplies GmbH</Nm>
+        <PstlAdr><TwnNm>Frankfurt</TwnNm><Ctry>DE</Ctry></PstlAdr>
+      </Cdtr>
+      <CdtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></CdtrAcct>
+      <RmtInf>
+        <Strd>
+          <RfrdDocInf>
+            <Tp><CdOrPrtry><Cd>CINV</Cd></CdOrPrtry></Tp>
+            <Nb>INV-10042</Nb>
+            <RltdDt>2026-08-15</RltdDt>
+          </RfrdDocInf>
+          <RfrdDocAmt><DuePyblAmt Ccy="EUR">12500.00</DuePyblAmt></RfrdDocAmt>
+        </Strd>
+      </RmtInf>
+    </CdtTrfTxInf>
+
+    <CdtTrfTxInf>
+      <PmtId>
+        <InstrId>INSTR-000411-2</InstrId>
+        <EndToEndId>INV-10043</EndToEndId>
+        <TxId>TX-000411-2</TxId>
+        <UETR>6b2c1a7e-0f4d-4a2b-9c31-000000000412</UETR>
+      </PmtId>
+      <IntrBkSttlmAmt Ccy="EUR">98750.00</IntrBkSttlmAmt>
+      <IntrBkSttlmDt>2026-08-19</IntrBkSttlmDt>
+      <ChrgBr>SHAR</ChrgBr>
+      <PrvsInstgAgt1><FinInstnId><BICFI>RABONL2U</BICFI></FinInstnId></PrvsInstgAgt1>
+      <IntrmyAgt1><FinInstnId><BICFI>CHASGB2L</BICFI></FinInstnId></IntrmyAgt1>
+      <Dbtr><Nm>Example Supplies BV</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>NL91ABNA0417164399</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId></DbtrAgt>
+      <CdtrAgt><FinInstnId><BICFI>DEUTDEFF</BICFI></FinInstnId></CdtrAgt>
+      <Cdtr><Nm>Pacific Imports GmbH</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>DE02120300000000202051</IBAN></Id></CdtrAcct>
+      <InstrForCdtrAgt><Cd>PHOB</Cd><InstrInf>Notify on receipt</InstrInf></InstrForCdtrAgt>
+      <RgltryRptg>
+        <Dbtr>
+          <Ctry>NL</Ctry>
+          <Tp>ORDERRES</Tp>
+        </Dbtr>
+      </RgltryRptg>
+      <RmtInf><Ustrd>INV-10043 August shipments</Ustrd></RmtInf>
+    </CdtTrfTxInf>
+  </FIToFICstmrCdtTrf>
+</Document>

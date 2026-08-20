@@ -1,0 +1,112 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ex:   <https://example.com/ns#> .
+
+# Every core constraint component, then the ones with no closed-world analogue.
+ex:CoverageShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Thing ;
+    sh:targetSubjectsOf ex:measures ;
+    sh:targetObjectsOf ex:measuredBy ;
+    sh:targetNode ex:SpecificThing ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type rdfs:label ) ;
+
+    # Value type
+    sh:property [ sh:path ex:aClass ; sh:class ex:Category ] ;
+    sh:property [ sh:path ex:aDatatype ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path ex:aNodeKind ; sh:nodeKind sh:BlankNodeOrIRI ] ;
+
+    # Cardinality
+    sh:property [ sh:path ex:atLeastOne ; sh:minCount 1 ] ;
+    sh:property [ sh:path ex:atMostThree ; sh:maxCount 3 ] ;
+
+    # Value range
+    sh:property [ sh:path ex:minInc ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ex:maxInc ; sh:maxInclusive 100 ] ;
+    sh:property [ sh:path ex:minExc ; sh:minExclusive 0 ] ;
+    sh:property [ sh:path ex:maxExc ; sh:maxExclusive 1 ] ;
+
+    # String-based
+    sh:property [ sh:path ex:minLen ; sh:minLength 2 ] ;
+    sh:property [ sh:path ex:maxLen ; sh:maxLength 64 ] ;
+    sh:property [ sh:path ex:pattern ; sh:pattern "^[a-z0-9-]+$" ; sh:flags "i" ] ;
+    sh:property [ sh:path ex:language ; sh:languageIn ( "en" "nl" "de" ) ] ;
+    sh:property [ sh:path ex:uniqueLang ; sh:uniqueLang true ] ;
+
+    # Property pair
+    sh:property [ sh:path ex:startsBefore ; sh:lessThan ex:endsAfter ] ;
+    sh:property [ sh:path ex:notAfter ; sh:lessThanOrEquals ex:limit ] ;
+    sh:property [ sh:path ex:mustDiffer ; sh:disjoint ex:otherValue ] ;
+    sh:property [ sh:path ex:mustMatch ; sh:equals ex:mirroredValue ] ;
+
+    # Shape-based
+    sh:property [ sh:path ex:nested ; sh:node ex:NestedShape ] ;
+    sh:property [ sh:path ex:notThis ; sh:not [ sh:datatype xsd:boolean ] ] ;
+    sh:property [ sh:path ex:qualified ;
+                  sh:qualifiedValueShape [ sh:class ex:Preferred ] ;
+                  sh:qualifiedMinCount 1 ;
+                  sh:qualifiedMaxCount 2 ;
+                  sh:qualifiedValueShapesDisjoint true ] ;
+
+    # Other
+    sh:property [ sh:path ex:enumerated ; sh:in ( "alpha" "beta" "gamma" ) ] ;
+    sh:property [ sh:path ex:constant ; sh:hasValue "fixed" ] ;
+
+    # Non-validating annotations that still carry meaning for a catalog.
+    sh:property [
+        sh:path ex:documented ;
+        sh:name "Documented value" ;
+        sh:description "Carries description, order, group and default for form generation." ;
+        sh:order 10 ;
+        sh:group ex:MainGroup ;
+        sh:defaultValue "unset" ;
+        sh:severity sh:Warning ;
+    ] .
+
+ex:NestedShape
+    a sh:NodeShape ;
+    sh:property [ sh:path ex:innerValue ; sh:datatype xsd:string ; sh:minCount 1 ] .
+
+ex:MainGroup
+    a sh:PropertyGroup ;
+    rdfs:label "Main" ;
+    sh:order 1 .
+
+# ---------------------------------------------------------------- declared limits
+
+# A SPARQL-based constraint: arbitrary query logic, not a structural constraint.
+ex:SparqlConstrainedShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Invoice ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "Invoice total must equal the sum of its line amounts." ;
+        sh:prefixes ex: ;
+        sh:select """
+            SELECT $this
+            WHERE {
+                $this <https://example.com/ns#total> ?total .
+                { SELECT $this (SUM(?amount) AS ?sum) WHERE {
+                    $this <https://example.com/ns#line> ?line .
+                    ?line <https://example.com/ns#amount> ?amount .
+                } GROUP BY $this }
+                FILTER (?total != ?sum)
+            }
+        """ ;
+    ] .
+
+# A zero-or-more path: unbounded recursion over the graph.
+ex:HierarchyShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Category ;
+    sh:property [
+        sh:path [ sh:zeroOrMorePath ex:broader ] ;
+        sh:class ex:Category ;
+    ] ;
+    sh:property [
+        sh:path [ sh:alternativePath ( ex:label ex:prefLabel ) ] ;
+        sh:minCount 1 ;
+    ] .

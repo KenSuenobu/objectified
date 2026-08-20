@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE invoice [
+  <!-- An internal subset: the DTD travels inside the instance document. -->
+  <!ELEMENT invoice (party, party, line+, total)>
+  <!ATTLIST invoice
+            number ID #REQUIRED
+            issued CDATA #REQUIRED>
+
+  <!ELEMENT party (name, city, country)>
+  <!ATTLIST party
+            role (seller|buyer) #REQUIRED>
+  <!ELEMENT name (#PCDATA)>
+  <!ELEMENT city (#PCDATA)>
+  <!ELEMENT country (#PCDATA)>
+
+  <!ELEMENT line (sku, quantity, unitPrice)>
+  <!ELEMENT sku (#PCDATA)>
+  <!ELEMENT quantity (#PCDATA)>
+  <!ELEMENT unitPrice (#PCDATA)>
+
+  <!ELEMENT total (#PCDATA)>
+  <!ATTLIST total
+            currency (EUR|GBP|USD) "EUR">
+
+  <!ENTITY seller "Example Corporation">
+]>
+<invoice number="INV-00010042" issued="2026-08-19">
+  <party role="seller">
+    <name>&seller;</name>
+    <city>Amsterdam</city>
+    <country>NL</country>
+  </party>
+  <party role="buyer">
+    <name>Acme Retail BV</name>
+    <city>Rotterdam</city>
+    <country>NL</country>
+  </party>
+  <line>
+    <sku>WID-0001</sku>
+    <quantity>12</quantity>
+    <unitPrice>18.50</unitPrice>
+  </line>
+  <line>
+    <sku>GAD-0007</sku>
+    <quantity>3</quantity>
+    <unitPrice>42.00</unitPrice>
+  </line>
+  <total currency="EUR">348.00</total>
+</invoice>

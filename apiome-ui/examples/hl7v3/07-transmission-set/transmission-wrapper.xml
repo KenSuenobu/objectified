@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Root of the set: the HL7 v3 transmission wrapper. It carries routing, sender and
+  receiver, and its payload is the CDA document in the sibling file — the wrapper alone
+  says who sent what to whom, and nothing about the clinical content.
+-->
+<MCCI_IN000002UV01 xmlns="urn:hl7-org:v3" ITSVersion="XML_1.0">
+  <id root="2.16.840.1.113883.19.5" extension="TX-2026-004471"/>
+  <creationTime value="20260824093000+0200"/>
+  <interactionId root="2.16.840.1.113883.1.6" extension="MCCI_IN000002UV01"/>
+  <processingCode code="P"/>
+  <processingModeCode code="T"/>
+  <acceptAckCode code="AL"/>
+
+  <receiver typeCode="RCV">
+    <device classCode="DEV" determinerCode="INSTANCE">
+      <id root="2.16.840.1.113883.19.5" extension="GP-SYSTEM-0044"/>
+      <name>Example Community Clinic EHR</name>
+    </device>
+  </receiver>
+
+  <sender typeCode="SND">
+    <device classCode="DEV" determinerCode="INSTANCE">
+      <id root="2.16.840.1.113883.19.5" extension="HOSPITAL-EDMS"/>
+      <name>Example General Hospital document service</name>
+    </device>
+  </sender>
+
+  <attentionLine>
+    <keyWordText code="documentType"/>
+    <value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ST">
+      Discharge Summary
+    </value>
+  </attentionLine>
+
+  <!-- The payload: the CDA document in discharge-summary.xml, referenced by its id. -->
+  <ControlActProcess classCode="CACT" moodCode="EVN">
+    <code code="MCCI_TE000002UV01"/>
+    <subject typeCode="SUBJ">
+      <registrationEvent classCode="REG" moodCode="EVN">
+        <id root="2.16.840.1.113883.19.5" extension="DS-2026-004471"/>
+        <statusCode code="active"/>
+        <subject1 typeCode="SBJ">
+          <document classCode="DOC" moodCode="EVN">
+            <id root="2.16.840.1.113883.19.5" extension="DS-2026-004471"/>
+            <code code="18842-5" codeSystem="2.16.840.1.113883.6.1"
+                  displayName="Discharge Summary"/>
+            <text mediaType="text/xml">
+              <reference value="discharge-summary.xml"/>
+            </text>
+          </document>
+        </subject1>
+      </registrationEvent>
+    </subject>
+  </ControlActProcess>
+</MCCI_IN000002UV01>

@@ -1,0 +1,16 @@
+arazzo: 1.1.0
+info:
+  title: Minimal ping workflow
+  version: 1.0.0
+sourceDescriptions:
+  - name: pingApi
+    url: https://api.example.com/openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: ping
+    summary: Call the health endpoint once.
+    steps:
+      - stepId: callPing
+        operationId: $sourceDescriptions.pingApi.getPing
+        successCriteria:
+          - condition: $statusCode == 200

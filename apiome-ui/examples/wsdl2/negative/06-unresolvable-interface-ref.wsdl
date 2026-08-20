@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://www.w3.org/ns/wsdl"
+             xmlns:tns="http://example.com/dangling"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:wsoap="http://www.w3.org/ns/wsdl/soap"
+             targetNamespace="http://example.com/dangling">
+  <documentation>
+    The binding and the service both point at tns:MissingInterface, which this document
+    never declares and no import brings in.
+  </documentation>
+  <types>
+    <xs:schema targetNamespace="http://example.com/dangling">
+      <xs:element name="request" type="xs:string"/>
+    </xs:schema>
+  </types>
+
+  <binding name="DanglingBinding"
+           interface="tns:MissingInterface"
+           type="http://www.w3.org/ns/wsdl/soap"
+           wsoap:protocol="http://www.w3.org/2003/05/soap/bindings/HTTP/">
+    <operation ref="tns:doThing"/>
+  </binding>
+
+  <service name="DanglingService" interface="tns:MissingInterface">
+    <endpoint name="Main" binding="tns:DanglingBinding" address="https://api.example.com/dangling"/>
+  </service>
+</description>

@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: beacons
+    description: One row per beacon.
+    columns:
+      - name: beacon_id
+        description: Primary key.
+      - name: seen_at
+        description: Last time the beacon reported.

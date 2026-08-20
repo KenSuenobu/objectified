@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SOAP project as a legacy estate keeps one: a WSDL-backed interface with four
+  operations, saved requests carrying envelopes, WS-Security credentials referenced by
+  property, environments, and a smoke-test suite. Reconstructed shape; no upstream text
+  copied.
+-->
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config"
+                    id="7a1c0000-0000-4000-8000-000000000060"
+                    activeEnvironment="Acceptance"
+                    name="Legacy Billing"
+                    resourceRoot="${projectDir}">
+  <con:settings/>
+
+  <con:interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:type="con:WsdlInterface"
+                 id="7a1c0000-0000-4000-8000-000000000061"
+                 name="BillingServiceSoapBinding"
+                 type="wsdl"
+                 bindingName="{http://example.com/billing}BillingServiceSoapBinding"
+                 soapVersion="1_1"
+                 anonymous="optional"
+                 definition="https://billing.internal.example.com/BillingService?wsdl">
+    <con:settings/>
+    <con:definitionCache type="TEXT" rootPart="BillingService.wsdl"/>
+    <con:endpoints>
+      <con:endpoint>https://billing.internal.example.com/BillingService</con:endpoint>
+      <con:endpoint>https://billing-acc.internal.example.com/BillingService</con:endpoint>
+    </con:endpoints>
+
+    <con:operation id="7a1c0000-0000-4000-8000-000000000062"
+                   isOneWay="false"
+                   action="http://example.com/billing/GetInvoice"
+                   name="GetInvoice"
+                   bindingOperationName="GetInvoice"
+                   type="Request-Response"
+                   outputName="GetInvoiceResponse"
+                   inputName="GetInvoiceRequest">
+      <con:settings/>
+      <con:call id="7a1c0000-0000-4000-8000-000000000063" name="Happy path">
+        <con:settings/>
+        <con:endpoint>https://billing-acc.internal.example.com/BillingService</con:endpoint>
+        <con:request>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bil="http://example.com/billing"&gt;
+   &lt;soapenv:Header/&gt;
+   &lt;soapenv:Body&gt;
+      &lt;bil:GetInvoiceRequest&gt;
+         &lt;bil:invoiceId&gt;INV-00010042&lt;/bil:invoiceId&gt;
+      &lt;/bil:GetInvoiceRequest&gt;
+   &lt;/soapenv:Body&gt;
+&lt;/soapenv:Envelope&gt;</con:request>
+        <con:credentials>
+          <con:username>${#Project#serviceUser}</con:username>
+          <con:password>${#Project#servicePassword}</con:password>
+          <con:authType>Preemptive</con:authType>
+          <con:wssType>PasswordText</con:wssType>
+        </con:credentials>
+      </con:call>
+      <con:call id="7a1c0000-0000-4000-8000-000000000064" name="Unknown invoice">
+        <con:settings/>
+        <con:endpoint>https://billing-acc.internal.example.com/BillingService</con:endpoint>
+        <con:request>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bil="http://example.com/billing"&gt;
+   &lt;soapenv:Body&gt;
+      &lt;bil:GetInvoiceRequest&gt;&lt;bil:invoiceId&gt;INV-99999999&lt;/bil:invoiceId&gt;&lt;/bil:GetInvoiceRequest&gt;
+   &lt;/soapenv:Body&gt;
+&lt;/soapenv:Envelope&gt;</con:request>
+      </con:call>
+    </con:operation>
+
+    <con:operation id="7a1c0000-0000-4000-8000-000000000065"
+                   isOneWay="false"
+                   action="http://example.com/billing/ListInvoices"
+                   name="ListInvoices"
+                   bindingOperationName="ListInvoices"
+                   type="Request-Response"
+                   outputName="ListInvoicesResponse"
+                   inputName="ListInvoicesRequest">
+      <con:settings/>
+      <con:call id="7a1c0000-0000-4000-8000-000000000066" name="Request 1">
+        <con:settings/>
+        <con:endpoint>https://billing-acc.internal.example.com/BillingService</con:endpoint>
+        <con:request>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bil="http://example.com/billing"&gt;
+   &lt;soapenv:Body&gt;
+      &lt;bil:ListInvoicesRequest&gt;&lt;bil:customerId&gt;CUS-000123&lt;/bil:customerId&gt;&lt;/bil:ListInvoicesRequest&gt;
+   &lt;/soapenv:Body&gt;
+&lt;/soapenv:Envelope&gt;</con:request>
+      </con:call>
+    </con:operation>
+
+    <con:operation id="7a1c0000-0000-4000-8000-000000000067"
+                   isOneWay="true"
+                   action="http://example.com/billing/NotifyPayment"
+                   name="NotifyPayment"
+                   bindingOperationName="NotifyPayment"
+                   type="One-Way"
+                   inputName="NotifyPaymentRequest">
+      <con:settings/>
+      <con:call id="7a1c0000-0000-4000-8000-000000000068" name="Request 1">
+        <con:settings/>
+        <con:endpoint>https://billing-acc.internal.example.com/BillingService</con:endpoint>
+        <con:request>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bil="http://example.com/billing"&gt;
+   &lt;soapenv:Body&gt;
+      &lt;bil:NotifyPaymentRequest&gt;&lt;bil:invoiceId&gt;INV-00010042&lt;/bil:invoiceId&gt;&lt;bil:amount&gt;12500.00&lt;/bil:amount&gt;&lt;/bil:NotifyPaymentRequest&gt;
+   &lt;/soapenv:Body&gt;
+&lt;/soapenv:Envelope&gt;</con:request>
+      </con:call>
+    </con:operation>
+  </con:interface>
+
+  <con:testSuite name="Smoke" id="7a1c0000-0000-4000-8000-000000000070">
+    <con:settings/>
+    <con:runType>SEQUENTIAL</con:runType>
+    <con:testCase failOnError="true" name="Fetch an invoice"
+                  id="7a1c0000-0000-4000-8000-000000000071">
+      <con:settings/>
+      <con:testStep type="request" name="GetInvoice" id="7a1c0000-0000-4000-8000-000000000072">
+        <con:settings/>
+        <con:config>
+          <con:interface>BillingServiceSoapBinding</con:interface>
+          <con:operation>GetInvoice</con:operation>
+          <con:request name="GetInvoice">
+            <con:settings/>
+            <con:endpoint>https://billing-acc.internal.example.com/BillingService</con:endpoint>
+            <con:request>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bil="http://example.com/billing"&gt;&lt;soapenv:Body&gt;&lt;bil:GetInvoiceRequest&gt;&lt;bil:invoiceId&gt;INV-00010042&lt;/bil:invoiceId&gt;&lt;/bil:GetInvoiceRequest&gt;&lt;/soapenv:Body&gt;&lt;/soapenv:Envelope&gt;</con:request>
+            <con:assertion type="SOAP Response" name="SOAP Response"
+                           id="7a1c0000-0000-4000-8000-000000000073"/>
+            <con:assertion type="Schema Compliance" name="Schema Compliance"
+                           id="7a1c0000-0000-4000-8000-000000000074">
+              <con:configuration>
+                <definition/>
+              </con:configuration>
+            </con:assertion>
+            <con:assertion type="Not SOAP Fault" name="Not SOAP Fault"
+                           id="7a1c0000-0000-4000-8000-000000000075"/>
+            <con:assertion type="XPath Match" name="Invoice id echoed"
+                           id="7a1c0000-0000-4000-8000-000000000076">
+              <con:configuration>
+                <path>declare namespace bil='http://example.com/billing';
+//bil:invoiceId/text()</path>
+                <content>INV-00010042</content>
+              </con:configuration>
+            </con:assertion>
+          </con:request>
+        </con:config>
+      </con:testStep>
+    </con:testCase>
+  </con:testSuite>
+
+  <con:properties>
+    <con:property>
+      <con:name>serviceUser</con:name>
+      <con:value>billing-integration</con:value>
+    </con:property>
+    <con:property>
+      <con:name>servicePassword</con:name>
+      <con:value/>
+    </con:property>
+  </con:properties>
+
+  <con:environments>
+    <con:environment name="Acceptance" id="7a1c0000-0000-4000-8000-000000000080">
+      <con:services>
+        <con:service name="BillingServiceSoapBinding" type="wsdl">
+          <con:endpoint>https://billing-acc.internal.example.com/BillingService</con:endpoint>
+        </con:service>
+      </con:services>
+    </con:environment>
+    <con:environment name="Production" id="7a1c0000-0000-4000-8000-000000000081">
+      <con:services>
+        <con:service name="BillingServiceSoapBinding" type="wsdl">
+          <con:endpoint>https://billing.internal.example.com/BillingService</con:endpoint>
+        </con:service>
+      </con:services>
+    </con:environment>
+  </con:environments>
+</con:soapui-project>

@@ -1,0 +1,53 @@
+name: edge_route
+virtual_hosts:
+  - name: public
+    domains:
+      - api.example.com
+    require_tls: ALL
+    routes:
+      - match:
+          prefix: /v2/orders
+        route:
+          cluster: orders_service
+      - match:
+          prefix: /v2/products
+        route:
+          cluster: catalogue_service
+    response_headers_to_add:
+      - header:
+          key: x-served-by
+          value: edge
+        append_action: OVERWRITE_IF_EXISTS_OR_ADD
+
+  - name: partner
+    domains:
+      - partner.example.com
+      - "*.partner.example.com"
+    routes:
+      - match:
+          prefix: /partner/v1
+          headers:
+            - name: x-partner-id
+              present_match: true
+        route:
+          cluster: partner_service
+          idle_timeout: 60s
+      - match:
+          prefix: /partner/v1
+        direct_response:
+          status: 403
+          body:
+            inline_string: partner id required
+
+  - name: catch_all
+    domains: ["*"]
+    routes:
+      - match:
+          prefix: /
+        redirect:
+          host_redirect: api.example.com
+          https_redirect: true
+          response_code: MOVED_PERMANENTLY
+
+internal_only_headers:
+  - x-internal-trace

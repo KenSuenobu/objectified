@@ -1,0 +1,43 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "Inventory",
+  "collectionId": "b1f7c8d0-0000-4000-8000-000000000100",
+  "dateExported": "2026-08-19T14:00:00.000Z",
+  "version": "1.2",
+  "folders": [],
+  "settings": { "headers": [{ "name": "X-Api-Key", "value": "{{apiKey}}" }], "auth": { "type": "none" } },
+  "requests": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000101",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000100",
+      "containerId": "",
+      "name": "Check stock",
+      "url": "{{baseUrl}}/stock/:sku",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2026-08-19T13:55:00.000Z",
+      "modified": "2026-08-19T13:55:00.000Z",
+      "headers": [],
+      "params": [
+        { "name": "sku", "value": "WID-0001", "isPath": true },
+        { "name": "warehouse", "value": "{{warehouse}}", "isPath": false }
+      ],
+      "tests": [{ "type": "res-code", "custom": "", "action": "equal", "value": "200" }]
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000102",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000100",
+      "containerId": "",
+      "name": "Reserve stock",
+      "url": "{{baseUrl}}/reservations",
+      "method": "POST",
+      "sortNum": 20000,
+      "created": "2026-08-19T13:56:00.000Z",
+      "modified": "2026-08-19T13:56:00.000Z",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "params": [],
+      "body": { "type": "json", "raw": "{ \"sku\": \"WID-0001\", \"quantity\": 1 }", "form": [] },
+      "tests": []
+    }
+  ]
+}

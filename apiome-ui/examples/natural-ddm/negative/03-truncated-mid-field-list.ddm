@@ -1,0 +1,10 @@
+DDM Name ...... CUSTOMER-FILE
+DB ............ 001
+File .......... 010
+Default Sequence AA
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA CUSTOMER-NUMBER                  A    10     U
+  1 AB CUSTOMER-NAME                    A    40     D
+  1 AC CUSTOMER-STATUS                  A     1

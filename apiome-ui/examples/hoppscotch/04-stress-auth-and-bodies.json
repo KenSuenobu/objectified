@@ -1,0 +1,207 @@
+{
+  "v": 6,
+  "id": "clx0000000000000000000030",
+  "name": "Grammar corners",
+  "folders": [
+    {
+      "v": 6,
+      "id": "clx0000000000000000000031",
+      "name": "Bodies",
+      "folders": [],
+      "requests": [
+        {
+          "v": "11",
+          "id": "clx0000000000000000000032",
+          "name": "Raw JSON",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/samples",
+          "params": [],
+          "headers": [{ "key": "Content-Type", "value": "application/json", "active": true, "description": "" }],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": { "contentType": "application/json", "body": "{ \"label\": \"sample-a\", \"assay\": \"pcr\" }" },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        },
+        {
+          "v": "11",
+          "id": "clx0000000000000000000033",
+          "name": "URL encoded",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/samples",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "label=sample-b&assay=elisa&replicates=3"
+          },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        },
+        {
+          "v": "11",
+          "id": "clx0000000000000000000034",
+          "name": "Multipart form",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/samples/upload",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": {
+            "contentType": "multipart/form-data",
+            "body": [
+              { "key": "label", "value": "sample-c", "active": true, "isFile": false },
+              { "key": "attachment", "value": "readings.csv", "active": true, "isFile": true },
+              { "key": "notes", "value": "", "active": false, "isFile": false }
+            ]
+          },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        },
+        {
+          "v": "11",
+          "id": "clx0000000000000000000035",
+          "name": "GraphQL",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/graphql",
+          "params": [],
+          "headers": [{ "key": "Content-Type", "value": "application/json", "active": true, "description": "" }],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"query\":\"query Sample($id: ID!) { sample(id: $id) { id status } }\",\"variables\":{\"id\":\"SMP-1\"}}"
+          },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        }
+      ],
+      "auth": { "authType": "inherit", "authActive": true },
+      "headers": []
+    },
+    {
+      "v": 6,
+      "id": "clx0000000000000000000040",
+      "name": "Auth",
+      "folders": [
+        {
+          "v": 6,
+          "id": "clx0000000000000000000041",
+          "name": "Nested",
+          "folders": [],
+          "requests": [
+            {
+              "v": "11",
+              "id": "clx0000000000000000000042",
+              "name": "Inherited from two levels up",
+              "method": "GET",
+              "endpoint": "<<baseUrl>>/deep",
+              "params": [],
+              "headers": [],
+              "auth": { "authType": "inherit", "authActive": true },
+              "body": { "contentType": null, "body": null },
+              "preRequestScript": "",
+              "testScript": "",
+              "requestVariables": []
+            }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "headers": []
+        }
+      ],
+      "requests": [
+        {
+          "v": "11",
+          "id": "clx0000000000000000000043",
+          "name": "Basic auth override",
+          "method": "GET",
+          "endpoint": "<<baseUrl>>/legacy",
+          "params": [],
+          "headers": [],
+          "auth": {
+            "authType": "basic",
+            "authActive": true,
+            "username": "<<labUser>>",
+            "password": "<<labPassword>>"
+          },
+          "body": { "contentType": null, "body": null },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        },
+        {
+          "v": "11",
+          "id": "clx0000000000000000000044",
+          "name": "API key in query",
+          "method": "GET",
+          "endpoint": "<<baseUrl>>/keyed",
+          "params": [],
+          "headers": [],
+          "auth": {
+            "authType": "api-key",
+            "authActive": true,
+            "addTo": "QUERY_PARAMS",
+            "key": "api_key",
+            "value": "<<apiKey>>"
+          },
+          "body": { "contentType": null, "body": null },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        },
+        {
+          "v": "11",
+          "id": "clx0000000000000000000045",
+          "name": "OAuth2 client credentials",
+          "method": "GET",
+          "endpoint": "<<baseUrl>>/protected",
+          "params": [],
+          "headers": [],
+          "auth": {
+            "authType": "oauth-2",
+            "authActive": true,
+            "grantTypeInfo": {
+              "grantType": "CLIENT_CREDENTIALS",
+              "authEndpoint": "https://auth.example.com/oauth/token",
+              "clientID": "<<clientId>>",
+              "clientSecret": "<<clientSecret>>",
+              "scopes": "lab.read lab.write",
+              "token": ""
+            },
+            "addTo": "HEADERS"
+          },
+          "body": { "contentType": null, "body": null },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        }
+      ],
+      "auth": { "authType": "bearer", "authActive": true, "token": "<<accessToken>>" },
+      "headers": [{ "key": "X-Auth-Folder", "value": "true", "active": true, "description": "" }]
+    }
+  ],
+  "requests": [
+    {
+      "v": "11",
+      "id": "clx0000000000000000000050",
+      "name": "Root-level request with scripts",
+      "method": "PATCH",
+      "endpoint": "<<baseUrl>>/samples/<<sampleId>>/status",
+      "params": [],
+      "headers": [
+        { "key": "X-Request-Id", "value": "<<requestId>>", "active": true, "description": "" },
+        { "key": "X-Debug", "value": "1", "active": false, "description": "Disabled header." }
+      ],
+      "auth": { "authType": "inherit", "authActive": true },
+      "body": { "contentType": "application/json", "body": "{ \"status\": \"complete\" }" },
+      "preRequestScript": "pw.env.set(\"requestId\", Date.now().toString());",
+      "testScript": "pw.test(\"accepted\", () => { pw.expect(pw.response.status).toBe(202); });",
+      "requestVariables": [{ "key": "sampleId", "value": "SMP-1", "active": true }]
+    }
+  ],
+  "auth": { "authType": "none", "authActive": false },
+  "headers": []
+}

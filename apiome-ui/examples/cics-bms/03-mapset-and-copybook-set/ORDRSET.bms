@@ -1,0 +1,24 @@
+*********************************************************************
+* Root of the set: the mapset source. The generated symbolic map in  *
+* the sibling copybook is what the program references, and only the  *
+* two together give both the screen positions and the record layout. *
+*********************************************************************
+ORDRSET  DFHMSD TYPE=&SYSPARM,MODE=INOUT,LANG=COBOL,STORAGE=AUTO,      X
+               TIOAPFX=YES,CTRL=(FREEKB,FRSET)
+ORDRMAP  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1
+         DFHMDF POS=(1,28),LENGTH=22,ATTRB=(PROT,BRT),                 X
+               INITIAL='ORDER ENQUIRY  (ORD9)'
+         DFHMDF POS=(4,5),LENGTH=14,ATTRB=(PROT,NORM),                 X
+               INITIAL='ORDER ID    :'
+ORDID    DFHMDF POS=(4,20),LENGTH=10,ATTRB=(UNPROT,NORM,IC),           X
+               PICIN='X(10)',PICOUT='X(10)'
+         DFHMDF POS=(6,5),LENGTH=14,ATTRB=(PROT,NORM),                 X
+               INITIAL='STATUS      :'
+ORDSTAT  DFHMDF POS=(6,20),LENGTH=1,ATTRB=(PROT,NORM),PICOUT='X'
+         DFHMDF POS=(8,5),LENGTH=14,ATTRB=(PROT,NORM),                 X
+               INITIAL='TOTAL       :'
+ORDTOT   DFHMDF POS=(8,20),LENGTH=13,ATTRB=(PROT,NORM),                X
+               PICOUT='Z,ZZZ,ZZ9.99'
+ORDMSG   DFHMDF POS=(22,1),LENGTH=70,ATTRB=(PROT,BRT)
+         DFHMSD TYPE=FINAL
+         END

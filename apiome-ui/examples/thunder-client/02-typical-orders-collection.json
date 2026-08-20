@@ -1,0 +1,89 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "Orders API",
+  "collectionId": "b1f7c8d0-0000-4000-8000-000000000010",
+  "dateExported": "2026-08-19T10:45:00.000Z",
+  "version": "1.2",
+  "folders": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000011",
+      "name": "Orders",
+      "containerId": "",
+      "created": "2026-08-19T10:40:00.000Z",
+      "sortNum": 10000
+    }
+  ],
+  "settings": {
+    "headers": [{ "name": "X-Tenant", "value": "acme" }],
+    "auth": { "type": "bearer", "bearer": "{{accessToken}}" }
+  },
+  "requests": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000012",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000010",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000011",
+      "name": "List orders",
+      "url": "{{baseUrl}}/v2/orders",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2026-08-19T10:41:00.000Z",
+      "modified": "2026-08-19T10:41:00.000Z",
+      "headers": [{ "name": "Accept", "value": "application/json" }],
+      "params": [
+        { "name": "status", "value": "new", "isPath": false },
+        { "name": "limit", "value": "25", "isPath": false }
+      ],
+      "tests": [
+        { "type": "res-code", "custom": "", "action": "equal", "value": "200" },
+        { "type": "res-time", "custom": "", "action": "<", "value": "2000" }
+      ]
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000013",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000010",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000011",
+      "name": "Place order",
+      "url": "{{baseUrl}}/v2/orders",
+      "method": "POST",
+      "sortNum": 20000,
+      "created": "2026-08-19T10:42:00.000Z",
+      "modified": "2026-08-19T10:42:00.000Z",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"customerId\": \"CUS-000123\",\n  \"lines\": [{ \"sku\": \"WID-0001\", \"quantity\": 2 }]\n}",
+        "form": []
+      },
+      "tests": [{ "type": "res-code", "custom": "", "action": "equal", "value": "201" }]
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000014",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000010",
+      "containerId": "b1f7c8d0-0000-4000-8000-000000000011",
+      "name": "Get order",
+      "url": "{{baseUrl}}/v2/orders/:orderId",
+      "method": "GET",
+      "sortNum": 30000,
+      "created": "2026-08-19T10:43:00.000Z",
+      "modified": "2026-08-19T10:43:00.000Z",
+      "headers": [],
+      "params": [{ "name": "orderId", "value": "ORD-00010042", "isPath": true }],
+      "tests": []
+    },
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-000000000015",
+      "colId": "b1f7c8d0-0000-4000-8000-000000000010",
+      "containerId": "",
+      "name": "Health",
+      "url": "{{baseUrl}}/healthz",
+      "method": "GET",
+      "sortNum": 40000,
+      "created": "2026-08-19T10:44:00.000Z",
+      "modified": "2026-08-19T10:44:00.000Z",
+      "headers": [],
+      "params": [],
+      "tests": [{ "type": "res-code", "custom": "", "action": "equal", "value": "200" }]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fileset member: the temperature probe object the unit links to. -->
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Object ObjectType="MODefinition">
+    <Name>Temperature Probe</Name>
+    <Description1>Probe reporting temperature and its measured range.</Description1>
+    <ObjectID>32711</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:x:32711</ObjectURN>
+    <LWM2MVersion>1.1</LWM2MVersion>
+    <ObjectVersion>1.0</ObjectVersion>
+    <MultipleInstances>Multiple</MultipleInstances>
+    <Mandatory>Optional</Mandatory>
+    <Resources>
+      <Item ID="5700">
+        <Name>Sensor Value</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>Float</Type>
+        <RangeEnumeration/>
+        <Units>Cel</Units>
+        <Description>Current temperature.</Description>
+      </Item>
+      <Item ID="5601">
+        <Name>Min Measured Value</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Float</Type>
+        <RangeEnumeration/>
+        <Units>Cel</Units>
+        <Description>Smallest value since reset.</Description>
+      </Item>
+      <Item ID="5605">
+        <Name>Reset Min and Max Measured Values</Name>
+        <Operations>E</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type/>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Clear the recorded extremes.</Description>
+      </Item>
+    </Resources>
+    <Description2/>
+  </Object>
+</LWM2M>

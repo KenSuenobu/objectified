@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="1.0"
+           xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"
+           xmlns:sap="http://www.sap.com/Protocols/SAPData">
+  <edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+                     m:DataServiceVersion="2.0">
+    <Schema Namespace="ZBP_SRV" xml:lang="en" sap:schema-version="1"
+            xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+
+      <EntityType Name="BusinessPartner" sap:content-version="1"
+                  sap:label="Business Partner">
+        <Key>
+          <PropertyRef Name="BusinessPartnerID"/>
+        </Key>
+        <Property Name="BusinessPartnerID" Type="Edm.String" Nullable="false" MaxLength="10"
+                  sap:label="Business Partner ID" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="CompanyName" Type="Edm.String" MaxLength="80"
+                  sap:label="Company Name" sap:filterable="true"/>
+        <Property Name="LegalForm" Type="Edm.String" MaxLength="10"
+                  sap:label="Legal Form" sap:updatable="false"/>
+        <Property Name="CurrencyCode" Type="Edm.String" MaxLength="5"
+                  sap:label="Currency" sap:semantics="currency-code"/>
+        <Property Name="CreatedAt" Type="Edm.DateTime" Precision="7"
+                  sap:label="Created At" sap:creatable="false" sap:updatable="false"/>
+        <Property Name="Address" Type="ZBP_SRV.CT_Address" Nullable="false"/>
+        <NavigationProperty Name="ToSalesOrders"
+                            Relationship="ZBP_SRV.Assoc_BusinessPartner_SalesOrders"
+                            FromRole="FromRole_Assoc_BusinessPartner_SalesOrders"
+                            ToRole="ToRole_Assoc_BusinessPartner_SalesOrders"/>
+      </EntityType>
+
+      <ComplexType Name="CT_Address" sap:label="Address">
+        <Property Name="City" Type="Edm.String" MaxLength="40" sap:label="City"/>
+        <Property Name="PostalCode" Type="Edm.String" MaxLength="10" sap:label="Postal Code"/>
+        <Property Name="Street" Type="Edm.String" MaxLength="60" sap:label="Street"/>
+        <Property Name="Country" Type="Edm.String" MaxLength="3" sap:label="Country"
+                  sap:semantics="country"/>
+      </ComplexType>
+
+      <EntityType Name="SalesOrder" sap:content-version="1" sap:label="Sales Order">
+        <Key>
+          <PropertyRef Name="SalesOrderID"/>
+        </Key>
+        <Property Name="SalesOrderID" Type="Edm.String" Nullable="false" MaxLength="10"
+                  sap:label="Sales Order ID" sap:creatable="false"/>
+        <Property Name="BusinessPartnerID" Type="Edm.String" MaxLength="10"
+                  sap:label="Business Partner ID"/>
+        <Property Name="GrossAmount" Type="Edm.Decimal" Precision="16" Scale="3"
+                  sap:label="Gross Amount" sap:unit="CurrencyCode"/>
+        <Property Name="CurrencyCode" Type="Edm.String" MaxLength="5"
+                  sap:label="Currency" sap:semantics="currency-code"/>
+        <Property Name="LifecycleStatus" Type="Edm.String" MaxLength="1"
+                  sap:label="Status" sap:updatable="false"/>
+        <NavigationProperty Name="ToLineItems"
+                            Relationship="ZBP_SRV.Assoc_SalesOrder_LineItems"
+                            FromRole="FromRole_Assoc_SalesOrder_LineItems"
+                            ToRole="ToRole_Assoc_SalesOrder_LineItems"/>
+      </EntityType>
+
+      <EntityType Name="SalesOrderLineItem" sap:content-version="1" sap:label="Line Item">
+        <Key>
+          <PropertyRef Name="SalesOrderID"/>
+          <PropertyRef Name="ItemPosition"/>
+        </Key>
+        <Property Name="SalesOrderID" Type="Edm.String" Nullable="false" MaxLength="10"/>
+        <Property Name="ItemPosition" Type="Edm.String" Nullable="false" MaxLength="10"/>
+        <Property Name="ProductID" Type="Edm.String" MaxLength="10" sap:label="Product"/>
+        <Property Name="Quantity" Type="Edm.Decimal" Precision="13" Scale="3"
+                  sap:label="Quantity" sap:unit="QuantityUnit"/>
+        <Property Name="QuantityUnit" Type="Edm.String" MaxLength="3"
+                  sap:semantics="unit-of-measure"/>
+      </EntityType>
+
+      <Association Name="Assoc_BusinessPartner_SalesOrders" sap:content-version="1">
+        <End Type="ZBP_SRV.BusinessPartner" Multiplicity="1"
+             Role="FromRole_Assoc_BusinessPartner_SalesOrders"/>
+        <End Type="ZBP_SRV.SalesOrder" Multiplicity="*"
+             Role="ToRole_Assoc_BusinessPartner_SalesOrders"/>
+        <ReferentialConstraint>
+          <Principal Role="FromRole_Assoc_BusinessPartner_SalesOrders">
+            <PropertyRef Name="BusinessPartnerID"/>
+          </Principal>
+          <Dependent Role="ToRole_Assoc_BusinessPartner_SalesOrders">
+            <PropertyRef Name="BusinessPartnerID"/>
+          </Dependent>
+        </ReferentialConstraint>
+      </Association>
+
+      <Association Name="Assoc_SalesOrder_LineItems" sap:content-version="1">
+        <End Type="ZBP_SRV.SalesOrder" Multiplicity="1" Role="FromRole_Assoc_SalesOrder_LineItems"/>
+        <End Type="ZBP_SRV.SalesOrderLineItem" Multiplicity="*" Role="ToRole_Assoc_SalesOrder_LineItems"/>
+      </Association>
+
+      <EntityContainer Name="ZBP_SRV_Entities" m:IsDefaultEntityContainer="true"
+                       sap:supported-formats="atom json xlsx">
+        <EntitySet Name="BusinessPartnerSet" EntityType="ZBP_SRV.BusinessPartner"
+                   sap:creatable="true" sap:updatable="true" sap:deletable="false"
+                   sap:pageable="true" sap:addressable="true" sap:content-version="1"/>
+        <EntitySet Name="SalesOrderSet" EntityType="ZBP_SRV.SalesOrder"
+                   sap:creatable="true" sap:updatable="false" sap:deletable="false"
+                   sap:content-version="1"/>
+        <EntitySet Name="SalesOrderLineItemSet" EntityType="ZBP_SRV.SalesOrderLineItem"
+                   sap:creatable="false" sap:updatable="false" sap:deletable="false"
+                   sap:content-version="1"/>
+        <AssociationSet Name="Assoc_BusinessPartner_SalesOrdersSet"
+                        Association="ZBP_SRV.Assoc_BusinessPartner_SalesOrders"
+                        sap:creatable="false" sap:updatable="false" sap:deletable="false"
+                        sap:content-version="1">
+          <End EntitySet="BusinessPartnerSet" Role="FromRole_Assoc_BusinessPartner_SalesOrders"/>
+          <End EntitySet="SalesOrderSet" Role="ToRole_Assoc_BusinessPartner_SalesOrders"/>
+        </AssociationSet>
+        <AssociationSet Name="Assoc_SalesOrder_LineItemsSet"
+                        Association="ZBP_SRV.Assoc_SalesOrder_LineItems"
+                        sap:content-version="1">
+          <End EntitySet="SalesOrderSet" Role="FromRole_Assoc_SalesOrder_LineItems"/>
+          <End EntitySet="SalesOrderLineItemSet" Role="ToRole_Assoc_SalesOrder_LineItems"/>
+        </AssociationSet>
+        <FunctionImport Name="ConfirmSalesOrder" ReturnType="ZBP_SRV.SalesOrder"
+                        EntitySet="SalesOrderSet" m:HttpMethod="POST"
+                        sap:action-for="ZBP_SRV.SalesOrder">
+          <Parameter Name="SalesOrderID" Type="Edm.String" Mode="In" MaxLength="10"/>
+        </FunctionImport>
+      </EntityContainer>
+
+      <atom:link rel="self" href="https://sap.example.com/sap/opu/odata/sap/ZBP_SRV/$metadata"
+                 xmlns:atom="http://www.w3.org/2005/Atom"/>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

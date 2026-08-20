@@ -1,0 +1,19 @@
+{
+  "resourceType": "ImagingStudy",
+  "id": "study-0311",
+  "status": "available",
+  "subject": { "reference": "Patient/PAT-0311" },
+  "started": "2026-08-18T09:45:00+01:00",
+  "modality": [{ "system": "http://dicom.nema.org/resources/ontology/DCM", "code": "MR" }],
+  "numberOfSeries": 4,
+  "numberOfInstances": 448,
+  "series": [
+    {
+      "uid": "1.2.826.0.1.9999999.3.2.20260818094500",
+      "number": 4,
+      "modality": { "system": "http://dicom.nema.org/resources/ontology/DCM", "code": "MR" },
+      "description": "AX T2 FLAIR",
+      "numberOfInstances": 112
+    }
+  ]
+}

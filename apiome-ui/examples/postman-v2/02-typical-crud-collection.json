@@ -1,0 +1,63 @@
+{
+  "info": {
+    "name": "Orders API",
+    "_postman_id": "0f2b6c7a-1111-4a2b-8c3d-000000000002",
+    "description": "Collection v2.0: note that every request URL is a plain string, not the object form v2.1 introduced.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "variable": [
+    { "id": "baseUrl", "key": "baseUrl", "value": "https://api.example.com/v2", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "List orders",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": "{{baseUrl}}/orders?status=new&limit=25",
+        "description": "Returns the caller's orders, newest first."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "originalRequest": { "method": "GET", "url": "{{baseUrl}}/orders?status=new&limit=25" },
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\"items\":[{\"orderId\":\"ORD-1001\",\"status\":\"new\",\"total\":42.5}],\"nextCursor\":null}"
+        }
+      ]
+    },
+    {
+      "name": "Place order",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUS-000123\",\n  \"lines\": [{ \"sku\": \"WID-0001\", \"quantity\": 2 }]\n}"
+        },
+        "url": "{{baseUrl}}/orders"
+      },
+      "response": []
+    },
+    {
+      "name": "Get order",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/orders/:orderId"
+      },
+      "response": []
+    },
+    {
+      "name": "Cancel order",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/orders/:orderId?reason=customer-request"
+      },
+      "response": []
+    }
+  ]
+}

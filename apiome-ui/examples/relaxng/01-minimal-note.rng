@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<element name="note" xmlns="http://relaxng.org/ns/structure/1.0">
+  <attribute name="id">
+    <data type="ID" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+  </attribute>
+  <text/>
+</element>

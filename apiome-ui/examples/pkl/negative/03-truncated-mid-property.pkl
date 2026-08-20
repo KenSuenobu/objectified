@@ -1,0 +1,5 @@
+module example.orders
+
+class OrderLine {
+  sku: String(matches(Regex("^[A-Z]{3}-[0-9]{4}$")))
+  quantity: Int(isPositive, isBetween(1, 99

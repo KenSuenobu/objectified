@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://www.w3.org/ns/wsdl"
+             xmlns:tns="http://example.com/broken"
+             targetNamespace="http://example.com/broken">
+  <interface name="BrokenInterface">
+    <operation name="doThing" pattern="http://www.w3.org/ns/wsdl/in-out">
+      <input messageLabel="In" element="tns:request"/>
+  </interface>
+</description>

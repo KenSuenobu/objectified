@@ -1,0 +1,32 @@
+{
+  "Kind": "ingress-gateway",
+  "Name": "public-ingress",
+  "TLS": { "Enabled": true },
+  "Listeners": [
+    {
+      "Port": 8443,
+      "Protocol": "http",
+      "Services": [
+        {
+          "Name": "orders",
+          "Hosts": ["api.example.com"],
+          "RequestHeaders": { "Set": { "x-forwarded-proto": "https" } }
+        },
+        {
+          "Name": "catalogue",
+          "Hosts": ["api.example.com"]
+        }
+      ]
+    },
+    {
+      "Port": 9443,
+      "Protocol": "grpc",
+      "Services": [{ "Name": "payments", "Hosts": ["grpc.example.com"] }]
+    },
+    {
+      "Port": 5432,
+      "Protocol": "tcp",
+      "Services": [{ "Name": "postgres" }]
+    }
+  ]
+}

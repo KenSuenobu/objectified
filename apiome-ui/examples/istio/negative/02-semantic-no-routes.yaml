@@ -1,0 +1,12 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: routeless
+  namespace: storefront
+spec:
+  # hosts and gateways but no http, tls or tcp rules: the resource selects traffic and
+  # then does nothing with it, so no route can be inferred.
+  hosts:
+    - routeless.example.com
+  gateways:
+    - storefront/public-gateway

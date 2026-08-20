@@ -1,0 +1,77 @@
+edition = "2023";
+
+package example.composition.v1;
+
+// Within-document composition: nested message definitions, a message reused by three
+// others, feature sets composed by scope, and an extension range filled by an extend
+// block in the same file.
+
+option features.field_presence = EXPLICIT;
+
+message Money {
+  int64 minor_units = 1;
+  string currency_code = 2;
+}
+
+message Address {
+  string line1 = 1;
+  string line2 = 2;
+  string city = 3;
+  string postal_code = 4;
+  string country_code = 5;
+}
+
+message Party {
+  // Nested enum, scoped to this message.
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    KIND_PERSON = 1;
+    KIND_ORGANISATION = 2;
+  }
+
+  // Nested message, scoped to this message and reused by its own fields.
+  message ContactPoint {
+    option features.field_presence = IMPLICIT;
+
+    string channel = 1;
+    string value = 2;
+    bool verified = 3;
+  }
+
+  string party_id = 1;
+  Kind kind = 2;
+  string display_name = 3;
+  Address address = 4;                 // composed from a sibling message
+  repeated ContactPoint contacts = 5;  // composed from a nested message
+}
+
+message OrderLine {
+  string sku = 1;
+  int32 quantity = 2 [features.field_presence = IMPLICIT];
+  Money unit_price = 3;
+  Money line_total = 4;
+}
+
+message Order {
+  string order_id = 1;
+  Party buyer = 2;
+  Party seller = 3;
+  Address ship_to = 4;
+  repeated OrderLine lines = 5;
+  Money total = 6;
+
+  // Extension range filled below: composition across declarations.
+  extensions 1000 to 1999;
+}
+
+extend Order {
+  string internal_reference = 1000;
+  Money internal_margin = 1001;
+}
+
+// A message that composes the others without adding scalars of its own.
+message OrderEnvelope {
+  Order order = 1;
+  map<string, string> headers = 2;
+  repeated Party observers = 3;
+}

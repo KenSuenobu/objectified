@@ -1,0 +1,53 @@
+# Mesh egress and scoping: a ServiceEntry brings an external API into the mesh registry,
+# a VirtualService routes to it, and a Sidecar limits which hosts the namespace may reach.
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: payment-network
+  namespace: payments
+spec:
+  hosts:
+    - network.example-acquirer.com
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: payment-network-egress
+  namespace: payments
+spec:
+  hosts:
+    - network.example-acquirer.com
+  http:
+    - match:
+        - uri:
+            prefix: /authorizations
+      route:
+        - destination:
+            host: network.example-acquirer.com
+            port:
+              number: 443
+      timeout: 10s
+      retries:
+        attempts: 2
+        perTryTimeout: 4s
+        retryOn: gateway-error,connect-failure
+---
+apiVersion: networking.istio.io/v1
+kind: Sidecar
+metadata:
+  name: default
+  namespace: payments
+spec:
+  egress:
+    - hosts:
+        - "./*"
+        - "istio-system/*"
+        - "payments/network.example-acquirer.com"
+  outboundTrafficPolicy:
+    mode: REGISTRY_ONLY

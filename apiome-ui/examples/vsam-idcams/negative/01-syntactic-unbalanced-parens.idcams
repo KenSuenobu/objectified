@@ -1,0 +1,5 @@
+  DEFINE CLUSTER (NAME(EXAMPLE.BROKEN.KSDS) -
+                  INDEXED -
+                  KEYS(10 0 -
+                  RECORDSIZE(200 200) -
+                  CYLINDERS(5 1)

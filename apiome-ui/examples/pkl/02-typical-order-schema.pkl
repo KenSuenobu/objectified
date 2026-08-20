@@ -1,0 +1,30 @@
+/// Order schema: classes, constrained types and a typed listing.
+module example.orders
+
+typealias OrderStatus = "new" | "paid" | "shipped" | "cancelled"
+
+typealias Sku = String(matches(Regex("^[A-Z]{3}-[0-9]{4}$")))
+
+class Money {
+  value: Int(isBetween(0, 1_000_000_000))
+  currency: "EUR" | "GBP" | "USD"
+}
+
+class OrderLine {
+  sku: Sku
+  quantity: Int(isPositive, isBetween(1, 9999))
+  unitPrice: Money
+  discount: Float?(isBetween(0.0, 1.0))
+}
+
+class Order {
+  orderId: String(matches(Regex("^ORD-[0-9]{8}$")))
+  customerId: String(length.isBetween(3, 20))
+  status: OrderStatus = "new"
+  placedAt: String
+  lines: Listing<OrderLine>(!isEmpty)
+  total: Money
+  note: String?(length <= 500)
+}
+
+order: Order

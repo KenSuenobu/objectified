@@ -1,0 +1,95 @@
+/**
+ * Payment authorization service in the shape a payments platform publishes:
+ * a schema-heavy protocol with money as decimal, enumerated result codes,
+ * an error hierarchy, and both request/response and one-way messages.
+ */
+@namespace("com.example.payments.v3")
+protocol PaymentService {
+
+  enum Currency {
+    USD, EUR, GBP, JPY, CHF, CAD, AUD
+  }
+
+  enum AuthResult {
+    APPROVED, DECLINED, REFERRAL, EXPIRED_CARD, INSUFFICIENT_FUNDS, DO_NOT_HONOR
+  }
+
+  enum CaptureMode {
+    AUTOMATIC, MANUAL
+  }
+
+  record Money {
+    decimal(18, 3) amount;
+    Currency currency;
+  }
+
+  record CardReference {
+    /** Network token, never a PAN. */
+    string networkToken;
+    int expiryMonth;
+    int expiryYear;
+    union { null, string } cardholderNameHint = null;
+  }
+
+  record RiskSignals {
+    union { null, string } deviceFingerprint = null;
+    union { null, string } ipCountry = null;
+    union { null, int } velocityLastHour = null;
+    map<string> merchantSignals = {};
+  }
+
+  record AuthorizationRequest {
+    @logicalType("uuid") string requestId;
+    string merchantId;
+    CardReference card;
+    Money amount;
+    CaptureMode captureMode = "AUTOMATIC";
+    union { null, RiskSignals } risk = null;
+    @logicalType("timestamp-millis") long requestedAt;
+  }
+
+  record AuthorizationResponse {
+    @logicalType("uuid") string requestId;
+    string authorizationId;
+    AuthResult result;
+    union { null, string } networkCode = null;
+    union { null, Money } authorizedAmount = null;
+    @logicalType("timestamp-millis") long decidedAt;
+  }
+
+  record CaptureRequest {
+    string authorizationId;
+    Money amount;
+    boolean finalCapture = true;
+  }
+
+  record SettlementNotice {
+    string authorizationId;
+    Money settledAmount;
+    @logicalType("date") int settlementDate;
+  }
+
+  error PaymentRejected {
+    string authorizationId;
+    AuthResult result;
+    string reason;
+  }
+
+  error SystemUnavailable {
+    string component;
+    union { null, int } retryAfterSeconds = null;
+  }
+
+  /** Authorize a card payment. */
+  AuthorizationResponse authorize(AuthorizationRequest request)
+    throws PaymentRejected, SystemUnavailable;
+
+  /** Capture a previously approved authorization. */
+  AuthorizationResponse capture(CaptureRequest request) throws PaymentRejected;
+
+  /** Void an authorization that has not settled. */
+  void voidAuthorization(string authorizationId) throws PaymentRejected;
+
+  /** Settlement notices are pushed, not requested. */
+  void settled(SettlementNotice notice) oneway;
+}

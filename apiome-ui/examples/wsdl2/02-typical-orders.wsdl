@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://www.w3.org/ns/wsdl"
+             xmlns:tns="http://example.com/orders"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:wsoap="http://www.w3.org/ns/wsdl/soap"
+             xmlns:wsdlx="http://www.w3.org/ns/wsdl-extensions"
+             targetNamespace="http://example.com/orders">
+
+  <documentation>
+    Order service, WSDL 2.0. Three operations across two message exchange patterns.
+  </documentation>
+
+  <types>
+    <xs:schema targetNamespace="http://example.com/orders"
+               elementFormDefault="qualified">
+      <xs:element name="getOrder">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="orderId" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="order">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="orderId" type="xs:string"/>
+            <xs:element name="customerId" type="xs:string"/>
+            <xs:element name="total" type="xs:decimal"/>
+            <xs:element name="line" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="sku" type="xs:string"/>
+                  <xs:element name="quantity" type="xs:int"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="placeOrder">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="customerId" type="xs:string"/>
+            <xs:element name="sku" type="xs:string"/>
+            <xs:element name="quantity" type="xs:int"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="orderAck">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="orderId" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="cancelOrder">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="orderId" type="xs:string"/>
+            <xs:element name="reason" type="xs:string" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="orderFault">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="code" type="xs:string"/>
+            <xs:element name="message" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:schema>
+  </types>
+
+  <interface name="OrderInterface">
+    <fault name="OrderFault" element="tns:orderFault"/>
+
+    <operation name="getOrder"
+               pattern="http://www.w3.org/ns/wsdl/in-out"
+               wsdlx:safe="true">
+      <input messageLabel="In" element="tns:getOrder"/>
+      <output messageLabel="Out" element="tns:order"/>
+      <outfault ref="tns:OrderFault" messageLabel="Out"/>
+    </operation>
+
+    <operation name="placeOrder"
+               pattern="http://www.w3.org/ns/wsdl/in-out">
+      <input messageLabel="In" element="tns:placeOrder"/>
+      <output messageLabel="Out" element="tns:orderAck"/>
+      <outfault ref="tns:OrderFault" messageLabel="Out"/>
+    </operation>
+
+    <operation name="cancelOrder"
+               pattern="http://www.w3.org/ns/wsdl/in-only">
+      <input messageLabel="In" element="tns:cancelOrder"/>
+    </operation>
+  </interface>
+
+  <binding name="OrderSoapBinding"
+           interface="tns:OrderInterface"
+           type="http://www.w3.org/ns/wsdl/soap"
+           wsoap:protocol="http://www.w3.org/2003/05/soap/bindings/HTTP/">
+    <fault ref="tns:OrderFault" wsoap:code="soap:Sender"/>
+    <operation ref="tns:getOrder"/>
+    <operation ref="tns:placeOrder"/>
+    <operation ref="tns:cancelOrder"/>
+  </binding>
+
+  <service name="OrderService" interface="tns:OrderInterface">
+    <endpoint name="SoapEndpoint"
+              binding="tns:OrderSoapBinding"
+              address="https://api.example.com/orders"/>
+  </service>
+</description>

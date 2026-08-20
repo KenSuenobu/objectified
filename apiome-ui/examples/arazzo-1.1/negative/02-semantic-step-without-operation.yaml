@@ -1,0 +1,16 @@
+arazzo: 1.1.0
+info:
+  title: Step with nothing to call
+  version: 1.0.0
+sourceDescriptions:
+  - name: api
+    url: https://api.example.com/openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: noOperation
+    summary: Valid YAML; the step names no operationId, operationPath, operationRef or workflowId.
+    steps:
+      - stepId: doNothing
+        description: There is nothing here to invoke.
+        successCriteria:
+          - condition: $statusCode == 200

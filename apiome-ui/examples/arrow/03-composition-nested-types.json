@@ -1,0 +1,68 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "order_id",
+        "type": { "name": "utf8" },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "customer",
+        "type": { "name": "struct" },
+        "nullable": false,
+        "children": [
+          {
+            "name": "customer_id",
+            "type": { "name": "utf8" },
+            "nullable": false,
+            "children": []
+          },
+          {
+            "name": "address",
+            "type": { "name": "struct" },
+            "nullable": true,
+            "children": [
+              { "name": "line1", "type": { "name": "utf8" }, "nullable": false, "children": [] },
+              { "name": "city", "type": { "name": "utf8" }, "nullable": false, "children": [] },
+              { "name": "country", "type": { "name": "fixedsizebinary", "byteWidth": 2 }, "nullable": false, "children": [] }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "lines",
+        "type": { "name": "list" },
+        "nullable": false,
+        "children": [
+          {
+            "name": "item",
+            "type": { "name": "struct" },
+            "nullable": false,
+            "children": [
+              { "name": "sku", "type": { "name": "utf8" }, "nullable": false, "children": [] },
+              { "name": "quantity", "type": { "name": "int", "bitWidth": 32, "isSigned": true }, "nullable": false, "children": [] },
+              { "name": "unit_price", "type": { "name": "decimal", "precision": 18, "scale": 4, "bitWidth": 128 }, "nullable": false, "children": [] }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "attributes",
+        "type": { "name": "map", "keysSorted": false },
+        "nullable": true,
+        "children": [
+          {
+            "name": "entries",
+            "type": { "name": "struct" },
+            "nullable": false,
+            "children": [
+              { "name": "key", "type": { "name": "utf8" }, "nullable": false, "children": [] },
+              { "name": "value", "type": { "name": "utf8" }, "nullable": true, "children": [] }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurator>
+  <domain name="General"/>
+
+  <enum name="ChangeTypeEnum" type="enum8">
+    <cluster code="0x0028"/>
+    <item name="Changed" value="0x00"/>
+    <item name="Added" value="0x01"/>
+    <item name="Removed" value="0x02"/>
+  </enum>
+
+  <struct name="CapabilityMinimaStruct">
+    <cluster code="0x0028"/>
+    <item fieldId="0" name="CaseSessionsPerFabric" type="int16u" default="3" min="3"/>
+    <item fieldId="1" name="SubscriptionsPerFabric" type="int16u" default="3" min="3"/>
+  </struct>
+
+  <cluster>
+    <domain>General</domain>
+    <name>Basic Information</name>
+    <code>0x0028</code>
+    <define>BASIC_INFORMATION_CLUSTER</define>
+    <description>Identity and capability of the node, plus lifecycle events.</description>
+
+    <attribute side="server" code="0x0000" define="DATA_MODEL_REVISION" type="int16u"
+               writable="false">DataModelRevision</attribute>
+    <attribute side="server" code="0x0001" define="VENDOR_NAME" type="char_string"
+               length="32" writable="false">VendorName</attribute>
+    <attribute side="server" code="0x0002" define="VENDOR_ID" type="vendor_id"
+               writable="false">VendorID</attribute>
+    <attribute side="server" code="0x0003" define="PRODUCT_NAME" type="char_string"
+               length="32" writable="false">ProductName</attribute>
+    <attribute side="server" code="0x0005" define="NODE_LABEL" type="char_string" length="32"
+               writable="true" default="">NodeLabel
+      <access op="read" privilege="view"/>
+      <access op="write" privilege="manage"/>
+    </attribute>
+    <attribute side="server" code="0x0006" define="LOCATION" type="char_string" length="2"
+               writable="true" default="XX">Location
+      <access op="read" privilege="view"/>
+      <access op="write" privilege="administer"/>
+    </attribute>
+    <attribute side="server" code="0x000A" define="SOFTWARE_VERSION_STRING"
+               type="char_string" length="64" writable="false">SoftwareVersionString</attribute>
+    <attribute side="server" code="0x0013" define="CAPABILITY_MINIMA"
+               type="CapabilityMinimaStruct" writable="false">CapabilityMinima</attribute>
+
+    <event source="server" code="0x00" name="StartUp" priority="critical">
+      <description>Emitted once after the node completes a boot.</description>
+      <field id="0" name="SoftwareVersion" type="int32u"/>
+    </event>
+
+    <event source="server" code="0x01" name="ShutDown" priority="critical" optional="true">
+      <description>Emitted when the node is about to shut down.</description>
+    </event>
+
+    <event source="server" code="0x02" name="Leave" priority="info" optional="true">
+      <field id="0" name="FabricIndex" type="fabric_idx"/>
+    </event>
+
+    <event source="server" code="0x03" name="ReachableChanged" priority="info" optional="true">
+      <field id="0" name="ReachableNewValue" type="boolean"/>
+      <field id="1" name="ChangeType" type="ChangeTypeEnum"/>
+    </event>
+  </cluster>
+</configurator>

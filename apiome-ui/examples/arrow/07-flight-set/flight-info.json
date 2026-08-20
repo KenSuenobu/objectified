@@ -1,0 +1,20 @@
+{
+  "flight_descriptor": {
+    "type": "PATH",
+    "path": ["warehouse", "public", "inventory"]
+  },
+  "endpoint": [
+    {
+      "ticket": { "ticket": "aW52ZW50b3J5LXBhcnQtMA==" },
+      "location": [{ "uri": "grpc+tls://flight-a.example.com:443" }]
+    },
+    {
+      "ticket": { "ticket": "aW52ZW50b3J5LXBhcnQtMQ==" },
+      "location": [{ "uri": "grpc+tls://flight-b.example.com:443" }]
+    }
+  ],
+  "total_records": -1,
+  "total_bytes": -1,
+  "ordered": false,
+  "schema_ref": "inventory-schema.json"
+}

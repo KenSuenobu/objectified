@@ -1,0 +1,8 @@
+# A route configuration with no virtual hosts describes no routes at all, so there is no
+# API surface to infer.
+name: empty_route
+validate_clusters: true
+internal_only_headers:
+  - x-internal-trace
+response_headers_to_remove:
+  - server

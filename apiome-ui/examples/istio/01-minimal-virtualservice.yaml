@@ -1,0 +1,14 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: ping
+  namespace: storefront
+spec:
+  hosts:
+    - ping.storefront.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: ping.storefront.svc.cluster.local
+            port:
+              number: 8080

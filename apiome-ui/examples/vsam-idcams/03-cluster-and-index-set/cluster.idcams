@@ -1,0 +1,16 @@
+/* Root of the set: the base cluster. The alternate index in the sibling
+   file RELATEs to this name, so the key layout only makes sense together. */
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.POLICY.KSDS)                   -
+          INDEXED                                     -
+          KEYS(12 0)                                  -
+          RECORDSIZE(320 320)                         -
+          FREESPACE(10 20)                            -
+          SHAREOPTIONS(2 3)                           -
+          CYLINDERS(400 80))                          -
+         DATA                                         -
+         (NAME(EXAMPLE.POLICY.KSDS.DATA)              -
+          CONTROLINTERVALSIZE(8192))                  -
+         INDEX                                        -
+         (NAME(EXAMPLE.POLICY.KSDS.INDEX)             -
+          CONTROLINTERVALSIZE(2048))

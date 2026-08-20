@@ -1,0 +1,17 @@
+arazzo: 1.1.0
+info:
+  title: Order to cash
+  version: 4.0.0
+sourceDescriptions:
+  - name: orders
+    url: https://api.example.com/orders/openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: orderToCash
+    steps:
+      - stepId: placeOrder
+        operationId: $sourceDescriptions.orders.createOrder
+        requestBody:
+          contentType: application/json
+          payload:
+            customerId: "CUS-000

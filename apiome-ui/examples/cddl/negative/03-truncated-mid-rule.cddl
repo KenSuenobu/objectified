@@ -1,0 +1,10 @@
+order = {
+  order-id: tstr,
+  lines: [+ line],
+  status: status,
+}
+
+line = {
+  sku: tstr,
+  quantity: uint,
+  unit-price: mon

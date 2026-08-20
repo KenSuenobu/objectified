@@ -1,0 +1,32 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "Orphaned",
+  "collectionId": "b1f7c8d0-0000-4000-8000-0000000000e6",
+  "dateExported": "2026-08-19T10:30:00.000Z",
+  "version": "1.2",
+  "folders": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-0000000000e7",
+      "name": "Present folder",
+      "containerId": "b1f7c8d0-0000-4000-8000-00000000MISSING",
+      "created": "2026-08-19T10:29:00.000Z",
+      "sortNum": 10000
+    }
+  ],
+  "requests": [
+    {
+      "_id": "b1f7c8d0-0000-4000-8000-0000000000e8",
+      "colId": "b1f7c8d0-0000-4000-8000-0000000000e6",
+      "containerId": "b1f7c8d0-0000-4000-8000-00000000ABSENT",
+      "name": "Request in a folder that does not exist",
+      "url": "{{baseUrl}}/orphan",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2026-08-19T10:30:00.000Z",
+      "modified": "2026-08-19T10:30:00.000Z",
+      "headers": [],
+      "params": [],
+      "tests": []
+    }
+  ]
+}

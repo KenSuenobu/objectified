@@ -1,0 +1,17 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix miss: <https://example.com/missing#> .
+@prefix ex:   <https://example.com/dangling#> .
+
+# owl:imports names an ontology that is not in the fileset and cannot be fetched, and the
+# classes below extend types that only that ontology defines.
+<https://example.com/dangling> a owl:Ontology ;
+    owl:imports <https://example.com/missing> ;
+    owl:versionInfo "1.0.0" .
+
+ex:Shipment a owl:Class ;
+    rdfs:subClassOf miss:Document .
+
+ex:shipTo a owl:ObjectProperty ;
+    rdfs:domain ex:Shipment ;
+    rdfs:range miss:Address .

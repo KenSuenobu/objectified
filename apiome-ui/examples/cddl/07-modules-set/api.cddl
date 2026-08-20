@@ -1,0 +1,27 @@
+; Root of the set: the request/response grammar. The shared value types live in
+; common.cddl, which the tool must be given alongside this file — CDDL has no
+; include directive, so composition is a fileset property.
+
+request = {
+  id: uuid,
+  method: "get" / "put" / "delete",
+  resource: tstr,
+  ? body: payload,
+  sent-at: timestamp,
+}
+
+response = {
+  id: uuid,
+  status: 100..599,
+  ? body: payload,
+  ? error: problem,
+  received-at: timestamp,
+}
+
+payload = { * tstr => any }
+
+problem = {
+  code: tstr,
+  message: tstr,
+  ? details: [* tstr],
+}

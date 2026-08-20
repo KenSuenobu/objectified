@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 name="ExampleVenueRules" version="FIX.4.4_EP0044">
+  <fixr:metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>Example Venue — order entry rules of engagement</dc:title>
+    <dc:publisher>Example Venue Ltd</dc:publisher>
+    <dc:date>2026-08-19</dc:date>
+    <dc:rights>Reconstructed for the apiome corpus; no upstream text copied.</dc:rights>
+  </fixr:metadata>
+
+  <fixr:codeSets>
+    <fixr:codeSet name="SideCodeSet" id="54" type="char">
+      <fixr:code name="Buy" id="54001" value="1"/>
+      <fixr:code name="Sell" id="54002" value="2"/>
+      <fixr:code name="SellShort" id="54005" value="5"/>
+      <fixr:code name="SellShortExempt" id="54006" value="6"/>
+    </fixr:codeSet>
+    <fixr:codeSet name="OrdStatusCodeSet" id="39" type="char">
+      <fixr:code name="New" id="39000" value="0"/>
+      <fixr:code name="PartiallyFilled" id="39001" value="1"/>
+      <fixr:code name="Filled" id="39002" value="2"/>
+      <fixr:code name="Canceled" id="39004" value="4"/>
+      <fixr:code name="Rejected" id="39008" value="8"/>
+    </fixr:codeSet>
+    <fixr:codeSet name="ExecTypeCodeSet" id="150" type="char">
+      <fixr:code name="New" id="150000" value="0"/>
+      <fixr:code name="Trade" id="150F" value="F"/>
+      <fixr:code name="Canceled" id="150004" value="4"/>
+      <fixr:code name="Rejected" id="150008" value="8"/>
+    </fixr:codeSet>
+    <fixr:codeSet name="CxlRejReasonCodeSet" id="102" type="int">
+      <fixr:code name="TooLateToCancel" id="102000" value="0"/>
+      <fixr:code name="UnknownOrder" id="102001" value="1"/>
+      <fixr:code name="OrderAlreadyInPendingStatus" id="102003" value="3"/>
+    </fixr:codeSet>
+  </fixr:codeSets>
+
+  <fixr:fields>
+    <fixr:field id="1" name="Account" type="String"/>
+    <fixr:field id="11" name="ClOrdID" type="String"/>
+    <fixr:field id="14" name="CumQty" type="Qty"/>
+    <fixr:field id="17" name="ExecID" type="String"/>
+    <fixr:field id="31" name="LastPx" type="Price"/>
+    <fixr:field id="32" name="LastQty" type="Qty"/>
+    <fixr:field id="37" name="OrderID" type="String"/>
+    <fixr:field id="38" name="OrderQty" type="Qty"/>
+    <fixr:field id="39" name="OrdStatus" type="OrdStatusCodeSet"/>
+    <fixr:field id="41" name="OrigClOrdID" type="String"/>
+    <fixr:field id="44" name="Price" type="Price"/>
+    <fixr:field id="54" name="Side" type="SideCodeSet"/>
+    <fixr:field id="55" name="Symbol" type="String"/>
+    <fixr:field id="60" name="TransactTime" type="UTCTimestamp"/>
+    <fixr:field id="102" name="CxlRejReason" type="CxlRejReasonCodeSet"/>
+    <fixr:field id="150" name="ExecType" type="ExecTypeCodeSet"/>
+    <fixr:field id="151" name="LeavesQty" type="Qty"/>
+    <fixr:field id="6" name="AvgPx" type="Price"/>
+  </fixr:fields>
+
+  <fixr:components>
+    <fixr:component name="Instrument" id="1003" category="Common">
+      <fixr:fieldRef id="55" presence="required"/>
+    </fixr:component>
+    <fixr:component name="OrderQtyData" id="1011" category="Common">
+      <fixr:fieldRef id="38" presence="required"/>
+    </fixr:component>
+  </fixr:components>
+
+  <fixr:actors>
+    <fixr:actor name="BuySide"/>
+    <fixr:actor name="SellSide"/>
+    <fixr:flow name="OrderEntry" source="BuySide" destination="SellSide"/>
+    <fixr:flow name="Executions" source="SellSide" destination="BuySide"/>
+  </fixr:actors>
+
+  <fixr:messages>
+    <fixr:message name="NewOrderSingle" id="14" msgType="D" flow="OrderEntry"
+                  category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:fieldRef id="1" presence="optional"/>
+        <fixr:componentRef id="1003" presence="required"/>
+        <fixr:fieldRef id="54" presence="required"/>
+        <fixr:componentRef id="1011" presence="required"/>
+        <fixr:fieldRef id="44" presence="optional"/>
+        <fixr:fieldRef id="60" presence="required"/>
+      </fixr:structure>
+      <fixr:responses>
+        <fixr:response name="ack">
+          <fixr:messageRef name="ExecutionReport" msgType="8" id="9"/>
+        </fixr:response>
+        <fixr:response name="reject">
+          <fixr:messageRef name="OrderCancelReject" msgType="9" id="10"/>
+        </fixr:response>
+      </fixr:responses>
+    </fixr:message>
+
+    <fixr:message name="ExecutionReport" id="9" msgType="8" flow="Executions"
+                  category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="37" presence="required"/>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:fieldRef id="17" presence="required"/>
+        <fixr:fieldRef id="150" presence="required"/>
+        <fixr:fieldRef id="39" presence="required"/>
+        <fixr:componentRef id="1003" presence="required"/>
+        <fixr:fieldRef id="54" presence="required"/>
+        <fixr:fieldRef id="151" presence="required"/>
+        <fixr:fieldRef id="14" presence="required"/>
+        <fixr:fieldRef id="6" presence="optional"/>
+        <fixr:fieldRef id="32" presence="conditional">
+          <fixr:rule name="RequiredOnTrade" presence="required">
+            <fixr:when>ExecType == "^Trade"</fixr:when>
+          </fixr:rule>
+        </fixr:fieldRef>
+        <fixr:fieldRef id="31" presence="conditional">
+          <fixr:rule name="PriceRequiredOnTrade" presence="required">
+            <fixr:when>ExecType == "^Trade"</fixr:when>
+          </fixr:rule>
+        </fixr:fieldRef>
+        <fixr:fieldRef id="60" presence="required"/>
+      </fixr:structure>
+    </fixr:message>
+
+    <fixr:message name="OrderCancelReject" id="10" msgType="9" flow="Executions"
+                  category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="37" presence="required"/>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:fieldRef id="41" presence="required"/>
+        <fixr:fieldRef id="39" presence="required"/>
+        <fixr:fieldRef id="102" presence="optional"/>
+      </fixr:structure>
+    </fixr:message>
+  </fixr:messages>
+</fixr:repository>

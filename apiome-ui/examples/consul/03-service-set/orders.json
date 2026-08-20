@@ -1,0 +1,22 @@
+{
+  "service": {
+    "id": "orders-1",
+    "name": "orders",
+    "tags": ["v2", "http", "urlprefix-/v2/orders"],
+    "port": 8080,
+    "meta": { "protocol": "http", "version": "2.3.0" },
+    "check": {
+      "http": "http://localhost:8080/healthz",
+      "interval": "10s"
+    },
+    "connect": {
+      "sidecar_service": {
+        "proxy": {
+          "upstreams": [
+            { "destination_name": "catalogue", "local_bind_port": 9101 }
+          ]
+        }
+      }
+    }
+  }
+}

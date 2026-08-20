@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Root of the set: the prescription. NCPDP SCRIPT is a *conversation*: the response in
+  the sibling file carries the pharmacy's acceptance and refers back to this message by
+  RelatesToMessageID, so the transaction's outcome is only visible across the pair.
+-->
+<Message xmlns="http://www.ncpdp.org/schema/SCRIPT" version="010" release="006">
+  <Header>
+    <To Qualifier="P">1234567</To>
+    <From Qualifier="D">1234567893</From>
+    <MessageID>MSG-20260824-0100</MessageID>
+    <SentTime>2026-08-24T09:30:00Z</SentTime>
+    <PrescriberOrderNumber>RX-2026-005510</PrescriberOrderNumber>
+  </Header>
+  <Body>
+    <NewRx>
+      <Patient>
+        <HumanPatient>
+          <Name><LastName>Sample</LastName><FirstName>Chris</FirstName></Name>
+          <Gender>M</Gender>
+          <DateOfBirth><Date>1962-09-05</Date></DateOfBirth>
+        </HumanPatient>
+      </Patient>
+      <Pharmacy>
+        <Identification><NCPDPID>1234567</NCPDPID></Identification>
+        <BusinessName>Example Community Pharmacy</BusinessName>
+      </Pharmacy>
+      <Prescriber>
+        <NonVeterinarian>
+          <Identification><NPI>1234567893</NPI></Identification>
+          <Name><LastName>Clinician</LastName><FirstName>Robin</FirstName></Name>
+        </NonVeterinarian>
+      </Prescriber>
+      <MedicationPrescribed>
+        <DrugDescription>Ramipril 5 MG oral capsule</DrugDescription>
+        <DrugCoded>
+          <ProductCode>00093721101</ProductCode>
+          <ProductCodeQualifier>ND</ProductCodeQualifier>
+        </DrugCoded>
+        <Quantity>
+          <Value>90</Value>
+          <CodeListQualifier>38</CodeListQualifier>
+        </Quantity>
+        <DaysSupply>90</DaysSupply>
+        <NumberOfRefills>3</NumberOfRefills>
+        <WrittenDate><Date>2026-08-24</Date></WrittenDate>
+        <Sig><SigText>Take one capsule by mouth once daily.</SigText></Sig>
+      </MedicationPrescribed>
+    </NewRx>
+  </Body>
+</Message>

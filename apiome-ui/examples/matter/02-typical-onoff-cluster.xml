@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurator>
+  <domain name="General"/>
+
+  <enum name="StartUpOnOffEnum" type="enum8">
+    <cluster code="0x0006"/>
+    <item name="Off" value="0x00"/>
+    <item name="On" value="0x01"/>
+    <item name="Toggle" value="0x02"/>
+  </enum>
+
+  <bitmap name="OnOffFeature" type="bitmap32">
+    <cluster code="0x0006"/>
+    <field name="Lighting" mask="0x1"/>
+    <field name="DeadFrontBehavior" mask="0x2"/>
+    <field name="OffOnly" mask="0x4"/>
+  </bitmap>
+
+  <cluster>
+    <domain>General</domain>
+    <name>On/Off</name>
+    <code>0x0006</code>
+    <define>ON_OFF_CLUSTER</define>
+    <description>Attributes and commands for switching devices between on and off.</description>
+
+    <attribute side="server" code="0x0000" define="ON_OFF" type="boolean" default="false"
+               writable="false" reportable="true">OnOff</attribute>
+    <attribute side="server" code="0x4000" define="GLOBAL_SCENE_CONTROL" type="boolean"
+               default="true" writable="false" optional="true">GlobalSceneControl</attribute>
+    <attribute side="server" code="0x4001" define="ON_TIME" type="int16u" default="0x0000"
+               writable="true" optional="true">OnTime</attribute>
+    <attribute side="server" code="0x4002" define="OFF_WAIT_TIME" type="int16u"
+               default="0x0000" writable="true" optional="true">OffWaitTime</attribute>
+    <attribute side="server" code="0x4003" define="START_UP_ON_OFF" type="StartUpOnOffEnum"
+               writable="true" optional="true" isNullable="true">StartUpOnOff</attribute>
+
+    <command source="client" code="0x00" name="Off" optional="false">
+      <description>Set the OnOff attribute to false.</description>
+    </command>
+    <command source="client" code="0x01" name="On" optional="false">
+      <description>Set the OnOff attribute to true.</description>
+    </command>
+    <command source="client" code="0x02" name="Toggle" optional="false">
+      <description>Invert the OnOff attribute.</description>
+    </command>
+    <command source="client" code="0x40" name="OffWithEffect" optional="true">
+      <arg name="EffectIdentifier" type="EffectIdentifierEnum"/>
+      <arg name="EffectVariant" type="int8u"/>
+    </command>
+    <command source="client" code="0x42" name="OnWithTimedOff" optional="true">
+      <arg name="OnOffControl" type="OnOffControlBitmap"/>
+      <arg name="OnTime" type="int16u" isNullable="true"/>
+      <arg name="OffWaitTime" type="int16u" isNullable="true"/>
+    </command>
+  </cluster>
+</configurator>

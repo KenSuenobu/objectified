@@ -1,0 +1,14 @@
+{
+  "Kind": "service-router",
+  "Name": "orders",
+  "Routes": [
+    {
+      "Match": { "HTTP": { "PathPrefix": "/v2/orders" } },
+      "Destination": { "Service": "orders", "ServiceSubset": "canary" }
+    },
+    {
+      "Match": { "HTTP": { "PathPrefix": "/v2/refunds" } },
+      "Destination": { "Service": "refunds" }
+    }
+  ]
+}

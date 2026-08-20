@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  xmlns:tns="http://example.com/catalogue"
+                  targetNamespace="http://example.com/catalogue"
+                  name="CatalogueService">
+  <wsdl:types>
+    <xs:schema targetNamespace="http://example.com/catalogue" elementFormDefault="qualified">
+      <xs:element name="GetProductRequest">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="sku" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="GetProductResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="sku" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="price" type="xs:decimal"/>
+            <xs:element name="currency" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:schema>
+  </wsdl:types>
+
+  <wsdl:message name="GetProductRequest">
+    <wsdl:part name="parameters" element="tns:GetProductRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetProductResponse">
+    <wsdl:part name="parameters" element="tns:GetProductResponse"/>
+  </wsdl:message>
+
+  <wsdl:portType name="CatalogueServicePortType">
+    <wsdl:operation name="GetProduct">
+      <wsdl:input message="tns:GetProductRequest"/>
+      <wsdl:output message="tns:GetProductResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="CatalogueServiceSoapBinding" type="tns:CatalogueServicePortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetProduct">
+      <soap:operation soapAction="http://example.com/catalogue/GetProduct" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="CatalogueService">
+    <wsdl:port name="CatalogueServicePort" binding="tns:CatalogueServiceSoapBinding">
+      <soap:address location="https://api.example.com/catalogue"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

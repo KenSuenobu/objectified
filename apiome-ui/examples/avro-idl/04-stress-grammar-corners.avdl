@@ -1,0 +1,54 @@
+/**
+ * Grammar corners: every annotation, logical type, and declaration form the IDL admits.
+ */
+@namespace("com.example.stress")
+@version("3")
+protocol StressProtocol {
+
+  /** A fixed-size type. */
+  @aliases(["Sha256"])
+  fixed Digest(32);
+
+  /** Logical types spelled both ways. */
+  record Temporal {
+    @logicalType("date") int day;
+    @logicalType("time-millis") int timeOfDay;
+    @logicalType("timestamp-micros") long capturedAt;
+    @logicalType("uuid") string correlationId;
+    decimal(12, 4) amount;
+    @logicalType("duration") Digest window;
+  }
+
+  enum Priority {
+    LOW, NORMAL, HIGH, URGENT
+  } = NORMAL;
+
+  record Corners {
+    /** Doc comment on a field. */
+    @order("ascending") string primary;
+    @order("ignore") string opaque;
+    union { null, int, string, array<bytes> } polymorphic = null;
+    map<array<union { null, double }>> deeplyNested;
+    array<map<string>> arrayOfMaps = [];
+    Priority priority = "NORMAL";
+    `record` string;
+    @extra({"owner": "platform", "pii": false}) bytes payload;
+  }
+
+  error StressError {
+    string reason;
+    union { null, Corners } context = null;
+  }
+
+  /** Message with no arguments. */
+  Corners snapshot();
+
+  /** Message returning void, not oneway. */
+  void touch(Corners corners);
+
+  /** Message that throws two errors. */
+  Corners mutate(Corners corners, boolean dryRun = false) throws StressError;
+
+  /** One-way message. */
+  void emit(Temporal temporal) oneway;
+}

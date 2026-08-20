@@ -1,0 +1,28 @@
+# Fileset member: the DestinationRule that defines the `stable` and `canary` subsets the
+# VirtualService routes to.
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: shipments
+  namespace: logistics
+spec:
+  host: shipments.logistics.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http2MaxRequests: 200
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 60s
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: stable
+      labels:
+        version: "2.4.0"
+    - name: canary
+      labels:
+        version: "2.5.0-rc.1"

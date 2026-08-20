@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurator>
+  <domain name="General"/>
+
+  <bitmap name="OptionsBitmap" type="bitmap8">
+    <cluster code="0x0008"/>
+    <field name="ExecuteIfOff" mask="0x1"/>
+    <field name="CoupleColorTempToLevel" mask="0x2"/>
+  </bitmap>
+
+  <cluster>
+    <domain>General</domain>
+    <name>Level Control</name>
+    <code>0x0008</code>
+    <define>LEVEL_CONTROL_CLUSTER</define>
+    <description>Controls a device's level, such as brightness.</description>
+
+    <attribute side="server" code="0x0000" define="CURRENT_LEVEL" type="int8u"
+               writable="false" isNullable="true" reportable="true" default="0">CurrentLevel</attribute>
+    <attribute side="server" code="0x0002" define="MIN_LEVEL" type="int8u" writable="false"
+               optional="true" default="1">MinLevel</attribute>
+    <attribute side="server" code="0x0003" define="MAX_LEVEL" type="int8u" writable="false"
+               optional="true" default="254">MaxLevel</attribute>
+    <attribute side="server" code="0x0011" define="ON_LEVEL" type="int8u" writable="true"
+               isNullable="true" optional="true">OnLevel</attribute>
+
+    <command source="client" code="0x00" name="MoveToLevel" optional="false">
+      <arg name="Level" type="int8u" min="0" max="254"/>
+      <arg name="TransitionTime" type="int16u" isNullable="true"/>
+      <arg name="OptionsMask" type="OptionsBitmap"/>
+      <arg name="OptionsOverride" type="OptionsBitmap"/>
+      <access op="invoke" privilege="operate"/>
+    </command>
+    <command source="client" code="0x04" name="MoveToLevelWithOnOff" optional="false">
+      <arg name="Level" type="int8u" min="0" max="254"/>
+      <arg name="TransitionTime" type="int16u" isNullable="true"/>
+    </command>
+  </cluster>
+</configurator>

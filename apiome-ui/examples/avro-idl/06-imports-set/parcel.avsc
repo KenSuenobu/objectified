@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "Parcel",
+  "namespace": "com.example.shipping",
+  "doc": "Imported through `import schema` — the generated artifact beside the IDL source.",
+  "fields": [
+    { "name": "lengthCm", "type": "double" },
+    { "name": "widthCm", "type": "double" },
+    { "name": "heightCm", "type": "double" },
+    { "name": "fragile", "type": "boolean", "default": false }
+  ]
+}

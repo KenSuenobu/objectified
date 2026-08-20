@@ -1,0 +1,19 @@
+/* Fileset member: the alternate index and its path. KEYS(8 40) means the
+   alternate key is eight bytes starting at offset 40 of the base record —
+   a fact about the *base* cluster's layout, not this file's. */
+  DEFINE AIX                                          -
+         (NAME(EXAMPLE.POLICY.AIX.BROKER)             -
+          RELATE(EXAMPLE.POLICY.KSDS)                 -
+          KEYS(8 40)                                  -
+          RECORDSIZE(80 2048)                         -
+          NONUNIQUEKEY                                -
+          UPGRADE                                     -
+          CYLINDERS(60 15))
+
+  DEFINE PATH                                         -
+         (NAME(EXAMPLE.POLICY.PATH.BROKER)            -
+          PATHENTRY(EXAMPLE.POLICY.AIX.BROKER)        -
+          UPDATE)
+
+  BLDINDEX INDATASET(EXAMPLE.POLICY.KSDS)             -
+           OUTDATASET(EXAMPLE.POLICY.AIX.BROKER)

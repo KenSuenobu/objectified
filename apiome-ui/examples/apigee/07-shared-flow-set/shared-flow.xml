@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fileset member: the shared flow the proxy calls into. This is where the OAuth check
+  and the quota actually live, so the proxy's effective security posture is only
+  visible once both files are read together.
+-->
+<SharedFlow name="default">
+    <Step><Name>Verify-OAuth-Token</Name></Step>
+    <Step>
+        <Name>Quota-Per-App</Name>
+        <Condition>request.verb != "OPTIONS"</Condition>
+    </Step>
+    <Step><Name>Add-Trace-Header</Name></Step>
+</SharedFlow>

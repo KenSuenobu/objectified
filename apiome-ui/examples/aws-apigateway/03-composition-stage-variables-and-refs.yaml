@@ -1,0 +1,82 @@
+openapi: 3.0.1
+info:
+  title: catalogue-api
+  description: >
+    Composition: one integration definition reused across operations by $ref, stage
+    variables in integration URIs, and shared request parameters.
+  version: "2026-08-19T11:00:00Z"
+servers:
+  - url: https://f6g7h8i9j0.execute-api.eu-west-1.amazonaws.com/{basePath}
+    variables:
+      basePath:
+        default: prod
+        enum: [dev, staging, prod]
+paths:
+  /products:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 200 response
+      x-amazon-apigateway-integration:
+        type: http_proxy
+        httpMethod: GET
+        uri: http://${stageVariables.backendHost}/products
+        requestParameters:
+          integration.request.header.X-Tenant: method.request.header.X-Tenant
+        connectionType: VPC_LINK
+        connectionId: ${stageVariables.vpcLinkId}
+        passthroughBehavior: when_no_match
+  /products/{sku}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 200 response
+        "404":
+          description: 404 response
+      x-amazon-apigateway-integration:
+        type: http_proxy
+        httpMethod: GET
+        uri: http://${stageVariables.backendHost}/products/{sku}
+        requestParameters:
+          integration.request.path.sku: method.request.path.sku
+          integration.request.header.X-Tenant: method.request.header.X-Tenant
+        connectionType: VPC_LINK
+        connectionId: ${stageVariables.vpcLinkId}
+        passthroughBehavior: when_no_match
+  /categories:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        "200":
+          description: 200 response
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: >-
+          arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:000000000000:function:${stageVariables.categoriesFn}/invocations
+        passthroughBehavior: when_no_match
+components:
+  parameters:
+    TenantHeader:
+      name: X-Tenant
+      in: header
+      required: true
+      schema:
+        type: string
+x-amazon-apigateway-binary-media-types:
+  - application/octet-stream
+  - image/*

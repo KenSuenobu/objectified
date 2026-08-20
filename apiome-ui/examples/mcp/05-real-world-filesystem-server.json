@@ -1,0 +1,150 @@
+{
+  "mcpVersion": "2025-06-18",
+  "server": {
+    "name": "filesystem",
+    "title": "Filesystem",
+    "version": "0.6.2",
+    "instructions": "Access is restricted to the directories listed in roots; every path argument is resolved against them."
+  },
+  "transport": {
+    "type": "stdio",
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-filesystem", "/srv/data"]
+  },
+  "capabilities": {
+    "tools": { "listChanged": true },
+    "resources": { "listChanged": true }
+  },
+  "tools": [
+    {
+      "name": "read_file",
+      "description": "Read the complete contents of a file from the file system.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "tail": { "type": "integer", "minimum": 1 },
+          "head": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["path"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true }
+    },
+    {
+      "name": "read_multiple_files",
+      "description": "Read the contents of multiple files simultaneously.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "paths": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+        },
+        "required": ["paths"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true }
+    },
+    {
+      "name": "write_file",
+      "description": "Create a new file or completely overwrite an existing file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "content": { "type": "string" }
+        },
+        "required": ["path", "content"],
+        "additionalProperties": false
+      },
+      "annotations": { "destructiveHint": true }
+    },
+    {
+      "name": "edit_file",
+      "description": "Apply line-based edits to a text file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "edits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "oldText": { "type": "string" },
+                "newText": { "type": "string" }
+              },
+              "required": ["oldText", "newText"],
+              "additionalProperties": false
+            }
+          },
+          "dryRun": { "type": "boolean", "default": false }
+        },
+        "required": ["path", "edits"],
+        "additionalProperties": false
+      },
+      "annotations": { "destructiveHint": true }
+    },
+    {
+      "name": "create_directory",
+      "description": "Create a new directory, creating parents as needed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "path": { "type": "string" } },
+        "required": ["path"],
+        "additionalProperties": false
+      },
+      "annotations": { "idempotentHint": true }
+    },
+    {
+      "name": "list_directory",
+      "description": "Get a detailed listing of all files and directories in a path.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "path": { "type": "string" } },
+        "required": ["path"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true }
+    },
+    {
+      "name": "search_files",
+      "description": "Recursively search for files and directories matching a pattern.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "pattern": { "type": "string" },
+          "excludePatterns": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["path", "pattern"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true }
+    },
+    {
+      "name": "get_file_info",
+      "description": "Retrieve detailed metadata about a file or directory.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "path": { "type": "string" } },
+        "required": ["path"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true }
+    },
+    {
+      "name": "list_allowed_directories",
+      "description": "Return the list of directories this server may access.",
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "idempotentHint": true }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "file:///srv/data",
+      "name": "data-root",
+      "description": "The single allowed root of this server.",
+      "mimeType": "inode/directory"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+module example.beacon
+
+id: String
+seenAt: Int

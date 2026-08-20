@@ -1,0 +1,9 @@
+edition = "2099";
+
+package example.future.v1;
+
+// An edition no released protoc knows. The adapter must reject with a version
+// message naming the editions it supports, not fall back to proto3 parsing.
+message Thing {
+  string id = 1;
+}

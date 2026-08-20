@@ -1,0 +1,4 @@
+ DCL 1 CUSTOMER_REC,
+       2 CUST_ID       CHAR(10),
+       2 CUST_NAME     CHAR(40),
+       2 CUST_BALANCE  FIXED DEC(13,

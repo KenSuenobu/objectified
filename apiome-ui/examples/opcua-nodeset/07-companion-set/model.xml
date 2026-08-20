@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Root of the set: a vendor nodeset that declares a RequiredModel. Its object type
+  subtypes a type defined only in the companion nodeset beside it, and its variable
+  uses a data type from that model — so the type graph closes only across the set.
+-->
+<UANodeSet xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd">
+  <NamespaceUris>
+    <Uri>http://example.com/UA/Vendor/</Uri>
+    <Uri>http://example.com/UA/Companion/</Uri>
+  </NamespaceUris>
+  <Models>
+    <Model ModelUri="http://example.com/UA/Vendor/" Version="1.0.0"
+           PublicationDate="2026-08-19T00:00:00Z">
+      <RequiredModel ModelUri="http://opcfoundation.org/UA/" Version="1.05.03"/>
+      <RequiredModel ModelUri="http://example.com/UA/Companion/" Version="2.0.0"
+                     PublicationDate="2026-06-01T00:00:00Z"/>
+    </Model>
+  </Models>
+  <Aliases>
+    <Alias Alias="Double">i=11</Alias>
+    <Alias Alias="String">i=12</Alias>
+    <Alias Alias="HasSubtype">i=45</Alias>
+    <Alias Alias="HasComponent">i=47</Alias>
+    <Alias Alias="HasTypeDefinition">i=40</Alias>
+    <Alias Alias="HasModellingRule">i=37</Alias>
+  </Aliases>
+
+  <!-- Subtype of a type defined in the companion model (ns=2). -->
+  <UAObjectType NodeId="ns=1;i=1200" BrowseName="1:VendorFillerType">
+    <DisplayName>VendorFillerType</DisplayName>
+    <References>
+      <Reference ReferenceType="HasSubtype" IsForward="false">ns=2;i=1100</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=6500</Reference>
+      <Reference ReferenceType="HasComponent">ns=1;i=6501</Reference>
+    </References>
+  </UAObjectType>
+
+  <!-- Variable typed by a data type defined in the companion model. -->
+  <UAVariable NodeId="ns=1;i=6500" BrowseName="1:CurrentRecipeState" DataType="ns=2;i=3100"
+              ParentNodeId="ns=1;i=1200" AccessLevel="1">
+    <DisplayName>CurrentRecipeState</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1200</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+
+  <UAVariable NodeId="ns=1;i=6501" BrowseName="1:NozzlePressure" DataType="Double"
+              ParentNodeId="ns=1;i=1200" AccessLevel="1" MinimumSamplingInterval="200">
+    <DisplayName>NozzlePressure</DisplayName>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1200</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=2368</Reference>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
+    </References>
+  </UAVariable>
+</UANodeSet>

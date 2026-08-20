@@ -1,0 +1,77 @@
+{
+  "v": 6,
+  "id": "clx0000000000000000000010",
+  "name": "Orders API",
+  "folders": [],
+  "requests": [
+    {
+      "v": "11",
+      "id": "clx0000000000000000000011",
+      "name": "List orders",
+      "method": "GET",
+      "endpoint": "<<baseUrl>>/v2/orders",
+      "params": [
+        { "key": "status", "value": "new", "active": true, "description": "Lifecycle filter." },
+        { "key": "limit", "value": "25", "active": true, "description": "" },
+        { "key": "cursor", "value": "", "active": false, "description": "" }
+      ],
+      "headers": [{ "key": "Accept", "value": "application/json", "active": true, "description": "" }],
+      "auth": { "authType": "inherit", "authActive": true },
+      "body": { "contentType": null, "body": null },
+      "preRequestScript": "",
+      "testScript": "pw.test(\"status is 200\", () => { pw.expect(pw.response.status).toBe(200); });",
+      "requestVariables": []
+    },
+    {
+      "v": "11",
+      "id": "clx0000000000000000000012",
+      "name": "Place order",
+      "method": "POST",
+      "endpoint": "<<baseUrl>>/v2/orders",
+      "params": [],
+      "headers": [{ "key": "Content-Type", "value": "application/json", "active": true, "description": "" }],
+      "auth": { "authType": "inherit", "authActive": true },
+      "body": {
+        "contentType": "application/json",
+        "body": "{\n  \"customerId\": \"CUS-000123\",\n  \"lines\": [{ \"sku\": \"WID-0001\", \"quantity\": 2 }]\n}"
+      },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": []
+    },
+    {
+      "v": "11",
+      "id": "clx0000000000000000000013",
+      "name": "Get order",
+      "method": "GET",
+      "endpoint": "<<baseUrl>>/v2/orders/<<orderId>>",
+      "params": [],
+      "headers": [],
+      "auth": { "authType": "inherit", "authActive": true },
+      "body": { "contentType": null, "body": null },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": [{ "key": "orderId", "value": "ORD-00010042", "active": true }]
+    },
+    {
+      "v": "11",
+      "id": "clx0000000000000000000014",
+      "name": "Cancel order",
+      "method": "DELETE",
+      "endpoint": "<<baseUrl>>/v2/orders/<<orderId>>",
+      "params": [{ "key": "reason", "value": "customer-request", "active": true, "description": "" }],
+      "headers": [],
+      "auth": { "authType": "inherit", "authActive": true },
+      "body": { "contentType": null, "body": null },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": []
+    }
+  ],
+  "auth": {
+    "authType": "bearer",
+    "authActive": true,
+    "token": "<<accessToken>>"
+  },
+  "headers": [{ "key": "X-Tenant", "value": "acme", "active": true, "description": "" }]
+}

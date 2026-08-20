@@ -1,0 +1,15 @@
+{
+  "api_id": "pathless-api",
+  "name": "Pathless API",
+  "org_id": "000000000000000000000001",
+  "active": true,
+  "use_keyless": true,
+  "proxy": {
+    "target_url": "http://pathless.internal.example.com:8080",
+    "strip_listen_path": true
+  },
+  "version_data": {
+    "not_versioned": true,
+    "versions": { "Default": { "name": "Default" } }
+  }
+}

@@ -1,0 +1,207 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: 0f6d2f0e-1b2c-4a5e-9f2a-000000000004
+name: telemetry_events
+version: 0.9.0-rc.2
+status: draft
+domain: platform
+dataProduct: telemetry
+tenant: ExampleCorp
+
+description:
+  purpose: Exercise every quality rule type, SLA property and custom extension ODCS v3.1 admits.
+  usage: Fixture only.
+  limitations: Nothing here is served.
+  authoritativeDefinitions:
+    - url: https://example.com/governance/telemetry
+      type: businessDefinition
+
+schema:
+  - name: events
+    physicalName: events_2026
+    logicalType: object
+    physicalType: table
+    dataGranularityDescription: One row per emitted event.
+    properties:
+      - name: event_id
+        logicalType: string
+        physicalType: uuid
+        required: true
+        unique: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        logicalTypeOptions:
+          format: uuid
+          minLength: 36
+          maxLength: 36
+        quality:
+          - rule: nullCount
+            mustBe: 0
+            dimension: completeness
+            severity: error
+          - rule: duplicateCount
+            mustBe: 0
+            dimension: uniqueness
+
+      - name: emitted_at
+        logicalType: date
+        physicalType: timestamp
+        required: true
+        partitioned: true
+        partitionKeyPosition: 1
+        logicalTypeOptions:
+          format: yyyy-MM-dd'T'HH:mm:ssX
+
+      - name: severity
+        logicalType: string
+        physicalType: varchar(10)
+        required: true
+        logicalTypeOptions:
+          enum: [debug, info, warn, error, fatal]
+        quality:
+          - type: sql
+            description: Only known severities are accepted.
+            query: |
+              SELECT COUNT(*) FROM events
+              WHERE severity NOT IN ('debug','info','warn','error','fatal')
+            mustBe: 0
+
+      - name: latency_ms
+        logicalType: integer
+        physicalType: bigint
+        logicalTypeOptions:
+          minimum: 0
+          maximum: 600000
+        quality:
+          - rule: avg
+            property: latency_ms
+            mustBeLessThan: 250
+            dimension: timeliness
+            businessImpact: operational
+          - type: custom
+            engine: soda
+            implementation: |
+              checks for events:
+                - invalid_percent(latency_ms) < 1%
+
+      - name: payload
+        logicalType: object
+        physicalType: jsonb
+        description: Free-form event body; not modelled further.
+
+      - name: pii_email
+        logicalType: string
+        physicalType: varchar(255)
+        classification: restricted
+        criticalDataElement: true
+        encryptedName: pii_email_enc
+        transformSourceObjects:
+          - crm.customers
+        transformLogic: sha256(lower(trim(email)))
+        transformDescription: Hashed at ingest; the raw value never lands.
+
+    quality:
+      - rule: rowCount
+        mustBeBetween: [1, 100000000]
+        dimension: volume
+        severity: warning
+      - rule: freshness
+        property: emitted_at
+        mustBeLessThan: 30
+        unit: minute
+        dimension: timeliness
+      - type: text
+        description: >
+          Every event must be traceable to a deployment id recorded in the platform
+          deployment registry. Checked manually during quarterly review.
+
+servers:
+  - server: lake
+    type: s3
+    location: s3://example-telemetry/events/
+    format: parquet
+    delimiter: none
+  - server: warehouse
+    type: snowflake
+    account: example-account
+    database: TELEMETRY
+    schema: PUBLIC
+    warehouse: ANALYTICS_WH
+  - server: stream
+    type: kafka
+    host: kafka.example.com:9092
+    format: avro
+
+team:
+  - username: platform.owner
+    role: Data Product Owner
+    dateIn: 2025-11-01
+  - username: former.owner
+    role: Data Product Owner
+    dateIn: 2024-04-01
+    dateOut: 2025-10-31
+    replacedByUsername: platform.owner
+  - username: sec.reviewer
+    role: Security Reviewer
+    dateIn: 2026-03-12
+
+roles:
+  - role: telemetry_reader
+    access: read
+    firstLevelApprovers: Platform Lead
+    secondLevelApprovers: Data Governance Board
+  - role: telemetry_admin
+    access: write
+    firstLevelApprovers: Platform Lead
+
+support:
+  - channel: '#telemetry-help'
+    tool: slack
+    url: https://example.slack.com/archives/C0000TELEM
+    scope: interactive
+  - channel: telemetry-oncall
+    tool: email
+    url: mailto:telemetry-oncall@example.com
+    scope: issues
+
+price:
+  priceAmount: 0.0125
+  priceCurrency: USD
+  priceUnit: megabyte
+
+slaDefaultElement: events.emitted_at
+slaProperties:
+  - property: latency
+    value: 15
+    unit: m
+    element: events.emitted_at
+  - property: generalAvailability
+    value: 2026-09-01T00:00:00Z
+  - property: endOfSupport
+    value: 2028-09-01T00:00:00Z
+  - property: endOfLife
+    value: 2029-09-01T00:00:00Z
+  - property: retention
+    value: 18
+    unit: M
+    element: events.emitted_at
+  - property: frequency
+    value: 5
+    unit: m
+    element: events.emitted_at
+  - property: timeOfAvailability
+    value: 05:00-07:00
+    element: events.emitted_at
+    driver: analytics
+
+tags:
+  - platform
+  - internal-only
+
+customProperties:
+  - property: dataGovernanceTier
+    value: gold
+  - property: costCentre
+    value: CC-4711
+  - property: refRulesetName
+    value: platform.telemetry

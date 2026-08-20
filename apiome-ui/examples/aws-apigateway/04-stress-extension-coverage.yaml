@@ -1,0 +1,141 @@
+openapi: 3.0.1
+info:
+  title: stress-api
+  description: >
+    Every x-amazon-apigateway-* extension the REST flavour admits, including one this
+    adapter has never seen. An unknown extension must be preserved, not dropped.
+  version: "2026-08-19T12:00:00Z"
+servers:
+  - url: https://k1l2m3n4o5.execute-api.us-east-1.amazonaws.com/prod
+paths:
+  /lambda-proxy:
+    x-amazon-apigateway-any-method:
+      responses:
+        "200":
+          description: proxied
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:catch-all/invocations
+        payloadFormatVersion: "1.0"
+        passthroughBehavior: when_no_match
+        timeoutInMillis: 15000
+  /{proxy+}:
+    x-amazon-apigateway-any-method:
+      parameters:
+        - name: proxy
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: greedy proxy
+      x-amazon-apigateway-integration:
+        type: http_proxy
+        httpMethod: ANY
+        uri: https://legacy.internal.example.com/{proxy}
+        requestParameters:
+          integration.request.path.proxy: method.request.path.proxy
+        connectionType: INTERNET
+        passthroughBehavior: when_no_match
+  /aws-service:
+    post:
+      responses:
+        "200":
+          description: 200 response
+      x-amazon-apigateway-integration:
+        type: aws
+        httpMethod: POST
+        uri: arn:aws:apigateway:us-east-1:sqs:path/000000000000/orders-queue
+        credentials: arn:aws:iam::000000000000:role/apigw-sqs
+        requestParameters:
+          integration.request.header.Content-Type: "'application/x-www-form-urlencoded'"
+        requestTemplates:
+          application/json: Action=SendMessage&MessageBody=$input.body
+        responses:
+          "2\\d{2}":
+            statusCode: "200"
+            responseTemplates:
+              application/json: '{"queued": true}'
+          default:
+            statusCode: "500"
+        passthroughBehavior: never
+  /throttled:
+    get:
+      responses:
+        "200":
+          description: 200 response
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        responses:
+          default:
+            statusCode: "200"
+      x-amazon-apigateway-request-validator: params-only
+      x-example-unknown-extension:
+        note: >
+          Not an AWS extension at all. FMT-7.1 requires an unknown extension to be preserved
+          in extras and reported, never silently dropped.
+        owner: platform-team
+security:
+  - jwt-authorizer: []
+components:
+  securitySchemes:
+    jwt-authorizer:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: cognito_user_pools
+      x-amazon-apigateway-authorizer:
+        type: cognito_user_pools
+        providerARNs:
+          - arn:aws:cognito-idp:us-east-1:000000000000:userpool/us-east-1_ABCDEFGHI
+        identitySource: method.request.header.Authorization
+    token-authorizer:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: custom
+      x-amazon-apigateway-authorizer:
+        type: token
+        identityValidationExpression: ^Bearer [-0-9a-zA-Z._]+$
+        authorizerUri: arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:token-auth/invocations
+        authorizerResultTtlInSeconds: 3600
+x-amazon-apigateway-api-key-source: HEADER
+x-amazon-apigateway-binary-media-types:
+  - "*/*"
+x-amazon-apigateway-minimum-compression-size: 1024
+x-amazon-apigateway-request-validators:
+  params-only:
+    validateRequestBody: false
+    validateRequestParameters: true
+x-amazon-apigateway-gateway-responses:
+  UNAUTHORIZED:
+    statusCode: 401
+    responseParameters:
+      gatewayresponse.header.WWW-Authenticate: "'Bearer'"
+    responseTemplates:
+      application/json: '{"message": $context.error.messageString}'
+  THROTTLED:
+    statusCode: 429
+    responseTemplates:
+      application/json: '{"message": "Too many requests"}'
+x-amazon-apigateway-endpoint-configuration:
+  vpcEndpointIds:
+    - vpce-0abc123def4567890
+x-amazon-apigateway-policy:
+  Version: "2012-10-17"
+  Statement:
+    - Effect: Allow
+      Principal: "*"
+      Action: execute-api:Invoke
+      Resource: arn:aws:execute-api:us-east-1:000000000000:k1l2m3n4o5/*
+    - Effect: Deny
+      Principal: "*"
+      Action: execute-api:Invoke
+      Resource: arn:aws:execute-api:us-east-1:000000000000:k1l2m3n4o5/*
+      Condition:
+        NotIpAddress:
+          aws:SourceIp: 203.0.113.0/24

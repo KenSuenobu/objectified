@@ -1,0 +1,19 @@
+{
+  "v": 6,
+  "id": "clx00000000000000000000e2",
+  "name": "Empty collection",
+  "folders": [
+    {
+      "v": 6,
+      "id": "clx00000000000000000000e3",
+      "name": "Also empty",
+      "folders": [],
+      "requests": [],
+      "auth": { "authType": "inherit", "authActive": true },
+      "headers": []
+    }
+  ],
+  "requests": [],
+  "auth": { "authType": "none", "authActive": false },
+  "headers": []
+}

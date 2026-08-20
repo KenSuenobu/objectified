@@ -1,0 +1,15 @@
+Project commerce {
+  database_type: 'PostgreSQL'
+}
+
+Table customer {
+  customer_id varchar [pk]
+  display_name varchar [not null]
+  email varchar [unique, not null]
+}
+
+Table "order" {
+  order_id varchar [pk]
+  customer_id varchar [ref: > customer.customer_id]
+  total_amount decimal
+}

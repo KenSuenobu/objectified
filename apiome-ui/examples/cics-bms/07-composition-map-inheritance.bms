@@ -1,0 +1,61 @@
+*********************************************************************
+* Within-document composition: a base map whose common fields are    *
+* repeated in two derived maps at the same positions, mapset-level    *
+* defaults inherited by every map, and a field group assembled from   *
+* three DFHMDF fields addressed as one.                              *
+*********************************************************************
+COMPSET  DFHMSD TYPE=&SYSPARM,MODE=INOUT,LANG=COBOL,STORAGE=AUTO,      X
+               TIOAPFX=YES,CTRL=(FREEKB,FRSET),                        X
+               MAPATTS=(COLOR,HILIGHT),DSATTS=(COLOR,HILIGHT),         X
+               COLOR=BLUE,HILIGHT=OFF
+*
+*---------------------------------------------------------------- base
+* Common chrome: title bar, message line and function keys, at the
+* positions every derived map keeps free.
+COMPBASE DFHMDI SIZE=(24,80),LINE=1,COLUMN=1
+BTITLE   DFHMDF POS=(1,20),LENGTH=40,ATTRB=(PROT,BRT)
+BUSER    DFHMDF POS=(1,66),LENGTH=8,ATTRB=(PROT,NORM)
+BMSG     DFHMDF POS=(22,1),LENGTH=70,ATTRB=(PROT,BRT),COLOR=RED
+BKEYS    DFHMDF POS=(24,1),LENGTH=50,ATTRB=(PROT,NORM),                X
+               INITIAL='F3=EXIT  F7=PREV  F8=NEXT  ENTER=SELECT'
+*
+*---------------------------------------------------------------- list
+* Derived map 1: the same chrome plus a repeating selection table.
+COMPLIST DFHMDI SIZE=(24,80),LINE=1,COLUMN=1
+LTITLE   DFHMDF POS=(1,20),LENGTH=40,ATTRB=(PROT,BRT),                 X
+               INITIAL='CONTRACT LIST'
+LUSER    DFHMDF POS=(1,66),LENGTH=8,ATTRB=(PROT,NORM)
+LSEL     DFHMDF POS=(4,2),LENGTH=1,ATTRB=(UNPROT,NORM),OCCURS=12
+LNUMBER  DFHMDF POS=(4,5),LENGTH=12,ATTRB=(PROT,NORM),OCCURS=12
+LPARTY   DFHMDF POS=(4,19),LENGTH=40,ATTRB=(PROT,NORM),OCCURS=12
+LSTATUS  DFHMDF POS=(4,61),LENGTH=1,ATTRB=(PROT,NORM),OCCURS=12
+LMSG     DFHMDF POS=(22,1),LENGTH=70,ATTRB=(PROT,BRT),COLOR=RED
+LKEYS    DFHMDF POS=(24,1),LENGTH=50,ATTRB=(PROT,NORM),                X
+               INITIAL='F3=EXIT  F7=PREV  F8=NEXT  ENTER=SELECT'
+*
+*---------------------------------------------------------------- detail
+* Derived map 2: the same chrome plus a detail form, including a field
+* group of three parts addressed as one date.
+COMPDTL  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1
+DTITLE   DFHMDF POS=(1,20),LENGTH=40,ATTRB=(PROT,BRT),                 X
+               INITIAL='CONTRACT DETAIL'
+DUSER    DFHMDF POS=(1,66),LENGTH=8,ATTRB=(PROT,NORM)
+         DFHMDF POS=(4,5),LENGTH=16,ATTRB=(PROT,NORM),                 X
+               INITIAL='CONTRACT NUMBER:'
+DNUMBER  DFHMDF POS=(4,22),LENGTH=12,ATTRB=(UNPROT,NORM,IC),           X
+               PICIN='X(12)',PICOUT='X(12)'
+         DFHMDF POS=(6,5),LENGTH=16,ATTRB=(PROT,NORM),                 X
+               INITIAL='EFFECTIVE DATE :'
+DEFFDD   DFHMDF POS=(6,22),LENGTH=2,ATTRB=(UNPROT,NUM),GRPNAME=DEFFGRP
+DEFFMM   DFHMDF POS=(6,25),LENGTH=2,ATTRB=(UNPROT,NUM),GRPNAME=DEFFGRP
+DEFFYY   DFHMDF POS=(6,28),LENGTH=4,ATTRB=(UNPROT,NUM),GRPNAME=DEFFGRP
+         DFHMDF POS=(8,5),LENGTH=16,ATTRB=(PROT,NORM),                 X
+               INITIAL='PREMIUM        :'
+DPREM    DFHMDF POS=(8,22),LENGTH=15,ATTRB=(PROT,NORM),                X
+               PICOUT='ZZZ,ZZZ,ZZ9.99'
+DMSG     DFHMDF POS=(22,1),LENGTH=70,ATTRB=(PROT,BRT),COLOR=RED
+DKEYS    DFHMDF POS=(24,1),LENGTH=50,ATTRB=(PROT,NORM),                X
+               INITIAL='F3=EXIT  F5=SAVE  F12=CANCEL'
+*
+         DFHMSD TYPE=FINAL
+         END

@@ -1,0 +1,20 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: 0f6d2f0e-1b2c-4a5e-9f2a-000000000001
+name: beacon_pings
+version: 1.0.0
+status: active
+schema:
+  - name: beacon_pings
+    logicalType: object
+    physicalType: table
+    properties:
+      - name: beacon_id
+        logicalType: string
+        physicalType: varchar(16)
+        required: true
+        primaryKey: true
+      - name: seen_at
+        logicalType: date
+        physicalType: timestamp
+        required: true

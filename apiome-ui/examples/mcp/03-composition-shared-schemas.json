@@ -1,0 +1,74 @@
+{
+  "mcpVersion": "2025-06-18",
+  "server": {
+    "name": "acme-inventory",
+    "title": "Acme Inventory",
+    "version": "2.2.0"
+  },
+  "capabilities": { "tools": { "listChanged": true } },
+  "$defs": {
+    "Sku": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}-[0-9]{4}$",
+      "description": "Stock keeping unit."
+    },
+    "Warehouse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "minLength": 3, "maxLength": 3 },
+        "region": { "type": "string", "enum": ["emea", "amer", "apac"] }
+      },
+      "required": ["code"],
+      "additionalProperties": false
+    },
+    "Quantity": {
+      "type": "object",
+      "properties": {
+        "amount": { "type": "integer", "minimum": 0 },
+        "unit": { "type": "string", "enum": ["each", "case", "pallet"], "default": "each" }
+      },
+      "required": ["amount"]
+    }
+  },
+  "tools": [
+    {
+      "name": "check_stock",
+      "description": "Read the on-hand quantity for a SKU in one warehouse.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sku": { "$ref": "#/$defs/Sku" },
+          "warehouse": { "$ref": "#/$defs/Warehouse" }
+        },
+        "required": ["sku", "warehouse"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "sku": { "$ref": "#/$defs/Sku" },
+          "onHand": { "$ref": "#/$defs/Quantity" },
+          "reserved": { "$ref": "#/$defs/Quantity" }
+        },
+        "required": ["sku", "onHand"]
+      },
+      "annotations": { "readOnlyHint": true }
+    },
+    {
+      "name": "transfer_stock",
+      "description": "Move stock between two warehouses.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sku": { "$ref": "#/$defs/Sku" },
+          "from": { "$ref": "#/$defs/Warehouse" },
+          "to": { "$ref": "#/$defs/Warehouse" },
+          "quantity": { "$ref": "#/$defs/Quantity" }
+        },
+        "required": ["sku", "from", "to", "quantity"],
+        "additionalProperties": false
+      },
+      "annotations": { "destructiveHint": true, "idempotentHint": false }
+    }
+  ]
+}

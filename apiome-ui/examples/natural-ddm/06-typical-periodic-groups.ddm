@@ -1,0 +1,28 @@
+DDM Name ...... ORDER-FILE
+DB ............ 001
+File .......... 020
+Default Sequence AA
+
+* Periodic groups are how ADABAS expresses repeating structure: the group
+* header carries no data, and every field inside it repeats together.
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA ORDER-NUMBER                     A    10     U
+  1 AB CUSTOMER-NUMBER                  A    10     D
+  1 AC ORDER-DATE                       N     8.0   D YYYYMMDD
+  1 AD ORDER-STATUS                     A     1     D
+  1 AE ORDER-TOTAL                      P    11.2   N
+  1 AF ORDER-CURRENCY                   A     3     N
+P 1 AG ORDER-LINE                                     Up to 99 occurrences
+  2 AH LINE-SKU                         A    18     D
+  2 AI LINE-QUANTITY                    P     9.3   N
+  2 AJ LINE-UNIT-PRICE                  P    11.2   N
+  2 AK LINE-DISCOUNT                    P     5.2   N
+M 2 AL LINE-NOTE                        A    40     N
+P 1 AM SHIPMENT                                       Up to 20 occurrences
+  2 AN SHIPMENT-ID                      A    12     D
+  2 AO SHIPPED-DATE                     N     8.0   N
+  2 AP CARRIER-CODE                     A     6     N
+  2 AQ TRACKING-NUMBER                  A    22     D
+S 1 S1 SUPER-CUST-DATE                  A    18     D AB(1-10),AC(1-8)

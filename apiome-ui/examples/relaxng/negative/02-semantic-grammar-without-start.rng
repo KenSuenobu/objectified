@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <!--
+    Well-formed XML and well-formed RELAX NG elements, but a grammar with no <start>
+    defines no document element, so there is nothing to model.
+  -->
+  <define name="thing">
+    <element name="thing">
+      <text/>
+    </element>
+  </define>
+</grammar>

@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: Cleaned order rows straight off the source table.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests: [not_null]
+      - name: placed_at
+      - name: total_amount
+
+  - name: fct_orders
+    description: Order facts joined to the customer dimension.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: customer_country
+      - name: total_amount
+
+  - name: stg_customers
+    description: Cleaned customer rows.
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: country_code

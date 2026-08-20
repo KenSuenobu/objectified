@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+  <start>
+    <ref name="address"/>
+  </start>
+
+  <define name="address">
+    <group>
+      <element name="line1"><text/></element>
+      <optional>
+        <element name="line2"><text/></element>
+      </optional>
+      <element name="city"><text/></element>
+      <element name="postalCode">
+        <ref name="postalCode"/>
+      </element>
+      <element name="countryCode">
+        <data type="string">
+          <param name="length">2</param>
+        </data>
+      </element>
+    </group>
+  </define>
+
+  <!-- Overridden by the including grammar. -->
+  <define name="postalCode">
+    <data type="string"/>
+  </define>
+</grammar>

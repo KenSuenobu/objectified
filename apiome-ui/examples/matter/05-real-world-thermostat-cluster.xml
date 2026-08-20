@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Thermostat cluster in the shape the Matter data model publishes it: setpoints with
+  limits, a system mode enum, feature-gated attributes and a setpoint-adjust command.
+  Reconstructed shape; no upstream text copied.
+-->
+<configurator>
+  <domain name="HVAC"/>
+
+  <enum name="SystemModeEnum" type="enum8">
+    <cluster code="0x0201"/>
+    <item name="Off" value="0x00"/>
+    <item name="Auto" value="0x01"/>
+    <item name="Cool" value="0x03"/>
+    <item name="Heat" value="0x04"/>
+    <item name="EmergencyHeat" value="0x05"/>
+    <item name="Precooling" value="0x06"/>
+    <item name="FanOnly" value="0x07"/>
+    <item name="Dry" value="0x08"/>
+    <item name="Sleep" value="0x09"/>
+  </enum>
+
+  <enum name="SetpointRaiseLowerModeEnum" type="enum8">
+    <cluster code="0x0201"/>
+    <item name="Heat" value="0x00"/>
+    <item name="Cool" value="0x01"/>
+    <item name="Both" value="0x02"/>
+  </enum>
+
+  <enum name="RunningModeEnum" type="enum8">
+    <cluster code="0x0201"/>
+    <item name="Off" value="0x00"/>
+    <item name="Cool" value="0x03"/>
+    <item name="Heat" value="0x04"/>
+  </enum>
+
+  <bitmap name="ThermostatFeature" type="bitmap32">
+    <cluster code="0x0201"/>
+    <field name="Heating" mask="0x1"/>
+    <field name="Cooling" mask="0x2"/>
+    <field name="Occupancy" mask="0x4"/>
+    <field name="ScheduleConfiguration" mask="0x8"/>
+    <field name="Setback" mask="0x10"/>
+    <field name="AutoMode" mask="0x20"/>
+  </bitmap>
+
+  <cluster>
+    <domain>HVAC</domain>
+    <name>Thermostat</name>
+    <code>0x0201</code>
+    <define>THERMOSTAT_CLUSTER</define>
+    <description>Controls the temperature of a conditioned space.</description>
+
+    <attribute side="server" code="0x0000" define="LOCAL_TEMPERATURE" type="temperature"
+               writable="false" isNullable="true" reportable="true">LocalTemperature</attribute>
+    <attribute side="server" code="0x0003" define="ABS_MIN_HEAT_SETPOINT_LIMIT"
+               type="temperature" writable="false" default="700" optional="true">AbsMinHeatSetpointLimit</attribute>
+    <attribute side="server" code="0x0004" define="ABS_MAX_HEAT_SETPOINT_LIMIT"
+               type="temperature" writable="false" default="3000" optional="true">AbsMaxHeatSetpointLimit</attribute>
+    <attribute side="server" code="0x0005" define="ABS_MIN_COOL_SETPOINT_LIMIT"
+               type="temperature" writable="false" default="1600" optional="true">AbsMinCoolSetpointLimit</attribute>
+    <attribute side="server" code="0x0006" define="ABS_MAX_COOL_SETPOINT_LIMIT"
+               type="temperature" writable="false" default="3200" optional="true">AbsMaxCoolSetpointLimit</attribute>
+    <attribute side="server" code="0x0011" define="OCCUPIED_COOLING_SETPOINT"
+               type="temperature" writable="true" default="2600" min="1600" max="3200"
+               optional="true">OccupiedCoolingSetpoint
+      <access op="read" privilege="view"/>
+      <access op="write" privilege="operate"/>
+    </attribute>
+    <attribute side="server" code="0x0012" define="OCCUPIED_HEATING_SETPOINT"
+               type="temperature" writable="true" default="2000" min="700" max="3000"
+               optional="true">OccupiedHeatingSetpoint
+      <access op="read" privilege="view"/>
+      <access op="write" privilege="operate"/>
+    </attribute>
+    <attribute side="server" code="0x001B" define="CONTROL_SEQUENCE_OF_OPERATION"
+               type="enum8" writable="true" default="0x04">ControlSequenceOfOperation</attribute>
+    <attribute side="server" code="0x001C" define="SYSTEM_MODE" type="SystemModeEnum"
+               writable="true" default="Auto">SystemMode
+      <access op="read" privilege="view"/>
+      <access op="write" privilege="operate"/>
+    </attribute>
+    <attribute side="server" code="0x001E" define="THERMOSTAT_RUNNING_MODE"
+               type="RunningModeEnum" writable="false" optional="true"
+               reportable="true">ThermostatRunningMode</attribute>
+    <attribute side="server" code="0x0029" define="THERMOSTAT_RUNNING_STATE" type="bitmap16"
+               writable="false" optional="true" reportable="true">ThermostatRunningState</attribute>
+    <attribute side="server" code="0x0030" define="SETPOINT_CHANGE_SOURCE" type="enum8"
+               writable="false" optional="true">SetpointChangeSource</attribute>
+    <attribute side="server" code="0x0031" define="SETPOINT_CHANGE_AMOUNT"
+               type="temperature_diff" writable="false" isNullable="true"
+               optional="true">SetpointChangeAmount</attribute>
+
+    <command source="client" code="0x00" name="SetpointRaiseLower" optional="false">
+      <description>Raise or lower the setpoint by a relative amount.</description>
+      <arg name="Mode" type="SetpointRaiseLowerModeEnum"/>
+      <arg name="Amount" type="int8s"/>
+      <access op="invoke" privilege="operate"/>
+    </command>
+
+    <command source="client" code="0x01" name="SetWeeklySchedule" optional="true">
+      <arg name="NumberOfTransitionsForSequence" type="int8u"/>
+      <arg name="DayOfWeekForSequence" type="bitmap8"/>
+      <arg name="ModeForSequence" type="bitmap8"/>
+      <arg name="Transitions" type="int16u" array="true"/>
+      <access op="invoke" privilege="manage"/>
+    </command>
+
+    <command source="client" code="0x02" name="GetWeeklySchedule" optional="true"
+             response="GetWeeklyScheduleResponse">
+      <arg name="DaysToReturn" type="bitmap8"/>
+      <arg name="ModeToReturn" type="bitmap8"/>
+    </command>
+
+    <command source="server" code="0x00" name="GetWeeklyScheduleResponse" optional="true"
+             disableDefaultResponse="true">
+      <arg name="NumberOfTransitionsForSequence" type="int8u"/>
+      <arg name="DayOfWeekForSequence" type="bitmap8"/>
+      <arg name="ModeForSequence" type="bitmap8"/>
+      <arg name="Transitions" type="int16u" array="true"/>
+    </command>
+
+    <command source="client" code="0x03" name="ClearWeeklySchedule" optional="true">
+      <access op="invoke" privilege="manage"/>
+    </command>
+  </cluster>
+</configurator>

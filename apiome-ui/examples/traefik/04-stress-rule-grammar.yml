@@ -1,0 +1,119 @@
+# Every matcher in the Traefik rule grammar, plus the constructs that have no canonical
+# HTTP-operation analogue (TCP and UDP routers, ClientIP, Method-only rules).
+http:
+  routers:
+    exact-path:
+      rule: Path(`/exact/resource`)
+      service: s1
+
+    prefix:
+      rule: PathPrefix(`/prefix/`)
+      service: s1
+
+    regexp-path:
+      rule: PathRegexp(`^/orders/[0-9]{6}$`)
+      service: s1
+
+    host-and-method:
+      rule: Host(`api.example.com`) && (Method(`GET`) || Method(`HEAD`))
+      service: s1
+
+    host-regexp:
+      rule: HostRegexp(`^[a-z]+\.example\.com$`)
+      service: s1
+
+    header-and-query:
+      rule: Header(`X-Tenant`, `acme`) && Query(`mode`, `full`) && QueryRegexp(`page`, `^[0-9]+$`)
+      service: s1
+
+    client-ip:
+      rule: ClientIP(`203.0.113.0/24`)
+      service: s1
+
+    negated:
+      rule: PathPrefix(`/public`) && !Header(`X-Internal`, `true`)
+      service: s1
+
+    method-only:
+      rule: Method(`OPTIONS`)
+      service: s1
+      priority: 1
+
+    grouped:
+      rule: (Host(`a.example.com`) || Host(`b.example.com`)) && PathPrefix(`/shared`)
+      service: s1
+      middlewares: [add-prefix, replace-path-regex]
+
+  services:
+    s1:
+      loadBalancer:
+        servers:
+          - url: http://backend.internal.example.com:8080
+        serversTransport: insecure-backend
+        responseForwarding:
+          flushInterval: 100ms
+
+  middlewares:
+    add-prefix:
+      addPrefix:
+        prefix: /internal
+
+    replace-path-regex:
+      replacePathRegex:
+        regex: ^/shared/(.*)
+        replacement: /v3/$1
+
+    retry:
+      retry:
+        attempts: 4
+        initialInterval: 100ms
+
+    buffering:
+      buffering:
+        maxRequestBodyBytes: 2000000
+        memRequestBodyBytes: 1048576
+        retryExpression: IsNetworkError() && Attempts() < 3
+
+    error-pages:
+      errors:
+        status:
+          - "500-599"
+        service: error-service
+        query: /{status}.html
+
+    forward-auth:
+      forwardAuth:
+        address: https://auth.internal.example.com/verify
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-Auth-User
+
+  serversTransports:
+    insecure-backend:
+      insecureSkipVerify: true
+
+# TCP and UDP routers describe traffic with no HTTP operation at all: a declared limit.
+tcp:
+  routers:
+    postgres:
+      rule: HostSNI(`db.example.com`)
+      entryPoints: [postgres]
+      service: postgres-service
+      tls:
+        passthrough: true
+  services:
+    postgres-service:
+      loadBalancer:
+        servers:
+          - address: postgres.internal.example.com:5432
+
+udp:
+  routers:
+    syslog:
+      entryPoints: [syslog]
+      service: syslog-service
+  services:
+    syslog-service:
+      loadBalancer:
+        servers:
+          - address: syslog.internal.example.com:514

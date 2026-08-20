@@ -1,0 +1,63 @@
+arazzo: 1.1.0
+info:
+  title: Storefront checkout
+  summary: Create a cart, add an item, and pay for it.
+  version: 2.1.0
+sourceDescriptions:
+  - name: storefront
+    url: https://api.example.com/storefront/openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: checkout
+    summary: Cart to paid order.
+    inputs:
+      type: object
+      properties:
+        sku:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        paymentToken:
+          type: string
+      required: [sku, quantity, paymentToken]
+    steps:
+      - stepId: createCart
+        description: Open an empty cart.
+        operationId: $sourceDescriptions.storefront.createCart
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          cartId: $response.body#/id
+      - stepId: addItem
+        operationId: $sourceDescriptions.storefront.addCartItem
+        parameters:
+          - name: cartId
+            in: path
+            value: $steps.createCart.outputs.cartId
+        requestBody:
+          contentType: application/json
+          payload:
+            sku: $inputs.sku
+            quantity: $inputs.quantity
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          total: $response.body#/total
+      - stepId: pay
+        operationId: $sourceDescriptions.storefront.payCart
+        parameters:
+          - name: cartId
+            in: path
+            value: $steps.createCart.outputs.cartId
+        requestBody:
+          contentType: application/json
+          payload:
+            token: $inputs.paymentToken
+            amount: $steps.addItem.outputs.total
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          orderId: $response.body#/orderId
+    outputs:
+      orderId: $steps.pay.outputs.orderId

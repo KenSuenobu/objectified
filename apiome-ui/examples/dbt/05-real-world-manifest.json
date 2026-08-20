@@ -1,0 +1,167 @@
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "dbt_version": "1.9.2",
+    "generated_at": "2026-08-19T04:12:55.311204Z",
+    "project_name": "example_commerce",
+    "adapter_type": "snowflake",
+    "env": {}
+  },
+  "nodes": {
+    "model.example_commerce.stg_orders": {
+      "unique_id": "model.example_commerce.stg_orders",
+      "resource_type": "model",
+      "name": "stg_orders",
+      "package_name": "example_commerce",
+      "path": "staging/stg_orders.sql",
+      "database": "ANALYTICS",
+      "schema": "STAGING",
+      "alias": "stg_orders",
+      "description": "Cleaned order rows straight off the source table.",
+      "config": { "materialized": "view", "tags": ["staging"] },
+      "tags": ["staging"],
+      "columns": {
+        "order_id": { "name": "order_id", "description": "Business identifier.", "data_type": "VARCHAR(20)", "meta": {} },
+        "customer_id": { "name": "customer_id", "description": "Owning customer.", "data_type": "VARCHAR(20)", "meta": {} },
+        "placed_at": { "name": "placed_at", "description": "Order timestamp, UTC.", "data_type": "TIMESTAMP_NTZ", "meta": {} },
+        "total_amount": { "name": "total_amount", "description": "Order total.", "data_type": "NUMBER(13,2)", "meta": {} }
+      },
+      "depends_on": { "macros": [], "nodes": ["source.example_commerce.raw_commerce.orders_raw"] }
+    },
+    "model.example_commerce.fct_orders": {
+      "unique_id": "model.example_commerce.fct_orders",
+      "resource_type": "model",
+      "name": "fct_orders",
+      "package_name": "example_commerce",
+      "path": "marts/fct_orders.sql",
+      "database": "ANALYTICS",
+      "schema": "ANALYTICS",
+      "alias": "fct_orders",
+      "description": "Order facts joined to the customer dimension.",
+      "config": {
+        "materialized": "table",
+        "unique_key": "order_id",
+        "contract": { "enforced": true },
+        "tags": ["marts"]
+      },
+      "tags": ["marts"],
+      "columns": {
+        "order_id": { "name": "order_id", "description": "Business identifier.", "data_type": "VARCHAR(20)", "constraints": [{ "type": "not_null" }], "meta": {} },
+        "customer_id": { "name": "customer_id", "data_type": "VARCHAR(20)", "meta": {} },
+        "customer_country": { "name": "customer_country", "data_type": "CHAR(2)", "meta": {} },
+        "total_amount": { "name": "total_amount", "data_type": "NUMBER(13,2)", "meta": {} }
+      },
+      "constraints": [{ "type": "primary_key", "columns": ["order_id"] }],
+      "depends_on": {
+        "macros": [],
+        "nodes": ["model.example_commerce.stg_orders", "model.example_commerce.stg_customers"]
+      }
+    },
+    "model.example_commerce.stg_customers": {
+      "unique_id": "model.example_commerce.stg_customers",
+      "resource_type": "model",
+      "name": "stg_customers",
+      "package_name": "example_commerce",
+      "path": "staging/stg_customers.sql",
+      "database": "ANALYTICS",
+      "schema": "STAGING",
+      "alias": "stg_customers",
+      "description": "Cleaned customer rows.",
+      "config": { "materialized": "view", "tags": ["staging"] },
+      "tags": ["staging"],
+      "columns": {
+        "customer_id": { "name": "customer_id", "data_type": "VARCHAR(20)", "meta": {} },
+        "country_code": { "name": "country_code", "data_type": "CHAR(2)", "meta": {} }
+      },
+      "depends_on": { "macros": [], "nodes": ["source.example_commerce.raw_commerce.customers_raw"] }
+    },
+    "test.example_commerce.unique_fct_orders_order_id.9c1b2f": {
+      "unique_id": "test.example_commerce.unique_fct_orders_order_id.9c1b2f",
+      "resource_type": "test",
+      "name": "unique_fct_orders_order_id",
+      "package_name": "example_commerce",
+      "path": "unique_fct_orders_order_id.sql",
+      "test_metadata": { "name": "unique", "kwargs": { "column_name": "order_id" } },
+      "column_name": "order_id",
+      "config": { "severity": "ERROR" },
+      "depends_on": { "macros": ["macro.dbt.test_unique"], "nodes": ["model.example_commerce.fct_orders"] }
+    },
+    "test.example_commerce.accepted_values_fct_orders_status.4d0e11": {
+      "unique_id": "test.example_commerce.accepted_values_fct_orders_status.4d0e11",
+      "resource_type": "test",
+      "name": "accepted_values_fct_orders_status",
+      "package_name": "example_commerce",
+      "path": "accepted_values_fct_orders_status.sql",
+      "test_metadata": {
+        "name": "accepted_values",
+        "kwargs": { "column_name": "status", "values": ["new", "paid", "shipped", "cancelled"] }
+      },
+      "column_name": "status",
+      "config": { "severity": "WARN" },
+      "depends_on": { "macros": ["macro.dbt.test_accepted_values"], "nodes": ["model.example_commerce.fct_orders"] }
+    }
+  },
+  "sources": {
+    "source.example_commerce.raw_commerce.orders_raw": {
+      "unique_id": "source.example_commerce.raw_commerce.orders_raw",
+      "resource_type": "source",
+      "source_name": "raw_commerce",
+      "name": "orders_raw",
+      "database": "RAW",
+      "schema": "COMMERCE",
+      "identifier": "orders",
+      "loaded_at_field": "_loaded_at",
+      "freshness": {
+        "warn_after": { "count": 6, "period": "hour" },
+        "error_after": { "count": 24, "period": "hour" }
+      },
+      "columns": {
+        "id": { "name": "id", "data_type": "VARCHAR(20)", "meta": {} },
+        "payload": { "name": "payload", "description": "Untyped source payload.", "data_type": "VARIANT", "meta": {} }
+      }
+    },
+    "source.example_commerce.raw_commerce.customers_raw": {
+      "unique_id": "source.example_commerce.raw_commerce.customers_raw",
+      "resource_type": "source",
+      "source_name": "raw_commerce",
+      "name": "customers_raw",
+      "database": "RAW",
+      "schema": "COMMERCE",
+      "identifier": "customers",
+      "columns": { "id": { "name": "id", "data_type": "VARCHAR(20)", "meta": {} } }
+    }
+  },
+  "exposures": {
+    "exposure.example_commerce.revenue_dashboard": {
+      "unique_id": "exposure.example_commerce.revenue_dashboard",
+      "resource_type": "exposure",
+      "name": "revenue_dashboard",
+      "type": "dashboard",
+      "maturity": "high",
+      "url": "https://bi.example.com/dashboards/revenue",
+      "owner": { "name": "Commerce Analytics", "email": "commerce-analytics@example.com" },
+      "depends_on": { "macros": [], "nodes": ["model.example_commerce.fct_orders"] }
+    }
+  },
+  "macros": {},
+  "parent_map": {
+    "model.example_commerce.stg_orders": ["source.example_commerce.raw_commerce.orders_raw"],
+    "model.example_commerce.stg_customers": ["source.example_commerce.raw_commerce.customers_raw"],
+    "model.example_commerce.fct_orders": [
+      "model.example_commerce.stg_orders",
+      "model.example_commerce.stg_customers"
+    ],
+    "exposure.example_commerce.revenue_dashboard": ["model.example_commerce.fct_orders"]
+  },
+  "child_map": {
+    "source.example_commerce.raw_commerce.orders_raw": ["model.example_commerce.stg_orders"],
+    "source.example_commerce.raw_commerce.customers_raw": ["model.example_commerce.stg_customers"],
+    "model.example_commerce.stg_orders": ["model.example_commerce.fct_orders"],
+    "model.example_commerce.stg_customers": ["model.example_commerce.fct_orders"],
+    "model.example_commerce.fct_orders": [
+      "test.example_commerce.unique_fct_orders_order_id.9c1b2f",
+      "test.example_commerce.accepted_values_fct_orders_status.4d0e11",
+      "exposure.example_commerce.revenue_dashboard"
+    ]
+  }
+}

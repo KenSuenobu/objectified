@@ -1,0 +1,125 @@
+{
+  "v": 6,
+  "id": "clx0000000000000000000060",
+  "name": "Payments sandbox",
+  "folders": [
+    {
+      "v": 6,
+      "id": "clx0000000000000000000061",
+      "name": "Authentication",
+      "folders": [],
+      "requests": [
+        {
+          "v": "11",
+          "id": "clx0000000000000000000062",
+          "name": "Get access token",
+          "method": "POST",
+          "endpoint": "https://auth.example.com/oauth/token",
+          "params": [],
+          "headers": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded", "active": true, "description": "" }],
+          "auth": { "authType": "none", "authActive": false },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "grant_type=client_credentials&client_id=<<clientId>>&client_secret=<<clientSecret>>"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.env.set(\"accessToken\", pw.response.body.access_token);",
+          "requestVariables": []
+        }
+      ],
+      "auth": { "authType": "inherit", "authActive": true },
+      "headers": []
+    },
+    {
+      "v": 6,
+      "id": "clx0000000000000000000070",
+      "name": "Authorizations",
+      "folders": [],
+      "requests": [
+        {
+          "v": "11",
+          "id": "clx0000000000000000000071",
+          "name": "Authorize a payment",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/authorizations",
+          "params": [],
+          "headers": [
+            { "key": "Content-Type", "value": "application/json", "active": true, "description": "" },
+            { "key": "Idempotency-Key", "value": "<<idempotencyKey>>", "active": true, "description": "" }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"merchantId\": \"<<merchantId>>\",\n  \"amount\": { \"value\": 2599, \"currency\": \"EUR\" },\n  \"card\": { \"networkToken\": \"tok_test_4242\", \"expiryMonth\": 12, \"expiryYear\": 2030 },\n  \"captureMode\": \"AUTOMATIC\"\n}"
+          },
+          "preRequestScript": "pw.env.set(\"idempotencyKey\", crypto.randomUUID());",
+          "testScript": "pw.test(\"created\", () => { pw.expect(pw.response.status).toBe(201); });\npw.env.set(\"authorizationId\", pw.response.body.authorizationId);",
+          "requestVariables": []
+        },
+        {
+          "v": "11",
+          "id": "clx0000000000000000000072",
+          "name": "Capture an authorization",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/authorizations/<<authorizationId>>/captures",
+          "params": [],
+          "headers": [{ "key": "Content-Type", "value": "application/json", "active": true, "description": "" }],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": {
+            "contentType": "application/json",
+            "body": "{ \"amount\": { \"value\": 2599, \"currency\": \"EUR\" }, \"finalCapture\": true }"
+          },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        },
+        {
+          "v": "11",
+          "id": "clx0000000000000000000073",
+          "name": "Void an authorization",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/authorizations/<<authorizationId>>/void",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": { "contentType": null, "body": null },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        }
+      ],
+      "auth": { "authType": "inherit", "authActive": true },
+      "headers": []
+    },
+    {
+      "v": 6,
+      "id": "clx0000000000000000000080",
+      "name": "Reporting",
+      "folders": [],
+      "requests": [
+        {
+          "v": "11",
+          "id": "clx0000000000000000000081",
+          "name": "Settlement report",
+          "method": "GET",
+          "endpoint": "<<baseUrl>>/reports/settlement",
+          "params": [
+            { "key": "date", "value": "2026-08-01", "active": true, "description": "" },
+            { "key": "merchantId", "value": "<<merchantId>>", "active": true, "description": "" }
+          ],
+          "headers": [{ "key": "Accept", "value": "text/csv", "active": true, "description": "" }],
+          "auth": { "authType": "inherit", "authActive": true },
+          "body": { "contentType": null, "body": null },
+          "preRequestScript": "",
+          "testScript": "",
+          "requestVariables": []
+        }
+      ],
+      "auth": { "authType": "inherit", "authActive": true },
+      "headers": []
+    }
+  ],
+  "requests": [],
+  "auth": { "authType": "bearer", "authActive": true, "token": "<<accessToken>>" },
+  "headers": []
+}

@@ -1,0 +1,7 @@
+<!ELEMENT catalogue (product+)>
+<!ATTLIST catalogue
+          version CDATA #REQUIRED>
+<!ELEMENT product (name, price, tag*)>
+<!ATTLIST product
+          sku ID #REQUIRED
+          discontinued (yes|no

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Root of the set: the repository. Its code sets are not declared here — they arrive by
+  XInclude from the sibling file, which is how a firm keeps one shared code-set library
+  across several venue repositories. Every fieldRef below types through those sets.
+-->
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 xmlns:xi="http://www.w3.org/2001/XInclude"
+                 name="ExampleModular" version="FIX.4.4_EP010">
+
+  <xi:include href="codesets.xml"/>
+
+  <fixr:fields>
+    <fixr:field id="11" name="ClOrdID" type="String"/>
+    <fixr:field id="38" name="OrderQty" type="Qty"/>
+    <fixr:field id="40" name="OrdType" type="OrdTypeCodeSet"/>
+    <fixr:field id="44" name="Price" type="Price"/>
+    <fixr:field id="54" name="Side" type="SideCodeSet"/>
+    <fixr:field id="55" name="Symbol" type="String"/>
+    <fixr:field id="59" name="TimeInForce" type="TimeInForceCodeSet"/>
+    <fixr:field id="60" name="TransactTime" type="UTCTimestamp"/>
+  </fixr:fields>
+
+  <fixr:components>
+    <fixr:component name="Instrument" id="1003" category="Common">
+      <fixr:fieldRef id="55" presence="required"/>
+    </fixr:component>
+  </fixr:components>
+
+  <fixr:messages>
+    <fixr:message name="NewOrderSingle" id="14" msgType="D"
+                  category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:componentRef id="1003" presence="required"/>
+        <fixr:fieldRef id="54" presence="required"/>
+        <fixr:fieldRef id="38" presence="required"/>
+        <fixr:fieldRef id="40" presence="required"/>
+        <fixr:fieldRef id="44" presence="conditional">
+          <fixr:rule name="RequiredForLimit" presence="required">
+            <fixr:when>OrdType == "^Limit"</fixr:when>
+          </fixr:rule>
+        </fixr:fieldRef>
+        <fixr:fieldRef id="59" presence="optional"/>
+        <fixr:fieldRef id="60" presence="required"/>
+      </fixr:structure>
+    </fixr:message>
+  </fixr:messages>
+</fixr:repository>

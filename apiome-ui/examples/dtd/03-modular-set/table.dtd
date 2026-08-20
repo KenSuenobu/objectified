@@ -1,0 +1,12 @@
+<!-- Table module: depends on %commonAtts; being declared by the common module first. -->
+
+<!ELEMENT table (row+)>
+<!ATTLIST table
+          %commonAtts;
+          border (yes|no) "no">
+
+<!ELEMENT row (cell+)>
+<!ELEMENT cell (#PCDATA)>
+<!ATTLIST cell
+          align (left|center|right) "left"
+          span NMTOKEN "1">

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LWM2M>
+  <Object ObjectType="MODefinition">
+    <Name>Broken</Name>
+    <ObjectID>32799</ObjectID>
+    <Resources>
+      <Item ID="0">
+        <Name>Value</Name>
+        <Operations>R</Operations>
+        <Type>Float</Type>
+    </Resources>
+  </Object>
+</LWM2M>

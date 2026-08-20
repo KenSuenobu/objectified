@@ -1,0 +1,109 @@
+{
+  "api_id": "catalogue-api",
+  "name": "Catalogue API",
+  "org_id": "000000000000000000000001",
+  "use_keyless": false,
+  "active": true,
+  "auth_configs": {
+    "jwt": {
+      "auth_header_name": "Authorization"
+    }
+  },
+  "enable_jwt": true,
+  "jwt_signing_method": "rsa",
+  "jwt_source": "https://login.example.com/.well-known/jwks.json",
+  "jwt_identity_base_field": "sub",
+  "jwt_policy_field_name": "pol",
+  "proxy": {
+    "listen_path": "/catalogue/",
+    "target_url": "http://catalogue.internal.example.com:8080",
+    "strip_listen_path": true
+  },
+  "definition": { "location": "header", "key": "x-api-version" },
+  "version_data": {
+    "not_versioned": false,
+    "default_version": "v2",
+    "versions": {
+      "v1": {
+        "name": "v1",
+        "expires": "2026-12-31 23:59",
+        "use_extended_paths": true,
+        "extended_paths": {
+          "white_list": [
+            { "path": "/products", "method_actions": { "GET": { "action": "no_action", "code": 200 } } }
+          ],
+          "transform": [
+            {
+              "path": "/products",
+              "method": "GET",
+              "template_data": {
+                "template_mode": "blob",
+                "enable_session": false,
+                "template_source": "eyJpdGVtcyI6IHt7Lml0ZW1zfX19"
+              }
+            }
+          ]
+        }
+      },
+      "v2": {
+        "name": "v2",
+        "use_extended_paths": true,
+        "extended_paths": {
+          "white_list": [
+            {
+              "path": "/products",
+              "method_actions": { "GET": { "action": "no_action", "code": 200 } }
+            },
+            {
+              "path": "/products/{sku}",
+              "method_actions": { "GET": { "action": "no_action", "code": 200 } }
+            },
+            {
+              "path": "/categories",
+              "method_actions": { "GET": { "action": "no_action", "code": 200 } }
+            }
+          ],
+          "black_list": [
+            { "path": "/internal/*", "method_actions": { "GET": { "action": "reply", "code": 403 } } }
+          ],
+          "ignored": [
+            { "path": "/healthz", "method_actions": { "GET": { "action": "no_action", "code": 200 } } }
+          ],
+          "validate_json": [
+            {
+              "path": "/products",
+              "method": "POST",
+              "schema": {
+                "type": "object",
+                "required": ["sku", "name", "price"],
+                "properties": {
+                  "sku": { "type": "string", "pattern": "^[A-Z]{3}-[0-9]{4}$" },
+                  "name": { "type": "string" },
+                  "price": { "type": "number", "minimum": 0 }
+                }
+              },
+              "error_response_code": 422
+            }
+          ],
+          "url_rewrites": [
+            {
+              "path": "/legacy/{sku}",
+              "method": "GET",
+              "match_pattern": "/legacy/(.*)",
+              "rewrite_to": "/products/$1"
+            }
+          ],
+          "size_limits": [{ "path": "/products", "method": "POST", "size_limit": 65536 }]
+        },
+        "global_headers": { "x-api-version": "v2" },
+        "global_headers_remove": ["x-internal"]
+      }
+    }
+  },
+  "custom_middleware": {
+    "pre": [{ "name": "enrichTenant", "path": "middleware/enrich.js", "require_session": false }],
+    "post_key_auth": [{ "name": "auditKey", "path": "middleware/audit.js", "require_session": true }],
+    "driver": "otto"
+  },
+  "response_processors": [{ "name": "header_injector", "options": { "add_headers": { "x-served-by": "tyk" } } }]
+}

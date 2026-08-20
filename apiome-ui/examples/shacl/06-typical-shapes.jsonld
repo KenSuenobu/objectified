@@ -1,0 +1,63 @@
+{
+  "@context": {
+    "sh": "http://www.w3.org/ns/shacl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "ex": "https://example.com/ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "property": { "@id": "sh:property" },
+    "path": { "@id": "sh:path", "@type": "@id" },
+    "targetClass": { "@id": "sh:targetClass", "@type": "@id" },
+    "datatype": { "@id": "sh:datatype", "@type": "@id" },
+    "nodeKind": { "@id": "sh:nodeKind", "@type": "@id" },
+    "class": { "@id": "sh:class", "@type": "@id" }
+  },
+  "@graph": [
+    {
+      "@id": "ex:ProductShape",
+      "@type": "sh:NodeShape",
+      "targetClass": "ex:Product",
+      "rdfs:label": "Product shape",
+      "property": [
+        {
+          "path": "ex:sku",
+          "datatype": "xsd:string",
+          "sh:pattern": "^[A-Z]{3}-[0-9]{4}$",
+          "sh:minCount": 1,
+          "sh:maxCount": 1
+        },
+        {
+          "path": "ex:name",
+          "datatype": "xsd:string",
+          "sh:minCount": 1,
+          "sh:maxLength": 120
+        },
+        {
+          "path": "ex:price",
+          "datatype": "xsd:decimal",
+          "sh:minExclusive": 0,
+          "sh:minCount": 1
+        },
+        {
+          "path": "ex:currency",
+          "sh:in": { "@list": ["EUR", "GBP", "USD"] },
+          "sh:maxCount": 1
+        },
+        {
+          "path": "ex:category",
+          "class": "ex:Category",
+          "nodeKind": "sh:IRI",
+          "sh:maxCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "ex:CategoryShape",
+      "@type": "sh:NodeShape",
+      "targetClass": "ex:Category",
+      "property": [
+        { "path": "ex:code", "datatype": "xsd:string", "sh:minCount": 1 },
+        { "path": "ex:label", "datatype": "xsd:string", "sh:minCount": 1, "sh:uniqueLang": true }
+      ]
+    }
+  ]
+}

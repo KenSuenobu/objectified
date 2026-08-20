@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Root of the set: the registry convention is one file per object. This device object's
+  Objlnk resources point at instances of the two objects defined in the sibling files,
+  so the device model is only complete across the set.
+-->
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://www.openmobilealliance.org/tech/profiles/LWM2M-v1_1.xsd">
+  <Object ObjectType="MODefinition">
+    <Name>Cold Chain Unit</Name>
+    <Description1>A refrigerated transport unit composed of sensors and an actuator.</Description1>
+    <ObjectID>32710</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:x:32710</ObjectURN>
+    <LWM2MVersion>1.1</LWM2MVersion>
+    <ObjectVersion>1.0</ObjectVersion>
+    <MultipleInstances>Multiple</MultipleInstances>
+    <Mandatory>Optional</Mandatory>
+    <Resources>
+      <Item ID="0">
+        <Name>Unit Identifier</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>String</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Asset tag of the unit.</Description>
+      </Item>
+      <Item ID="1">
+        <Name>Temperature Sensor</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Mandatory</Mandatory>
+        <Type>Objlnk</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Link to a 32711 Temperature Probe instance.</Description>
+      </Item>
+      <Item ID="2">
+        <Name>Door Actuator</Name>
+        <Operations>R</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Objlnk</Type>
+        <RangeEnumeration/>
+        <Units/>
+        <Description>Link to a 32712 Door Lock instance.</Description>
+      </Item>
+      <Item ID="3">
+        <Name>Set Point</Name>
+        <Operations>RW</Operations>
+        <MultipleInstances>Single</MultipleInstances>
+        <Mandatory>Optional</Mandatory>
+        <Type>Float</Type>
+        <RangeEnumeration>-30..10</RangeEnumeration>
+        <Units>Cel</Units>
+        <Description>Target temperature.</Description>
+      </Item>
+    </Resources>
+    <Description2/>
+  </Object>
+</LWM2M>

@@ -1,0 +1,27 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix core: <https://example.com/core#> .
+
+# The imported ontology: shared classes the importing ontology extends.
+<https://example.com/core> a owl:Ontology ;
+    owl:versionInfo "1.0.0" ;
+    rdfs:label "Core ontology" .
+
+core:Document a owl:Class ;
+    rdfs:label "Document" .
+
+core:Address a owl:Class ;
+    rdfs:label "Address" .
+
+core:identifier a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:domain core:Document ;
+    rdfs:range xsd:string .
+
+core:line1 a owl:DatatypeProperty ;
+    rdfs:domain core:Address ;
+    rdfs:range xsd:string .
+
+core:countryCode a owl:DatatypeProperty ;
+    rdfs:domain core:Address ;
+    rdfs:range xsd:string .

@@ -1,0 +1,92 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: 0f6d2f0e-1b2c-4a5e-9f2a-000000000003
+name: customer_360
+version: 1.4.0
+status: active
+domain: crm
+
+description:
+  purpose: Nested object and array properties — the composition ODCS expresses inside one schema object.
+
+schema:
+  - name: customers
+    logicalType: object
+    physicalType: table
+    properties:
+      - name: customer_id
+        logicalType: string
+        physicalType: varchar(20)
+        required: true
+        primaryKey: true
+
+      - name: address
+        logicalType: object
+        physicalType: struct
+        description: Nested object property.
+        properties:
+          - name: line1
+            logicalType: string
+            physicalType: varchar(60)
+            required: true
+          - name: line2
+            logicalType: string
+            physicalType: varchar(60)
+          - name: city
+            logicalType: string
+            physicalType: varchar(40)
+            required: true
+          - name: country_code
+            logicalType: string
+            physicalType: char(2)
+            required: true
+
+      - name: contact_points
+        logicalType: array
+        physicalType: array<struct>
+        description: Repeated nested object.
+        items:
+          logicalType: object
+          properties:
+            - name: channel
+              logicalType: string
+              physicalType: varchar(10)
+              required: true
+            - name: value
+              logicalType: string
+              physicalType: varchar(120)
+              required: true
+              classification: restricted
+            - name: verified
+              logicalType: boolean
+              physicalType: boolean
+
+      - name: segment_scores
+        logicalType: array
+        physicalType: array<double>
+        items:
+          logicalType: number
+
+    authoritativeDefinitions:
+      - url: https://example.com/governance/customer-360
+        type: businessDefinition
+      - url: https://example.com/lineage/customer-360
+        type: transformationImplementation
+
+  - name: customer_consents
+    logicalType: object
+    physicalType: table
+    description: A second schema object in the same contract, related by customer_id.
+    properties:
+      - name: customer_id
+        logicalType: string
+        physicalType: varchar(20)
+        required: true
+      - name: consent_type
+        logicalType: string
+        physicalType: varchar(30)
+        required: true
+      - name: granted_at
+        logicalType: date
+        physicalType: timestamp
+        required: true

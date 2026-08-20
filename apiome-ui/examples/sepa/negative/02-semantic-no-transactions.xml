@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSG-BAD-0002</MsgId>
+      <CreDtTm>2026-08-19T10:30:00</CreDtTm>
+      <NbOfTxs>0</NbOfTxs>
+      <InitgPty><Nm>Example Company BV</Nm></InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>EMPTY-BATCH</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <ReqdExctnDt><Dt>2026-08-20</Dt></ReqdExctnDt>
+      <Dbtr><Nm>Example Company BV</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>NL91ABNA0417164300</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId></DbtrAgt>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

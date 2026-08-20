@@ -1,0 +1,144 @@
+{
+  "mcpVersion": "2025-06-18",
+  "server": {
+    "name": "acme-lab",
+    "title": "Acme Laboratory",
+    "version": "0.9.0-rc.3",
+    "instructions": "Every tool in this server is metered; prefer batch calls."
+  },
+  "transport": {
+    "type": "stdio",
+    "command": "acme-lab-mcp",
+    "args": ["--profile", "readonly"]
+  },
+  "capabilities": {
+    "tools": { "listChanged": true },
+    "resources": { "subscribe": true, "listChanged": true },
+    "prompts": { "listChanged": true },
+    "completions": {},
+    "logging": {},
+    "experimental": { "acme.batching": { "maxBatch": 25 } }
+  },
+  "tools": [
+    {
+      "name": "run_assay",
+      "title": "Run an assay",
+      "description": "Queue an assay run against a sample plate.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "plate": {
+            "oneOf": [
+              { "type": "string", "pattern": "^PLT-[0-9]{5}$" },
+              {
+                "type": "object",
+                "properties": {
+                  "barcode": { "type": "string" },
+                  "wells": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 384,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "row": { "type": "string", "pattern": "^[A-P]$" },
+                        "column": { "type": "integer", "minimum": 1, "maximum": 24 },
+                        "sampleId": { "type": ["string", "null"] }
+                      },
+                      "required": ["row", "column"]
+                    }
+                  }
+                },
+                "required": ["barcode", "wells"]
+              }
+            ]
+          },
+          "protocol": {
+            "type": "string",
+            "enum": ["elisa", "pcr", "hplc", "mass-spec", "flow-cytometry"]
+          },
+          "replicates": { "type": "integer", "minimum": 1, "maximum": 8, "default": 3 },
+          "options": {
+            "type": "object",
+            "additionalProperties": { "type": ["string", "number", "boolean"] }
+          },
+          "notify": {
+            "anyOf": [
+              { "type": "string", "format": "email" },
+              { "type": "array", "items": { "type": "string", "format": "email" }, "uniqueItems": true }
+            ]
+          }
+        },
+        "required": ["plate", "protocol"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "runId": { "type": "string", "format": "uuid" },
+          "queuedAt": { "type": "string", "format": "date-time" },
+          "estimatedMinutes": { "type": "number", "exclusiveMinimum": 0 }
+        },
+        "required": ["runId", "queuedAt"]
+      },
+      "annotations": {
+        "title": "Run an assay",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": { "acme.io/cost": "metered", "acme.io/tier": "lab" }
+    },
+    {
+      "name": "cancel_run",
+      "description": "Cancel a queued or running assay.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "runId": { "type": "string", "format": "uuid" } },
+        "required": ["runId"]
+      },
+      "annotations": { "destructiveHint": true, "idempotentHint": true }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "lab://calibration/current",
+      "name": "calibration",
+      "description": "Current instrument calibration table.",
+      "mimeType": "text/csv",
+      "size": 20480,
+      "annotations": { "audience": ["assistant"], "priority": 0.3 }
+    },
+    {
+      "uri": "lab://sop/elisa.pdf",
+      "name": "elisa-sop",
+      "description": "Standard operating procedure, ELISA.",
+      "mimeType": "application/pdf"
+    }
+  ],
+  "resourceTemplates": [
+    {
+      "uriTemplate": "lab://run/{runId}/report{?format}",
+      "name": "run-report",
+      "description": "Report for one assay run; format defaults to json.",
+      "mimeType": "application/json"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "explain_result",
+      "description": "Explain an assay result to a non-specialist.",
+      "arguments": [
+        { "name": "runId", "required": true },
+        { "name": "readingLevel", "required": false },
+        { "name": "includeRawValues", "required": false }
+      ]
+    },
+    {
+      "name": "draft_protocol",
+      "description": "Draft a protocol from a free-text goal.",
+      "arguments": [{ "name": "goal", "required": true }]
+    }
+  ]
+}

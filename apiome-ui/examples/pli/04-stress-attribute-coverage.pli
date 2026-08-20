@@ -1,0 +1,79 @@
+ /*********************************************************************/
+ /* Every declaration attribute the layout engine must account for,    */
+ /* including the ones whose storage depends on assumptions PL/I does  */
+ /* not state (alignment, encoding, VARYING prefix width).             */
+ /*********************************************************************/
+ DCL 1 COVERAGE_REC BASED(REC_PTR),
+
+       /* character forms */
+       2 CHAR_FIXED       CHAR(20),
+       2 CHAR_VARYING     CHAR(50) VARYING,
+       2 CHAR_VARYINGZ    CHAR(30) VARYINGZ,
+       2 GRAPHIC_FIXED    GRAPHIC(10),
+       2 WIDECHAR_FIXED   WIDECHAR(10),
+
+       /* numeric forms */
+       2 FIXED_DEC_PACKED FIXED DEC(15,2),
+       2 FIXED_DEC_ZONED  PIC'S9(7)V99',
+       2 FIXED_BIN_15     FIXED BIN(15),
+       2 FIXED_BIN_31     FIXED BIN(31),
+       2 FIXED_BIN_63     FIXED BIN(63),
+       2 UNSIGNED_BIN     FIXED BIN(31) UNSIGNED,
+       2 FLOAT_SHORT      FLOAT BIN(21),
+       2 FLOAT_LONG       FLOAT DEC(16),
+
+       /* picture forms */
+       2 PIC_NUMERIC      PIC'999V99',
+       2 PIC_SIGNED       PIC'S999',
+       2 PIC_EDITED       PIC'ZZZ,ZZ9.99',
+       2 PIC_CHARACTER    PIC'AAAXXX',
+
+       /* bit and pointer forms */
+       2 BIT_FLAGS        BIT(16) ALIGNED,
+       2 BIT_UNALIGNED    BIT(3) UNALIGNED,
+       2 REC_POINTER      POINTER,
+       2 AREA_FIELD       AREA(256),
+       2 OFFSET_FIELD     OFFSET(AREA_FIELD),
+
+       /* arrays: fixed bounds, explicit lower bound, two dimensions */
+       2 SIMPLE_ARRAY(10)     FIXED BIN(31),
+       2 BOUNDED_ARRAY(1:12)  FIXED DEC(7,2),
+       2 MATRIX(4,3)          FIXED BIN(15),
+       2 ARRAY_OF_STRUCT(3),
+         3 ITEM_CODE      CHAR(8),
+         3 ITEM_QTY       FIXED BIN(31),
+
+       /* self-defining length: REFER — a declared parsing limit, because the
+          extent is a runtime value, not a static one */
+       2 TABLE_COUNT      FIXED BIN(15),
+       2 TABLE_ENTRIES(TABLE_COUNT REFER(TABLE_COUNT)) CHAR(12),
+
+       /* shared storage */
+       2 PAYLOAD UNION,
+         3 AS_TEXT        CHAR(64),
+         3 AS_NUMBERS,
+           4 NUM_A        FIXED BIN(31),
+           4 NUM_B        FIXED BIN(31),
+           4 NUM_C        FIXED BIN(31),
+         3 AS_BITS        BIT(512),
+
+       /* structure cloned from another declaration */
+       2 SHIPPING_ADDR    LIKE ADDRESS_REC,
+
+       /* alignment directives on the structure itself */
+       2 ALIGNED_BLOCK    ALIGNED,
+         3 A_WORD         FIXED BIN(31),
+         3 A_BYTE         CHAR(1),
+       2 UNALIGNED_BLOCK  UNALIGNED,
+         3 U_WORD         FIXED BIN(31),
+         3 U_BYTE         CHAR(1),
+
+       2 FILLER_END       CHAR(8);
+
+ DCL 1 ADDRESS_REC,
+       2 LINE1    CHAR(35),
+       2 CITY     CHAR(25),
+       2 POSTCODE CHAR(10),
+       2 COUNTRY  CHAR(3);
+
+ DCL REC_PTR POINTER;

@@ -1,0 +1,15 @@
+/// Imported module: the value classes the root composes with.
+module example.shared
+
+class Address {
+  line1: String(!isEmpty)
+  line2: String?
+  city: String(!isEmpty)
+  postalCode: String
+  countryCode: String(length == 2)
+}
+
+class Money {
+  value: Int(isBetween(0, 1_000_000_000))
+  currency: "EUR" | "GBP" | "USD"
+}

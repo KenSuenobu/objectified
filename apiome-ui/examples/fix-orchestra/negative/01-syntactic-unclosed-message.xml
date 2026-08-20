@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 name="Broken" version="FIX.4.4">
+  <fixr:fields>
+    <fixr:field id="11" name="ClOrdID" type="String"/>
+  </fixr:fields>
+  <fixr:messages>
+    <fixr:message name="NewOrderSingle" id="14" msgType="D">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+    </fixr:message>
+  </fixr:messages>
+</fixr:repository>

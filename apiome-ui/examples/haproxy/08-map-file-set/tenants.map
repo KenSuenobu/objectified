@@ -1,0 +1,7 @@
+# Fileset member: tenant header value -> backend name.
+# Referenced by map_str(/etc/haproxy/maps/tenants.map,shared_backend) in haproxy.cfg.
+acme        acme_backend
+acme-eu     acme_backend
+acme-us     acme_backend
+globex      globex_backend
+globex-eu   globex_backend

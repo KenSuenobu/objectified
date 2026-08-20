@@ -1,0 +1,30 @@
+/* LISTCAT ALL output: the catalog's own description of an existing
+   cluster, which is often the only surviving documentation of the file. */
+
+LISTING FROM CATALOG -- CATALOG.EXAMPLE.MASTER
+CLUSTER ------- EXAMPLE.CUSTOMER.KSDS
+     IN-CAT --- CATALOG.EXAMPLE.MASTER
+     HISTORY
+       DATASET-OWNER-----(NULL)     CREATION--------2024.061
+       RELEASE----------------2     EXPIRATION------0000.000
+     ASSOCIATIONS
+       DATA-----EXAMPLE.CUSTOMER.KSDS.DATA
+       INDEX----EXAMPLE.CUSTOMER.KSDS.INDEX
+       AIX------EXAMPLE.CUSTOMER.AIX.NAME
+  DATA ------- EXAMPLE.CUSTOMER.KSDS.DATA
+     ATTRIBUTES
+       KEYLEN----------------10     AVGLRECL-------------200
+       MAXLRECL-------------200     RKP--------------------0
+       CISIZE--------------4096     BUFSPACE------------8192
+       SHROPTNS(2,3)   RECOVERY     INDEXED           NOERASE
+       NOWRITECHK      NOIMBED      NOREPLICAT        UNORDERED
+       SPANNED         NOREUSE
+     STATISTICS
+       REC-TOTAL---------118432     SPLITS-CI------------214
+       REC-DELETED---------1204     SPLITS-CA--------------7
+       REC-INSERTED-------10442     FREESPACE-%CI---------10
+       REC-UPDATED--------55210     FREESPACE-%CA---------20
+  INDEX ------ EXAMPLE.CUSTOMER.KSDS.INDEX
+     ATTRIBUTES
+       KEYLEN----------------10     CISIZE--------------2048
+       LEVELS-----------------3

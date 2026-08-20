@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fileset member: the pharmacy's response. RelatesToMessageID is the edge back to the
+  NewRx; on its own this message says nothing about which prescription it accepted.
+-->
+<Message xmlns="http://www.ncpdp.org/schema/SCRIPT" version="010" release="006">
+  <Header>
+    <To Qualifier="D">1234567893</To>
+    <From Qualifier="P">1234567</From>
+    <MessageID>MSG-20260824-0101</MessageID>
+    <RelatesToMessageID>MSG-20260824-0100</RelatesToMessageID>
+    <SentTime>2026-08-24T09:30:12Z</SentTime>
+    <PrescriberOrderNumber>RX-2026-005510</PrescriberOrderNumber>
+  </Header>
+  <Body>
+    <Status>
+      <Code>010</Code>
+      <Description>Transaction accepted by the pharmacy.</Description>
+    </Status>
+  </Body>
+</Message>

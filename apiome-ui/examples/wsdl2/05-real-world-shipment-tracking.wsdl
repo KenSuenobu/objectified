@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://www.w3.org/ns/wsdl"
+             xmlns:tns="http://example.com/shipping/tracking/v2"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:wsoap="http://www.w3.org/ns/wsdl/soap"
+             xmlns:wsdlx="http://www.w3.org/ns/wsdl-extensions"
+             targetNamespace="http://example.com/shipping/tracking/v2">
+
+  <documentation>
+    Shipment tracking service in the shape carriers publish: a tracking query, a rate
+    quote, and a fire-and-forget event notification, all under one interface.
+  </documentation>
+
+  <types>
+    <xs:schema targetNamespace="http://example.com/shipping/tracking/v2"
+               elementFormDefault="qualified">
+
+      <xs:simpleType name="TrackingNumber">
+        <xs:restriction base="xs:string">
+          <xs:pattern value="[0-9]{12,22}"/>
+        </xs:restriction>
+      </xs:simpleType>
+
+      <xs:simpleType name="ShipmentStatus">
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="LABEL_CREATED"/>
+          <xs:enumeration value="IN_TRANSIT"/>
+          <xs:enumeration value="OUT_FOR_DELIVERY"/>
+          <xs:enumeration value="DELIVERED"/>
+          <xs:enumeration value="EXCEPTION"/>
+        </xs:restriction>
+      </xs:simpleType>
+
+      <xs:complexType name="Address">
+        <xs:sequence>
+          <xs:element name="line1" type="xs:string"/>
+          <xs:element name="line2" type="xs:string" minOccurs="0"/>
+          <xs:element name="city" type="xs:string"/>
+          <xs:element name="region" type="xs:string" minOccurs="0"/>
+          <xs:element name="postalCode" type="xs:string"/>
+          <xs:element name="countryCode" type="xs:string"/>
+        </xs:sequence>
+      </xs:complexType>
+
+      <xs:element name="trackRequest">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="trackingNumber" type="tns:TrackingNumber"/>
+            <xs:element name="includeHistory" type="xs:boolean" default="false" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="trackResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="trackingNumber" type="tns:TrackingNumber"/>
+            <xs:element name="status" type="tns:ShipmentStatus"/>
+            <xs:element name="estimatedDelivery" type="xs:date" minOccurs="0"/>
+            <xs:element name="destination" type="tns:Address"/>
+            <xs:element name="event" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="occurredAt" type="xs:dateTime"/>
+                  <xs:element name="status" type="tns:ShipmentStatus"/>
+                  <xs:element name="location" type="xs:string" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="rateRequest">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="origin" type="tns:Address"/>
+            <xs:element name="destination" type="tns:Address"/>
+            <xs:element name="weightKg" type="xs:decimal"/>
+            <xs:element name="serviceLevel" type="xs:string" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="rateResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="quote" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="serviceLevel" type="xs:string"/>
+                  <xs:element name="amount" type="xs:decimal"/>
+                  <xs:element name="currency" type="xs:string"/>
+                  <xs:element name="transitDays" type="xs:int"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="statusNotification">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="trackingNumber" type="tns:TrackingNumber"/>
+            <xs:element name="status" type="tns:ShipmentStatus"/>
+            <xs:element name="occurredAt" type="xs:dateTime"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="trackingFault">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="code" type="xs:string"/>
+            <xs:element name="reason" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:schema>
+  </types>
+
+  <interface name="TrackingInterface">
+    <fault name="TrackingFault" element="tns:trackingFault"/>
+
+    <operation name="track" pattern="http://www.w3.org/ns/wsdl/in-out" wsdlx:safe="true">
+      <input messageLabel="In" element="tns:trackRequest"/>
+      <output messageLabel="Out" element="tns:trackResponse"/>
+      <outfault ref="tns:TrackingFault" messageLabel="Out"/>
+    </operation>
+
+    <operation name="rate" pattern="http://www.w3.org/ns/wsdl/in-out">
+      <input messageLabel="In" element="tns:rateRequest"/>
+      <output messageLabel="Out" element="tns:rateResponse"/>
+      <outfault ref="tns:TrackingFault" messageLabel="Out"/>
+    </operation>
+
+    <operation name="notifyStatus" pattern="http://www.w3.org/ns/wsdl/in-only">
+      <input messageLabel="In" element="tns:statusNotification"/>
+    </operation>
+  </interface>
+
+  <binding name="TrackingSoapBinding"
+           interface="tns:TrackingInterface"
+           type="http://www.w3.org/ns/wsdl/soap"
+           wsoap:protocol="http://www.w3.org/2003/05/soap/bindings/HTTP/">
+    <fault ref="tns:TrackingFault" wsoap:code="soap:Sender"/>
+    <operation ref="tns:track"/>
+    <operation ref="tns:rate"/>
+    <operation ref="tns:notifyStatus"/>
+  </binding>
+
+  <service name="TrackingService" interface="tns:TrackingInterface">
+    <endpoint name="Production" binding="tns:TrackingSoapBinding" address="https://api.example.com/shipping/tracking/v2"/>
+    <endpoint name="Sandbox" binding="tns:TrackingSoapBinding" address="https://sandbox.example.com/shipping/tracking/v2"/>
+  </service>
+</description>

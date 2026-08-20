@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LWM2M xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Object ObjectType="MODefinition">
+    <Name>Temperature</Name>
+    <ObjectID>3303</ObjectID>
+    <ObjectURN>urn:oma:lwm2m:ext:3303</ObjectURN>
+    <MultipleInstances>Multiple</MultipleInstances>
+    <Mandatory>Optional</Mandatory>
+    <Resources>
+      <Item ID="5700">
+        <Name>Sensor Value</Name>
+        <Operations>R</Operations>
+        <Type>Float</Type>
+        <Units>Cel</Units>
+        <Description>Current temperature.</Description>
+      </Item>
+    </Resources>
+  </Object>
+</LWM2M>

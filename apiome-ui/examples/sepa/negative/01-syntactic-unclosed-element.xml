@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSG-BAD-0001</MsgId>
+      <CreDtTm>2026-08-19T10:30:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+    <PmtInf>
+      <PmtInfId>BATCH-BAD</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

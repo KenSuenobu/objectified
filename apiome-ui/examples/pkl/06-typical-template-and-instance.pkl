@@ -1,0 +1,41 @@
+/// Template plus instance in one module: the Pkl idiom where a class defines the shape
+/// and a module-level value amends it into concrete configuration.
+module example.catalogue
+
+class Product {
+  sku: String(matches(Regex("^[A-Z]{3}-[0-9]{4}$")))
+  name: String(!isEmpty)
+  price: Float(isPositive)
+  currency: "EUR" | "GBP" | "USD" = "EUR"
+  discontinued: Boolean = false
+  tags: Listing<String> = new {}
+}
+
+class Catalogue {
+  version: String
+  products: Listing<Product>
+}
+
+catalogue: Catalogue = new {
+  version = "2026.08"
+  products = new {
+    new Product {
+      sku = "WID-0001"
+      name = "Stainless widget 40mm"
+      price = 180.0
+      tags = new { "hardware" }
+    }
+    new Product {
+      sku = "GAD-0007"
+      name = "Gadget, boxed"
+      price = 42.0
+      tags = new { "hardware"; "boxed" }
+    }
+    new Product {
+      sku = "BRK-0020"
+      name = "Bracket"
+      price = 1.5
+      discontinued = true
+    }
+  }
+}

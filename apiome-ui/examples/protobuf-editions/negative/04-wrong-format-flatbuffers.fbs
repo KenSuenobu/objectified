@@ -1,0 +1,13 @@
+namespace example.orders;
+
+table OrderLine {
+  sku:string;
+  quantity:int;
+}
+
+table Order {
+  order_id:string;
+  lines:[OrderLine];
+}
+
+root_type Order;

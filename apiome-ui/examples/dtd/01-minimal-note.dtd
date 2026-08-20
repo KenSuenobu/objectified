@@ -1,0 +1,3 @@
+<!ELEMENT note (#PCDATA)>
+<!ATTLIST note
+          id ID #REQUIRED>

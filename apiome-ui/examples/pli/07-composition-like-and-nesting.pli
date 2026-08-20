@@ -1,0 +1,56 @@
+ /*********************************************************************/
+ /* Within-document composition: one declared block cloned into three  */
+ /* records by LIKE, a nested structure reused at two levels, and a    */
+ /* record whose members are entirely other declarations.              */
+ /*********************************************************************/
+
+ /* Building blocks. */
+ DCL 1 AUDIT_BLOCK,
+       2 CREATED_DATE  FIXED DEC(8,0),
+       2 CREATED_TIME  FIXED DEC(6,0),
+       2 CREATED_USER  CHAR(8),
+       2 UPDATED_DATE  FIXED DEC(8,0),
+       2 UPDATED_USER  CHAR(8);
+
+ DCL 1 MONEY_BLOCK,
+       2 AMOUNT   FIXED DEC(15,2),
+       2 CURRENCY CHAR(3);
+
+ DCL 1 ADDRESS_BLOCK,
+       2 LINE1    CHAR(35),
+       2 LINE2    CHAR(35),
+       2 CITY     CHAR(25),
+       2 POSTCODE CHAR(10),
+       2 COUNTRY  CHAR(3);
+
+ /* Composed records: every member is a clone of a block above. */
+ DCL 1 CUSTOMER_REC,
+       2 CUST_ID       CHAR(10),
+       2 CUST_NAME     CHAR(40),
+       2 CUST_BILL_TO  LIKE ADDRESS_BLOCK,
+       2 CUST_SHIP_TO  LIKE ADDRESS_BLOCK,
+       2 CUST_BALANCE  LIKE MONEY_BLOCK,
+       2 CUST_LIMIT    LIKE MONEY_BLOCK,
+       2 CUST_AUDIT    LIKE AUDIT_BLOCK;
+
+ DCL 1 INVOICE_REC,
+       2 INV_ID        CHAR(12),
+       2 INV_CUSTOMER  CHAR(10),
+       2 INV_BILL_TO   LIKE ADDRESS_BLOCK,
+       2 INV_NET       LIKE MONEY_BLOCK,
+       2 INV_TAX       LIKE MONEY_BLOCK,
+       2 INV_GROSS     LIKE MONEY_BLOCK,
+       2 INV_LINE_CT   FIXED BIN(15),
+       2 INV_LINES(30),
+         3 LINE_SKU    CHAR(18),
+         3 LINE_QTY    FIXED DEC(9,3),
+         3 LINE_PRICE  LIKE MONEY_BLOCK,
+         3 LINE_TOTAL  LIKE MONEY_BLOCK,
+       2 INV_AUDIT     LIKE AUDIT_BLOCK;
+
+ /* A record built only from other records. */
+ DCL 1 STATEMENT_REC,
+       2 STMT_CUSTOMER LIKE CUSTOMER_REC,
+       2 STMT_COUNT    FIXED BIN(15),
+       2 STMT_TOTAL    LIKE MONEY_BLOCK,
+       2 STMT_AUDIT    LIKE AUDIT_BLOCK;

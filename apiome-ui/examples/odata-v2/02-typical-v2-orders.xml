@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx">
+  <edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+                     m:DataServiceVersion="2.0">
+    <Schema Namespace="Northbound.Orders" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+
+      <EntityType Name="Customer">
+        <Key>
+          <PropertyRef Name="CustomerId"/>
+        </Key>
+        <Property Name="CustomerId" Type="Edm.String" Nullable="false" MaxLength="10"/>
+        <Property Name="Name" Type="Edm.String" MaxLength="80"/>
+        <Property Name="Country" Type="Edm.String" MaxLength="2"/>
+        <NavigationProperty Name="Orders"
+                            Relationship="Northbound.Orders.CustomerOrders"
+                            FromRole="Customer"
+                            ToRole="Order"/>
+      </EntityType>
+
+      <EntityType Name="Order">
+        <Key>
+          <PropertyRef Name="OrderId"/>
+        </Key>
+        <Property Name="OrderId" Type="Edm.String" Nullable="false" MaxLength="10"/>
+        <Property Name="CustomerId" Type="Edm.String" MaxLength="10"/>
+        <Property Name="OrderedOn" Type="Edm.DateTime"/>
+        <Property Name="Total" Type="Edm.Decimal" Precision="13" Scale="2"/>
+        <Property Name="Currency" Type="Edm.String" MaxLength="3"/>
+        <NavigationProperty Name="Customer"
+                            Relationship="Northbound.Orders.CustomerOrders"
+                            FromRole="Order"
+                            ToRole="Customer"/>
+        <NavigationProperty Name="Items"
+                            Relationship="Northbound.Orders.OrderItems"
+                            FromRole="Order"
+                            ToRole="Item"/>
+      </EntityType>
+
+      <EntityType Name="Item">
+        <Key>
+          <PropertyRef Name="OrderId"/>
+          <PropertyRef Name="ItemNo"/>
+        </Key>
+        <Property Name="OrderId" Type="Edm.String" Nullable="false" MaxLength="10"/>
+        <Property Name="ItemNo" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="Sku" Type="Edm.String" MaxLength="18"/>
+        <Property Name="Quantity" Type="Edm.Decimal" Precision="13" Scale="3"/>
+      </EntityType>
+
+      <Association Name="CustomerOrders">
+        <End Role="Customer" Type="Northbound.Orders.Customer" Multiplicity="1"/>
+        <End Role="Order" Type="Northbound.Orders.Order" Multiplicity="*"/>
+        <ReferentialConstraint>
+          <Principal Role="Customer">
+            <PropertyRef Name="CustomerId"/>
+          </Principal>
+          <Dependent Role="Order">
+            <PropertyRef Name="CustomerId"/>
+          </Dependent>
+        </ReferentialConstraint>
+      </Association>
+
+      <Association Name="OrderItems">
+        <End Role="Order" Type="Northbound.Orders.Order" Multiplicity="1"/>
+        <End Role="Item" Type="Northbound.Orders.Item" Multiplicity="*"/>
+      </Association>
+
+      <EntityContainer Name="OrdersContainer" m:IsDefaultEntityContainer="true">
+        <EntitySet Name="Customers" EntityType="Northbound.Orders.Customer"/>
+        <EntitySet Name="Orders" EntityType="Northbound.Orders.Order"/>
+        <EntitySet Name="Items" EntityType="Northbound.Orders.Item"/>
+        <AssociationSet Name="CustomerOrdersSet" Association="Northbound.Orders.CustomerOrders">
+          <End Role="Customer" EntitySet="Customers"/>
+          <End Role="Order" EntitySet="Orders"/>
+        </AssociationSet>
+        <AssociationSet Name="OrderItemsSet" Association="Northbound.Orders.OrderItems">
+          <End Role="Order" EntitySet="Orders"/>
+          <End Role="Item" EntitySet="Items"/>
+        </AssociationSet>
+        <FunctionImport Name="CancelOrder"
+                        ReturnType="Northbound.Orders.Order"
+                        EntitySet="Orders"
+                        m:HttpMethod="POST">
+          <Parameter Name="OrderId" Type="Edm.String" Mode="In" MaxLength="10"/>
+          <Parameter Name="Reason" Type="Edm.String" Mode="In" MaxLength="60"/>
+        </FunctionImport>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

@@ -1,0 +1,70 @@
+//DEFACCT  JOB (ACCT),'ACCOUNT FILE DEFINITION',CLASS=A,MSGCLASS=X,
+//             NOTIFY=&SYSUID
+//*
+//* Account master file: a KSDS with two alternate indexes and their
+//* paths, defined the way an operations team ships the job.
+//* Reconstructed shape; no upstream text copied.
+//*
+//DELETE   EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+  DELETE EXAMPLE.PROD.ACCOUNT.KSDS CLUSTER PURGE
+  SET MAXCC = 0
+/*
+//DEFINE   EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+  DEFINE CLUSTER                                        -
+         (NAME(EXAMPLE.PROD.ACCOUNT.KSDS)               -
+          INDEXED                                       -
+          KEYS(14 0)                                    -
+          RECORDSIZE(320 320)                           -
+          FREESPACE(15 25)                              -
+          SHAREOPTIONS(2 3)                             -
+          SPEED                                         -
+          ERASE                                         -
+          STORAGECLASS(SCPROD)                          -
+          MANAGEMENTCLASS(MCPROD)                       -
+          CYLINDERS(1200 200))                          -
+         DATA                                           -
+         (NAME(EXAMPLE.PROD.ACCOUNT.KSDS.DATA)          -
+          CONTROLINTERVALSIZE(8192)                     -
+          BUFFERSPACE(65536))                           -
+         INDEX                                          -
+         (NAME(EXAMPLE.PROD.ACCOUNT.KSDS.INDEX)         -
+          CONTROLINTERVALSIZE(2048))
+
+  /* Alternate index on the customer number: many accounts per customer. */
+  DEFINE AIX                                            -
+         (NAME(EXAMPLE.PROD.ACCOUNT.AIX.CUST)           -
+          RELATE(EXAMPLE.PROD.ACCOUNT.KSDS)             -
+          KEYS(10 14)                                   -
+          RECORDSIZE(120 2048)                          -
+          NONUNIQUEKEY                                  -
+          UPGRADE                                       -
+          CYLINDERS(120 30))
+
+  /* Alternate index on the IBAN: unique. */
+  DEFINE AIX                                            -
+         (NAME(EXAMPLE.PROD.ACCOUNT.AIX.IBAN)           -
+          RELATE(EXAMPLE.PROD.ACCOUNT.KSDS)             -
+          KEYS(34 24)                                   -
+          RECORDSIZE(120 2048)                          -
+          UNIQUEKEY                                     -
+          UPGRADE                                       -
+          CYLINDERS(150 30))
+
+  DEFINE PATH                                           -
+         (NAME(EXAMPLE.PROD.ACCOUNT.PATH.CUST)          -
+          PATHENTRY(EXAMPLE.PROD.ACCOUNT.AIX.CUST)      -
+          UPDATE)
+
+  DEFINE PATH                                           -
+         (NAME(EXAMPLE.PROD.ACCOUNT.PATH.IBAN)          -
+          PATHENTRY(EXAMPLE.PROD.ACCOUNT.AIX.IBAN)      -
+          UPDATE)
+
+  BLDINDEX INDATASET(EXAMPLE.PROD.ACCOUNT.KSDS)         -
+           OUTDATASET(EXAMPLE.PROD.ACCOUNT.AIX.CUST     -
+                      EXAMPLE.PROD.ACCOUNT.AIX.IBAN)
+/*

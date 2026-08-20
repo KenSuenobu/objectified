@@ -1,0 +1,47 @@
+<!--
+  Within-document composition: parameter entities used as reusable attribute sets and
+  content-model fragments, one of them redefined before use, and a content model
+  assembled from three other fragments.
+-->
+
+<!-- Reusable attribute set. -->
+<!ENTITY % identity  "id ID #REQUIRED
+                      version CDATA #IMPLIED">
+
+<!-- Content-model fragments, composed into larger models below. -->
+<!ENTITY % inline    "(#PCDATA | emphasis | link)*">
+<!ENTITY % blocks    "(para | list)">
+<!ENTITY % metadata  "(title, author*, published?)">
+
+<!-- A fragment defined in terms of two others. -->
+<!ENTITY % body      "(%blocks; | figure)+">
+
+<!ELEMENT document (%metadata;, %body;, appendix*)>
+<!ATTLIST document
+          %identity;
+          lang NMTOKEN "en">
+
+<!ELEMENT title %inline;>
+<!ELEMENT author (#PCDATA)>
+<!ELEMENT published EMPTY>
+<!ATTLIST published date CDATA #REQUIRED>
+
+<!ELEMENT para %inline;>
+<!ELEMENT emphasis %inline;>
+<!ELEMENT link %inline;>
+<!ATTLIST link
+          %identity;
+          href CDATA #REQUIRED>
+
+<!ELEMENT list (item+)>
+<!ELEMENT item (%blocks; | #PCDATA)*>
+
+<!ELEMENT figure (caption?, image)>
+<!ELEMENT caption %inline;>
+<!ELEMENT image EMPTY>
+<!ATTLIST image
+          %identity;
+          src CDATA #REQUIRED>
+
+<!ELEMENT appendix (%metadata;, %body;)>
+<!ATTLIST appendix %identity;>

@@ -1,0 +1,52 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "order_id",
+        "type": { "name": "utf8" },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "customer_id",
+        "type": { "name": "utf8" },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "placed_at",
+        "type": { "name": "timestamp", "unit": "MICROSECOND", "timezone": "UTC" },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "total_minor_units",
+        "type": { "name": "int", "bitWidth": 64, "isSigned": true },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "currency",
+        "type": { "name": "fixedsizebinary", "byteWidth": 3 },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "cancelled",
+        "type": { "name": "bool" },
+        "nullable": false,
+        "children": []
+      },
+      {
+        "name": "note",
+        "type": { "name": "utf8" },
+        "nullable": true,
+        "children": []
+      }
+    ],
+    "metadata": [
+      { "key": "source", "value": "orders.public.orders" },
+      { "key": "generated_by", "value": "apiome corpus" }
+    ]
+  }
+}

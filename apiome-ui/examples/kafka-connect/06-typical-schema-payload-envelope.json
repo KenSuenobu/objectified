@@ -1,0 +1,44 @@
+{
+  "schema": {
+    "type": "struct",
+    "name": "com.example.shipments.Shipment",
+    "version": 2,
+    "optional": false,
+    "fields": [
+      { "field": "shipment_id", "type": "string", "optional": false },
+      { "field": "carrier", "type": "string", "optional": true },
+      {
+        "field": "shipped_at",
+        "type": "int64",
+        "name": "org.apache.kafka.connect.data.Timestamp",
+        "version": 1,
+        "optional": true
+      },
+      { "field": "weight_kg", "type": "float64", "optional": true },
+      {
+        "field": "parcels",
+        "type": "array",
+        "optional": false,
+        "items": {
+          "type": "struct",
+          "name": "com.example.shipments.Parcel",
+          "optional": false,
+          "fields": [
+            { "field": "parcel_id", "type": "string", "optional": false },
+            { "field": "fragile", "type": "boolean", "optional": true, "default": false }
+          ]
+        }
+      }
+    ]
+  },
+  "payload": {
+    "shipment_id": "SHP-000412",
+    "carrier": "example-express",
+    "shipped_at": 1786060800000,
+    "weight_kg": 12.4,
+    "parcels": [
+      { "parcel_id": "PCL-1", "fragile": false },
+      { "parcel_id": "PCL-2", "fragile": true }
+    ]
+  }
+}

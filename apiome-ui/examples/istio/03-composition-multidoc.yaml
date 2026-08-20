@@ -1,0 +1,103 @@
+# Three resources in one YAML stream: the Gateway that terminates TLS, the VirtualService
+# that routes, and the DestinationRule that defines the subsets the routes name. None of
+# the three is complete on its own.
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: public-gateway
+  namespace: storefront
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - api.example.com
+      tls:
+        mode: SIMPLE
+        credentialName: api-example-com-cert
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - api.example.com
+      tls:
+        httpsRedirect: true
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: checkout
+  namespace: storefront
+spec:
+  hosts:
+    - api.example.com
+  gateways:
+    - storefront/public-gateway
+  http:
+    - name: canary
+      match:
+        - uri:
+            prefix: /v2/checkout
+          headers:
+            x-canary:
+              exact: "true"
+      route:
+        - destination:
+            host: checkout.storefront.svc.cluster.local
+            subset: v2
+            port:
+              number: 8080
+    - name: split
+      match:
+        - uri:
+            prefix: /v2/checkout
+      route:
+        - destination:
+            host: checkout.storefront.svc.cluster.local
+            subset: v1
+            port:
+              number: 8080
+          weight: 90
+        - destination:
+            host: checkout.storefront.svc.cluster.local
+            subset: v2
+            port:
+              number: 8080
+          weight: 10
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: checkout
+  namespace: storefront
+spec:
+  host: checkout.storefront.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 60s
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 20

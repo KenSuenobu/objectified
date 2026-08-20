@@ -1,0 +1,35 @@
+openapi: 3.1.0
+info:
+  title: Inventory
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/inventory
+paths:
+  /reservations:
+    post:
+      operationId: reserveStock
+      summary: Reserve stock for a SKU
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sku:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+              required: [sku, quantity]
+      responses:
+        "201":
+          description: Reserved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reservationId:
+                    type: string
+                required: [reservationId]

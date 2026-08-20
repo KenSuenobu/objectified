@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 name="ExampleComposition" version="FIX.4.4_EP002">
+  <fixr:codeSets>
+    <fixr:codeSet name="PartyRoleCodeSet" id="452" type="int">
+      <fixr:code name="ExecutingFirm" id="452001" value="1"/>
+      <fixr:code name="ClearingFirm" id="452004" value="4"/>
+      <fixr:code name="ClientID" id="452003" value="3"/>
+    </fixr:codeSet>
+    <fixr:codeSet name="PartyIDSourceCodeSet" id="447" type="char">
+      <fixr:code name="BIC" id="447001" value="B"/>
+      <fixr:code name="Proprietary" id="447004" value="D"/>
+      <fixr:code name="LEI" id="447N" value="N"/>
+    </fixr:codeSet>
+  </fixr:codeSets>
+
+  <fixr:fields>
+    <fixr:field id="11" name="ClOrdID" type="String"/>
+    <fixr:field id="55" name="Symbol" type="String"/>
+    <fixr:field id="448" name="PartyID" type="String"/>
+    <fixr:field id="447" name="PartyIDSource" type="PartyIDSourceCodeSet"/>
+    <fixr:field id="452" name="PartyRole" type="PartyRoleCodeSet"/>
+    <fixr:field id="453" name="NoPartyIDs" type="NumInGroup"/>
+    <fixr:field id="802" name="NoPartySubIDs" type="NumInGroup"/>
+    <fixr:field id="523" name="PartySubID" type="String"/>
+    <fixr:field id="803" name="PartySubIDType" type="int"/>
+  </fixr:fields>
+
+  <fixr:components>
+    <fixr:component name="Instrument" id="1003" category="Common">
+      <fixr:fieldRef id="55" presence="required"/>
+    </fixr:component>
+  </fixr:components>
+
+  <fixr:groups>
+    <!-- A repeating group whose entries contain another repeating group. -->
+    <fixr:group name="PartySubIDsGrp" id="2005" category="Common">
+      <fixr:numInGroup id="802"/>
+      <fixr:fieldRef id="523" presence="required"/>
+      <fixr:fieldRef id="803" presence="optional"/>
+    </fixr:group>
+
+    <fixr:group name="PartiesGrp" id="1012" category="Common">
+      <fixr:numInGroup id="453"/>
+      <fixr:fieldRef id="448" presence="required"/>
+      <fixr:fieldRef id="447" presence="required"/>
+      <fixr:fieldRef id="452" presence="required"/>
+      <fixr:groupRef id="2005" presence="optional"/>
+    </fixr:group>
+  </fixr:groups>
+
+  <fixr:messages>
+    <fixr:message name="NewOrderSingle" id="14" msgType="D" category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:componentRef id="1003" presence="required"/>
+        <fixr:groupRef id="1012" presence="optional"/>
+      </fixr:structure>
+    </fixr:message>
+  </fixr:messages>
+</fixr:repository>

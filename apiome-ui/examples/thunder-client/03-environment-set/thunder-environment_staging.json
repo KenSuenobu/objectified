@@ -1,0 +1,14 @@
+{
+  "clientName": "Thunder Client",
+  "id": "b1f7c8d0-0000-4000-8000-000000000110",
+  "name": "Inventory · staging",
+  "default": true,
+  "sortNum": 10000,
+  "created": "2026-08-19T13:50:00.000Z",
+  "modified": "2026-08-19T13:57:00.000Z",
+  "data": [
+    { "name": "baseUrl", "value": "https://staging.example.com/inventory" },
+    { "name": "warehouse", "value": "AMS" },
+    { "name": "apiKey", "value": "" }
+  ]
+}

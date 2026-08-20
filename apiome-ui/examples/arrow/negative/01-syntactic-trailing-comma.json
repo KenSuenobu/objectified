@@ -1,0 +1,12 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": { "name": "int", "bitWidth": 64, "isSigned": true },
+        "nullable": false,
+        "children": [],
+      }
+    ]
+  }
+}

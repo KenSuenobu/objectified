@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TargetEndpoint name="production">
+    <Description>Target half of a proxy: the server the routes resolve to.</Description>
+    <PreFlow name="PreFlow">
+        <Request>
+            <Step><Name>Add-Backend-Auth</Name></Step>
+        </Request>
+        <Response/>
+    </PreFlow>
+    <PostFlow name="PostFlow">
+        <Request/>
+        <Response/>
+    </PostFlow>
+    <HTTPTargetConnection>
+        <LoadBalancer>
+            <Server name="orders-primary"/>
+            <Server name="orders-secondary"/>
+            <Algorithm>RoundRobin</Algorithm>
+            <MaxFailures>5</MaxFailures>
+        </LoadBalancer>
+        <Path>/v2</Path>
+        <Properties>
+            <Property name="connect.timeout.millis">5000</Property>
+            <Property name="io.timeout.millis">30000</Property>
+            <Property name="success.codes">2xx,404</Property>
+        </Properties>
+        <SSLInfo>
+            <Enabled>true</Enabled>
+            <ClientAuthEnabled>true</ClientAuthEnabled>
+            <KeyStore>ref://orders-keystore</KeyStore>
+            <KeyAlias>orders-client</KeyAlias>
+            <TrustStore>ref://orders-truststore</TrustStore>
+        </SSLInfo>
+    </HTTPTargetConnection>
+</TargetEndpoint>

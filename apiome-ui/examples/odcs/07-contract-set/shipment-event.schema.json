@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/shipment-event.json",
+  "title": "Shipment event payload",
+  "description": "Fileset member: the structural definition the contract delegates to.",
+  "type": "object",
+  "required": ["eventType", "shipmentId"],
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "enum": ["created", "picked", "packed", "dispatched", "delivered", "exception"]
+    },
+    "shipmentId": { "type": "string", "pattern": "^SHP-[0-9]{6}$" },
+    "carrier": { "type": "string" },
+    "location": {
+      "type": "object",
+      "properties": {
+        "facility": { "type": "string" },
+        "countryCode": { "type": "string", "minLength": 2, "maxLength": 2 }
+      }
+    },
+    "parcels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["parcelId"],
+        "properties": {
+          "parcelId": { "type": "string" },
+          "weightKg": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      }
+    },
+    "exception": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    }
+  }
+}

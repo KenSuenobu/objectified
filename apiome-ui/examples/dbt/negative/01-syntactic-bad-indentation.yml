@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: orders
+    description: Order facts.
+    columns:
+      - name: order_id
+       tests:
+          - unique
+      - name: status

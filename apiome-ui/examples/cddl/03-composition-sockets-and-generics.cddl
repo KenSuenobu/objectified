@@ -1,0 +1,44 @@
+; Composition: sockets/plugs ($ and $$) and generic parameters — the two extension
+; mechanisms CDDL offers, and the ones FMT-4.4 must either model or declare as limits.
+
+; A type socket: extensible by later plugs.
+$message /= ping-message
+$message /= pong-message
+
+ping-message = {
+  kind: "ping",
+  nonce: bstr .size 8,
+}
+
+pong-message = {
+  kind: "pong",
+  nonce: bstr .size 8,
+  latency-ms: uint,
+}
+
+; A group socket: members spliced into every envelope.
+envelope = {
+  $$envelope-common,
+  payload: $message,
+}
+
+$$envelope-common //= (
+  version: 1,
+  sent-at: uint,
+)
+
+$$envelope-common //= (
+  version: 2,
+  sent-at: uint,
+  trace-id: bstr .size 16,
+)
+
+; Generics: a parameterised container reused at two instantiations.
+page<T> = {
+  items: [* T],
+  ? next-cursor: tstr,
+  total: uint,
+}
+
+message-page = page<$message>
+string-page = page<tstr>

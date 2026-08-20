@@ -1,0 +1,23 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix core: <https://example.com/core#> .
+@prefix ex:   <https://example.com/shipping#> .
+
+# Root of the set: an ontology that imports the shared core and extends its classes.
+<https://example.com/shipping> a owl:Ontology ;
+    owl:imports <https://example.com/core> ;
+    owl:versionInfo "1.1.0" ;
+    rdfs:label "Shipping ontology" .
+
+ex:Shipment a owl:Class ;
+    rdfs:subClassOf core:Document ;
+    rdfs:label "Shipment" .
+
+ex:shipTo a owl:ObjectProperty ;
+    rdfs:domain ex:Shipment ;
+    rdfs:range core:Address .
+
+ex:weightKg a owl:DatatypeProperty ;
+    rdfs:domain ex:Shipment ;
+    rdfs:range xsd:decimal .

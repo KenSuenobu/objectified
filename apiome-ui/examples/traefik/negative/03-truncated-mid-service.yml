@@ -1,0 +1,10 @@
+http:
+  routers:
+    orders:
+      rule: Host(`api.example.com`) && PathPrefix(`/v2/orders`)
+      service: orders-service
+  services:
+    orders-service:
+      loadBalancer:
+        servers:
+          - url: http://orders-1.internal.example

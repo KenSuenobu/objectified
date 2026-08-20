@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixr:repository xmlns:fixr="http://fixprotocol.io/2020/orchestra/repository"
+                 name="ExampleWorkflow" version="FIX.4.4_EP005">
+  <fixr:codeSets>
+    <fixr:codeSet name="OrdStatusCodeSet" id="39" type="char">
+      <fixr:code name="New" id="39000" value="0"/>
+      <fixr:code name="PartiallyFilled" id="39001" value="1"/>
+      <fixr:code name="Filled" id="39002" value="2"/>
+      <fixr:code name="Canceled" id="39004" value="4"/>
+    </fixr:codeSet>
+  </fixr:codeSets>
+
+  <fixr:fields>
+    <fixr:field id="11" name="ClOrdID" type="String"/>
+    <fixr:field id="39" name="OrdStatus" type="OrdStatusCodeSet"/>
+  </fixr:fields>
+
+  <fixr:actors>
+    <fixr:actor name="BuySide">
+      <fixr:fieldRef id="11"/>
+    </fixr:actor>
+    <fixr:actor name="SellSide"/>
+
+    <fixr:flow name="OrderEntry" source="BuySide" destination="SellSide" reliability="idempotent"/>
+    <fixr:flow name="Executions" source="SellSide" destination="BuySide" reliability="recoverable"/>
+
+    <fixr:actor name="OrderBook">
+      <fixr:states name="OrderState" id="39">
+        <fixr:state name="New">
+          <fixr:transition name="PartialFill" target="PartiallyFilled">
+            <fixr:when>ExecType == "^Trade" and LeavesQty &gt; 0</fixr:when>
+          </fixr:transition>
+          <fixr:transition name="Fill" target="Filled">
+            <fixr:when>ExecType == "^Trade" and LeavesQty == 0</fixr:when>
+          </fixr:transition>
+          <fixr:transition name="Cancel" target="Canceled"/>
+        </fixr:state>
+        <fixr:state name="PartiallyFilled">
+          <fixr:transition name="Fill" target="Filled">
+            <fixr:when>LeavesQty == 0</fixr:when>
+          </fixr:transition>
+          <fixr:transition name="Cancel" target="Canceled"/>
+        </fixr:state>
+        <fixr:state name="Filled"/>
+        <fixr:state name="Canceled"/>
+      </fixr:states>
+    </fixr:actor>
+  </fixr:actors>
+
+  <fixr:messages>
+    <fixr:message name="NewOrderSingle" id="14" msgType="D" flow="OrderEntry"
+                  category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+      </fixr:structure>
+    </fixr:message>
+    <fixr:message name="ExecutionReport" id="9" msgType="8" flow="Executions"
+                  category="SingleGeneralOrderHandling">
+      <fixr:structure>
+        <fixr:fieldRef id="11" presence="required"/>
+        <fixr:fieldRef id="39" presence="required"/>
+      </fixr:structure>
+    </fixr:message>
+  </fixr:messages>
+</fixr:repository>

@@ -1,0 +1,30 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "https://example.com/ns#",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+
+    "id": "@id",
+    "type": "@type",
+
+    "name": "schema:name",
+    "email": { "@id": "schema:email" },
+    "homepage": { "@id": "schema:url", "@type": "@id" },
+    "birthDate": { "@id": "schema:birthDate", "@type": "xsd:date" },
+    "memberCount": { "@id": "schema:numberOfEmployees", "@type": "xsd:integer" },
+
+    "knows": { "@id": "schema:knows", "@type": "@id", "@container": "@set" },
+    "worksFor": { "@id": "schema:worksFor", "@type": "@id" },
+
+    "address": { "@id": "schema:address", "@context": {
+      "street": "schema:streetAddress",
+      "city": "schema:addressLocality",
+      "postalCode": "schema:postalCode",
+      "country": "schema:addressCountry"
+    }},
+
+    "tags": { "@id": "schema:keywords", "@container": "@list" },
+    "labels": { "@id": "https://www.w3.org/2000/01/rdf-schema#label", "@container": "@language" }
+  }
+}

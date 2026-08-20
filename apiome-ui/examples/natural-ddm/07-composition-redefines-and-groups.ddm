@@ -1,0 +1,35 @@
+DDM Name ...... CONTRACT-FILE
+DB ............ 001
+File .......... 030
+Default Sequence AA
+
+* Within-document composition: a group field whose members are read both as a whole and
+* individually (the REDEFINE lines), a periodic group that itself contains a group, and
+* superdescriptors assembled from fields at three different levels. Composition here is
+* structural rather than by reference — ADABAS has no imports.
+
+T L DB Name                             F Leng  S D Remark
+- - -- -------------------------------- - ----  - - ------------------------------
+  1 AA CONTRACT-NUMBER                  A    12     U
+  1 AB PARTY-BLOCK                      A    75     N Group read as one field
+R 2 AB PARTY-NAME                       A    40     N Redefinition of AB, bytes 1-40
+R 2 AB PARTY-COUNTRY                    A     3     N Redefinition of AB, bytes 41-43
+R 2 AB PARTY-REFERENCE                  A    32     N Redefinition of AB, bytes 44-75
+  1 AC EFFECTIVE-DATE                   N     8.0   D YYYYMMDD
+  1 AD EXPIRY-DATE                      N     8.0   N YYYYMMDD
+  1 AE PREMIUM-AMOUNT                   P    11.2   N
+  1 AF PREMIUM-CURRENCY                 A     3     N
+G 1 AG BILLING-GROUP                                  Group of related fields
+  2 AH BILLING-FREQUENCY                A     1     N
+  2 AI BILLING-DAY                      N     2.0   N
+  2 AJ BILLING-METHOD                   A     2     N
+P 1 AK INSTALMENT                                     Periodic group
+  2 AL INSTALMENT-NUMBER                N     3.0   N
+  2 AM INSTALMENT-DUE                   N     8.0   N
+  2 AN INSTALMENT-AMOUNT                P    11.2   N
+G 2 AO INSTALMENT-STATUS                                Group inside the periodic group
+  3 AP STATUS-CODE                      A     1     N
+  3 AQ STATUS-DATE                      N     8.0   N
+M 2 AR INSTALMENT-NOTE                  A    40     N MU inside the periodic group
+S 1 S1 SUPER-PARTY-EFFDATE              A    51     D AB(1-40),AC(1-8),AF(1-3)
+S 1 S2 SUPER-STATUS-DUE                 A     9     D AP(1-1),AM(1-8)

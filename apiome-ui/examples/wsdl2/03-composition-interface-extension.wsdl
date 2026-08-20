@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://www.w3.org/ns/wsdl"
+             xmlns:tns="http://example.com/catalogue"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:wsoap="http://www.w3.org/ns/wsdl/soap"
+             targetNamespace="http://example.com/catalogue">
+
+  <documentation>
+    Interface extension: ReadWriteCatalogue extends ReadCatalogue, so a 2.0 reader must
+    flatten inherited operations and faults onto the derived interface.
+  </documentation>
+
+  <types>
+    <xs:schema targetNamespace="http://example.com/catalogue"
+               elementFormDefault="qualified">
+      <xs:element name="getProduct" type="xs:string"/>
+      <xs:element name="product">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="sku" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="price" type="xs:decimal"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="upsertProduct">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="sku" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="price" type="xs:decimal"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="upsertAck" type="xs:string"/>
+      <xs:element name="notFound" type="xs:string"/>
+    </xs:schema>
+  </types>
+
+  <interface name="ReadCatalogue">
+    <fault name="NotFound" element="tns:notFound"/>
+    <operation name="getProduct" pattern="http://www.w3.org/ns/wsdl/in-out">
+      <input messageLabel="In" element="tns:getProduct"/>
+      <output messageLabel="Out" element="tns:product"/>
+      <outfault ref="tns:NotFound" messageLabel="Out"/>
+    </operation>
+  </interface>
+
+  <interface name="ReadWriteCatalogue" extends="tns:ReadCatalogue">
+    <operation name="upsertProduct" pattern="http://www.w3.org/ns/wsdl/in-out">
+      <input messageLabel="In" element="tns:upsertProduct"/>
+      <output messageLabel="Out" element="tns:upsertAck"/>
+    </operation>
+  </interface>
+
+  <binding name="CatalogueBinding"
+           interface="tns:ReadWriteCatalogue"
+           type="http://www.w3.org/ns/wsdl/soap"
+           wsoap:protocol="http://www.w3.org/2003/05/soap/bindings/HTTP/">
+    <operation ref="tns:upsertProduct"/>
+  </binding>
+
+  <service name="CatalogueService" interface="tns:ReadWriteCatalogue">
+    <endpoint name="Main" binding="tns:CatalogueBinding" address="https://api.example.com/catalogue"/>
+  </service>
+</description>

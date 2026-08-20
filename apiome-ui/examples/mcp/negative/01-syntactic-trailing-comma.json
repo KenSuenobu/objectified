@@ -1,0 +1,12 @@
+{
+  "mcpVersion": "2025-06-18",
+  "server": { "name": "broken", "version": "1.0.0" },
+  "capabilities": { "tools": {} },
+  "tools": [
+    {
+      "name": "ping",
+      "description": "Trailing comma after the last member makes this invalid JSON.",
+      "inputSchema": { "type": "object", "properties": {} },
+    }
+  ]
+}

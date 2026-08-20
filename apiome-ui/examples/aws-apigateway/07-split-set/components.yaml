@@ -1,0 +1,75 @@
+# Fileset member: the schema half. Referenced by relative $ref from api.yaml; on its own
+# it declares no paths and no AWS extensions.
+components:
+  parameters:
+    ShipmentId:
+      name: shipmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^SHP-[0-9]{6}$'
+  schemas:
+    Money:
+      type: object
+      required: [value, currency]
+      properties:
+        value:
+          type: integer
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+    Parcel:
+      type: object
+      required: [parcelId]
+      properties:
+        parcelId:
+          type: string
+        fragile:
+          type: boolean
+          default: false
+        weightKg:
+          type: number
+          exclusiveMinimum: 0
+    Shipment:
+      type: object
+      required: [shipmentId, carrier, parcels]
+      properties:
+        shipmentId:
+          type: string
+          pattern: '^SHP-[0-9]{6}$'
+        carrier:
+          type: string
+        shippedAt:
+          type: string
+          format: date-time
+        price:
+          $ref: '#/components/schemas/Money'
+        parcels:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Parcel'
+    NewShipment:
+      type: object
+      required: [carrier, parcels]
+      properties:
+        carrier:
+          type: string
+        parcels:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Parcel'
+    ShipmentPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Shipment'
+        nextCursor:
+          type: string
+          nullable: true

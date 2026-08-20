@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+                     m:DataServiceVersion="3.0"
+                     m:MaxDataServiceVersion="3.0">
+    <Schema Namespace="Fleet" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+
+      <ComplexType Name="Address">
+        <Property Name="Street" Type="Edm.String" MaxLength="60"/>
+        <Property Name="City" Type="Edm.String" MaxLength="40"/>
+        <Property Name="PostalCode" Type="Edm.String" MaxLength="10"/>
+        <Property Name="Country" Type="Edm.String" MaxLength="2"/>
+      </ComplexType>
+
+      <EnumType Name="ServiceLevel">
+        <Member Name="Basic" Value="0"/>
+        <Member Name="Standard" Value="1"/>
+        <Member Name="Premium" Value="2"/>
+      </EnumType>
+
+      <EntityType Name="Vehicle" Abstract="true">
+        <Key>
+          <PropertyRef Name="Vin"/>
+        </Key>
+        <Property Name="Vin" Type="Edm.String" Nullable="false" MaxLength="17"/>
+        <Property Name="Registered" Type="Edm.DateTime"/>
+        <Property Name="HomeDepot" Type="Fleet.Address"/>
+        <NavigationProperty Name="Contract"
+                            Relationship="Fleet.VehicleContract"
+                            FromRole="Vehicle"
+                            ToRole="Contract"/>
+      </EntityType>
+
+      <EntityType Name="Truck" BaseType="Fleet.Vehicle">
+        <Property Name="PayloadKg" Type="Edm.Int32"/>
+        <Property Name="AxleCount" Type="Edm.Byte"/>
+      </EntityType>
+
+      <EntityType Name="Van" BaseType="Fleet.Vehicle">
+        <Property Name="LoadVolumeM3" Type="Edm.Decimal" Precision="6" Scale="2"/>
+      </EntityType>
+
+      <EntityType Name="Contract">
+        <Key>
+          <PropertyRef Name="ContractId"/>
+        </Key>
+        <Property Name="ContractId" Type="Edm.String" Nullable="false" MaxLength="12"/>
+        <Property Name="Level" Type="Fleet.ServiceLevel"/>
+        <Property Name="StartsOn" Type="Edm.DateTime"/>
+      </EntityType>
+
+      <Association Name="VehicleContract">
+        <End Role="Vehicle" Type="Fleet.Vehicle" Multiplicity="*"/>
+        <End Role="Contract" Type="Fleet.Contract" Multiplicity="0..1"/>
+      </Association>
+
+      <EntityContainer Name="FleetContainer" m:IsDefaultEntityContainer="true">
+        <EntitySet Name="Vehicles" EntityType="Fleet.Vehicle"/>
+        <EntitySet Name="Contracts" EntityType="Fleet.Contract"/>
+        <AssociationSet Name="VehicleContractSet" Association="Fleet.VehicleContract">
+          <End Role="Vehicle" EntitySet="Vehicles"/>
+          <End Role="Contract" EntitySet="Contracts"/>
+        </AssociationSet>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

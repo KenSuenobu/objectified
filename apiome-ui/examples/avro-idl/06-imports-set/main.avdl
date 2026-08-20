@@ -1,0 +1,25 @@
+/**
+ * Root of the set: imports another IDL file and a generated .avsc schema, then uses
+ * types from both. The adapter must resolve both import kinds across the fileset.
+ */
+@namespace("com.example.shipping")
+protocol ShippingService {
+
+  import idl "common.avdl";
+  import schema "parcel.avsc";
+
+  record ShipmentRequest {
+    string shipmentId;
+    com.example.common.Address destination;
+    com.example.shipping.Parcel parcel;
+    com.example.common.Weight weight;
+  }
+
+  record ShipmentResponse {
+    string shipmentId;
+    string trackingNumber;
+    com.example.common.Money price;
+  }
+
+  ShipmentResponse ship(ShipmentRequest request);
+}

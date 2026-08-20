@@ -1,0 +1,46 @@
+{
+  "version_info": "2026-08-19T13:44:02Z/117",
+  "type_url": "type.googleapis.com/envoy.config.route.v3.RouteConfiguration",
+  "nonce": "a4f1c2",
+  "control_plane": { "identifier": "istiod-7c9d5f7d8-abcde" },
+  "resources": [
+    {
+      "@type": "type.googleapis.com/envoy.config.route.v3.RouteConfiguration",
+      "name": "8080",
+      "virtual_hosts": [
+        {
+          "name": "orders.storefront.svc.cluster.local:8080",
+          "domains": [
+            "orders.storefront.svc.cluster.local",
+            "orders.storefront.svc.cluster.local:8080",
+            "orders",
+            "orders:8080",
+            "10.96.14.22",
+            "10.96.14.22:8080"
+          ],
+          "routes": [
+            {
+              "name": "orders-v2",
+              "match": { "prefix": "/v2/orders" },
+              "route": {
+                "cluster": "outbound|8080|v2|orders.storefront.svc.cluster.local",
+                "timeout": "15s",
+                "retry_policy": {
+                  "retry_on": "connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes",
+                  "num_retries": 2,
+                  "retriable_status_codes": [503]
+                }
+              }
+            },
+            {
+              "name": "default",
+              "match": { "prefix": "/" },
+              "route": { "cluster": "outbound|8080||orders.storefront.svc.cluster.local" }
+            }
+          ]
+        }
+      ],
+      "validate_clusters": false
+    }
+  ]
+}

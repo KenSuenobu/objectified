@@ -1,0 +1,11 @@
+<policies>
+  <inbound>
+    <base />
+    <set-backend-service base-url="https://orders.internal.example.com" />
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+</policies>

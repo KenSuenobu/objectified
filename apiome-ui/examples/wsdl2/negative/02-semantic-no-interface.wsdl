@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://www.w3.org/ns/wsdl"
+             xmlns:tns="http://example.com/empty"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             targetNamespace="http://example.com/empty">
+  <documentation>
+    Well-formed WSDL 2.0 that declares types and nothing else: no interface, no binding,
+    no service, therefore no operations to import.
+  </documentation>
+  <types>
+    <xs:schema targetNamespace="http://example.com/empty">
+      <xs:element name="orphan" type="xs:string"/>
+    </xs:schema>
+  </types>
+</description>

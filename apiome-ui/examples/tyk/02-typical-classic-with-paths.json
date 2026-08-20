@@ -1,0 +1,62 @@
+{
+  "api_id": "orders-api",
+  "api_model": {},
+  "name": "Orders API",
+  "org_id": "000000000000000000000001",
+  "slug": "orders-api",
+  "use_keyless": false,
+  "auth_configs": {
+    "authToken": {
+      "auth_header_name": "Authorization",
+      "use_certificate": false
+    }
+  },
+  "active": true,
+  "enable_batch_request_support": false,
+  "proxy": {
+    "listen_path": "/v2/orders/",
+    "target_url": "http://orders.internal.example.com:8080",
+    "strip_listen_path": true,
+    "preserve_host_header": false
+  },
+  "custom_middleware": {
+    "pre": [],
+    "post": [],
+    "id_extractor": { "extract_from": "", "extract_with": "" }
+  },
+  "version_data": {
+    "not_versioned": false,
+    "default_version": "v2",
+    "versions": {
+      "v2": {
+        "name": "v2",
+        "expires": "",
+        "use_extended_paths": true,
+        "extended_paths": {
+          "white_list": [
+            {
+              "path": "/orders",
+              "method_actions": {
+                "GET": { "action": "no_action", "code": 200 },
+                "POST": { "action": "no_action", "code": 201 }
+              }
+            },
+            {
+              "path": "/orders/{id}",
+              "method_actions": {
+                "GET": { "action": "no_action", "code": 200 },
+                "DELETE": { "action": "no_action", "code": 204 }
+              }
+            }
+          ],
+          "cache": [{ "path": "/orders", "method": "GET" }],
+          "hard_timeouts": [{ "path": "/orders", "method": "POST", "timeout": 15 }]
+        }
+      }
+    }
+  },
+  "definition": { "location": "url", "key": "version" },
+  "global_rate_limit": { "rate": 600, "per": 60 },
+  "enable_context_vars": true,
+  "response_processors": []
+}

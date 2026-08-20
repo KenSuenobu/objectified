@@ -1,0 +1,58 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@base": "https://example.com/records/",
+    "@vocab": "https://example.com/ns#",
+    "@language": "en",
+    "@protected": true,
+
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+
+    "id": "@id",
+    "type": "@type",
+    "graph": "@graph",
+
+    "aliasedNone": { "@id": "@none" },
+
+    "typedIri": { "@id": "schema:url", "@type": "@id" },
+    "typedVocab": { "@id": "schema:additionalType", "@type": "@vocab" },
+    "typedJson": { "@id": "ex:payload", "@type": "@json" },
+    "typedDate": { "@id": "schema:dateCreated", "@type": "xsd:dateTime" },
+
+    "setContainer": { "@id": "schema:keywords", "@container": "@set" },
+    "listContainer": { "@id": "ex:orderedSteps", "@container": "@list" },
+    "indexContainer": { "@id": "ex:byRegion", "@container": "@index" },
+    "idContainer": { "@id": "ex:byIdentifier", "@container": "@id" },
+    "typeContainer": { "@id": "ex:byType", "@container": "@type" },
+    "graphContainer": { "@id": "ex:namedGraphs", "@container": "@graph" },
+    "languageContainer": { "@id": "skos:prefLabel", "@container": "@language" },
+    "setAndIndex": { "@id": "ex:multi", "@container": ["@index", "@set"] },
+
+    "reverseProperty": { "@reverse": "schema:memberOf", "@type": "@id" },
+
+    "scoped": {
+      "@id": "ex:scoped",
+      "@context": {
+        "inner": "ex:innerTerm",
+        "deep": { "@id": "ex:deepTerm", "@context": { "deepest": "ex:deepestTerm" } }
+      }
+    },
+
+    "typeScoped": {
+      "@id": "ex:Typed",
+      "@context": {
+        "onlyHere": "ex:onlyWhenTypeIsTyped"
+      }
+    },
+
+    "prefixed": { "@id": "ex:prefixed", "@prefix": true },
+    "protectedTerm": { "@id": "ex:immutable", "@protected": true },
+    "nestedTerm": { "@id": "@nest" },
+    "indexedTerm": { "@id": "ex:indexed", "@index": "ex:indexKey" },
+    "directionAware": { "@id": "ex:rtl", "@direction": "rtl", "@language": "ar" },
+
+    "ex": "https://example.com/ns#"
+  }
+}

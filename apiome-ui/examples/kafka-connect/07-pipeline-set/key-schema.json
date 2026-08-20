@@ -1,0 +1,9 @@
+{
+  "type": "struct",
+  "name": "logistics.shipments.Key",
+  "version": 1,
+  "optional": false,
+  "fields": [
+    { "field": "shipment_id", "type": "string", "optional": false }
+  ]
+}

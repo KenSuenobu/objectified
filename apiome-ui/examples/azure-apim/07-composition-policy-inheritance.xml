@@ -1,0 +1,87 @@
+<!--
+  Within-document composition: `<base />` is the composition operator. A policy document
+  at the operation level inherits the API-level policy, which inherits the product-level
+  policy, which inherits the global one. The position of <base /> decides whether the
+  inherited fragment runs before or after the local one — which is exactly what an
+  importer must resolve to know the effective pipeline.
+
+  This file carries all four scopes in the order APIM evaluates them.
+-->
+<policies-composition>
+
+  <!-- Scope: global (all APIs) -->
+  <policy scope="global">
+    <policies>
+      <inbound>
+        <set-header name="X-Correlation-Id" exists-action="skip">
+          <value>@(context.RequestId.ToString())</value>
+        </set-header>
+        <rate-limit calls="10000" renewal-period="60" />
+      </inbound>
+      <backend><forward-request timeout="60" /></backend>
+      <outbound>
+        <set-header name="X-Powered-By" exists-action="delete" />
+      </outbound>
+      <on-error><base /></on-error>
+    </policies>
+  </policy>
+
+  <!-- Scope: product (a group of APIs) -->
+  <policy scope="product" name="internal-only">
+    <policies>
+      <inbound>
+        <base />
+        <ip-filter action="allow">
+          <address-range from="10.0.0.0" to="10.255.255.255" />
+        </ip-filter>
+        <quota-by-key calls="500000" renewal-period="86400"
+                      counter-key="@(context.Subscription.Id)" />
+      </inbound>
+      <backend><base /></backend>
+      <outbound><base /></outbound>
+      <on-error><base /></on-error>
+    </policies>
+  </policy>
+
+  <!-- Scope: API -->
+  <policy scope="api" name="orders-api">
+    <policies>
+      <inbound>
+        <base />
+        <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+          <openid-config url="https://login.example.com/.well-known/openid-configuration" />
+          <required-claims>
+            <claim name="aud" match="any"><value>orders-api</value></claim>
+          </required-claims>
+        </validate-jwt>
+        <set-backend-service base-url="https://orders.internal.example.com/v2" />
+      </inbound>
+      <backend><base /></backend>
+      <outbound>
+        <base />
+        <set-header name="X-Api" exists-action="override"><value>orders</value></set-header>
+      </outbound>
+      <on-error><base /></on-error>
+    </policies>
+  </policy>
+
+  <!-- Scope: operation. Note <base /> placed *after* the local cache-lookup, so the
+       local policy runs first — the ordering an importer must preserve. -->
+  <policy scope="operation" api="orders-api" operation="get-order">
+    <policies>
+      <inbound>
+        <cache-lookup vary-by-developer="false" vary-by-developer-groups="false">
+          <vary-by-header>Accept</vary-by-header>
+        </cache-lookup>
+        <base />
+        <rewrite-uri template="/v2/orders/{orderId}" />
+      </inbound>
+      <backend><base /></backend>
+      <outbound>
+        <base />
+        <cache-store duration="60" />
+      </outbound>
+      <on-error><base /></on-error>
+    </policies>
+  </policy>
+</policies-composition>

@@ -1,0 +1,10 @@
+http:
+  routers:
+    broken:
+      rule: Path(`/broken`)
+       service: broken-service
+  services:
+    broken-service:
+      loadBalancer:
+        servers:
+          - url: http://broken.internal.example.com:8080

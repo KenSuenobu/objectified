@@ -1,0 +1,13 @@
+; Shared value types referenced by api.cddl. On its own this file defines no entry
+; point; it exists to be loaded with the root.
+
+uuid = bstr .size 16
+
+timestamp = #6.1(number)
+
+money = {
+  minor-units: int,
+  currency: tstr .size 3,
+}
+
+country-code = tstr .size 2

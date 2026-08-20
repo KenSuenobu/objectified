@@ -1,0 +1,9 @@
+{
+  "service": {
+    "id": "orders-1",
+    "name": "orders",
+    "port": 8080,
+    "checks": [
+      {
+        "name": "orders HTTP health",
+        "http": "http://10.20.30.41:8080/heal

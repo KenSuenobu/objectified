@@ -1,0 +1,10 @@
+{
+  "type": "struct",
+  "name": "com.example.Untyped",
+  "optional": false,
+  "fields": [
+    { "field": "order_id", "type": "string", "optional": false },
+    { "field": "mystery", "optional": true },
+    { "field": "another", "type": "quaternion", "optional": true }
+  ]
+}

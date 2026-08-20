@@ -1,0 +1,64 @@
+<!--
+  The policy half of the same API. Nothing in the OpenAPI document says that JWTs are
+  validated, that the backend is rewritten, or that callers are rate limited: those facts
+  exist only here.
+-->
+<policies>
+  <inbound>
+    <base />
+    <cors allow-credentials="true">
+      <allowed-origins>
+        <origin>https://app.example.com</origin>
+      </allowed-origins>
+      <allowed-methods preflight-result-max-age="600">
+        <method>GET</method>
+        <method>POST</method>
+        <method>OPTIONS</method>
+      </allowed-methods>
+      <allowed-headers>
+        <header>content-type</header>
+        <header>authorization</header>
+        <header>ocp-apim-subscription-key</header>
+      </allowed-headers>
+      <expose-headers>
+        <header>x-request-id</header>
+      </expose-headers>
+    </cors>
+    <validate-jwt header-name="Authorization" failed-validation-httpcode="401"
+                  failed-validation-error-message="Unauthorized">
+      <openid-config url="https://login.example.com/.well-known/openid-configuration" />
+      <required-claims>
+        <claim name="aud" match="any">
+          <value>orders-api</value>
+        </claim>
+        <claim name="scp" match="any" separator=" ">
+          <value>orders.read</value>
+          <value>orders.write</value>
+        </claim>
+      </required-claims>
+    </validate-jwt>
+    <rate-limit-by-key calls="1000" renewal-period="60"
+                       counter-key="@(context.Subscription?.Id ?? context.Request.IpAddress)" />
+    <quota-by-key calls="100000" bandwidth="4096" renewal-period="86400"
+                  counter-key="@(context.Subscription.Id)" />
+    <set-backend-service base-url="https://orders.internal.example.com/v2" />
+    <rewrite-uri template="/v2{path}" copy-unmatched-params="true" />
+    <set-header name="X-Forwarded-Tenant" exists-action="override">
+      <value>@(context.Subscription?.Name ?? "unknown")</value>
+    </set-header>
+  </inbound>
+  <backend>
+    <forward-request timeout="30" />
+  </backend>
+  <outbound>
+    <base />
+    <set-header name="X-Powered-By" exists-action="delete" />
+  </outbound>
+  <on-error>
+    <base />
+    <return-response>
+      <set-status code="500" reason="Internal Server Error" />
+      <set-body>@{ return "{\"message\":\"Unexpected error\"}"; }</set-body>
+    </return-response>
+  </on-error>
+</policies>

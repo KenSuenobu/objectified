@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurator>
+  <domain name="General"/>
+  <!--
+    The attribute's type `MissingModeEnum` and the command argument's type
+    `MissingStruct` are not declared here and no sibling file supplies them, so neither
+    member can be typed.
+  -->
+  <cluster>
+    <domain>General</domain>
+    <name>Dangling</name>
+    <code>0xFFF7</code>
+    <define>DANGLING_CLUSTER</define>
+    <description>References types that do not exist.</description>
+    <attribute side="server" code="0x0000" define="MODE" type="MissingModeEnum"
+               writable="true">Mode</attribute>
+    <command source="client" code="0x00" name="Apply" optional="false">
+      <arg name="Settings" type="MissingStruct"/>
+    </command>
+  </cluster>
+</configurator>

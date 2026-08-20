@@ -1,0 +1,9 @@
+ /* MISSING is not supplied in the fileset, so ADDRESS_BLOCK never resolves.
+    FMT-11.1 requires an unresolved include to make the record `partial` with
+    a named reason — never a silently short layout.                        */
+ %INCLUDE MISSING;
+
+ DCL 1 SHIPMENT_REC,
+       2 SHIPMENT_ID CHAR(12),
+       2 DESTINATION LIKE ADDRESS_BLOCK,
+       2 WEIGHT_KG   FIXED DEC(9,3);

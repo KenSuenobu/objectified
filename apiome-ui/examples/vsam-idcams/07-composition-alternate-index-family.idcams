@@ -1,0 +1,60 @@
+/* Within-document composition: one base cluster and the family of objects defined
+   *in terms of it* — two alternate indexes whose KEYS offsets are positions inside
+   the base record, two paths that join index to base, and a REPRO that loads the
+   base from an existing sequential file. None of the dependent objects can be
+   understood without the base definition above it. */
+
+  DEFINE CLUSTER                                      -
+         (NAME(EXAMPLE.CONTRACT.KSDS)                 -
+          INDEXED                                     -
+          KEYS(12 0)                                  -
+          RECORDSIZE(400 400)                         -
+          FREESPACE(10 20)                            -
+          SHAREOPTIONS(2 3)                           -
+          CYLINDERS(300 60))                          -
+         DATA                                         -
+         (NAME(EXAMPLE.CONTRACT.KSDS.DATA)            -
+          CONTROLINTERVALSIZE(8192))                  -
+         INDEX                                        -
+         (NAME(EXAMPLE.CONTRACT.KSDS.INDEX)           -
+          CONTROLINTERVALSIZE(2048))
+
+  /* Alternate key at offset 12: the party block that follows the contract number. */
+  DEFINE AIX                                          -
+         (NAME(EXAMPLE.CONTRACT.AIX.PARTY)            -
+          RELATE(EXAMPLE.CONTRACT.KSDS)               -
+          KEYS(40 12)                                 -
+          RECORDSIZE(100 2048)                        -
+          NONUNIQUEKEY                                -
+          UPGRADE                                     -
+          CYLINDERS(60 15))
+
+  /* Alternate key at offset 87: the effective date. */
+  DEFINE AIX                                          -
+         (NAME(EXAMPLE.CONTRACT.AIX.EFFDATE)          -
+          RELATE(EXAMPLE.CONTRACT.KSDS)               -
+          KEYS(8 87)                                  -
+          RECORDSIZE(60 2048)                         -
+          NONUNIQUEKEY                                -
+          UPGRADE                                     -
+          CYLINDERS(40 10))
+
+  DEFINE PATH                                         -
+         (NAME(EXAMPLE.CONTRACT.PATH.PARTY)           -
+          PATHENTRY(EXAMPLE.CONTRACT.AIX.PARTY)       -
+          UPDATE)
+
+  DEFINE PATH                                         -
+         (NAME(EXAMPLE.CONTRACT.PATH.EFFDATE)         -
+          PATHENTRY(EXAMPLE.CONTRACT.AIX.EFFDATE)     -
+          UPDATE)
+
+  /* Load the base from a sequential extract, then build both indexes from it. */
+  REPRO INDATASET(EXAMPLE.CONTRACT.EXTRACT)           -
+        OUTDATASET(EXAMPLE.CONTRACT.KSDS)             -
+        REPLACE
+
+  BLDINDEX INDATASET(EXAMPLE.CONTRACT.KSDS)           -
+           OUTDATASET(EXAMPLE.CONTRACT.AIX.PARTY      -
+                      EXAMPLE.CONTRACT.AIX.EFFDATE)   -
+           INTERNALSORT

@@ -1,0 +1,33 @@
+*********************************************************************
+* Within-document composition: a LOGICAL database whose segments are  *
+* assembled from two physical databases. The SOURCE= operand is the   *
+* composition operator — every segment here is a projection of a      *
+* segment defined elsewhere, and the hierarchy is a new one built     *
+* from those parts.                                                   *
+*********************************************************************
+         DBD   NAME=CUSTORDL,ACCESS=LOGICAL
+*
+* Root: the customer segment from CUSTDB.
+         SEGM  NAME=LCUSTOMR,PARENT=0,                                 X
+               SOURCE=((CUSTOMER,DATA,CUSTDB))
+*
+* Child: the address segment, from the same physical database.
+         SEGM  NAME=LADDRESS,PARENT=LCUSTOMR,                          X
+               SOURCE=((ADDRESS,DATA,CUSTDB))
+*
+* Child: the order segment, concatenating the logical child in CUSTDB
+* with the physical order root in ORDERDB — the classic IMS join.
+         SEGM  NAME=LORDER,PARENT=LCUSTOMR,                            X
+               SOURCE=((ORDER,DATA,CUSTDB),(ORDER,DATA,ORDERDB))
+*
+* Grandchild: order lines, from the order database only.
+         SEGM  NAME=LORDLINE,PARENT=LORDER,                            X
+               SOURCE=((ORDLINE,DATA,ORDERDB))
+*
+* Grandchild: notes, variable length, from the order database.
+         SEGM  NAME=LORDNOTE,PARENT=LORDER,                            X
+               SOURCE=((ORDNOTE,DATA,ORDERDB))
+*
+         DBDGEN
+         FINISH
+         END

@@ -1,0 +1,11 @@
+http:
+  routers:
+    orders:
+      rule: Host(`api.example.com`) && PathPrefix(`/v2/orders`)
+      entryPoints: [websecure]
+      service: orders-service
+  services:
+    orders-service:
+      loadBalancer:
+        servers:
+          - url: http://orders.internal.example.com:8080

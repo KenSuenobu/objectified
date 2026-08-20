@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <edmx:Reference Uri="shared-types.xml"
+                  xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <edmx:Include Namespace="Shared.Types" Alias="Shared"/>
+  </edmx:Reference>
+  <edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+                     m:DataServiceVersion="3.0">
+    <Schema Namespace="Invoicing" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+      <EntityType Name="Invoice">
+        <Key>
+          <PropertyRef Name="InvoiceId"/>
+        </Key>
+        <Property Name="InvoiceId" Type="Edm.String" Nullable="false" MaxLength="12"/>
+        <Property Name="BillTo" Type="Shared.Address"/>
+        <Property Name="Amount" Type="Edm.Decimal" Precision="13" Scale="2"/>
+      </EntityType>
+      <EntityContainer Name="InvoicingContainer" m:IsDefaultEntityContainer="true">
+        <EntitySet Name="Invoices" EntityType="Invoicing.Invoice"/>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

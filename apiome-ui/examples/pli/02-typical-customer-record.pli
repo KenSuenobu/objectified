@@ -1,0 +1,23 @@
+ /*********************************************************************/
+ /* Customer master record as a PL/I estate declares it.              */
+ /*********************************************************************/
+ DCL 1 CUSTOMER_REC,
+       2 CUST_ID          CHAR(10),
+       2 CUST_NAME        CHAR(40),
+       2 CUST_ADDRESS,
+         3 ADDR_LINE1     CHAR(35),
+         3 ADDR_LINE2     CHAR(35),
+         3 ADDR_CITY      CHAR(25),
+         3 ADDR_POSTCODE  CHAR(10),
+         3 ADDR_COUNTRY   CHAR(3),
+       2 CUST_STATUS      CHAR(1),
+       2 CUST_OPENED      FIXED DEC(8,0),
+       2 CUST_BALANCE     FIXED DEC(13,2),
+       2 CUST_CURRENCY    CHAR(3),
+       2 CUST_LIMIT       FIXED DEC(13,2),
+       2 CUST_FLAGS       BIT(8) ALIGNED,
+       2 CUST_CONTACT_CT  FIXED BIN(15),
+       2 CUST_CONTACTS(5),
+         3 CONTACT_TYPE   CHAR(2),
+         3 CONTACT_VALUE  CHAR(60),
+       2 FILLER_1         CHAR(20);

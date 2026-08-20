@@ -1,0 +1,38 @@
+{
+  "v": 6,
+  "id": "clx0000000000000000000100",
+  "name": "Inventory (set root)",
+  "folders": [],
+  "requests": [
+    {
+      "v": "11",
+      "id": "clx0000000000000000000101",
+      "name": "Check stock",
+      "method": "GET",
+      "endpoint": "<<baseUrl>>/stock/<<sku>>",
+      "params": [{ "key": "warehouse", "value": "<<warehouse>>", "active": true, "description": "" }],
+      "headers": [{ "key": "X-Api-Key", "value": "<<apiKey>>", "active": true, "description": "" }],
+      "auth": { "authType": "inherit", "authActive": true },
+      "body": { "contentType": null, "body": null },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": [{ "key": "sku", "value": "WID-0001", "active": true }]
+    },
+    {
+      "v": "11",
+      "id": "clx0000000000000000000102",
+      "name": "Reserve stock",
+      "method": "POST",
+      "endpoint": "<<baseUrl>>/reservations",
+      "params": [],
+      "headers": [{ "key": "Content-Type", "value": "application/json", "active": true, "description": "" }],
+      "auth": { "authType": "inherit", "authActive": true },
+      "body": { "contentType": "application/json", "body": "{ \"sku\": \"WID-0001\", \"quantity\": 1 }" },
+      "preRequestScript": "",
+      "testScript": "",
+      "requestVariables": []
+    }
+  ],
+  "auth": { "authType": "none", "authActive": false },
+  "headers": []
+}

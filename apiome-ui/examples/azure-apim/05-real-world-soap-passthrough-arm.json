@@ -1,0 +1,109 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "ApimServiceName": { "type": "string", "defaultValue": "example-apim" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ApiManagement/service/apis",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/legacy-billing-soap')]",
+      "properties": {
+        "displayName": "Legacy Billing (SOAP)",
+        "description": "WSDL-derived pass-through API in front of a mainframe billing service.",
+        "apiType": "soap",
+        "type": "soap",
+        "path": "legacy/billing",
+        "protocols": ["https"],
+        "serviceUrl": "https://billing.legacy.internal.example.com/BillingService.svc",
+        "subscriptionRequired": true,
+        "apiRevision": "1",
+        "isCurrent": true,
+        "subscriptionKeyParameterNames": {
+          "header": "Ocp-Apim-Subscription-Key",
+          "query": "subscription-key"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/legacy-billing-soap/GetInvoice')]",
+      "properties": {
+        "displayName": "GetInvoice",
+        "method": "POST",
+        "urlTemplate": "/",
+        "description": "SOAP action http://example.com/billing/GetInvoice",
+        "request": {
+          "headers": [
+            { "name": "SOAPAction", "type": "string", "required": true, "defaultValue": "\"http://example.com/billing/GetInvoice\"" }
+          ],
+          "representations": [{ "contentType": "text/xml" }]
+        },
+        "responses": [
+          { "statusCode": 200, "representations": [{ "contentType": "text/xml" }] },
+          { "statusCode": 500, "description": "SOAP fault" }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/legacy-billing-soap/ListInvoices')]",
+      "properties": {
+        "displayName": "ListInvoices",
+        "method": "POST",
+        "urlTemplate": "/",
+        "description": "SOAP action http://example.com/billing/ListInvoices",
+        "request": {
+          "headers": [
+            { "name": "SOAPAction", "type": "string", "required": true, "defaultValue": "\"http://example.com/billing/ListInvoices\"" }
+          ],
+          "representations": [{ "contentType": "text/xml" }]
+        },
+        "responses": [{ "statusCode": 200, "representations": [{ "contentType": "text/xml" }] }]
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/policies",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/legacy-billing-soap/policy')]",
+      "properties": {
+        "format": "rawxml",
+        "value": "<policies><inbound><base /><ip-filter action=\"allow\"><address-range from=\"10.20.0.0\" to=\"10.20.255.255\" /></ip-filter><set-backend-service base-url=\"https://billing.legacy.internal.example.com/BillingService.svc\" /><authentication-certificate thumbprint=\"0000000000000000000000000000000000000000\" /><set-header name=\"X-Gateway\" exists-action=\"override\"><value>apim</value></set-header></inbound><backend><forward-request timeout=\"60\" /></backend><outbound><base /><xml-to-json kind=\"direct\" apply=\"content-type-xml\" consider-accept-header=\"true\" /></outbound><on-error><base /></on-error></policies>"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/backends",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/legacy-billing-backend')]",
+      "properties": {
+        "protocol": "http",
+        "url": "https://billing.legacy.internal.example.com/BillingService.svc",
+        "tls": { "validateCertificateChain": true, "validateCertificateName": true },
+        "credentials": {
+          "header": { "X-Legacy-Client": ["apim"] }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/products",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/internal-only')]",
+      "properties": {
+        "displayName": "Internal only",
+        "description": "Products carry the subscription and approval posture.",
+        "subscriptionRequired": true,
+        "approvalRequired": true,
+        "subscriptionsLimit": 5,
+        "state": "published"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/products/apis",
+      "apiVersion": "2022-08-01",
+      "name": "[concat(parameters('ApimServiceName'), '/internal-only/legacy-billing-soap')]"
+    }
+  ]
+}

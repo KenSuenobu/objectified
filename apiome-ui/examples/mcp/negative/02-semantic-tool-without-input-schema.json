@@ -1,0 +1,15 @@
+{
+  "mcpVersion": "2025-06-18",
+  "server": { "name": "schemaless", "version": "1.0.0" },
+  "capabilities": { "tools": {} },
+  "tools": [
+    {
+      "name": "do_something",
+      "description": "Valid JSON, but no tool declares an inputSchema, so there is no callable surface to model."
+    },
+    {
+      "name": "do_something_else",
+      "description": "Same problem: MCP requires inputSchema on every tool."
+    }
+  ]
+}

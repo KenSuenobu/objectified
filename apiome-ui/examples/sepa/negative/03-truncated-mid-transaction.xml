@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSG-BAD-0003</MsgId>
+      <CreDtTm>2026-08-19T10:30:00</CreDtTm>
+      <NbOfTxs>3</NbOfTxs>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>BATCH-0003</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>E2E-0003</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">150.

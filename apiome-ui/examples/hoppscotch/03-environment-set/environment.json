@@ -1,0 +1,10 @@
+{
+  "id": "clx0000000000000000000110",
+  "v": 2,
+  "name": "Inventory · staging",
+  "variables": [
+    { "key": "baseUrl", "value": "https://staging.example.com/inventory", "secret": false },
+    { "key": "warehouse", "value": "AMS", "secret": false },
+    { "key": "apiKey", "value": "", "secret": true }
+  ]
+}

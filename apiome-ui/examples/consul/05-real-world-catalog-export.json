@@ -1,0 +1,89 @@
+{
+  "Services": {
+    "orders": ["v2", "http", "primary"],
+    "catalogue": ["v1", "http"],
+    "payments": ["v3", "grpc"],
+    "search": ["v1", "http", "canary"]
+  },
+  "Nodes": [
+    {
+      "Node": "node-eu-west-1a-01",
+      "Address": "10.20.0.11",
+      "Datacenter": "eu-west-1",
+      "Meta": { "instance_type": "m6i.large", "availability_zone": "eu-west-1a" },
+      "Services": {
+        "orders-1": {
+          "ID": "orders-1",
+          "Service": "orders",
+          "Tags": ["v2", "http", "primary", "urlprefix-/v2/orders"],
+          "Address": "10.20.0.11",
+          "Port": 8080,
+          "Meta": {
+            "version": "2.3.0",
+            "protocol": "http",
+            "openapi_url": "https://api.example.com/v2/orders/openapi.json"
+          },
+          "Weights": { "Passing": 10, "Warning": 1 }
+        },
+        "catalogue-1": {
+          "ID": "catalogue-1",
+          "Service": "catalogue",
+          "Tags": ["v1", "http", "urlprefix-/v2/products"],
+          "Address": "10.20.0.11",
+          "Port": 8081,
+          "Meta": { "version": "1.9.4", "protocol": "http" }
+        }
+      },
+      "Checks": [
+        {
+          "CheckID": "service:orders-1",
+          "Name": "orders HTTP health",
+          "Status": "passing",
+          "ServiceName": "orders",
+          "Type": "http",
+          "Definition": { "HTTP": "http://10.20.0.11:8080/healthz", "Interval": "10s" }
+        }
+      ]
+    },
+    {
+      "Node": "node-eu-west-1b-02",
+      "Address": "10.20.1.12",
+      "Datacenter": "eu-west-1",
+      "Services": {
+        "payments-1": {
+          "ID": "payments-1",
+          "Service": "payments",
+          "Tags": ["v3", "grpc"],
+          "Address": "10.20.1.12",
+          "Port": 8443,
+          "Meta": { "version": "3.4.1", "protocol": "grpc" }
+        },
+        "search-1": {
+          "ID": "search-1",
+          "Service": "search",
+          "Tags": ["v1", "http", "canary", "urlprefix-/v3/search"],
+          "Address": "10.20.1.12",
+          "Port": 9200,
+          "Meta": { "version": "1.2.0-rc.4", "protocol": "http" }
+        }
+      },
+      "Checks": [
+        {
+          "CheckID": "service:payments-1",
+          "Name": "payments gRPC",
+          "Status": "passing",
+          "ServiceName": "payments",
+          "Type": "grpc"
+        },
+        {
+          "CheckID": "service:search-1",
+          "Name": "search HTTP health",
+          "Status": "warning",
+          "ServiceName": "search",
+          "Type": "http",
+          "Output": "HTTP GET http://10.20.1.12:9200/_cluster/health: 200 (yellow)"
+        }
+      ]
+    }
+  ]
+}

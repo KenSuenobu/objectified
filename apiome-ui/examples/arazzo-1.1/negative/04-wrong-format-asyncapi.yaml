@@ -1,0 +1,19 @@
+asyncapi: 3.0.0
+info:
+  title: Order events
+  version: 1.0.0
+channels:
+  orderAccepted:
+    address: orders/accepted
+    messages:
+      accepted:
+        payload:
+          type: object
+          properties:
+            orderId:
+              type: string
+operations:
+  receiveOrderAccepted:
+    action: receive
+    channel:
+      $ref: '#/channels/orderAccepted'

@@ -1,0 +1,9 @@
+name: broken_route
+virtual_hosts:
+  - name: broken
+    domains: ["*"]
+    routes:
+      - match:
+         prefix: /broken
+        route:
+          cluster: broken_service

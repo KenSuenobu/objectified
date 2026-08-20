@@ -1,0 +1,138 @@
+name: matcher_coverage
+virtual_hosts:
+  - name: everything
+    domains: ["*"]
+    routes:
+      # Exact path.
+      - match:
+          path: /exact/resource
+        route:
+          cluster: exact_service
+
+      # Prefix.
+      - match:
+          prefix: /prefix/
+        route:
+          cluster: prefix_service
+
+      # Path-separated prefix: /seg matches /seg and /seg/x but not /segment.
+      - match:
+          path_separated_prefix: /seg
+        route:
+          cluster: separated_service
+
+      # RE2 regex.
+      - match:
+          safe_regex:
+            google_re2: {}
+            regex: "^/orders/[0-9]{6}/lines/[0-9]+$"
+        route:
+          cluster: orders_service
+
+      # Case-insensitive prefix with a header matcher and a query parameter matcher.
+      - match:
+          prefix: /search
+          case_sensitive: false
+          headers:
+            - name: :method
+              string_match:
+                exact: GET
+            - name: x-tenant
+              string_match:
+                prefix: acme-
+            - name: x-debug
+              invert_match: true
+              present_match: true
+          query_parameters:
+            - name: q
+              present_match: true
+            - name: page
+              string_match:
+                safe_regex:
+                  google_re2: {}
+                  regex: "^[0-9]+$"
+        route:
+          cluster: search_service
+          timeout: 3s
+          retry_policy:
+            retry_on: 5xx,reset,connect-failure
+            num_retries: 3
+            per_try_timeout: 1s
+
+      # Weighted clusters — canary routing.
+      - match:
+          prefix: /checkout
+        route:
+          weighted_clusters:
+            clusters:
+              - name: checkout_v1
+                weight: 90
+              - name: checkout_v2
+                weight: 10
+            total_weight: 100
+
+      # Runtime fraction: a percentage of traffic matches this route at all.
+      - match:
+          prefix: /experiment
+          runtime_fraction:
+            default_value:
+              numerator: 5
+              denominator: HUNDRED
+        route:
+          cluster: experiment_service
+
+      # gRPC route with a per-route filter config.
+      - match:
+          prefix: /example.orders.v1.OrderService/
+          grpc: {}
+        route:
+          cluster: orders_grpc
+          max_stream_duration:
+            grpc_timeout_header_max: 20s
+        typed_per_filter_config:
+          envoy.filters.http.rate_limit:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ratelimit.v3.RateLimitPerRoute
+            vh_rate_limits: INCLUDE
+
+      # Rewrite with a regex.
+      - match:
+          prefix: /legacy/
+        route:
+          cluster: legacy_service
+          regex_rewrite:
+            pattern:
+              google_re2: {}
+              regex: "^/legacy/(.*)$"
+            substitution: "/v3/\\1"
+
+      # Direct response and redirect terminal actions.
+      - match:
+          path: /robots.txt
+        direct_response:
+          status: 200
+          body:
+            inline_string: "User-agent: *\nDisallow: /\n"
+      - match:
+          prefix: /old
+        redirect:
+          path_redirect: /new
+          response_code: TEMPORARY_REDIRECT
+
+      # Connect matcher: a construct with no canonical HTTP-operation analogue.
+      - match:
+          connect_matcher: {}
+        route:
+          cluster: tunnel_service
+          upgrade_configs:
+            - upgrade_type: CONNECT
+              connect_config: {}
+    cors:
+      allow_origin_string_match:
+        - exact: https://app.example.com
+      allow_methods: GET, POST, OPTIONS
+      allow_headers: content-type,authorization
+      max_age: "600"
+    rate_limits:
+      - actions:
+          - remote_address: {}
+        stage: 0
