@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BROWSE_PROTOCOLS,
+  BROWSE_PARADIGMS,
   NO_FACET_SELECTION,
   computeFacetOptions,
   describeFacetSelection,
@@ -9,12 +9,13 @@ import {
   formatLabel,
   hasFacetSelection,
   normalizeFacetValue,
-  protocolLabel,
+  paradigmLabel,
   toggleFacet,
   type FacetedEntity,
 } from '../browseFacets';
+import { FORMAT_PARADIGMS } from '../generated/formatCounts';
 
-/** A directory row with the given protocols/formats. */
+/** A directory row with the given paradigms (stored as `protocols`) and formats. */
 function entity(protocols: string[] | null, formats: string[] | null): FacetedEntity & { id: string } {
   return { id: `${protocols?.join('+') ?? '-'}/${formats?.join('+') ?? '-'}`, protocols, formats };
 }
@@ -32,21 +33,21 @@ describe('normalizeFacetValue', () => {
   });
 });
 
-describe('protocolLabel', () => {
+describe('paradigmLabel', () => {
   it('labels every canonical paradigm', () => {
-    for (const protocol of BROWSE_PROTOCOLS) {
-      expect(protocolLabel(protocol.id)).toBe(protocol.label);
+    for (const paradigm of BROWSE_PARADIGMS) {
+      expect(paradigmLabel(paradigm.id)).toBe(paradigm.label);
     }
   });
 
   it('labels data_schema readably', () => {
-    expect(protocolLabel('data_schema')).toBe('Data schema');
-    expect(protocolLabel('DATA_SCHEMA')).toBe('Data schema');
+    expect(paradigmLabel('data_schema')).toBe('Data schema');
+    expect(paradigmLabel('DATA_SCHEMA')).toBe('Data schema');
   });
 
-  it('falls back to the raw value for an unknown protocol', () => {
-    expect(protocolLabel('telepathy')).toBe('telepathy');
-    expect(protocolLabel('')).toBe('');
+  it('falls back to the raw value for an unknown paradigm', () => {
+    expect(paradigmLabel('telepathy')).toBe('telepathy');
+    expect(paradigmLabel('')).toBe('');
   });
 });
 
@@ -82,7 +83,7 @@ describe('formatLabel', () => {
 
 describe('facetLabel', () => {
   it('routes to the right axis', () => {
-    expect(facetLabel('protocol', 'rest')).toBe('REST');
+    expect(facetLabel('paradigm', 'rest')).toBe('REST');
     expect(facetLabel('format', 'wsdl')).toBe('WSDL');
   });
 });
@@ -96,7 +97,7 @@ describe('computeFacetOptions', () => {
   ];
 
   it('counts an entry once per distinct value it carries', () => {
-    const options = computeFacetOptions(entities, 'protocol');
+    const options = computeFacetOptions(entities, 'paradigm');
     expect(options).toEqual([
       { value: 'rest', label: 'REST', count: 2 },
       { value: 'event', label: 'Event-driven', count: 1 },
@@ -104,10 +105,10 @@ describe('computeFacetOptions', () => {
     ]);
   });
 
-  it('orders protocols by the canonical paradigm order, not by count', () => {
+  it('orders paradigms by the canonical paradigm order, not by count', () => {
     const options = computeFacetOptions(
       [entity(['graph'], null), entity(['graph'], null), entity(['rest'], null)],
-      'protocol'
+      'paradigm'
     );
     expect(options.map((o) => o.value)).toEqual(['rest', 'graph']);
   });
@@ -118,21 +119,21 @@ describe('computeFacetOptions', () => {
     expect(options[0]).toEqual({ value: 'openapi-3.1', label: 'OpenAPI 3.1', count: 2 });
   });
 
-  it('sorts unknown protocols after the canonical ones', () => {
+  it('sorts unknown paradigms after the canonical ones', () => {
     const options = computeFacetOptions(
       [entity(['telepathy'], null), entity(['abacus'], null), entity(['rpc'], null)],
-      'protocol'
+      'paradigm'
     );
     expect(options.map((o) => o.value)).toEqual(['rpc', 'abacus', 'telepathy']);
   });
 
   it('normalizes and de-duplicates row values', () => {
-    const options = computeFacetOptions([entity([' REST ', 'rest'], null)], 'protocol');
+    const options = computeFacetOptions([entity([' REST ', 'rest'], null)], 'paradigm');
     expect(options).toEqual([{ value: 'rest', label: 'REST', count: 1 }]);
   });
 
   it('tolerates missing / null columns', () => {
-    expect(computeFacetOptions([{}, { protocols: null, formats: undefined }], 'protocol')).toEqual([]);
+    expect(computeFacetOptions([{}, { protocols: null, formats: undefined }], 'paradigm')).toEqual([]);
     expect(computeFacetOptions([], 'format')).toEqual([]);
   });
 });
@@ -149,93 +150,125 @@ describe('filterByFacets', () => {
   });
 
   it('matches when any of the entry values matches', () => {
-    expect(filterByFacets(all, { protocol: 'event', format: null })).toEqual([multi]);
+    expect(filterByFacets(all, { paradigm: 'event', format: null })).toEqual([multi]);
   });
 
   it('composes the two axes with AND', () => {
-    expect(filterByFacets(all, { protocol: 'rest', format: 'asyncapi-3' })).toEqual([multi]);
-    expect(filterByFacets(all, { protocol: 'graph', format: 'openapi-3.1' })).toEqual([]);
+    expect(filterByFacets(all, { paradigm: 'rest', format: 'asyncapi-3' })).toEqual([multi]);
+    expect(filterByFacets(all, { paradigm: 'graph', format: 'openapi-3.1' })).toEqual([]);
   });
 
   it('normalizes the selection before comparing', () => {
-    expect(filterByFacets(all, { protocol: '  REST ', format: null })).toEqual([rest, multi]);
+    expect(filterByFacets(all, { paradigm: '  REST ', format: null })).toEqual([rest, multi]);
   });
 
   it('excludes rows with no facet values once an axis is selected', () => {
-    expect(filterByFacets(all, { protocol: 'rest', format: null })).not.toContain(untagged);
+    expect(filterByFacets(all, { paradigm: 'rest', format: null })).not.toContain(untagged);
   });
 
   it('narrows to nothing for an unknown value instead of throwing', () => {
-    expect(filterByFacets(all, { protocol: 'telepathy', format: null })).toEqual([]);
+    expect(filterByFacets(all, { paradigm: 'telepathy', format: null })).toEqual([]);
   });
 
   it('does not mutate the input', () => {
     const input = [...all];
-    filterByFacets(input, { protocol: 'rest', format: null });
+    filterByFacets(input, { paradigm: 'rest', format: null });
     expect(input).toEqual(all);
   });
 });
 
 describe('toggleFacet', () => {
   it('selects a value on an empty axis', () => {
-    expect(toggleFacet(NO_FACET_SELECTION, 'protocol', 'rest')).toEqual({
-      protocol: 'rest',
+    expect(toggleFacet(NO_FACET_SELECTION, 'paradigm', 'rest')).toEqual({
+      paradigm: 'rest',
       format: null,
     });
   });
 
   it('clears the axis when the active value is clicked again', () => {
-    expect(toggleFacet({ protocol: 'rest', format: null }, 'protocol', 'rest')).toEqual({
-      protocol: null,
+    expect(toggleFacet({ paradigm: 'rest', format: null }, 'paradigm', 'rest')).toEqual({
+      paradigm: null,
       format: null,
     });
   });
 
   it('replaces a different value on the same axis', () => {
-    expect(toggleFacet({ protocol: 'rest', format: null }, 'protocol', 'rpc')).toEqual({
-      protocol: 'rpc',
+    expect(toggleFacet({ paradigm: 'rest', format: null }, 'paradigm', 'rpc')).toEqual({
+      paradigm: 'rpc',
       format: null,
     });
   });
 
   it('leaves the other axis untouched', () => {
-    expect(toggleFacet({ protocol: 'rest', format: 'openapi-3.1' }, 'format', 'graphql')).toEqual({
-      protocol: 'rest',
+    expect(toggleFacet({ paradigm: 'rest', format: 'openapi-3.1' }, 'format', 'graphql')).toEqual({
+      paradigm: 'rest',
       format: 'graphql',
     });
   });
 
   it('does not mutate the input selection', () => {
-    const selection = { protocol: 'rest', format: null };
-    toggleFacet(selection, 'protocol', 'rpc');
-    expect(selection).toEqual({ protocol: 'rest', format: null });
+    const selection = { paradigm: 'rest', format: null };
+    toggleFacet(selection, 'paradigm', 'rpc');
+    expect(selection).toEqual({ paradigm: 'rest', format: null });
   });
 });
 
 describe('hasFacetSelection', () => {
   it('is false for the empty selection', () => {
     expect(hasFacetSelection(NO_FACET_SELECTION)).toBe(false);
-    expect(hasFacetSelection({ protocol: '  ', format: '' })).toBe(false);
+    expect(hasFacetSelection({ paradigm: '  ', format: '' })).toBe(false);
   });
 
   it('is true when either axis is narrowed', () => {
-    expect(hasFacetSelection({ protocol: 'rest', format: null })).toBe(true);
-    expect(hasFacetSelection({ protocol: null, format: 'graphql' })).toBe(true);
+    expect(hasFacetSelection({ paradigm: 'rest', format: null })).toBe(true);
+    expect(hasFacetSelection({ paradigm: null, format: 'graphql' })).toBe(true);
   });
 });
 
 describe('describeFacetSelection', () => {
   it('summarizes both axes with labels', () => {
-    expect(describeFacetSelection({ protocol: 'rest', format: 'openapi-3.1' })).toBe(
+    expect(describeFacetSelection({ paradigm: 'rest', format: 'openapi-3.1' })).toBe(
       'REST · OpenAPI 3.1'
     );
   });
 
   it('summarizes a single axis', () => {
-    expect(describeFacetSelection({ protocol: null, format: 'graphql' })).toBe('GraphQL');
+    expect(describeFacetSelection({ paradigm: null, format: 'graphql' })).toBe('GraphQL');
   });
 
   it('is empty when nothing is selected', () => {
     expect(describeFacetSelection(NO_FACET_SELECTION)).toBe('');
+  });
+});
+
+describe('BROWSE_PARADIGMS (FMT-1.6)', () => {
+  it('is the generated canonical vocabulary, not a local copy', () => {
+    expect(BROWSE_PARADIGMS).toBe(FORMAT_PARADIGMS);
+  });
+
+  it('carries the six paradigms `ApiParadigm` declares, in canonical order', () => {
+    expect(BROWSE_PARADIGMS.map((paradigm) => paradigm.id)).toEqual([
+      'rest',
+      'rpc',
+      'event',
+      'graph',
+      'data_schema',
+      'agent',
+    ]);
+  });
+
+  it('labels every value, so a chip is never blank', () => {
+    for (const paradigm of BROWSE_PARADIGMS) {
+      expect(paradigm.label.trim()).not.toBe('');
+    }
+  });
+
+  it('offers a facet value for every paradigm an import can record', () => {
+    // The reverse of the drift the vocabulary used to risk: a paradigm the registry produces but
+    // the facet cannot offer is a value a visitor can see on a row and never filter by.
+    const facetValues = new Set(BROWSE_PARADIGMS.map((paradigm) => paradigm.id));
+    for (const paradigm of FORMAT_PARADIGMS) {
+      expect(facetValues.has(paradigm.id)).toBe(true);
+    }
   });
 });

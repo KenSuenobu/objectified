@@ -26,6 +26,7 @@
  * and a title hit outranks a summary hit, which outranks a keyword hit.
  */
 
+import { FORMAT_COUNTS } from '@/app/generated/formatCounts';
 import { buildDocsHref } from '@/app/utils/docsLinks';
 
 /**
@@ -73,7 +74,7 @@ export const GUIDE_ENTRIES: readonly GuideEntry[] = [
     id: 'import-a-spec',
     title: 'Import a specification',
     summary:
-      'Import any of 40+ formats — and which of the two importers, Projects or Catalog, handles yours.',
+      `Import any of ${FORMAT_COUNTS.importable} formats — and which of the two importers, Projects or Catalog, handles yours.`,
     page: 'docs/guide/import-a-spec.md',
     section: 'spine',
     keywords: ['upload', 'swagger', 'openapi', 'arazzo', 'json schema', 'job', 'raml', 'postman'],

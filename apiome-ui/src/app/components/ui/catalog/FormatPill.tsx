@@ -18,7 +18,7 @@
  * Which hue a format gets is still the registry's decision — its `tone` — so a new format names
  * a tone and needs no CSS. The hues are the ones the catalog already showed on a light theme,
  * frozen rather than re-chosen: this ticket is about a format's colour holding still, and
- * re-assigning 45 formats is a separate decision.
+ * re-assigning every registered format is a separate decision.
  *
  * Used on the Catalog card (MFI-23.4) and the detail view (MFI-23.9).
  */

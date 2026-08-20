@@ -2,8 +2,26 @@
 
 # Apiome
 
-Apiome is an OpenAPI 3.2.0 Specification Application that provides a visual editor
-for creating and editing Schema Objects and Properties.
+Apiome reads, converts and publishes API descriptions.  It provides a visual editor for creating
+and editing Schema Objects and Properties on OpenAPI 3.2.0 documents, and a catalog that keeps every
+other description format in its own shape rather than forcing it into OpenAPI's.
+
+**42<!--format-count:total--> formats, any-to-any**, spanning all 6<!--format-count:paradigms-->
+canonical paradigms — REST, RPC, event-driven, graph, data schema and agent:
+
+- Imports 42<!--format-count:importable--> formats.
+- Exports 35<!--format-count:exportable--> formats.
+- Round-trips 35<!--format-count:round_trip--> of them — import *and* export.
+- Introspects a live endpoint, rather than reading a file, for
+  4<!--format-count:live_discovery--> of them.
+
+Those numbers are measured from the adapter registries rather than maintained by hand, and so is the
+full list:
+
+- **[Supported formats](docs/guide/supported-formats.md)** — every format, its registry key,
+  direction, version coverage, file extensions and boundaries, generated and drift-checked in CI.
+- `GET /v1/formats/matrix` — the same answer, machine-readable.
+- `apiome formats` — the same answer, at a terminal.
 
 ## Goals
 

@@ -19,6 +19,16 @@ on:
       # fixture or manifest edit alone must trigger it — FMT-1.3 found an `asyncapi` fixture
       # that had never been validated because the parser was absent.
       - 'apiome-ui/examples/**'
+      # The FMT-1.6 format-count surfaces. This suite regenerates each of them and rejects a
+      # hand-typed count, so an edit to one of them alone must trigger the check that rejects it.
+      - 'README.md'
+      - 'docs/format-counts.json'
+      - 'docs/guide/**'
+      - 'apiome-browse/lib/**'
+      - 'apiome-browse/src/app/HomeClient.tsx'
+      - 'apiome-ui/src/app/generated/**'
+      - 'apiome-ui/src/app/components/ade/help/helpCatalog.ts'
+      - 'apiome-ui/src/app/components/ui/catalog/FormatPill.tsx'
   pull_request:
     branches: [ main, develop ]
     paths:
@@ -26,6 +36,14 @@ on:
       - '.github/workflows/apiome-rest-test.yml'
       - 'docs/guide/supported-formats.md'
       - 'apiome-ui/examples/**'
+      - 'README.md'
+      - 'docs/format-counts.json'
+      - 'docs/guide/**'
+      - 'apiome-browse/lib/**'
+      - 'apiome-browse/src/app/HomeClient.tsx'
+      - 'apiome-ui/src/app/generated/**'
+      - 'apiome-ui/src/app/components/ade/help/helpCatalog.ts'
+      - 'apiome-ui/src/app/components/ui/catalog/FormatPill.tsx'
   workflow_dispatch:
 
 jobs:
@@ -87,6 +105,13 @@ jobs:
       # fix instead of burying it among thousands of test results.
       - name: Check generated supported-formats page is current
         run: uv run python scripts/generate_supported_formats_doc.py --check
+
+      # The FMT-1.6 format-count truth pass (#5417). Every human-facing count — README, the
+      # guide pages, the portal and the app — is written from the registries by this script.
+      # The pytest suite asserts the same thing; this step names the stale surface, and rejects
+      # a count that has been typed back in by hand instead of measured.
+      - name: Check format counts agree with the registry
+        run: uv run python scripts/generate_format_counts.py --check
 
       # The FMT-1.4 corpus parity gate (#5415). Every registered adapter must carry corpus
       # examples, negatives, golden snapshots, a round-trip matrix row and a capability entry.

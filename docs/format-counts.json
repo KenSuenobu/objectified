@@ -1,0 +1,58 @@
+{
+  "version": "1",
+  "capability_registry_version": "3",
+  "total": 42,
+  "importable": 42,
+  "exportable": 35,
+  "round_trip": 35,
+  "import_only": 7,
+  "export_only": 0,
+  "live_discovery": 4,
+  "publishable": 1,
+  "catalog": 41,
+  "toolchain_gated": 3,
+  "paradigms": [
+    {
+      "id": "rest",
+      "label": "REST",
+      "total": 15,
+      "importable": 15,
+      "exportable": 11
+    },
+    {
+      "id": "rpc",
+      "label": "RPC",
+      "total": 10,
+      "importable": 10,
+      "exportable": 9
+    },
+    {
+      "id": "event",
+      "label": "Event-driven",
+      "total": 2,
+      "importable": 2,
+      "exportable": 2
+    },
+    {
+      "id": "graph",
+      "label": "Graph",
+      "total": 1,
+      "importable": 1,
+      "exportable": 1
+    },
+    {
+      "id": "data_schema",
+      "label": "Data schema",
+      "total": 13,
+      "importable": 13,
+      "exportable": 12
+    },
+    {
+      "id": "agent",
+      "label": "Agent",
+      "total": 1,
+      "importable": 1,
+      "exportable": 0
+    }
+  ]
+}

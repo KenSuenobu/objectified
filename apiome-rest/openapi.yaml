@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.132.0
+  version: 1.133.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -57087,7 +57087,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: 3a2c369a-ada1-4c95-b581-4e38ae4407c4
+          example: a47339fa-41d0-4507-b9b6-6423905959e5
         method:
           type: string
           title: Method
@@ -59079,7 +59079,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-20T19:49:29Z'
+          example: '2026-08-20T20:52:02Z'
         envelope:
           additionalProperties: true
           type: object
@@ -86878,7 +86878,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-20T19:49:29Z'
+          example: '2026-08-20T20:52:02Z'
       additionalProperties: false
       type: object
       required:
@@ -98292,13 +98292,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-20T19:49:29Z'
+          example: '2026-08-20T20:52:02Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-20T19:49:29Z'
+          example: '2026-08-20T20:52:02Z'
         outcome:
           anyOf:
           - type: string
