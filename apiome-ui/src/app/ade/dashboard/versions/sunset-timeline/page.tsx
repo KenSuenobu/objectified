@@ -1,333 +1,348 @@
 'use client';
 
-import { useAuthSession } from '@lib/auth/session-client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+/**
+ * Ship → Sunset timeline (HIVE-8.2, #5328).
+ *
+ * Authority: `docs/mockups/ship/sunset-timeline.html`, whose **Notes → Keeps (1:1)** list is
+ * this ticket's acceptance criteria; DESIGN.md §5.3 (page header), §8 (list page) and §3.1
+ * (status vocabulary).
+ *
+ * ### What this screen is
+ *
+ * The end-of-life schedule for every deprecated revision in the workspace: what is going
+ * away, when, what replaces it, and what a consumer has to do about it. Nothing is *authored*
+ * here — a sunset is scheduled from Build → Versions — so the screen has exactly two controls:
+ * the project filter and the CSV export.
+ *
+ * ### What this ticket changed
+ *
+ * The table and its export are the source of truth and are kept exactly: the same seven
+ * columns in the same order, the same seven CSV fields, the same file name. What is *added*
+ * is the drawing above them — the one screen in the app where a temporal visualisation is
+ * obviously the right answer and was simply absent.
+ *
+ * The rest is the ordinary Hive migration: the hand-rolled `<header>`/`<main>` pair becomes
+ * `Page` + `PageHeader` + `PageBody` (the shell has drawn the chrome since HIVE-3.8), the
+ * table becomes `DataTable`, and the Timeline badge stops choosing between three pairs of
+ * Tailwind palette strings and reads the shared status vocabulary instead.
+ *
+ * ### Two things it fixes rather than restyles
+ *
+ * 1. **A failed read looked like an empty workspace.** The error `Alert` was drawn *above* an
+ *    empty-state card that said "No deprecation or sunset entries" — so an outage and a clean
+ *    workspace looked nearly the same. The failure is the table's own error state now, with a
+ *    retry, and the empty state only draws when the read succeeded.
+ * 2. **`imminent` and `past` were amber and rose in one light palette and one dark one.** They
+ *    are vocabulary tones now, so they follow all nine themes.
+ *
+ * ### The one word that is normalised
+ *
+ * REST calls a non-urgent scheduled sunset `announced`; the mockup, the legend and this
+ * screen call it `scheduled`. That rename happens once, in `sunsetTimelineStatus`, and both
+ * the badge and the drawing read through it — so the two can never disagree. The **CSV keeps
+ * the server's string**, because the export is a contract with whatever consumes it.
+ *
+ * @see `@/app/components/ade/sunset` — the rules, the drawing and the table.
+ */
+
+import * as React from 'react';
 import Link from 'next/link';
-import { Sun, Download, Package, ArrowLeft } from 'lucide-react';
-import { Button } from '../../../../components/ui/Button';
-import { LoadingState } from '../../../../components/ui/LoadingState';
-import { EmptyState, GatedState } from '../../../../components/ui/EmptyState';
-import { Badge } from '../../../../components/ui/Badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/Select';
-import { Alert } from '../../../../components/ui/Alert';
-import { MIGRATION_GUIDE_ISSUE_URL } from '../../../../utils/revision-deprecation';
+import { Download, Sunset } from 'lucide-react';
+
+import { useAuthSession } from '@lib/auth/session-client';
+import type { ShortcutBinding } from '@lib/shortcuts';
+
+import PageHeader from '@/app/components/shell/PageHeader';
+import { Page, PageBody } from '@/app/components/shell/pageChrome';
+import { useShortcuts } from '@/app/hooks/useShortcuts';
+import { Alert, AlertDescription } from '@/app/components/ui/Alert';
+import { Button } from '@/app/components/ui/Button';
+import { DataTableFoot, DataTableToolbar } from '@/app/components/ui/DataTable';
+import { EmptyState, GatedState } from '@/app/components/ui/EmptyState';
+import { LoadingState } from '@/app/components/ui/LoadingState';
 import {
-  dashboardContentStackClass,
-  dashboardMainClass,
-  dashboardPanelPaddedClass,
-  dashboardTableWrapClass,
-  dashboardTableTheadClass,
-  dashboardThClass,
-  dashboardTbodyClass,
-  dashboardTrHoverClass,
-} from '@/app/components/ade/dashboard/dashboardScreenClasses';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/Select';
+import {
+  ALL_PROJECTS,
+  HOME_HREF,
+  SUNSET_CSV_FILENAME,
+  SUNSET_CSV_HEADERS,
+  SUNSET_DESCRIPTION,
+  SUNSET_EMPTY,
+  SUNSET_LOAD_ERROR,
+  SUNSET_NO_TENANT,
+  SUNSET_SIGNED_OUT,
+  SUNSET_WARNINGS_BANNER,
+  SunsetTable,
+  SunsetTimelineChart,
+  VERSIONS_HREF,
+  hasSunsetWarnings,
+  sunsetCsv,
+  sunsetFootLabel,
+  sunsetTimelineLayout,
+  type SunsetEntry,
+  type SunsetMarker,
+  type SunsetProject,
+} from '@/app/components/ade/sunset';
 
-interface Project {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface SunsetEntry {
-  revisionId: string;
-  projectId: string;
-  projectName?: string | null;
-  projectSlug?: string | null;
-  versionLine: string;
-  sunsetDate?: string | null;
-  /** Canonical UTC instant (#748); same value as sunsetDate when present */
-  sunsetAt?: string | null;
-  timelineStatus: string;
-  lifecyclePhase: string;
-  deprecationMessage?: string | null;
-  successorRevisionId?: string | null;
-  published: boolean;
-  deprecationWarnings: Array<{
-    revisionId?: string;
-    message?: string;
-    migrationGuideUrl?: string;
-    sunsetDate?: string | null;
-  }>;
-}
-
-function statusBadgeClass(timelineStatus: string): string {
-  switch (timelineStatus) {
-    case 'imminent':
-      return 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100 border-amber-200 dark:border-amber-700';
-    case 'past':
-      return 'bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-100 border-rose-200 dark:border-rose-700';
-    default:
-      return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-600';
-  }
-}
-
-function lifecycleLabel(phase: string): string {
-  if (phase === 'sunset_reached') return 'Sunset reached (read-only / redirect)';
-  return 'Deprecated (migrate before sunset)';
-}
-
+/**
+ * Render the sunset timeline surface.
+ *
+ * @returns The page.
+ */
 export default function SunsetTimelinePage() {
   const { data: session, status } = useAuthSession();
-  const currentTenantId = (session?.user as { current_tenant_id?: string })?.current_tenant_id;
+  const currentTenantId = (session?.user as { current_tenant_id?: string } | undefined)
+    ?.current_tenant_id;
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [projectFilter, setProjectFilter] = useState<string>('all');
-  const [entries, setEntries] = useState<SunsetEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [projects, setProjects] = React.useState<SunsetProject[]>([]);
+  const [projectFilter, setProjectFilter] = React.useState<string>(ALL_PROJECTS);
+  const [entries, setEntries] = React.useState<SunsetEntry[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [selectedRevisionId, setSelectedRevisionId] = React.useState<string | null>(null);
 
-  const loadProjects = useCallback(async () => {
-    const response = await fetch('/api/projects');
-    if (!response.ok) return;
-    const data = await response.json();
-    if (data.projects) setProjects(data.projects);
+  const filterRef = React.useRef<HTMLButtonElement | null>(null);
+
+  // ---- the reads --------------------------------------------------------------------------
+
+  const loadProjects = React.useCallback(async () => {
+    try {
+      const response = await fetch('/api/projects');
+      if (!response.ok) return;
+      const data = await response.json();
+      if (Array.isArray(data?.projects)) setProjects(data.projects);
+    } catch {
+      // The filter is a convenience: a workspace whose project list will not load still gets
+      // its whole schedule, which is the thing this screen is for.
+    }
   }, []);
 
-  const loadTimeline = useCallback(async () => {
+  const loadTimeline = React.useCallback(async () => {
     if (!currentTenantId) return;
     setLoading(true);
     setError(null);
     try {
       const qs =
-        projectFilter !== 'all' ? `?projectId=${encodeURIComponent(projectFilter)}` : '';
-      const res = await fetch(`/api/versions/sunset-timeline${qs}`);
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setError(typeof data.error === 'string' ? data.error : 'Failed to load timeline');
+        projectFilter !== ALL_PROJECTS
+          ? `?projectId=${encodeURIComponent(projectFilter)}`
+          : '';
+      const response = await fetch(`/api/versions/sunset-timeline${qs}`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        setError(typeof data.error === 'string' ? data.error : SUNSET_LOAD_ERROR);
         setEntries([]);
         return;
       }
       setEntries(Array.isArray(data.entries) ? data.entries : []);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load timeline');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : SUNSET_LOAD_ERROR);
       setEntries([]);
     } finally {
       setLoading(false);
     }
   }, [currentTenantId, projectFilter]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (currentTenantId) void loadProjects();
   }, [currentTenantId, loadProjects]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (currentTenantId) void loadTimeline();
   }, [currentTenantId, loadTimeline]);
 
-  const exportCsv = useCallback(() => {
-    const headers = [
-      'project',
-      'versionLine',
-      'sunsetDate',
-      'timelineStatus',
-      'lifecyclePhase',
-      'successorRevisionId',
-      'deprecationMessage',
-    ];
-    const lines = [
-      headers.join(','),
-      ...entries.map((e) =>
-        [
-          JSON.stringify(e.projectName ?? e.projectSlug ?? e.projectId),
-          JSON.stringify(e.versionLine),
-          JSON.stringify(e.sunsetDate ?? ''),
-          JSON.stringify(e.timelineStatus),
-          JSON.stringify(e.lifecyclePhase),
-          JSON.stringify(e.successorRevisionId ?? ''),
-          JSON.stringify(e.deprecationMessage ?? ''),
-        ].join(',')
-      ),
-    ];
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'sunset-timeline.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
+  // A row selected from the drawing must not stay selected once the rows change underneath it.
+  React.useEffect(() => {
+    setSelectedRevisionId((current) =>
+      current && entries.some((entry) => entry.revisionId === current) ? current : null
+    );
   }, [entries]);
 
-  const hasWarnings = useMemo(
-    () => entries.some((e) => e.deprecationWarnings && e.deprecationWarnings.length > 0),
-    [entries]
+  // ---- the export -------------------------------------------------------------------------
+
+  const exportCsv = React.useCallback(() => {
+    const blob = new Blob([sunsetCsv(entries)], { type: 'text/csv;charset=utf-8' });
+    const anchor = document.createElement('a');
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = SUNSET_CSV_FILENAME;
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
+  }, [entries]);
+
+  // ---- the drawing ------------------------------------------------------------------------
+
+  /**
+   * The clock the layout is computed against, taken once per set of rows.
+   *
+   * Read here rather than inside the layout so the geometry stays a pure function of
+   * `(rows, now)` — which is what makes every coordinate unit testable.
+   */
+  const [now, setNow] = React.useState<number | null>(null);
+  React.useEffect(() => {
+    setNow(Date.now());
+  }, [entries]);
+
+  const layout = React.useMemo(
+    () => (now === null ? null : sunsetTimelineLayout(entries, now)),
+    [entries, now]
   );
+
+  const handleSelectMarker = React.useCallback((marker: SunsetMarker) => {
+    setSelectedRevisionId(marker.revisionId);
+  }, []);
+
+  // `/` — DESIGN.md §8's list-page key. This list has one control, so `/` reaches it.
+  const shortcuts = React.useMemo<readonly ShortcutBinding[]>(
+    () =>
+      currentTenantId
+        ? [
+            {
+              id: 'sunset-filter',
+              scope: 'list',
+              description: 'Filter the sunset schedule by project',
+              chord: { key: '/' },
+              run: () => filterRef.current?.focus(),
+            },
+          ]
+        : [],
+    [currentTenantId]
+  );
+  useShortcuts(shortcuts);
+
+  // ---- the page ---------------------------------------------------------------------------
 
   if (status === 'loading') {
     return (
-      <div className="p-6">
-        <LoadingState minHeightClassName="min-h-[220px]" message="Loading…" />
-      </div>
+      <Page>
+        <PageBody>
+          <LoadingState minHeightClassName="min-h-[220px]" message="Loading…" />
+        </PageBody>
+      </Page>
     );
   }
 
   if (!session) {
     return (
-      <div className="p-6">
-        <p className="text-slate-600 dark:text-slate-400">Sign in to view the sunset timeline.</p>
-      </div>
+      <Page>
+        <PageBody>
+          <EmptyState
+            variant="compact"
+            icon={<Sunset />}
+            tone="neutral"
+            title={SUNSET_SIGNED_OUT}
+          />
+        </PageBody>
+      </Page>
     );
   }
 
-  if (!currentTenantId) {
-    return (
-      <div className="p-6 max-w-3xl mx-auto">
-        <GatedState description="Deprecation and sunset dates belong to one workspace." />
-      </div>
-    );
-  }
+  const toolbar = (
+    <DataTableToolbar data-testid="sunset-toolbar">
+      <Select value={projectFilter} onValueChange={setProjectFilter}>
+        <SelectTrigger ref={filterRef} className="stl-filter" aria-label="Filter by project">
+          <SelectValue placeholder="Filter by project" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL_PROJECTS}>All projects</SelectItem>
+          {projects.map((project) => (
+            <SelectItem key={project.id} value={project.id}>
+              {project.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </DataTableToolbar>
+  );
+
+  const footer = (
+    <DataTableFoot data-testid="sunset-foot">
+      <span>
+        {sunsetFootLabel(entries.length)} · CSV columns: {SUNSET_CSV_HEADERS.join(', ')} →{' '}
+        <span className="mono">{SUNSET_CSV_FILENAME}</span>
+      </span>
+      <span className="stl-foot__hint">
+        Schedules are set on <Link href={VERSIONS_HREF}>Versions</Link>
+      </span>
+    </DataTableFoot>
+  );
 
   return (
-    <>
-      <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="px-6 py-4">
-          <Link
-            href="/ade/dashboard/projects"
-            className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:underline mb-2"
+    <Page>
+      <PageHeader
+        breadcrumb={[{ label: 'Home', href: HOME_HREF }, { label: 'Ship' }, { label: 'Sunset timeline' }]}
+        title="Sunset timeline"
+        description={SUNSET_DESCRIPTION}
+        actions={
+          <Button
+            variant="outline"
+            onClick={exportCsv}
+            disabled={entries.length === 0}
+            data-testid="sunset-export"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Projects
-          </Link>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Sun className="w-6 h-6 text-amber-500" />
-                Sunset timeline
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1 max-w-3xl">
-                End-of-life schedule for deprecated schema revisions. Dates come from the server (
-                <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">versions.metadata</code>
-                , #507). Status <span className="font-medium">imminent</span> means sunset within 30 days.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue placeholder="Filter by project" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All projects</SelectItem>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={exportCsv}
-                disabled={entries.length === 0}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export CSV
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+            <Download aria-hidden />
+            Export CSV
+          </Button>
+        }
+      />
 
-      <main className={dashboardMainClass}>
-        <div className={dashboardContentStackClass}>
-      {error && (
-        <Alert variant="error">
-          {error}
-        </Alert>
-      )}
+      <PageBody>
+        {!currentTenantId ? (
+          <GatedState
+            title={SUNSET_NO_TENANT.title}
+            description={SUNSET_NO_TENANT.description}
+          />
+        ) : (
+          <>
+            {hasSunsetWarnings(entries) ? (
+              <Alert variant="warning" data-testid="sunset-warnings">
+                <AlertDescription>
+                  {SUNSET_WARNINGS_BANNER.lead}{' '}
+                  <Link href={VERSIONS_HREF}>{SUNSET_WARNINGS_BANNER.linkLabel}</Link>{' '}
+                  {SUNSET_WARNINGS_BANNER.tail}
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-      {hasWarnings && (
-        <Alert variant="warning">
-          <span className="text-sm">
-            Rows include the same structured warnings as compatibility checks (#507). Open a revision in Versions to
-            see banners in context.
-          </span>
-        </Alert>
-      )}
+            {layout && layout.plotted > 0 ? (
+              <SunsetTimelineChart
+                layout={layout}
+                total={entries.length}
+                selectedRevisionId={selectedRevisionId}
+                onSelect={handleSelectMarker}
+              />
+            ) : null}
 
-      {loading ? (
-        <div className={dashboardPanelPaddedClass}>
-          <LoadingState minHeightClassName="min-h-[240px]" message="Loading schedule…" />
-        </div>
-      ) : entries.length === 0 ? (
-        <div className={dashboardTableWrapClass}>
-          <div className="p-8">
-            <EmptyState
-              icon={<Sun className="h-10 w-10" />}
-              title="No deprecation or sunset entries"
-              description="Mark revisions as deprecated or set a sunset date on revision metadata to see them here."
-              variant="compact"
+            <SunsetTable
+              entries={entries}
+              loading={loading}
+              error={error}
+              onRetry={() => void loadTimeline()}
+              selectedRevisionId={selectedRevisionId}
+              toolbar={toolbar}
+              footer={footer}
+              empty={
+                <EmptyState
+                  variant="compact"
+                  surface={false}
+                  icon={<Sunset />}
+                  title={SUNSET_EMPTY.title}
+                  description={SUNSET_EMPTY.description}
+                  action={
+                    <Button asChild data-testid="sunset-empty-versions">
+                      <Link href={VERSIONS_HREF}>{SUNSET_EMPTY.actionLabel}</Link>
+                    </Button>
+                  }
+                />
+              }
             />
-          </div>
-        </div>
-      ) : (
-        <div className={dashboardTableWrapClass}>
-          <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className={dashboardTableTheadClass}>
-              <tr>
-                <th className={`${dashboardThClass} align-bottom`}>Project</th>
-                <th className={`${dashboardThClass} align-bottom`}>Version line</th>
-                <th className={`${dashboardThClass} align-bottom`}>Sunset</th>
-                <th className={`${dashboardThClass} align-bottom`}>Timeline</th>
-                <th className={`${dashboardThClass} align-bottom`}>Lifecycle</th>
-                <th className={`${dashboardThClass} align-bottom`}>Successor</th>
-                <th className={`${dashboardThClass} min-w-[200px] align-bottom`}>Notes / #507</th>
-              </tr>
-            </thead>
-            <tbody className={dashboardTbodyClass}>
-              {entries.map((e) => (
-                <tr
-                  key={e.revisionId}
-                  className={dashboardTrHoverClass}
-                >
-                  <td className="px-6 py-4 align-top">
-                    <div className="flex items-center gap-2">
-                      <Package className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                      <span className="font-medium text-slate-900 dark:text-slate-100">
-                        {e.projectName ?? e.projectSlug ?? e.projectId}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 align-top font-mono text-xs">{e.versionLine}</td>
-                  <td className="px-6 py-4 align-top text-slate-700 dark:text-slate-300">
-                    {e.sunsetAt ?? e.sunsetDate ?? '—'}
-                  </td>
-                  <td className="px-6 py-4 align-top">
-                    <Badge variant="outline" className={statusBadgeClass(e.timelineStatus)}>
-                      {e.timelineStatus}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 align-top text-slate-700 dark:text-slate-300 max-w-[220px]">
-                    {lifecycleLabel(e.lifecyclePhase)}
-                  </td>
-                  <td className="px-6 py-4 align-top font-mono text-xs break-all">
-                    {e.successorRevisionId ?? '—'}
-                  </td>
-                  <td className="px-6 py-4 align-top text-slate-600 dark:text-slate-400">
-                    {e.deprecationWarnings[0]?.message ? (
-                      <p className="text-xs leading-relaxed">{e.deprecationWarnings[0].message}</p>
-                    ) : e.deprecationMessage ? (
-                      <p className="text-xs leading-relaxed">{e.deprecationMessage}</p>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                    <a
-                      href={e.deprecationWarnings[0]?.migrationGuideUrl ?? MIGRATION_GUIDE_ISSUE_URL}
-                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1 inline-block"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Migration guide
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </div>
-      )}
-        </div>
-      </main>
-    </>
+          </>
+        )}
+      </PageBody>
+    </Page>
   );
 }

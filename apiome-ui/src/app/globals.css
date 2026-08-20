@@ -27929,3 +27929,510 @@ tr:focus-within .pub-url__glyph {
   padding-inline: 0;
   color: var(--fg-muted);
 }
+
+/* ==========================================================================
+   SUNSET TIMELINE  (HIVE-8.2, #5328)
+   --------------------------------------------------------------------------
+   `docs/mockups/ship/sunset-timeline.html`, whose page-local `<style>` block
+   this replaces (`.tlx`, `.tlx text`, `.tlx .ver`, `.tlx .lane`, `.legend`,
+   `.legend .sw`) together with the palette classes the 333-line screen had
+   grown: a `bg-amber-100 text-amber-900 dark:bg-amber-900/40` imminent badge,
+   a `bg-rose-100 text-rose-900 dark:bg-rose-900/40` past badge, a
+   `bg-slate-100 text-slate-800 dark:bg-slate-800` scheduled one, a
+   `text-amber-500` title icon, a `text-indigo-600 dark:text-indigo-400`
+   migration-guide link and nine `text-slate` and `text-gray` quiet cells. Every
+   one of those froze the surface on one light palette and one dark one; the
+   nine themes had no say.
+
+   Why the drawing is styled here rather than in the component
+   -----------------------------------------------------------
+   Because an SVG cannot be styled by Tailwind utilities the way a `div` can:
+   `fill` and `stroke` are the properties that matter and they are set from
+   `data-status`, which is a *selector* problem. Painting them in the component
+   would mean a `switch` returning colour strings — exactly what this ticket
+   removes from the badge. Here, one rule per status names one token, and the
+   diamond and the row's badge resolve to the same hue by construction.
+
+   The mockup froze five things in pixels that must not be frozen: the 900px
+   minimum plot width, the 240px plot height, and the 11 / 11.5 / var(--fs-xs)
+   type sizes. The plot's minimum width and height are `rem` here, so both
+   follow all six font scales; the type *inside* the `viewBox` is the
+   `ui/svgTypography` exemption and is set on the elements in user units, which
+   is the one place a number is genuinely geometry (DESIGN.md §3.2).
+
+   Three classes are borrowed rather than restated: `.mono` (the font-family
+   preference), `.badge` chrome (the Timeline column wears it through
+   `ui/Badge`, so a badge and a legend swatch cannot drift) and `.sr-only`.
+
+   No hue is named below. Every colour is a token, so the surface follows all
+   nine appearances. Three measured deviations from the mockup are recorded at
+   the rules that make them: the lane names and the month ticks take
+   `--fg-muted` rather than the mockup's `--fg-subtle`; the today chip is the
+   accent `-soft`/`-fg` pair rather than a solid accent fill with the mockup's
+   literal `#fff`; and every diamond carries a `--fg-muted` hairline, because
+   the saturated role step a status is drawn in does **not** clear the 3:1
+   non-text floor on the card surface in four of the nine appearances.
+   ========================================================================== */
+
+/* ---- The card ------------------------------------------------------------ */
+.stl-card__header {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.stl-card__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.stl-card__title > svg {
+  inline-size: var(--icon-rail);
+  block-size: var(--icon-rail);
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.stl-card__note {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.stl-card__body {
+  padding-block-start: 0;
+}
+
+.stl-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.stl-card__hint {
+  color: var(--fg-muted);
+}
+
+/* ---- The legend ---------------------------------------------------------- */
+/* A real list, not a row of spans: it is an enumeration of the three statuses,
+   and DESIGN.md §6 forbids colour as the only signal — so each swatch is
+   followed by the word it stands for, and the pair is one item. */
+.stl-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.stl-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.stl-legend__item--quiet {
+  color: var(--fg-muted);
+}
+
+/* The hairline is the same one the diamonds carry, and for the same measured
+   reason (see `.stl-marker__glyph`): a swatch has to be a visible *shape* in
+   all nine appearances, and the saturated role step is not one in four of
+   them. The word beside it is the signal either way — DESIGN.md §6. */
+.stl-legend__swatch {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px var(--fg-muted);
+}
+
+.stl-legend__swatch[data-status='past'] {
+  background: var(--rose);
+}
+
+.stl-legend__swatch[data-status='imminent'] {
+  background: var(--warn);
+}
+
+.stl-legend__swatch[data-status='scheduled'] {
+  background: var(--neutral);
+}
+
+/* ---- The plot ------------------------------------------------------------ */
+/* The mockup's `min-width: 900px` in rem, so a reader at the Largest font
+   scale gets a plot that scrolls rather than one whose lane names collide.
+   The scroll is the *card's* — `overflow-x` here is what keeps a wide drawing
+   from taking the document sideways with it (DESIGN.md §5). */
+.stl-plot {
+  inline-size: 100%;
+  overflow-x: auto;
+}
+
+.stl-svg {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 56.25rem;
+  block-size: auto;
+  /* The focus ring is drawn at the marker's own radius plus five user units;
+     `overflow: visible` is what lets a ring on the last lane's marker paint
+     outside the `viewBox` rather than being clipped in half. */
+  overflow: visible;
+}
+
+/* `--fg-muted`, not the mockup's `--fg-subtle`: measured on the card surface
+   that step is 3.1:1 in the light theme and lower in Solarized, and a month
+   label is text. The same finding `ui/DataTable`'s cell-sub rule records. */
+.stl-months text {
+  fill: var(--fg-muted);
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.stl-grid line {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ---- Today --------------------------------------------------------------- */
+.stl-today line {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The mockup fills this chip with a solid `--accent` and writes `#fff` on it.
+   Measured, the app's ink for a solid role fill (`--fg-on-accent` on
+   `--accent`) is 1.95:1 in Blueprint, 2.00:1 in Nord and 2.11:1 in High
+   contrast — the same limitation `.cat-facet__count` records. The `-soft` /
+   `-fg` pair is the one that *is* calibrated: 5.22:1 in Nord at worst and
+   11.40:1 in High contrast. The rule above keeps the mockup's azure, because
+   a 1.5-unit line is a non-text mark and `--accent` clears 4.07:1 on the
+   surface in all nine. */
+.stl-today rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.stl-today text {
+  fill: var(--accent-fg);
+  text-anchor: middle;
+  dominant-baseline: central;
+  font-weight: 600;
+}
+
+/* ---- Lanes --------------------------------------------------------------- */
+.stl-lane__name {
+  fill: var(--fg-muted);
+  font-weight: 600;
+}
+
+.stl-lane__rule {
+  stroke: var(--border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The run from *today* to a future sunset — decoration in the strict sense:
+   it repeats the distance the countdown chip states in words and the marker's
+   accessible name states as a date, so nothing is lost when a theme makes it
+   quiet. Scheduled and past runs are softened because a five-month bar at full
+   strength out-shouts the imminent one beside it, which is the opposite of
+   what the drawing is for. */
+.stl-connector {
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.stl-connector[data-status='imminent'] {
+  stroke: var(--warn);
+}
+
+.stl-connector[data-status='scheduled'] {
+  stroke: var(--neutral);
+  opacity: 0.45;
+}
+
+.stl-connector[data-status='past'] {
+  stroke: var(--rose);
+  opacity: 0.45;
+}
+
+/* ---- The countdown chip -------------------------------------------------- */
+.stl-chip[data-status='past'] {
+  fill: var(--rose-soft);
+}
+
+.stl-chip[data-status='imminent'] {
+  fill: var(--warn-soft);
+}
+
+.stl-chip[data-status='scheduled'] {
+  fill: var(--neutral-soft);
+}
+
+/* The tone's own ink, not `--fg`. The three `-soft` grounds are *fixed light*
+   tints in every appearance — which is what makes a `Badge` a light pill on a
+   dark surface — so the page foreground on one of them measures 1.03:1 in
+   Nord. Each `-soft`/`-fg` pair is the calibrated one: 5.61:1 (warn), 6.02:1
+   (rose) and 7.29:1 (neutral), identically in all nine. */
+.stl-chip__label {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  dominant-baseline: central;
+}
+
+.stl-chip__label[data-status='past'] {
+  fill: var(--rose-fg);
+}
+
+.stl-chip__label[data-status='imminent'] {
+  fill: var(--warn-fg);
+}
+
+.stl-chip__label[data-status='scheduled'] {
+  fill: var(--neutral-fg);
+}
+
+.stl-marker__date {
+  fill: var(--fg-muted);
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- The markers --------------------------------------------------------- */
+/* Each marker is a `role="button"` group, so it takes the pointer and the
+   focus ring a button takes. `outline` is not reliably painted on an SVG
+   group, so the ring is a `<circle>` in the drawing's own units — which also
+   means it scales with the drawing instead of sitting at a fixed width. */
+.stl-marker {
+  cursor: pointer;
+  outline: none;
+}
+
+.stl-marker__hit {
+  fill: transparent;
+}
+
+.stl-marker__ring {
+  fill: none;
+  stroke: var(--focus-ring);
+  stroke-width: 2;
+  opacity: 0;
+  vector-effect: non-scaling-stroke;
+}
+
+.stl-marker:focus-visible .stl-marker__ring,
+.stl-marker[data-current] .stl-marker__ring {
+  opacity: 1;
+}
+
+/* The hairline is not decoration. Measured on the card surface, the saturated
+   role step a status is drawn in is 2.73:1 (`--neutral`, Blueprint), 2.91 /
+   2.82 / 2.34 (Solarized), 2.26 / 3.54 / 1.81 (Nord) and 2.84 / 3.81 / 2.29
+   (Darcula) — under the 3:1 floor WCAG 1.4.11 holds a non-text mark to. The
+   `-fg` steps cannot rescue it either: they are fixed light inks and measure
+   1.16–2.93:1 on those same dark surfaces. So the *shape* is carried by a
+   `--fg-muted` contour, which is 4.86:1 at worst in all nine, and the fill
+   carries the hue on top of it. The status is in the chip's words, the
+   marker's accessible name and the row's badge as well. */
+.stl-marker__glyph {
+  stroke: var(--fg-muted);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transition: transform var(--dur-fast) ease-out;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.stl-marker:hover .stl-marker__glyph,
+.stl-marker:focus-visible .stl-marker__glyph {
+  transform: scale(1.15);
+}
+
+.stl-marker[data-status='past'] .stl-marker__glyph {
+  fill: var(--rose);
+}
+
+.stl-marker[data-status='imminent'] .stl-marker__glyph {
+  fill: var(--warn);
+}
+
+.stl-marker[data-status='scheduled'] .stl-marker__glyph {
+  fill: var(--neutral);
+}
+
+/* ---- Below 900px the drawing steps aside ---------------------------------
+   The acceptance criterion "degrades to the table alone below 900 px". The
+   plot's own minimum width is 56.25rem, so under that the card would be a
+   horizontal scroller wrapping a drawing nobody can take in — and every fact
+   in it is in the table underneath. `display: none` rather than a visual hide,
+   so the drawing leaves the accessibility tree with the pixels: a keyboard
+   reader must not tab through markers that are not on screen. */
+@media (max-width: 56.25rem) {
+  .stl-card {
+    display: none;
+  }
+}
+
+/* ---- The table ----------------------------------------------------------- */
+/* The mockup's four column hints, in rem so a reader at the Largest font scale
+   gets wider columns rather than clipped ones. The table is `scrollX`, so
+   these are the widths it scrolls *to* — never a reason for the document to
+   scroll. */
+.stl-col-version {
+  inline-size: 8rem;
+}
+
+.stl-col-sunset {
+  inline-size: 13rem;
+}
+
+.stl-col-lifecycle {
+  inline-size: 15rem;
+}
+
+.stl-col-successor {
+  inline-size: 11rem;
+}
+
+.stl-col-notes {
+  min-inline-size: 16.25rem;
+}
+
+/* The note cell is two or three lines; top alignment is what keeps it reading
+   as one row with the single-line cells beside it. Unlayered, so it wins over
+   the primitive's utility class without the primitive learning a prop for one
+   screen — the same call HIVE-6.2 and HIVE-8.1 made. */
+.stl-table td {
+  vertical-align: top;
+  padding-block: calc(var(--space-2) + 0.125rem);
+}
+
+/* The host `SunsetTable` wraps `DataTable` in, so it can find a row by id. A wrapper is a
+   flex item of the page body, and a flex item's automatic minimum size is its *content* —
+   which for a `scrollX` table is its `min-width`. Without this the card cannot shrink and
+   the document scrolls sideways at narrow widths instead of the card scrolling. */
+.stl-table-host {
+  min-inline-size: 0;
+}
+
+.stl-project {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+/* The primitive's cell is `white-space: nowrap`; without a clip, one long project name is
+   an unbreakable run that holds the column — and therefore the table — open. */
+.stl-project__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-inline-size: 0;
+}
+
+.stl-project__icon {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.stl-version {
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+/* The stored instant, printed whole. `tabular-nums` so a column of them lines
+   up, `nowrap` so `2026-07-15T00:00:00Z` is never broken across two lines —
+   the column is sized for it above. */
+.stl-instant {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--fg-muted);
+}
+
+.stl-lifecycle {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.stl-successor {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.stl-absent {
+  color: var(--fg-muted);
+}
+
+.stl-note {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  max-inline-size: 20rem;
+  min-inline-size: 0;
+}
+
+.stl-note__text {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+
+.stl-note__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--fs-xs);
+  color: var(--accent-fg);
+}
+
+.stl-note__link > svg {
+  inline-size: 0.6875rem;
+  block-size: 0.6875rem;
+  flex-shrink: 0;
+}
+
+/* The row a timeline marker points at. A tint plus a leading rule, never a
+   tint alone: the same "colour is not the only signal" rule the legend
+   follows, and the rule is what a reader scanning the table sees first. */
+.stl-row--current > td {
+  background: var(--accent-soft);
+}
+
+.stl-row--current > td:first-child {
+  box-shadow: inset 0.125rem 0 0 0 var(--accent);
+}
+
+.stl-foot__hint {
+  color: var(--fg-muted);
+}
+
+.stl-filter {
+  inline-size: 13.75rem;
+  max-inline-size: 100%;
+}
