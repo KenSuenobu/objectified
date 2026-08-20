@@ -21,7 +21,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { ChevronRight, ListTree, Loader2, Search, X } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
+import { entityKindTone, projectionStatusTone } from '@/app/components/ade/export-studio';
 import { computeWindowedRange, clampRowIndex } from '@/app/utils/windowed-rows';
 import { EXPORT_MANIFEST_TREE_VIRTUALIZE_ABOVE } from '@/app/utils/preview-budgets';
 import {
@@ -48,40 +50,24 @@ export const MANIFEST_TREE_HEIGHT = 380;
 /** How long (ms) the tree's type-ahead buffer keeps accumulating characters. */
 const TYPEAHEAD_RESET_MS = 500;
 
-/** Status badge tone per shared projection status (drop = rose, loss = amber, ok = emerald). */
-const STATUS_TONE: Record<string, string> = {
-  retained: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
-  transformed: 'bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300',
-  approximated: 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
-  synthesized: 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
-  dropped: 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300',
-  unavailable: 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300',
-  'not-applicable': 'bg-gray-100 text-gray-500 dark:bg-gray-700/60 dark:text-gray-300',
-};
-
-/** Kind chip tone per entity kind. */
-const KIND_TONE: Record<ExportManifestEntity['entity_kind'], string> = {
-  service: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300',
-  operation: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300',
-  channel: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300',
-  type: 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-950/50 dark:text-fuchsia-300',
-  field: 'bg-gray-100 text-gray-600 dark:bg-gray-700/60 dark:text-gray-300',
-};
-
-/** One fidelity-status badge, shared by tree rows, the header legend, and the detail strip. */
+/**
+ * One fidelity-status badge, shared by tree rows, the header legend, and the detail strip.
+ *
+ * The tone is the shared one from `exportStudioView`, so a `dropped` entity is the same rose
+ * here, in the mapping graph's table and in the round-trip's difference list — three surfaces
+ * that each used to pick their own.
+ */
 function StatusBadge({ status, count }: { status: string; count?: number }) {
   return (
-    <span
+    <Badge
       data-testid="export-manifest-status"
       data-status={status}
-      className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
-        STATUS_TONE[status] ?? STATUS_TONE['not-applicable'],
-      )}
+      variant={projectionStatusTone(status)}
+      className="shrink-0 gap-1"
     >
       {typeof count === 'number' ? <span className="tabular-nums">{count}</span> : null}
       {status}
-    </span>
+    </Badge>
   );
 }
 
@@ -386,18 +372,15 @@ export function ExportManifestPanel({
           data-entity-key={row.entity?.key}
           style={{ '--tree-depth': row.depth } as React.CSSProperties}
           className={cn(
-            'flex h-8 w-full items-center gap-2 rounded-md pr-2 text-left text-xs motion-safe:transition',
+            'xstd-tree__row h-8 motion-safe:transition',
             'pl-[calc(0.5rem+(var(--tree-depth)-1)*1.125rem)]',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
-            selected
-              ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-100'
-              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
           )}
+          data-selected={selected}
         >
           {row.hasChildren ? (
             <ChevronRight
               className={cn(
-                'h-3.5 w-3.5 shrink-0 text-gray-400 motion-safe:transition-transform',
+                'xstd-tree__twist motion-safe:transition-transform',
                 row.expanded && 'rotate-90',
               )}
               aria-hidden
@@ -407,25 +390,19 @@ export function ExportManifestPanel({
           )}
           {row.kind === 'section' ? (
             <>
-              <span className="font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                {row.label}
-              </span>
+              <span className="xstd-tree__group">{row.label}</span>
               {row.count !== null ? (
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs font-semibold tabular-nums text-gray-500 dark:bg-gray-700/60 dark:text-gray-300">
-                  {row.count.toLocaleString()}
-                </span>
+                <span className="xstd-tree__count">{row.count.toLocaleString()}</span>
               ) : null}
             </>
           ) : (
             <>
-              <span
-                className={cn(
-                  'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider',
-                  KIND_TONE[row.entity!.entity_kind],
-                )}
+              <Badge
+                variant={entityKindTone(row.entity!.entity_kind)}
+                          className="shrink-0 uppercase"
               >
                 {row.entity!.entity_kind}
-              </span>
+              </Badge>
               <span
                 className={cn(
                   'truncate font-mono',
@@ -444,14 +421,14 @@ export function ExportManifestPanel({
                        Enter on the row already does — activation reveals the location. */
                     <span
                       data-testid="export-manifest-location"
-                      className="font-mono text-2xs tabular-nums text-emerald-600 underline decoration-dotted underline-offset-2 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+                      className="xstd-tree__line"
                     >
                       {locationLabel}
                     </span>
                   ) : (
                     <span
                       data-testid="export-manifest-location"
-                      className="font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
+                      className="xstd-tree__line--flat"
                     >
                       {locationLabel}
                     </span>
@@ -467,22 +444,15 @@ export function ExportManifestPanel({
 
   return (
     <section
-      className={cn('flex min-h-0 flex-col rounded-xl border border-gray-200 p-3 dark:border-gray-700', className)}
+      className={cn('xstd-tree-card', className)}
       data-testid="export-manifest-panel"
     >
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <ListTree className="h-4 w-4 text-emerald-600" aria-hidden />
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-          Artifact entities
-        </h3>
-        {virtualized && (
-          <span className="text-2xs font-normal text-gray-500 dark:text-gray-400">windowed</span>
-        )}
+      <div className="xstd-tree-card__head mb-2 flex-wrap">
+        <ListTree aria-hidden />
+        <h3 className="xstd-tree-card__title">Artifact entities</h3>
+        {virtualized && <span className="xstd-note">windowed</span>}
         {page ? (
-          <span
-            data-testid="export-manifest-summary"
-            className="ml-auto flex items-center gap-1.5 text-2xs text-gray-500 dark:text-gray-400"
-          >
+          <span data-testid="export-manifest-summary" className="xstd-tree-card__meta">
             <span className="tabular-nums">{page.total_entities.toLocaleString()} entities</span>
             {droppedCount > 0 ? <StatusBadge status="dropped" count={droppedCount} /> : null}
           </span>
@@ -494,29 +464,25 @@ export function ExportManifestPanel({
           className="flex flex-col items-center justify-center gap-2 py-8 text-center"
           data-testid="export-manifest-loading"
         >
-          <Loader2 className="h-6 w-6 motion-safe:animate-spin text-emerald-500" aria-hidden />
-          <p className="text-xs text-gray-500 dark:text-gray-400">Describing the artifact…</p>
+          <Loader2 className="h-6 w-6 motion-safe:animate-spin text-accent" aria-hidden />
+          <p className="xstd-quiet">Describing the artifact…</p>
         </div>
       ) : error ? (
         <p
           data-testid="export-manifest-error"
           role="status"
-          className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300"
+          className="xstd-notice"
+          data-tone="danger"
         >
-          {error}
+          <span className="xstd-notice__grow">{error}</span>
         </p>
       ) : entities.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-gray-200 px-3 py-6 text-center text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500">
-          The manifest lists no entities for this artifact.
-        </p>
+        <p className="xstd-empty">The manifest lists no entities for this artifact.</p>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           <div className="flex items-center gap-2">
-            <div className="relative min-w-0 flex-1">
-              <Search
-                className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400"
-                aria-hidden
-              />
+            <div className="input-wrap min-w-0 flex-1">
+              <Search aria-hidden />
               <input
                 type="text"
                 value={filter}
@@ -524,14 +490,14 @@ export function ExportManifestPanel({
                 placeholder="Filter entities (name, kind, status)…"
                 aria-label="Filter manifest entities"
                 data-testid="export-manifest-filter"
-                className="w-full rounded-md border border-gray-200 bg-white py-1.5 pl-7 pr-7 text-xs text-gray-900 placeholder:text-gray-400 focus:border-indigo-400 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                className="input input--sm"
               />
               {filtering ? (
                 <button
                   type="button"
                   onClick={() => setFilter('')}
                   aria-label="Clear entity filter"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 motion-safe:transition-colors hover:text-gray-700 dark:hover:text-gray-200"
+                  className="xstd-evidence__close"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
@@ -540,7 +506,7 @@ export function ExportManifestPanel({
             {filtering ? (
               <span
                 data-testid="export-manifest-filter-count"
-                className="shrink-0 font-mono text-2xs tabular-nums text-gray-400 dark:text-gray-500"
+                className="xstd-tree__line--flat shrink-0"
               >
                 {entityRowCount} of {entities.length}
               </span>
@@ -551,9 +517,10 @@ export function ExportManifestPanel({
             <div
               role="status"
               data-testid="export-manifest-truncation"
-              className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+              className="xstd-notice"
+              data-tone="warn"
             >
-              <span className="min-w-0 flex-1">
+              <span className="xstd-notice__grow">
                 Showing {entities.length.toLocaleString()} of{' '}
                 {(page?.total_entities ?? entities.length).toLocaleString()} entities — this
                 manifest is truncated.
@@ -574,7 +541,7 @@ export function ExportManifestPanel({
               ref={listRef}
               onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
               onKeyDown={handleTreeKeyDown}
-              className="h-[380px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+              className="xstd-tree__scroll"
               style={viewportHeight !== MANIFEST_TREE_HEIGHT ? { height: viewportHeight } : undefined}
             >
               <ul role="tree" aria-label="Entities in the emitted artifact" className="relative">
@@ -595,7 +562,7 @@ export function ExportManifestPanel({
           ) : (
             <p
               data-testid="export-manifest-no-matches"
-              className="rounded-lg border border-dashed border-gray-200 px-3 py-6 text-center text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
+              className="xstd-empty"
             >
               {filtering
                 ? `No entities match “${filter.trim()}”.`
@@ -608,35 +575,31 @@ export function ExportManifestPanel({
             <div
               data-testid="export-manifest-detail"
               aria-live="polite"
-              className="rounded-lg border border-gray-200 px-3 py-2 text-xs dark:border-gray-700"
+              className="xstd-entity"
             >
               <div className="flex flex-wrap items-center gap-2">
-                <span className="truncate font-mono font-semibold text-gray-900 dark:text-gray-100">
-                  {selectedEntity.key}
-                </span>
+                <span className="xstd-entity__name">{selectedEntity.key}</span>
                 <StatusBadge status={selectedEntity.status} />
                 {selectedEntity.reason ? (
                   <span
                     data-testid="export-manifest-reason"
-                    className="rounded bg-rose-50 px-1.5 py-0.5 font-mono text-2xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                    className="xstd-entity__reason"
                   >
                     {selectedEntity.reason}
                   </span>
                 ) : null}
                 {!selectedEntity.emitted ? (
-                  <span className="text-2xs font-semibold uppercase text-rose-600 dark:text-rose-400">
+                  <Badge variant="rose" className="uppercase">
                     not in artifact
-                  </span>
+                  </Badge>
                 ) : null}
               </div>
-              <p className="mt-1 text-gray-600 dark:text-gray-300">{selectedEntity.detail}</p>
+              <p className="xstd-entity__detail">{selectedEntity.detail}</p>
               {selectedEntity.target_mapping ? (
-                <p className="mt-0.5 text-2xs text-gray-500 dark:text-gray-400">
-                  Mapped as: {selectedEntity.target_mapping}
-                </p>
+                <p className="xstd-note mt-0.5">Mapped as: {selectedEntity.target_mapping}</p>
               ) : null}
               {selectedEntity.location ? (
-                <p className="mt-0.5 font-mono text-2xs tabular-nums text-gray-500 dark:text-gray-400">
+                <p className="xstd-tree__line--flat mt-0.5">
                   {normalizedLocationFile(selectedEntity)}
                   {selectedEntity.location.line != null ? `:${selectedEntity.location.line}` : ''}
                   {selectedEntity.location.pointer ? ` · ${selectedEntity.location.pointer}` : ''}

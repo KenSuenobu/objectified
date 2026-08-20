@@ -16,7 +16,6 @@ import {
   filterSameFormatTargets,
   optionFieldsFromSchema,
   targetMatchesSourceFormat,
-  tierBadgeClass,
   tierTone,
   validateExportOptions,
   type ExportTargetDescriptor,
@@ -113,14 +112,6 @@ describe('tierTone', () => {
     expect(tierTone('lossless')).toBe('ok');
     expect(tierTone('lossy')).toBe('warn');
     expect(tierTone('types-only')).toBe('danger');
-  });
-});
-
-describe('tierBadgeClass', () => {
-  it('colors lossless green, lossy amber, and types-only red (mockup palette)', () => {
-    expect(tierBadgeClass('lossless')).toContain('emerald');
-    expect(tierBadgeClass('lossy')).toContain('amber');
-    expect(tierBadgeClass('types-only')).toContain('rose');
   });
 });
 

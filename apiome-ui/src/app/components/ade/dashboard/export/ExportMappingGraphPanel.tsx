@@ -38,6 +38,7 @@
 import { useCallback, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { AlertTriangle, Loader2, Network } from 'lucide-react';
 import { cn } from '@lib/utils';
+import { Badge } from '../../../ui/Badge';
 import { computeWindowedRange } from '@/app/utils/windowed-rows';
 import {
   GRAPH_DRAW_BUDGET,
@@ -285,7 +286,7 @@ export function ExportMappingGraphPanel({
       <section className={cn('projection-panel space-y-2', className)} data-testid="export-mapping-graph">
         <SectionHeading targetLabel={targetLabel} />
         <p
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+          className="xstd-notice" data-tone="warn"
           data-testid="export-mapping-error"
         >
           <AlertTriangle className="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" aria-hidden />
@@ -302,15 +303,15 @@ export function ExportMappingGraphPanel({
         <SectionHeading targetLabel={targetLabel} />
         {loading ? (
           <p
-            className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+            className="xstd-loading-row"
             data-testid="export-mapping-loading"
           >
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-500" aria-hidden />
+            <Loader2 className="motion-safe:animate-spin" aria-hidden />
             Loading the source-to-target mapping…
           </p>
         ) : (
           <p
-            className="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
+            className="xstd-empty"
             data-testid="export-mapping-empty"
           >
             The manifest carried no canonical entities for this artifact.
@@ -401,7 +402,7 @@ export function ExportMappingGraphPanel({
           <span
             data-testid="export-mapping-snapshot"
             title={`Manifest snapshot ${page.manifest_hash}`}
-            className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-2xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className="xstd-map__snapshot"
           >
             snapshot {page.manifest_hash.slice(0, 12)}
           </span>
@@ -415,18 +416,16 @@ export function ExportMappingGraphPanel({
           .map(([status, count]) => {
             const p = statusPresentation(status);
             return (
-              <span
+              <Badge
                 key={status}
                 data-testid={`export-mapping-legend-${status}`}
-                className={cn(
-                  'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
-                  p.badgeClass,
-                )}
+                variant={p.tone}
+                className="gap-1"
               >
                 <span aria-hidden>{p.symbol}</span>
                 {p.label}
                 <span className="tabular-nums">{count}</span>
-              </span>
+              </Badge>
             );
           })}
       </div>
@@ -440,7 +439,7 @@ export function ExportMappingGraphPanel({
 
       {view.aggregated && (
         <p
-          className="text-2xs text-gray-500 dark:text-gray-400"
+          className="xstd-note"
           data-testid="export-mapping-aggregated-note"
         >
           Clean rows are aggregated to keep the map readable; expand them in the table below.
@@ -452,7 +451,7 @@ export function ExportMappingGraphPanel({
       {drawnSelection.truncated && (
         <p
           role="status"
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+          className="xstd-notice" data-tone="warn"
           data-testid="export-mapping-draw-cap"
         >
           Drawing {drawnSelection.drawnRowCount.toLocaleString()} of{' '}
@@ -462,7 +461,7 @@ export function ExportMappingGraphPanel({
       )}
 
       {/* The graph. Its accessible name is the table caption — the text alternative. */}
-      <div className="max-h-80 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
+      <div className="xstd-map__frame">
         <svg
           data-testid="export-mapping-svg"
           role="group"
@@ -482,7 +481,7 @@ export function ExportMappingGraphPanel({
                 x={layout.columns.outcome}
                 y={lane.headerY}
                 fontSize={SVG_TEXT_SIZE.label}
-                className="fill-gray-500 font-semibold uppercase tracking-wide dark:fill-gray-400"
+                className="xstd-axis-label"
               >
                 {lane.label} ({lane.count})
               </text>
@@ -571,7 +570,7 @@ export function ExportMappingGraphPanel({
       {/* The text alternative: identical content, identical aria labels, windowed. */}
       <div
         className={cn(
-          'overflow-auto rounded-lg border border-gray-100 dark:border-gray-800',
+          'xstd-map__table',
           tableVirtualized ? 'h-72' : 'max-h-72',
         )}
         style={
@@ -598,7 +597,7 @@ export function ExportMappingGraphPanel({
           <thead>
             <tr
               aria-rowindex={1}
-              className="border-b border-gray-200 text-2xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
+              className="text-2xs"
             >
               <th scope="col" className="px-2 py-1.5">Status</th>
               <th scope="col" className="px-2 py-1.5">Canonical entity</th>
@@ -611,7 +610,7 @@ export function ExportMappingGraphPanel({
         </table>
       </div>
       {tableVirtualized && (
-        <p className="text-2xs text-gray-500 dark:text-gray-400" data-testid="export-mapping-table-windowed">
+        <p className="xstd-note" data-testid="export-mapping-table-windowed">
           The table is windowed — every one of its {tableRows.length.toLocaleString()} rows is
           reachable by scrolling.
         </p>
@@ -623,8 +622,8 @@ export function ExportMappingGraphPanel({
 /** The section heading, shared by the populated, empty, and error states. */
 function SectionHeading({ targetLabel }: { targetLabel: string }) {
   return (
-    <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-      <Network className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
+    <h4 className="xstd-caps">
+      <Network aria-hidden />
       What became of each entity in {targetLabel}
     </h4>
   );
@@ -652,7 +651,7 @@ function ReconciliationStrip({
   if (reconciliation.partial) {
     return (
       <div
-        className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-2xs text-gray-600 dark:border-gray-700 dark:text-gray-300"
+        className="xstd-notice"
         data-testid="export-mapping-partial"
       >
         <span>
@@ -662,8 +661,8 @@ function ReconciliationStrip({
           report.
         </span>
         {loading ? (
-          <span className="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400">
-            <Loader2 className="h-3 w-3 animate-spin text-indigo-500" aria-hidden />
+          <span className="xstd-quiet inline-flex items-center gap-1">
+            <Loader2 className="h-3 w-3 motion-safe:animate-spin text-accent" aria-hidden />
             Loading…
           </span>
         ) : (
@@ -686,7 +685,7 @@ function ReconciliationStrip({
     return (
       <p
         role="status"
-        className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-2xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+        className="xstd-notice" data-tone="warn"
         data-testid="export-mapping-mismatch"
       >
         <AlertTriangle className="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" aria-hidden />
@@ -704,7 +703,7 @@ function ReconciliationStrip({
 
   return (
     <p
-      className="text-2xs text-gray-500 dark:text-gray-400"
+      className="xstd-note"
       data-testid="export-mapping-reconciled"
     >
       Reconciles with the fidelity report for this job:{' '}
@@ -718,16 +717,10 @@ function ReconciliationStrip({
 function StatusText({ status }: { status: ProjectionStatus }) {
   const p = statusPresentation(status);
   return (
-    <span
-      data-status={status}
-      className={cn(
-        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold',
-        p.badgeClass,
-      )}
-    >
+    <Badge data-status={status} variant={p.tone} className="gap-1">
       <span aria-hidden>{p.symbol}</span>
       {p.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -750,8 +743,7 @@ function MappingTableRow({
     <tr
       aria-rowindex={ariaRowIndex}
       className={cn(
-        'h-9 whitespace-nowrap border-b border-gray-100 last:border-0 dark:border-gray-800',
-        selected && 'bg-indigo-50 dark:bg-indigo-950/30',
+        'xstd-map__row h-9 whitespace-nowrap last:border-0',
       )}
       data-testid={`export-mapping-table-row-${entry.key}`}
     >
@@ -766,18 +758,16 @@ function MappingTableRow({
           aria-pressed={selected}
           aria-label={entryAriaLabel(entry)}
           data-testid={`export-mapping-row-select-${entry.key}`}
-          className="max-w-56 truncate font-mono text-gray-800 underline-offset-2 hover:underline dark:text-gray-100"
+          className="xstd-map__cell xstd-map__cell--mono underline-offset-2 hover:underline"
         >
           {row.construct}
         </button>
       </td>
-      <td className="max-w-56 truncate px-2 py-1.5 font-mono text-gray-600 dark:text-gray-300">
-        {row.targetLocation ?? (
-          <span className="font-sans text-gray-400 dark:text-gray-500">— not emitted</span>
-        )}
+      <td className="xstd-map__cell px-2 py-1.5 font-mono">
+        {row.targetLocation ?? <span className="xstd-map__none font-sans">— not emitted</span>}
       </td>
-      <td className="px-2 py-1.5 text-gray-600 dark:text-gray-300">{mappingLaneLabel(entry.lane)}</td>
-      <td className="px-2 py-1.5 text-gray-600 dark:text-gray-300">
+      <td className="px-2 py-1.5">{mappingLaneLabel(entry.lane)}</td>
+      <td className="px-2 py-1.5">
         <span className="block max-w-md truncate">
           {row.reason ? <span className="font-mono">{row.reason}</span> : null}
           {row.reason ? ' — ' : ''}
@@ -806,7 +796,7 @@ function AggregateToggleRow({
 }) {
   const members = entry.members ?? [];
   return (
-    <tr aria-rowindex={ariaRowIndex} className="h-9 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
+    <tr aria-rowindex={ariaRowIndex} className="xstd-map__row h-9 whitespace-nowrap">
       <td className="px-2 py-1.5">
         <StatusText status={entry.status} />
       </td>
@@ -818,14 +808,14 @@ function AggregateToggleRow({
           onFocus={onFocusRow}
           aria-label={entryAriaLabel(entry)}
           data-testid={`export-mapping-aggregate-toggle-${entry.lane}-${entry.status}`}
-          className="text-gray-700 underline-offset-2 hover:underline dark:text-gray-200"
+          className="underline-offset-2 hover:underline"
         >
           {members.length} entit{members.length === 1 ? 'y' : 'ies'}{' '}
           {statusPresentation(entry.status).label.toLowerCase()} ·{' '}
           {mappingLaneLabel(entry.lane)} (aggregated) — {expanded ? 'collapse' : 'expand'}
         </button>
       </td>
-      <td className="px-2 py-1.5 text-gray-600 dark:text-gray-300">
+      <td className="px-2 py-1.5">
         <button
           type="button"
           onClick={onSelect}
@@ -856,18 +846,18 @@ function MemberRow({
     <tr
       aria-rowindex={ariaRowIndex}
       onFocus={onFocusRow}
-      className="h-9 whitespace-nowrap border-b border-gray-50 bg-gray-50/50 dark:border-gray-800/50 dark:bg-gray-900/30"
+      className="xstd-map__row xstd-map__row--aggregate h-9 whitespace-nowrap"
       data-testid={`export-mapping-aggregate-member-${member.id}`}
     >
       <td className="px-2 py-1" />
-      <td className="max-w-56 truncate px-2 py-1 font-mono text-gray-600 dark:text-gray-300">
+      <td className="xstd-map__cell px-2 py-1 font-mono">
         {member.construct}
       </td>
-      <td className="max-w-56 truncate px-2 py-1 font-mono text-gray-600 dark:text-gray-300">
+      <td className="xstd-map__cell px-2 py-1 font-mono">
         {member.targetLocation ?? '—'}
       </td>
-      <td className="px-2 py-1 text-gray-500 dark:text-gray-400">{mappingLaneLabel(entry.lane)}</td>
-      <td className="px-2 py-1 text-gray-500 dark:text-gray-400">
+      <td className="px-2 py-1">{mappingLaneLabel(entry.lane)}</td>
+      <td className="px-2 py-1">
         <span className="block max-w-md truncate">{member.reasonSummary}</span>
       </td>
     </tr>

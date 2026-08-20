@@ -34,6 +34,7 @@
  * `apiome-rest/src/app/projection_taxonomy.py`.
  */
 
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
 import type { LossinessSeverity, ProjectionStatus } from './exportFidelityPreview';
 import type {
   ProjectionEdge,
@@ -113,9 +114,26 @@ export interface StatusPresentation {
   label: string;
   /** Compact color-independent symbol printed beside the label (e.g. `×`). */
   symbol: string;
-  /** Tailwind classes for the status chip/badge. */
+  /**
+   * The status's tone from the shared vocabulary — what `Badge` takes (HIVE-8.3, #5329).
+   *
+   * The same table `.xstd-node[data-status]` paints from, so a chip and the graph node it
+   * summarises resolve to one token rather than to two palette strings that could disagree.
+   */
+  tone: StatusTone;
+  /**
+   * Tailwind classes for the status chip/badge.
+   *
+   * @deprecated Superseded by {@link StatusPresentation.tone} in HIVE-8.3 (#5329). Still read
+   * by the three catalog projection surfaces, which their own epic redesigns.
+   */
   badgeClass: string;
-  /** Tailwind stroke class for the graph edge/outcome border. */
+  /**
+   * Tailwind stroke class for the graph edge/outcome border.
+   *
+   * @deprecated The SVG marks take `data-status` and are painted by the HIVE-8.3 block since
+   * #5329; this stays only for a caller that still spells the stroke itself.
+   */
   strokeClass: string;
   /**
    * SVG `stroke-dasharray` for the outcome edge, or null for a solid line. A distinct dash
@@ -128,6 +146,7 @@ const STATUS_PRESENTATION: Record<ProjectionStatus, StatusPresentation> = {
   retained: {
     label: 'Retained',
     symbol: '✓',
+    tone: 'ok',
     badgeClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
     strokeClass: 'stroke-emerald-500 dark:stroke-emerald-400',
     dashArray: null,
@@ -135,6 +154,7 @@ const STATUS_PRESENTATION: Record<ProjectionStatus, StatusPresentation> = {
   transformed: {
     label: 'Transformed',
     symbol: '⇄',
+    tone: 'accent',
     badgeClass: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
     strokeClass: 'stroke-sky-500 dark:stroke-sky-400',
     dashArray: null,
@@ -142,6 +162,7 @@ const STATUS_PRESENTATION: Record<ProjectionStatus, StatusPresentation> = {
   approximated: {
     label: 'Approximated',
     symbol: '≈',
+    tone: 'warn',
     badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
     strokeClass: 'stroke-amber-500 dark:stroke-amber-400',
     dashArray: '6 3',
@@ -149,6 +170,7 @@ const STATUS_PRESENTATION: Record<ProjectionStatus, StatusPresentation> = {
   synthesized: {
     label: 'Synthesized',
     symbol: '＋',
+    tone: 'violet',
     badgeClass: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
     strokeClass: 'stroke-violet-500 dark:stroke-violet-400',
     dashArray: '2 3',
@@ -156,6 +178,7 @@ const STATUS_PRESENTATION: Record<ProjectionStatus, StatusPresentation> = {
   dropped: {
     label: 'Dropped',
     symbol: '×',
+    tone: 'rose',
     badgeClass: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
     strokeClass: 'stroke-rose-500 dark:stroke-rose-400',
     dashArray: '8 4',
@@ -163,6 +186,7 @@ const STATUS_PRESENTATION: Record<ProjectionStatus, StatusPresentation> = {
   unavailable: {
     label: 'Unavailable',
     symbol: '⊘',
+    tone: 'neutral',
     badgeClass: 'bg-slate-200 text-slate-800 dark:bg-slate-700/60 dark:text-slate-200',
     strokeClass: 'stroke-slate-400 dark:stroke-slate-500',
     dashArray: '2 6',
@@ -170,6 +194,7 @@ const STATUS_PRESENTATION: Record<ProjectionStatus, StatusPresentation> = {
   'not-applicable': {
     label: 'Not applicable',
     symbol: '—',
+    tone: 'outline',
     badgeClass: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
     strokeClass: 'stroke-gray-400 dark:stroke-gray-500',
     dashArray: '1 4',

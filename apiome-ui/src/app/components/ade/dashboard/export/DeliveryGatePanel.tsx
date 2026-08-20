@@ -27,7 +27,6 @@ import type {
   DeliveryDimension,
   DeliveryGateReport,
   DeliveryReason,
-  DeliverySeverity,
 } from './exportJob';
 
 export interface DeliveryGatePanelProps {
@@ -47,27 +46,14 @@ const DIMENSION_LABEL: Record<DeliveryDimension, string> = {
 function dimensionIcon(dimension: DeliveryDimension) {
   switch (dimension) {
     case 'validation':
-      return <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />;
+      return <ShieldAlert aria-hidden />;
     case 'fidelity':
-      return <Gauge className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />;
+      return <Gauge aria-hidden />;
     case 'policy':
-      return <ScrollText className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />;
+      return <ScrollText aria-hidden />;
     case 'lint':
     default:
-      return <FileCheck2 className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />;
-  }
-}
-
-/** Row tint per reason severity — blocking reads as an error, warning as an advisory. */
-function reasonRowClass(severity: DeliverySeverity): string {
-  switch (severity) {
-    case 'blocking':
-      return 'border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-100';
-    case 'warning':
-      return 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100';
-    case 'info':
-    default:
-      return 'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-200';
+      return <FileCheck2 aria-hidden />;
   }
 }
 
@@ -83,34 +69,15 @@ export function DeliveryGatePanel({ delivery }: DeliveryGatePanelProps) {
 
   return (
     <div
-      className={`space-y-3 rounded-lg border p-4 ${
-        blocked
-          ? 'border-rose-300 bg-rose-50/60 dark:border-rose-800 dark:bg-rose-950/20'
-          : 'border-amber-300 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-950/20'
-      }`}
+      className="xstd-gate"
       data-testid="delivery-gate-panel"
       data-decision={delivery.decision}
     >
-      <div className="flex items-start gap-3">
-        {blocked ? (
-          <ShieldAlert
-            className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-300"
-            aria-hidden
-          />
-        ) : (
-          <AlertTriangle
-            className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-300"
-            aria-hidden
-          />
-        )}
+      <div className="xstd-gate__head">
+        {blocked ? <ShieldAlert aria-hidden /> : <AlertTriangle aria-hidden />}
         <div className="min-w-0 space-y-1">
-          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            {delivery.headline}
-          </div>
-          <p
-            className="text-xs text-gray-700 dark:text-gray-200"
-            data-testid="delivery-gate-message"
-          >
+          <div className="xstd-gate__title">{delivery.headline}</div>
+          <p className="xstd-quiet" data-testid="delivery-gate-message">
             {delivery.message}
           </p>
         </div>
@@ -125,13 +92,11 @@ export function DeliveryGatePanel({ delivery }: DeliveryGatePanelProps) {
               data-testid="delivery-gate-reason"
               data-reason-code={reason.code}
               data-severity={reason.severity}
-              className={`flex items-start gap-2 rounded-md border px-3 py-2 text-xs ${reasonRowClass(
-                reason.severity,
-              )}`}
+              className="xstd-gate__reason"
             >
               {dimensionIcon(reason.dimension)}
               <span className="min-w-0">
-                <span className="font-semibold">{DIMENSION_LABEL[reason.dimension]}</span>
+                <span className="xstd-gate__dimension">{DIMENSION_LABEL[reason.dimension]}</span>
                 {' — '}
                 {reason.message}
               </span>
@@ -143,16 +108,16 @@ export function DeliveryGatePanel({ delivery }: DeliveryGatePanelProps) {
       {/* How to proceed: the waiver path, or why there is none. */}
       {blocked && (
         <div
-          className="rounded-md border border-gray-200 bg-white/70 p-3 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200"
+          className="xstd-gate__override"
           data-testid="delivery-gate-override"
           data-available={delivery.override.available}
         >
           <p>{delivery.override.instructions}</p>
           {delivery.override.available && (
-            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-2xs">
+            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-2xs">
               {delivery.override.endpoint && (
                 <>
-                  <dt className="text-gray-500 dark:text-gray-400">endpoint</dt>
+                  <dt>endpoint</dt>
                   <dd className="break-all" data-testid="delivery-gate-override-endpoint">
                     POST {delivery.override.endpoint}
                   </dd>
@@ -160,19 +125,19 @@ export function DeliveryGatePanel({ delivery }: DeliveryGatePanelProps) {
               )}
               {delivery.override.subject_key && (
                 <>
-                  <dt className="text-gray-500 dark:text-gray-400">subject</dt>
+                  <dt>subject</dt>
                   <dd className="break-all">{delivery.override.subject_key}</dd>
                 </>
               )}
               {delivery.override.format_key && (
                 <>
-                  <dt className="text-gray-500 dark:text-gray-400">target</dt>
+                  <dt>target</dt>
                   <dd className="break-all">{delivery.override.format_key}</dd>
                 </>
               )}
               {delivery.override.roles && delivery.override.roles.length > 0 && (
                 <>
-                  <dt className="text-gray-500 dark:text-gray-400">roles</dt>
+                  <dt>roles</dt>
                   <dd>{delivery.override.roles.join(', ')}</dd>
                 </>
               )}
@@ -184,11 +149,11 @@ export function DeliveryGatePanel({ delivery }: DeliveryGatePanelProps) {
       {/* A delivered artifact says what it carries, so a user knows there is proof to check. */}
       {delivery.attestation && (
         <div
-          className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+          className="xstd-gate__attestation"
           data-testid="delivery-gate-attestation"
           data-signed={delivery.attestation.signed}
         >
-          <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          <ShieldCheck aria-hidden />
           <span>
             This artifact carries a{delivery.attestation.signed ? ' signed' : 'n unsigned'} delivery
             attestation.

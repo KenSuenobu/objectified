@@ -1,5 +1,6 @@
 'use client';
 
+import { Segmented, SegmentedItem } from '../../../ui/Segmented';
 import type { OptionField } from './exportTargetCatalog';
 
 export interface ExportOptionsFormProps {
@@ -67,7 +68,7 @@ export function ExportOptionControl({ targetKey, field, value, error, onChange }
   const inputId = `export-option-${targetKey}-${field.key}`;
   const errorId = `${inputId}-error`;
   const errorNote = error ? (
-    <p id={errorId} className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+    <p id={errorId} className="xstd-field__error">
       {error}
     </p>
   ) : null;
@@ -75,7 +76,7 @@ export function ExportOptionControl({ targetKey, field, value, error, onChange }
   if (field.kind === 'boolean') {
     return (
       <div>
-        <label className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-200" htmlFor={inputId}>
+        <label className="xstd-field__label xstd-check" htmlFor={inputId}>
           <input
             id={inputId}
             type="checkbox"
@@ -86,9 +87,9 @@ export function ExportOptionControl({ targetKey, field, value, error, onChange }
             className="mt-0.5"
           />
           <span>
-            <span className="block font-medium">{field.label}</span>
+            <span className="xstd-field__name block">{field.label}</span>
             {field.description && (
-              <span className="block text-xs text-gray-500 dark:text-gray-400">{field.description}</span>
+              <span className="xstd-field__desc">{field.description}</span>
             )}
           </span>
         </label>
@@ -100,26 +101,25 @@ export function ExportOptionControl({ targetKey, field, value, error, onChange }
   if (field.kind === 'enum') {
     return (
       <div className="text-sm">
-        <div className="font-medium text-gray-700 dark:text-gray-200">{field.label}</div>
-        {field.description && (
-          <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{field.description}</div>
-        )}
-        <div className="mt-2 inline-flex overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
-          {field.enumValues.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => onChange(option)}
-              className={`px-3 py-1.5 text-xs transition ${
-                value === option
-                  ? 'bg-indigo-600 font-medium text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900'
-              }`}
-            >
-              {option}
-            </button>
-          ))}
+        <div id={`${inputId}-label`} className="xstd-field__name">
+          {field.label}
         </div>
+        {field.description && <div className="xstd-field__desc mt-0.5">{field.description}</div>}
+        {/* The mockup's "enum segmented": the shared primitive, which brings the roving
+            tab stop and the arrow keys the hand-built button row never had. */}
+        <Segmented
+          className="mt-2"
+          size="sm"
+          value={typeof value === 'string' ? value : undefined}
+          onValueChange={onChange}
+          aria-labelledby={`${inputId}-label`}
+        >
+          {field.enumValues.map((option) => (
+            <SegmentedItem key={option} value={option}>
+              {option}
+            </SegmentedItem>
+          ))}
+        </Segmented>
         {errorNote}
       </div>
     );
@@ -127,12 +127,10 @@ export function ExportOptionControl({ targetKey, field, value, error, onChange }
 
   return (
     <div className="text-sm">
-      <label className="font-medium text-gray-700 dark:text-gray-200" htmlFor={inputId}>
+      <label className="xstd-field__name" htmlFor={inputId}>
         {field.label}
       </label>
-      {field.description && (
-        <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{field.description}</div>
-      )}
+      {field.description && <div className="xstd-field__desc mt-0.5">{field.description}</div>}
       <input
         id={inputId}
         value={typeof value === 'string' ? value : ''}
@@ -140,7 +138,7 @@ export function ExportOptionControl({ targetKey, field, value, error, onChange }
         placeholder={field.required ? 'required' : 'server default'}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
+        className="input mt-2 w-full"
       />
       {errorNote}
     </div>

@@ -4,7 +4,7 @@ import * as Progress from '@radix-ui/react-progress';
 import {
   AlertTriangle,
   Ban,
-  CheckCircle2,
+  Check,
   CircleDashed,
   Loader2,
   RefreshCw,
@@ -17,6 +17,7 @@ import {
 import { Button } from '../../../ui/Button';
 import { Badge } from '../../../ui/Badge';
 import { DeliveryGatePanel } from './DeliveryGatePanel';
+import { eventLevelState, stageRowState } from '@/app/components/ade/export-studio';
 import {
   classifyExportFailure,
   deliveryReportFor,
@@ -95,8 +96,8 @@ export function GenerateProgress({
       {/* The job runs while focus sits on the Generate button, so its headline state is announced
           politely rather than only redrawn (MFX-41.5). */}
       <div role="status" className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-          <FileOutput className="h-4 w-4 text-indigo-500" aria-hidden />
+        <div className="xstd-caps">
+          <FileOutput aria-hidden />
           Generating {targetLabel}
         </div>
         <StateBadge state={state} />
@@ -107,17 +108,15 @@ export function GenerateProgress({
         <div className="flex items-center gap-3" data-testid="generate-progress-bar">
           <Progress.Root
             aria-label={`Export generation progress for ${targetLabel}`}
-            className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+            className="xstd-progress"
             value={percent}
           >
             <Progress.Indicator
-              className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-transform duration-300 ease-out"
+              className="xstd-progress__fill"
               style={{ transform: `translateX(-${100 - (percent || 0)}%)` }}
             />
           </Progress.Root>
-          <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
-            {percent}%
-          </span>
+          <span className="xstd-progress__value">{percent}%</span>
         </div>
       )}
 
@@ -129,17 +128,19 @@ export function GenerateProgress({
             <li
               key={stage.key}
               data-testid={`generate-stage-${stage.key}`}
-              data-status={stageState}
-              className={`flex items-start gap-3 rounded-lg border p-3 ${stageRowClass(stageState)}`}
+              data-status={stageRowState(stageState)}
+              className="xstd-stage"
             >
-              <StageIcon status={stageState} />
+              <span className="xstd-stage__icon">
+                <StageIcon status={stageState} />
+              </span>
               <div className="min-w-0">
-                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <div className="xstd-stage__title">
                   {stage.label}
                   {/* The icon + tint say "done" / "failed" visually; the word says it to everyone. */}
                   <span className="sr-only"> — {stageState}</span>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{stage.description}</div>
+                <div className="xstd-stage__desc">{stage.description}</div>
               </div>
             </li>
           );
@@ -158,22 +159,17 @@ export function GenerateProgress({
             onClick={onCancel}
             disabled={submitting}
           >
-            <Ban className="h-4 w-4" aria-hidden />
+            <Ban aria-hidden />
             Cancel
           </Button>
         </div>
       )}
 
       {state === 'canceled' && (
-        <div
-          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/40"
-          data-testid="generate-canceled"
-        >
-          <p className="text-sm text-gray-700 dark:text-gray-200">
-            The export was canceled. You can start it again.
-          </p>
+        <div className="xstd-notice" data-testid="generate-canceled">
+          <span className="xstd-notice__grow">The export was canceled. You can start it again.</span>
           <Button data-testid="generate-canceled-retry" onClick={onRetry} disabled={submitting}>
-            <RefreshCw className="h-4 w-4" aria-hidden />
+            <RefreshCw aria-hidden />
             Generate again
           </Button>
         </div>
@@ -214,36 +210,26 @@ function StateBadge({ state }: { state: ExportJobStatus['state'] }) {
   );
 }
 
-/** The per-stage status icon. */
+/**
+ * The per-stage glyph.
+ *
+ * It carries no colour of its own: the row's `data-status` paints both the badge behind it and
+ * the frame around the row, which is what keeps the two from drifting the way the pre-Hive
+ * `StageIcon` / `stageRowClass` pair could.
+ */
 function StageIcon({ status }: { status: ExportStageStatus }) {
   switch (status) {
     case 'done':
-      return <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" aria-hidden />;
+      return <Check aria-hidden />;
     case 'active':
-      return <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-indigo-500" aria-hidden />;
+      return <Loader2 className="motion-safe:animate-spin" aria-hidden />;
     case 'failed':
-      return <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-500" aria-hidden />;
+      return <XCircle aria-hidden />;
     case 'canceled':
-      return <Ban className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" aria-hidden />;
+      return <Ban aria-hidden />;
     case 'pending':
     default:
-      return <CircleDashed className="mt-0.5 h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600" aria-hidden />;
-  }
-}
-
-/** The border/background tint for a stage row, keyed by its status. */
-function stageRowClass(status: ExportStageStatus): string {
-  switch (status) {
-    case 'active':
-      return 'border-indigo-200 bg-indigo-50 dark:border-indigo-900 dark:bg-indigo-950/30';
-    case 'failed':
-      return 'border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/30';
-    case 'done':
-      return 'border-emerald-100 bg-emerald-50/40 dark:border-emerald-950 dark:bg-emerald-950/20';
-    case 'canceled':
-    case 'pending':
-    default:
-      return 'border-gray-200 dark:border-gray-700';
+      return <CircleDashed aria-hidden />;
   }
 }
 
@@ -257,13 +243,10 @@ function EventList({ events }: { events: ExportJobEvent[] }) {
         <li
           key={event.id}
           data-testid={`generate-event-${event.level}`}
-          className={`flex items-start gap-2 rounded-md px-3 py-2 text-xs ${
-            event.level === 'error'
-              ? 'bg-rose-50 text-rose-800 dark:bg-rose-950/30 dark:text-rose-200'
-              : 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200'
-          }`}
+          className="xstd-event"
+          data-level={eventLevelState(event.level)}
         >
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+          <AlertTriangle aria-hidden />
           <span>{event.message}</span>
         </li>
       ))}
@@ -335,28 +318,20 @@ function FailureSurface({
 
   return (
     <div
-      className="space-y-3 rounded-lg border border-rose-300 bg-rose-50 p-4 dark:border-rose-800 dark:bg-rose-950/30"
+      className="xstd-failure"
       data-testid="generate-failure"
       data-failure-class={failure.class}
       data-recovery={failure.action}
     >
-      <div className="flex items-start gap-3">
-        <Icon className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-300" aria-hidden />
+      <div className="xstd-failure__head">
+        <Icon aria-hidden />
         <div className="space-y-1">
-          <div className="text-sm font-semibold text-rose-900 dark:text-rose-100">
-            {failure.title}
-          </div>
-          <p
-            className="text-xs text-rose-800/90 dark:text-rose-200/90"
-            data-testid="generate-failure-remediation"
-          >
+          <div className="xstd-failure__title">{failure.title}</div>
+          <p className="xstd-failure__body" data-testid="generate-failure-remediation">
             {failure.description}
           </p>
           {status.error?.message && (
-            <p
-              className="mt-1 rounded bg-rose-100/60 px-2 py-1 font-mono text-xs text-rose-900 dark:bg-rose-900/30 dark:text-rose-100"
-              data-testid="generate-failure-message"
-            >
+            <p className="xstd-failure__detail" data-testid="generate-failure-message">
               {status.error.message}
             </p>
           )}
@@ -365,7 +340,7 @@ function FailureSurface({
 
       {/* Severe-conversion guard reasons (TRANSCODE_CONFIRMATION_REQUIRED). */}
       {reasons.length > 0 && (
-        <ul className="ml-8 list-disc space-y-0.5 text-xs text-rose-800 dark:text-rose-200" data-testid="generate-guard-reasons">
+        <ul className="xstd-failure__list space-y-0.5" data-testid="generate-guard-reasons">
           {reasons.map((reason, idx) => (
             <li key={idx}>{reason}</li>
           ))}
@@ -378,7 +353,7 @@ function FailureSurface({
 
       {/* Validation-gate summary — the full findings render in the Verify lens after routing. */}
       {failure.class === 'validation' && validation && (
-        <p className="ml-8 text-xs text-rose-800 dark:text-rose-200" data-testid="generate-validation-summary">
+        <p className="xstd-failure__note" data-testid="generate-validation-summary">
           {validation.findings.length}{' '}
           {validation.findings.length === 1 ? 'validation finding' : 'validation findings'} —
           review them in the Verify step.
@@ -389,7 +364,7 @@ function FailureSurface({
         {/* Secondary retry only when the taxonomy says the same request may succeed (IXH-6.4). */}
         {failure.action !== 'retry' && failure.retriable && (
           <Button variant="outline" data-testid="generate-failure-retry" onClick={onRetry} disabled={submitting}>
-            <RefreshCw className="h-4 w-4" aria-hidden />
+            <RefreshCw aria-hidden />
             Retry export
           </Button>
         )}

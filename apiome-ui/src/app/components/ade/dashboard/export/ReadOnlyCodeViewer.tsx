@@ -37,7 +37,7 @@ function OfflineCodeFallback({ value, fallbackTestId }: { value?: string; fallba
   return (
     <pre
       data-testid={fallbackTestId ?? 'read-only-code-content'}
-      className="h-full overflow-auto whitespace-pre-wrap break-words p-3 font-mono text-xs leading-5 text-gray-800 dark:text-gray-200"
+      className="xstd-code-fallback"
     >
       {value ?? ''}
     </pre>
@@ -72,7 +72,7 @@ const MonacoEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="xstd-code-empty">
         Loading viewer…
       </div>
     ),

@@ -20,12 +20,12 @@
 import { CheckCircle2, ExternalLink, FileWarning, Gauge, ShieldCheck, ShieldX, Wrench } from 'lucide-react';
 import { FindingLocation } from './FindingLocation';
 import type { LocatedProblem } from './exportProblemMarkers';
+import { validationToneName } from '@/app/components/ade/export-studio';
 import {
   validationLensState,
   validationLensTone,
   validatorToolLabel,
   type EmittedValidationReport,
-  type ValidationLensTone,
 } from './exportVerify';
 
 export interface ValidationResultsLensProps {
@@ -40,21 +40,6 @@ export interface ValidationResultsLensProps {
   openableProblems?: LocatedProblem[];
   /** Open a located finding in the Review editor (file + line), MFX-43.3. */
   onOpenProblem?: (problem: LocatedProblem) => void;
-}
-
-/** Tailwind text colour for each lens tone (headline text + icon). */
-function toneTextClass(tone: ValidationLensTone): string {
-  switch (tone) {
-    case 'invalid':
-      return 'text-rose-700 dark:text-rose-300';
-    case 'warn':
-      return 'text-amber-700 dark:text-amber-300';
-    case 'ok':
-      return 'text-emerald-700 dark:text-emerald-300';
-    case 'neutral':
-    default:
-      return 'text-gray-600 dark:text-gray-300';
-  }
 }
 
 /**
@@ -76,21 +61,26 @@ export function ValidationResultsLens({
   // Select an existing icon component by tone (assigned, not created — the ternary keeps each
   // branch a static component reference so it survives re-renders without resetting state).
   const Icon = tone === 'invalid' ? ShieldX : tone === 'warn' ? FileWarning : tone === 'ok' ? ShieldCheck : Gauge;
-  const toneClass = toneTextClass(tone);
   const tool = validatorToolLabel(validation);
 
   return (
     <div className="space-y-3" data-testid="verify-validation" data-validation-state={state}>
       {/* The overall verdict headline: band + message, plus the validator identity when known. */}
       <div className="flex items-start gap-2">
-        <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${toneClass}`} aria-hidden />
         <div className="space-y-0.5">
-          <div className={`text-sm font-semibold ${toneClass}`} data-testid="verify-validation-headline">
+          {/* The tone lands on the glyph, never on the sentence: the reason the HIVE-8.3
+              block's deviation 2 gives. */}
+          <div
+            className="xstd-lens-head"
+            data-tone={validationToneName(tone)}
+            data-testid="verify-validation-headline"
+          >
+            <Icon aria-hidden />
             {validation.headline}
           </div>
-          <p className="text-xs text-gray-600 dark:text-gray-300">{validation.message}</p>
+          <p className="xstd-quiet">{validation.message}</p>
           {tool && (
-            <p className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" data-testid="verify-validation-tool">
+            <p className="xstd-quiet flex items-center gap-1" data-testid="verify-validation-tool">
               <Wrench className="h-3 w-3 shrink-0" aria-hidden />
               {state === 'unavailable' ? (
                 <span>
@@ -111,25 +101,28 @@ export function ValidationResultsLens({
       {state === 'unavailable' && (
         <div
           data-testid="verify-validation-unavailable"
-          className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"
+          className="xstd-notice"
+          data-tone="warn"
         >
-          The emitted artifact was <strong>not validated</strong> — the validator could not run on
-          this server.
-          {validation.detail && <span className="mt-1 block text-amber-800 dark:text-amber-200">{validation.detail}</span>}
+          <span className="xstd-notice__grow">
+            The emitted artifact was <strong>not validated</strong> — the validator could not run
+            on this server.
+            {validation.detail && <span className="mt-1 block">{validation.detail}</span>}
+          </span>
         </div>
       )}
 
       {/* Not-applicable: no toolchain matches the format, so there is genuinely nothing to check. */}
       {state === 'not_applicable' && (
-        <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="verify-validation-not-applicable">
+        <p className="xstd-quiet" data-testid="verify-validation-not-applicable">
           No validator matches this format — there is nothing to validate for this target.
         </p>
       )}
 
       {/* A clean pass: an explicit positive confirmation (never left as an empty panel). */}
       {state === 'valid' && (
-        <p className="text-sm text-emerald-700 dark:text-emerald-300" data-testid="verify-validation-clean">
-          <CheckCircle2 className="mr-1.5 inline h-4 w-4 align-text-bottom" aria-hidden />
+        <p className="xstd-lens-head" data-tone="ok" data-testid="verify-validation-clean">
+          <CheckCircle2 aria-hidden />
           The emitted artifact re-parsed with no validation errors.
         </p>
       )}
@@ -142,7 +135,7 @@ export function ValidationResultsLens({
             const problem = openableProblems?.find((p) => p.finding === finding) ?? null;
             const content = (
               <>
-                <div className="text-gray-900 dark:text-gray-100">{finding.message}</div>
+                <div className="xstd-finding__message">{finding.message}</div>
                 <FindingLocation
                   file={finding.file}
                   path={finding.path}
@@ -155,7 +148,8 @@ export function ValidationResultsLens({
             return (
               <li
                 key={`${finding.keyword ?? 'err'}-${idx}`}
-                className="rounded-md border border-rose-200 bg-rose-50 text-sm dark:border-rose-900 dark:bg-rose-950/30"
+                className="xstd-finding"
+                data-tone="danger"
               >
                 {problem && onOpenProblem ? (
                   <button
@@ -163,13 +157,10 @@ export function ValidationResultsLens({
                     data-testid={`verify-open-${problem.id}`}
                     title="Open in the Review editor"
                     onClick={() => onOpenProblem(problem)}
-                    className="group relative w-full p-3 text-left hover:bg-rose-100/70 dark:hover:bg-rose-900/30"
+                    className="xstd-finding__button"
                   >
                     {content}
-                    <ExternalLink
-                      className="absolute right-3 top-3 h-3.5 w-3.5 text-rose-400 opacity-0 transition-opacity group-hover:opacity-100 dark:text-rose-500"
-                      aria-hidden
-                    />
+                    <ExternalLink className="xstd-finding__open" aria-hidden />
                     <span className="sr-only">Open in the Review editor</span>
                   </button>
                 ) : (

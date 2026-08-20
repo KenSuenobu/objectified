@@ -10,11 +10,14 @@
 
 import type { FileFindingCounts } from './exportBundle';
 
-/** Tone classes matched to the Verify lens badges (rose = blocking, amber = advisory). */
-const TONE_CLASS = {
-  error: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
-  warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-} as const;
+/**
+ * The tone per severity, matched to the Verify lens badges (danger = blocking, warn = advisory).
+ *
+ * HIVE-8.3 (#5329): the same `data-tone` the lens badge carries, painted by one rule in
+ * `globals.css` — so a "3 errors" chip in the bundle tree and a "3" on the validation tab can
+ * no longer be two different reds.
+ */
+const TONE = { error: 'danger', warning: 'warn' } as const;
 
 export interface BundleFindingBadgeProps {
   /** The node's rolled-up error/warning counts. */
@@ -43,9 +46,9 @@ export function BundleFindingBadge({ counts, testId }: BundleFindingBadgeProps) 
   return (
     <span
       data-testid={testId}
-      data-tone={tone}
+      data-tone={TONE[tone]}
       title={label}
-      className={`inline-flex min-w-[1.1rem] items-center justify-center rounded-full px-1.5 py-0.5 text-2xs font-semibold tabular-nums ${TONE_CLASS[tone]}`}
+      className="xstd-lens-badge"
     >
       {/* A bare digit in a coloured pill is not a label, and `aria-label` on a plain span is not
           allowed to name it (MFX-41.5) — so the number is decorative and the phrase is the text. */}

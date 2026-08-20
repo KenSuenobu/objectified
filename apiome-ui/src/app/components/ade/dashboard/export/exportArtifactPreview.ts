@@ -20,6 +20,7 @@
  * mirroring `./exportFidelityPreview.ts`.
  */
 
+import type { StatusTone } from '@/app/components/ui/statusVocabulary';
 import { parse as parseYaml } from 'yaml';
 import type { LossinessReport } from './exportFidelityPreview';
 
@@ -106,6 +107,21 @@ export function validateEmittedArtifact(artifact: EmittedArtifact): ArtifactVali
 /** The visual tone of the preview status badge. */
 export type ArtifactBadgeTone = 'green' | 'amber' | 'red' | 'neutral';
 
+/**
+ * The badge tone → the shared vocabulary (HIVE-8.3, #5329).
+ *
+ * The four words here predate the vocabulary and name *hues*; the four on the right name
+ * *meanings*. Keeping the pair rather than renaming the domain type is deliberate: the tone is
+ * derived from parse + fidelity facts across three branches above, and renaming it would churn
+ * every one of them to say nothing new.
+ */
+export const ARTIFACT_BADGE_TONE: Readonly<Record<ArtifactBadgeTone, StatusTone>> = {
+  green: 'ok',
+  amber: 'warn',
+  red: 'danger',
+  neutral: 'neutral',
+};
+
 /** The preview card's status badge: tone + chip label + the explanatory hint line. */
 export interface ArtifactBadge {
   /** Visual tone: green = clean, amber = lossy, red = invalid, neutral = nothing to claim. */
@@ -188,25 +204,6 @@ export function buildArtifactBadge(
     label: validation.checked ? `valid · ${roundTripLabel}` : roundTripLabel,
     hint: `${parseHint} ${roundTripHint}`,
   };
-}
-
-/**
- * CSS utility classes for the preview status badge chip, keyed by tone. The palette
- * matches the tier badges and count chips of MFX-6.1/6.2 (green → emerald, amber → amber,
- * red → rose, neutral → gray).
- */
-export function artifactBadgeClass(tone: ArtifactBadgeTone): string {
-  switch (tone) {
-    case 'green':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
-    case 'amber':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-    case 'red':
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300';
-    case 'neutral':
-    default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
-  }
 }
 
 /**

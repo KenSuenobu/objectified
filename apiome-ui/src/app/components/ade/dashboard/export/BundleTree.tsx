@@ -147,7 +147,7 @@ export function BundleTree({ nodes, countsByPath, activePath, onSelect, classNam
     <div
       data-testid="bundle-tree"
       className={cn(
-        'overflow-auto rounded-lg border border-gray-200 bg-gray-50/60 p-1 dark:border-gray-700 dark:bg-gray-900/40',
+        'xstd-bundle__tree',
         className,
       )}
     >
@@ -220,20 +220,20 @@ function BundleTreeRowItem({
         style={indentStyle}
         className={cn(
           'flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left text-xs',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
+
           indentClass,
           virtualizeClass,
           selected
-            ? 'bg-indigo-100 font-medium text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-200'
+            ? 'xstd-tree__row'
             : isFolder
-              ? 'font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'
-              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+              ? 'xstd-tree__row font-medium'
+              : 'xstd-tree__row',
         )}
       >
         {isFolder ? (
           <ChevronRight
             className={cn(
-              'h-3.5 w-3.5 shrink-0 text-gray-400 motion-safe:transition-transform',
+              'xstd-tree__twist motion-safe:transition-transform',
               expanded && 'rotate-90',
             )}
             aria-hidden
@@ -244,18 +244,18 @@ function BundleTreeRowItem({
         )}
         {isFolder ? (
           expanded ? (
-            <FolderOpen className="h-3.5 w-3.5 shrink-0 text-indigo-500" aria-hidden />
+            <FolderOpen className="xstd-folder-icon" aria-hidden />
           ) : (
-            <Folder className="h-3.5 w-3.5 shrink-0 text-indigo-500" aria-hidden />
+            <Folder className="xstd-folder-icon" aria-hidden />
           )
         ) : (
-          <FileCode2 className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+          <FileCode2 className="xstd-file-icon" aria-hidden />
         )}
         <span className="truncate">{node.name}</span>
         <span className="ml-auto flex shrink-0 items-center gap-1.5">
           <BundleFindingBadge counts={counts} testId={`bundle-tree-badge-${node.path}`} />
           {node.kind === 'file' && (
-            <span className="text-2xs tabular-nums text-gray-400 dark:text-gray-500">
+            <span className="xstd-file-size">
               {formatByteSize(node.file.sizeBytes)}
             </span>
           )}

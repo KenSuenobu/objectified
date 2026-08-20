@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -19,11 +18,11 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../ui/Button';
 import { Alert } from '../../../ui/Alert';
-import {
-  dashboardContentStackClass,
-  dashboardMainClass,
-  dashboardPanelPaddedClass,
-} from '../dashboardScreenClasses';
+import { Badge } from '../../../ui/Badge';
+import { LoadingState } from '../../../ui/LoadingState';
+import { stepperStatus } from '../../../ui/Stepper';
+import PageHeader from '../../../shell/PageHeader';
+import { Page, PageBody } from '../../../shell/pageChrome';
 import { useExportTargets } from './useExportTargets';
 import { useExportVerify } from './useExportVerify';
 import { useExportJob } from './useExportJob';
@@ -90,8 +89,8 @@ import {
   exportTargetCards,
   filterSameFormatTargets,
   optionFieldsFromSchema,
-  tierBadgeClass,
   tierLabel,
+  tierTone,
   validateExportOptions,
   type ExportTargetCard,
 } from './exportTargetCatalog';
@@ -963,31 +962,33 @@ export function ExportStudio({
   }`;
 
   return (
-    <main className={dashboardMainClass} data-testid="export-studio">
-      <div className={dashboardContentStackClass}>
-        <div>
-          <Link
-            href={backTarget.href}
-            className="mb-2 inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline dark:text-indigo-400"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden />
-            Back to {backTarget.label}
-          </Link>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
-              <PanelsTopLeft className="h-6 w-6 text-indigo-500" aria-hidden />
-              Export Studio
-            </h1>
-            {/* MFX-41.4: "look at this export config" as a URL. */}
-            <CopyStudioLinkButton scope={shareScope} />
-          </div>
-          <p className="mt-1 max-w-3xl text-sm text-gray-600 dark:text-gray-400">
+    <Page data-testid="export-studio">
+      {/* The shell has drawn the chrome since HIVE-3.8, so the screen is a `Page` with the
+          standard header: the trail carries the way back to Versions or Catalog that the
+          hand-rolled link used to, and "Copy link" is the header's one action — Generate
+          stays in the footer nav, where every step's primary lives. */}
+      <PageHeader
+        breadcrumb={[
+          { label: 'Ship' },
+          { label: `Back to ${backTarget.label}`, href: backTarget.href },
+        ]}
+        title={
+          <>
+            <PanelsTopLeft aria-hidden />
+            Export studio
+          </>
+        }
+        description={
+          <>
             Verify a conversion before you generate it. Exporting{' '}
-            <strong className="text-gray-900 dark:text-gray-100">{sourceLabel}</strong>
+            <strong>{sourceLabel}</strong>
             {versionLabel !== 'latest' ? ` (version ${versionLabel})` : ''}.
-          </p>
-        </div>
-
+          </>
+        }
+        /* MFX-41.4: "look at this export config" as a URL. */
+        actions={<CopyStudioLinkButton scope={shareScope} />}
+      />
+      <PageBody>
         {/* The numbered stepper (MFX-41.1) — the ImportDialog/ExportDialog pill pattern, full width.
             The three states are distinguished by glyph and weight as well as palette (MFX-41.5): a
             completed step leads with a check and says so to a screen reader, the current step carries
@@ -996,29 +997,22 @@ export function ExportStudio({
         <ol
           data-testid="export-studio-stepper"
           aria-label="Export steps"
-          className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-5"
+          role="list"
+          className="xstd-steps"
         >
           {STUDIO_STEPS.map((s, idx) => {
-            const state = idx === stepIndex ? 'current' : idx < stepIndex ? 'done' : 'upcoming';
+            const state = stepperStatus(idx, stepIndex);
             return (
               <li
                 key={s.key}
                 data-testid={`export-studio-step-${s.key}`}
                 data-state={state}
                 aria-current={state === 'current' ? 'step' : undefined}
-                className={`flex items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-center ${
-                  state === 'upcoming'
-                    ? 'border-gray-200 text-gray-500 dark:border-gray-700 dark:text-gray-400'
-                    : state === 'done'
-                      ? 'border-emerald-200 bg-emerald-50 font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
-                      : 'border-indigo-500 bg-indigo-50 font-semibold text-indigo-800 ring-2 ring-indigo-200 dark:border-indigo-400 dark:bg-indigo-950/40 dark:text-indigo-100 dark:ring-indigo-900'
-                }`}
+                className="xstd-step"
               >
-                {state === 'done' ? (
-                  <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                ) : (
-                  <span aria-hidden>{idx + 1}.</span>
-                )}
+                <span className="xstd-step__num" aria-hidden>
+                  {state === 'done' ? <Check /> : idx + 1}
+                </span>
                 {s.label}
                 <span className="sr-only">
                   {state === 'done'
@@ -1056,26 +1050,24 @@ export function ExportStudio({
           role="group"
           aria-label={stepPanelLabel}
           tabIndex={-1}
-          className={`${dashboardPanelPaddedClass} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400`}
+          className="xstd-panel"
           data-testid="export-studio-body"
         >
           {step === 'source' && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-                <Package className="h-4 w-4 text-indigo-500" aria-hidden />
+            <div className="xstd-stack">
+              <div className="xstd-caps">
+                <Package aria-hidden />
                 Source
               </div>
               {loading ? (
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
+                <div className="xstd-loading-row">
+                  <Loader2 className="motion-safe:animate-spin" aria-hidden />
                   Measuring export fidelity for this source…
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {sourceLabel}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="xstd-stack xstd-stack--tight">
+                  <div className="xstd-source__name">{sourceLabel}</div>
+                  <div className="xstd-quiet">
                     Version {versionLabel}
                     {response ? ` · ${cards.length} export targets available` : ''}
                   </div>
@@ -1083,8 +1075,8 @@ export function ExportStudio({
                       normalized counts — the same provenance the catalog detail idhead shows —
                       so the "not an OpenAPI project" source is recognizable here. */}
                   {isCatalogSource && (catalogFormat || catalogContext) && (
-                    <div className="space-y-2" data-testid="export-studio-catalog-context">
-                      <div className="flex flex-wrap items-center gap-2">
+                    <div className="xstd-stack xstd-stack--tight" data-testid="export-studio-catalog-context">
+                      <div className="xstd-source__pills">
                         <FormatPill format={catalogFormat} />
                         <ProtocolPill protocol={catalogContext?.protocol} />
                       </div>
@@ -1093,7 +1085,7 @@ export function ExportStudio({
                   )}
                 </div>
               )}
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="xstd-quiet">
                 Export is scoped to this version: the fidelity badge on every target card is
                 computed for this source, not a generic estimate.
                 {isCatalogSource
@@ -1104,7 +1096,7 @@ export function ExportStudio({
           )}
 
           {step === 'target' && (
-            <div className="space-y-4">
+            <div className="xstd-stack">
               {sourceFormat && <OriginalSourceOption artifact={artifact} sourceFormat={sourceFormat} />}
               <ExportTargetGrid
                 cards={cards}
@@ -1114,12 +1106,13 @@ export function ExportStudio({
                 preflight={preflight}
                 order={targetOrder}
                 onOrderChange={setTargetOrder}
+                // HIVE-8.3: the Studio groups all 36 registry targets under the four family
+                // headings; the ExportDialog, which mounts the same grid, does not.
+                groupByFamily
                 heading={
-                  <div className="text-center">
-                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                      Choose a target format
-                    </div>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <div>
+                    <div className="xstd-source__name">Choose a target format</div>
+                    <p className="xstd-quiet">
                       Fidelity badges are computed for <strong>this</strong> source (version{' '}
                       {versionLabel}).
                     </p>
@@ -1130,14 +1123,14 @@ export function ExportStudio({
           )}
 
           {step === 'options' && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-                <SlidersHorizontal className="h-4 w-4 text-indigo-500" aria-hidden />
+            <div className="xstd-stack">
+              <div className="xstd-caps">
+                <SlidersHorizontal aria-hidden />
                 {selected ? `${selected.entry.descriptor.label} options` : 'Target options'}
               </div>
-              <div className="my-1 h-px bg-gray-200 dark:bg-gray-700" />
+              <div className="xstd-rule" />
               {optionFields.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="export-studio-no-options">
+                <p className="xstd-quiet" data-testid="export-studio-no-options">
                   This target has no options — it exports with its defaults. Continue to verify the
                   conversion.
                 </p>
@@ -1208,16 +1201,18 @@ export function ExportStudio({
           )}
 
           {step === 'review' && selected && (
-            <div className="space-y-4">
+            <div className="xstd-stack">
               {/* The verify verdict follows the user to Review (MFX-42.1): the same banner it saw
                   on the Verify step, so what gated Generate stays visible while generating. */}
               {verifyVerdict && <VerdictBanner verdict={verifyVerdict} />}
               {bundle && isMultiFileBundle(bundle) ? (
-                <div className="flex min-h-0 flex-col gap-2">
-                  <p className="shrink-0 text-xs text-gray-600 dark:text-gray-300">
-                    <CheckCircle2 className="mr-1.5 inline h-4 w-4 align-text-bottom text-green-500" aria-hidden />
-                    Generated a <strong>{bundle.files.length}-file bundle</strong>. Navigate the files
-                    or the artifact entities on the left, then download the .zip.
+                <div className="xstd-stack xstd-stack--tight">
+                  <p className="xstd-notice" data-tone="ok">
+                    <CheckCircle2 aria-hidden />
+                    <span className="xstd-notice__grow">
+                      Generated a <strong>{bundle.files.length}-file bundle</strong>. Navigate the
+                      files or the artifact entities on the left, then download the .zip.
+                    </span>
                   </p>
                   {/* IXH-4.1: the structural manifest tree beside the code viewer, two-way. */}
                   <div className="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[minmax(18rem,22rem)_1fr]">
@@ -1253,11 +1248,13 @@ export function ExportStudio({
                   {roundtripPanel}
                 </div>
               ) : emitted ? (
-                <div className="flex min-h-0 flex-col gap-2">
-                  <p className="shrink-0 text-xs text-gray-600 dark:text-gray-300">
-                    <CheckCircle2 className="mr-1.5 inline h-4 w-4 align-text-bottom text-green-500" aria-hidden />
-                    Generated <strong>{emitted.filename}</strong>. Review it below, then download the
-                    file or a .zip bundle.
+                <div className="xstd-stack xstd-stack--tight">
+                  <p className="xstd-notice" data-tone="ok">
+                    <CheckCircle2 aria-hidden />
+                    <span className="xstd-notice__grow">
+                      Generated <strong>{emitted.filename}</strong>. Review it below, then download
+                      the file or a .zip bundle.
+                    </span>
                   </p>
                   {/* IXH-2.5: a delivered artifact that carries warnings (or an attestation worth
                       naming) says so before the user downloads it. */}
@@ -1300,15 +1297,11 @@ export function ExportStudio({
               ) : job && jobStatus ? (
                 jobCompleted ? (
                   // Completed — the emitted artifact is being fetched for the preview/download.
-                  <div
-                    className="flex flex-col items-center justify-center gap-3 py-10 text-center"
+                  <LoadingState
                     data-testid="export-studio-preparing-download"
-                  >
-                    <Loader2 className="h-8 w-8 animate-spin text-indigo-500" aria-hidden />
-                    <div className="text-sm text-gray-700 dark:text-gray-200">
-                      Generated {selected.entry.descriptor.label} — preparing your download…
-                    </div>
-                  </div>
+                    minHeightClassName="min-h-[14rem]"
+                    message={`Generated ${selected.entry.descriptor.label} — preparing your download…`}
+                  />
                 ) : (
                   <GenerateProgress
                     status={jobStatus}
@@ -1336,11 +1329,9 @@ export function ExportStudio({
                   targetLabel={selected.entry.descriptor.label}
                   tierBadge={
                     fidelity ? (
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${tierBadgeClass(fidelity.tier)}`}
-                      >
+                      <Badge variant={tierTone(fidelity.tier)}>
                         {tierLabel(fidelity.tier)} · {fidelity.preserved_percent}% preserved
-                      </span>
+                      </Badge>
                     ) : null
                   }
                   changedOptionKeys={Object.keys(
@@ -1353,7 +1344,7 @@ export function ExportStudio({
         </div>
 
         {/* IXH-6.3: paginated recent jobs — never fetches the unbounded full history. */}
-        <RecentAsyncJobsPanel kind="export" limit={10} className="mt-2" />
+        <RecentAsyncJobsPanel kind="export" limit={10} />
 
         {/* Step navigation (MFX-41.1): Back / Continue, with Generate + downloads on the last step. */}
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1414,8 +1405,8 @@ export function ExportStudio({
             )}
           </div>
         </div>
-      </div>
-    </main>
+      </PageBody>
+    </Page>
   );
 }
 
@@ -1457,11 +1448,7 @@ function CopyStudioLinkButton({ scope }: { scope: ExportStudioScope }) {
       onClick={() => void copy()}
       title="Copy a link that reopens this export configuration. Credentials are never included."
     >
-      {copied ? (
-        <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
-      ) : (
-        <Link2 className="h-4 w-4" aria-hidden />
-      )}
+      {copied ? <Check aria-hidden /> : <Link2 aria-hidden />}
       {copied ? 'Link copied' : 'Copy link'}
     </Button>
   );
@@ -1484,15 +1471,10 @@ function CatalogSummaryCounts({
   ].filter((entry) => entry.value >= 0);
   if (entries.length === 0) return null;
   return (
-    <div className="flex flex-wrap gap-1.5" data-testid="export-studio-catalog-counts">
+    <div className="xstd-source__counts" data-testid="export-studio-catalog-counts">
       {entries.map((entry) => (
-        <span
-          key={entry.label}
-          className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
-        >
-          <span className="font-mono font-semibold tabular-nums text-gray-900 dark:text-gray-100">
-            {entry.value}
-          </span>
+        <span key={entry.label} className="xstd-count-chip">
+          <span className="xstd-count-chip__value">{entry.value}</span>
           {entry.label}
         </span>
       ))}
@@ -1519,27 +1501,21 @@ function ExportReviewSummary({
   return (
     <dl className="grid gap-3 text-sm sm:grid-cols-2" data-testid="export-studio-review-summary">
       <div>
-        <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-          Source
-        </dt>
-        <dd className="mt-1 text-gray-900 dark:text-gray-100">
+        <dt className="xstd-caps">Source</dt>
+        <dd className="mt-1">
           {sourceLabel} {versionLabel !== 'latest' ? `· v${versionLabel}` : ''}
         </dd>
       </div>
       <div>
-        <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-          Target
-        </dt>
-        <dd className="mt-1 flex items-center gap-2 text-gray-900 dark:text-gray-100">
+        <dt className="xstd-caps">Target</dt>
+        <dd className="mt-1 flex items-center gap-2">
           {targetLabel}
           {tierBadge}
         </dd>
       </div>
       <div className="sm:col-span-2">
-        <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-          Options
-        </dt>
-        <dd className="mt-1 text-gray-700 dark:text-gray-300">
+        <dt className="xstd-caps">Options</dt>
+        <dd className="mt-1 text-fg-muted">
           {changedOptionKeys.length === 0
             ? 'Defaults for every option.'
             : `Overridden: ${changedOptionKeys.join(', ')}.`}

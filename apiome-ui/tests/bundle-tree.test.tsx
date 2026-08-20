@@ -45,17 +45,21 @@ describe('BundleTree (MFX-43.2)', () => {
 
   it('badges per-file findings and rolls them up to the folder', () => {
     renderTree();
-    // The error-bearing file badges red.
+    // HIVE-8.3: the badge names a vocabulary tone, the same one the Verify lens badge uses.
+    // The error-bearing file badges danger.
     const userBadge = screen.getByTestId('bundle-tree-badge-com/example/User.avsc');
-    expect(userBadge).toHaveAttribute('data-tone', 'error');
+    expect(userBadge).toHaveAttribute('data-tone', 'danger');
     expect(userBadge).toHaveTextContent('1');
-    // The warning-only file badges amber.
+    // The warning-only file badges warn.
     expect(screen.getByTestId('bundle-tree-badge-com/example/Order.avsc')).toHaveAttribute(
       'data-tone',
-      'warning',
+      'warn',
     );
-    // The folder rolls up an error + a warning → error tone (blocking dominates).
-    expect(screen.getByTestId('bundle-tree-badge-com/example')).toHaveAttribute('data-tone', 'error');
+    // The folder rolls up an error + a warning → danger tone (blocking dominates).
+    expect(screen.getByTestId('bundle-tree-badge-com/example')).toHaveAttribute(
+      'data-tone',
+      'danger',
+    );
     // The clean primary file carries no badge.
     expect(screen.queryByTestId('bundle-tree-badge-petstore.proto')).not.toBeInTheDocument();
   });

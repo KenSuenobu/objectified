@@ -648,9 +648,15 @@ describe('MFX-41.5 — stepper semantics and focus management', () => {
     const done = screen.getByTestId('export-studio-step-source');
     expect(done).toHaveAttribute('data-state', 'done');
     expect(done).toHaveTextContent(/completed/i);
-    // The done and current pills do not share a treatment.
+    // The done and current pills do not share a treatment. HIVE-8.3 moved that treatment from
+    // the class list to `data-state`, which the stylesheet keys off — so the attribute is what
+    // separates them now, and it is also what a screen reader's `aria-current` agrees with.
     const current = screen.getByTestId('export-studio-step-target');
-    expect(done.className).not.toEqual(current.className);
+    expect(current).toHaveAttribute('data-state', 'current');
+    expect(done.getAttribute('data-state')).not.toEqual(current.getAttribute('data-state'));
+    // The glyph, not the colour, is what says "done": the numeral is replaced by a tick.
+    expect(done.querySelector('.xstd-step__num svg')).not.toBeNull();
+    expect(current.querySelector('.xstd-step__num svg')).toBeNull();
   });
 
   it('moves focus to the newly-rendered step panel, which names the step', async () => {

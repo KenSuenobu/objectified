@@ -1,7 +1,7 @@
 'use client';
 
 import { ExternalLink, X } from 'lucide-react';
-import { advisorySeverityPillClass } from '../../../../utils/export-advisory';
+import { advisorySeverityTone } from '../../../../utils/export-advisory';
 import type { ProjectionReasonCode, ReasonExplanation } from './capabilityRegistry';
 import { isKnownReasonCode, sanitizeDocumentationEvidence } from './capabilityRegistry';
 import {
@@ -14,6 +14,7 @@ import {
 } from './lossExplanation';
 import type { ProjectionManifestSummary } from './exportFidelityPreview';
 import { statusPresentation, type ProjectionEvidenceRow, type ProjectionViewEntry } from './projectionGraph';
+import { Badge } from '../../../ui/Badge';
 
 export interface EvidenceDrawerProps {
   /** The selected view entry (a row or an aggregate) the drawer explains. */
@@ -76,22 +77,20 @@ export function EvidenceDrawer({
     <aside
       data-testid="projection-detail"
       aria-label="Selected construct evidence"
-      className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 dark:border-indigo-900 dark:bg-indigo-950/30"
+      className="xstd-evidence"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-2 py-0.5 text-2xs font-semibold ${p.badgeClass}`}>
+          <Badge variant={p.tone}>
             <span aria-hidden>{p.symbol} </span>
             {p.label}
-          </span>
+          </Badge>
           {entry.kind === 'row' && entry.row && entry.row.severity !== 'info' && (
-            <span
-              className={`rounded-full px-1.5 py-0.5 text-2xs font-semibold uppercase ${advisorySeverityPillClass(entry.row.severity)}`}
-            >
+            <Badge variant={advisorySeverityTone(entry.row.severity)} className="uppercase">
               {entry.row.severity}
-            </span>
+            </Badge>
           )}
-          <code className="break-all font-mono text-xs font-semibold text-gray-900 dark:text-gray-100">
+          <code className="xstd-evidence__title">
             {entry.kind === 'row' ? entry.row?.construct : entry.label}
           </code>
         </div>
@@ -100,14 +99,14 @@ export function EvidenceDrawer({
           data-testid="projection-detail-close"
           aria-label="Close evidence detail"
           onClick={onClose}
-          className="rounded-md p-1 text-gray-500 hover:bg-white hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+          className="xstd-evidence__close"
         >
           <X className="h-3.5 w-3.5" aria-hidden />
         </button>
       </div>
 
       {entry.kind === 'aggregate' ? (
-        <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
+        <p className="xstd-evidence__body">
           {entry.members?.length ?? 0} constructs with this outcome were aggregated for
           readability. Expand the aggregate row in the table to list every construct.
         </p>
@@ -175,15 +174,12 @@ function EvidenceDrawerBody({
       <div data-testid="projection-detail-reason">
         <div className="flex flex-wrap items-center gap-1.5">
           {categoryView && (
-            <span
-              data-testid="projection-detail-category"
-              className={`rounded-full px-2 py-0.5 text-2xs font-semibold ${categoryView.badgeClass}`}
-            >
+            <Badge data-testid="projection-detail-category" variant={categoryView.tone}>
               {categoryView.label}
-            </span>
+            </Badge>
           )}
           {row.reason && isKnownReasonCode(row.reason) && (
-            <span className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-2xs text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+            <span className="xstd-evidence__code">
               {row.reason}
             </span>
           )}
@@ -191,14 +187,14 @@ function EvidenceDrawerBody({
         {categoryView && (
           <p
             data-testid="projection-detail-distinction"
-            className="mt-1 font-medium text-gray-800 dark:text-gray-100"
+            className="mt-1 font-medium text-fg"
           >
             {categoryView.distinction}
           </p>
         )}
-        {explanation && <p className="mt-1 text-gray-700 dark:text-gray-200">{explanation}</p>}
+        {explanation && <p className="mt-1 text-fg">{explanation}</p>}
         {outcomeText && (
-          <p data-testid="projection-detail-outcome" className="mt-1 text-gray-600 dark:text-gray-300">
+          <p data-testid="projection-detail-outcome" className="mt-1 text-fg-muted">
             {outcomeText}
           </p>
         )}
@@ -208,9 +204,9 @@ function EvidenceDrawerBody({
       <dl className="space-y-1">
         {(row.targetLocation || row.targetLabel) && (
           <div>
-            <dt className="inline font-medium text-gray-500 dark:text-gray-400">In the destination: </dt>
+            <dt className="inline font-medium">In the destination: </dt>
             <dd className="inline">
-              <code className="break-all font-mono text-gray-700 dark:text-gray-300">
+              <code className="break-all font-mono">
                 {row.targetLocation ?? row.targetLabel}
               </code>
             </dd>
@@ -218,11 +214,11 @@ function EvidenceDrawerBody({
         )}
         {(row.sourceLabel || row.sourceLocation) && (
           <div>
-            <dt className="inline font-medium text-gray-500 dark:text-gray-400">From the source: </dt>
-            <dd className="inline text-gray-700 dark:text-gray-300">
+            <dt className="inline font-medium">From the source: </dt>
+            <dd className="inline">
               {row.sourceLabel}
               {row.sourceLocation ? (
-                <span className="text-gray-500 dark:text-gray-400"> ({row.sourceLocation})</span>
+                <span className="text-fg-muted"> ({row.sourceLocation})</span>
               ) : null}
             </dd>
           </div>
@@ -238,7 +234,7 @@ function EvidenceDrawerBody({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={docLink.ariaLabel}
-            className="inline-flex items-center gap-1 font-medium text-indigo-600 hover:underline dark:text-indigo-300"
+            className="xstd-link inline-flex items-center gap-1"
           >
             {docLink.text}
             <ExternalLink className="h-3 w-3" aria-hidden />
@@ -246,7 +242,7 @@ function EvidenceDrawerBody({
         </div>
       )}
       {docNote && (
-        <p data-testid="projection-detail-doc-note" className="text-gray-500 dark:text-gray-400">
+        <p data-testid="projection-detail-doc-note" className="text-fg-muted">
           {docNote}
         </p>
       )}
@@ -255,13 +251,13 @@ function EvidenceDrawerBody({
       {(remediationText || actions.length > 0) && (
         <div
           data-testid="projection-detail-remediation"
-          className="rounded-md border border-indigo-200 bg-white/60 p-2 dark:border-indigo-900 dark:bg-gray-900/40"
+          className="xstd-evidence__remediation"
         >
-          <div className="text-2xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <div className="xstd-caps">
             What you can do
           </div>
           {remediationText && (
-            <p className="mt-1 text-gray-700 dark:text-gray-200">{remediationText}</p>
+            <p className="mt-1 text-fg">{remediationText}</p>
           )}
           {actions.map((action) => (
             <div key={action.kind} className="mt-1.5 flex flex-wrap items-center gap-2">
@@ -269,11 +265,11 @@ function EvidenceDrawerBody({
                 type="button"
                 data-testid={`projection-detail-action-${action.kind}`}
                 onClick={action.kind === 'change-target' ? onChangeTarget : onChangeOptions}
-                className="rounded-md border border-indigo-300 px-2 py-1 text-2xs font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                className="xstd-evidence__action"
               >
                 {action.label}
               </button>
-              <span className="text-gray-500 dark:text-gray-400">{action.description}</span>
+              <span className="text-fg-muted">{action.description}</span>
             </div>
           ))}
         </div>
@@ -283,7 +279,7 @@ function EvidenceDrawerBody({
       {provenanceParts.length > 0 && (
         <p
           data-testid="projection-detail-provenance"
-          className="text-2xs text-gray-500 dark:text-gray-400"
+          className="xstd-note"
         >
           Evidence produced by {provenanceParts.join(' · ')}.
         </p>

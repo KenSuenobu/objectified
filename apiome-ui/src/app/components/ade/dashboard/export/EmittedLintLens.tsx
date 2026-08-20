@@ -36,11 +36,9 @@ import {
   type EmittedArtifactLintReport,
   type EmittedLintFinding,
 } from './exportVerify';
-import {
-  gradeChipClass,
-  severityBadgeClass,
-  type LintSeverity,
-} from '../../../../utils/version-lint-report';
+import { type LintSeverity } from '../../../../utils/version-lint-report';
+import { Badge } from '../../../ui/Badge';
+import { GradeChip } from '../../../ui/catalog/GradeChip';
 
 /** A pointer to the source's own (catalog) lint report, for the distinguishing note's link. */
 export interface EmittedLintSourceReport {
@@ -76,19 +74,20 @@ const SEVERITY_HEADING: Record<LintSeverity, string> = {
 };
 
 /**
- * A severity chip: `3 errors` with a count, or a bare `error` tag on a single finding. Uses the
- * shared {@link severityBadgeClass} so the tint matches the catalog lint panel's finding chips.
+ * A severity chip: `3 errors` with a count, or a bare `error` tag on a single finding.
+ *
+ * The tone comes from the shared vocabulary through `Badge`, which is what makes a warning
+ * here the same amber as a warning in the workspace lint queue — the migration HIVE-5.8 made
+ * for the same three severities.
  */
 function SeverityChip({ severity, count }: { severity: LintSeverity; count?: number }) {
   if (typeof count === 'number' && count === 0) return null;
   const label =
     typeof count === 'number' ? `${count} ${severity}${count === 1 ? '' : 's'}` : severity;
   return (
-    <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize ${severityBadgeClass(severity)}`}
-    >
+    <Badge status={severity} className="capitalize">
       {label}
-    </span>
+    </Badge>
   );
 }
 
@@ -110,14 +109,10 @@ function LintFindingRow({
     <>
       <div className="flex flex-wrap items-center gap-2">
         <SeverityChip severity={finding.severity} />
-        <code className="text-xs text-gray-600 dark:text-gray-300">{finding.rule}</code>
-        {finding.category && (
-          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-            {finding.category}
-          </span>
-        )}
+        <code className="xstd-quiet">{finding.rule}</code>
+        {finding.category && <span className="xstd-rule-chip">{finding.category}</span>}
       </div>
-      <div className="mt-1 text-gray-900 dark:text-gray-100">{finding.message}</div>
+      <div className="mt-1 xstd-finding__message">{finding.message}</div>
       <FindingLocation
         file={finding.file}
         path={finding.path}
@@ -127,20 +122,17 @@ function LintFindingRow({
     </>
   );
   return (
-    <li className="rounded-md border border-gray-200 text-sm dark:border-gray-700">
+    <li className="xstd-finding">
       {problem && onOpenProblem ? (
         <button
           type="button"
           data-testid={`verify-open-${problem.id}`}
           title="Open in the Review editor"
           onClick={() => onOpenProblem(problem)}
-          className="group relative w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800/60"
+          className="xstd-finding__button"
         >
           {content}
-          <ExternalLink
-            className="absolute right-3 top-3 h-3.5 w-3.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 dark:text-gray-500"
-            aria-hidden
-          />
+          <ExternalLink className="xstd-finding__open" aria-hidden />
           <span className="sr-only">Open in the Review editor</span>
         </button>
       ) : (
@@ -168,7 +160,7 @@ export function EmittedLintLens({
   // No lint pack for this target: an explicit empty state, never a misleading clean score.
   if (state === 'not_applicable') {
     return (
-      <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="verify-lint-empty">
+      <p className="xstd-quiet" data-testid="verify-lint-empty">
         No lint pack is registered for {targetLabel ? <strong>{targetLabel}</strong> : 'this target'}
         {' '}— there is nothing to lint. The export is not blocked by lint.
       </p>
@@ -186,7 +178,7 @@ export function EmittedLintLens({
     <div className="space-y-3" data-testid="verify-lint" data-lint-state={state}>
       {/* Distinguishing note: this is the emitted artifact's lint, not the source's catalog lint. */}
       <p
-        className="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400"
+        className="xstd-quiet flex items-start gap-1.5"
         data-testid="verify-lint-source-note"
       >
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -204,7 +196,7 @@ export function EmittedLintLens({
               <a
                 href={sourceReport.href}
                 data-testid="verify-lint-source-link"
-                className="inline-flex items-center gap-0.5 font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                className="xstd-link inline-flex items-center gap-0.5"
               >
                 View {sourceReport.label}&apos;s lint report
                 <ArrowUpRight className="h-3 w-3" aria-hidden />
@@ -217,18 +209,16 @@ export function EmittedLintLens({
       {/* Score/grade + severity summary chips. */}
       <div className="flex flex-wrap items-center gap-2">
         {score && (
-          <span
-            data-testid="verify-lint-grade"
-            className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${gradeChipClass(score.grade)}`}
-          >
-            {score.grade} · {score.score}/100
+          <span className="flex items-center gap-1.5" data-testid="verify-lint-grade">
+            <GradeChip grade={score.grade} />{' '}
+            <span className="xstd-quiet">· {score.score}/100</span>
           </span>
         )}
         <SeverityChip severity="error" count={counts.error} />
         <SeverityChip severity="warning" count={counts.warning} />
         <SeverityChip severity="info" count={counts.info} />
         {rules > 0 && (
-          <span className="text-xs text-gray-500 dark:text-gray-400" data-testid="verify-lint-rules">
+          <span className="xstd-quiet" data-testid="verify-lint-rules">
             {rules} rule{rules === 1 ? '' : 's'} triggered
           </span>
         )}
@@ -236,11 +226,8 @@ export function EmittedLintLens({
 
       {/* Clean: a positive confirmation (never left as an empty panel). */}
       {state === 'clean' ? (
-        <p
-          className="text-sm text-emerald-700 dark:text-emerald-300"
-          data-testid="verify-lint-clean"
-        >
-          <CheckCircle2 className="mr-1.5 inline h-4 w-4 align-text-bottom" aria-hidden />
+        <p className="xstd-lens-head" data-tone="ok" data-testid="verify-lint-clean">
+          <CheckCircle2 aria-hidden />
           The lint pack reported no findings.
         </p>
       ) : (
@@ -249,7 +236,7 @@ export function EmittedLintLens({
         <div className="space-y-4" data-testid="verify-lint-findings">
           {groups.map((group) => (
             <section key={group.severity} data-testid={`verify-lint-group-${group.severity}`}>
-              <h4 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <h4 className="xstd-caps mb-2">
                 {SEVERITY_HEADING[group.severity]}
                 <span className="tabular-nums" data-testid={`verify-lint-group-count-${group.severity}`}>
                   {group.findings.length}

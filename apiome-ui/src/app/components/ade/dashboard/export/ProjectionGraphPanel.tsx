@@ -42,6 +42,7 @@ import { useCapabilityReasons } from './useCapabilityReasons';
 import { useProjectionEvidence } from './useProjectionEvidence';
 import { trackProjectionMetric } from './projectionMetrics';
 import { SVG_TEXT_SIZE } from '@/app/components/ui/svgTypography';
+import { Badge } from '../../../ui/Badge';
 
 /** Zoom bounds/step for the graph view (pure scale; layout stays deterministic). */
 const MIN_ZOOM = 0.5;
@@ -430,14 +431,10 @@ function StatusChips({ summary }: { summary: ProjectionManifestSummary }) {
       {chips.map((status) => {
         const p = statusPresentation(status);
         return (
-          <span
-            key={status}
-            data-testid={`projection-chip-${status}`}
-            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.badgeClass}`}
-          >
+          <Badge key={status} data-testid={`projection-chip-${status}`} variant={p.tone}>
             <span aria-hidden>{p.symbol} </span>
             {summary.status_counts[status]} {p.label.toLowerCase()}
-          </span>
+          </Badge>
         );
       })}
     </div>
@@ -705,12 +702,10 @@ function ProjectionTable({ entries, selectedKey, onSelect }: ProjectionTableProp
 /** A status cell: symbol + text label chip (colour supplemental). */
 function StatusCell({ presentation }: { presentation: ReturnType<typeof statusPresentation> }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-2xs font-semibold ${presentation.badgeClass}`}
-    >
+    <Badge variant={presentation.tone} className="whitespace-nowrap">
       <span aria-hidden>{presentation.symbol}</span>
       {presentation.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -730,12 +725,9 @@ function ReasonCell({ row, entryKey }: { row: ProjectionEvidenceRow; entryKey: s
   return (
     <div className="space-y-0.5">
       {categoryView && (
-        <span
-          data-testid={`projection-row-category-${entryKey}`}
-          className={`inline-block rounded-full px-1.5 py-0.5 text-2xs font-semibold ${categoryView.badgeClass}`}
-        >
+        <Badge data-testid={`projection-row-category-${entryKey}`} variant={categoryView.tone}>
           {categoryView.label}
-        </span>
+        </Badge>
       )}
       <div>{row.reasonSummary}</div>
       {docLink && (

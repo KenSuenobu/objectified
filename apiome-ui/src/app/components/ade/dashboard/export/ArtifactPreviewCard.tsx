@@ -5,6 +5,7 @@ import { FileCode2 } from 'lucide-react';
 import type { editor as MonacoEditorApi } from 'monaco-editor';
 import { monacoLanguageForArtifact } from '@/app/utils/export-target-language';
 import { cn } from '@lib/utils';
+import { Badge } from '../../../ui/Badge';
 import { ReadOnlyCodeViewer } from './ReadOnlyCodeViewer';
 import { ViewerActionsBar } from './ViewerActionsBar';
 import { DeferredFilePanel, TruncatedContentNotice } from './ViewerContentGuard';
@@ -21,7 +22,7 @@ import {
   type ExportManifestEntity,
 } from './exportPreviewManifest';
 import {
-  artifactBadgeClass,
+  ARTIFACT_BADGE_TONE,
   buildArtifactBadge,
   formatByteSize,
   utf8ByteLength,
@@ -209,12 +210,13 @@ export function ArtifactPreviewCard({
         <span className="text-xs font-semibold uppercase tracking-wide text-fg">
           Emitted {artifact.filename}
         </span>
-        <span
+        <Badge
           data-testid="export-artifact-badge"
-          className={`ml-auto rounded-full px-2 py-0.5 text-2xs font-semibold ${artifactBadgeClass(badge.tone)}`}
+          variant={ARTIFACT_BADGE_TONE[badge.tone]}
+          className="ml-auto"
         >
           {badge.label}
-        </span>
+        </Badge>
       </div>
 
       <ViewerActionsBar

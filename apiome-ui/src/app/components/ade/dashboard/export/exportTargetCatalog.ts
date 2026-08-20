@@ -221,25 +221,6 @@ export function tierTone(tier: ExportFidelityTier): StatusTone {
   return FIDELITY_BUCKET_TONE[tier] ?? FIDELITY_BUCKET_TONE['types-only'];
 }
 
-/**
- * CSS utility classes for a card's fidelity tier badge. Colors follow the export mockup:
- * lossless → green, lossy → amber, types-only (severe) → red.
- *
- * @deprecated Superseded by {@link tierTone}, which names a token rather than a palette pair.
- * Still read by `ExportStudio`, which is redesigned by its own epic; nothing new should use it.
- */
-export function tierBadgeClass(tier: ExportFidelityTier): string {
-  switch (tier) {
-    case 'lossless':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
-    case 'lossy':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-    case 'types-only':
-    default:
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300';
-  }
-}
-
 /** The version view's fidelity pre-summary rows (MFX-6.5): best-fidelity vs lossy targets. */
 export interface FidelityPreSummary {
   /** Targets that carry this source cleanly (`lossless`). */
@@ -274,13 +255,6 @@ export interface FidelityChip {
   /** How many constructs fell into this bucket. */
   count: number;
   /**
-   * CSS utility classes for the chip.
-   *
-   * @deprecated Superseded by {@link FidelityChip.tone} in HIVE-6.3 (#5314). Still read by the
-   * studio surfaces their own epic redesigns.
-   */
-  className: string;
-  /**
    * The chip's tone, from the shared status vocabulary — what `Badge` takes (HIVE-6.3, #5314).
    *
    * The same table `projectionNodeStrokeVar` reads, so the count chip and the graph node it
@@ -305,7 +279,6 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
       key: 'dropped',
       label: 'dropped',
       count: fidelity.dropped,
-      className: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
       tone: PROJECTION_OUTCOME_TONE.dropped,
       glyph: kindGlyph('drop'),
     },
@@ -313,7 +286,6 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
       key: 'approximated',
       label: 'approximated',
       count: fidelity.approximated,
-      className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
       tone: PROJECTION_OUTCOME_TONE.approximated,
       glyph: kindGlyph('approx'),
     },
@@ -321,7 +293,6 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
       key: 'synthesized',
       label: 'synthesized',
       count: fidelity.synthesized,
-      className: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
       tone: PROJECTION_OUTCOME_TONE.synthesized,
       glyph: kindGlyph('synth'),
     },
@@ -331,7 +302,6 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
     key: 'preserved',
     label: 'clean',
     count: fidelity.preserved,
-    className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
     tone: PROJECTION_OUTCOME_TONE.clean,
     glyph: kindGlyph('ok'),
   });

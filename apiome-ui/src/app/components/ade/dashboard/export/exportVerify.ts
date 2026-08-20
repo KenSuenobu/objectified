@@ -298,18 +298,27 @@ export function verifyVerdictBanner(verdict: ExportVerifyVerdict): VerifyVerdict
   }
 }
 
-/** CSS utility classes for the verdict banner container, keyed by tone. */
-export function verifyVerdictBannerClass(tone: VerifyVerdictBanner['tone']): string {
+/**
+ * The `Alert` variant for the verdict banner, keyed by tone.
+ *
+ * HIVE-8.3 (#5329) replaced the four Tailwind palette quintuples this returned with the
+ * shared alert variants, so the banner follows all nine themes. `severe` and `invalid` share
+ * `error` deliberately: both are *stop* verdicts, and the words above them — "Severe
+ * conversion" against "The emitted artifact is invalid" — are what separate the two. Painting
+ * one a redder red than the other asked colour to carry a distinction it cannot.
+ */
+export function verifyVerdictAlertVariant(
+  tone: VerifyVerdictBanner['tone'],
+): 'error' | 'warning' | 'success' {
   switch (tone) {
     case 'invalid':
-      return 'border-rose-300 bg-rose-50 text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100';
     case 'severe':
-      return 'border-red-400 bg-red-100 text-red-900 dark:border-red-700 dark:bg-red-950/50 dark:text-red-100';
+      return 'error';
     case 'lossy':
-      return 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100';
+      return 'warning';
     case 'clean':
     default:
-      return 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100';
+      return 'success';
   }
 }
 

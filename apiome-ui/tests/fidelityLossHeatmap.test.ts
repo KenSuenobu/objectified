@@ -415,12 +415,14 @@ describe('fidelityLossHeatmap — heat encoding', () => {
     expect(heatmapIntensity(5, 0)).toBe(1);
   });
 
-  it('states every level in words and in glyphs, not only in a colour class', () => {
+  it('states every level in words and in glyphs, and names no colour at all', () => {
     for (const level of [0, 1, 2, 3, 4] as const) {
       const presentation = intensityPresentation(level);
       expect(presentation.label).toMatch(/^(none|low|moderate|high|severe)$/);
       expect(presentation.glyph.length).toBeGreaterThan(0);
-      expect(presentation.cellClass).toContain('dark:');
+      // HIVE-8.3: the wash lives in `.xstd-heat__cell[data-heat]`, so the presentation
+      // carries only the two channels that read without colour.
+      expect(Object.keys(presentation).sort()).toEqual(['glyph', 'label']);
     }
     // The glyph count is itself the scale — a greyscale-readable channel.
     expect(intensityPresentation(4).glyph.length).toBeGreaterThan(
