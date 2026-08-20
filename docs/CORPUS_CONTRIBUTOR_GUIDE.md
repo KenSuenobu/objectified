@@ -32,13 +32,42 @@ that script must always say the same thing.
 | Python loader | `apiome-rest/tests/corpus_loader.py` (`load_corpus(...)`) |
 | TypeScript loader | `apiome-ui/lib/corpus/corpus.ts` (`loadCorpus(...)`) |
 
-Only `README.md`, `corpus.manifest.json`, and `corpus.schema.json` may exist under
-`apiome-ui/examples/` without being a corpus fixture. Everything else on disk needs a manifest entry,
-and every manifest entry needs a file on disk — the completeness test checks both directions.
+Any file named `README.md`, plus `corpus.manifest.json` and `corpus.schema.json`, may exist under
+`apiome-ui/examples/` without being a corpus fixture — including a `README.md` **inside a format
+directory**, which is the right place to document what that format is, which ticket its fixtures
+serve, and what each file exercises. Everything else on disk needs a manifest entry, and every
+manifest entry needs a file on disk — the completeness test checks both directions.
 
 **Tests select fixtures by tag, never by path.** Use `load_corpus(format=…, feature=…, rung=…)` (or
 `loadCorpus({ … })` from Jest) so renaming or reclassifying a file is a manifest edit rather than a
 hunt through hard-coded paths.
+
+---
+
+## 1.1 Fixtures for a format that has no adapter yet
+
+A format's corpus may be written **before** its adapter exists — that is the normal order when a
+roadmap ticket is scoped, and it is what the FMT (format-matrix expansion) directories do. Such an
+entry declares:
+
+- `adapter_key: null` — no adapter is expected to claim the file yet. This is what keeps the fixture
+  out of the live tier suites: `test_corpus_import.py`, `test_corpus_negative.py`,
+  `test_corpus_golden.py` and `test_corpus_adversarial.py` all select entries **by adapter key**, so
+  a null-keyed entry is inert until the adapter lands.
+- the `pending-adapter` feature tag on every file, so the whole pending set is selectable with
+  `load_corpus(feature="pending-adapter")`.
+- a directory `label` ending `(pending #NNNN)`, naming the issue that will register the adapter — the
+  generated README index then shows at a glance which formats are declared and which are live.
+- `expected_detection.format` set to the key detection **will** report, at the confidence the ticket
+  intends (`0` on negative entries, as usual). These are contracts to implement, not measurements.
+
+**Do not** add a `rung_waivers` entry for a pending format: waivers are keyed by *registered*
+adapter key, and one for an unknown key fails `test_rung_waivers_are_registered_and_not_stale`.
+
+When the adapter lands, the ticket flips the set live: set `adapter_key`, drop the `pending-adapter`
+tag and the `(pending …)` label suffix, re-ground `expected_detection` against real detection output,
+add any needed `rung_waivers`, and record known deviations in `notes` / `KNOWN_DETECTION_BUGS` rather
+than deleting the fixture.
 
 ---
 
