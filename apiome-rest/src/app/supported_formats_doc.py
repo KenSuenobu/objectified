@@ -35,7 +35,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from .canonical_model import ApiParadigm
-from .emitter import available_emit_formats, get_emitter
+from .emitter import EmitterDescriptor, available_emit_formats, get_emitter
 from .format_capability_registry import (
     CapabilityProvenance,
     NativeHierarchy,
@@ -52,9 +52,12 @@ from .import_source import (
 __all__ = [
     "SUPPORTED_FORMATS_DOCS_PAGE",
     "REGENERATE_COMMAND",
+    "INTERNAL_FORMAT_KEYS",
     "FormatRow",
     "collect_format_rows",
+    "is_shipped_import_source",
     "render_supported_formats_page",
+    "shipped_emitters",
 ]
 
 #: Path of the generated page, relative to the monorepo root.
@@ -77,8 +80,10 @@ _PARADIGM_SECTIONS: Tuple[Tuple[ApiParadigm, str], ...] = (
 
 #: Registry keys that are internal machinery rather than a format a reader can use. ``sample`` is
 #: the no-op acceptance adapter that exercises the job pipeline; documenting it as a supported
-#: format would be exactly the kind of over-claim this page exists to end.
-_INTERNAL_KEYS: frozenset[str] = frozenset({"sample"})
+#: format would be exactly the kind of over-claim this page exists to end. Public because the
+#: FMT-1.4 corpus parity gate excludes exactly the same keys — a format that is not documented is
+#: not required to carry fixtures either, and the two must not drift apart.
+INTERNAL_FORMAT_KEYS: frozenset[str] = frozenset({"sample"})
 
 #: The em dash used for "not applicable" cells, so an empty cell never reads as a missing fact.
 _NONE = "—"
@@ -93,13 +98,21 @@ _NONE = "—"
 _SHIPPED_MODULE_PREFIX = "app."
 
 
-def _is_shipped_import_source(key: str) -> bool:
-    """Whether ``key`` names an adapter defined in this repository."""
+def is_shipped_import_source(key: str) -> bool:
+    """Whether ``key`` names an adapter defined in this repository.
+
+    Args:
+        key: An import-source registry key.
+
+    Returns:
+        ``True`` when an adapter is registered under ``key`` and its class comes from this
+        repository rather than from a test module or a caller-supplied plugin.
+    """
     adapter = get_import_source(key)
     return adapter is not None and type(adapter).__module__.startswith(_SHIPPED_MODULE_PREFIX)
 
 
-def _shipped_emitters() -> Dict[str, Tuple[str, bool]]:
+def shipped_emitters() -> Dict[str, EmitterDescriptor]:
     """Map each shipped emitter onto the import-source key it corresponds to.
 
     Iterates the emitter **registry keys** rather than descriptor keys: the two are not always the
@@ -112,21 +125,18 @@ def _shipped_emitters() -> Dict[str, Tuple[str, bool]]:
     rather than a second mapping being invented here that could drift from it.
 
     Returns:
-        ``{import_source_key: (emitter_label, available)}``, first by sorted registry key so the
-        result is deterministic.
+        ``{import_source_key: emitter_descriptor}``, first by sorted registry key so the result is
+        deterministic.
     """
-    mapping: Dict[str, Tuple[str, bool]] = {}
+    mapping: Dict[str, EmitterDescriptor] = {}
     for format_key in available_emit_formats():
         emitter = get_emitter(format_key)
         if emitter is None or not emitter.__module__.startswith(_SHIPPED_MODULE_PREFIX):
             continue
         descriptor = emitter.descriptor()
-        if descriptor.key in _INTERNAL_KEYS:
+        if descriptor.key in INTERNAL_FORMAT_KEYS:
             continue
-        mapping.setdefault(
-            resolve_import_source_key(descriptor.key),
-            (descriptor.label, descriptor.available),
-        )
+        mapping.setdefault(resolve_import_source_key(descriptor.key), descriptor)
     return mapping
 
 
@@ -204,12 +214,12 @@ class FormatRow:
 
 def _emitters_by_import_key() -> Dict[str, str]:
     """``{import_source_key: emitter_label}`` for every shipped emitter."""
-    return {key: label for key, (label, _available) in _shipped_emitters().items()}
+    return {key: descriptor.label for key, descriptor in shipped_emitters().items()}
 
 
 def _emitter_availability() -> Dict[str, bool]:
     """``{import_source_key: can_run_here}`` for every shipped emitter."""
-    return {key: available for key, (_label, available) in _shipped_emitters().items()}
+    return {key: descriptor.available for key, descriptor in shipped_emitters().items()}
 
 
 def _is_publishable(descriptor: ImportSourceDescriptor) -> bool:
@@ -233,7 +243,7 @@ def collect_format_rows() -> List[FormatRow]:
 
     Every registered import adapter contributes a row, plus any emitter with no import adapter
     behind it (an export-only destination), so a format cannot be supported and undocumented.
-    Internal machinery (:data:`_INTERNAL_KEYS`) is excluded.
+    Internal machinery (:data:`INTERNAL_FORMAT_KEYS`) is excluded.
 
     Returns:
         The rows, deterministically ordered.
@@ -244,7 +254,7 @@ def collect_format_rows() -> List[FormatRow]:
     covered: set[str] = set()
 
     for descriptor in describe_import_sources():
-        if descriptor.key in _INTERNAL_KEYS or not _is_shipped_import_source(descriptor.key):
+        if descriptor.key in INTERNAL_FORMAT_KEYS or not is_shipped_import_source(descriptor.key):
             continue
         covered.add(descriptor.key)
         capability = capability_for(descriptor.key)
