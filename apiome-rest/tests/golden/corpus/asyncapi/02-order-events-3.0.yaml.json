@@ -1,0 +1,223 @@
+{
+  "adapter": "asyncapi",
+  "canonical": {
+    "channels": [
+      {
+        "address": "order/placed",
+        "bindings": {},
+        "description": "An order was placed by a customer.",
+        "extras": {},
+        "key": "order/placed",
+        "name": "orderPlaced",
+        "parameters": [],
+        "protocol": null
+      },
+      {
+        "address": "order/shipped",
+        "bindings": {},
+        "description": "An order was handed to the carrier.",
+        "extras": {},
+        "key": "order/shipped",
+        "name": "orderShipped",
+        "parameters": [],
+        "protocol": null
+      }
+    ],
+    "description": "Streams order lifecycle events to fulfilment and analytics.",
+    "extras": {},
+    "format": "asyncapi-3",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Order Service",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "kafka",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Production Kafka cluster.",
+        "extras": {
+          "host": "broker.example.com:9092"
+        },
+        "name": "production",
+        "protocol": "kafka",
+        "url": "broker.example.com:9092",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "default",
+        "name": "default",
+        "operations": [
+          {
+            "channel_ref": "order/placed",
+            "deprecated": false,
+            "description": "Handle a newly placed order.",
+            "extras": {
+              "action": "receive"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "receiveOrderPlaced",
+            "kind": "subscribe",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "title": "Order placed"
+                },
+                "headers": [],
+                "key": "receiveOrderPlaced#event.orderPlaced",
+                "name": "orderPlaced",
+                "payload": null,
+                "payload_schema": {
+                  "description": "Details of a placed order.",
+                  "properties": {
+                    "currency": {
+                      "default": "USD",
+                      "description": "ISO 4217 currency code.",
+                      "type": "string"
+                    },
+                    "customerId": {
+                      "description": "Customer who placed the order.",
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "orderId": {
+                      "description": "Unique order identifier.",
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "placedAt": {
+                      "description": "When the order was placed.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "total": {
+                      "description": "Order total in the order currency.",
+                      "format": "double",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "orderId",
+                    "customerId",
+                    "total",
+                    "placedAt"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "receiveOrderPlaced",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": "order/shipped",
+            "deprecated": false,
+            "description": "Handle a shipped order.",
+            "extras": {
+              "action": "receive"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "receiveOrderShipped",
+            "kind": "subscribe",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "title": "Order shipped"
+                },
+                "headers": [],
+                "key": "receiveOrderShipped#event.orderShipped",
+                "name": "orderShipped",
+                "payload": null,
+                "payload_schema": {
+                  "description": "Shipment details for an order.",
+                  "properties": {
+                    "carrier": {
+                      "description": "Shipping carrier name.",
+                      "type": "string"
+                    },
+                    "orderId": {
+                      "description": "The order being shipped.",
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "shippedAt": {
+                      "description": "When the shipment left the warehouse.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "trackingNumber": {
+                      "description": "Carrier tracking number.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "orderId",
+                    "trackingNumber",
+                    "shippedAt"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "receiveOrderShipped",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Order Service",
+    "types": [],
+    "version": "2.0.0"
+  },
+  "corpus_path": "asyncapi/02-order-events-3.0.yaml",
+  "counts": {
+    "channels": 2,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "asyncapi-3"
+  },
+  "fingerprint": "sha256:284162282633a04a4597df1cc2468828609da73b1f8516123a51b2268d00e6e8",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "68ba096926177912d14dcaa2f63d57c9a1ff50eb2ad17b7dda4301cc92058c03",
+    "score": 96,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

@@ -31,10 +31,11 @@ import pytest
 from corpus_adapter_support import (
     KNOWN_IMPORT_BUGS,
     adapter_for,
+    build_fileset,
     missing_tools,
     valid_entries,
 )
-from corpus_loader import CorpusEntry
+from corpus_loader import CorpusEntry, FilesetRole
 from corpus_snapshot import (
     GOLDEN_ROOT,
     SNAPSHOT_VERSION,
@@ -237,6 +238,29 @@ def _fingerprint_param(entry: CorpusEntry) -> "pytest.param":
     return pytest.param(entry, id=entry.path, marks=marks)
 
 
+def _parse_text(adapter, entry: CorpusEntry, text: str):
+    """Parse ``text`` as this entry, through the seam the entry's shape requires.
+
+    A set *root* must go through ``parse_fileset`` even when only its own text is being
+    varied: parsing a root alone leaves its cross-file ``$ref`` targets unresolvable, which is a
+    property of the fixture, not of the ordering under test. Everything else parses its own
+    text directly, exactly as before.
+
+    Args:
+        adapter: The entry's resolved import adapter.
+        entry: The manifest entry.
+        text: The root/document text to parse (possibly a reordered permutation).
+
+    Returns:
+        The adapter's native AST.
+    """
+    if entry.fileset_role is FilesetRole.ROOT:
+        return adapter.parse_fileset(
+            build_fileset(entry, root_text=text), source_label=entry.path
+        )
+    return adapter.parse(text, source_label=entry.path)
+
+
 def _reorderable_entries() -> List[CorpusEntry]:
     """Valid entries whose source is a structured mapping that can be permuted.
 
@@ -265,10 +289,10 @@ def test_fingerprint_survives_source_reordering(entry: CorpusEntry) -> None:
     assert reordered is not None  # guaranteed by the parametrization
 
     baseline = canonical_fingerprint(
-        adapter.normalize(adapter.parse(entry.read_text(), source_label=entry.path))
+        adapter.normalize(_parse_text(adapter, entry, entry.read_text()))
     )
     try:
-        permuted_ast = adapter.parse(reordered, source_label=entry.path)
+        permuted_ast = _parse_text(adapter, entry, reordered)
     except Exception:  # noqa: BLE001 - a reordered doc the format rejects proves nothing
         pytest.skip("the reordered document is not a valid instance of this format")
     permuted = canonical_fingerprint(adapter.normalize(permuted_ast))

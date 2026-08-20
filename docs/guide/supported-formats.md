@@ -72,7 +72,7 @@ The **Direction** column below says whether a format can be imported, exported, 
 
 | Format | Key | Direction | Publishable | Input kinds | Live discovery | Format keys | File extensions | Analysis | Runtime |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| AsyncAPI | `asyncapi` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `asyncapi-2`, `asyncapi-3` | `.asyncapi.yaml`, `.asyncapi.yml`, `.asyncapi.json`, `.yaml`, `.yml`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Needs toolchain — Requires the asyncapi-parser toolchain, which is not available in this runtime. |
+| AsyncAPI | `asyncapi` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `asyncapi-2`, `asyncapi-3` | `.asyncapi.yaml`, `.asyncapi.yml`, `.asyncapi.json`, `.yaml`, `.yml`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | CloudEvents | `cloudevents` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `cloudevents`, `cloud-events` | `.cloudevents.json`, `.cloudevent.json`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 
 ## Graph

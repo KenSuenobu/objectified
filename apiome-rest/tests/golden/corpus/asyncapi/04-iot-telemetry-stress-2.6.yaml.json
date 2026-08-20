@@ -1,0 +1,425 @@
+{
+  "adapter": "asyncapi",
+  "canonical": {
+    "channels": [
+      {
+        "address": "sensor/{sensorId}/alert",
+        "bindings": {},
+        "description": "Alerts derived from a sensor's readings.",
+        "extras": {},
+        "key": "sensor/{sensorId}/alert",
+        "name": null,
+        "parameters": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "^[a-z0-9]{8}$",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "sensor/{sensorId}/alert#param.sensorId",
+            "name": "sensorId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "protocol": null
+      },
+      {
+        "address": "sensor/{sensorId}/reading",
+        "bindings": {},
+        "description": "Periodic readings published by one sensor.",
+        "extras": {},
+        "key": "sensor/{sensorId}/reading",
+        "name": null,
+        "parameters": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "^[a-z0-9]{8}$",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Stable sensor hardware identifier.",
+            "extras": {},
+            "field_number": null,
+            "key": "sensor/{sensorId}/reading#param.sensorId",
+            "name": "sensorId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "protocol": null
+      }
+    ],
+    "description": "Ingests sensor readings and fans out threshold and battery alerts for a fleet of field devices.",
+    "extras": {},
+    "format": "asyncapi-2",
+    "identity": {
+      "extras": {},
+      "id": "urn:example:iot:telemetry",
+      "name": "IoT Telemetry Service",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "mqtt",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Regional MQTT broker.",
+        "extras": {
+          "bindings": {
+            "mqtt": {
+              "cleanSession": true,
+              "clientId": "telemetry-ingest"
+            }
+          },
+          "protocolVersion": "5.0",
+          "security": [
+            {
+              "devicePassword": []
+            }
+          ]
+        },
+        "name": "production",
+        "protocol": "mqtt",
+        "url": "mqtt://broker.{env}.example.com:1883",
+        "variables": [
+          {
+            "default": "prod",
+            "description": "Deployment environment.",
+            "enum": [
+              "prod",
+              "staging"
+            ],
+            "extras": {},
+            "name": "env"
+          }
+        ]
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "default",
+        "name": "default",
+        "operations": [
+          {
+            "channel_ref": "sensor/{sensorId}/alert",
+            "deprecated": false,
+            "description": "Receive threshold or battery alerts for a sensor.",
+            "extras": {
+              "action": "subscribe"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "onSensorAlert",
+            "kind": "subscribe",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "title": "Battery alert"
+                },
+                "headers": [],
+                "key": "onSensorAlert#event.batteryAlert",
+                "name": "batteryAlert",
+                "payload": null,
+                "payload_schema": {
+                  "allOf": [
+                    {
+                      "properties": {
+                        "raisedAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "sensorId": {
+                          "type": "string"
+                        },
+                        "severity": {
+                          "default": "warning",
+                          "enum": [
+                            "info",
+                            "warning",
+                            "critical"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "sensorId",
+                        "raisedAt"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "batteryPercent": {
+                          "description": "Remaining charge when the alert fired.",
+                          "maximum": 100,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "batteryPercent"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "title": "Threshold alert"
+                },
+                "headers": [],
+                "key": "onSensorAlert#event.thresholdAlert",
+                "name": "thresholdAlert",
+                "payload": null,
+                "payload_schema": {
+                  "allOf": [
+                    {
+                      "properties": {
+                        "raisedAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "sensorId": {
+                          "type": "string"
+                        },
+                        "severity": {
+                          "default": "warning",
+                          "enum": [
+                            "info",
+                            "warning",
+                            "critical"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "sensorId",
+                        "raisedAt"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "threshold": {
+                          "description": "Configured limit that was crossed.",
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "threshold"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "onSensorAlert",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": "sensor/{sensorId}/reading",
+            "deprecated": false,
+            "description": "A sensor pushes one telemetry reading.",
+            "extras": {
+              "action": "publish",
+              "bindings": {
+                "mqtt": {
+                  "qos": 1,
+                  "retain": false
+                }
+              },
+              "traits": [
+                {
+                  "bindings": {
+                    "mqtt": {
+                      "qos": 1,
+                      "retain": false
+                    }
+                  }
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "publishReading",
+            "kind": "publish",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "correlationId": {
+                    "description": "Trace header carried through the alert fan-out.",
+                    "location": "$message.header#/traceId"
+                  },
+                  "examples": [
+                    {
+                      "name": "nominal",
+                      "payload": {
+                        "celsius": 21.5,
+                        "recordedAt": "2026-03-01T12:00:00Z",
+                        "sensorId": "ab12cd34"
+                      },
+                      "summary": "An in-range reading."
+                    }
+                  ],
+                  "title": "Sensor reading",
+                  "traits": [
+                    {
+                      "headers": {
+                        "properties": {
+                          "traceId": {
+                            "description": "Correlates a reading with the alerts it triggered.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    }
+                  ]
+                },
+                "headers": [
+                  {
+                    "constraints": null,
+                    "default": null,
+                    "deprecated": false,
+                    "description": "Correlates a reading with the alerts it triggered.",
+                    "extras": {},
+                    "field_number": null,
+                    "key": "publishReading#event.sensorReading.traceId",
+                    "name": "traceId",
+                    "type": {
+                      "extras": {},
+                      "item": null,
+                      "name": "string",
+                      "nullable": true
+                    }
+                  }
+                ],
+                "key": "publishReading#event.sensorReading",
+                "name": "sensorReading",
+                "payload": null,
+                "payload_schema": {
+                  "properties": {
+                    "celsius": {
+                      "description": "Measured temperature in degrees Celsius.",
+                      "type": "number"
+                    },
+                    "recordedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "sensorId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "sensorId",
+                    "celsius",
+                    "recordedAt"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "publishReading",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "IoT Telemetry Service",
+    "types": [],
+    "version": "1.4.0"
+  },
+  "corpus_path": "asyncapi/04-iot-telemetry-stress-2.6.yaml",
+  "counts": {
+    "channels": 2,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "asyncapi-2"
+  },
+  "fingerprint": "sha256:01e687845ccf6a626b14cd2647cf351096abc9d41db0acd5fc4908c489f3fd61",
+  "lint": {
+    "findings": 11,
+    "grade": "C",
+    "report_fingerprint": "fdc89b965b0b918128d4fd70d1e58477b71bddfb3294d3c490743b080398dceb",
+    "score": 72,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

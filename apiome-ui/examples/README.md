@@ -316,11 +316,11 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`06-payment-events-set/schemas.yaml`** — Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml.
 
-> ⚠ **`07-nonconforming-examples-3.0.yaml`** — Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py.
+> ⚠ **`07-nonconforming-examples-3.0.yaml`** — Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py. The `x-expected-violation` intent marker sits only on the schema: an AsyncAPI 3 `MessageExample` object takes no vendor extensions, so each message example states its intent in its `summary` instead (FMT-1.3, #5414 — caught the first time CI ran with the required parser installed).
 
-> ⚠ **`negative/01-syntactic-unclosed-flow-sequence.yaml`** — Verified without asyncapi-parser installed (parse raises tool-unavailable), but the flaw is broken YAML, so classification is text-grounded and tool-independent.
+> ⚠ **`negative/01-syntactic-unclosed-flow-sequence.yaml`** — The flaw is broken YAML, so classification is text-grounded and tool-independent. Originally verified without asyncapi-parser installed; re-verified with the required parser present (FMT-1.3, #5414), which now runs in CI.
 
-> ⚠ **`negative/02-semantic-channels-not-a-mapping.yaml`** — Verified without asyncapi-parser installed; the asyncapi sniffer still claims the document (detect_matched true) and the blatantly wrong `channels` type also fails validation when the tool is present.
+> ⚠ **`negative/02-semantic-channels-not-a-mapping.yaml`** — The asyncapi sniffer claims the document (detect_matched true) and the blatantly wrong `channels` type also fails parser validation. Originally verified without asyncapi-parser installed; re-verified with the required parser present (FMT-1.3, #5414), which now runs in CI.
 
 > ⚠ **`negative/03-truncated-mid-ref.yaml`** — The truncated YAML no longer parses, so the asyncapi sniffer cannot claim it; the greedy graphql sniffer claims the text at 0.9 confidence, so the pipeline classifies FORMAT_MISMATCH instead of INPUT_MALFORMED.
 

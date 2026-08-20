@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.129.0
+  version: 1.130.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -49892,8 +49892,36 @@ paths:
       tags:
       - ops
       summary: Health Check
-      description: Backward-compatible health endpoint (compose healthcheck). Equivalent
+      description: 'Backward-compatible health endpoint (compose healthcheck). Equivalent
         to readiness.
+
+
+        The ``status``/``database`` keys are unchanged. The response additionally
+        carries a
+
+        ``toolchain`` block (FMT-1.3) reporting the bundled-toolchain verdict this
+        runtime booted
+
+        with: ``status`` (``ok`` / ``degraded`` / ``failed``), whether the deployment
+        ``enforced``
+
+        the toolchain, how many hard-required tools there are, how many resolved,
+        and the keys of
+
+        any that are ``missing``. Availability only — resolved paths, the optional
+        tools and the
+
+        exact third-party versions stay on the platform-admin ``GET /v1/ops/toolchain``,
+        because
+
+        this endpoint is unauthenticated.
+
+
+        The HTTP status reflects readiness only: an enforcing deployment cannot serve
+        at all with a
+
+        required tool missing (startup refuses), and a non-enforcing one is degraded
+        deliberately.'
       operationId: health_check_health_get
       responses:
         '200':
@@ -50156,16 +50184,27 @@ paths:
         its pinned version, and whether its binary resolves in this runtime — the
         "format
 
-        unavailable" signal a missing tool produces (MFI-5.2). With ``?verify=true``
-        each
+        unavailable" signal a missing tool produces (MFI-5.2). Each tool additionally
+        carries
 
-        *available* tool is additionally invoked with its version probe to confirm
-        it actually
+        ``required`` (is it a hard dependency of this runtime?) and ``gated_formats``
+        (which
 
-        runs. The ``sandbox`` block reports the active security/resource posture (MFI-5.3)
-        every
+        registered import/export formats vanish without it), so the answer to "what
+        did this
 
-        tool subprocess runs under (no-network default, rlimit clamps, input/output
+        deployment lose?" is on the same response as "what is missing?" (FMT-1.3).
+        With
+
+        ``?verify=true`` each *available* tool is additionally invoked with its version
+        probe to
+
+        confirm it actually runs. The ``sandbox`` block reports the active security/resource
+        posture
+
+        (MFI-5.3) every tool subprocess runs under (no-network default, rlimit clamps,
+        input/output
+
         caps).'
       operationId: ops_toolchain_v1_ops_toolchain_get
       parameters:
@@ -56957,7 +56996,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: 7013ed21-5671-492c-af5a-a331a8291761
+          example: 22aefa96-6a63-4f5d-9162-d20a14a3f880
         method:
           type: string
           title: Method
@@ -58949,7 +58988,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-20T17:20:40Z'
+          example: '2026-08-20T18:22:25Z'
         envelope:
           additionalProperties: true
           type: object
@@ -86244,7 +86283,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-20T17:20:40Z'
+          example: '2026-08-20T18:22:25Z'
       additionalProperties: false
       type: object
       required:
@@ -97658,13 +97697,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-20T17:20:40Z'
+          example: '2026-08-20T18:22:25Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-20T17:20:40Z'
+          example: '2026-08-20T18:22:25Z'
         outcome:
           anyOf:
           - type: string

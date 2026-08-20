@@ -140,11 +140,20 @@ def test_readyz_503_when_db_down():
 
 
 def test_health_backward_compatible_shape():
+    """The historical keys are unchanged; FMT-1.3 only *adds* the toolchain block."""
     with patch("app.ops_routes.db") as mdb:
         mdb.execute_query.return_value = [{"ok": 1}]
         r = client.get("/health")
     assert r.status_code == 200
-    assert r.json() == {"status": "healthy", "database": "connected"}
+    body = r.json()
+    assert body["status"] == "healthy"
+    assert body["database"] == "connected"
+    # Bundled-toolchain verdict (FMT-1.3, #5414) — additive, and never a filesystem path.
+    assert set(body) == {"status", "database", "toolchain"}
+    toolchain = body["toolchain"]
+    assert set(toolchain) == {"status", "enforced", "required", "available", "missing"}
+    assert toolchain["status"] in {"ok", "degraded", "failed"}
+    assert toolchain["required"] >= 1
 
 
 def test_health_unhealthy_when_db_down():
