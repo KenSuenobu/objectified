@@ -24,6 +24,16 @@ def import_sources() -> str:
     return f"{V1}/import/sources"
 
 
+def format_matrix() -> str:
+    """The format support matrix (FMT-1.5); drives ``apiome formats``.
+
+    Non-tenant reference data: one row per registered format, with its import/export support,
+    declared version coverage, file extensions, toolchain gate and capability boundary summary.
+    Accepts optional ``paradigm`` and ``direction`` query filters.
+    """
+    return f"{V1}/formats/matrix"
+
+
 def export_targets(tenant_slug: str) -> str:
     """Emitter registry targets + per-source fidelity for an artifact (MFX-2.5/9.4).
 
