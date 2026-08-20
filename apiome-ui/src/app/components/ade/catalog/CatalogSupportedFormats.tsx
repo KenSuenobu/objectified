@@ -8,10 +8,13 @@
  * the registry into **Importable now** and **Recognized — not yet importable**, with an
  * adapter whose toolchain is missing in this runtime dimmed and labelled.
  *
- * The data is the registry, unchanged: flipping a format's `importable` flag moves it between
- * the two sections and needs no edit here, and an importable format whose adapter cannot run
- * (gRPC without `buf`, say) is dimmed rather than dropped — a reader who cannot import
- * Protobuf today should be told why, not left to conclude the product has never heard of it.
+ * The data is the **server** registry (FMT-1.2, #5413): the two sections are partitioned by which
+ * adapters `GET /api/import/sources` actually reports, so registering an adapter moves its format to
+ * "Importable now" with no edit here and retiring one moves it back. The local format registry keeps
+ * only what it is good at — the icon, the fixed identity hue and the one-line description. An
+ * importable format whose adapter cannot run (gRPC without `buf`, say) is dimmed rather than
+ * dropped: a reader who cannot import Protobuf today should be told why, not left to conclude the
+ * product has never heard of it.
  *
  * ### What the re-skin changed
  *
@@ -30,12 +33,8 @@ import { ChevronDown, Layers } from 'lucide-react';
 
 import { Badge } from '@/app/components/ui/Badge';
 import { Card } from '@/app/components/ui/Card';
-import {
-  IMPORTABLE_ALTERNATIVE_FORMATS,
-  RECOGNIZED_ALTERNATIVE_FORMATS,
-  catalogFormatHueClass,
-  type CatalogFormat,
-} from '@/app/utils/catalog-format-registry';
+import { catalogFormatHueClass, type CatalogFormat } from '@/app/utils/catalog-format-registry';
+import { partitionCatalogFormats } from '@/app/utils/catalog-format-support';
 import { catalogAdapterForFormat } from '@/app/utils/catalog-import-formats';
 import { catalogFormatDocumentationUrl } from '@/app/utils/catalog-format-documentation';
 import { cn } from '@lib/utils';
@@ -132,7 +131,13 @@ export function CatalogSupportedFormats({
   // Availability is fetched eagerly rather than on expand, so the always-visible header count
   // is honest before anyone opens the panel.
   const availability = useCatalogImportAvailability(true);
-  const recognizedCount = RECOGNIZED_ALTERNATIVE_FORMATS.length;
+  // Membership comes from the registry response; the local `importable` flag is only the fallback
+  // used before it resolves (or if it is unreachable), so the gallery is never blank.
+  const { importable: registryImportable, recognized } = React.useMemo(
+    () => partitionCatalogFormats(availability.registeredKeys),
+    [availability.registeredKeys]
+  );
+  const recognizedCount = recognized.length;
 
   /** The runtime-unavailable note for an importable format, or `undefined` when it can run. */
   const unavailableNoteFor = React.useCallback(
@@ -144,9 +149,11 @@ export function CatalogSupportedFormats({
     [availability]
   );
 
+  // The header count states what can be imported *here* — an adapter whose toolchain is missing is
+  // still listed below (dimmed, with the reason) but must not be counted as available.
   const importable = React.useMemo(
-    () => IMPORTABLE_ALTERNATIVE_FORMATS.filter((fmt) => !unavailableNoteFor(fmt)),
-    [unavailableNoteFor]
+    () => registryImportable.filter((fmt) => !unavailableNoteFor(fmt)),
+    [registryImportable, unavailableNoteFor]
   );
   const preview = importable.slice(0, PREVIEW_LIMIT);
   const overflow = importable.length - preview.length;
@@ -190,7 +197,7 @@ export function CatalogSupportedFormats({
               <span className="cat-quiet">Stored as-is; convert to OpenAPI later</span>
             </div>
             <div className="cat-formats__grid">
-              {IMPORTABLE_ALTERNATIVE_FORMATS.map((fmt) => (
+              {registryImportable.map((fmt) => (
                 <FormatChip
                   key={fmt.id}
                   fmt={fmt}
@@ -210,7 +217,7 @@ export function CatalogSupportedFormats({
             </div>
             {recognizedCount > 0 ? (
               <div className="cat-formats__grid">
-                {RECOGNIZED_ALTERNATIVE_FORMATS.map((fmt) => (
+                {recognized.map((fmt) => (
                   <FormatChip key={fmt.id} fmt={fmt} muted />
                 ))}
               </div>

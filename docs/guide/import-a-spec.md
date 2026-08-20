@@ -1,10 +1,34 @@
 # How do I… import a specification?
 
-Importing turns an existing OpenAPI, Swagger 2.0, Arazzo, or JSON Schema document into Apiome
-classes, properties, paths, and operations you can edit. Import is **asynchronous**: you create a
-job, it runs in the background, and you poll it to completion.
+Importing turns an existing API description into something Apiome can search, diff, lint and
+convert. Import is **asynchronous**: you create a job, it runs in the background, and you poll it
+to completion.
 
-Supported inputs: **OpenAPI 3.x**, **Swagger 2.0**, **Arazzo 1.0**, **JSON Schema 2020-12**.
+**Apiome imports 40+ formats.** The full list — with each format's registry key, input kinds,
+version coverage, file extensions and export support — is generated from the running registries at
+[supported-formats.md](supported-formats.md). Do not maintain a copy of it anywhere else.
+
+## Two importers, one registry
+
+Which importer handles a document is decided by the server, from the format it normalizes to:
+
+- **The Projects importer** takes **OpenAPI 3.x** and **Swagger 2.0**. These normalize onto the
+  editable class/property/path model, so an import becomes a **publishable Project** you can
+  version, lint and publish. This is the path the rest of this page describes.
+- **The Catalog importer** takes **everything else** — Protobuf/gRPC, GraphQL, AsyncAPI, Arazzo,
+  JSON Schema, Thrift, Smithy, TypeSpec, WSDL, XSD, OData, EDI X12, HL7 v2, FHIR, COBOL copybooks,
+  FIX, ISO 20022/8583 and the rest. A catalog import keeps the format's **own** structure rather
+  than forcing it into the OpenAPI shape, so what you get back is what you put in. Catalog items
+  are searchable, diffable and convertible; they are not publishable until converted.
+
+Both importers read the same import-source registry, so a format is offered as soon as its adapter
+is registered — the file pickers derive their `accept` lists from it rather than hard-coding one.
+An unrecognized file extension is **not** rejected: the bytes are sent to content detection, and
+the detector's verdict is what you are shown.
+
+> Converting a catalog item into a publishable Project is a separate step — see
+> [convert-to-openapi.md](convert-to-openapi.md) and [export-fidelity.md](export-fidelity.md) for
+> what survives the conversion.
 
 ---
 
@@ -140,5 +164,9 @@ check is server-side, so a client cannot grant itself one.
 
 ## Related
 
+- [supported-formats.md](supported-formats.md) — every format Apiome imports and exports,
+  generated from the registries
+- [catalog-format-details.md](catalog-format-details.md) — what a catalog item records per format
+- [convert-to-openapi.md](convert-to-openapi.md) — promote a catalog item to a publishable Project
 - [edit-classes-and-properties.md](edit-classes-and-properties.md) — refine what you imported
 - [edit-paths.md](edit-paths.md) — refine the imported paths/operations

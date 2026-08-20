@@ -12,11 +12,15 @@ on:
     paths:
       - 'apiome-rest/**'
       - '.github/workflows/apiome-rest-test.yml'
+      # The generated supported-formats page (FMT-1.2) is drift-checked by this suite. It is
+      # listed here so a hand edit of the page alone still triggers the check that rejects it.
+      - 'docs/guide/supported-formats.md'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'apiome-rest/**'
       - '.github/workflows/apiome-rest-test.yml'
+      - 'docs/guide/supported-formats.md'
   workflow_dispatch:
 
 jobs:
@@ -50,6 +54,12 @@ jobs:
 
       - name: Install dependencies (incl. dev/test group)
         run: uv sync
+
+      # An explicit, readable gate for the generated docs (FMT-1.2, #5413). The pytest suite
+      # below asserts the same thing, but a dedicated step names the failure and the one-line
+      # fix instead of burying it among thousands of test results.
+      - name: Check generated supported-formats page is current
+        run: uv run python scripts/generate_supported_formats_doc.py --check
 
       - name: Run tests with coverage
         run: |
