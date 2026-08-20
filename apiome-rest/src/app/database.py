@@ -6129,16 +6129,7 @@ class Database:
             DELETE FROM apiome.lint_workspace_saved_views
             WHERE id = %s::uuid AND tenant_id = %s::uuid AND user_id = %s::uuid
         """
-        conn = self.get_connection()
-        try:
-            with conn.cursor() as cur:
-                cur.execute(q, (view_id, tenant_id, user_id))
-                deleted = cur.rowcount > 0
-            conn.commit()
-            return deleted
-        except Exception:
-            conn.rollback()
-            raise
+        return self._execute_write(q, (view_id, tenant_id, user_id)) > 0
 
     def set_version_source_format(
         self,
@@ -19527,16 +19518,7 @@ class Database:
             DELETE FROM apiome.mcp_saved_searches
             WHERE id = %s::uuid AND tenant_id = %s::uuid AND user_id = %s::uuid
         """
-        conn = self.get_connection()
-        try:
-            with conn.cursor() as cur:
-                cur.execute(q, (search_id, tenant_id, user_id))
-                deleted = cur.rowcount > 0
-            conn.commit()
-            return deleted
-        except Exception:
-            conn.rollback()
-            raise
+        return self._execute_write(q, (search_id, tenant_id, user_id)) > 0
 
     # -----------------------------------------------------------------------
     # MCP Catalog — cataloger notes (V2-MCP-36.3 / MCAT-22.3, #4666)
@@ -19615,15 +19597,7 @@ class Database:
             SET body = %s, updated_by = %s::uuid, updated_at = CURRENT_TIMESTAMP
             WHERE id = %s::uuid AND tenant_id = %s::uuid AND endpoint_id = %s::uuid
         """
-        conn = self.get_connection()
-        try:
-            with conn.cursor() as cur:
-                cur.execute(q, (body, user_id, note_id, tenant_id, endpoint_id))
-                updated = cur.rowcount > 0
-            conn.commit()
-        except Exception:
-            conn.rollback()
-            raise
+        updated = self._execute_write(q, (body, user_id, note_id, tenant_id, endpoint_id)) > 0
         if not updated:
             return None
         return self.get_mcp_endpoint_note(tenant_id, endpoint_id, note_id)
@@ -19636,16 +19610,7 @@ class Database:
             DELETE FROM apiome.mcp_endpoint_notes
             WHERE id = %s::uuid AND tenant_id = %s::uuid AND endpoint_id = %s::uuid
         """
-        conn = self.get_connection()
-        try:
-            with conn.cursor() as cur:
-                cur.execute(q, (note_id, tenant_id, endpoint_id))
-                deleted = cur.rowcount > 0
-            conn.commit()
-            return deleted
-        except Exception:
-            conn.rollback()
-            raise
+        return self._execute_write(q, (note_id, tenant_id, endpoint_id)) > 0
 
     # MCP Catalog — curated collections (V2-MCP-36.4 / MCAT-22.4, #4667)
 
@@ -19757,7 +19722,8 @@ class Database:
         endpoint_ids: List[str],
     ) -> Dict[str, Any]:
         """Insert a curated collection and optional initial members (MCAT-22.4)."""
-        conn = self.get_connection()
+        conn = self.connect()
+        prev_autocommit = self._begin_tx(conn)
         try:
             with conn.cursor() as cur:
                 unique_slug = self._next_available_collection_slug(cur, tenant_id, slug)
@@ -19786,6 +19752,8 @@ class Database:
         except Exception:
             conn.rollback()
             raise
+        finally:
+            conn.autocommit = prev_autocommit
         enriched = self.get_mcp_collection(tenant_id, collection_id)
         return enriched if enriched is not None else row
 
@@ -19838,22 +19806,14 @@ class Database:
             DELETE FROM apiome.mcp_collections
             WHERE id = %s::uuid AND tenant_id = %s::uuid
         """
-        conn = self.get_connection()
-        try:
-            with conn.cursor() as cur:
-                cur.execute(q, (collection_id, tenant_id))
-                deleted = cur.rowcount > 0
-            conn.commit()
-            return deleted
-        except Exception:
-            conn.rollback()
-            raise
+        return self._execute_write(q, (collection_id, tenant_id)) > 0
 
     def replace_mcp_collection_members(
         self, tenant_id: str, collection_id: str, endpoint_ids: List[str]
     ) -> List[Dict[str, Any]]:
         """Replace the full membership list for a collection (MCAT-22.4)."""
-        conn = self.get_connection()
+        conn = self.connect()
+        prev_autocommit = self._begin_tx(conn)
         try:
             with conn.cursor() as cur:
                 cur.execute(
@@ -19896,6 +19856,8 @@ class Database:
         except Exception:
             conn.rollback()
             raise
+        finally:
+            conn.autocommit = prev_autocommit
         return self.list_mcp_collection_members(tenant_id, collection_id)
 
     def add_mcp_collection_members(
@@ -19904,7 +19866,8 @@ class Database:
         """Append endpoints to a collection, preserving existing order (MCAT-22.4)."""
         if not endpoint_ids:
             return self.list_mcp_collection_members(tenant_id, collection_id)
-        conn = self.get_connection()
+        conn = self.connect()
+        prev_autocommit = self._begin_tx(conn)
         try:
             with conn.cursor() as cur:
                 cur.execute(
@@ -19950,13 +19913,16 @@ class Database:
         except Exception:
             conn.rollback()
             raise
+        finally:
+            conn.autocommit = prev_autocommit
         return self.list_mcp_collection_members(tenant_id, collection_id)
 
     def remove_mcp_collection_member(
         self, tenant_id: str, collection_id: str, endpoint_id: str
     ) -> bool:
         """Remove one endpoint from a collection (MCAT-22.4)."""
-        conn = self.get_connection()
+        conn = self.connect()
+        prev_autocommit = self._begin_tx(conn)
         try:
             with conn.cursor() as cur:
                 cur.execute(
@@ -19985,6 +19951,8 @@ class Database:
         except Exception:
             conn.rollback()
             raise
+        finally:
+            conn.autocommit = prev_autocommit
 
     def get_mcp_endpoint(self, tenant_id: str, endpoint_id: str) -> Optional[Dict[str, Any]]:
         """Fetch one live catalog endpoint scoped to ``tenant_id`` (MCAT-3.1).
