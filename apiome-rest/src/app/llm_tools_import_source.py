@@ -54,6 +54,7 @@ class LlmToolsImportSource(ImportSource, register=True):
     )
     supports_live_discovery = False
     formats = ("llm-tools",)
+    file_extensions = (".tools.json", ".llm-tools.json", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

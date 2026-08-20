@@ -36,6 +36,7 @@ class Iso8583ImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("iso8583",)
+    file_extensions = (".iso8583.json", ".8583.json", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

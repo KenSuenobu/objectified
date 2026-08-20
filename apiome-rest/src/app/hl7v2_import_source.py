@@ -35,6 +35,7 @@ class Hl7V2ImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("hl7v2", "hl7", "hl7v2x")
+    file_extensions = (".hl7",)
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

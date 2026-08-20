@@ -41,6 +41,7 @@ class OpenRpcImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("openrpc", "jsonrpc")
+    file_extensions = (".openrpc.json", ".openrpc", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

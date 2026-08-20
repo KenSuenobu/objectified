@@ -41,6 +41,7 @@ class ThriftImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("thrift",)
+    file_extensions = (".thrift",)
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

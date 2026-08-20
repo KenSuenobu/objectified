@@ -65,8 +65,8 @@ import {
   importFooterFor,
   importQualityGate,
   isAcceptedImportFile,
+  detectAndDescribe,
   urlTestAction,
-  IMPORT_FILE_EXTENSIONS,
   IMPORT_WIZARD_COPY,
   type ImportWizardStep,
 } from '../import';
@@ -116,6 +116,10 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileMetadata, setFileMetadata] = useState<FileMetadataPreview | null>(null);
+  // A non-blocking notice about the picked file (FMT-1.1, #5412): either its extension is one no
+  // registered adapter declares, or analysis failed and the detector identified the format. Never
+  // an error — the file is analyzed regardless, and content sniffing has the final word.
+  const [advisoryNotice, setAdvisoryNotice] = useState<string | null>(null);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -166,7 +170,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
   // MFI-1.3: the source-selection grid is data-driven. Built-in cards render immediately; any
   // server-registered adapter is merged in once `GET /api/import/sources` resolves. Only fetched
   // while the dialog is open.
-  const { cards: sourceCards } = useImportSources(open, variant);
+  const { cards: sourceCards, fileExtensions } = useImportSources(open, variant);
 
   useEffect(() => {
     if (!importComplete || !importSucceeded || !jobId || !analysisResult?.qualityScore) return;
@@ -298,6 +302,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
       setSelectedSource(null);
       setSelectedFile(null);
       setFileMetadata(null);
+      setAdvisoryNotice(null);
       setUrlContent(null);
       setUrlFilename(null);
       setUrlMetadata(null);
@@ -324,6 +329,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
     setSelectedSource(null);
     setSelectedFile(null);
     setFileMetadata(null);
+    setAdvisoryNotice(null);
     setAnalysisResult(null);
     setImportOptions(null);
     setJobId(null);
@@ -403,6 +409,14 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
       const content = urlContent || clipboardContent || gitContent || swaggerHubContent || postmanContent || await selectedFile!.text();
       const filename = urlFilename || clipboardFilename || gitFilename || swaggerHubFilename || postmanFilename || selectedFile?.name || 'openapi-spec.yaml';
       const result = await analyzeSpecification(content, filename);
+      // FMT-1.1 (#5412): the local analyzer reads only the OpenAPI/Swagger/Arazzo family. When it
+      // cannot place a document, ask the registry-wide detector what the bytes actually are and
+      // report *its* verdict, instead of leaving the user with a bare parse error.
+      if (!result.formatSupported) {
+        setAdvisoryNotice(await detectAndDescribe(content, filename));
+      } else {
+        setAdvisoryNotice(null);
+      }
       setAnalysisResult(result);
       setCurrentStep('analysis');
     } catch (error) {
@@ -473,16 +487,20 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
   };
 
   const handleFileSelect = async (file: File) => {
-    if (!isAcceptedImportFile(file.name)) {
-      setSelectedFile(null);
-      setFileMetadata(null);
-      setErrorMessage(`Unsupported file type. Allowed: ${IMPORT_FILE_EXTENSIONS.join(', ')}`);
-      return;
-    }
+    // FMT-1.1 (#5412): the extension is a *hint*, not a gate. This used to reject anything outside a
+    // hard-coded ten-entry list, which made thirty-three registered adapters unreachable. An
+    // unrecognized name is now accepted and routed to detection — content sniffing decides the
+    // format, and the detector's verdict is what the user is told if it turns out to be nothing.
+    const recognized = isAcceptedImportFile(file.name, fileExtensions);
 
     setErrorMessage(null);
     setSelectedFile(file);
     setFileMetadata(null);
+    setAdvisoryNotice(
+      recognized
+        ? null
+        : `No import source claims the extension on "${file.name}". We'll analyze its contents anyway and tell you what it turns out to be.`,
+    );
 
     // A ZIP is a bundle, not a document — it is only opened once Analyze runs.
     if (file.name.toLowerCase().endsWith('.zip')) return;
@@ -816,6 +834,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
         case 'file':
           return (
             <FileIntakePanel
+              extensions={fileExtensions}
               file={selectedFile}
               metadata={fileMetadata}
               loading={isLoadingMetadata}
@@ -828,6 +847,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
               onRemove={() => {
                 setSelectedFile(null);
                 setFileMetadata(null);
+                setAdvisoryNotice(null);
               }}
             />
           );
@@ -889,6 +909,17 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
             {errorMessage ? (
               <Alert variant="danger" className="mb-4">
                 {errorMessage}
+              </Alert>
+            ) : null}
+            {/*
+              FMT-1.1 (#5412): an extension no adapter declares is a *warning*, not a rejection —
+              the file is analyzed anyway and detection decides. `info`, never `danger`: nothing has
+              failed yet, and the common case is a correctly-named file of a format whose adapter
+              simply does not spell that suffix.
+            */}
+            {advisoryNotice ? (
+              <Alert variant="info" className="mb-4" data-testid="import-advisory-notice">
+                {advisoryNotice}
               </Alert>
             ) : null}
             {renderStep()}

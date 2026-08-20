@@ -16,6 +16,7 @@
  * view over it.
  */
 
+import { FALLBACK_IMPORT_FILE_EXTENSIONS } from '../dashboard/importSourceCatalog';
 import type { ImportSourceCard, ImportPanelId } from '../dashboard/importSourceCatalog';
 
 /* -------------------------------------------------------------------------
@@ -545,8 +546,8 @@ export const IMPORT_WIZARD_COPY = {
   comingSoon: 'Coming soon',
   dropTitle: 'Drop files here',
   dropBrowse: 'Browse files',
-  dropExtensions:
-    'Supports: .yaml, .yml, .json, .zip, .graphql, .gql, .raml, .proto, .avsc, .thrift',
+  /** Prefix for the drop-zone hint; the extensions themselves come from the registry. */
+  dropExtensionsPrefix: 'Supports:',
   zipNote: 'ZIP files will be analyzed after clicking Analyze',
   filePreview: 'File preview',
   analyzingFile: 'Analyzing file...',
@@ -555,30 +556,55 @@ export const IMPORT_WIZARD_COPY = {
   closeWarning: 'Close (rolls back a running job)',
 } as const;
 
-/** The file extensions the drop zone accepts, in the order the hint lists them. */
-export const IMPORT_FILE_EXTENSIONS: ReadonlyArray<string> = [
-  '.yaml',
-  '.yml',
-  '.json',
-  '.zip',
-  '.graphql',
-  '.gql',
-  '.raml',
-  '.proto',
-  '.avsc',
-  '.thrift',
-];
+/**
+ * The offline fallback accept list (FMT-1.1, #5412).
+ *
+ * Re-exported from the registry module so there is exactly one copy of it. Use the list the
+ * `useImportSources` hook returns wherever the registry is reachable; this constant is only what a
+ * picker falls back to before/without `GET /api/import/sources`.
+ */
+export const IMPORT_FILE_EXTENSIONS = FALLBACK_IMPORT_FILE_EXTENSIONS;
 
 /**
- * Whether a filename carries an extension the drop zone accepts.
+ * How to build the drop-zone hint text from whatever accept list is in force.
+ *
+ * @param extensions The accept list, normally the registry-derived one from `useImportSources`.
+ * @param limit How many extensions to name before eliding the rest; the registry contributes ~60,
+ *   which would overflow the drop zone.
+ * @returns A hint such as `Supports: .yaml, .yml, .json and 57 more`.
+ */
+export function describeImportExtensions(
+  extensions: ReadonlyArray<string>,
+  limit = 10,
+): string {
+  if (extensions.length === 0) return IMPORT_WIZARD_COPY.dropExtensionsPrefix;
+  const shown = extensions.slice(0, limit).join(', ');
+  const remaining = extensions.length - Math.min(limit, extensions.length);
+  const tail = remaining > 0 ? ` and ${remaining} more` : '';
+  return `${IMPORT_WIZARD_COPY.dropExtensionsPrefix} ${shown}${tail}`;
+}
+
+/**
+ * Whether a filename carries an extension some registered adapter declares.
+ *
+ * **Advisory only — never a gate.** Content sniffing (`POST /v1/import/detect`) is the authority on
+ * what a file is; a filename is a hint. A `false` here means "no adapter claims this name", which is
+ * a reason to warn, not to refuse: the bytes still go to detection, and the detector's verdict is
+ * what the user is shown. Rejecting on this used to make thirty-three working formats unimportable.
+ *
+ * Compound extensions are honoured, so `api.postman_collection.json` matches
+ * `.postman_collection.json` rather than only `.json`.
  *
  * @param name The file's name.
- * @returns `true` when the extension is on the list, matched case-insensitively.
+ * @param extensions The accept list to check against; defaults to the offline fallback.
+ * @returns `true` when the name ends with a listed extension, matched case-insensitively.
  */
-export function isAcceptedImportFile(name: string): boolean {
-  const dot = name.lastIndexOf('.');
-  if (dot < 0) return false;
-  return IMPORT_FILE_EXTENSIONS.includes(name.slice(dot).toLowerCase());
+export function isAcceptedImportFile(
+  name: string,
+  extensions: ReadonlyArray<string> = IMPORT_FILE_EXTENSIONS,
+): boolean {
+  const lower = name.toLowerCase();
+  return extensions.some((ext) => lower.endsWith(ext.toLowerCase()));
 }
 
 /* -------------------------------------------------------------------------

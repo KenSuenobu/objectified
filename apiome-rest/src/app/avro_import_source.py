@@ -35,6 +35,7 @@ class AvroImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("avro", "avsc")
+    file_extensions = (".avsc", ".avro")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

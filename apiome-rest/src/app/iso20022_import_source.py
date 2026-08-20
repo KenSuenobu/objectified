@@ -36,6 +36,7 @@ class Iso20022ImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("iso20022",)
+    file_extensions = (".xml",)
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text

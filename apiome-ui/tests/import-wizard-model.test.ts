@@ -16,6 +16,7 @@ import { Upload, Link2, Network } from 'lucide-react';
 
 import {
   IMPORT_FILE_EXTENSIONS,
+  describeImportExtensions,
   IMPORT_JOB_STATES,
   IMPORT_WIZARD_COPY,
   IMPORT_WIZARD_STEPS,
@@ -453,7 +454,10 @@ describe('the Analyze step’s quality gate', () => {
    ------------------------------------------------------------------------- */
 
 describe('the accepted file extensions', () => {
-  it('are the ten the drop zone’s hint lists, in that order', () => {
+  // FMT-1.1 (#5412): these ten are now only the *offline fallback*. The live accept list comes from
+  // the import-source registry (see importFileExtensions.test.ts), so this list no longer bounds
+  // what can be imported — it is just what a picker shows before the registry answers.
+  it('are the ten the drop zone falls back to, in that order', () => {
     expect(IMPORT_FILE_EXTENSIONS).toEqual([
       '.yaml',
       '.yml',
@@ -466,8 +470,10 @@ describe('the accepted file extensions', () => {
       '.avsc',
       '.thrift',
     ]);
+    const hint = describeImportExtensions(IMPORT_FILE_EXTENSIONS);
+    expect(hint.startsWith(IMPORT_WIZARD_COPY.dropExtensionsPrefix)).toBe(true);
     for (const extension of IMPORT_FILE_EXTENSIONS) {
-      expect(IMPORT_WIZARD_COPY.dropExtensions).toContain(extension);
+      expect(hint).toContain(extension);
     }
   });
 
@@ -477,14 +483,23 @@ describe('the accepted file extensions', () => {
     expect(isAcceptedImportFile('bundle.ZIP')).toBe(true);
   });
 
-  it('refuses anything else, and anything with no extension at all', () => {
+  it('reports anything else as unrecognized — advisory, not a refusal', () => {
+    // The dialog turns a `false` into a notice and still sends the bytes to detection; nothing here
+    // decides whether an import may proceed.
     expect(isAcceptedImportFile('notes.txt')).toBe(false);
     expect(isAcceptedImportFile('Makefile')).toBe(false);
     expect(isAcceptedImportFile('')).toBe(false);
   });
 
-  it('reads only the last dot, so a versioned filename is not misread', () => {
+  it('matches on the suffix, so a versioned filename is not misread', () => {
     expect(isAcceptedImportFile('spec.v2.json')).toBe(true);
     expect(isAcceptedImportFile('spec.json.bak')).toBe(false);
+  });
+
+  it('honours a compound extension the registry declares', () => {
+    // Suffix matching is what lets `.postman_collection.json` be a distinct declaration from
+    // `.json`; the old last-dot-only rule could not express it.
+    expect(isAcceptedImportFile('team.postman_collection.json', ['.postman_collection.json'])).toBe(true);
+    expect(isAcceptedImportFile('team.json', ['.postman_collection.json'])).toBe(false);
   });
 });

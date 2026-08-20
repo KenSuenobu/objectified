@@ -41,6 +41,7 @@ class PostmanImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("postman", "postmancollection")
+    file_extensions = (".postman_collection.json", ".postman.json", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         document = payload.document

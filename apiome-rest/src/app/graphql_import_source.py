@@ -115,6 +115,7 @@ class GraphQlImportSource(ImportSource, register=True):
     )
     supports_live_discovery = True
     formats = ("graphql",)
+    file_extensions = (".graphql", ".gql", ".graphqls")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         """Recognize GraphQL SDL text (or a captured introspection response).

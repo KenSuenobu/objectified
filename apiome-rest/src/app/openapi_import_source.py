@@ -78,6 +78,7 @@ class OpenApiImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("openapi-3.0", "openapi-3.1", "openapi-3.2", "swagger-2.0")
+    file_extensions = (".yaml", ".yml", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         """Recognize an OpenAPI/Swagger document by its version marker.

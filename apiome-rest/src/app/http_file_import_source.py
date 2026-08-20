@@ -51,6 +51,7 @@ class HttpFileImportSource(ImportSource, register=True):
     )
     supports_live_discovery = False
     formats = ("http-file", "http", "rest")
+    file_extensions = (".http", ".rest")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         filename = (payload.filename or "").lower()
