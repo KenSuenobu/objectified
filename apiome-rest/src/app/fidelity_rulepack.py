@@ -25,9 +25,11 @@ whichever pack the target declares, falling back to the profile-derived default.
   outcomes so a pack reads declaratively.
 
 * :class:`FidelityRulePack` — the SPI: an abstract oracle bound to a
-  (:class:`~app.emitter.CapabilityProfile`, target label) pairing that answers four
-  questions — one verdict per operation, per channel, and per named type, and zero
-  or more per record field (a field can incur several independent losses at once).
+  (:class:`~app.emitter.CapabilityProfile`, target label) pairing that answers five
+  questions — one verdict per operation, per channel, and per named type, zero or
+  more per record field (a field can incur several independent losses at once), and
+  zero or more for the artifact root (the document envelope a target without a title
+  field cannot carry).
   It owns the deterministic drive loop (:meth:`~FidelityRulePack.evaluate`) that
   walks a model and assembles a :class:`~app.lossiness.LossinessReport`, so a
   concrete pack only writes the *decisions*.
@@ -72,10 +74,18 @@ from .lossiness import (
 )
 
 __all__ = [
+    "ROOT_CONSTRUCT_KEY",
     "FidelityVerdict",
     "FidelityRulePack",
     "CapabilityRulePack",
 ]
+
+#: The canonical construct key of the artifact **root** — its title, version,
+#: identity and servers. It is the empty string because that is the key the root
+#: entity carries in a :func:`~app.import_source.canonical_diff`, so a root verdict
+#: recorded here reconciles against a ``changed root ''`` difference. Kept as a named
+#: constant so a pack never has to spell the bare ``""`` and wonder what it means.
+ROOT_CONSTRUCT_KEY = ""
 
 
 # Operation kinds whose representability depends on the target's *event* capability
@@ -215,13 +225,19 @@ class FidelityRulePack(ABC):
       record; the whole type for a union / scalar / enum / map / alias);
     * :meth:`field_verdicts` — **zero or more** verdicts per record field, because a
       single field can incur several independent losses at once (a required,
-      constrained field on a target lacking both nullability and constraints).
+      constrained field on a target lacking both nullability and constraints);
+    * :meth:`root_verdicts` — **zero or more** verdicts for the artifact *root*, the
+      one canonical entity that is not a construct inside a service: the title,
+      version, servers and identity a document envelope carries. It defaults to no
+      verdicts, so only a target that genuinely cannot carry the envelope (a Kong
+      declarative file, an ``HTTPRoute`` manifest, a request file, a tool array —
+      none of which has a title field) declares one.
 
     The base class owns the deterministic drive loop (:meth:`evaluate`) that visits
     every construct, calls these hooks, and assembles a sorted
     :class:`~app.lossiness.LossinessReport` — so a concrete pack writes only the
     per-construct *decisions*, never report plumbing. Subclasses register their
-    behaviour by overriding the four hooks; most format epics subclass
+    behaviour by overriding the hooks; most format epics subclass
     :class:`CapabilityRulePack` (the profile-derived default) and override only the
     verdicts their target handles specially.
 
@@ -250,6 +266,31 @@ class FidelityRulePack(ABC):
         self.target_label = target_label
 
     # --- override points ----------------------------------------------------
+
+    def root_verdicts(self, api: CanonicalApi) -> List[FidelityVerdict]:
+        """Return every loss the artifact *root* incurs (possibly none).
+
+        The root is the artifact's document envelope — its title, version, identity
+        and servers — the one canonical entity that lives outside every service.
+        Most destinations have a document envelope of their own and carry it, so the
+        default is **no verdicts at all**: a target says nothing about the root
+        unless it has something to say. A target whose file format has nowhere to put
+        the envelope (a Kong declarative configuration, a Gateway API ``HTTPRoute``
+        manifest, an HTTP request file, an LLM tool array — none of which has a title
+        field) overrides this to declare the loss *before* an emit runs, rather than
+        leaving a re-import to silently rename the model after the file it read.
+
+        Verdicts are recorded under :data:`ROOT_CONSTRUCT_KEY` (the empty string),
+        which is the canonical key the root entity carries in a
+        :func:`~app.import_source.canonical_diff`.
+
+        Args:
+            api: The source canonical model to be exported. Never mutated.
+
+        Returns:
+            Zero or more verdicts for the artifact root; ``[]`` by default.
+        """
+        return []
 
     @abstractmethod
     def operation_verdict(self, operation: Operation) -> FidelityVerdict:
@@ -281,12 +322,12 @@ class FidelityRulePack(ABC):
     def evaluate(self, api: CanonicalApi) -> LossinessReport:
         """Walk ``api`` construct by construct and assemble its fidelity report.
 
-        The concrete drive loop shared by every pack: it visits operations, then
-        channels, then named types (descending into each record's fields), records
-        one :class:`~app.lossiness.LossItem` per verdict keyed by the construct's own
-        canonical ``key``, and returns the finished report. The report sorts its
-        items into a stable canonical order on build, so this walk order does not
-        affect the output.
+        The concrete drive loop shared by every pack: it visits the artifact root,
+        then operations, then channels, then named types (descending into each
+        record's fields), records one :class:`~app.lossiness.LossItem` per verdict
+        keyed by the construct's own canonical ``key``, and returns the finished
+        report. The report sorts its items into a stable canonical order on build,
+        so this walk order does not affect the output.
 
         Args:
             api: The source canonical model to be exported. Never mutated.
@@ -295,6 +336,7 @@ class FidelityRulePack(ABC):
             The predicted :class:`~app.lossiness.LossinessReport` for the export.
         """
         builder = LossinessReportBuilder()
+        self._record(builder, ROOT_CONSTRUCT_KEY, self.root_verdicts(api))
         for operation in api.operations():
             self._record(builder, operation.key, [self.operation_verdict(operation)])
         for channel in api.channels:
@@ -345,7 +387,10 @@ class CapabilityRulePack(FidelityRulePack):
       independent aspect helpers (:meth:`_nullability_verdict`,
       :meth:`_constraints_verdict`, :meth:`_field_identity_verdict`) — the
       fine-grained override points for a subclass;
-    * **enum / map / alias** — ``OK`` everywhere the canonical model can name them.
+    * **enum / map / alias** — ``OK`` everywhere the canonical model can name them;
+    * **root** — no verdict. The six capability axes say nothing about a document
+      envelope, so the profile-derived default cannot honestly claim one is lost;
+      only a target that knows its file format has no title field declares it.
     """
 
     # --- operations & channels ---------------------------------------------

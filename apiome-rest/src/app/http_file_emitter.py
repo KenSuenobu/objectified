@@ -67,10 +67,13 @@ from pydantic import Field, field_validator
 from .canonical_model import (
     ApiParadigm,
     CanonicalApi,
+    Channel,
+    MessageRole,
     Operation,
     OperationKind,
     Parameter,
     ParameterLocation,
+    Type,
 )
 from .emitter import (
     CapabilityProfile,
@@ -110,6 +113,7 @@ __all__ = [
     "HttpFileEmitOptions",
     "HttpFileEmitter",
     "HttpFileFidelityRulePack",
+    "validate_http_file_document",
 ]
 
 #: Registry key of this emitter; matches the ``http-file`` import adapter so the
@@ -148,6 +152,17 @@ AUTH_SCHEME_HEADERS: Dict[str, Tuple[str, str]] = {
 #: Operation kinds that describe an event flow rather than a request/response call.
 _EVENT_OPERATION_KINDS = frozenset({OperationKind.PUBLISH, OperationKind.SUBSCRIBE})
 
+#: Operation ``extras`` keys that hold the *observations* an inferred surface was
+#: derived from — the sample URLs and values a request-file/cURL import recorded, and
+#: the file and line each call was written on. An emitted request file writes one
+#: freshly synthesized request per operation, so none of them survives the trip; the
+#: fidelity pack names that before an emit runs.
+_OBSERVATION_EXTRAS: Tuple[str, ...] = (
+    "inference_evidence",
+    "source_location",
+    "source_files",
+)
+
 #: Comment prefix per dialect.
 _COMMENT_PREFIX: Dict[str, str] = {"vscode": "#", "jetbrains": "//"}
 
@@ -158,6 +173,44 @@ _OUTPUT_FILENAMES: Dict[str, str] = {"http": "requests.http", "curl": "requests.
 #: Media type per output mode. Neither is IANA-registered, so both use the conventional
 #: ``text/x-*`` spelling the other source-text emitters use.
 _MEDIA_TYPES: Dict[str, str] = {"http": "text/x-http", "curl": "text/x-shellscript"}
+
+
+# ===========================================================================
+# Validation
+# ===========================================================================
+
+
+def validate_http_file_document(content: str, *, source_label: str = "emitted") -> None:
+    """Validate emitted request-file text by re-parsing it — FMT-2.7 (#5425).
+
+    The post-emit gate for the ``http`` output mode: the emitted document is fed back
+    through the ``http-file`` import adapter — the same parser an intake uses — so a
+    file this emitter wrote is proven to be one Apiome (and, by the same grammar, VS
+    Code REST Client and the IntelliJ HTTP Client) can read. The adapter also refuses a
+    document that parses to no request block at all, so an empty collection is caught
+    here too without a second rule being stated.
+
+    The ``curl`` output mode is deliberately **not** validated here. That artifact is a
+    POSIX shell script of many ``curl`` commands, and the request-file grammar reads a
+    single cURL command; there is no importer for a script, so the export gate reports
+    it not-applicable rather than failing a legal export.
+
+    Args:
+        content: The emitted ``.http`` / ``.rest`` document text.
+        source_label: Label used in the error message when parsing is what fails.
+
+    Raises:
+        ValueError: When the text does not re-parse as a request file.
+    """
+    from .http_file_import_source import HttpFileImportSource
+    from .import_source import ImportSourceError
+
+    try:
+        HttpFileImportSource().parse(content, source_label=source_label)
+    except ImportSourceError as exc:
+        # The adapter raises its own intake error; this function has one failure type so
+        # a caller validating an artifact need not know which half failed.
+        raise ValueError(f"Invalid HTTP request file: {exc}") from exc
 
 
 # ===========================================================================
@@ -172,18 +225,45 @@ class HttpFileFidelityRulePack(CapabilityRulePack):
     headers, an example body — and no declaration of the types those bodies conform to,
     because the format has no schema vocabulary at all. Events have no representation
     either: there is no request to write for a publish or a subscribe.
+
+    FMT-2.7 (#5425) completed the pack with the three constructs the six capability
+    axes cannot express on their own: the artifact title (a request file has no title
+    field), the reply half of an operation (a request file records the call, never the
+    response), and every named type — which the profile-derived default would call
+    ``OK`` on the strength of ``operations=True``, over-claiming a declaration the
+    format cannot make.
     """
 
     target_label = "HTTP request file"
 
-    def event_verdict(self, event) -> FidelityVerdict:
+    def root_verdicts(self, api: CanonicalApi) -> List[FidelityVerdict]:
+        """Declare the artifact title a request file has nowhere to put.
+
+        A request file has no title field; the title survives only as a comment, and
+        a re-import names the surface after the file it read. Reported only when the
+        source carries a title or an identity name to lose.
+        """
+        if not (api.title or api.identity.name):
+            return []
+        return [
+            FidelityVerdict.approx(
+                message=(
+                    f"{self.target_label} has no title field; the artifact title "
+                    "survives only as a comment, and a re-import names the surface "
+                    "after the file it was read from"
+                ),
+                target_mapping="artifact title → comment",
+            )
+        ]
+
+    def channel_verdict(self, channel: Channel) -> FidelityVerdict:
         """An event channel has no request block; it is dropped."""
         return FidelityVerdict.drop(
             message=(
                 f"{self.target_label} has no event/channel representation; "
-                f"event {event.key!r} is dropped"
+                f"channel {channel.key!r} is dropped"
             ),
-            target_mapping="event → dropped",
+            target_mapping="channel → dropped",
         )
 
     def operation_verdict(self, operation: Operation) -> FidelityVerdict:
@@ -204,7 +284,35 @@ class HttpFileFidelityRulePack(CapabilityRulePack):
                 ),
                 target_mapping="non-HTTP operation → dropped",
             )
+        if any(message.role is not MessageRole.REQUEST for message in operation.messages):
+            return FidelityVerdict.approx(
+                message=(
+                    f"{self.target_label} writes the call, not the reply; the declared "
+                    f"response(s) of operation {operation.key!r} are not carried"
+                ),
+                target_mapping="request/response pair → request block",
+            )
+        if any(key in operation.extras for key in _OBSERVATION_EXTRAS):
+            return FidelityVerdict.approx(
+                message=(
+                    f"{self.target_label} writes one canonical request per operation, "
+                    f"not a copy of the calls {operation.key!r} was inferred from; the "
+                    "recorded sample URLs, sample values and per-call source locations "
+                    "are not carried"
+                ),
+                target_mapping="observed calls → one synthesized request",
+            )
         return FidelityVerdict.ok(message=f"operation carried to {self.target_label}")
+
+    def type_verdict(self, type_: Type) -> FidelityVerdict:
+        """A named type is never declared; it survives only as an example body's shape."""
+        return FidelityVerdict.approx(
+            message=(
+                f"{self.target_label} has no schema vocabulary; type {type_.key!r} is "
+                "not declared and survives only as the shape of an example body"
+            ),
+            target_mapping="named type → example body shape",
+        )
 
 
 # ===========================================================================

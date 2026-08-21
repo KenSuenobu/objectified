@@ -72,7 +72,9 @@ from .canonical_model import (
     ApiParadigm,
     CanonicalApi,
     CanonicalField,
+    Channel,
     Constraints,
+    Operation,
     Service,
     Type,
     TypeKind,
@@ -89,7 +91,9 @@ from .emitter import (
     Provenance,
     ProvenanceTracker,
 )
+from .fidelity_rulepack import CapabilityRulePack, FidelityVerdict
 from .k8s_crd_normalizer import K8S_CRD_FORMAT
+from .lossiness import LossinessSeverity
 from .k8s_structural_schema import (
     CRD_API_VERSION,
     CRD_KIND,
@@ -105,6 +109,7 @@ from .k8s_structural_schema import (
 __all__ = [
     "K8sCrdEmitOptions",
     "K8sCrdEmitter",
+    "K8sCrdFidelityRulePack",
     # Re-exported so an export caller needs one import to emit and verify.
     "structural_schema_violations",
     "validate_k8s_crd_document",
@@ -208,6 +213,112 @@ def _first_str(*candidates: Any) -> Optional[str]:
         if isinstance(candidate, str) and candidate.strip():
             return candidate.strip()
     return None
+
+
+# ===========================================================================
+# Fidelity
+# ===========================================================================
+
+
+class K8sCrdFidelityRulePack(CapabilityRulePack):
+    """Fidelity rules for CustomResourceDefinition export — FMT-2.7 (#5425).
+
+    States, construct by construct and *before* an emit runs, the same losses
+    :class:`K8sCrdEmitter` records while building the document, so a target card and
+    the finished artifact agree.
+
+    A CRD is a **resource definition**: one structural ``openAPIV3Schema`` per
+    version, and no operations — the API server generates the endpoints from the
+    resource. What the profile's six axes cannot say on their own is *which*
+    JSON-Schema constructs Kubernetes rejects: a ``oneOf`` may not carry a ``type``,
+    ``uniqueItems: true`` is refused outright, and a ``format`` outside the set the
+    API server knows validates nothing. Each of those is named here rather than
+    discovered in the artifact.
+    """
+
+    target_label = "Kubernetes CRD"
+
+    def channel_verdict(self, channel: Channel) -> FidelityVerdict:
+        """An event channel has no place in a resource definition; it is dropped."""
+        return FidelityVerdict.drop(
+            message=(
+                f"{self.target_label} defines a resource's schema and has no "
+                f"event/channel vocabulary; channel {channel.key!r} is dropped"
+            ),
+            target_mapping="channel → dropped",
+        )
+
+    def operation_verdict(self, operation: Operation) -> FidelityVerdict:
+        """Every operation is dropped: the API server generates a CRD's endpoints."""
+        return FidelityVerdict.drop(
+            message=(
+                f"{self.target_label} declares a resource, not its endpoints — the API "
+                f"server generates those — so operation {operation.key!r} is dropped"
+            ),
+            target_mapping="operation → dropped",
+        )
+
+    def type_verdict(self, type_: Type) -> FidelityVerdict:
+        """Report the two type shapes a structural schema cannot declare."""
+        if type_.kind is TypeKind.UNION:
+            return FidelityVerdict.drop(
+                message=(
+                    f"a structural schema's `oneOf`/`anyOf` may not carry a `type`, so "
+                    f"{self.target_label} cannot express the union {type_.key!r}; the "
+                    "node is emitted as a free-form object"
+                ),
+                target_mapping="union → free-form node",
+            )
+        if (
+            type_.kind is TypeKind.SCALAR
+            and _infer_scalar_from_constraints(type_.constraints) is None
+        ):
+            return FidelityVerdict.approx(
+                message=(
+                    f"scalar type {type_.key!r} names no JSON type "
+                    f"{self.target_label} can declare; it is emitted as a free-form node"
+                ),
+                target_mapping="untyped scalar → free-form node",
+            )
+        return super().type_verdict(type_)
+
+    def field_verdicts(self, field: CanonicalField) -> List[FidelityVerdict]:
+        """Add the two validation facets Kubernetes refuses to the default verdicts.
+
+        ``nullability`` and ``constraints`` are both ``True`` on the profile, so the
+        base pack contributes nothing for most fields — but "Kubernetes honours the
+        validation facets" is true only of the facets it *knows*. The two exceptions
+        are enumerated here so a source that carries them is warned before the emit
+        silently drops the keyword.
+        """
+        verdicts = super().field_verdicts(field)
+        constraints = field.constraints
+        if constraints is None:
+            return verdicts
+        if constraints.unique_items:
+            verdicts.append(
+                FidelityVerdict.drop(
+                    message=(
+                        f"{self.target_label} rejects `uniqueItems: true`; the "
+                        f"constraint on {field.key!r} is dropped"
+                    ),
+                    severity=LossinessSeverity.INFO,
+                    target_mapping="uniqueItems → dropped",
+                )
+            )
+        if constraints.format and constraints.format not in KUBERNETES_KNOWN_FORMATS:
+            verdicts.append(
+                FidelityVerdict.drop(
+                    message=(
+                        f"{self.target_label} does not recognise "
+                        f"`format: {constraints.format}`; the keyword on {field.key!r} "
+                        "is dropped because it would validate nothing"
+                    ),
+                    severity=LossinessSeverity.INFO,
+                    target_mapping="unknown format → dropped",
+                )
+            )
+        return verdicts
 
 
 # ===========================================================================
@@ -1328,6 +1439,11 @@ class K8sCrdEmitter(Emitter, register=True):
             constraints=True,
             field_identity=False,
         )
+
+    @classmethod
+    def fidelity_rule_pack(cls) -> type[CapabilityRulePack]:
+        """Return the CustomResourceDefinition degradation rules."""
+        return K8sCrdFidelityRulePack
 
     def emit(
         self,

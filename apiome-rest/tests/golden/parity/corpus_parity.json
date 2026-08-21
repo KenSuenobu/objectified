@@ -793,8 +793,8 @@
         {
           "source_format": "gateway-api",
           "emit_key": "gateway-api",
-          "status": "xfail",
-          "has_reason": true
+          "status": "pass",
+          "has_reason": false
         }
       ],
       "capability_provenance": "derived",
@@ -1299,8 +1299,8 @@
         {
           "source_format": "kong",
           "emit_key": "kong",
-          "status": "xfail",
-          "has_reason": true
+          "status": "pass",
+          "has_reason": false
         }
       ],
       "capability_provenance": "derived",

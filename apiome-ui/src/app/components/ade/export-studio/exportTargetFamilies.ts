@@ -21,9 +21,12 @@
  * ### The rule that matters
  *
  * A paradigm this table does not know still gets a group ({@link OTHER_FAMILY}), never a
- * dropped card. That is what keeps "all 36 targets reachable" true of a registry that grows:
- * `ApiParadigm` already carries an `agent` member with no emitter behind it yet, and the day
- * one lands it appears under *Other targets* rather than vanishing from the grid.
+ * dropped card. That is what kept "all 36 targets reachable" true when the registry grew:
+ * `ApiParadigm`'s `agent` member had no emitter behind it, and when the first one landed
+ * (the LLM tool-array target, FMT-2.5) it appeared under *Other targets* rather than
+ * vanishing from the grid — which is the safety net working, not the finished answer.
+ * FMT-2.7 (#5425) gave that paradigm its own heading, so a reader looking for "what can I
+ * hand an agent?" finds it under a name instead of under *Other*.
  *
  * Everything here is pure — no React, no fetch — so the partition is unit-tested directly.
  */
@@ -41,13 +44,16 @@ export interface ExportTargetFamily {
  *
  * The order is the mockup's and it is not alphabetical: it runs from the paradigm most
  * sources are (`rest`) to the one fewest are, so the reader's likeliest answer is the first
- * heading they meet.
+ * heading they meet. *Agents & tools* is appended last for the same reason — it is the
+ * newest and smallest family, and putting it above *Data schema & graph* would push the
+ * larger group down for no gain.
  */
 export const EXPORT_TARGET_FAMILIES: readonly ExportTargetFamily[] = [
   { key: 'rest', label: 'REST & HTTP' },
   { key: 'rpc', label: 'RPC' },
   { key: 'event', label: 'Events' },
   { key: 'data', label: 'Data schema & graph' },
+  { key: 'agent', label: 'Agents & tools' },
 ] as const;
 
 /** Where a paradigm with no family of its own lands — a heading, never a hidden card. */
@@ -60,6 +66,11 @@ export const OTHER_FAMILY: ExportTargetFamily = { key: 'other', label: 'Other ta
  * `graph` shares the data-schema heading because GraphQL's SDL is, to a reader choosing an
  * export, the same kind of answer as Avro or JSON Schema: a type system rather than a
  * transport. `schema` is accepted as a legacy spelling of `data_schema`.
+ *
+ * `agent` gets a heading of its own rather than joining `rest`: a tool array is not a
+ * transport description at all — it is the list of calls a model may make — so a reader
+ * scanning for an HTTP export would have to read past it, and a reader scanning for an
+ * agent export would never think to look under *REST & HTTP*.
  */
 const PARADIGM_FAMILY: Readonly<Record<string, string>> = {
   rest: 'rest',
@@ -68,6 +79,7 @@ const PARADIGM_FAMILY: Readonly<Record<string, string>> = {
   graph: 'data',
   data_schema: 'data',
   schema: 'data',
+  agent: 'agent',
 };
 
 /**

@@ -671,7 +671,13 @@ KNOWN_ROUNDTRIP_XFAILS: Dict[Tuple[str, str], str] = {
     ('http-file', 'gateway-api'): "unexplained: changed operation 'GET /users', changed operation 'POST /users', changed root '', changed service 'http-file/02-typical-vars-auth.http', removed type 'PostUserRequest'; overclaim: OK 'GET /users', OK 'POST /users', OK 'PostUserRequest'",
     ('http-file', 'graphql'): "unexplained: removed operation 'GET /users', added operation 'Mutation.POST__users', removed operation 'POST /users', added operation 'Query.GET__users', cha...",
     ('http-file', 'hl7v2'): 'Emit failed: HL7 v2 export requires `hl7v2_segments` extras from import',
-    ("http-file", "http-file"): "unexplained: changed operation 'GET /users', changed operation 'POST /users', changed root '', added service 'http-file->http-file', removed service 'http-file/02-typical-vars-auth.http'; overclaim: OK 'GET /users', OK 'POST /users'",
+    ("http-file", "http-file"): (
+        "A request file has no field for the surface's own name, so a re-import must name "
+        "the model after the file it read: the source's service disappears and one named "
+        "for the emitted file appears. The name is chosen by the *re-import*, not by the "
+        "export, so no fidelity rule pack can predict it (FMT-2.7 explains the artifact "
+        "title, the operations and the types; this service pair is what remains)."
+    ),
     ('http-file', 'iso20022'): 'Emit failed: ISO 20022 export requires `iso20022_tree` extras from import',
     ('http-file', 'iso8583'): 'Emit failed: ISO 8583 export requires `iso8583_data_elements` extras from import',
     ('http-file', 'json-schema'): "unexplained: changed root '', removed service 'http-file/02-typical-vars-auth.http', removed type 'PostUserRequest', added type 'http-file/02-typical-vars-au...",
@@ -919,7 +925,14 @@ KNOWN_ROUNDTRIP_XFAILS: Dict[Tuple[str, str], str] = {
     ('llm-tools', 'jtd'): "unexplained: changed root '', removed service '02-typical-anthropic', added type '02-typical-anthropic'; overclaim: OK 'create_ticketParams', OK 'search_docs...",
     ('llm-tools', 'k8s-crd'): "unexplained: changed root '', removed service '02-typical-anthropic', added service 'createticketparamses.example.com', removed type 'create_ticketParams', added type 'example.c...",
     ('llm-tools', 'kong'): 'Emit failed: Kong declarative export requires at least one HTTP operation: a declarative configuration is a routing surface, and a model with no operations has no route to declare (Kong rejects a config with none).',
-    ("llm-tools", "llm-tools"): "unexplained: removed operation '02-typical-anthropic.create_ticket', removed operation '02-typical-anthropic.search_docs', added operation 'llm-tools->llm-tools.create_ticket', added operation 'llm-tools->llm-tools.search_docs', changed root '', removed service '02-typical-anthropic', added service 'llm-tools->llm-tools'; overclaim: OK '02-typical-anthropic.create_ticket', OK '02-typical-anthropic.search_docs'",
+    ("llm-tools", "llm-tools"): (
+        "A bare tool array has no document header, so a re-import must name the surface "
+        "after the file it read — and because a canonical operation key is "
+        "`<service>.<tool>`, every tool is re-keyed with it. The name is chosen by the "
+        "*re-import*, not by the export, so no fidelity rule pack can predict it "
+        "(FMT-2.7 explains the artifact title, the servers and the inlined types; this "
+        "re-keying is what remains)."
+    ),
     ('llm-tools', 'odata'): "unexplained: removed operation '02-typical-anthropic.create_ticket', removed operation '02-typical-anthropic.search_docs', added operation 'GET /02-typical-a...",
     ('llm-tools', 'oncrpc'): 'Re-import failed: Content does not appear to be ONC RPC / XDR RPCL (llm-tools->oncrpc)',
     ('llm-tools', 'openapi'): "unexplained: removed operation '02-typical-anthropic.create_ticket', removed operation '02-typical-anthropic.search_docs', added operation 'POST /02-typical-...",
@@ -1678,7 +1691,6 @@ KNOWN_ROUNDTRIP_XFAILS: Dict[Tuple[str, str], str] = {
     ('gateway-api', 'fhir'): 'Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim).',
     ('gateway-api', 'fix'): 'Emit failed: FIX export requires `fix_fields` extras from import',
     ('gateway-api', 'flatbuffers'): 'Re-import failed: Content does not appear to be a FlatBuffers .fbs schema',
-    ('gateway-api', 'gateway-api'): "unexplained: changed root ''",
     ('gateway-api', 'graphql'): 'Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim).',
     ('gateway-api', 'hl7v2'): 'Emit failed: HL7 v2 export requires `hl7v2_segments` extras from import',
     ("gateway-api", "http-file"): "unexplained: changed operation 'GET /users', changed operation 'GET /users/{userId}', changed operation 'POST /users', changed root '', added service 'gateway-api->http-file', removed service 'identity/users'; overclaim: OK 'GET /users', OK 'GET /users/{userId}', OK 'POST /users'",
@@ -1728,7 +1740,6 @@ KNOWN_ROUNDTRIP_XFAILS: Dict[Tuple[str, str], str] = {
     ('kong', 'json-schema'): 'Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim).',
     ('kong', 'jtd'): 'Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim).',
     ('kong', 'k8s-crd'): "unexplained: changed root '', added service 'kong02typicalsingleserviceauthyamls.example.com', removed service 'users-service', added type 'example.com/v1.Kong02TypicalSingleSer...",
-    ('kong', 'kong'): 'A deck declarative file has no field for the artifact title, so a re-import names the configuration after the file it was read from (the emitter declares this as its `artifact-title` loss). Everything else round-trips with an empty canonical diff; the fidelity pack that would explain the root change is FMT-2.7.',
     ("kong", "llm-tools"): "unexplained: removed operation 'DELETE /users/{userId}', removed operation 'GET /users', removed operation 'GET /users/{userId}', removed operation 'POST /users', removed operation 'PUT /users/{userId}', added operation 'kong->llm-tools.DELETE_users_userId', added operation 'kong->llm-tools.GET_users', added operation 'kong->llm-tools.GET_users_userId', added operation 'kong->llm-tools.POST_users', added operation 'kong->llm-tools.PUT_users_userId', changed root '', added service 'kong->llm-tools', removed service 'users-service', added type 'DELETE_users_userIdParams', added type 'GET_usersParams', added type 'GET_users_userIdParams', added type 'POST_usersParams', added type 'PUT_users_userIdParams'; overclaim: OK 'DELETE /users/{userId}', OK 'GET /users', OK 'GET /users/{userId}', OK 'POST /users', OK 'PUT /users/{userId}'",
     ('kong', 'odata'): 'Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim).',
     ('kong', 'oncrpc'): 'Re-import failed: Content does not appear to be ONC RPC / XDR RPCL (kong->oncrpc)',

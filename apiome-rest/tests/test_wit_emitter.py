@@ -65,6 +65,7 @@ from app.wit_emitter import (
     WitEmitOptions,
     WitEmitter,
     WitFidelityRulePack,
+    validate_wit_document,
 )
 from app.wit_import_source import WitImportSource
 from app.wit_parser import parse_wit
@@ -1338,3 +1339,36 @@ def test_a_map_type_is_an_approximation_and_a_record_is_not() -> None:
     assert pack.type_verdict(Type(key="Pet", name="Pet", kind=TypeKind.RECORD)).kind is (
         LossinessKind.OK
     )
+
+
+# ---------------------------------------------------------------------------
+# The post-emit validation gate — FMT-2.7 (#5425)
+# ---------------------------------------------------------------------------
+
+
+def test_the_validator_accepts_a_package_this_emitter_wrote() -> None:
+    """The gate's checker agrees with the emitter on every corpus fixture."""
+    for fixture in sorted(WIT_EXAMPLES.glob("*.wit")):
+        result = WitEmitter().emit(import_wit(fixture.read_text()))
+        validate_wit_document(str(result.files[0].content))
+
+
+def test_the_validator_rejects_text_that_is_not_wit() -> None:
+    with pytest.raises(ValueError, match="Invalid WIT package"):
+        validate_wit_document("this is prose, not a package\n")
+
+
+def test_the_validator_rejects_a_syntactically_broken_package() -> None:
+    with pytest.raises(ValueError, match="Invalid WIT package"):
+        validate_wit_document("package apiome:demo@1.0.0;\ninterface widgets {\n")
+
+
+def test_the_validator_rejects_a_package_that_declares_nothing() -> None:
+    """A bare package declaration is syntactically legal and describes no API.
+
+    The adapter is what refuses it, which is the point of routing the gate through the
+    adapter rather than through the bare grammar: everything an intake would reject, an
+    export is held to as well.
+    """
+    with pytest.raises(ValueError, match="declares no interfaces or worlds"):
+        validate_wit_document("package apiome:demo@1.0.0;\n")
