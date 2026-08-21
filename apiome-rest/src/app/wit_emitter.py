@@ -95,6 +95,7 @@ __all__ = [
     "WitEmitOptions",
     "WitEmitter",
     "WitFidelityRulePack",
+    "validate_wit_document",
 ]
 
 #: Registry key of this emitter. It matches the ``wit`` import adapter, so the
@@ -1447,6 +1448,39 @@ def _declared_security_schemes(api: CanonicalApi) -> List[str]:
             elif isinstance(declared, str):
                 names.add(declared)
     return sorted(names)
+
+
+# ===========================================================================
+# Validation
+# ===========================================================================
+
+
+def validate_wit_document(content: str, *, source_label: str = "emitted") -> None:
+    """Validate an emitted WIT package by re-parsing it — FMT-2.7 (#5425).
+
+    The post-emit gate for this target: the emitted text is fed back through the
+    ``wit`` import adapter — the same parser an intake uses — so a package this
+    emitter wrote is proven to be one the WIT grammar accepts, and one Apiome can read
+    back. The adapter also refuses a package that parses but declares neither an
+    interface nor a world, so an empty-but-legal package is caught here too without a
+    second rule being stated.
+
+    Args:
+        content: The emitted ``.wit`` document text.
+        source_label: Label used in the error message when parsing is what fails.
+
+    Raises:
+        ValueError: When the text does not re-parse as a WIT package.
+    """
+    from .import_source import ImportSourceError
+    from .wit_import_source import WitImportSource
+
+    try:
+        WitImportSource().parse(content, source_label=source_label)
+    except ImportSourceError as exc:
+        # The adapter raises its own intake error; this function has one failure type so
+        # a caller validating an artifact need not know which half failed.
+        raise ValueError(f"Invalid WIT package: {exc}") from exc
 
 
 # ===========================================================================

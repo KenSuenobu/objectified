@@ -47,7 +47,11 @@ from app.emitter import (
     load_builtin_emitters,
 )
 from app.import_source import canonical_diff
-from app.k8s_crd_emitter import K8sCrdEmitOptions, K8sCrdEmitter
+from app.k8s_crd_emitter import (
+    K8sCrdEmitOptions,
+    K8sCrdEmitter,
+    K8sCrdFidelityRulePack,
+)
 from app.k8s_crd_import_source import K8sCrdImportSource
 from app.k8s_structural_schema import (
     CRD_API_VERSION,
@@ -875,3 +879,75 @@ def test_every_emitted_schema_passes_the_independent_structural_checker() -> Non
                 schema = version.get("schema", {}).get("openAPIV3Schema")
                 if schema is not None:
                     assert structural_schema_violations(schema) == []
+
+
+# ---------------------------------------------------------------------------
+# The fidelity rule pack — FMT-2.7 (#5425)
+# ---------------------------------------------------------------------------
+
+
+def _pack() -> K8sCrdFidelityRulePack:
+    return K8sCrdFidelityRulePack(K8sCrdEmitter.capability_profile(), K8sCrdEmitter.label)
+
+
+def test_the_emitter_declares_the_crd_pack() -> None:
+    assert K8sCrdEmitter.fidelity_rule_pack() is K8sCrdFidelityRulePack
+
+
+def test_the_pack_drops_a_union_because_one_of_may_not_carry_a_type() -> None:
+    verdict = _pack().type_verdict(
+        Type(key="Shape", name="Shape", kind=TypeKind.UNION, union_members=["Widget"])
+    )
+    assert verdict.kind.value == "drop"
+    assert verdict.target_mapping == "union → free-form node"
+
+
+def test_the_pack_approximates_a_scalar_with_no_inferable_json_type() -> None:
+    """The emitter writes a free-form node for it, so the pack says so first."""
+    untyped = Type(key="Opaque", name="Opaque", kind=TypeKind.SCALAR)
+    assert _pack().type_verdict(untyped).kind.value == "approx"
+    typed = Type(
+        key="Name",
+        name="Name",
+        kind=TypeKind.SCALAR,
+        constraints=Constraints(min_length=1),
+    )
+    assert _pack().type_verdict(typed).kind.value == "ok"
+
+
+def test_the_pack_names_the_two_validation_facets_kubernetes_refuses() -> None:
+    """``constraints=True`` holds only for the facets the API server actually knows."""
+    pack = _pack()
+    unique = CanonicalField(
+        key="Widget.tags",
+        name="tags",
+        type=TypeRef(name="string"),
+        constraints=Constraints(unique_items=True),
+    )
+    assert [verdict.kind.value for verdict in pack.field_verdicts(unique)] == ["drop"]
+    unknown_format = CanonicalField(
+        key="Widget.urn",
+        name="urn",
+        type=TypeRef(name="string"),
+        constraints=Constraints(format="widget-urn"),
+    )
+    assert [verdict.kind.value for verdict in pack.field_verdicts(unknown_format)] == ["drop"]
+    known = CanonicalField(
+        key="Widget.at",
+        name="at",
+        type=TypeRef(name="string"),
+        constraints=Constraints(format="date-time"),
+    )
+    assert pack.field_verdicts(known) == []
+
+
+def test_the_pack_drops_operations_and_channels_a_resource_definition_cannot_hold() -> None:
+    pack = _pack()
+    op = Operation(key="GET /widgets", name="list", kind=OperationKind.REQUEST_RESPONSE)
+    assert pack.operation_verdict(op).kind.value == "drop"
+    assert pack.channel_verdict(Channel(key="c", address="c")).kind.value == "drop"
+
+
+def test_the_pack_declares_no_root_loss_because_a_crd_names_itself() -> None:
+    """``metadata.name`` and ``spec.group`` carry the identity, so nothing is lost there."""
+    assert _pack().root_verdicts(_import_fixture("02-typical-cronwidget.yaml")) == []

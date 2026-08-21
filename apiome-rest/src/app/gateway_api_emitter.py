@@ -60,7 +60,15 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 import yaml
 from pydantic import Field, field_validator
 
-from .canonical_model import ApiParadigm, CanonicalApi
+from .canonical_model import (
+    ApiParadigm,
+    CanonicalApi,
+    CanonicalField,
+    Channel,
+    Operation,
+    OperationKind,
+    Type,
+)
 from .emitter import (
     CapabilityProfile,
     EmitOptions,
@@ -73,6 +81,7 @@ from .emitter import (
     Provenance,
     ProvenanceTracker,
 )
+from .fidelity_rulepack import CapabilityRulePack, FidelityVerdict
 from .gateway_api_parser import PATH_KIND_TYPES, ROUTE_EXTRA_KEYS
 from .gateway_api_schema import (
     GATEWAY_API_GROUP,
@@ -97,6 +106,7 @@ __all__ = [
     "DOCUMENT_MODES",
     "GatewayApiEmitOptions",
     "GatewayApiEmitter",
+    "GatewayApiFidelityRulePack",
     # Re-exported so an export caller needs one import to emit and verify.
     "httproute_document_violations",
     "httproute_stream_violations",
@@ -133,6 +143,114 @@ _MEDIA_TYPE = "application/yaml"
 #: Fallback names for values that sanitize to nothing.
 _FALLBACK_RESOURCE = "httproute"
 _FALLBACK_BACKEND = "backend"
+
+#: Operation kinds that describe an event flow rather than a request/response call.
+_EVENT_OPERATION_KINDS = frozenset({OperationKind.PUBLISH, OperationKind.SUBSCRIBE})
+
+
+# ===========================================================================
+# Fidelity
+# ===========================================================================
+
+
+class GatewayApiFidelityRulePack(CapabilityRulePack):
+    """Fidelity rules for Gateway API ``HTTPRoute`` export — FMT-2.7 (#5425).
+
+    States, construct by construct and *before* an emit runs, the same losses
+    :class:`GatewayApiEmitter` records while building the manifest, so a target card
+    and the finished artifact agree.
+
+    An ``HTTPRoute`` is a **routing surface**: hostnames, path patterns, methods and
+    header/query matches, and nothing about the payloads those matches carry. The
+    three losses named directly here are the artifact title (the CRD's
+    ``metadata.name`` is a resource name, not a title), every event channel, and
+    every named type — the last of which the profile-derived default would call
+    ``OK`` on the strength of ``operations=True``, over-claiming a fidelity a
+    manifest with no schema section cannot deliver.
+    """
+
+    target_label = "Gateway API HTTPRoute"
+
+    def root_verdicts(self, api: CanonicalApi) -> List[FidelityVerdict]:
+        """Declare the artifact title an ``HTTPRoute`` has nowhere to put.
+
+        ``metadata.name`` names the *resource*, is constrained to a DNS label, and is
+        derived per service — so it cannot stand in for the artifact title, and a
+        re-import names the model after the file it read. Reported only when the
+        source carries a title or an identity name to lose.
+        """
+        if not (api.title or api.identity.name):
+            return []
+        return [
+            FidelityVerdict.approx(
+                message=(
+                    f"{self.target_label} has no field for the artifact title — "
+                    "`metadata.name` names the resource — so a re-import names the "
+                    "model after the file it was read from"
+                ),
+                target_mapping="artifact title → file name",
+            )
+        ]
+
+    def channel_verdict(self, channel: Channel) -> FidelityVerdict:
+        """An event channel has no rule to become; it is dropped."""
+        return FidelityVerdict.drop(
+            message=(
+                f"{self.target_label} routes HTTP requests and has no event/channel "
+                f"vocabulary; channel {channel.key!r} is dropped"
+            ),
+            target_mapping="channel → dropped",
+        )
+
+    def operation_verdict(self, operation: Operation) -> FidelityVerdict:
+        """Only an HTTP-bound operation with a known method becomes a rule match."""
+        if operation.kind in _EVENT_OPERATION_KINDS:
+            return FidelityVerdict.drop(
+                message=(
+                    f"{self.target_label} has no event vocabulary; "
+                    f"{operation.kind.value} operation {operation.key!r} is dropped"
+                ),
+                target_mapping="event operation → dropped",
+            )
+        if not operation.http_method and not operation.http_path:
+            return FidelityVerdict.drop(
+                message=(
+                    f"{self.target_label} matches on method, path and hostname; "
+                    f"operation {operation.key!r} declares no HTTP binding to route "
+                    "and is dropped"
+                ),
+                target_mapping="non-HTTP operation → dropped",
+            )
+        method = (operation.http_method or "").upper()
+        if method and method not in HTTP_METHODS:
+            return FidelityVerdict.approx(
+                message=(
+                    f"the Gateway API method vocabulary has no {method!r}; the method "
+                    f"match for operation {operation.key!r} is not emitted, so the rule "
+                    "matches every method on its path"
+                ),
+                target_mapping="unknown method → path-only match",
+            )
+        return FidelityVerdict.ok(message=f"operation carried to {self.target_label}")
+
+    def type_verdict(self, type_: Type) -> FidelityVerdict:
+        """Every named type is dropped: a routing surface has no schema section."""
+        return FidelityVerdict.drop(
+            message=(
+                f"{self.target_label} declares where a request goes, never what it "
+                f"carries; type {type_.key!r} has no declaration to become and is dropped"
+            ),
+            target_mapping="named type → dropped",
+        )
+
+    def field_verdicts(self, field: CanonicalField) -> List[FidelityVerdict]:
+        """No per-field verdicts — the owning type is already dropped whole.
+
+        Reporting a dropped type's fields as three further losses (nullability,
+        constraints, field number) restates one fact three times and inflates the
+        loss counts a fidelity badge is computed from.
+        """
+        return []
 
 
 class GatewayApiEmitOptions(EmitOptions):
@@ -473,6 +591,11 @@ class GatewayApiEmitter(Emitter, register=True):
             constraints=False,
             field_identity=False,
         )
+
+    @classmethod
+    def fidelity_rule_pack(cls) -> type[CapabilityRulePack]:
+        """Return the Gateway API ``HTTPRoute`` degradation rules."""
+        return GatewayApiFidelityRulePack
 
     def emit(
         self,

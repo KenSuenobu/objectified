@@ -36,6 +36,7 @@ from app.canonical_model import (
     ApiIdentity,
     ApiParadigm,
     CanonicalApi,
+    CanonicalField,
     Channel,
     Message,
     MessageRole,
@@ -64,6 +65,7 @@ from app.gateway_api_emitter import (
     DOCUMENT_MODES,
     GatewayApiEmitOptions,
     GatewayApiEmitter,
+    GatewayApiFidelityRulePack,
     _parse_reference,
 )
 from app.gateway_api_import_source import GatewayApiImportSource
@@ -1131,3 +1133,68 @@ def test_the_projection_invents_no_upstream_for_a_flavor_that_needs_none() -> No
     )
     assert all(service.url is None for service in document.services)
     assert "synthesized-upstream" not in {loss.subject for loss in losses.records()}
+
+
+# ---------------------------------------------------------------------------
+# The fidelity rule pack — FMT-2.7 (#5425)
+# ---------------------------------------------------------------------------
+
+
+def _pack() -> GatewayApiFidelityRulePack:
+    return GatewayApiFidelityRulePack(
+        GatewayApiEmitter.capability_profile(), GatewayApiEmitter.label
+    )
+
+
+def test_the_emitter_declares_the_httproute_pack() -> None:
+    assert GatewayApiEmitter.fidelity_rule_pack() is GatewayApiFidelityRulePack
+
+
+def test_the_pack_declares_the_artifact_title_a_manifest_has_no_field_for() -> None:
+    """``metadata.name`` names the resource, so it cannot stand in for the title."""
+    verdicts = _pack().root_verdicts(_rest_model(title="Pet Store"))
+    assert [verdict.kind.value for verdict in verdicts] == ["approx"]
+    assert "metadata.name" in verdicts[0].message
+
+
+def test_the_pack_claims_no_title_loss_when_the_model_has_no_title() -> None:
+    assert _pack().root_verdicts(_rest_model(title="")) == []
+
+
+def test_the_pack_drops_every_named_type_and_says_nothing_per_field() -> None:
+    pack = _pack()
+    assert pack.type_verdict(Type(key="Pet", name="Pet", kind=TypeKind.RECORD)).kind.value == (
+        "drop"
+    )
+    field = CanonicalField(key="Pet.id", name="id", type=TypeRef(name="string", nullable=False))
+    assert pack.field_verdicts(field) == []
+
+
+def test_the_pack_approximates_a_method_outside_the_gateway_api_vocabulary() -> None:
+    """An unknown method's match is not emitted, so the rule widens to the whole path."""
+    pack = _pack()
+    fetch = Operation(
+        key="FETCH /pets",
+        name="FETCH /pets",
+        kind=OperationKind.REQUEST_RESPONSE,
+        http_method="FETCH",
+        http_path="/pets",
+    )
+    verdict = pack.operation_verdict(fetch)
+    assert verdict.kind.value == "approx"
+    assert verdict.target_mapping == "unknown method → path-only match"
+
+
+def test_the_pack_keeps_a_routable_operation_and_drops_the_rest() -> None:
+    pack = _pack()
+    routed = Operation(
+        key="GET /pets",
+        name="GET /pets",
+        kind=OperationKind.REQUEST_RESPONSE,
+        http_method="GET",
+        http_path="/pets",
+    )
+    assert pack.operation_verdict(routed).kind.value == "ok"
+    rpc = Operation(key="Rpc.call", name="call", kind=OperationKind.REQUEST_RESPONSE)
+    assert pack.operation_verdict(rpc).kind.value == "drop"
+    assert pack.channel_verdict(Channel(key="c", address="c")).kind.value == "drop"

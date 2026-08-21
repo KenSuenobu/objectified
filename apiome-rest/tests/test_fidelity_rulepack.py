@@ -49,6 +49,7 @@ from app.emitter import CapabilityProfile, Emitter
 from app.export_fidelity import ExportFidelityTier, build_export_fidelity
 from app.fidelity_engine import compute_lossiness, compute_lossiness_for_emitter
 from app.fidelity_rulepack import (
+    ROOT_CONSTRUCT_KEY,
     CapabilityRulePack,
     FidelityRulePack,
     FidelityVerdict,
@@ -239,6 +240,56 @@ def test_abstract_pack_cannot_be_instantiated():
     """`FidelityRulePack` is abstract — a concrete pack must implement the hooks."""
     with pytest.raises(TypeError):
         FidelityRulePack(PROTOBUF_PROFILE)  # type: ignore[abstract]
+
+
+# ---------------------------------------------------------------------------
+# The artifact-root hook — FMT-2.7 (#5425)
+# ---------------------------------------------------------------------------
+
+
+def test_the_root_hook_says_nothing_by_default():
+    """Most destinations have a document envelope of their own, so silence is the default.
+
+    An unconditional root verdict would make every target claim a loss it does not incur
+    and would shift every preserved-% in the product; the hook exists for the formats that
+    genuinely have nowhere to put the artifact's identity.
+    """
+    assert _StubPack(PROTOBUF_PROFILE).root_verdicts(_rich_api()) == []
+    assert CapabilityRulePack(PROTOBUF_PROFILE).root_verdicts(_rich_api()) == []
+    assert _items_for(_StubPack(PROTOBUF_PROFILE).evaluate(_rich_api()), ROOT_CONSTRUCT_KEY) == []
+
+
+class _RootPack(_StubPack):
+    """A pack that declares two independent root losses, to prove the list is walked."""
+
+    def root_verdicts(self, api: CanonicalApi) -> List[FidelityVerdict]:
+        return [
+            FidelityVerdict.approx("title has no field"),
+            FidelityVerdict.drop("servers have no field"),
+        ]
+
+
+def test_the_drive_loop_records_every_root_verdict_under_the_root_key():
+    """Root verdicts land on the empty key — the one a `canonical_diff` gives the root."""
+    report = _RootPack(PROTOBUF_PROFILE).evaluate(_rich_api())
+    items = _items_for(report, ROOT_CONSTRUCT_KEY)
+    assert sorted(item.kind.value for item in items) == ["approx", "drop"]
+    assert ROOT_CONSTRUCT_KEY == ""
+
+
+def test_the_root_key_is_what_a_canonical_diff_calls_the_root():
+    """The hook is only useful if its key reconciles against a real `changed root` entry.
+
+    `app.roundtrip_matrix.reconcile` relates a construct to a diff entity by key, and the
+    root entity's key is the empty string — so a root verdict recorded anywhere else would
+    never explain the difference it exists to explain.
+    """
+    from app.import_source import canonical_diff
+
+    api = _rich_api()
+    renamed = api.model_copy(update={"title": "Something else"})
+    entries = canonical_diff(api, renamed).entries
+    assert [(e.entity, e.key) for e in entries] == [("root", ROOT_CONSTRUCT_KEY)]
 
 
 # ---------------------------------------------------------------------------

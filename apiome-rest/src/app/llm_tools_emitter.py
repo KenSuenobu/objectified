@@ -64,7 +64,7 @@ tool. The mixed-dialect provenance is reported as a loss rather than approximate
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 from pydantic import Field, field_validator
 
@@ -83,6 +83,7 @@ from .emitter import (
 )
 from .fidelity_rulepack import CapabilityRulePack, FidelityVerdict
 from .llm_tool_schema import TOOL_MODES, validate_tool_array
+from .lossiness import LossinessSeverity
 from .tool_projection import (
     DEFAULT_MAX_NAME_LENGTH,
     DEFAULT_MAX_NESTING_DEPTH,
@@ -98,7 +99,9 @@ __all__ = [
     "LlmToolsEmitOptions",
     "LlmToolsEmitter",
     "LlmToolsFidelityRulePack",
+    "detect_tool_mode",
     "render_tool_entry",
+    "validate_llm_tools_document",
 ]
 
 #: Registry key of this emitter. It matches the ``llm-tools`` import adapter, so the
@@ -361,6 +364,83 @@ class _LlmToolsWriter:
 
 
 # ===========================================================================
+# Validation
+# ===========================================================================
+
+
+def validate_llm_tools_document(content: str, *, source_label: str = "emitted") -> None:
+    """Validate an emitted tool array against its provider's schema — FMT-2.7 (#5425).
+
+    The post-emit gate for this target, in two halves:
+
+    #. the emitted text is fed back through the ``llm-tools`` import adapter, so a
+       document this emitter wrote is proven to be one Apiome can read; and
+    #. the parsed array is re-checked against the **provider tool-schema rules** for the
+       dialect it actually declares — name grammar, argument-schema shape, nesting depth
+       and the ``strict`` requirements — through the same
+       :func:`~app.llm_tool_schema.validate_tool_array` the emitter builds against.
+
+    The mode is *detected from the artifact* rather than taken from the emit options, so
+    the check is independent of how the document was produced: a bare array validated as
+    OpenAI (or the reverse) would pass rules the provider it is actually headed to does
+    not apply. A document whose entries do not classify at all fails the first half, so
+    the fallback mode is only ever reached for an array the adapter already accepted.
+
+    Args:
+        content: The emitted tool-array JSON text.
+        source_label: Label used in the error messages.
+
+    Raises:
+        ValueError: When the text does not re-parse as a tool array, or breaks a rule
+            of the provider dialect it declares.
+    """
+    from .import_source import ImportSourceError
+    from .llm_tools_import_source import LlmToolsImportSource
+
+    try:
+        LlmToolsImportSource().parse(content, source_label=source_label)
+    except ImportSourceError as exc:
+        # The adapter raises its own intake error; this function has one failure type so
+        # a caller validating an artifact need not know which half failed.
+        raise ValueError(f"Invalid LLM tool array: {exc}") from exc
+
+    document = json.loads(content)
+    validate_tool_array(
+        document,
+        mode=detect_tool_mode(document),
+        max_depth=DEFAULT_MAX_NESTING_DEPTH,
+        source_label=source_label,
+    )
+
+
+def detect_tool_mode(document: Any) -> str:
+    """Return the provider dialect an emitted tool array is written in.
+
+    Reads the dialect off the array's first classifiable entry through the importer's
+    :func:`~app.llm_tools_parser.classify_tool_dialect` — the same detector an intake
+    uses — so the emit and import directions cannot disagree about what a document is.
+    Falls back to ``bare`` (the least restrictive dialect) when nothing classifies,
+    which only happens for a document the import adapter has already rejected.
+
+    Args:
+        document: The parsed tool array, or a ``{"tools": [...]}`` wrapper.
+
+    Returns:
+        One of :data:`~app.llm_tool_schema.TOOL_MODES`.
+    """
+    from .llm_tools_parser import classify_tool_dialect
+
+    entries = document.get("tools") if isinstance(document, Mapping) else document
+    for entry in entries if isinstance(entries, list) else []:
+        if not isinstance(entry, Mapping):
+            continue
+        dialect = classify_tool_dialect(entry)
+        if dialect is not None:
+            return dialect
+    return "bare"
+
+
+# ===========================================================================
 # Fidelity
 # ===========================================================================
 
@@ -373,9 +453,51 @@ class LlmToolsFidelityRulePack(CapabilityRulePack):
     representation (there is no request/reply exchange to describe), streaming has none
     (a tool call is one request and one reply), and a named type survives only by being
     inlined into every tool that uses it — the standalone type does not come back.
+
+    FMT-2.7 (#5425) completed the pack with what the array's *envelope* cannot hold.
+    The emitted artifact is a bare JSON array of tool objects: it has no document
+    header at all, so neither the artifact title nor the servers the tools are reached
+    over has a field to live in. Both are the same two losses
+    :class:`LlmToolsEmitter` records while writing the document, stated before the
+    emit rather than after it.
     """
 
     target_label = "LLM tool array"
+
+    def root_verdicts(self, api: CanonicalApi) -> List[FidelityVerdict]:
+        """Declare the document envelope a bare tool array has no room for.
+
+        Two independent losses, each reported only when the source has something to
+        lose: the artifact **title** (a re-import names the array after the file it
+        read) and the declared **servers** (a tool entry names a callable and its
+        arguments, never the transport it is reached over). They mirror the emitter's
+        own document-level losses one for one.
+        """
+        verdicts: List[FidelityVerdict] = []
+        if api.title or api.identity.name:
+            verdicts.append(
+                FidelityVerdict.approx(
+                    message=(
+                        f"{self.target_label} is a bare array of tool objects with no "
+                        "document header; the artifact title and version have no field, "
+                        "and a re-import names the array after the file it was read from"
+                    ),
+                    target_mapping="artifact title → file name",
+                )
+            )
+        if api.servers:
+            verdicts.append(
+                FidelityVerdict.drop(
+                    message=(
+                        f"a {self.target_label} entry names a callable and its arguments "
+                        f"and has no field for a server; the {len(api.servers)} declared "
+                        "server(s) and the transport binding are dropped"
+                    ),
+                    severity=LossinessSeverity.WARN,
+                    target_mapping="servers → dropped",
+                )
+            )
+        return verdicts
 
     def channel_verdict(self, channel: Channel) -> FidelityVerdict:
         """An event channel has no tool representation; it is dropped."""

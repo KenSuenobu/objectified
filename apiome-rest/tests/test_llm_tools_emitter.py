@@ -70,7 +70,9 @@ from app.llm_tools_emitter import (
     LlmToolsEmitOptions,
     LlmToolsEmitter,
     LlmToolsFidelityRulePack,
+    detect_tool_mode,
     render_tool_entry,
+    validate_llm_tools_document,
 )
 from app.llm_tools_normalizer import LlmToolsNormalizer
 from app.llm_tools_parser import parse_llm_tools
@@ -862,3 +864,47 @@ def test_the_committed_corpus_fixture_is_exactly_what_the_emitter_writes(
 def test_the_committed_corpus_fixture_re_imports(fixture: str) -> None:
     api = import_llm_tools(LLM_TOOLS_EXAMPLES / fixture)
     assert api.operations()
+
+
+# ---------------------------------------------------------------------------
+# The post-emit validation gate — FMT-2.7 (#5425)
+# ---------------------------------------------------------------------------
+
+
+def test_the_validator_accepts_an_array_this_emitter_wrote_in_every_dialect() -> None:
+    """The gate's checker agrees with the emitter's own pre-flight, mode by mode."""
+    api = import_openapi()
+    for mode in TOOL_MODES:
+        result = LlmToolsEmitter().emit(api, opts=LlmToolsEmitOptions(mode=mode))
+        validate_llm_tools_document(str(result.files[0].content))
+
+
+def test_the_validator_checks_the_dialect_the_document_declares_not_the_one_it_is_told() -> None:
+    """An Anthropic tool is held to Anthropic's rules even with no options in sight.
+
+    Detecting the mode from the artifact is what makes the gate independent of how the
+    document was produced: a bare array checked as OpenAI would skip the rules the
+    provider it is headed to actually applies.
+    """
+    anthropic = json.dumps(
+        [
+            {
+                "name": "list_widgets",
+                "description": "d",
+                "input_schema": {"type": "object", "properties": {}},
+            }
+        ]
+    )
+    assert detect_tool_mode(json.loads(anthropic)) == "anthropic"
+    validate_llm_tools_document(anthropic)
+
+
+def test_the_validator_rejects_an_argument_schema_that_is_not_an_object() -> None:
+    broken = json.dumps([{"name": "list_widgets", "description": "d", "input_schema": []}])
+    with pytest.raises(ValueError):
+        validate_llm_tools_document(broken)
+
+
+def test_the_validator_rejects_a_document_that_is_not_a_tool_array() -> None:
+    with pytest.raises(ValueError, match="Invalid LLM tool array"):
+        validate_llm_tools_document(json.dumps({"openapi": "3.1.0", "paths": {}}))

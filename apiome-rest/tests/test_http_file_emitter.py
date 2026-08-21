@@ -76,6 +76,7 @@ from app.http_file_emitter import (
     HttpFileFidelityRulePack,
     camel_case,
     collapse_headers,
+    validate_http_file_document,
 )
 from app.http_file_import_source import HttpFileImportSource
 from app.http_file_parser import parse_http_file
@@ -1382,3 +1383,26 @@ def test_type_ref_payloads_are_synthesized_like_the_snippet_service_does() -> No
     text = emit(api)
     if request.body is not None:
         assert request.body in text
+
+
+# ---------------------------------------------------------------------------
+# The post-emit validation gate — FMT-2.7 (#5425)
+# ---------------------------------------------------------------------------
+
+
+def test_the_validator_accepts_a_request_file_this_emitter_wrote() -> None:
+    """The gate's checker agrees with the emitter, in both dialects."""
+    api = import_http_fixture("05-vscode-style-orders.http")
+    for dialect in DIALECTS:
+        result = HttpFileEmitter().emit(api, opts=HttpFileEmitOptions(dialect=dialect))
+        validate_http_file_document(str(result.files[0].content))
+
+
+def test_the_validator_rejects_prose_with_no_request_line() -> None:
+    with pytest.raises(ValueError, match="Invalid HTTP request file"):
+        validate_http_file_document("# just a comment\n# and another\n")
+
+
+def test_the_validator_rejects_an_empty_document() -> None:
+    with pytest.raises(ValueError, match="Invalid HTTP request file"):
+        validate_http_file_document("   \n")

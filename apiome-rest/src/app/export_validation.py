@@ -24,6 +24,18 @@ check. This module is the thin dispatcher that picks the matching validator per 
   every emitted ``.avsc`` with a shared named-schema registry; pure Python);
 * ``proto3`` — :func:`app.proto_descriptor.compile_proto_descriptor_set` (the emitted
   ``.proto`` is compiled by ``buf``; needs the ``buf`` toolchain);
+* ``k8s-crd`` / ``gateway-api`` — :func:`app.k8s_structural_schema.validate_k8s_crd_document`
+  and :func:`app.gateway_api_schema.validate_httproute_manifest` (re-import plus the field
+  rules the API server enforces on each CRD; pure Python, FMT-2.7);
+* ``kong`` — :func:`app.kong_deck_schema.validate_kong_declarative_document`, the vendored
+  equivalent of ``deck validate`` (``deck`` is a Go binary and is not in this runtime);
+* ``http-file`` — :func:`app.http_file_emitter.validate_http_file_document` (a re-parse
+  through the ``http-file`` adapter). Its ``curl`` output mode is a *shell script*, which
+  no importer reads, so that bundle is reported not-applicable instead;
+* ``llm-tools`` — :func:`app.llm_tools_emitter.validate_llm_tools_document` (a re-parse
+  plus the provider tool-schema rules for the dialect the artifact declares);
+* ``wit`` — :func:`app.wit_emitter.validate_wit_document` (a WIT parse through the ``wit``
+  adapter);
 * ``sample-noop`` and any unregistered format — *not applicable* (the sample emitter is an
   internal no-op with no importable artifact).
 
@@ -225,6 +237,52 @@ def _findings_from_diagnostics(
 def _finding_from_message(message: str, *, file: Optional[str] = None) -> ValidationFinding:
     """Build one finding from a free-form parser message."""
     return ValidationFinding(message=message, file=file)
+
+
+async def _run_text_validator(
+    target: str,
+    emit_result: EmitResult,
+    validator: Callable[[str], None],
+) -> EmittedArtifactValidation:
+    """Run a raise-on-invalid text checker over every emitted file and collapse the result.
+
+    The shape almost every text-format validator here wants: call ``validator`` with each
+    emitted file's content, collect one finding per file that raised, and return
+    :func:`_passed` or :func:`_rejected`. Every file is attempted even after one fails, so
+    a multi-document bundle reports all of its problems rather than only the first.
+
+    The whole walk runs in one worker thread. These checkers re-parse and re-normalize a
+    document, which is CPU-bound; doing it inline would block the export engine's event
+    loop for the length of an import.
+
+    Args:
+        target: The resolved target format key, echoed into the verdict.
+        emit_result: The emitter's output bundle.
+        validator: A checker that returns ``None`` for a valid document and raises for an
+            invalid one. Any exception is treated as a rejection — a checker's own
+            ``ValueError`` and a parser's ``TypeError`` are both "this artifact is not
+            valid", and neither should escape a validation gate as a crash.
+
+    Returns:
+        The collapsed :class:`EmittedArtifactValidation` verdict.
+    """
+
+    def _run() -> List[ValidationFinding]:
+        findings: List[ValidationFinding] = []
+        for emitted in emit_result.files:
+            try:
+                validator(str(emitted.content))
+            except Exception as exc:  # noqa: BLE001 — any failure is "not valid", never a crash
+                findings.append(ValidationFinding(message=str(exc), file=emitted.path))
+        return findings
+
+    findings = await asyncio.to_thread(_run)
+    return _passed(target) if not findings else _rejected(target, findings)
+
+
+def _is_shell_script(emitted: EmittedFile) -> bool:
+    """Whether an emitted file is a shell script rather than a document to re-parse."""
+    return emitted.media_type == "text/x-shellscript" or emitted.path.endswith(".sh")
 
 
 def _findings_from_avro_errors(errors: List[str]) -> List[ValidationFinding]:
@@ -639,6 +697,81 @@ async def _validate_arazzo(
     return _passed(target) if not errors else _rejected(target, [_finding_from_message(err) for err in errors])
 
 
+# --- FMT-2.7 (#5425): the six FMT-EPIC-2 targets ---------------------------
+#
+# Each reuses the checker its emitter epic already shipped, so the gate re-states no
+# rule of its own: the CRD and HTTPRoute checkers apply their CRD schema rules, the
+# Kong checker is the vendored ``deck validate``, and the request-file, tool-array
+# and WIT checkers re-parse through the matching import adapter.
+
+
+async def _validate_k8s_crd(
+    target: str, emit_result: EmitResult, api: CanonicalApi
+) -> EmittedArtifactValidation:
+    """Re-validate an emitted CustomResourceDefinition (re-import + structural rules)."""
+    from .k8s_structural_schema import validate_k8s_crd_document
+
+    return await _run_text_validator(target, emit_result, validate_k8s_crd_document)
+
+
+async def _validate_kong(
+    target: str, emit_result: EmitResult, api: CanonicalApi
+) -> EmittedArtifactValidation:
+    """Re-validate an emitted Kong declarative configuration (the vendored ``deck validate``)."""
+    from .kong_deck_schema import validate_kong_declarative_document
+
+    return await _run_text_validator(target, emit_result, validate_kong_declarative_document)
+
+
+async def _validate_gateway_api(
+    target: str, emit_result: EmitResult, api: CanonicalApi
+) -> EmittedArtifactValidation:
+    """Re-validate an emitted ``HTTPRoute`` stream (re-import + the CRD's field rules)."""
+    from .gateway_api_schema import validate_httproute_manifest
+
+    return await _run_text_validator(target, emit_result, validate_httproute_manifest)
+
+
+async def _validate_http_file(
+    target: str, emit_result: EmitResult, api: CanonicalApi
+) -> EmittedArtifactValidation:
+    """Re-validate an emitted request file by re-parsing it through the ``http-file`` adapter.
+
+    The ``curl`` output mode emits a POSIX shell script of many ``curl`` commands, and
+    the request-file grammar reads a *single* cURL command — no importer matches a
+    script, so that bundle is reported **not applicable** rather than failing a legal
+    export. The ``.http`` document, which the ticket names, is re-parsed.
+    """
+    from .http_file_emitter import validate_http_file_document
+
+    if all(_is_shell_script(emitted) for emitted in emit_result.files):
+        return _not_applicable(
+            target,
+            "The request-file target emitted a shell script of `curl` commands; the "
+            "`http-file` parser reads a request file (or one cURL command), not a "
+            "script, so the emitted artifact was not re-parsed.",
+        )
+    return await _run_text_validator(target, emit_result, validate_http_file_document)
+
+
+async def _validate_llm_tools(
+    target: str, emit_result: EmitResult, api: CanonicalApi
+) -> EmittedArtifactValidation:
+    """Re-validate an emitted tool array (re-import + the provider's tool-schema rules)."""
+    from .llm_tools_emitter import validate_llm_tools_document
+
+    return await _run_text_validator(target, emit_result, validate_llm_tools_document)
+
+
+async def _validate_wit(
+    target: str, emit_result: EmitResult, api: CanonicalApi
+) -> EmittedArtifactValidation:
+    """Re-validate an emitted WIT package by re-parsing it through the ``wit`` adapter."""
+    from .wit_emitter import validate_wit_document
+
+    return await _run_text_validator(target, emit_result, validate_wit_document)
+
+
 _VALIDATORS: Dict[str, _Validator] = {
     "openapi-3.1": _validate_openapi,
     "graphql": _validate_graphql,
@@ -661,6 +794,13 @@ _VALIDATORS: Dict[str, _Validator] = {
     "json-schema": _validate_jsonschema,
     "jtd": _validate_jtd,
     "arazzo": _validate_arazzo,
+    # FMT-EPIC-2 targets (FMT-2.7, #5425)
+    "k8s-crd": _validate_k8s_crd,
+    "kong": _validate_kong,
+    "gateway-api": _validate_gateway_api,
+    "http-file": _validate_http_file,
+    "llm-tools": _validate_llm_tools,
+    "wit": _validate_wit,
 }
 
 

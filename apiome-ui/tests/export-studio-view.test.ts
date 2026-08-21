@@ -40,12 +40,13 @@ import { STATUS_TONES } from '../src/app/components/ui/statusVocabulary';
    ------------------------------------------------------------------------- */
 
 describe('familyForParadigm', () => {
-  it('names the four headings the mockup prints, in its order', () => {
+  it('names the headings the mockup prints, in its order', () => {
     expect(EXPORT_TARGET_FAMILIES.map((family) => family.label)).toEqual([
       'REST & HTTP',
       'RPC',
       'Events',
       'Data schema & graph',
+      'Agents & tools',
     ]);
   });
 
@@ -58,6 +59,9 @@ describe('familyForParadigm', () => {
     // GraphQL joins the data-schema heading: to a reader choosing an export, an SDL is the
     // same kind of answer as Avro — a type system rather than a transport.
     expect(familyForParadigm('graph').key).toBe('data');
+    // FMT-2.7 (#5425): the LLM tool-array target made `agent` a paradigm with an emitter
+    // behind it, so it has a heading of its own rather than falling to the catch-all.
+    expect(familyForParadigm('agent').key).toBe('agent');
   });
 
   it('normalises case and either spelling of the word separator', () => {
@@ -70,10 +74,10 @@ describe('familyForParadigm', () => {
   });
 
   it('gives an unknown paradigm a heading rather than dropping its card', () => {
-    // `ApiParadigm.AGENT` has no emitter behind it yet. The day one lands it must appear in
-    // the grid, not vanish from it — which is what keeps "all 36 targets reachable" true of
-    // a registry that grows.
-    expect(familyForParadigm('agent')).toEqual(OTHER_FAMILY);
+    // A paradigm this table does not know must still appear in the grid, not vanish from
+    // it — which is what keeps "every registered target is reachable" true of a registry
+    // that grows a member before it grows a heading.
+    expect(familyForParadigm('quantum')).toEqual(OTHER_FAMILY);
     expect(familyForParadigm('')).toEqual(OTHER_FAMILY);
     expect(familyForParadigm(null)).toEqual(OTHER_FAMILY);
     expect(familyForParadigm(undefined)).toEqual(OTHER_FAMILY);
@@ -90,11 +94,19 @@ describe('groupTargetsByFamily', () => {
     card('graphql', 'graph'),
     card('raml', 'rest'),
     card('tools', 'agent'),
+    card('quantum', 'quantum'),
   ];
 
   it('draws the families in their declared order, with the catch-all last', () => {
     const groups = groupTargetsByFamily(CARDS, (c) => c.paradigm);
-    expect(groups.map((group) => group.key)).toEqual(['rest', 'rpc', 'event', 'data', 'other']);
+    expect(groups.map((group) => group.key)).toEqual([
+      'rest',
+      'rpc',
+      'event',
+      'data',
+      'agent',
+      'other',
+    ]);
   });
 
   it('keeps the incoming order inside a family, so the readiness sort still ranks', () => {

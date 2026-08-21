@@ -76,6 +76,18 @@ const EXPORT_TARGET_LANGUAGE: Readonly<Record<string, ExportTargetMeta>> = {
   arazzo: { language: 'yaml', extension: '.yaml', baseName: 'workflow' },
   workflows: { language: 'yaml', extension: '.yaml', baseName: 'workflow' },
   typespec: { language: 'typescript', extension: '.tsp', baseName: 'api' },
+  // The FMT-EPIC-2 targets (FMT-2.7, #5425). Each `baseName`/`extension` pair is the
+  // filename its emitter writes *by default*, so a Studio download lands with the name the
+  // destination tool expects to read — `kong.yaml` is what `deck` looks for, and
+  // `requests.http` is what both request-file editors key on. A per-emit option that
+  // changes the serialization (the request-file target's `curl` mode writes a `.sh`
+  // script) is not visible from the target id alone, and is not modelled here.
+  'k8s-crd': { language: 'yaml', extension: '.yaml', baseName: 'crd' },
+  kong: { language: 'yaml', extension: '.yaml', baseName: 'kong' },
+  'gateway-api': { language: 'yaml', extension: '.yaml', baseName: 'httproute' },
+  'http-file': { language: 'plaintext', extension: '.http', baseName: 'requests' },
+  'llm-tools': { language: 'json', extension: '.json', baseName: 'tools' },
+  wit: { language: 'plaintext', extension: '.wit', baseName: 'api' },
   sample: { language: 'plaintext', extension: '.txt', baseName: 'sample' },
 };
 
@@ -111,6 +123,19 @@ const EXPORT_TARGET_ALIASES: Readonly<Record<string, string>> = {
   proto: 'protobuf',
   proto3: 'protobuf',
   sdl: 'graphql',
+  // FMT-EPIC-2 spellings (FMT-2.7, #5425).
+  'kubernetes-crd': 'k8s-crd',
+  crd: 'k8s-crd',
+  k8scrd: 'k8s-crd',
+  'kong-declarative': 'kong',
+  httproute: 'gateway-api',
+  gatewayapi: 'gateway-api',
+  httpfile: 'http-file',
+  curl: 'http-file',
+  llmtools: 'llm-tools',
+  'function-calling': 'llm-tools',
+  'openai-tools': 'llm-tools',
+  'anthropic-tools': 'llm-tools',
 };
 
 /** Targets whose emitted serialization can vary (JSON default, YAML/XML sniffed from the bytes). */
@@ -154,6 +179,10 @@ const EXTENSION_LANGUAGE: Readonly<Record<string, string>> = {
   '.markdown': 'markdown',
   '.apib': 'markdown', // API Blueprint
   // Grammar-less: render as plaintext rather than mis-highlight
+  '.http': 'plaintext', // request file — no Monaco grammar for the `.http` dialects
+  '.rest': 'plaintext',
+  '.wit': 'plaintext', // WebAssembly Component Model interface types
+  '.sh': 'shell', // the request-file target's `curl` output mode
   '.thrift': 'plaintext',
   '.asn1': 'plaintext',
   '.asn': 'plaintext',

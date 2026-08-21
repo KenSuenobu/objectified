@@ -32,6 +32,7 @@ from app.canonical_model import (
     ApiIdentity,
     ApiParadigm,
     CanonicalApi,
+    CanonicalField,
     Channel,
     Message,
     MessageRole,
@@ -72,7 +73,7 @@ from app.gateway_config_model import (
 )
 from app.import_source import canonical_diff
 from app.kong_deck_schema import deck_document_violations, validate_kong_declarative_document
-from app.kong_emitter import KongEmitOptions, KongEmitter
+from app.kong_emitter import KongEmitOptions, KongEmitter, KongFidelityRulePack
 from app.kong_import_source import KongImportSource
 from app.kong_parser import ROUTE_EXTRA_KEYS, SERVICE_EXTRA_KEYS
 
@@ -1432,3 +1433,54 @@ def test_a_service_whose_operations_are_all_unroutable_emits_no_upstream() -> No
     assert [service["name"] for service in document["services"]] == ["pets"]
     assert any(loss.subject == "unrouted-service" for loss in result.losses)
     assert deck_document_violations(document) == []
+
+
+# ---------------------------------------------------------------------------
+# The fidelity rule pack — FMT-2.7 (#5425)
+# ---------------------------------------------------------------------------
+
+
+def _pack() -> KongFidelityRulePack:
+    return KongFidelityRulePack(KongEmitter.capability_profile(), KongEmitter.label)
+
+
+def test_the_emitter_declares_the_kong_pack() -> None:
+    assert KongEmitter.fidelity_rule_pack() is KongFidelityRulePack
+
+
+def test_the_pack_declares_the_artifact_title_deck_has_no_field_for() -> None:
+    """The pack states, before the emit, the loss the emitter records while writing."""
+    verdicts = _pack().root_verdicts(_rest_model(title="Pet API"))
+    assert [verdict.kind.value for verdict in verdicts] == ["approx"]
+    assert verdicts[0].target_mapping == "artifact title → file name"
+
+
+def test_the_pack_claims_no_title_loss_when_the_model_has_no_title() -> None:
+    api = _rest_model(title="")
+    assert _pack().root_verdicts(api) == []
+
+
+def test_the_pack_drops_every_named_type_and_says_nothing_per_field() -> None:
+    """A routing surface has no schema section, so the type is the whole story."""
+    pack = _pack()
+    widget = Type(key="Widget", name="Widget", kind=TypeKind.RECORD)
+    assert pack.type_verdict(widget).kind.value == "drop"
+    field = CanonicalField(key="Widget.id", name="id", type=TypeRef(name="string", nullable=False))
+    assert pack.field_verdicts(field) == []
+
+
+def test_the_pack_keeps_an_http_operation_and_drops_the_rest() -> None:
+    pack = _pack()
+    routed = Operation(
+        key="GET /pets",
+        name="GET /pets",
+        kind=OperationKind.REQUEST_RESPONSE,
+        http_method="GET",
+        http_path="/pets",
+    )
+    assert pack.operation_verdict(routed).kind.value == "ok"
+    rpc = Operation(key="Rpc.call", name="call", kind=OperationKind.REQUEST_RESPONSE)
+    assert pack.operation_verdict(rpc).kind.value == "drop"
+    published = Operation(key="events.created", name="created", kind=OperationKind.PUBLISH)
+    assert pack.operation_verdict(published).kind.value == "drop"
+    assert pack.channel_verdict(Channel(key="c", address="c")).kind.value == "drop"

@@ -143,6 +143,8 @@ const TARGETS: ExportTargetsResponse = {
     entry('avro', 'Apache Avro', 'data_schema', LOSSY),
     entry('graphql', 'GraphQL SDL', 'graph', LOSSY),
     entry('toolbundle', 'Agent tool bundle', 'agent', LOSSY),
+    // A paradigm no family table knows: it must still reach the grid, under the catch-all.
+    entry('holodeck', 'Holodeck program', 'quantum', LOSSY),
   ],
 };
 
