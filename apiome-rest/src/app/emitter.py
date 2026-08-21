@@ -663,6 +663,7 @@ def load_builtin_emitters() -> None:
     from . import jtd_emitter as _jtd_emitter  # noqa: F401
     from . import arazzo_emitter as _arazzo_emitter  # noqa: F401
     from . import k8s_crd_emitter as _k8s_crd_emitter  # noqa: F401
+    from . import kong_emitter as _kong_emitter  # noqa: F401
 
 
 def get_emitter(format_key: str) -> Optional[type[Emitter]]:

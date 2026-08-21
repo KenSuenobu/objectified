@@ -32,6 +32,7 @@ from typing import Any, Dict, Optional, Tuple
 
 __all__ = [
     "KONG_AUTH_PLUGIN_SCHEMES",
+    "KONG_SCHEME_AUTH_PLUGINS",
     "SECRET_CONFIG_KEYS",
     "GatewayConfigParseError",
     "GatewayPathPattern",
@@ -63,6 +64,21 @@ KONG_AUTH_PLUGIN_SCHEMES: Dict[str, Optional[str]] = {
     "hmac-auth": None,
     "ldap-auth": None,
 }
+
+#: Canonical security-scheme identifier → the Kong auth plugin that implements it —
+#: the *reverse* of :data:`KONG_AUTH_PLUGIN_SCHEMES`, used by
+#: :mod:`app.gateway_config_emitter` when a canonical model names a scheme but no
+#: source plugin (a cross-format export, where nothing recorded which plugin the
+#: scheme came from). Derived from the forward table rather than written out a
+#: second time, so the two can never disagree: the first plugin declared for a
+#: scheme wins (``apiKey`` → ``key-auth``, not ``key-auth-enc``), and plugins with
+#: no canonical scheme contribute nothing. ``test_gateway_security_table_symmetry``
+#: asserts the round trip in both directions.
+KONG_SCHEME_AUTH_PLUGINS: Dict[str, str] = {}
+for _plugin, _scheme in KONG_AUTH_PLUGIN_SCHEMES.items():
+    if _scheme is not None:
+        KONG_SCHEME_AUTH_PLUGINS.setdefault(_scheme, _plugin)
+del _plugin, _scheme
 
 #: Plugin-config keys whose values are credential material. Redacted recursively by
 #: :func:`redact_secret_config` before a config dict is retained anywhere. ``key`` is

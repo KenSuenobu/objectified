@@ -35,6 +35,8 @@ from .gateway_config_model import (
 )
 
 __all__ = [
+    "ROUTE_EXTRA_KEYS",
+    "SERVICE_EXTRA_KEYS",
     "is_kong_declarative",
     "is_kong_declarative_document",
     "parse_kong_declarative",
@@ -63,6 +65,18 @@ _IGNORED_CONSTRUCT_REASONS: Dict[str, str] = {
     ),
 }
 
+#: Service attributes carried into ``GatewayServiceDef.extras`` when present. Public
+#: for the same reason as :data:`ROUTE_EXTRA_KEYS` — the emitter writes back exactly
+#: this set.
+SERVICE_EXTRA_KEYS = (
+    "tags",
+    "retries",
+    "connect_timeout",
+    "read_timeout",
+    "write_timeout",
+    "enabled",
+)
+
 #: Consumer sub-keys that hold credential material (counted, then discarded).
 _CREDENTIAL_KEYS = (
     "keyauth_credentials",
@@ -74,8 +88,10 @@ _CREDENTIAL_KEYS = (
 )
 
 #: Route attributes carried into ``GatewayRoute.extras`` when present (attributes
-#: the canonical model has no field for; preserved, never dropped).
-_ROUTE_EXTRA_KEYS = (
+#: the canonical model has no field for; preserved, never dropped). Public because
+#: :mod:`app.kong_emitter` writes exactly these keys back — a key readable here but
+#: not writable there would silently vanish on an import → export round trip.
+ROUTE_EXTRA_KEYS = (
     "strip_path",
     "preserve_host",
     "path_handling",
@@ -254,7 +270,7 @@ def _parse_route(
                 auth.append(hint)
 
     extras: Dict[str, Any] = {}
-    for key in _ROUTE_EXTRA_KEYS:
+    for key in ROUTE_EXTRA_KEYS:
         if key in entry and entry[key] is not None:
             extras[key] = entry[key]
 
@@ -359,7 +375,7 @@ def parse_kong_declarative(
 
             extras = {
                 key: raw_service[key]
-                for key in ("tags", "retries", "connect_timeout", "read_timeout", "write_timeout", "enabled")
+                for key in SERVICE_EXTRA_KEYS
                 if key in raw_service and raw_service[key] is not None
             }
             services.append(

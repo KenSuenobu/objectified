@@ -253,11 +253,19 @@ def test_a_round_tripping_format_says_so(rows: List[FormatRow]) -> None:
 
 
 def test_an_import_only_format_says_so(rows: List[FormatRow]) -> None:
-    # `kong` imports a gateway config; there is no Kong emitter.
+    # `mcp` reads a Model Context Protocol server description; there is no MCP emitter.
+    mcp = next(r for r in rows if r.key == "mcp")
+    assert mcp.can_import is True
+    assert mcp.can_export is False
+    assert mcp.direction == "Import only"
+
+
+def test_a_round_tripping_gateway_format_says_so(rows: List[FormatRow]) -> None:
+    """`kong` gained its emitter in FMT-2.2, so the page must stop calling it read-only."""
     kong = next(r for r in rows if r.key == "kong")
     assert kong.can_import is True
-    assert kong.can_export is False
-    assert kong.direction == "Import only"
+    assert kong.can_export is True
+    assert kong.direction == "Import + export"
 
 
 def test_protobuf_emitter_is_joined_onto_its_grpc_import_adapter(rows: List[FormatRow]) -> None:
