@@ -1,0 +1,723 @@
+{
+  "adapter": "http-file",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "http_file_variables": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.example.com/v1"
+        }
+      ],
+      "path_inferences": [
+        {
+          "generalized_segments": [
+            {
+              "index": 0,
+              "kind": "literal",
+              "value": "v1"
+            },
+            {
+              "index": 1,
+              "kind": "literal",
+              "value": "api"
+            },
+            {
+              "index": 2,
+              "kind": "literal",
+              "value": "items"
+            },
+            {
+              "index": 3,
+              "kind": "param",
+              "value": "itemId"
+            }
+          ],
+          "method": "DELETE",
+          "sample_urls": [
+            "https://api.example.com/v1/api/items/{itemId}"
+          ],
+          "template": "/v1/api/items/{itemId}"
+        },
+        {
+          "generalized_segments": [
+            {
+              "index": 0,
+              "kind": "literal",
+              "value": "v1"
+            },
+            {
+              "index": 1,
+              "kind": "literal",
+              "value": "api"
+            },
+            {
+              "index": 2,
+              "kind": "literal",
+              "value": "items"
+            },
+            {
+              "index": 3,
+              "kind": "param",
+              "value": "itemId"
+            }
+          ],
+          "method": "GET",
+          "sample_urls": [
+            "https://api.example.com/v1/api/items/{itemId}"
+          ],
+          "template": "/v1/api/items/{itemId}"
+        }
+      ],
+      "provenance": "inferred",
+      "sample_counts": {
+        "DELETE /v1/api/items/{itemId}": 1,
+        "GET /v1/api/items": 1,
+        "GET /v1/api/items/{itemId}": 1,
+        "GET /v1/api/search": 1,
+        "POST /v1/api/items": 1,
+        "POST /v1/api/session": 1
+      }
+    },
+    "format": "http-file",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "http-file/07-emitted-vscode-collection.http",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred",
+          "source_file": "http-file/07-emitted-vscode-collection.http"
+        },
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred"
+        },
+        "key": "http-file/07-emitted-vscode-collection.http",
+        "name": "http-file/07-emitted-vscode-collection.http",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "api"
+                  },
+                  {
+                    "index": 2,
+                    "kind": "literal",
+                    "value": "items"
+                  },
+                  {
+                    "index": 3,
+                    "kind": "param",
+                    "value": "itemId"
+                  }
+                ],
+                "method": "DELETE",
+                "sample_urls": [
+                  "https://api.example.com/v1/api/items/{itemId}"
+                ],
+                "template": "/v1/api/items/{itemId}"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/07-emitted-vscode-collection.http"
+              ],
+              "source_label": "http-file/07-emitted-vscode-collection.http",
+              "source_location": "14:1"
+            },
+            "http_method": "DELETE",
+            "http_path": "/v1/api/items/{itemId}",
+            "key": "DELETE /v1/api/items/{itemId}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "DELETE /v1/api/items/{itemId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "DELETE /v1/api/items/{itemId}#path.itemId",
+                "location": "path",
+                "name": "itemId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "api"
+                  },
+                  {
+                    "index": 2,
+                    "kind": "literal",
+                    "value": "items"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://api.example.com/v1/api/items"
+                ],
+                "template": "/v1/api/items"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/07-emitted-vscode-collection.http"
+              ],
+              "source_label": "http-file/07-emitted-vscode-collection.http",
+              "source_location": "58:1"
+            },
+            "http_method": "GET",
+            "http_path": "/v1/api/items",
+            "key": "GET /v1/api/items",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /v1/api/items",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "GET /v1/api/items#header.x-tenant-id",
+                "location": "header",
+                "name": "x-tenant-id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "api"
+                  },
+                  {
+                    "index": 2,
+                    "kind": "literal",
+                    "value": "items"
+                  },
+                  {
+                    "index": 3,
+                    "kind": "param",
+                    "value": "itemId"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://api.example.com/v1/api/items/{itemId}"
+                ],
+                "template": "/v1/api/items/{itemId}"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/07-emitted-vscode-collection.http"
+              ],
+              "source_label": "http-file/07-emitted-vscode-collection.http",
+              "source_location": "19:1"
+            },
+            "http_method": "GET",
+            "http_path": "/v1/api/items/{itemId}",
+            "key": "GET /v1/api/items/{itemId}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /v1/api/items/{itemId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "GET /v1/api/items/{itemId}#path.itemId",
+                "location": "path",
+                "name": "itemId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "api"
+                  },
+                  {
+                    "index": 2,
+                    "kind": "literal",
+                    "value": "search"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://api.example.com/v1/api/search?q=Q"
+                ],
+                "template": "/v1/api/search"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/07-emitted-vscode-collection.http"
+              ],
+              "source_label": "http-file/07-emitted-vscode-collection.http",
+              "source_location": "26:1"
+            },
+            "http_method": "GET",
+            "http_path": "/v1/api/search",
+            "key": "GET /v1/api/search",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /v1/api/search",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1,
+                  "samples": [
+                    "Q"
+                  ]
+                },
+                "key": "GET /v1/api/search#query.q",
+                "location": "query",
+                "name": "q",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "api"
+                  },
+                  {
+                    "index": 2,
+                    "kind": "literal",
+                    "value": "items"
+                  }
+                ],
+                "method": "POST",
+                "sample_urls": [
+                  "https://api.example.com/v1/api/items"
+                ],
+                "template": "/v1/api/items"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/07-emitted-vscode-collection.http"
+              ],
+              "source_label": "http-file/07-emitted-vscode-collection.http",
+              "source_location": "33:1"
+            },
+            "http_method": "POST",
+            "http_path": "/v1/api/items",
+            "key": "POST /v1/api/items",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "headers": [],
+                "key": "POST /v1/api/items#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PostItemRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "POST /v1/api/items",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "POST /v1/api/items#header.content-type",
+                "location": "header",
+                "name": "content-type",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "POST /v1/api/items#header.x-tenant-id",
+                "location": "header",
+                "name": "x-tenant-id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "api"
+                  },
+                  {
+                    "index": 2,
+                    "kind": "literal",
+                    "value": "session"
+                  }
+                ],
+                "method": "POST",
+                "sample_urls": [
+                  "https://api.example.com/v1/api/session"
+                ],
+                "template": "/v1/api/session"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/07-emitted-vscode-collection.http"
+              ],
+              "source_label": "http-file/07-emitted-vscode-collection.http",
+              "source_location": "44:1"
+            },
+            "http_method": "POST",
+            "http_path": "/v1/api/session",
+            "key": "POST /v1/api/session",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "headers": [],
+                "key": "POST /v1/api/session#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PostSessionRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "POST /v1/api/session",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "POST /v1/api/session#header.content-type",
+                "location": "header",
+                "name": "content-type",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "http-file/07-emitted-vscode-collection.http",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "provenance": "inferred"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostItemRequest.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PostItemRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "PostItemRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "provenance": "inferred"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostSessionRequest.password",
+            "name": "password",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostSessionRequest.username",
+            "name": "username",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PostSessionRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "PostSessionRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "http-file/07-emitted-vscode-collection.http",
+  "counts": {
+    "channels": 0,
+    "operations": 6,
+    "servers": 1,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "http-file"
+  },
+  "fingerprint": "sha256:c4414f4bc7f291a5b70d5f4d7c0b8776d32f47803724a228fa1c8e278a2dfe0d",
+  "lint": {
+    "findings": 14,
+    "grade": "D",
+    "report_fingerprint": "62d1c0f4b10702a9fa8b75556d6f48a2e1c5a1fba0a73660ff4682bb04b7adac",
+    "score": 66,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

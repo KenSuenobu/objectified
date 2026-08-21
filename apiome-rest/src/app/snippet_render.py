@@ -228,12 +228,25 @@ def _upper_snake(name: str) -> str:
     return token or "VALUE"
 
 
-def _resolve_server(api: CanonicalApi) -> Tuple[str, List[SnippetPlaceholder]]:
+def resolve_server_base(api: CanonicalApi) -> Tuple[str, List[SnippetPlaceholder]]:
     """Pick the base URL: first declared server with variable defaults substituted.
 
     Variables without a default become upper-snake placeholder tokens; a model with no
     servers falls back to :data:`FALLBACK_SERVER_URL` (recorded as a ``server`` placeholder
-    so consumers know the base URL is not real).
+    so consumers know the base URL is not real). Any trailing slash is trimmed, so a caller
+    can concatenate a path onto the result.
+
+    Public because the bulk request-file emitter
+    (:class:`app.http_file_emitter.HttpFileEmitter`) writes this exact string as its
+    ``@baseUrl`` variable: taking it from here rather than re-deriving it is what stops the
+    emitted variable and the emitted request lines from disagreeing (FMT-2.4, #5422).
+
+    Args:
+        api: The canonical model whose servers are consulted.
+
+    Returns:
+        ``(base_url, placeholders)`` — the base URL and any server-variable placeholders it
+        still contains.
     """
     placeholders: List[SnippetPlaceholder] = []
     if not api.servers:
@@ -336,7 +349,7 @@ def synthesize_request(
             "snippets are only available for HTTP operations"
         )
 
-    base_url, placeholders = _resolve_server(api)
+    base_url, placeholders = resolve_server_base(api)
     method = op.http_method.upper()
 
     path = op.http_path if op.http_path.startswith("/") else "/" + op.http_path
@@ -481,8 +494,23 @@ def format_python_literal(value: Any, indent_level: int) -> str:
 # ===========================================================================
 
 
-def _render_curl(request: SnippetRequest) -> str:
-    """One-line curl command: ``-X`` only for non-GET, ``-H`` per header, ``--data-raw`` body."""
+def render_curl(request: SnippetRequest) -> str:
+    """Render one synthesized request as a single-line ``curl`` command.
+
+    ``-X`` appears only for non-GET methods, one ``-H`` per header in synthesis order,
+    and ``--data-raw`` for a body — every argument POSIX-quoted by :func:`shell_quote`.
+
+    Public because the bulk request-file emitter
+    (:class:`app.http_file_emitter.HttpFileEmitter`) renders its ``curl`` output mode
+    through *this* function, which is what makes a single-operation snippet and the
+    whole-API script byte-identical for the same operation (FMT-2.4, #5422).
+
+    Args:
+        request: The synthesized request to render.
+
+    Returns:
+        The one-line ``curl`` command.
+    """
     parts = ["curl"]
     if request.method != "GET":
         parts.extend(["-X", request.method])
@@ -532,7 +560,7 @@ def _render_httpx(request: SnippetRequest) -> str:
     return "\n".join(lines)
 
 
-_RENDERERS = {"curl": _render_curl, "ts": _render_fetch, "python": _render_httpx}
+_RENDERERS = {"curl": render_curl, "ts": _render_fetch, "python": _render_httpx}
 
 
 def render_snippet(api: CanonicalApi, op: Operation, lang: str) -> SnippetRender:

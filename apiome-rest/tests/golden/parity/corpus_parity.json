@@ -969,11 +969,11 @@
         "http-file"
       ],
       "fixtures": {
-        "valid": 8,
+        "valid": 10,
         "negative": 5,
         "adversarial": 0,
         "scale": 0,
-        "total": 13
+        "total": 15
       },
       "rungs": [
         "composition",
@@ -984,13 +984,20 @@
         "typical"
       ],
       "rung_waivers": [],
-      "goldens": 6,
+      "goldens": 8,
       "golden_directories": [
         "http-file"
       ],
-      "emit_key": null,
+      "emit_key": "http-file",
       "roundtrip_row": true,
-      "roundtrip_cells": [],
+      "roundtrip_cells": [
+        {
+          "source_format": "http-file",
+          "emit_key": "http-file",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
       "capability_provenance": "derived",
       "requirements": {
         "valid-examples": "satisfied",
