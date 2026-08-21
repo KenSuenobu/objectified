@@ -1,0 +1,26 @@
+package apiome:graph-ql-schema;
+
+interface query {
+    use types.{user as user-2};
+
+    /// Get a user by ID
+    user: func(id: string) -> option<user-2>;
+    /// List all users
+    users: func() -> list<user-2>;
+}
+
+interface types {
+    /// A simple user type for testing basic GraphQL import
+    record user {
+        age: option<s32>,
+        created-at: option<string>,
+        email: string,
+        id: string,
+        is-active: bool,
+        name: string,
+    }
+}
+
+world graph-ql-schema {
+    export query;
+}

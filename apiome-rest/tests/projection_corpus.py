@@ -158,6 +158,7 @@ CORPUS_COVERAGE: Dict[str, Union[str, Waiver]] = {
     "thrift": GENERIC,
     "typespec": GENERIC,
     "wadl": GENERIC,
+    "wit": GENERIC,
     "wsdl": GENERIC,
     "xmlrpc": GENERIC,
     "xsd": GENERIC,
