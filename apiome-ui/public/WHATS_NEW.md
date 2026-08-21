@@ -8,6 +8,9 @@ We continue to improve the platform based on your feedback with improvements and
 
 - Import:
   - Hardening import functionality
+  - Adds formats:
+    - MCP
+    - Kong
 
 ## Bug Fixes
 
