@@ -22,6 +22,9 @@ import {
   catalogFormatFamilyId,
   catalogFormatFamilyLabel,
   catalogFormatSearchTokens,
+  catalogFormatTraits,
+  CATALOG_FORMAT_DATA_TYPES,
+  CATALOG_FORMAT_ORIGINS,
 } from '../src/app/utils/catalog-format-registry';
 
 describe('catalog-format-registry — formats', () => {
@@ -160,6 +163,69 @@ describe('catalog-format-registry — importable vs recognized (MFI-23.12)', () 
   test('native formats are importable', () => {
     expect(resolveCatalogFormat('openapi')?.importable).toBe(true);
     expect(resolveCatalogFormat('swagger')?.importable).toBe(true);
+  });
+});
+
+describe('catalog-format-registry — format traits (CATP-1.1)', () => {
+  test('every registered format is classified, and both halves resolve to metadata', () => {
+    const unclassified = CATALOG_FORMATS.filter((f) => !catalogFormatTraits(f)).map((f) => f.id);
+    expect(unclassified).toEqual([]);
+  });
+
+  test('every trait descriptor carries a label, an icon and a sentence', () => {
+    for (const meta of [
+      ...Object.values(CATALOG_FORMAT_DATA_TYPES),
+      ...Object.values(CATALOG_FORMAT_ORIGINS),
+    ]) {
+      expect(meta.label.trim().length).toBeGreaterThan(0);
+      expect(meta.icon).toBeDefined();
+      expect(meta.description.trim().length).toBeGreaterThan(0);
+    }
+  });
+
+  test('the pill labels stay short enough to sit beside a format name', () => {
+    for (const meta of [
+      ...Object.values(CATALOG_FORMAT_DATA_TYPES),
+      ...Object.values(CATALOG_FORMAT_ORIGINS),
+    ]) {
+      expect(meta.label).not.toContain(' ');
+      expect(meta.label.length).toBeLessThanOrEqual(10);
+    }
+  });
+
+  test('classifies the corners of the estate the gallery is meant to make visible', () => {
+    /** The two pill labels for one format id. */
+    const traits = (id: string) => {
+      const fmt = CATALOG_FORMATS.find((f) => f.id === id);
+      if (!fmt) throw new Error(`no registry entry for ${id}`);
+      const resolved = catalogFormatTraits(fmt);
+      return [resolved?.dataType.label, resolved?.origin.label];
+    };
+
+    expect(traits('openapi')).toEqual(['REST', 'Web']);
+    expect(traits('grpc')).toEqual(['RPC', 'Cloud']);
+    expect(traits('graphql')).toEqual(['Graph', 'Web']);
+    expect(traits('asyncapi')).toEqual(['Events', 'Cloud']);
+    expect(traits('avro')).toEqual(['Schema', 'Data']);
+    expect(traits('wsdl')).toEqual(['RPC', 'Enterprise']);
+    expect(traits('cobolcopybook')).toEqual(['Records', 'Mainframe']);
+    expect(traits('zosconnect')).toEqual(['REST', 'Mainframe']);
+    expect(traits('hl7v2')).toEqual(['Messages', 'Healthcare']);
+    expect(traits('fix')).toEqual(['Messages', 'Finance']);
+    expect(traits('edix12')).toEqual(['Messages', 'B2B']);
+    expect(traits('asn1')).toEqual(['Schema', 'Telecom']);
+    expect(traits('mcp')).toEqual(['Tools', 'AI']);
+    // The three the paradigm alone would flatten: all `rest`, and none of them a REST contract.
+    expect(traits('postman')).toEqual(['Requests', 'Web']);
+    expect(traits('kong')).toEqual(['Routes', 'Cloud']);
+    expect(traits('arazzo')).toEqual(['Workflow', 'Web']);
+  });
+
+  test('every classification in the tables is actually used by some format', () => {
+    const usedTypes = new Set(CATALOG_FORMATS.map((f) => f.dataType));
+    const usedOrigins = new Set(CATALOG_FORMATS.map((f) => f.origin));
+    expect(Object.keys(CATALOG_FORMAT_DATA_TYPES).filter((k) => !usedTypes.has(k as never))).toEqual([]);
+    expect(Object.keys(CATALOG_FORMAT_ORIGINS).filter((k) => !usedOrigins.has(k as never))).toEqual([]);
   });
 });
 

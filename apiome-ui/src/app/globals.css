@@ -2256,6 +2256,58 @@ html[data-kbd-hints="off"] .kbd-group {
   filter: saturate(0.9) brightness(0.85) contrast(1.05);
 }
 
+/* ---- Format trait pills (CATP-1.1) ---------------------------------------
+   The two pills beside a format's name in the catalog's supported-formats
+   gallery: what documents in that format describe, and the ecosystem they
+   typically come from.
+
+   Deliberately *not* a `.fmt--*` hue, and the reason is the one the block
+   above just made: the format's colour is an identity, and the gallery exists
+   to teach it. A second and third saturated pill on the same chip would
+   compete with the only colour there that carries meaning. So the traits take
+   the neutral pair this panel already uses for its `+39` pill — `--bg-inset`
+   under `--fg-muted`, a pairing measured on this surface — and separate
+   themselves by icon and by fill-versus-outline instead of by hue. Tokens, so
+   they follow all nine themes rather than freezing like the identity block. */
+.fmt-traits {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+/* Tighter than `.fmt` on both axes, and deliberately: these two sit *beside*
+   a format's name in a 19rem track, and every 16th of a rem they give back is
+   a character the name keeps. */
+.fmt-trait {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  block-size: 1.125rem;
+  padding: 0 0.3125rem;
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.fmt-trait > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* The second of the pair. Same ink, an outline where the first has a fill:
+   two identically-dressed pills side by side read as one two-word label. */
+.fmt-trait--origin {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
 /* The verb chip. `min-width` is what turns a column of them into a readable
    left edge; `.method--fit` gives it up for a chip that sits inline in prose. */
 .method {
@@ -20199,9 +20251,17 @@ html[data-motion='reduce'] .prm-spin {
   margin-block-end: var(--space-3);
 }
 
+/* The track minimum grew from 15rem with CATP-1.1: a chip now carries a name,
+   two trait pills and a line of description, and at 15rem the pills never fit
+   beside the name — the fallback corner would have been the only corner. At
+   19rem three columns still fit a desktop panel and the pills sit where they
+   were asked to sit. `min(19rem, 100%)` and not a bare `19rem`, because a
+   minimum wider than its container overflows it: at the Largest font scale on
+   a phone, 19rem is 380px inside a ~340px panel, which is a document that
+   scrolls sideways. */
 .cat-formats__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr));
   gap: var(--space-2);
 }
 
@@ -20215,7 +20275,23 @@ html[data-motion='reduce'] .prm-spin {
   color: var(--fg-muted);
 }
 
+/* The chip is its own query container, so its trait pills can choose a
+   corner: beside the name while the chip is wide enough to hold both, and
+   under the description — still hard right — when it is not. A `@container`
+   and not a `@media`, because these chips are grid tracks; what decides
+   whether two pills fit beside a name is the *track's* width, which moves
+   with the panel, the rail and the reader's font scale, none of which a
+   viewport width knows — and a size query measures the *content* box, so the
+   threshold excludes the chip's own padding. It is the width the widest
+   registered name and both pills measure to, so the corner flips before a name has to give up
+   more than its last character or two — and the name carries a `title`, so a
+   longer one a later ticket registers is still readable where it does. `em`, for that last one: a container query's font
+   units resolve against the container, so the threshold grows with the type
+   it is measuring. And the container is declared right here on the queried
+   element's own ancestor — a `@container` rule with no container above it
+   never matches at all. */
 .cat-fmt-chip {
+  container: cat-fmt-chip / inline-size;
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
@@ -20274,12 +20350,49 @@ a.cat-fmt-chip:hover {
 }
 
 .cat-fmt-chip__text {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "name traits"
+    "desc desc";
+  flex: 1;
   min-inline-size: 0;
+  column-gap: var(--space-2);
+}
+
+.cat-fmt-chip__traits {
+  grid-area: traits;
+  align-self: start;
+  justify-self: end;
+}
+
+/* Not enough width for a name and two pills on one line. The pills drop to
+   their own row under the description, right-aligned, which is the corner
+   left. */
+@container cat-fmt-chip (max-width: 19.5em) {
+  .cat-fmt-chip__text {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "name"
+      "desc"
+      "traits";
+    /* The description takes the slack, so the pills sit on the chip's floor
+       rather than wherever its description happened to end — the chips in a
+       row are stretched to the tallest of them, and a row of pills at six
+       different heights reads as six different components. `align-self` and
+       not the chip's `align-items`, because a `@container` rule styles what is
+       *inside* the container, never the container itself. */
+    grid-template-rows: auto 1fr auto;
+    align-self: stretch;
+  }
+
+  .cat-fmt-chip__traits {
+    margin-block-start: var(--space-1);
+  }
 }
 
 .cat-fmt-chip__name {
+  grid-area: name;
   overflow: hidden;
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -20289,12 +20402,14 @@ a.cat-fmt-chip:hover {
 }
 
 .cat-fmt-chip__desc {
+  grid-area: desc;
   font-size: var(--fs-2xs);
   line-height: var(--lh-snug);
   color: var(--fg-muted);
 }
 
 .cat-fmt-chip__note {
+  grid-area: desc;
   font-size: var(--fs-2xs);
   font-weight: 500;
   line-height: var(--lh-snug);

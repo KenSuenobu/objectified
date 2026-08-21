@@ -33,7 +33,12 @@ import { ChevronDown, Layers } from 'lucide-react';
 
 import { Badge } from '@/app/components/ui/Badge';
 import { Card } from '@/app/components/ui/Card';
-import { catalogFormatHueClass, type CatalogFormat } from '@/app/utils/catalog-format-registry';
+import { FormatTraitPills } from '@/app/components/ui/catalog/FormatTraitPills';
+import {
+  catalogFormatHueClass,
+  catalogFormatTraits,
+  type CatalogFormat,
+} from '@/app/utils/catalog-format-registry';
 import { partitionCatalogFormats } from '@/app/utils/catalog-format-support';
 import { catalogAdapterForFormat } from '@/app/utils/catalog-import-formats';
 import { catalogFormatDocumentationUrl } from '@/app/utils/catalog-format-documentation';
@@ -68,6 +73,11 @@ interface FormatChipProps {
 /**
  * One format in the gallery: its tinted tile, its name, and one line about it.
  *
+ * Beside the name sit the two **trait pills** (CATP-1.1) — the format's data type and the
+ * ecosystem it typically comes from — so the gallery answers "which of these forty-five is mine?"
+ * without opening any of them. Their text is inside the link, whose `aria-label` therefore names
+ * them too, or a screen reader would hear only the format's name.
+ *
  * A chip with documentation is an `<a target="_blank">` and says so in its accessible name,
  * because a link that leaves the app without warning is the one thing DESIGN.md §9 asks a
  * link to announce. A chip without is a plain `<div>` — not a disabled link.
@@ -77,6 +87,7 @@ interface FormatChipProps {
  */
 function FormatChip({ fmt, muted, unavailableNote, documentationUrl }: FormatChipProps) {
   const Icon = fmt.icon;
+  const traits = catalogFormatTraits(fmt);
   const unavailable = Boolean(unavailableNote);
   const dimmed = muted || unavailable;
   const className = cn(
@@ -91,12 +102,18 @@ function FormatChip({ fmt, muted, unavailableNote, documentationUrl }: FormatChi
         <Icon />
       </span>
       <span className="cat-fmt-chip__text">
-        <span className="cat-fmt-chip__name">{fmt.label}</span>
+        <span className="cat-fmt-chip__name" title={fmt.label}>
+          {fmt.label}
+        </span>
         {unavailableNote ? (
           <span className="cat-fmt-chip__note">{unavailableNote}</span>
         ) : fmt.description ? (
           <span className="cat-fmt-chip__desc">{fmt.description}</span>
         ) : null}
+        {/* Last in the DOM so the chip reads name → what it is → what it is *for*, and placed by
+            `grid-area` rather than order: the same markup sits top-right of the name on a wide
+            chip and bottom-right of the description when the two would not fit on one line. */}
+        <FormatTraitPills format={fmt} className="cat-fmt-chip__traits" />
       </span>
     </>
   );
@@ -108,7 +125,11 @@ function FormatChip({ fmt, muted, unavailableNote, documentationUrl }: FormatChi
         target="_blank"
         rel="noopener noreferrer"
         className={className}
-        aria-label={`${fmt.label} technical documentation (opens in new tab)`}
+        aria-label={
+          traits
+            ? `${fmt.label}, ${traits.dataType.label}, typical source ${traits.origin.label} — technical documentation (opens in new tab)`
+            : `${fmt.label} technical documentation (opens in new tab)`
+        }
       >
         {body}
       </a>

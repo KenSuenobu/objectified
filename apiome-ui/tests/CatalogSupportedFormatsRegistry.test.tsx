@@ -188,3 +188,70 @@ describe('CatalogSupportedFormats reads the registry', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 });
+
+/**
+ * The trait pills (CATP-1.1): each format in the gallery says what it *is* and where APIs in it
+ * typically come from, so the forty-five names can be placed without opening any of them.
+ */
+describe('CatalogSupportedFormats shows each format\'s traits', () => {
+  /** The chip whose name is `label`, from inside the open panel. */
+  const chip = (label: string) => {
+    const name = panel().getByText(label);
+    const node = name.closest('.cat-fmt-chip');
+    if (!node) throw new Error(`\`${label}\` is not inside a format chip`);
+    return node as HTMLElement;
+  };
+
+  /** The two pill labels on one chip, in the order they are rendered. */
+  const pills = (label: string) =>
+    [...chip(label).querySelectorAll('.fmt-trait')].map((pill) => pill.textContent);
+
+  it('pairs a data type with a typical source on every chip', async () => {
+    global.fetch = mockRegistry([source('grpc'), source('graphql')]) as unknown as typeof fetch;
+    await renderGallery();
+
+    await waitFor(() => expect(panel().getByText('gRPC')).toBeInTheDocument());
+    for (const node of panel().getAllByTestId('format-traits')) {
+      expect(node.querySelectorAll('.fmt-trait')).toHaveLength(2);
+    }
+    expect(pills('gRPC')).toEqual(['RPC', 'Cloud']);
+    expect(pills('GraphQL')).toEqual(['Graph', 'Web']);
+  });
+
+  it('classifies a recognized-but-not-importable format too', async () => {
+    // The roadmap section is exactly where a reader most needs to know what they are waiting for.
+    global.fetch = mockRegistry([source('grpc')]) as unknown as typeof fetch;
+    await renderGallery();
+
+    await waitFor(() => expect(panel().getByText('HL7 v2')).toBeInTheDocument());
+    expect(pills('HL7 v2')).toEqual(['Messages', 'Healthcare']);
+  });
+
+  it('names the question each pill answers, for the pointer and the reader', async () => {
+    global.fetch = mockRegistry([source('grpc')]) as unknown as typeof fetch;
+    await renderGallery();
+
+    await waitFor(() => expect(panel().getByText('COBOL Copybook')).toBeInTheDocument());
+    const [dataType, origin] = [...chip('COBOL Copybook').querySelectorAll('.fmt-trait')];
+    expect(dataType).toHaveAttribute('data-trait', 'data-type');
+    expect(dataType).toHaveAttribute('data-value', 'records');
+    expect(dataType.getAttribute('title')).toMatch(/^Data type: Records — /);
+    expect(origin).toHaveAttribute('data-trait', 'origin');
+    expect(origin).toHaveAttribute('data-value', 'mainframe');
+    expect(origin.getAttribute('title')).toMatch(/^Typical source: Mainframe — /);
+  });
+
+  it('keeps the pills in the accessible name of a chip that is a link', async () => {
+    // The chip's `aria-label` replaces its text, so a pill a sighted reader can see would
+    // otherwise be one a screen reader never hears.
+    global.fetch = mockRegistry([source('grpc')]) as unknown as typeof fetch;
+    await renderGallery();
+
+    await waitFor(() => expect(panel().getByText('gRPC')).toBeInTheDocument());
+    expect(
+      panel().getByRole('link', {
+        name: 'gRPC, RPC, typical source Cloud — technical documentation (opens in new tab)',
+      }),
+    ).toBeInTheDocument();
+  });
+});

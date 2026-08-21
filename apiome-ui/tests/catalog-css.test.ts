@@ -176,6 +176,7 @@ const CATALOG_PRELUDES = [
   '.cat-fmt-chip__tile',
   '.cat-fmt-chip__tile > svg',
   '.cat-fmt-chip__text',
+  '.cat-fmt-chip__traits',
   '.cat-fmt-chip__name',
   '.cat-fmt-chip__desc',
   '.cat-fmt-chip__note',
@@ -476,8 +477,11 @@ describe('horizontal containment', () => {
     expect(declaration('.cat-grid', 'grid-template-columns')).toBe(
       'repeat(auto-fit, minmax(18rem, 1fr))'
     );
+    // CATP-1.1 widened the format track from 15rem so a chip's two trait pills fit beside its
+    // name; `min(…, 100%)` keeps the wider minimum from overflowing a phone panel at the
+    // Largest scale, where 19rem is wider than the panel it sits in.
     expect(declaration('.cat-formats__grid', 'grid-template-columns')).toBe(
-      'repeat(auto-fill, minmax(15rem, 1fr))'
+      'repeat(auto-fill, minmax(min(19rem, 100%), 1fr))'
     );
 
     const collapsed = rules.filter(
@@ -756,5 +760,55 @@ describe('the one hue that is deliberately not a token', () => {
     const grade = parseDeclarations(catalogRule('.cnv-grade').body);
     expect(grade.has('background')).toBe(false);
     expect(grade.has('color')).toBe(false);
+  });
+});
+
+describe('the format chip’s trait pills (CATP-1.1)', () => {
+  /** The one `@container` rule that re-lays the chip’s text column. */
+  const narrow = () => {
+    const rule = rules.find(
+      (candidate) =>
+        candidate.prelude.startsWith('@container cat-fmt-chip') &&
+        candidate.body.includes('.cat-fmt-chip__text {')
+    );
+    if (!rule) throw new Error('globals.css no longer narrows the format chip’s text column');
+    return rule;
+  };
+
+  it('queries the chip itself, which is the only thing that knows if the pills fit', () => {
+    // A `@container` rule with no container above it never matches at all — the quiet way a
+    // "responsive" rule turns out to be dead. The container is declared on the chip, and the
+    // queried element is inside it.
+    expect(declaration('.cat-fmt-chip', 'container')).toBe('cat-fmt-chip / inline-size');
+    expect(narrow().prelude).toContain('cat-fmt-chip');
+  });
+
+  it('measures the threshold in type, not in pixels, so it follows the font scale', () => {
+    // `em` in a container query resolves against the container, which the `data-font-scale`
+    // percentage on `html` has already scaled — unlike a `@media` width, which never moves.
+    expect(narrow().prelude).toMatch(/\(max-width: [\d.]+em\)$/);
+    expect(narrow().prelude).not.toMatch(/px\)/);
+  });
+
+  it('puts the pills top-right of the name, and bottom-right when they do not fit', () => {
+    const wide = parseDeclarations(catalogRule('.cat-fmt-chip__text').body);
+    expect(wide.get('grid-template-areas')).toBe('"name traits" "desc desc"');
+    expect(catalogRule('.cat-fmt-chip__traits').body).toContain('grid-area: traits');
+    expect(declaration('.cat-fmt-chip__traits', 'align-self')).toBe('start');
+    expect(declaration('.cat-fmt-chip__traits', 'justify-self')).toBe('end');
+    // Narrow: the same markup, the last row instead of the first column — still hard right,
+    // because `justify-self: end` is not restated and therefore not lost.
+    expect(narrow().body.replace(/\s+/g, ' ')).toContain('"name" "desc" "traits"');
+  });
+
+  it('leaves the identity hue to the format, and takes the neutral pair instead', () => {
+    // The chip's tile already carries the format's fixed hue. Two more saturated pills beside
+    // it would compete with the only colour on the chip that means anything.
+    const pill = parseDeclarations(catalogRule('.fmt-trait').body);
+    expect(pill.get('background')).toBe('var(--bg-inset)');
+    expect(pill.get('color')).toBe('var(--fg-muted)');
+    const origin = parseDeclarations(catalogRule('.fmt-trait--origin').body);
+    expect(origin.get('background')).toBe('transparent');
+    expect(origin.get('box-shadow')).toBe('inset 0 0 0 1px var(--border)');
   });
 });
