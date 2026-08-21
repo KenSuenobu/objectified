@@ -1,0 +1,239 @@
+{
+  "adapter": "wit",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "source_files": [
+        "wit/07-emitted-types-only.wit"
+      ],
+      "wit": {
+        "capability_limits": [],
+        "external_uses": [],
+        "package": "com-example-order:order",
+        "unexpanded_includes": [],
+        "version": null,
+        "worlds": []
+      }
+    },
+    "format": "wit",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "com-example-order:order",
+      "namespace": "com-example-order:order"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "com-example-order:order.types.line-item.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "com-example-order:order.types.line-item.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "com-example-order:order.types.line-item.unit-price",
+            "name": "unit-price",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "uint8",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com-example-order:order.types.line-item",
+        "key_type": null,
+        "kind": "record",
+        "name": "line-item",
+        "namespace": "com-example-order:order",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "com-example-order:order.types.order.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "com-example-order:order.types.order.customer-id",
+            "name": "customer-id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "com-example-order:order.types.order.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "com-example-order:order.types.line-item",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "com-example-order:order.types.order.order-id",
+            "name": "order-id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "com-example-order:order.types.order.placed-at",
+            "name": "placed-at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com-example-order:order.types.order",
+        "key_type": null,
+        "kind": "record",
+        "name": "order",
+        "namespace": "com-example-order:order",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "wit/07-emitted-types-only.wit",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wit"
+  },
+  "fingerprint": "sha256:7dba1d1cb8604906fce436736c20d9f322ccb2847fc95b67d633db3da7389978",
+  "lint": {
+    "findings": 11,
+    "grade": "B",
+    "report_fingerprint": "e741fec5741e69b7a8ab9c5bd11e6fab1ac28cf4a4d4b094528b6ba75d958a4a",
+    "score": 83,
+    "severity_counts": {
+      "error": 0,
+      "info": 9,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

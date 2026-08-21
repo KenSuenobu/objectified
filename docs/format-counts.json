@@ -3,9 +3,9 @@
   "capability_registry_version": "3",
   "total": 43,
   "importable": 43,
-  "exportable": 40,
-  "round_trip": 40,
-  "import_only": 3,
+  "exportable": 41,
+  "round_trip": 41,
+  "import_only": 2,
   "export_only": 0,
   "live_discovery": 4,
   "publishable": 1,
@@ -24,7 +24,7 @@
       "label": "RPC",
       "total": 10,
       "importable": 10,
-      "exportable": 9
+      "exportable": 10
     },
     {
       "id": "event",

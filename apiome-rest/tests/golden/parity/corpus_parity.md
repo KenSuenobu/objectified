@@ -51,7 +51,7 @@ Every shipped, non-preview import adapter must carry four artifacts: corpus exam
 | `thrift` | Thrift | rpc | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `thrift` |
 | `typespec` | TypeSpec | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `typespec` |
 | `wadl` | WADL | rest | 6 | 5 | 1 | 0 | 12 | 5/6 (+1 waived) | 6 | `wadl` |
-| `wit` | WIT (WebAssembly) | rpc | 8 | 5 | 0 | 0 | 13 | 6/6 | 6 | — |
+| `wit` | WIT (WebAssembly) | rpc | 11 | 5 | 0 | 0 | 16 | 6/6 | 9 | `wit` |
 | `wsdl` | WSDL | rest | 6 | 5 | 2 | 0 | 13 | 5/6 (+1 waived) | 6 | `wsdl` |
 | `xmlrpc` | XML-RPC | rpc | 6 | 5 | 2 | 0 | 13 | 5/6 (+1 waived) | 6 | `xmlrpc` |
 | `xsd` | XSD | data_schema | 6 | 5 | 2 | 0 | 13 | 5/6 (+1 waived) | 6 | `xsd` |

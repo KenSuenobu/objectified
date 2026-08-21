@@ -1,0 +1,637 @@
+{
+  "adapter": "wit",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "source_files": [
+        "wit/08-emitted-interface-functions.wit"
+      ],
+      "wit": {
+        "capability_limits": [
+          {
+            "construct": "tuple#types",
+            "count": 1,
+            "detail": "tuple<…> has no canonical representation; it is referenced as an opaque type with the WIT spelling preserved in extras.",
+            "kind": "tuple"
+          }
+        ],
+        "external_uses": [],
+        "package": "example:catalog-v1",
+        "unexpanded_includes": [],
+        "version": null,
+        "worlds": []
+      }
+    },
+    "format": "wit",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example:catalog-v1",
+      "namespace": "example:catalog-v1"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "wit_kind": "interface"
+        },
+        "key": "example:catalog-v1.product-service",
+        "name": "product-service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example:catalog-v1.product-service.create-product",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "arg"
+                },
+                "headers": [],
+                "key": "example:catalog-v1.product-service.create-product#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example:catalog-v1.types.create-product-request",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example:catalog-v1.product-service.create-product#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example:catalog-v1.types.product",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "create-product",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example:catalog-v1.product-service.get-product",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "arg"
+                },
+                "headers": [],
+                "key": "example:catalog-v1.product-service.get-product#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example:catalog-v1.types.get-product-request",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example:catalog-v1.product-service.get-product#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example:catalog-v1.types.product",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "get-product",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example:catalog-v1.product-service.list-products",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "wit_param_name": "arg"
+                },
+                "headers": [],
+                "key": "example:catalog-v1.product-service.list-products#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example:catalog-v1.types.list-products-request",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example:catalog-v1.product-service.list-products#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example:catalog-v1.types.list-products-response",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "list-products",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": {
+          "extras": {},
+          "item": {
+            "extras": {
+              "wit_type": "tuple<option<string>, option<string>>"
+            },
+            "item": null,
+            "name": "tuple",
+            "nullable": false
+          },
+          "name": null,
+          "nullable": false
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "types",
+          "wit_kind": "type-alias"
+        },
+        "fields": [],
+        "key": "example:catalog-v1.types.attributes-entry",
+        "key_type": null,
+        "kind": "alias",
+        "name": "attributes-entry",
+        "namespace": "example:catalog-v1",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.create-product-request.product",
+            "name": "product",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example:catalog-v1.types.product",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example:catalog-v1.types.create-product-request",
+        "key_type": null,
+        "kind": "record",
+        "name": "create-product-request",
+        "namespace": "example:catalog-v1",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.dimensions.depth-mm",
+            "name": "depth-mm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.dimensions.height-mm",
+            "name": "height-mm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.dimensions.width-mm",
+            "name": "width-mm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example:catalog-v1.types.dimensions",
+        "key_type": null,
+        "kind": "record",
+        "name": "dimensions",
+        "namespace": "example:catalog-v1",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.get-product-request.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example:catalog-v1.types.get-product-request",
+        "key_type": null,
+        "kind": "record",
+        "name": "get-product-request",
+        "namespace": "example:catalog-v1",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.list-products-request.page-size",
+            "name": "page-size",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.list-products-request.page-token",
+            "name": "page-token",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example:catalog-v1.types.list-products-request",
+        "key_type": null,
+        "kind": "record",
+        "name": "list-products-request",
+        "namespace": "example:catalog-v1",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.list-products-response.next-page-token",
+            "name": "next-page-token",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.list-products-response.products",
+            "name": "products",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "example:catalog-v1.types.product",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example:catalog-v1.types.list-products-response",
+        "key_type": null,
+        "kind": "record",
+        "name": "list-products-response",
+        "namespace": "example:catalog-v1",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wit_interface": "types",
+          "wit_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.product.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example:catalog-v1.types.attributes-entry",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.product.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.product.dimensions",
+            "name": "dimensions",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example:catalog-v1.types.dimensions",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.product.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example:catalog-v1.types.product.price-cents",
+            "name": "price-cents",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example:catalog-v1.types.product",
+        "key_type": null,
+        "kind": "record",
+        "name": "product",
+        "namespace": "example:catalog-v1",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "wit/08-emitted-interface-functions.wit",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wit"
+  },
+  "fingerprint": "sha256:ae09b08eb8eadc5e67edf5e012a8975c23ee1a3b176aac794085b748da13dfda",
+  "lint": {
+    "findings": 32,
+    "grade": "F",
+    "report_fingerprint": "0e49397acce67eb2adaf672441b1d3505b7a6cea5f51a1c6e8deda722fcf34cb",
+    "score": 46,
+    "severity_counts": {
+      "error": 0,
+      "info": 22,
+      "warning": 10
+    }
+  },
+  "snapshot_version": 1
+}

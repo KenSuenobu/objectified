@@ -1936,11 +1936,11 @@
         "wit"
       ],
       "fixtures": {
-        "valid": 8,
+        "valid": 11,
         "negative": 5,
         "adversarial": 0,
         "scale": 0,
-        "total": 13
+        "total": 16
       },
       "rungs": [
         "composition",
@@ -1951,13 +1951,20 @@
         "typical"
       ],
       "rung_waivers": [],
-      "goldens": 6,
+      "goldens": 9,
       "golden_directories": [
         "wit"
       ],
-      "emit_key": null,
+      "emit_key": "wit",
       "roundtrip_row": true,
-      "roundtrip_cells": [],
+      "roundtrip_cells": [
+        {
+          "source_format": "wit",
+          "emit_key": "wit",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
       "capability_provenance": "derived",
       "requirements": {
         "valid-examples": "satisfied",

@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **1415 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **1418 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -68,7 +68,7 @@ The corpus holds **1415 files** across **103 format directories**. Every file ha
 | `smithy/` | Smithy 2.0 | rpc | `$version` + Smithy shapes | 11 |
 | `thrift/` | Apache Thrift | rpc | `service` / `struct` shapes | 11 |
 | `trpc/` | tRPC routers (pending #5464) | rpc | `initTRPC` + exported `t.router({...})` with `.query`/`.mutation` procedures | 16 |
-| `wit/` | WIT (WebAssembly Component Model) | rpc | `package ns:name` + `interface`/`world` blocks | 13 |
+| `wit/` | WIT (WebAssembly Component Model) | rpc | `package ns:name` + `interface`/`world` blocks | 16 |
 | `xml-rpc/` | XML-RPC | rpc | `<methodCall>` / `<methodResponse>` root | 13 |
 
 ### Event / messaging
@@ -2408,6 +2408,9 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `06-package-set/api.wit` ⚠ | multi-file (root) | `wit` ≥ 0.9 | valid | `multi-file`, `package-directory`, `cross-file-use` |
 | `06-package-set/service.wit` | multi-file (member) | `wit` ≥ 0.9 | valid | `multi-file`, `package-directory`, `world` |
 | `06-package-set/types.wit` | multi-file (member) | `wit` ≥ 0.9 | valid | `multi-file`, `package-directory` |
+| `07-emitted-types-only.wit` ⚠ | minimal | `wit` ≥ 0.95 | valid | `emitted`, `types-only`, `record`, `no-world`, `doc-comments` |
+| `08-emitted-interface-functions.wit` ⚠ | composition | `wit` ≥ 0.95 | valid | `emitted`, `interface-functions`, `use`, `cross-interface-reference`, `map-approximation` |
+| `09-emitted-world-exports.wit` ⚠ | real-world | `wit` ≥ 0.95 | valid | `emitted`, `world`, `export`, `synthesized-world`, `use-alias` |
 | `negative/01-syntactic-missing-colon.wit` ⚠ | — | `wit` (no guarantee) | invalid | `negative`, `syntactic` |
 | `negative/02-semantic-no-definitions.wit` ⚠ | — | `wit` (no guarantee) | invalid | `negative`, `semantic` |
 | `negative/03-truncated-mid-record.wit` | — | `wit` (no guarantee) | invalid | `negative`, `truncated` |
@@ -2419,6 +2422,12 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`05-real-world-keyvalue.wit`** — Modeled after the WASI key-value proposal's interface surface (wasi:keyvalue).
 
 > ⚠ **`06-package-set/api.wit`** — `use order-types.{…}` resolves against the sibling types.wit through the merged package fileset.
+
+> ⚠ **`07-emitted-types-only.wit`** — A schema-only source has no callables, so the package is types only and carries no world; the shared `types` interface is where types belonging to no operation group land.
+
+> ⚠ **`08-emitted-interface-functions.wit`** — An RPC service becomes one interface of `func` items that `use` the shared types interface; the protobuf map field is approximated as `list<tuple<k, v>>`.
+
+> ⚠ **`09-emitted-world-exports.wit`** — A source that declares no world gets one synthesized to export the generated interfaces; the imported `user` type is aliased because the interface already declares a `user` function.
 
 > ⚠ **`negative/01-syntactic-missing-colon.wit`** — Function statement missing the `name: func` colon.
 
@@ -2592,7 +2601,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 1415 | `Apache-2.0` |
+| `hand-authored` | 1418 | `Apache-2.0` |
 
 ## Trying an import
 

@@ -1,0 +1,18 @@
+package com-example-order:order;
+
+interface types {
+    /// A single line item within an order.
+    record line-item {
+        quantity: s64,
+        sku: string,
+        unit-price: list<u8>,
+    }
+    /// A customer order.
+    record order {
+        currency: string,
+        customer-id: string,
+        items: list<line-item>,
+        order-id: string,
+        placed-at: string,
+    }
+}

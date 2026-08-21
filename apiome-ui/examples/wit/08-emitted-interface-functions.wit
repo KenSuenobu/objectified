@@ -1,0 +1,40 @@
+package example:catalog-v1;
+
+interface product-service {
+    use types.{create-product-request, product, get-product-request, list-products-request, list-products-response};
+
+    create-product: func(arg: option<create-product-request>) -> option<product>;
+    get-product: func(arg: option<get-product-request>) -> option<product>;
+    list-products: func(arg: option<list-products-request>) -> option<list-products-response>;
+}
+
+interface types {
+    record create-product-request {
+        product: option<product>,
+    }
+    record dimensions {
+        depth-mm: option<s32>,
+        height-mm: option<s32>,
+        width-mm: option<s32>,
+    }
+    record get-product-request {
+        id: option<string>,
+    }
+    record list-products-request {
+        page-size: option<s32>,
+        page-token: option<string>,
+    }
+    record list-products-response {
+        next-page-token: option<string>,
+        products: list<option<product>>,
+    }
+    record product {
+        attributes: attributes-entry,
+        currency: option<string>,
+        dimensions: option<dimensions>,
+        id: option<string>,
+        name: option<string>,
+        price-cents: option<s64>,
+    }
+    type attributes-entry = list<tuple<option<string>, option<string>>>;
+}

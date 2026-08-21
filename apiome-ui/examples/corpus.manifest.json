@@ -30276,6 +30276,75 @@
       "fileset_role": "member"
     },
     {
+      "path": "wit/07-emitted-types-only.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "emitted",
+        "types-only",
+        "record",
+        "no-world",
+        "doc-comments"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Emitted in-repo by app.wit_emitter (FMT-2.6) from avro/02-order-record.avsc.",
+      "notes": "A schema-only source has no callables, so the package is types only and carries no world; the shared `types` interface is where types belonging to no operation group land.",
+      "rung": "minimal"
+    },
+    {
+      "path": "wit/08-emitted-interface-functions.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "emitted",
+        "interface-functions",
+        "use",
+        "cross-interface-reference",
+        "map-approximation"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Emitted in-repo by app.wit_emitter (FMT-2.6) from protobuf/02-grpc-service.proto with emit_world disabled.",
+      "notes": "An RPC service becomes one interface of `func` items that `use` the shared types interface; the protobuf map field is approximated as `list<tuple<k, v>>`.",
+      "rung": "composition"
+    },
+    {
+      "path": "wit/09-emitted-world-exports.wit",
+      "format": "wit",
+      "adapter_key": "wit",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wit",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "emitted",
+        "world",
+        "export",
+        "synthesized-world",
+        "use-alias"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Emitted in-repo by app.wit_emitter (FMT-2.6) from graphql/01-simple-user.graphql.",
+      "notes": "A source that declares no world gets one synthesized to export the generated interfaces; the imported `user` type is aliased because the interface already declares a `user` function.",
+      "rung": "real-world"
+    },
+    {
       "path": "wit/negative/01-syntactic-missing-colon.wit",
       "format": "wit",
       "adapter_key": "wit",
