@@ -60,7 +60,7 @@ git checkout -b ticket-<number>
 - UI: Use **CSS classes** - no hard-coded values.
 - Documentation must be complete and simple.
 - Check for code reuse; extract repeated logic into separate reusable modules.
-- Tests must run unit tests only, must **be thorough**, have **no warnings, no errors, and no skips**
+- Tests must run unit tests only, e2e and integration is done via CI/CD, so is not necessary here.
 
 ## Phase 5: Verify and Test
 
@@ -82,7 +82,7 @@ yarn test
 
 Run package-specific tests the issue touches, per READMEs.
 
-- Test unit tests, not just changes, so regressions are checked.  Integration and e2e tests can be skipped.
+- Test unit tests
 - Fix **any failures introduced that block ticket** and **any tests or build issues** before proceeding.
 
 ## Phase 6: Note Work
